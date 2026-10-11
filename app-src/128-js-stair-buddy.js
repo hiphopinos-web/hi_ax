@@ -14,7 +14,23 @@
 var STB_HOPS = 5, STB_HOP_MS = 600, STB_TURN_MS = 360, STB_TYPE_MS = 45, STB_NUDGE_MS = 20000;
 var STB_SAVE_MS = 8 * 60000, STB_REST_MS = 15 * 60000, STB_FIX_MS = 20 * 60000;
 var STB_COUNT = ["하나", "둘", "셋", "넷", "다섯"];
-var STB_HELLO = "같이 가요! 화면은 켠 채로 두세요";
+var STB_HELLO = "화면을 켜 두면 제가 같이 갈게요";   /* 261011 (사용자 「권장대로」) 위 고정 안내가 「화면을 꺼도 기록은 이어져요」라 첫 말을 맞춤 · 옛 「같이 가요! 화면은 켠 채로 두세요」 */
+/* 261011 (사용자 「권장대로」 · 50대 수석 관점 검토) 화면 맨 위 고정 안내(움직이지 않음 · 타자 효과 없음 · 본문 크기 · 큰 글씨 배율 따름) · 18F 출발 = 내려가기 */
+var STB_INTRO = { up: "계단 오르기를 시작했어요", down: "계단 내려가기를 시작했어요", lines: ["화면을 꺼도 기록은 이어져요", "도착 층 방화문 앞 QR을 찍으면 끝나요"] };
+/* 261011 (사용자 「B 권장으로 가자」) 계단 동행 소리 · 기본 무음(game_sound 가 true 일 때만 · 고른 적 없으면 무음) · 안내 줄 오른쪽 작은 스피커 단추(게임 소리와 같은 한 값)
+   켜면 한 고리(점프 5번)의 다섯 번째 점프에만 작은 「띠용」 한 번(점프 게임 ppyong 과 같은 합성 · 작은 볼륨 ppyongS) · 도착 「쿵」 그대로
+   8분 절약 · 15분 쉼 · 동작 줄이기 · 화면 숨김 · 계단 동행 밖 = 소리 없음(점프가 없고 · stbSnd 가 한 번 더 막는다) · 음원 파일 없음 */
+function stbSndHtml() { var on = S.get("game_sound", null) === true; return '<button type="button" class="snd-btn stb-snd' + (on ? " on" : "") + '" id="stbSnd" aria-label="효과음" aria-pressed="' + on + '" onpointerdown="event.preventDefault()" onclick="stbSndTog()">' + sndIcon(on) + "</button>"; }
+function stbSndTog() {
+  var on = S.get("game_sound", null) !== true;
+  S.set("game_sound", on);   /* 게임 소리와 같은 한 값 */
+  if (on) { SFX.site = false; sfxUnlock(); sfx("click"); }   /* 누르는 그 순간 소리 잠금 해제 */
+  var bt = el("stbSnd"); if (bt) { bt.classList.toggle("on", on); bt.setAttribute("aria-pressed", String(on)); bt.innerHTML = sndIcon(on); }
+}
+function stbSnd() {
+  var b = STB; if (!b || b.save || b.rest || stbRm() || document.hidden || App.current !== "stair" || STR.mode !== "start" || S.get("game_sound", null) !== true) return;
+  b.sndN = (b.sndN || 0) + 1; SFX.site = false; sfx("ppyongS");
+}
 var STB_CUTE = ["힘내요!", "화이팅!", "한 칸만 더!", "잘하고 있어요", "같이 가요!", "거의 다 왔어요", "멋져요!", "한 걸음씩 차근차근", "뛰지 말고 천천히", "숨 고르고 가요", "벌써 이만큼 왔어요", "오늘도 최고예요"];
 /* 계단 말 · 숫자 · 의학 효과 없이 */
 var STB_GOOD = ["계단은 가까이 있는 좋은 운동이에요", "따로 시간 내지 않아도 하는 운동이에요", "천천히 걸어도 좋은 운동이 돼요", "계단을 쓰면 엘리베이터가 덜 붐벼요", "엘리베이터 기다리는 시간도 아껴요", "걷다 보면 생각이 정리되기도 해요"];
@@ -138,7 +154,9 @@ function stbBotHtml(b) {
 function stbHtml(o, s, since) {
   var b = stbEnsure(since), down = stbDown(), ln = b.line || { t: "" };
   if (!b.rest && stbAge() >= STB_REST_MS) stbRestLine(b);
-  return '<h1 class="stb-sr">계단 동행 · ' + esc(o.fl) + "F 출발 · 도착 층 방화문 앞 QR 스캔</h1>" +   /* 5차(사용자 「상단 정보는 크게 필요 없다」) 층 · 경로 · 시작 시각 줄 걷음 · 화면 읽기용 제목 하나만 */
+  return '<h1 class="stb-sr">계단 동행 · ' + esc(o.fl) + "F 출발</h1>" +   /* 261011 QR 안내는 아래 고정 안내가 읽힌다(겹쳐 읽지 않게 제목에서 뺌) */
+    '<div class="stb-in"><div class="stb-ihr"><p class="stb-ih">' + (down ? STB_INTRO.down : STB_INTRO.up) + "</p>" + stbSndHtml() + "</div>" +
+      '<p class="stb-il segfix">' + STB_INTRO.lines.map(function (t) { return "<ax-seg>" + t + "</ax-seg>"; }).join("") + "</p></div>" +   /* 5차(사용자 「상단 정보는 크게 필요 없다」) 층 · 경로 · 시작 시각 줄 걷음 · 화면 읽기용 제목 하나만 */
     '<button type="button" class="stb-bub" id="stbBub" aria-label="다음 말 보기" onclick="stbSkip()">' +   /* 말풍선 = 단추(누르면 다 보이기 · 다음으로) · 읽어 주기는 아래 stbSr 한 줄 */
       '<span class="stb-tx" aria-hidden="true">' + (ln.tag ? '<span class="stb-tag" id="stbTag">' + ln.tag + "</span>" : '<span class="stb-tag" id="stbTag" hidden></span>') +
       '<span id="stbTx">' + esc(ln.t.slice(0, b.n)) + '</span></span><i class="stb-more' + (b.done ? " on" : "") + '" id="stbMore"></i></button>' +
@@ -454,6 +472,7 @@ function stbHop() {
   if (cn) { cn.textContent = STB_COUNT[b.hop - 1] || ""; cn.dataset.h = ab; }
   stb3Hop({ big: big, sway: sway });
   if (b.sty === "look" && b.hop === 3) { stbNext(function () { stb3Act("look"); stbBotAct("look"); stbNext(stbHop, STB_ACT_MS.look); }, STB_HOP_MS); return; }   /* 두리번 */
+  if (b.hop === STB_HOPS) stbSnd();   /* 261011 다섯 번째 점프에만 작은 「띠용」(소리 켠 사람만) */
   if (b.hop < STB_HOPS) stbNext(stbHop, STB_HOP_MS); else stbNext(stbFace, STB_HOP_MS + 150);
 }
 /* 앞으로 돌아섬 → 땀 쪼르륵 → 한마디 + 눈웃음 → 다 말하면 기다렸다 다시 돌아섬 */

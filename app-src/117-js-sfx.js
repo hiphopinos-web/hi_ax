@@ -64,7 +64,7 @@ function sfxNoise(dur, o) {
   src.connect(f); f.connect(g); g.connect(SFX.master); src.start(t); src.stop(t + dur + 0.02);
 }
 var SFX_LEN = { tick: 0.06, go: 0.35, fanfare: 0.75, over: 0.5, best: 0.45, click: 0.04, tok: 0.06, shook: 0.14, ppok: 0.14, cascade: 0.2, kwang: 0.4, ttuk: 0.1,
-  ppyong: 0.16, ppyong2: 0.16, ting: 0.22, puck: 0.14, hit: 0.12, tik: 0.05, floor: 0.12, level: 0.3, tak: 0.05, dingdong: 0.65, kung: 0.34,
+  ppyong: 0.16, ppyong2: 0.16, ppyongS: 0.16, ting: 0.22, puck: 0.14, hit: 0.12, tik: 0.05, floor: 0.12, level: 0.3, tak: 0.05, dingdong: 0.65, kung: 0.34,
   oxok: 0.22, oxup: 0.32, oxcrk: 0.08, oxsplash: 0.45, rgmiss: 0.16, rgcombo: 0.3, rglast: 0.45, scan: 0.2, rgpass: 0.3, rgjoin: 0.5, rgbonus: 0.6 };
 /* 이름 → 소리 · p = 연쇄 단계·콤보 등 */
 function sfxPlay(name, p) {
@@ -85,6 +85,7 @@ function sfxPlay(name, p) {
     case "ttuk": T(300, 0.08, { to: 170, type: "triangle", vol: 0.5 }); break;
     case "ppyong": T(380, 0.15, { to: 920, vol: 0.5 }); T(380, 0.1, { to: 900, type: "square", vol: 0.08 }); break;
     case "ppyong2": T(560, 0.15, { to: 1350, vol: 0.5 }); T(560, 0.1, { to: 1300, type: "square", vol: 0.08 }); break;
+    case "ppyongS": T(380, 0.15, { to: 920, vol: 0.16 }); T(380, 0.1, { to: 900, type: "square", vol: 0.03 }); break;   /* 261011 계단 동행 · 점프 「띠용」과 같은 합성 · 작은 볼륨 */
     case "ting": T(1976, 0.12, { vol: 0.42 }); T(2637, 0.18, { vol: 0.34, delay: 0.05 }); break;
     case "puck": T(190, 0.13, { to: 60, vol: 0.75 }); N(0.08, { filter: "lowpass", freq: 1300, vol: 0.5 }); break;
     case "hit": var fh = 700 * Math.pow(1.06, Math.min(12, p || 1));
