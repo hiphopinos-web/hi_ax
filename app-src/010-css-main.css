@@ -888,6 +888,9 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   /* v6.83 (사용자 261009 묶음 13 · 보충 2) 두 줄 이상 = 목록 모양 · 점 = 「하는 일」 목록과 같은 둥근 점 부품(값 = :root --axs-dot · --axs-dot-gap · --axs-dot-top 한 곳 · 글자 크기 비례) · 색 = 그 줄 글자색(무채색) · 꺾이면 점 뒤 글자 시작에 맞춰 들여쓰기 · 줄 간격 그대로 */
   .seglist > ax-seg { position: relative; display: block; padding-left: calc(var(--axs-dot) + var(--axs-dot-gap)); }
   .seglist > ax-seg::before, .seglist > ax-seg + ax-seg::before { content: ""; position: absolute; left: 0; top: var(--axs-dot-top); width: var(--axs-dot); height: var(--axs-dot); border-radius: 50%; background: currentColor; }
+  /* 261011 (사용자 「두 줄로」) 늘 목록 모양 = .segfix · 한 줄에 들어가도 조각마다 줄 머리 점(.seglist 와 같은 부품) */
+  .segfix > ax-seg { position: relative; display: block; padding-left: calc(var(--axs-dot) + var(--axs-dot-gap)); }
+  .segfix > ax-seg::before, .segfix > ax-seg + ax-seg::before { content: ""; position: absolute; left: 0; top: var(--axs-dot-top); width: var(--axs-dot); height: var(--axs-dot); border-radius: 50%; background: currentColor; }
   /* 섹션 제목 (카드 바깥) */
   .sect { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 9px 2px 6px; }
   .sect b { font-size: calc(15.5px * var(--fs)); font-weight: 800; color: var(--hi); }

@@ -1016,7 +1016,7 @@ function myAgendaHtml() {
       (cx1 ? '<p class="ax-meta">신청 취소는 신청 상세에서 할 수 있어요</p>' : "") + "</section>";
   }
   var head = n ? '<p class="ax-meta">10월 26일 · ' + n + "개</p>" : "";
-  if (!n) return '<section class="axs-msec" id="mysched">' + head + '<p class="ax-description">신청한 프로그램이 아직 없어요 · 17F 강연과 1F 전시는 신청 없이 갈 수 있어요</p>' +
+  if (!n) return '<section class="axs-msec" id="mysched">' + head + '<p class="ax-description segfix">' + segHtml("신청한 프로그램이 아직 없어요 · 17F 강연과 1F 전시는 신청 없이 갈 수 있어요") + '</p>' +
     '<button type="button" class="ax-button ax-button-weak" onclick="progAlwaysGo()">상시 운영 보기</button></section>';
   var cx = items.some(function (x) { return x.kind === "resv" || x.kind === "cchat"; });
   return '<section class="axs-msec" id="mysched">' + head +
