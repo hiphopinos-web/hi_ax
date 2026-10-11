@@ -1130,6 +1130,8 @@
    *   판 = 3D 소품과 같은 10칸 주황 사다리(디자인 시안/가상 1층/v2/build/prep_lm.py wheel.webp 와 같은 색 · 순서 · 테 · 가운데 흰 원) · 경품 이름 · 사진 없음 · 멈춘 칸을 말하지 않는다(가상 체험)
    *   v6.93 (사용자 261011 「빈 판이라 재미가 없다」 → 「등수 글자, 다만 예시라는 것을 좀 더 알려 줘」) 칸마다 「1등」~「5등」(SP_RK · 실제 룰렛 수량 60 · 140 · 210 · 210 · 340 비율을 10칸 최대 나머지 배분 = 1 · 1 · 2 · 2 · 4 · 같은 등수는 떨어뜨림)
    *     글자 = 칸 가운데 방향 · 위가 바깥(맨 위 칸이 바로 읽힘) · 짙은 글자 #191F28(가장 진한 칸 #FF7E31 위에서도 6.6:1) · 판 위 흰 알약 「체험용 룰렛」 · 멈춘 칸 강조 · 당첨 글 없음(문구 그대로) · 3D 소품 판은 그대로(구운 텍스처 · 멀리서 글자가 읽히지 않는다)
+   *   v6.94 (사용자 261011 「체험이니 기분 좋게 1등 당첨시켜 주자」 · v6.93 「멈춘 칸 강조 없음」을 바꿈) 늘 「1등」 칸에 멈춘다(spWin = 1등 칸 가운데 ± 11도 · 칸 경계에서 7도 안쪽) · 바퀴 수 4 ~ 5 + 남은 각 · 시간 3.6 ~ 4.2초 그대로
+   *     멈추면 1등 칸 흰 빛 · 테 깜빡임 1.1초(opacity 만 · .spwh.win .sphl) 뒤 켜진 채 · 움직임 줄이기 = 1등 칸이 바늘 아래인 멈춘 판 + 강조 정지 · 문구 · 「체험용 룰렛」 그대로 · 「1등 당첨」 · 경품 이름 글 없음
    *   끝 = 사진 찍기 폴라로이드와 같다(3.8초 뒤 저절로 · 아무 데나 톡 · Enter · Space · Esc) · 도는 동안 = 걷기 · 단추 · 화면 누름 · 키 막음(G.sheetOpen) · 뒤로(기기 · Esc) = 바로 닫힘(소리 · 타이머 정리)
    *   소리 = 둘러보기 음악 스위치를 따른다(포토부스 셔터와 같다 · Web Audio 합성 · 음원 파일 없음) · 서버 호출 · 스탬프 · 룰렛 1회권 기록 없음(HOST 를 부르지 않는다)
    *   움직임 줄이기 = 돌지 않고 멈춘 판 + 메시지 바로 · 「팡」 소리 한 번 · 종이 조각 · 빛 테 없음 */
@@ -1144,11 +1146,17 @@
       var a0 = i * 2 * Math.PI / SP_SEG, a1 = (i + 1) * 2 * Math.PI / SP_SEG;
       o += '<path d="M256 256L' + (c + r * Math.cos(a0)).toFixed(2) + ' ' + (c + r * Math.sin(a0)).toFixed(2) + 'A248 248 0 0 1 ' + (c + r * Math.cos(a1)).toFixed(2) + ' ' + (c + r * Math.sin(a1)).toFixed(2) + 'Z" fill="' + SP_COL[i % SP_COL.length] + '"/>';
     }
+    var w = SP_RK.indexOf('1등'), b0 = w * 2 * Math.PI / SP_SEG, b1 = (w + 1) * 2 * Math.PI / SP_SEG;   /* v6.94 1등 칸 강조 층(멈춘 뒤만 보임) */
+    o += '<path class="sphl" d="M256 256L' + (c + 236 * Math.cos(b0)).toFixed(2) + ' ' + (c + 236 * Math.sin(b0)).toFixed(2) + 'A236 236 0 0 1 ' + (c + 236 * Math.cos(b1)).toFixed(2) + ' ' + (c + 236 * Math.sin(b1)).toFixed(2) + 'Z" fill="#FFFFFF" fill-opacity=".4" stroke="#FFFFFF" stroke-width="10" stroke-linejoin="round"/>';
     for (var j = 0; j < SP_SEG; j++) {   /* v6.93 등수 글자 · 칸 가운데 각도 · 위 = 바깥 */
       var m = (j + 0.5) * 2 * Math.PI / SP_SEG, tx = (c + 168 * Math.cos(m)).toFixed(1), ty = (c + 168 * Math.sin(m)).toFixed(1);
       o += '<text x="' + tx + '" y="' + ty + '" transform="rotate(' + (m * 180 / Math.PI + 90).toFixed(1) + ' ' + tx + ' ' + ty + ')" text-anchor="middle" dominant-baseline="central" fill="#191F28" font-size="46" font-weight="800" letter-spacing="-1">' + SP_RK[j] + '</text>';
     }
     return o + '<circle cx="256" cy="256" r="242" fill="none" stroke="#FF7E31" stroke-width="12"/><circle cx="256" cy="256" r="30" fill="#FFFFFF"/></svg>';
+  }
+  function spWin() {   /* v6.94 1등 칸 가운데가 바늘(12시 = 270도) 아래 오는 판 각도 ± (반 칸 - 7도) */
+    var i = SP_RK.indexOf('1등'), s = 360 / SP_SEG;
+    return ((270 - (i + 0.5) * s + (Math.random() * 2 - 1) * (s / 2 - 7)) % 360 + 360) % 360;
   }
   function spNear() {
     if (!G.loaded || G.scn !== 'lobby' || G.anim || G.sheetOpen || G.mapMode || G.bigMap || SH || G.squeeze || PH.on || PH.near || SP.on || EV.seq) return false;
@@ -1186,12 +1194,12 @@
     $('spg').hidden = true; SP.near = false; $('look').hidden = true; lookFrame(null);
     setRun(false); G.runKey = false; G.stick = null; G.path = null; G.goal = null; G.tapAct = null; G.mode = 'free'; $('dest').hidden = true; G.push = 0; G.pushK = 0; HOLD = null;
     G.sheetOpen = true;   /* 연출 동안 = 걷기 · 점프 · 화면 누름 · 다른 단추 · 키 막음(스탬프 카드와 같은 잠금) */
-    $('spfx').innerHTML = ''; $('spm').textContent = ''; $('spwh').classList.remove('hit');
+    $('spfx').innerHTML = ''; $('spm').textContent = ''; $('spwh').classList.remove('hit', 'win');
     SP.a0 = SP.ang % 360; spSet(SP.a0); SP.seg = Math.floor(SP.a0 / (360 / SP_SEG));
     ov.hidden = false; ov.classList.remove('out', 'done', 'in'); void ov.offsetWidth; if (!RM) ov.classList.add('in');
     try { ov.focus({ preventScroll: true }); } catch (e) {}
-    if (RM) { SP.A = 0; spSet(Math.random() * 360); spStop(performance.now()); return; }   /* 움직임 줄이기 = 돌지 않고 멈춘 판 + 메시지 바로 */
-    SP.A = 360 * 5 + Math.random() * 360; SP.dur = 3600 + Math.round(Math.random() * 600);
+    if (RM) { SP.A = 0; spSet(spWin()); spStop(performance.now()); return; }   /* 움직임 줄이기 = 돌지 않고 멈춘 판 + 메시지 바로 */
+    SP.A = 360 * (4 + Math.floor(Math.random() * 2)) + ((spWin() - SP.a0) % 360 + 360) % 360; SP.dur = 3600 + Math.round(Math.random() * 600);
     spLater(function () { if (!SP.on || SP.ph !== 'in') return; SP.ph = 'spin'; SP.st = performance.now(); spLog('spin'); SP.raf = requestAnimationFrame(spFrame); }, SP_IN);
   }
   function spSet(a) { SP.ang = a; $('spd').style.transform = 'rotate(' + a.toFixed(2) + 'deg)'; }
@@ -1209,6 +1217,7 @@
     SP.ph = 'done'; SP.stopMs = Math.round(now - SP.t0); spLog('stop');
     SP.pang = spPang();
     if (!RM) { var wh = $('spwh'); wh.classList.remove('hit'); void wh.offsetWidth; wh.classList.add('hit'); spBurst(); }
+    $('spwh').classList.add('win');   /* v6.94 1등 칸 강조 */
     $('spm').innerHTML = '<span>' + SP_MSG[0] + '</span><span>' + SP_MSG[1] + '</span>';
     ov.classList.add('done');
     spLater(function () { spClose(); }, SP_POP);
@@ -1268,7 +1277,7 @@
   }
   function spEnd() {
     spKill(false);
-    var ov = $('spov'); ov.hidden = true; ov.classList.remove('in', 'out', 'done'); $('spfx').innerHTML = ''; $('spm').textContent = ''; $('spwh').classList.remove('hit');
+    var ov = $('spov'); ov.hidden = true; ov.classList.remove('in', 'out', 'done'); $('spfx').innerHTML = ''; $('spm').textContent = ''; $('spwh').classList.remove('hit', 'win');
     SP.on = false; SP.ph = ''; G.sheetOpen = false; G.guardT = performance.now(); G.need = true; G.last = 0; spLog('end');
   }
   function spAbort() {   /* 둘러보기를 닫을 때 · 연출 중이면 바로 정리 */
@@ -5259,5 +5268,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v6.93', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v6.94', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();
