@@ -16,7 +16,7 @@ var STB_SAVE_MS = 8 * 60000, STB_REST_MS = 15 * 60000, STB_FIX_MS = 20 * 60000;
 var STB_COUNT = ["하나", "둘", "셋", "넷", "다섯"];
 var STB_HELLO = "화면을 켜 두면 제가 같이 갈게요";   /* 261011 (사용자 「권장대로」) 위 고정 안내가 「화면을 꺼도 기록은 이어져요」라 첫 말을 맞춤 · 옛 「같이 가요! 화면은 켠 채로 두세요」 */
 /* 261011 (사용자 「권장대로」 · 50대 수석 관점 검토) 화면 맨 위 고정 안내(움직이지 않음 · 타자 효과 없음 · 본문 크기 · 큰 글씨 배율 따름) · 18F 출발 = 내려가기 */
-var STB_INTRO = { up: "계단 오르기를 시작했어요", down: "계단 내려가기를 시작했어요", lines: ["화면을 꺼도 기록은 이어져요", "도착 층 방화문 앞 QR을 찍으면 끝나요"] };
+var STB_INTRO = { head: "계단 이용을 시작했어요", lines: ["화면을 꺼도 기록은 이어져요", "도착 층 방화문 앞 QR로 끝나요"] };   /* 261011 사용자 「모든 층 계단 이용 · QR로 끝나요」(오르내림 구분 없음 · 360 큰 글씨 한 줄) */
 /* 261011 (사용자 「B 권장으로 가자」) 계단 동행 소리 · 기본 무음(game_sound 가 true 일 때만 · 고른 적 없으면 무음) · 안내 줄 오른쪽 작은 스피커 단추(게임 소리와 같은 한 값)
    켜면 한 고리(점프 5번)의 다섯 번째 점프에만 작은 「띠용」 한 번(점프 게임 ppyong 과 같은 합성 · 작은 볼륨 ppyongS) · 도착 「쿵」 그대로
    8분 절약 · 15분 쉼 · 동작 줄이기 · 화면 숨김 · 계단 동행 밖 = 소리 없음(점프가 없고 · stbSnd 가 한 번 더 막는다) · 음원 파일 없음 */
@@ -155,7 +155,7 @@ function stbHtml(o, s, since) {
   var b = stbEnsure(since), down = stbDown(), ln = b.line || { t: "" };
   if (!b.rest && stbAge() >= STB_REST_MS) stbRestLine(b);
   return '<h1 class="stb-sr">계단 동행 · ' + esc(o.fl) + "F 출발</h1>" +   /* 261011 QR 안내는 아래 고정 안내가 읽힌다(겹쳐 읽지 않게 제목에서 뺌) */
-    '<div class="stb-in"><div class="stb-ihr"><p class="stb-ih">' + (down ? STB_INTRO.down : STB_INTRO.up) + "</p>" + stbSndHtml() + "</div>" +
+    '<div class="stb-in"><div class="stb-ihr"><p class="stb-ih">' + STB_INTRO.head + "</p>" + stbSndHtml() + "</div>" +
       '<p class="stb-il segfix">' + STB_INTRO.lines.map(function (t) { return "<ax-seg>" + t + "</ax-seg>"; }).join("") + "</p></div>" +   /* 5차(사용자 「상단 정보는 크게 필요 없다」) 층 · 경로 · 시작 시각 줄 걷음 · 화면 읽기용 제목 하나만 */
     '<button type="button" class="stb-bub" id="stbBub" aria-label="다음 말 보기" onclick="stbSkip()">' +   /* 말풍선 = 단추(누르면 다 보이기 · 다음으로) · 읽어 주기는 아래 stbSr 한 줄 */
       '<span class="stb-tx" aria-hidden="true">' + (ln.tag ? '<span class="stb-tag" id="stbTag">' + ln.tag + "</span>" : '<span class="stb-tag" id="stbTag" hidden></span>') +
