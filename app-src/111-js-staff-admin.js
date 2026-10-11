@@ -322,52 +322,83 @@ function crowdSend(t, a) {
 /* ════════ 261008 「지금 현장」 스태프 제보 (사용자 결정 261008 · 기획 `디자인 시안/혼잡도 재설계 261008/기획안.md` 6장) ════════
  * 진입 = 홈 2×2 칸(앱 스태프 명단 사번 · staffBtn) · 스캔 화면 자리 칩 옆 「줄」(룰렛 · AX PLAY 자리) · 관리자 모드로 또 들어가지 않는다
  *   이 폰에서 코드를 아직 안 넣었으면 처음 한 번만(sscCodeAsk · 이어서 이 시트) · 등급코드 · 관리코드 · 사람 토큰 모두 된다(서버 gradeAuth_)
- * 시트 = 숫자 5단추(룰렛 · 포토부스 0 · 5 · 10 · 15 · 20+ / AX PLAY 0 · 2 · 4 · 6 · 8+) · 17F = 5단계 세로 한 줄(엄지 · 단계마다 보고 누르는 기준 작은 글씨)
- *   누르는 순간 저장(확인 단추 없음 · crowd_rep set) · 시트가 닫히고 5초 「저장됨 · 되돌리기」 · 시트 안 「되돌리기」(2분 안) | 「자동으로」(제보 지움)
- *   전송 실패 = 「전송 실패 · 다시 눌러주세요」 · 자동 재전송 없음(늦게 닿은 값이 되살아나지 않게)
- * 처리 시간 재기(룰렛 · 포토부스 · AX PLAY) = 「시작」 → 시트가 닫혀도 아래 칩 「재는 중 · 12초 · 끝」 → 「끝」 = crowd_cal 한 건(5초 미만 · 300초 넘음은 버린다) */
+ * 17F = 5단계 세로 한 줄(엄지 · 단계마다 보고 누르는 기준 작은 글씨) · 누르는 순간 저장
+ * v6.92 (사용자 261011 「혼잡도 제보가 너무 듬성듬성이다 · 두 가지 옵션 · 혼잡도(단계를 직접) 또는 대기 인원 · 시간 재기 시작은 없애고 체험 시간 입력창」) 룰렛 · 포토부스 · AX PLAY
+ *   위 = 방식 전환 「혼잡도 | 대기 인원」(axs-seg · 이 폰에서 마지막 쓴 쪽 = 기기 키 cn_mode · STORE_DEVICE)
+ *   혼잡도 = 「여유 · 보통 · 혼잡」 큰 단추 3개(17F 단계 단추 문법 · 색 = 칸 색과 같은 뜻) · 누르는 순간 저장(crowd_rep set lv) · 참가자 칸 = 단계만(예상 분 없음 · 서버 d 1)
+ *   대기 인원 = 숫자 칸(inputmode numeric · 0~99) + 양옆 −/+(1명씩) + 「저장」(crowd_rep set v) · 단계 · 예상 분 = 서버 계산 그대로
+ *   저장 뒤 = 시트가 닫히고 5초 「저장됨 · 되돌리기」 · 시트 안 「되돌리기」(2분 안) | 「자동으로」(제보 지움) · 전송 실패 = 「전송 실패 · 다시 눌러주세요」 · 자동 재전송 없음(늦게 닿은 값이 되살아나지 않게)
+ *   아래 = 「1인 체험 시간」 숫자 칸(초 · 5~300 · 지금 적용 값으로 채움) + 「저장」 = 오늘 처리 시간을 그 값으로 덮어쓴다(crowd_cal op set) · 옛 「시간 재기 시작」 · 재는 중 칩(cnSw*)은 지웠다(되살리기 = hi_ax v6.91) */
 var CN_NM = { r: "1F 룰렛", p: "1F 포토부스", a: "1F AX PLAY", h: "17F 대강당" };
-var CN_VS = { r: [0, 5, 10, 15, 20], p: [0, 5, 10, 15, 20], a: [0, 2, 4, 6, 8] };
 var CN_HSTD = ["", "30% 이하", "절반쯤", "70%쯤", "90%쯤 · 띄엄띄엄 빈자리", "빈자리 없음 · 서서 듣는 사람"];
-var CNS = { k: "", busy: false, ut: {}, last: {}, sw: null, swT: null, undoT: null };
+var CN_DLV = [["ok", "여유", "cn-lv1"], ["mid", "보통", "cn-lv2"], ["jam", "혼잡", "cn-lv4"]];   /* 단계 직접값 · 참가자 칸과 같은 이름 · 색 = 여유 흰 면 · 보통 brandSoft · 혼잡 errorSoft(17F 단추와 같은 뜻) */
+var CN_NMAX = 99, CN_TMIN = 5, CN_TMAX = 300;
+var CNS = { k: "", busy: false, ut: {}, last: {}, undoT: null, nv: {}, tv: {} };
 function cnNow() { return Date.now() + (typeof sesOff === "function" ? sesOff() : 0); }
 function cnAuthed() { return !!(admTok() || admKey()); }
+function cnMode() { return S.get("cn_mode", "lv") === "n" ? "n" : "lv"; }
 function cnSheet(k) {
   if (!CN_NM[k]) return;
   if (!BE.on) { toast("서버에 연결되지 않아 기록되지 않아요"); return; }
   if (!cnAuthed()) { SSC_CK.then = function () { cnSheet(k); }; sscCodeAsk(); return; }
-  CNS.k = k;
+  CNS.k = k; CNS.nv[k] = null; CNS.tv[k] = null;
+  cnUndoBarOff();   /* v6.92 저장 직후 5초 줄(z 95)이 시트(z 70) 아래쪽 입력 · 저장 단추를 덮어 「되돌리기」가 눌리던 것 · 시트 안 「되돌리기」가 같은 일을 한다 */
   sheetOpen(cnSpec(k));
 }
-function cnSpec(k) { return { id: "cn", title: k === "h" ? "17F 대강당 · 자리" : k === "a" ? "1F AX PLAY · 기다리는 사람" : CN_NM[k] + " · 줄 몇 명?", body: cnBody(k), noGo: true }; }
+function cnSpec(k) { return { id: "cn", title: k === "h" ? "17F 대강당 · 자리" : CN_NM[k] + " · 제보", body: cnBody(k), noGo: true }; }
 function cnRepaint() { if (SHEET.id === "cn" && SHEET.spec && el("axsSheet")) { SHEET.spec.body = cnBody(CNS.k); sheetPaint(); } }
+var CN_MINUS = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>';
+var CN_PLUS = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg>';
 function cnBody(k) {
   var x = cnCell(k), n = cnGet() || {}, now = cnNow(), ut = CNS.ut[k] > now, dis = CNS.busy ? " disabled" : "";
   var cur = x.cls === " none" ? "정보 없음" : x.st + (x.sub ? " · " + x.sub : "");
   var head = '<p class="cn-now">지금 <b>' + esc(cur) + "</b></p>";
-  var pad;
-  if (k === "h") {
-    pad = '<div class="cn-lv" role="group" aria-label="17F 대강당 자리">' + [1, 2, 3, 4, 5].map(function (v) {
-      return '<button type="button" class="cn-lv' + v + '"' + dis + ' onclick="cnSend(\'h\', ' + v + ')"><b>' + CN_HLV[v] + "</b><span>" + CN_HSTD[v] + "</span></button>";
-    }).join("") + "</div>";
-  } else {
-    pad = '<div class="cn-num" role="group" aria-label="' + CN_NM[k] + (k === "a" ? " 기다리는 사람" : " 줄 인원") + '">' + CN_VS[k].map(function (v, i) {
-      return '<button type="button"' + dis + ' onclick="cnSend(\'' + k + '\', ' + v + ')">' + v + (i === 4 ? "+" : "") + "</button>";
-    }).join("") + "</div>";
-  }
   var lr = CNS.last[k], sx = n[k] && typeof n[k] === "object" ? n[k] : null;
   var who = lr && lr.at > now - 900000 ? "제보 " + crowdHm(lr.at) + " · " + lr.txt : !sx ? "제보 없음" : sx.s === "q" ? "입장 QR 하한 · 제보 없음" : sx.s === "a" ? "룰렛 스캔 기록 · 자동" : "제보 " + crowdHm(sx.at);
   var foot = '<div class="cn-row"><span>' + esc(who) + "</span>" +
     (ut ? '<button type="button"' + dis + ' onclick="cnUndo(\'' + k + '\')">되돌리기</button>' : '<button type="button"' + dis + ' onclick="cnAuto(\'' + k + '\')">자동으로</button>') + "</div>";
-  var sw = "";
-  if (k !== "h") {
-    var c = n.cal && n.cal[k], run = CNS.sw && CNS.sw.k === k;
-    sw = '<div class="cn-row"><span>처리 시간 ' + (c ? c[0] + "초 · 오늘 재기 " + c[1] : "사전값") + "</span></div>" +
-      '<button type="button" class="cn-swgo' + (run ? " rec" : "") + '" onclick="' + (run ? "cnSwEnd()" : "cnSwStart('" + k + "')") + '">' + (run ? "끝 · " + cnSwSec() + "초" : "시간 재기 시작") + "</button>";
+  if (k === "h") {
+    return head + '<div class="cn-lv" role="group" aria-label="17F 대강당 자리">' + [1, 2, 3, 4, 5].map(function (v) {
+      return '<button type="button" class="cn-lv' + v + '"' + dis + ' onclick="cnSend(\'h\', ' + v + ')"><b>' + CN_HLV[v] + "</b><span>" + CN_HSTD[v] + "</span></button>";
+    }).join("") + "</div>" + foot;
   }
-  return head + pad + foot + sw;
+  var md = cnMode(), seg = '<div class="axs-seg cn-seg" role="tablist" aria-label="제보 방식">' + [["lv", "혼잡도"], ["n", "대기 인원"]].map(function (t) {
+    return '<button type="button" role="tab" aria-selected="' + (md === t[0]) + '" onclick="cnModeSet(\'' + t[0] + '\', this)">' + t[1] + "</button>";
+  }).join("") + "</div>";
+  var pad, nmLb = k === "a" ? "기다리는 사람" : "줄 인원";
+  if (md === "lv") {
+    pad = '<div class="cn-lv cn-dlv" role="group" aria-label="' + CN_NM[k] + ' 혼잡도">' + CN_DLV.map(function (d) {
+      return '<button type="button" class="' + d[2] + '"' + dis + ' onclick="cnSendLv(\'' + k + '\', \'' + d[0] + '\')"><b>' + d[1] + "</b></button>";
+    }).join("") + "</div>";
+  } else {
+    var nv = CNS.nv[k] != null ? CNS.nv[k] : sx && sx.s === "s" && !sx.d && sx.q != null ? Number(sx.q) : 0;
+    pad = '<div class="cn-cnt" role="group" aria-label="' + CN_NM[k] + " " + nmLb + '">' +
+      '<button type="button" class="st"' + dis + ' onclick="cnStep(\'' + k + '\', -1)" aria-label="1명 빼기">' + CN_MINUS + "</button>" +
+      '<label class="cn-nbox"><span class="ax-sr-only">' + nmLb + '(명)</span><input id="cnN" class="ax-field" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" enterkeyhint="done" autocomplete="off" value="' + nv + '" oninput="cnNIn(\'' + k + '\', this)" onkeydown="onEnter(event, function () { cnSendN(\'' + k + '\'); })"><span class="u" aria-hidden="true">명</span></label>' +
+      '<button type="button" class="st"' + dis + ' onclick="cnStep(\'' + k + '\', 1)" aria-label="1명 더하기">' + CN_PLUS + "</button></div>" +
+      '<button type="button" class="ax-button cn-nsave"' + dis + ' onclick="cnSendN(\'' + k + '\')">저장</button>';
+  }
+  var c = n.cal && n.cal[k], tv = CNS.tv[k] != null ? CNS.tv[k] : c ? c[0] : "";
+  var tst = !c ? "" : typeof c[2] === "string" && c[2] ? "지금 " + c[0] + "초 · " + c[2] + " 입력" : c[2] === 1 ? "지금 " + c[0] + "초" : "사전값 " + c[0] + "초";   /* 서버 sync crowd.n.cal = [초, 재기 수] + 셋째(입력 HH:MM · 재기 · 스캔 자동 1 · 사전값 없음) */
+  var tm = '<div class="cn-tm"><p class="cn-tmh"><b>1인 체험 시간</b>' + (tst ? "<span>" + esc(tst) + "</span>" : "") + "</p>" +
+    '<div class="cn-tmr"><label class="cn-tbox"><span class="ax-sr-only">1인 체험 시간(초)</span><input id="cnT" class="ax-field" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" enterkeyhint="done" autocomplete="off" value="' + tv + '" oninput="cnTIn(\'' + k + '\', this)" onkeydown="onEnter(event, function () { cnCalSet(\'' + k + '\'); })"><span class="u" aria-hidden="true">초</span></label>' +
+    '<button type="button" class="ax-button ax-button-weak cn-tsave"' + dis + ' onclick="cnCalSet(\'' + k + '\')">저장</button></div></div>';
+  return head + seg + '<div class="cn-pane">' + pad + "</div>" + foot + tm;
 }
-function cnValTxt(k, v) { return k === "h" ? CN_HLV[v] : (k === "a" ? "기다림 " : "줄 ") + v + (v === CN_VS[k][4] ? "+" : "") + "명"; }
+function cnModeSet(md, b) {
+  if (cnMode() === md) return;
+  AXM.seg(b, function () { S.put("cn_mode", md); cnRepaint(); });
+}
+function cnDigits(v, mx) { return String(v || "").replace(/[^0-9]/g, "").slice(0, mx); }
+function cnNIn(k, inp) { var d = cnDigits(inp.value, 2); if (d !== inp.value) inp.value = d; CNS.nv[k] = d; }
+function cnTIn(k, inp) { var d = cnDigits(inp.value, 3); if (d !== inp.value) inp.value = d; CNS.tv[k] = d; }
+function cnStep(k, dv) {
+  var inp = el("cnN"), v = parseInt(inp ? inp.value : CNS.nv[k], 10);
+  v = Math.max(0, Math.min(CN_NMAX, (isNaN(v) ? 0 : v) + dv));
+  CNS.nv[k] = String(v); if (inp) inp.value = v;
+}
+function cnValTxt(k, v) { return k === "h" ? CN_HLV[v] : (k === "a" ? "기다림 " : "줄 ") + v + "명"; }
+function cnLvTxt(lv) { var d = CN_DLV.filter(function (x) { return x[0] === lv; })[0]; return "혼잡도 " + (d ? d[1] : ""); }
 function cnCall(q, ok) {
   if (CNS.busy) return;
   CNS.busy = true; cnRepaint();
@@ -375,7 +406,7 @@ function cnCall(q, ok) {
     CNS.busy = false;
     if (res && res.reason === "auth") { sheetClose(true); admAuthLost(); return; }
     if (!res || !res.ok) {
-      toast(res && res.reason === "locked" ? admLockedMsg(res) : res && res.reason === "late" ? "되돌릴 수 있는 시간이 지났어요" : res && /unknown action/.test(String(res.err || "")) ? "이 서버는 아직 지금 현장 제보를 받지 않아요" : "전송 실패 · 다시 눌러주세요");
+      toast(res && res.reason === "locked" ? admLockedMsg(res) : res && res.reason === "late" ? "되돌릴 수 있는 시간이 지났어요" : res && (res.reason === "v" || res.reason === "op") ? "이 서버는 아직 이 방식을 받지 않아요" : res && /unknown action/.test(String(res.err || "")) ? "이 서버는 아직 지금 현장 제보를 받지 않아요" : "전송 실패 · 다시 눌러주세요");
       if (res && res.crowd) crowdStore(res.crowd);
       cnRepaint(); return;
     }
@@ -383,12 +414,25 @@ function cnCall(q, ok) {
     ok(res);
   }, function () { CNS.busy = false; toast("전송 실패 · 다시 눌러주세요"); cnRepaint(); });
 }
-function cnSend(k, v) {
-  cnCall({ action: "crowd_rep", tgt: k, v: v, op: "set" }, function (res) {
-    var now = cnNow();
-    CNS.ut[k] = res.ut || now + 120000; CNS.last[k] = { at: now, txt: cnValTxt(k, v) };
-    sheetClose(true);
-    cnUndoBar(k, CN_NM[k] + " · " + cnValTxt(k, v) + " · 저장됨");
+function cnSaved(k, res, txt) {
+  var now = cnNow();
+  CNS.ut[k] = res.ut || now + 120000; CNS.last[k] = { at: now, txt: txt }; CNS.nv[k] = null;
+  sheetClose(true);
+  cnUndoBar(k, CN_NM[k] + " · " + txt + " · 저장됨");
+}
+function cnSend(k, v) { cnCall({ action: "crowd_rep", tgt: k, v: v, op: "set" }, function (res) { cnSaved(k, res, cnValTxt(k, v)); }); }
+function cnSendLv(k, lv) { cnCall({ action: "crowd_rep", tgt: k, lv: lv, op: "set" }, function (res) { cnSaved(k, res, cnLvTxt(lv)); }); }
+function cnSendN(k) {
+  var inp = el("cnN"), raw = cnDigits(inp ? inp.value : CNS.nv[k], 2), v = parseInt(raw, 10);
+  if (raw === "" || isNaN(v) || v < 0 || v > CN_NMAX) { toast("0 ~ " + CN_NMAX + "명으로 넣어 주세요"); return; }
+  cnSend(k, v);
+}
+function cnCalSet(k) {
+  var inp = el("cnT"), raw = cnDigits(inp ? inp.value : CNS.tv[k], 3), sec = parseInt(raw, 10);
+  if (raw === "" || isNaN(sec) || sec < CN_TMIN || sec > CN_TMAX) { toast(CN_TMIN + " ~ " + CN_TMAX + "초로 넣어 주세요"); return; }
+  cnCall({ action: "crowd_cal", tgt: k, sec: sec, op: "set" }, function (res) {
+    if (!res.set) { toast("이 서버는 아직 체험 시간 입력을 받지 않아요"); cnRepaint(); return; }   /* 옛 서버 = 한 건 더하기로만 들어갔다 */
+    CNS.tv[k] = null; toast(CN_NM[k] + " · 1인 " + sec + "초 저장"); cnRepaint();
   });
 }
 function cnUndo(k) {
@@ -407,30 +451,6 @@ function cnUndoBar(k, msg) {
   CNS.undoT = setTimeout(cnUndoBarOff, 5000);
 }
 function cnUndoBarOff() { if (CNS.undoT) { clearTimeout(CNS.undoT); CNS.undoT = null; } var b = el("cnUndo"); if (b && b.parentNode) b.parentNode.removeChild(b); }
-/* 처리 시간 재기 · 시작 → 떠 있는 칩 → 끝 */
-function cnSwSec() { return CNS.sw ? Math.max(0, Math.round((Date.now() - CNS.sw.t0) / 1000)) : 0; }
-function cnSwStart(k) {
-  CNS.sw = { k: k, t0: Date.now() };
-  sheetClose(true);
-  cnSwPaint();
-  if (CNS.swT) clearInterval(CNS.swT);
-  CNS.swT = setInterval(cnSwPaint, 1000);
-}
-function cnSwPaint() {
-  var c = el("cnSw");
-  if (!CNS.sw) { if (c && c.parentNode) c.parentNode.removeChild(c); return; }
-  if (!c) { c = document.createElement("div"); c.id = "cnSw"; c.className = "cn-sw"; c.setAttribute("role", "status"); el("frame").appendChild(c); }
-  c.innerHTML = "<span>" + esc(CN_NM[CNS.sw.k]) + " · 재는 중 <b>" + cnSwSec() + '초</b></span><button type="button" class="x" onclick="cnSwStop()" aria-label="재기 취소">' + X_SVG + '</button><button type="button" class="go" onclick="cnSwEnd()">끝</button>';
-  if (SHEET.id === "cn") cnRepaint();
-}
-function cnSwStop() { if (CNS.swT) clearInterval(CNS.swT); CNS.swT = null; CNS.sw = null; cnSwPaint(); cnRepaint(); }
-function cnSwEnd() {
-  if (!CNS.sw) return;
-  var k = CNS.sw.k, sec = cnSwSec();
-  cnSwStop();
-  if (sec < 5 || sec > 300) { toast("5초 ~ 300초만 기록해요 · 다시 재 주세요"); return; }
-  cnCall({ action: "crowd_cal", tgt: k, sec: sec }, function (res) { toast(CN_NM[k] + " · " + sec + "초 기록 · 오늘 " + ((res.cal && res.cal.k) || 1) + "건"); cnRepaint(); });
-}
 function cnAdmNote() { return '<section class="ax-card ax-stack-tight axs-gap12"><h2 class="ax-card-title">지금 현장 제보</h2><p class="ax-meta">홈 「지금 현장」 칸을 눌러 제보해요</p><button type="button" class="ax-button" onclick="App.go(\'home\')">홈으로</button></section>'; }
 function sscCnBtn(sp) {
   var k = sp && sp.id === "roulette" ? "r" : sp && sp.id === "p2" ? "a" : "";

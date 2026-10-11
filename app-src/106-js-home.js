@@ -187,6 +187,7 @@ function cnTest() { return typeof testEmp === "function" && testEmp() === true; 
 function cnStaff() { return typeof staffBtn === "function" && staffBtn() === true; }
 function cnSub(k, x) {
   if (k === "h") return crowdHm(x.at) + " 기준";
+  if (x.d) return "";   /* v6.92 스태프가 단계를 직접 넣은 값 = 단계만(예상 분 · 자리 있음을 만들지 않는다) */
   if (k === "a") { if (!x.q) return "자리 있음"; var m = Math.max(1, Math.round(x.m)); return m >= 5 ? "대기 5분 이상" : "대기 약 " + m + "분"; }
   if (!(x.m >= 2.5)) return "바로 가능";
   var r = Math.round(x.m / 5) * 5;
@@ -205,7 +206,7 @@ function cnRand() {
   var now = Date.now(), b = Math.floor(now / 60000);
   if (CN_RND.n && CN_RND.b === b) return CN_RND.n;
   var rn = function (a, z) { return a + Math.floor(Math.random() * (z - a + 1)); }, pk = function () { return ["ok", "mid", "jam"][rn(0, 2)]; }, ag = function () { return now - rn(0, 3) * 60000; };
-  var q = function () { var lv = pk(); return { lv: lv, m: lv === "ok" ? rn(0, 2) : lv === "mid" ? rn(3, 10) : rn(11, 22), at: ag() }; };
+  var q = function () { var lv = pk(); return rn(0, 2) ? { lv: lv, m: lv === "ok" ? rn(0, 2) : lv === "mid" ? rn(3, 10) : rn(11, 22), at: ag() } : { lv: lv, d: 1, at: ag() }; };   /* v6.92 셋 중 하나 = 단계 직접값(d · 예상 분 없음) */
   var la = pk(), n = { on: 1, r: q(), p: q(), a: { lv: la, q: la === "ok" ? 0 : 1, m: la === "ok" ? 0 : la === "mid" ? rn(1, 3) : rn(4, 8), at: ag() }, h: { lv: rn(1, 5), at: ag() } };
   CN_RND = { b: b, n: n };
   return n;
