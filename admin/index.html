@@ -2888,13 +2888,13 @@ function rqDone(id, res){
 
 /* ══ 21. 현장 › 지금 현장 (crowd_now · crowd_rep · crowd_now_set) ══ */
 var CN_NMS={ r:"1F 룰렛", p:"1F 포토부스", a:"1F AX PLAY", h:"17F 대강당" }, CN_VSA={ r:[0,5,10,15,20], p:[0,5,10,15,20], a:[0,2,4,6,8], h:[1,2,3,4,5] };
-var CN_HLVA=["","여유","보통","붐빔","거의 만석","만석"], CN_SRC={ base:"사전값 사용", cal:"재기 반영", auto:"스캔 자동" };
-function cnHm(t){ var m=String(t||"").match(/(\d{2}):(\d{2})/); return m?m[1]+":"+m[2]:"-"; }
+var CN_HLVA=["","여유","보통","붐빔","거의 만석","만석"], CN_SRC={ base:"사전값 사용", cal:"재기 반영", auto:"스캔 자동", set:"입력" };
+function cnHm(t){ if(+t>1e12){ var d=new Date(+t); t=d.getHours()+":"+(d.getMinutes()+100+"").slice(1); t=(t.length<5?"0":"")+t; } var m=String(t||"").match(/(\d{2}):(\d{2})/); return m?m[1]+":"+m[2]:"-"; }
 function cnCell(k, x){
   if(!x) return tag("정보 없음");
   if(k==="h"){ var lv=Math.max(1,Math.min(5,Number(x.lv)||1)); return tag(CN_HLVA[lv], lv>=4?"bad":lv>=2?"warn":"ok")+' <span class="cap">'+esc(cnHm(x.at))+' · '+(x.s==="q"?"입장 QR 하한":"스태프")+'</span>'; }
-  var st=x.lv==="jam"?"혼잡":x.lv==="mid"?"보통":"여유", sub=k==="a"?(x.q?"대기 약 "+Math.max(1,Math.round(x.m))+"분":"자리 있음"):(x.m<2.5?"바로 가능":"약 "+Math.min(20,Math.round(x.m/5)*5)+"분");
-  return tag(st, x.lv==="jam"?"bad":x.lv==="mid"?"warn":"ok")+' <span class="cap">'+esc(sub)+' · '+esc(x.q)+'명 · '+(x.s==="a"?"스캔 자동":"제보 "+esc(cnHm(x.at)))+'</span>';
+  var st=x.lv==="jam"?"혼잡":x.lv==="mid"?"보통":"여유", sub=x.d?"직접 입력":k==="a"?(x.q?"대기 약 "+Math.max(1,Math.round(x.m))+"분":"자리 있음"):(x.m<2.5?"바로 가능":"약 "+Math.min(20,Math.round(x.m/5)*5)+"분");
+  return tag(st, x.lv==="jam"?"bad":x.lv==="mid"?"warn":"ok")+' <span class="cap">'+esc(sub)+(x.q!=null?' · '+esc(x.q)+'명':'')+' · '+(x.s==="a"?"스캔 자동":"제보 "+esc(cnHm(x.at)))+'</span>';
 }
 VIEWS.crowd={
   need:function(){ return [{ k:"cnow", a:"crowd_now", ttl:15000 }]; },
@@ -2908,8 +2908,8 @@ VIEWS.crowd={
     var tg=d.tg||{}, cf=d.cfg||{}, nw=d.now||Date.now();
     var rows=["r","p","a","h"].map(function(k){
       var o=tg[k]||{}, rep=o.rep, cal=o.cal, left=rep?Math.max(1,Math.ceil((rep.x-nw)/60000)):0;
-      var tTx=k==="h"?(o.qr?'입장 QR <b class="n">'+esc(o.qr.n)+'</b>명 × '+esc(o.qr.coef)+' = '+esc(o.qr.pct)+'% → '+esc(CN_HLVA[o.qr.lv]):'QR 하한 없음(오후 강연 입장 창 밖)')+' · 스태프 '+(o.staff?esc(CN_HLVA[o.staff]):"없음"):cal?'<b class="n">'+esc(cal.t)+'초</b> '+esc(CN_SRC[cal.src]||cal.src)+' · 사전값 '+esc(cal.pre)+'초 · 오늘 재기 '+esc(cal.k)+'건 · 동시 '+esc(o.c):'';
-      var btns=CN_VSA[k].map(function(v,i){ return '<button class="btn sm" data-qa="cn.rep" onclick="cnRep(\''+k+'\','+v+')">'+(k==="h"?CN_HLVA[v]:v+(i===4?"+":""))+'</button>'; }).join("")+'<button class="btn sm ghost" data-qa="cn.auto" onclick="cnRepOp(\''+k+'\',\'auto\')">자동으로</button>'+(o.ut?'<button class="btn sm danger" data-qa="cn.undo" onclick="cnRepOp(\''+k+'\',\'undo\')">되돌리기</button>':'');
+      var tTx=k==="h"?(o.qr?'입장 QR <b class="n">'+esc(o.qr.n)+'</b>명 × '+esc(o.qr.coef)+' = '+esc(o.qr.pct)+'% → '+esc(CN_HLVA[o.qr.lv]):'QR 하한 없음(오후 강연 입장 창 밖)')+' · 스태프 '+(o.staff?esc(CN_HLVA[o.staff]):"없음"):cal?'<b class="n">'+esc(cal.t)+'초</b> '+esc(CN_SRC[cal.src]||cal.src)+(cal.set?(cal.src==="set"?'':' · 입력 '+esc(cal.set)+'초')+' '+esc(cnHm(cal.setAt)):'')+' · 사전값 '+esc(cal.pre)+'초 · 오늘 재기 '+esc(cal.k)+'건 · 동시 '+esc(o.c):'';
+      var btns=CN_VSA[k].map(function(v,i){ return '<button class="btn sm" data-qa="cn.rep" onclick="cnRep(\''+k+'\','+v+')">'+(k==="h"?CN_HLVA[v]:v)+'</button>'; }).join("")+'<button class="btn sm ghost" data-qa="cn.auto" onclick="cnRepOp(\''+k+'\',\'auto\')">자동으로</button>'+(o.ut?'<button class="btn sm danger" data-qa="cn.undo" onclick="cnRepOp(\''+k+'\',\'undo\')">되돌리기</button>':'');
       return '<div class="card pad cnr"><div class="fx"><b style="font-size:var(--fs-h2)">'+CN_NMS[k]+'</b>'+cnCell(k,o.cell)+'<span class="sp"></span><span class="cap">'+(rep?'지금 제보 '+esc(rep.txt)+' · '+left+'분 남음':'지금 제보 없음')+'</span></div><p class="cap mt8">'+tTx+'</p><div class="fx mt12"><span class="cap">대리 제보</span>'+btns+'</div></div>';
     }).join("");
     var reh='<div class="grid g3 mt16">'+["r","p","a"].map(function(k){ var o=tg[k]||{}, r=o.reh||{ n:0, rows:[] };
