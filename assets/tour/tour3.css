@@ -468,6 +468,7 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3 .spov.in .spst { animation: spRise .3s ease both; }
 #axTour3 .spov.out { opacity: 0; pointer-events: none; transition: opacity .18s ease; }
 #axTour3 .spst { display: flex; flex-direction: column; align-items: center; gap: 28px; padding: 16px; }
+#axTour3 .spk { margin: 0 0 2px; padding: 6px 16px; border-radius: 999px; background: #FFFFFF; color: var(--ink); font-size: 15px; line-height: 22px; font-weight: 700; white-space: nowrap; }   /* v6.93 예시 판 표시 */
 #axTour3 .spwh { position: relative; width: min(74vw, 300px, 44vh); aspect-ratio: 1; border-radius: 50%; box-shadow: 0 16px 40px rgba(25, 31, 40, .35); }
 #axTour3 .spwh.hit { animation: spHit .32s cubic-bezier(.3, .7, .3, 1); }
 #axTour3 .spd { position: absolute; inset: 0; border-radius: 50%; will-change: transform; }

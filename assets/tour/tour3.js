@@ -1127,19 +1127,26 @@
    *   그 아래 흰 알약 「경품 보기」(앱 상품 탭 룰렛 구역 · openPrize) · 이 근처에서는 3D 돋보기 「경품 보기」를 숨긴다(같은 일 · 겹치지 않게)
    * 누르면 = 판만 가운데(뒤 어둡게 · mobile-popup-motion 장면 = 300ms 흐려짐 + 6px 떠오름 · 닫힘 180ms) → 0.3초 뒤 빠르게 돌다 감속(3.6 ~ 4.2초 · 누른 뒤 4.5초 안 정지) · 째깍(칸 경계마다 · 감속에 따라 간격이 벌어짐)
    *   → 「팡」(소리 · 판 살짝 부풂 · 흰 빛 테 · 종이 조각) → 「행운을 빌어요.」 / 「1층에서 룰렛을 체험하세요.」(가운데 두 줄 · 마침표에서 나눔)
-   *   판 = 3D 소품과 같은 10칸 주황 사다리(디자인 시안/가상 1층/v2/build/prep_lm.py wheel.webp 와 같은 색 · 순서 · 테 · 가운데 흰 원) · 등수 · 경품 이름 없음 · 멈춘 칸을 말하지 않는다(가상 체험)
+   *   판 = 3D 소품과 같은 10칸 주황 사다리(디자인 시안/가상 1층/v2/build/prep_lm.py wheel.webp 와 같은 색 · 순서 · 테 · 가운데 흰 원) · 경품 이름 · 사진 없음 · 멈춘 칸을 말하지 않는다(가상 체험)
+   *   v6.93 (사용자 261011 「빈 판이라 재미가 없다」 → 「등수 글자, 다만 예시라는 것을 좀 더 알려 줘」) 칸마다 「1등」~「5등」(SP_RK · 실제 룰렛 수량 60 · 140 · 210 · 210 · 340 비율을 10칸 최대 나머지 배분 = 1 · 1 · 2 · 2 · 4 · 같은 등수는 떨어뜨림)
+   *     글자 = 칸 가운데 방향 · 위가 바깥(맨 위 칸이 바로 읽힘) · 짙은 글자 #191F28(가장 진한 칸 #FF7E31 위에서도 6.6:1) · 판 위 흰 알약 「체험용 룰렛」 · 멈춘 칸 강조 · 당첨 글 없음(문구 그대로) · 3D 소품 판은 그대로(구운 텍스처 · 멀리서 글자가 읽히지 않는다)
    *   끝 = 사진 찍기 폴라로이드와 같다(3.8초 뒤 저절로 · 아무 데나 톡 · Enter · Space · Esc) · 도는 동안 = 걷기 · 단추 · 화면 누름 · 키 막음(G.sheetOpen) · 뒤로(기기 · Esc) = 바로 닫힘(소리 · 타이머 정리)
    *   소리 = 둘러보기 음악 스위치를 따른다(포토부스 셔터와 같다 · Web Audio 합성 · 음원 파일 없음) · 서버 호출 · 스탬프 · 룰렛 1회권 기록 없음(HOST 를 부르지 않는다)
    *   움직임 줄이기 = 돌지 않고 멈춘 판 + 메시지 바로 · 「팡」 소리 한 번 · 종이 조각 · 빛 테 없음 */
   var SP = { near: false, on: false, ph: '', popped: false, t0: 0, st: 0, dur: 0, a0: 0, A: 0, ang: 0, raf: 0, tm: [], seg: 0, tickT: 0, ticks: 0, snd: 0, pang: false, n: 0, out: null, stopMs: 0, log: [] };
   var SP_R = 3.0, SP_R2 = 3.3, SP_SEG = 10, SP_POP = 3800, SP_IN = 300, SP_OUT = 180, SP_GAP = 45;
   var SP_COL = ['#FF7E31', '#FFB284', '#FFD8C1', '#FFEBE0', '#FFFFFF'];   /* 3D 소품 wheel.webp 와 같은 순서(10칸 = 두 번) */
+  var SP_RK = ['5등', '1등', '5등', '3등', '4등', '5등', '2등', '5등', '3등', '4등'];   /* v6.93 칸 등수(예시) · 시계 방향 · 0 = 3시 방향 칸 */
   var SP_MSG = ['행운을 빌어요.', '1층에서 룰렛을 체험하세요.'];   /* 사용자 문구 그대로(띄어쓰기만 「체험하세요」) */
   function spSvg() {
     var c = 256, r = 248, o = '<svg viewBox="0 0 512 512" aria-hidden="true" focusable="false">';
     for (var i = 0; i < SP_SEG; i++) {
       var a0 = i * 2 * Math.PI / SP_SEG, a1 = (i + 1) * 2 * Math.PI / SP_SEG;
       o += '<path d="M256 256L' + (c + r * Math.cos(a0)).toFixed(2) + ' ' + (c + r * Math.sin(a0)).toFixed(2) + 'A248 248 0 0 1 ' + (c + r * Math.cos(a1)).toFixed(2) + ' ' + (c + r * Math.sin(a1)).toFixed(2) + 'Z" fill="' + SP_COL[i % SP_COL.length] + '"/>';
+    }
+    for (var j = 0; j < SP_SEG; j++) {   /* v6.93 등수 글자 · 칸 가운데 각도 · 위 = 바깥 */
+      var m = (j + 0.5) * 2 * Math.PI / SP_SEG, tx = (c + 168 * Math.cos(m)).toFixed(1), ty = (c + 168 * Math.sin(m)).toFixed(1);
+      o += '<text x="' + tx + '" y="' + ty + '" transform="rotate(' + (m * 180 / Math.PI + 90).toFixed(1) + ' ' + tx + ' ' + ty + ')" text-anchor="middle" dominant-baseline="central" fill="#191F28" font-size="46" font-weight="800" letter-spacing="-1">' + SP_RK[j] + '</text>';
     }
     return o + '<circle cx="256" cy="256" r="242" fill="none" stroke="#FF7E31" stroke-width="12"/><circle cx="256" cy="256" r="30" fill="#FFFFFF"/></svg>';
   }
@@ -5124,7 +5131,7 @@
     '    <button type="button" class="nb pri wide" id="t3-hOk">닫기</button>\n' +
     '  </div>\n' +
     '</section>\n' +
-'<section class="spov" id="t3-spov" role="dialog" aria-modal="true" aria-label="룰렛 돌리기 · 가상 체험" tabindex="-1" hidden><div class="spst"><div class="spwh" id="t3-spwh"><div class="spd" id="t3-spd"></div><span class="sppt" aria-hidden="true"><svg viewBox="0 0 28 34" fill="none"><path d="M3 3h22L14 31z" fill="#191F28" stroke="#FFFFFF" stroke-width="3" stroke-linejoin="round"/></svg></span><span class="spfx" id="t3-spfx" aria-hidden="true"></span></div><p class="spm" id="t3-spm" role="status" aria-live="polite"></p></div></section>\n' +   /* v6.91 룰렛 판만 가운데(판 그림 = spSvg) */
+'<section class="spov" id="t3-spov" role="dialog" aria-modal="true" aria-label="체험용 룰렛" tabindex="-1" hidden><div class="spst"><p class="spk" aria-hidden="true">체험용 룰렛</p><div class="spwh" id="t3-spwh"><div class="spd" id="t3-spd"></div><span class="sppt" aria-hidden="true"><svg viewBox="0 0 28 34" fill="none"><path d="M3 3h22L14 31z" fill="#191F28" stroke="#FFFFFF" stroke-width="3" stroke-linejoin="round"/></svg></span><span class="spfx" id="t3-spfx" aria-hidden="true"></span></div><p class="spm" id="t3-spm" role="status" aria-live="polite"></p></div></section>\n' +   /* v6.91 룰렛 판만 가운데(판 그림 = spSvg) */
 '<section class="scard" id="t3-scard" role="dialog" aria-modal="true" aria-labelledby="t3-scT" tabindex="-1" hidden>\n' +
     '  <div class="sccard">\n' +
     '    <div class="scic" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5.5" r="2.6"/><path d="M10.6 8v3.6M13.4 8v3.6"/><rect x="5" y="11.6" width="14" height="3.6" rx="1"/><path d="M4.5 17.6h15M7 20.5h10"/></svg></div>\n' +
@@ -5252,5 +5259,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v6.91', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v6.93', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();
