@@ -1122,6 +1122,153 @@
     return { pos: new T.Vector3(c.x, PH_CAM[2], c.z), look: new T.Vector3(l.x, 0.6, l.z) };
   }
 
+  /* ═══════════ v6.91 룰렛 돌리기(사용자 261011 「포토부스의 사진 찍기처럼 룰렛 근처에 가면 룰렛 돌리기 버튼이 뜨고, 돌리면 룰렛판이 돌다가 멈추면서 팡~ 하고 "행운을 빌어요. 1층에서 룰렛을 체험 하세요." 메시지가 뜨자 · 룰렛은 가운데에 판이 단독으로 따로 뜨면서 약간의 효과음과 함께 5초 안에 멈추게」) ═══════════
+   * 단추 = 룰렛 휠(D.PROPS.wheel) 3m 안(한 번 뜨면 3.3m 까지) · 포토부스보다 휠이 가까울 때 · 휠이 화면에 보일 때 · 사진 찍기와 같은 주 버튼(자리 · 크기 · 처음 통통 두 번 · 숨 쉬는 빛 · PC Enter)
+   *   그 아래 흰 알약 「경품 보기」(앱 상품 탭 룰렛 구역 · openPrize) · 이 근처에서는 3D 돋보기 「경품 보기」를 숨긴다(같은 일 · 겹치지 않게)
+   * 누르면 = 판만 가운데(뒤 어둡게 · mobile-popup-motion 장면 = 300ms 흐려짐 + 6px 떠오름 · 닫힘 180ms) → 0.3초 뒤 빠르게 돌다 감속(3.6 ~ 4.2초 · 누른 뒤 4.5초 안 정지) · 째깍(칸 경계마다 · 감속에 따라 간격이 벌어짐)
+   *   → 「팡」(소리 · 판 살짝 부풂 · 흰 빛 테 · 종이 조각) → 「행운을 빌어요.」 / 「1층에서 룰렛을 체험하세요.」(가운데 두 줄 · 마침표에서 나눔)
+   *   판 = 3D 소품과 같은 10칸 주황 사다리(디자인 시안/가상 1층/v2/build/prep_lm.py wheel.webp 와 같은 색 · 순서 · 테 · 가운데 흰 원) · 등수 · 경품 이름 없음 · 멈춘 칸을 말하지 않는다(가상 체험)
+   *   끝 = 사진 찍기 폴라로이드와 같다(3.8초 뒤 저절로 · 아무 데나 톡 · Enter · Space · Esc) · 도는 동안 = 걷기 · 단추 · 화면 누름 · 키 막음(G.sheetOpen) · 뒤로(기기 · Esc) = 바로 닫힘(소리 · 타이머 정리)
+   *   소리 = 둘러보기 음악 스위치를 따른다(포토부스 셔터와 같다 · Web Audio 합성 · 음원 파일 없음) · 서버 호출 · 스탬프 · 룰렛 1회권 기록 없음(HOST 를 부르지 않는다)
+   *   움직임 줄이기 = 돌지 않고 멈춘 판 + 메시지 바로 · 「팡」 소리 한 번 · 종이 조각 · 빛 테 없음 */
+  var SP = { near: false, on: false, ph: '', popped: false, t0: 0, st: 0, dur: 0, a0: 0, A: 0, ang: 0, raf: 0, tm: [], seg: 0, tickT: 0, ticks: 0, snd: 0, pang: false, n: 0, out: null, stopMs: 0, log: [] };
+  var SP_R = 3.0, SP_R2 = 3.3, SP_SEG = 10, SP_POP = 3800, SP_IN = 300, SP_OUT = 180, SP_GAP = 45;
+  var SP_COL = ['#FF7E31', '#FFB284', '#FFD8C1', '#FFEBE0', '#FFFFFF'];   /* 3D 소품 wheel.webp 와 같은 순서(10칸 = 두 번) */
+  var SP_MSG = ['행운을 빌어요.', '1층에서 룰렛을 체험하세요.'];   /* 사용자 문구 그대로(띄어쓰기만 「체험하세요」) */
+  function spSvg() {
+    var c = 256, r = 248, o = '<svg viewBox="0 0 512 512" aria-hidden="true" focusable="false">';
+    for (var i = 0; i < SP_SEG; i++) {
+      var a0 = i * 2 * Math.PI / SP_SEG, a1 = (i + 1) * 2 * Math.PI / SP_SEG;
+      o += '<path d="M256 256L' + (c + r * Math.cos(a0)).toFixed(2) + ' ' + (c + r * Math.sin(a0)).toFixed(2) + 'A248 248 0 0 1 ' + (c + r * Math.cos(a1)).toFixed(2) + ' ' + (c + r * Math.sin(a1)).toFixed(2) + 'Z" fill="' + SP_COL[i % SP_COL.length] + '"/>';
+    }
+    return o + '<circle cx="256" cy="256" r="242" fill="none" stroke="#FF7E31" stroke-width="12"/><circle cx="256" cy="256" r="30" fill="#FFFFFF"/></svg>';
+  }
+  function spNear() {
+    if (!G.loaded || G.scn !== 'lobby' || G.anim || G.sheetOpen || G.mapMode || G.bigMap || SH || G.squeeze || PH.on || PH.near || SP.on || EV.seq) return false;
+    var p = planOf(G.pos), w = D.PROPS.wheel, d = Math.hypot(p[0] - w[0], p[1] - w[1]);
+    if (d >= (SP.near ? SP_R2 : SP_R)) return false;
+    return !(PB.at && Math.hypot(p[0] - PB.at[0], p[1] - PB.at[1]) < d);   /* 포토부스가 더 가까우면 「사진 찍기」 */
+  }
+  function placeSpin(now) {
+    var g = $('spg'); if (!g) return;
+    var n = spNear();
+    if (n) { var w = D.PROPS.wheel, c = toThree(w[0], w[1]); _ib.set(c.x, 1.6, c.z).project(camera); if (!(_ib.z < 1 && Math.abs(_ib.x) < 0.95 && Math.abs(_ib.y) < 0.95)) n = false; }   /* 휠이 화면에 보일 때만 */
+    SP.near = n;
+    if (!n) { if (!g.hidden) g.hidden = true; SP.popped = false; return; }
+    var b = $('spin');
+    if (g.hidden) {
+      g.hidden = false;
+      var sr = $('stage').getBoundingClientRect(), jl = $('bJump').getBoundingClientRect().left - sr.left, gw = g.offsetWidth;   /* 가운데 · 단 점프 단추와 띄움(사진 찍기와 같다) */
+      g.style.left = Math.round(Math.max(gw / 2 + 12, Math.min(sr.width / 2, jl - 20 - gw / 2))) + 'px';
+    }
+    var sH = $('stage').clientHeight, gh = g.offsetHeight || 106, hy = _ia.set(G.pos.x, 1.1, G.pos.z).project(camera), headT = (1 - hy.y) / 2 * sH;   /* 세로 = 3D 보기 가운데 · 묶음(돌리기 + 경품 보기) 아래 끝이 캐릭터 머리 위 16px 보다 내려가지 않게(사진 찍기와 같은 규칙) */
+    var tp = Math.round(Math.max(12, Math.min(sH / 2 - gh / 2, headT - 16 - gh)));
+    if (Math.abs((parseFloat(g.style.top) || 0) - tp) > 2) g.style.top = tp + 'px';
+    if (!SP.popped && !RM) { SP.popped = true; b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); }   /* 처음 뜰 때 통통 두 번 */
+  }
+  function doSpin() {
+    if (performance.now() - (G.guardT || 0) < 500) return;
+    if (SP.on || $('spg').hidden || !spNear()) return;
+    spStart();
+  }
+  function spLater(f, ms) { var id = setTimeout(function () { SP.tm = SP.tm.filter(function (x) { return x !== id; }); f(); }, ms); SP.tm.push(id); }
+  function spLog(ph) { if (SP.log.length < 40) SP.log.push({ ph: ph, t: Math.round(performance.now() - SP.t0), ang: +SP.ang.toFixed(1) }); }
+  function spStart() {
+    var ov = $('spov');
+    SP.on = true; SP.ph = 'in'; SP.n++; SP.t0 = performance.now(); SP.ticks = 0; SP.snd = 0; SP.pang = false; SP.stopMs = 0; SP.log = []; spLog('start');
+    $('spg').hidden = true; SP.near = false; $('look').hidden = true; lookFrame(null);
+    setRun(false); G.runKey = false; G.stick = null; G.path = null; G.goal = null; G.tapAct = null; G.mode = 'free'; $('dest').hidden = true; G.push = 0; G.pushK = 0; HOLD = null;
+    G.sheetOpen = true;   /* 연출 동안 = 걷기 · 점프 · 화면 누름 · 다른 단추 · 키 막음(스탬프 카드와 같은 잠금) */
+    $('spfx').innerHTML = ''; $('spm').textContent = ''; $('spwh').classList.remove('hit');
+    SP.a0 = SP.ang % 360; spSet(SP.a0); SP.seg = Math.floor(SP.a0 / (360 / SP_SEG));
+    ov.hidden = false; ov.classList.remove('out', 'done', 'in'); void ov.offsetWidth; if (!RM) ov.classList.add('in');
+    try { ov.focus({ preventScroll: true }); } catch (e) {}
+    if (RM) { SP.A = 0; spSet(Math.random() * 360); spStop(performance.now()); return; }   /* 움직임 줄이기 = 돌지 않고 멈춘 판 + 메시지 바로 */
+    SP.A = 360 * 5 + Math.random() * 360; SP.dur = 3600 + Math.round(Math.random() * 600);
+    spLater(function () { if (!SP.on || SP.ph !== 'in') return; SP.ph = 'spin'; SP.st = performance.now(); spLog('spin'); SP.raf = requestAnimationFrame(spFrame); }, SP_IN);
+  }
+  function spSet(a) { SP.ang = a; $('spd').style.transform = 'rotate(' + a.toFixed(2) + 'deg)'; }
+  function spFrame() {
+    SP.raf = 0; if (!SP.on || SP.ph !== 'spin') return;
+    var now = performance.now(), k = clamp((now - SP.st) / SP.dur, 0, 1), a = SP.a0 + SP.A * (1 - Math.pow(1 - k, 3));   /* 빠르게 → 감속(3차 감속 곡선) */
+    spSet(a);
+    var sg = Math.floor(a / (360 / SP_SEG));
+    if (sg !== SP.seg) { SP.seg = sg; if (now - SP.tickT >= SP_GAP) { SP.tickT = now; SP.ticks++; if (spTick(k)) SP.snd++; } }   /* 째깍 = 칸 경계 · 너무 빠를 때는 45ms 간격으로 묶음 */
+    if (k >= 1) { spStop(now); return; }
+    SP.raf = requestAnimationFrame(spFrame);
+  }
+  function spStop(now) {
+    var ov = $('spov');
+    SP.ph = 'done'; SP.stopMs = Math.round(now - SP.t0); spLog('stop');
+    SP.pang = spPang();
+    if (!RM) { var wh = $('spwh'); wh.classList.remove('hit'); void wh.offsetWidth; wh.classList.add('hit'); spBurst(); }
+    $('spm').innerHTML = '<span>' + SP_MSG[0] + '</span><span>' + SP_MSG[1] + '</span>';
+    ov.classList.add('done');
+    spLater(function () { spClose(); }, SP_POP);
+  }
+  function spBurst() {   /* 팡 = 흰 빛 테 하나 + 종이 조각 18개(transform · opacity 만 · 0.9초) */
+    var R = ($('spwh').offsetWidth || 280) / 2, C = ['#FF7E31', '#FFB284', '#FFFFFF', '#FFD8C1'], o = '<b></b>';
+    for (var i = 0; i < 18; i++) {
+      var a = i / 18 * Math.PI * 2 + (Math.random() - 0.5) * 0.3, d = R * (0.8 + Math.random() * 0.55);
+      o += '<i class="' + (i % 3 === 0 ? 'r' : '') + '" style="--c:' + C[i % C.length] + ';--x:' + Math.round(Math.cos(a) * d) + 'px;--y:' + Math.round(Math.sin(a) * d + 24) + 'px;--r:' + Math.round((Math.random() * 2 - 1) * 540) + 'deg;--d:' + (Math.random() * 0.06).toFixed(2) + 's"></i>';
+    }
+    $('spfx').innerHTML = o;
+  }
+  function spCtx() { var c = MUS.ctx; return musOn() && MUS.want && c && c.state === 'running' && !document.hidden ? c : null; }   /* 포토부스 셔터와 같은 조건 */
+  function spOutOf(c) { if (!SP.out || SP.out.context !== c) { SP.out = c.createGain(); SP.out.gain.value = 0.5; SP.out.connect(c.destination); } return SP.out; }
+  function spTick(k) {   /* 째깍 · 짧은 딸깍(삼각파 · 35ms) · 느려질수록 살짝 낮게 */
+    var c = spCtx(); if (!c) return false;
+    try {
+      var t = c.currentTime + 0.005, o = c.createOscillator(), g = c.createGain();
+      o.type = 'triangle'; o.frequency.setValueAtTime(1900 - 500 * k, t);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.32, t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.035);
+      o.connect(g); g.connect(spOutOf(c)); o.start(t); o.stop(t + 0.045);
+      return true;
+    } catch (e) { return false; }
+  }
+  function spPang() {   /* 팡 = 걸러낸 잡음(퍽) + 낮은 사인(둥) + 올라가는 세 음(반짝) · 0.5초 */
+    var c = spCtx(); if (!c) return false;
+    try {
+      var t = c.currentTime + 0.01, out = spOutOf(c), n = Math.floor(c.sampleRate * 0.3), bf = c.createBuffer(1, n, c.sampleRate), dd = bf.getChannelData(0);
+      for (var i = 0; i < n; i++) dd[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2);
+      var s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); s.buffer = bf; f.type = 'lowpass';
+      f.frequency.setValueAtTime(5200, t); f.frequency.exponentialRampToValueAtTime(600, t + 0.25);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.85, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+      s.connect(f); f.connect(g); g.connect(out); s.start(t); s.stop(t + 0.32);
+      var o = c.createOscillator(), og = c.createGain(); o.type = 'sine';
+      o.frequency.setValueAtTime(170, t); o.frequency.exponentialRampToValueAtTime(55, t + 0.18);
+      og.gain.setValueAtTime(0.0001, t); og.gain.exponentialRampToValueAtTime(0.7, t + 0.006); og.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+      o.connect(og); og.connect(out); o.start(t); o.stop(t + 0.24);
+      [1318.5, 1568, 2093].forEach(function (fq, j) {
+        var q = c.createOscillator(), qg = c.createGain(), t1 = t + 0.06 + j * 0.07; q.type = 'sine'; q.frequency.value = fq;
+        qg.gain.setValueAtTime(0.0001, t1); qg.gain.exponentialRampToValueAtTime(0.16, t1 + 0.01); qg.gain.exponentialRampToValueAtTime(0.0001, t1 + 0.28);
+        q.connect(qg); qg.connect(out); q.start(t1); q.stop(t1 + 0.3);
+      });
+      return true;
+    } catch (e) { return false; }
+  }
+  function spKill(snd) {   /* 타이머 · 그리기 · (snd = 소리까지) 정리 */
+    SP.tm.forEach(function (id) { clearTimeout(id); }); SP.tm = [];
+    if (SP.raf) { cancelAnimationFrame(SP.raf); SP.raf = 0; }
+    if (snd && SP.out) { try { SP.out.gain.value = 0; SP.out.disconnect(); } catch (e) {} SP.out = null; }
+  }
+  function spClose() {   /* 끝(톡 · 저절로 · 키) = 180ms 흐려짐 · 도는 중(뒤로 · Esc) = 소리 · 타이머까지 멈추고 닫힘 */
+    if (!SP.on || SP.ph === 'out') return;
+    var mid = SP.ph !== 'done'; spKill(mid); spLog(mid ? 'abort' : 'close');
+    if (RM) { spEnd(); return; }
+    SP.ph = 'out'; $('spov').classList.add('out');
+    spLater(spEnd, SP_OUT);
+  }
+  function spEnd() {
+    spKill(false);
+    var ov = $('spov'); ov.hidden = true; ov.classList.remove('in', 'out', 'done'); $('spfx').innerHTML = ''; $('spm').textContent = ''; $('spwh').classList.remove('hit');
+    SP.on = false; SP.ph = ''; G.sheetOpen = false; G.guardT = performance.now(); G.need = true; G.last = 0; spLog('end');
+  }
+  function spAbort() {   /* 둘러보기를 닫을 때 · 연출 중이면 바로 정리 */
+    if (!SP.on) { spKill(true); return; }
+    spKill(true); spLog('abort'); spEnd();
+  }
+
   /* ═══════════ v5.58 AX in Action 인터뷰 화면(사용자 261004 「AX IN ACTION 모니터에서는 나 같은 애들의 인터뷰 영상이 · 인터뷰 같은 걸 하는 듯한 영상」) ═══════════
    * TV(판 15 앞 · 도면 x 22.7~23.9) = 홍보부 모션 대신 인터뷰 · 화면 가운데 나 닮은 챗봇 한 명(통통 · 몸 흔들림 · 말하는 박자로 눈 깜빡 · 머리 위 전파) · 아래 자막 띠(뜻 없는 회색 막대 · 실명 · 지어낸 사례 없음) · 왼쪽 위 「● INTERVIEW」
    * 말 한 마디 1.6~2.6초 + 쉼 0.5초 · 세 마디마다 다른 친구(주황 · 노랑 · 분홍 · 웜그레이 · 파랑 없음) · 자막 막대 길이가 마디마다 바뀐다
@@ -2323,7 +2470,7 @@
     if (store.get('axfTour3ElevTip') === '1' || store.get('axfTour3Elev') === '1' || !$('etip').hidden) return;
     var el = performance.now() - VIS.t0, rate = Object.keys(VIS.seen).length / (zs.length || 1);
     if (!((el >= ETIP_MIN && rate >= ETIP_RATE) || el >= ETIP_MAX)) return;
-    if (PH.on || PH.near || SH || SCARD || G.anim || G.squeeze || G.bigMap || EV.seq || !$('help').hidden || !$('hint').hidden || !$('pola').hidden) return;   /* 다음 틱에 다시 */
+    if (PH.on || PH.near || SP.on || SH || SCARD || G.anim || G.squeeze || G.bigMap || EV.seq || !$('help').hidden || !$('hint').hidden || !$('pola').hidden) return;   /* 다음 틱에 다시 */
     etipShow();
   }
   function etipShow() {
@@ -2579,7 +2726,7 @@
    *   들어가기 = enterPanel(v5.53 한 번의 줌 · 판 앞 물체 비키기) · PC = Enter */
   var LOOK = { t: null, key: '', still: 0, pop: '', fr: null }, LOOK_R = 2.0, LOOK_R2 = 2.35;
   function lookPick() {
-    if (PH.near || PH.on) return null;   /* v5.67 포토부스 근처 = 「사진 찍기」가 먼저 */
+    if (PH.near || PH.on || SP.near || SP.on) return null;   /* v5.67 포토부스 근처 = 「사진 찍기」가 먼저 · v6.91 룰렛 근처 = 「룰렛 돌리기」가 먼저 */
     if (!G.loaded || G.scn !== 'lobby' || G.anim || G.sheetOpen || G.sheetFx || G.mapMode || G.bigMap || SH || G.squeeze) return null;
     var p = G.pos, hx = Math.sin(G.h), hz = Math.cos(G.h), best = null, bs = 1e9;
     Object.keys(S.faces).forEach(function (k) {
@@ -3283,7 +3430,7 @@
       b.onclick = run; box.appendChild(b); mags.push(Object.assign({ el: b, at: at, n: n }, extra || {}));
     }
     add('타자왕 광고 보기', openPromo, toThree(1.75, 1.25).setY(1.0), null);   /* 「재생 중」 TV 앞 */
-    var w = D.PROPS.wheel; add('경품 보기', openPrize, toThree(w[0] + 0.9, w[1]).setY(1.0), null);
+    var w = D.PROPS.wheel; add('경품 보기', openPrize, toThree(w[0] + 0.9, w[1]).setY(1.0), null, { pz: 1 });   /* v6.91 룰렛 3m 안 = 「룰렛 돌리기」 아래 흰 알약이 대신(placeMags) */
     add('엘리베이터 타기', goGate, toThree(GATE.at[0], 11.05).setY(1.25), null, { r: 6.5, icon: UPI, cls: 'up' });   /* v5.49 게이트 앞 · 누르면 그 앞까지 */
   }
   var _m = new T.Vector3(), _c = new T.Vector3();
@@ -3295,6 +3442,7 @@
     var lk = $('look'), gb = $('gbub'), sb = $('shot'), et = $('etip');
     if (et && !et.hidden) { var re = rc(et); if (re) keep.push(re); }   /* v5.84 엘리베이터 권유 = 말풍선보다 앞 */
     if (sb && !sb.hidden) { var r0 = rc(sb); if (r0) keep.push(r0); }   /* v5.67 사진 찍기 = 맨 앞 */
+    var sp = $('spg'); if (sp && !sp.hidden) { var rs = rc(sp); if (rs) keep.push(rs); }   /* v6.91 룰렛 돌리기 묶음 = 사진 찍기와 같은 앞 */
     if (lk && !lk.hidden) { var r1 = rc(lk); if (r1) keep.push(r1); }
     if (gb && !gb.hidden) { var r2 = rc(gb); if (r2 && keep.some(function (k) { return hit(k, r2); })) { gb.style.visibility = 'hidden'; hid++; } else { gb.style.visibility = ''; if (r2) keep.push(r2); } } else if (gb) gb.style.visibility = '';
     mags.concat(pinEls).forEach(function (m) { var el = m.el; if (el.style.display === 'none') { el.style.visibility = ''; return; } var r = rc(el); if (r && keep.some(function (k) { return hit(k, r); })) { el.style.visibility = 'hidden'; hid++; } else { el.style.visibility = ''; if (r) keep.push(r); } });
@@ -3304,6 +3452,7 @@
     var W = $('stage').clientWidth, H = $('stage').clientHeight, on = G.loaded && G.scn === 'lobby' && !G.anim;
     mags.forEach(function (m) {
       if (!on) { m.el.style.display = 'none'; return; }
+      if (m.pz && (SP.near || SP.on)) { m.el.style.display = 'none'; return; }   /* v6.91 */
       if (m.pillar) {
         _c.set(camera.position.x - m.pillar.x, 0, camera.position.z - m.pillar.z).normalize();
         m.at = _m.set(m.pillar.x + _c.x * 0.72, 0.5, m.pillar.z + _c.z * 0.72).clone();
@@ -3567,14 +3716,12 @@
     toast('앱에서는 「' + i.cta + '」 화면으로 가요');
   }
 
-  /* 룰렛 상품 · 앱 경품 표(index.html PRIZES.roulette)와 같은 이름 · 수량 · 사진 · 가격 없음 · v5.90 (사용자 261006) 새 수량 60 · 140 · 210 · 210 · 340 · 사진 = 앱과 같은 _v2 · 「샘플」 딱지 뗌 */
-  var ROUL = [{ rk: '1등', nm: '텀블러', q: 60, img: ['rl1_tumbler_v2'] }, { rk: '2등', nm: '커피 + 키캡 키링', q: 140, img: ['rl2_coffee_v2', 'rl2_keyring_v2'] }, { rk: '3등', nm: '컵받침', q: 210, img: ['rl3_coaster_v2'] }, { rk: '4등', nm: '판스티커', q: 210, img: ['rl4_sticker_v2'] }, { rk: '5등', nm: '볼펜', q: 340, img: ['rl5_pen_v2'] }];
+  /* v6.91 (사용자 261011 「경품 보기를 누르면 이미 만들어 둔 상품 탭의 경품 보기로 날아가서 보여 주자」) 경품 보기 = 둘러보기를 닫고 앱 상품 탭 룰렛 구역(TOUR_HOST.prizeGo → prizeGo('roulette'))
+   *   뒤로 · 「3D로 돌아가기」 = 나가기 전 자리(stampGo 와 같은 TOUR_RET) · 앱 밖(시험판) = 안내 한 줄 · 옛 둘러보기 안 5장 넘김 시트(ROUL · .card.prize · .pz)는 지움(정리 기록.md) */
   function openPrize() {
-    var cards = ROUL.map(function (p) {
-      return '<article class="card prize" aria-label="' + esc(p.rk + ' ' + p.nm) + '"><h2><span class="k">' + p.rk + '</span>' + esc(p.nm) + '<span class="q">' + p.q + '개</span></h2>' +
-        '<div class="pic"><div class="pz' + (p.img.length > 1 ? ' two' : '') + '">' + p.img.map(function (im) { return '<span class="ph"><img alt="' + esc(p.nm) + '" data-src="' + ROOT + 'assets/prize/' + im + '.webp"></span>'; }).join('') + '</div></div></article>';
-    });
-    openSheet({ name: 'EVENT', title: '룰렛 경품' }, 0, null, cards);   /* v5.66 칩 = EVENT 점 글자 · 「룰렛 경품」은 제목 줄(타자왕 순위판 머리와 같은 짜임) */
+    var h = HOST();
+    if (h && h.prizeGo) { try { h.prizeGo('roulette'); return; } catch (e) {} }
+    toast('앱에서는 「경품 보기」 화면으로 가요');
   }
   /* 타자왕 순위판 · 1층 TV 와 같은 전체 루프(../tv/typing/ · 후킹 · 게임 · 하는 법 · 상품 · 순위 TOP 10 · 마감 · 순위 30초 폴링 · 사용자 261003 「1층 랭킹 보드 화면 그대로 · 등수도」) · 시트 안 9:16 · 닫으면 iframe 을 비워 폴링 멈춤 */
   function openPromo() {
@@ -4121,10 +4268,12 @@
     window.addEventListener('keydown', function (e) {
       if (!G.open || typing(e)) return;
       if (e.key === 'Escape' && (G.bigMap || !$('cfg').hidden)) { if (G.bigMap) closeBigMap(); else closeCfg(); e.preventDefault(); return; }
+      if (SP.on) { if (e.key === 'Escape' || ((e.key === 'Enter' || e.key === ' ') && SP.ph === 'done' && !e.repeat)) { e.preventDefault(); spClose(); } else if (e.key === ' ' || /^Arrow/.test(e.key)) e.preventDefault(); return; }   /* v6.91 룰렛 돌리기 = 키 막음 · 끝 = Enter · Space · Esc 로 닫기 · 도는 중 Esc = 바로 닫힘 */
       if (G.sheetOpen || G.scn !== 'lobby' || EV.seq) return;   /* v5.55 아이리스 흐름 동안 = 막음 */
       var code = e.code;
       if (PH.on) { if ((e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') && !$('pola').hidden) { e.preventDefault(); phClose(); } return; }   /* v5.67 사진 찍기 연출 = 키 막음 · 팝업 = Enter · Space · Esc 로 닫기 */
       if (e.key === 'Enter' && !e.repeat && !$('shot').hidden && !/BUTTON|A|INPUT/.test((e.target && e.target.tagName) || '')) { e.preventDefault(); doShot(); return; }   /* v5.67 사진 찍기 */
+      if (e.key === 'Enter' && !e.repeat && !$('spg').hidden && !/BUTTON|A|INPUT/.test((e.target && e.target.tagName) || '')) { e.preventDefault(); doSpin(); return; }   /* v6.91 룰렛 돌리기 */
       if (e.key === 'Enter' && !e.repeat && !$('look').hidden && !/BUTTON|A|INPUT/.test((e.target && e.target.tagName) || '')) { e.preventDefault(); doLook(); return; }   /* v5.54 자세히 보기 */
       if (KMOVE[code]) { keys[code] = KMOVE[code]; G.stick = keyStick(); setKnob(G.stick.x, G.stick.y, true); G.moved = true; G.path = null; G.tapAct = null; if (G.mode === 'auto') { G.mode = 'free'; G.goal = null; $('dest').hidden = true; } G.need = true; e.preventDefault(); return; }
       var act = KRH[code] || (e.key === ' ' && !/BUTTON/.test((e.target && e.target.tagName) || '') ? 'jump' : null);
@@ -4219,7 +4368,7 @@
   /* ═══════════ v5.91 눌러서 가기(사용자 261006 「조작 단추는 지금 그대로 두고, 화면을 눌러서 가는 방식을 주된 방법으로」) ═══════════
    * 바닥 = 그 자리로 걸어간다(주황 원 · 길이 없으면 가장 가까운 갈 수 있는 자리 reachPath) · 조이스틱 · 단추 넷 · 화면 밀기 · 위아래 시점 · 기본 시점은 그대로
    * 눌러서 할 수 있는 것 = 그 앞까지 걸어가서 바로 그 일을 연다
-   *   판 = 판 보기(자세히 보기와 같다) · 동전 = 아래에서 점프(동전 점프와 같은 카드) · 포토부스 = 사진 찍기 흐름 · 룰렛 = 경품 보기 · 타자왕 TV · 판 = 순위판
+   *   판 = 판 보기(자세히 보기와 같다) · 동전 = 아래에서 점프(동전 점프와 같은 카드) · 포토부스 = 사진 찍기 흐름 · 룰렛 휠 = 룰렛 돌리기(v6.91) · 룰렛 판 = 경품 보기(앱) · 타자왕 TV · 판 = 순위판
    *   게이트 = 앞까지 걸어가 비집기 연출 그대로 탑승(밀지 않아도) · 작은 홀 엘리베이터 문 = 바로 탑승 · 스태프 = 앞에서 말풍선(이번 방문에 이미 말했어도 다시)
    *   이미 가까우면 걷지 않고 바로 · 걷는 중 조이스틱 · WASD · 달리기 · 다른 곳 누르기 · 이전 · 다음 구역 = 그 일 취소(startWalk 가 G.tapAct 를 갈아 끼우고 · 패드 · 키는 지운다)
    *   움직임 줄이기 = 걷지 않고 그 자리로(startWalk 와 같다) */
@@ -4231,7 +4380,7 @@
   }
   function tapEvent(o, pn, u) {
     if (underName(o, /^photoKiosk$/) || Math.hypot(pn[0] - PB.at[0], pn[1] - PB.at[1]) < 1.4) return 'photo';   /* 기계 · 친구들 */
-    var w = D.PROPS.wheel; if (Math.hypot(pn[0] - w[0], pn[1] - w[1]) < 0.9) return 'prize';
+    var w = D.PROPS.wheel; if (Math.hypot(pn[0] - w[0], pn[1] - w[1]) < 0.9) return 'spin';   /* v6.91 휠 = 룰렛 돌리기 · 뒤 판(룰렛 이벤트) = 경품 보기(아래) */
     var z = u.pg || u.zone ? D.Z(u.zone) || D.zoneOfPg(u.pg) : null;
     if (z && z.id === 'event') return pn[1] < 4.6 ? 'promo' : pn[1] < 9.0 ? 'photo' : 'prize';   /* 판 줄 = 타자왕 · 포토부스 · 룰렛 순(남 → 북) */
     return null;
@@ -4252,6 +4401,7 @@
     if (a.k === 'coin') return Math.hypot(a.b.x - G.pos.x, a.b.z - G.pos.z) < 0.35 ? { now: true } : { at: a.b.at };
     if (a.k === 'photo') return dd(PB.at) < PH_R ? { now: true } : { at: stopAt('event') };
     if (a.k === 'prize') return dd(D.PROPS.wheel) < 2.6 ? { now: true } : { at: stopAt('roulette') };
+    if (a.k === 'spin') { var wd = dd(D.PROPS.wheel); return wd < SP_R - 0.3 && !(PB.at && dd(PB.at) < wd) ? { now: true } : { at: stopAt('roulette') }; }   /* v6.91 */
     if (a.k === 'promo') { var ts = stopAt('typing'); return dd(ts) < 1.2 ? { now: true } : { at: ts }; }
     if (a.k === 'gate') return dd(GATE.at) < 0.6 ? { now: true } : { at: GATE.at };
     if (a.k === 'cs') { var cq = [VB.x0 + 0.45, (VB.z0 + VB.z1) / 2]; return dd(cq) < 0.6 ? { now: true } : { at: cq }; }
@@ -4288,6 +4438,7 @@
       else if (a.k === 'coin') tapCoin(a.b);
       else if (a.k === 'photo') phStart();
       else if (a.k === 'prize') { var w = D.PROPS.wheel, p = planOf(G.pos); G.face = Math.atan2(w[0] - p[0], -(w[1] - p[1])); openPrize(); }
+      else if (a.k === 'spin') { var w2 = D.PROPS.wheel, p2 = planOf(G.pos); G.face = Math.atan2(w2[0] - p2[0], -(w2[1] - p2[1])); spStart(); }   /* v6.91 휠을 눌러도 룰렛 돌리기 */
       else if (a.k === 'promo') openPromo();
       else if (a.k === 'gate') startSqueeze();
       else if (a.k === 'cs') { G.csGo = true; EV.from = 'cs'; setRun(false); if (MOT.on) motGet(EV_ORD[0]).catch(function () {}); toElev(); setTimeout(function () { G.csGo = false; }, 800); }
@@ -4363,7 +4514,7 @@
     if (G.loaded && (G.scn === 'lobby' || G.scn === 'elev') && tvStep(now)) busy = true;   /* v5.55 엘리베이터 광고 화면도(로비 화면은 로비가 숨어 멈춤) */   /* v5.40 TV 화면 · 초당 10장 · 보이는 것만 */
     if (!busy && !G.need && !G.showFps) { G.idleN = (G.idleN || 0) + 1; return; }
     G.idleN = 0; G.need = false;
-    S.frame(camera, G.scn, G.scn === 'lobby' && !G.anim && !!G.camIn); if (G.ceil) G.ceil.visible = false; renderer.render(scene, camera); placePins(); mini(); placeBubble(); placeShot(now); placeLook(now); placeMags(); placeBlocks(); placeCheer(); declutter();
+    S.frame(camera, G.scn, G.scn === 'lobby' && !G.anim && !!G.camIn); if (G.ceil) G.ceil.visible = false; renderer.render(scene, camera); placePins(); mini(); placeBubble(); placeShot(now); placeSpin(now); placeLook(now); placeMags(); placeBlocks(); placeCheer(); declutter();
     var wm = performance.now() - w0; G.workMs = G.workMs == null ? wm : G.workMs * 0.95 + wm * 0.05; G.workMax = Math.max(G.workMax || 0, wm);
     if (!$('dest').hidden && G.destAt) { _p.copy(G.destAt).project(camera); $('dest').style.left = ((_p.x + 1) / 2 * $('stage').clientWidth).toFixed(1) + 'px'; $('dest').style.top = ((1 - _p.y) / 2 * $('stage').clientHeight).toFixed(1) + 'px'; }
     if (G.diag) { if (G.lastDraw && now - G.lastDraw > 50 && now - G.lastDraw < 400 && G.drewLast) G.hitch = (G.hitch || 0) + 1; G.drewLast = now - (G.lastDraw || 0) < 400; G.lastDraw = now; }   /* v5.50 진단 · 이어 그리는 중 멈칫(쉬던 틈은 빼려고 바로 전 프레임도 그렸을 때만) */
@@ -4504,7 +4655,7 @@
     window.addEventListener('keydown', function (e) {
       if (!G.open) return;
       if (!$('vid').hidden) { if (e.key === 'Escape') closePromo(); return; }
-      if (!G.sheetOpen) return;
+      if (!G.sheetOpen || !SH) return;   /* v6.91 판 보기가 아닌 잠금(스탬프 카드 · 룰렛 돌리기) = 넘김 없음 */
       if (e.key === 'ArrowRight') setPage(SH.i + 1); else if (e.key === 'ArrowLeft') setPage(SH.i - 1); else if (e.key === 'Escape') closeSheet();
     });
   }
@@ -4537,7 +4688,7 @@
   function maybeHelp() { G.idleAt = performance.now(); if (hintOk()) showHint(true); }
   function tapLearned() { if (store.get('axfTour3TapUsed') !== '1') store.set('axfTour3TapUsed', '1'); }   /* 직접 눌러 걸어가 봄 = 다음부터 안내 없음 */
   function hintBusy() {
-    return !G.open || !G.loaded || G.scn !== 'lobby' || document.hidden || !!G.path || !!G.stick || G.air || !!HOLD || !!G.anim || !!G.squeeze || G.bigMap || !!EV.seq || PH.on || PH.near || !!SH || !!SCARD || G.sheetOpen ||
+    return !G.open || !G.loaded || G.scn !== 'lobby' || document.hidden || !!G.path || !!G.stick || G.air || !!HOLD || !!G.anim || !!G.squeeze || G.bigMap || !!EV.seq || PH.on || PH.near || SP.on || SP.near || !!SH || !!SCARD || G.sheetOpen ||
       !$('help').hidden || !$('pola').hidden || !$('etip').hidden || !$('vid').hidden || !$('cfg').hidden || !$('swc').hidden;
   }
   /* 261007 (사용자 「권장대로 진행해 줘」 · 둘러보기 조작 재검토 A · 결정 3) 돌기 단추가 없어져 시점 돌리기 = 화면 밀기 · 첫 구역에 도착한 뒤 한 번 「화면을 좌우로 밀면 돌아봐요」 + 손가락이 좌우로 미는 그림
@@ -4858,7 +5009,8 @@
     $('gbub').onclick = function (e) { if (performance.now() - (G.guardT || 0) < 500) return; var cr = $('cv').getBoundingClientRect(), nc = e && e.clientX ? coinNear(e.clientX - cr.left, e.clientY - cr.top, 2) : null; if (nc) { tapGo({ k: 'coin', b: nc }); return; }   /* 261007 말풍선 아래 동전을 누른 것 = 동전 */ var gd = G.talk; if (!gd) return; if (gd.stamp) { openStampCard(gd.stamp); return; } if (gd.spot === 'typing') { openPromo(); return; } if (!gd.go) return; doLook(); };   /* v5.54 말풍선 = 자세히 보기 단추와 같은 일 */
     $('look').onclick = doLook;
     $('etGo').onclick = etipGo; $('etX').onclick = etipHide;   /* v5.84 */
-    $('shot').onclick = doShot; $('pola').addEventListener('click', phClose);   /* v5.67 사진 찍기 · 팝업 톡 = 닫기 */
+    $('shot').onclick = doShot; $('pola').addEventListener('click', phClose);
+    $('spd').innerHTML = spSvg(); $('spin').onclick = doSpin; $('spPz').onclick = function () { if (performance.now() - (G.guardT || 0) < 500 || SP.on) return; openPrize(); }; $('spov').addEventListener('click', function () { if (SP.ph === 'done') spClose(); });   /* v6.91 끝난 뒤 아무 데나 톡 = 닫기 · 도는 중 = 무시 */   /* v5.67 사진 찍기 · 팝업 톡 = 닫기 */
     var rs = store.get('axfTour3RM'); if (rs === '1' || rs === '0') RM = rs === '1';
     ROOTEL.classList.toggle('rm', RM); $('rmChk').checked = RM;
     $('rmChk').onchange = function () { RM = $('rmChk').checked; store.set('axfTour3RM', RM ? '1' : '0'); ROOTEL.classList.toggle('rm', RM); G.need = true; };
@@ -4888,6 +5040,8 @@
     var r = $('cv').getBoundingClientRect(); ray.setFromCamera(new T.Vector2((x - r.left) / r.width * 2 - 1, -((y - r.top) / r.height) * 2 + 1), camera);
     return ray.intersectObject(S.lobby, true).slice(0, 8).map(function (h) { var o = h.object, n = [], q = o; while (q && q !== S.lobby && n.length < 4) { n.push(q.name || q.type); q = q.parent; } var u = o.userData || {}; return { n: n.join('<'), d: +h.distance.toFixed(2), y: +h.point.y.toFixed(2), shown: isShown(o), st: u.stamp || null, pg: u.pg || null, z: u.zone || null }; });
   };
+  G.api.sp = function () { var ov = $('spov'); return { on: SP.on, ph: SP.ph, near: SP.near, n: SP.n, ang: +SP.ang.toFixed(1), dur: SP.dur, A: Math.round(SP.A), stopMs: SP.stopMs, ticks: SP.ticks, snd: SP.snd, pang: SP.pang, raf: !!SP.raf, tm: SP.tm.length, out: !!SP.out, ov: !ov.hidden, cls: ov.className, msg: $('spm').innerText, spg: !$('spg').hidden, sheet: !!G.sheetOpen, rm: !!RM, log: SP.log.slice() }; };   /* v6.91 확인용 */
+  G.api.spNear = function () { return spNear(); };
   G.api.taps = function () { return { act: G.tapAct ? G.tapAct.k : null, pend: G.tapPend || null, done: G.tapDone || [], log: G.tapLog || [], frames: G.tapFrames || 0, rings: TAPS.rings.length, op: TAPS.mat ? +TAPS.mat.opacity.toFixed(3) : null, vis: TAPS.fr ? TAPS.fr.visible : null, hint: !$('hint').hidden, hint2: !$('hint2').hidden, hfg: !$('hfg').hidden, hintAt: G.hintAt || null, hintN: G.hintN || 0, hintV: VIS.hintN || 0, idle: Math.round(performance.now() - (G.idleAt || 0)), learned: store.get('axfTour3TapUsed') === '1', sq: !!G.squeeze, scn: G.scn, sheet: !!G.sheetOpen, scard: !!SCARD, ph: !!PH.on, talk: G.talk ? G.talk.id : null, bub: !$('gbub').hidden }; };   /* v5.91 확인용 */
   G.api.tapGo = function (k, id) { if (k === 'coin') { var b = BLOCKS.filter(function (q) { return q.id === id; })[0]; if (b) tapGo({ k: 'coin', b: b }); return; } if (k === 'guide') { var g = guides.filter(function (q) { return q.zone === id || q.id === id; })[0]; if (g) tapGo({ k: 'guide', gd: g }); return; } if (k === 'board') { tapGo({ k: 'board', z: D.Z(id[0]), pg: id[1] || null }); return; } tapGo({ k: k }); };
   /* ═══════════ 앱 안 열기 · 닫기 · 뒤로(v5.37 정식 앱 이식 · 사용자 261003 「이것들이 수정되면 정식 앱에 올리자」) ═══════════
@@ -4919,6 +5073,7 @@
     '    <button type="button" class="gbub" id="t3-gbub" hidden><span id="t3-gbubT"></span><span class="go">스탬프 받기</span></button>\n' +
     '    <button type="button" class="look" id="t3-look" hidden aria-label="자세히 보기"><span class="lk" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.2"/><path d="M15.2 15.2l5 5"/></svg></span><span class="lt">자세히 보기</span><kbd class="kh" aria-hidden="true">Enter</kbd></button>\n' +   /* v5.54 자세히 보기 하나 */
     '    <button type="button" class="look shot" id="t3-shot" hidden aria-label="사진 찍기 · 포토부스 친구들과 단체 사진"><span class="lk" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M3.5 8h3.4l1.7-2.5h6.8L17.1 8h3.4v11.5h-17z"/><circle cx="12" cy="13.5" r="3.4"/></svg></span><span class="lt">사진 찍기</span><kbd class="kh" aria-hidden="true">Enter</kbd></button>\n' +   /* v5.67 포토부스 사진 찍기(자세히 보기와 같은 알약) */
+    '    <div class="spg" id="t3-spg" hidden><button type="button" class="spb" id="t3-spin" aria-label="룰렛 돌리기 · 가상 체험"><span class="lk" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13.5" r="8"/><path d="M12 13.5V5.5M12 13.5l6.9 4M12 13.5l-6.9 4"/><path d="M9.6 1.8h4.8L12 4.6z" fill="currentColor" stroke-width="1.4"/></svg></span><span class="lt">룰렛 돌리기</span><kbd class="kh" aria-hidden="true">Enter</kbd></button><button type="button" class="spz" id="t3-spPz" aria-label="경품 보기 · 앱 경품 화면"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg><span>경품 보기</span></button></div>\n' +   /* v6.91 룰렛 돌리기(사진 찍기와 같은 주 버튼) + 경품 보기 */
     '    <div class="pflash" id="t3-pflash" hidden aria-hidden="true"></div>\n' +   /* v5.67 찰칵 흰 빛 */
     '    <div class="pola" id="t3-pola" role="dialog" aria-label="방금 찍은 사진 · 누르면 닫혀요" hidden><figure class="pc"><canvas id="t3-polaC" width="480" height="360"></canvas><figcaption>2026.10.26 AX Festival</figcaption></figure><p class="pm">동료들과 추억을 남기세요</p></div>\n' +   /* v5.67 폴라로이드(사용자 문구 그대로) */
     '    <div class="cheer" id="t3-cheer" role="status" aria-live="polite" hidden>더 힘내세요!</div>\n' +
@@ -4969,6 +5124,7 @@
     '    <button type="button" class="nb pri wide" id="t3-hOk">닫기</button>\n' +
     '  </div>\n' +
     '</section>\n' +
+'<section class="spov" id="t3-spov" role="dialog" aria-modal="true" aria-label="룰렛 돌리기 · 가상 체험" tabindex="-1" hidden><div class="spst"><div class="spwh" id="t3-spwh"><div class="spd" id="t3-spd"></div><span class="sppt" aria-hidden="true"><svg viewBox="0 0 28 34" fill="none"><path d="M3 3h22L14 31z" fill="#191F28" stroke="#FFFFFF" stroke-width="3" stroke-linejoin="round"/></svg></span><span class="spfx" id="t3-spfx" aria-hidden="true"></span></div><p class="spm" id="t3-spm" role="status" aria-live="polite"></p></div></section>\n' +   /* v6.91 룰렛 판만 가운데(판 그림 = spSvg) */
 '<section class="scard" id="t3-scard" role="dialog" aria-modal="true" aria-labelledby="t3-scT" tabindex="-1" hidden>\n' +
     '  <div class="sccard">\n' +
     '    <div class="scic" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5.5" r="2.6"/><path d="M10.6 8v3.6M13.4 8v3.6"/><rect x="5" y="11.6" width="14" height="3.6" rx="1"/><path d="M4.5 17.6h15M7 20.5h10"/></svg></div>\n' +
@@ -5066,6 +5222,7 @@
     if (!$('vid').hidden) closePromo();
     if (SCARD) closeStampCard();
     phAbort();   /* v5.67 */
+    spAbort();   /* v6.91 */
     irAbort();   /* v5.55 아이리스 흐름 중이면 멈추고 */
     if (G.scn === 'elev' && !G.keepElev) leaveElev(true);   /* v5.49 다음에 열 때 로비에서 · v5.65 층 안내로 갈 때는 엘리베이터 안 그대로(돌아오면 그 자리) */
     if (G.squeeze) { G.pos.copy(toThree(GATE.at[0], GATE.at[1] - 0.3)); G.sqS = [1, 1, 1]; G.jy = 0; }   /* v5.56 연출 중 닫으면 게이트 앞으로(걷는 곳 밖에 남지 않게) */
@@ -5083,6 +5240,7 @@
   function back() {
     if (!ROOTEL || !G.open) return;
     if (!$('vid').hidden) { closePromo(); return; }
+    if (SP.on) { spClose(); return; }   /* v6.91 룰렛 돌리기 = 뒤로 = 닫힘(도는 중이면 소리 · 타이머까지 멈춤) */
     if (SCARD) { closeStampCard(); return; }   /* v5.49 */
     if (!$('pola').hidden) { phClose(); return; }   /* v5.67 폴라로이드 */
     if (PH.on) return;   /* v5.67 사진 찍기 연출 동안 = 막음 */
@@ -5094,5 +5252,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v6.83', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v6.91', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();

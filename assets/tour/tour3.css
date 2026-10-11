@@ -209,14 +209,6 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 @media (prefers-reduced-motion: reduce) { #axTour3 .finger, #axTour3 .dest { animation: none; } #axTour3 .sheet, #axTour3 .list, #axTour3 .hcard, #axTour3 .cta { animation: none; } }
 
 /* 룰렛 상품 카드 · 사진 · 「샘플」 딱지(오른쪽 위 흰 바탕 · 앱 규칙) · 가격 없음 */
-#axTour3 .card.prize h2 { display: flex; align-items: baseline; gap: 6px; }
-#axTour3 .card.prize h2 .q { margin-left: auto; font-size: 15px; font-weight: 600; color: var(--muted); }
-#axTour3 .card.prize .pic { display: flex; align-items: flex-start; justify-content: center; padding: 16px; }
-#axTour3 .pz { display: flex; gap: 10px; width: 100%; max-width: 360px; }
-#axTour3 .pz .ph { position: relative; flex: 1; min-width: 0; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: #F9FAFB; }
-#axTour3 .pz .ph img { width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity .2s; }
-#axTour3 .pz .ph img.on { opacity: 1; }
-#axTour3 .pz .ph i { position: absolute; right: 6px; top: 6px; font-style: normal; font-size: 11px; line-height: 16px; font-weight: 700; color: var(--body); background: #FFFFFF; border-radius: 6px; padding: 0 6px; box-shadow: 0 0 0 1px var(--divider); }
 /* 3D 를 못 그리는 기기 · 안내 한 줄 */
 #axTour3 .nogl { position: absolute; inset: 0; margin: 0; display: grid; place-items: center; padding: 24px; text-align: center; font-size: 17px; line-height: 26px; font-weight: 600; color: var(--body); background: var(--canvas); z-index: 6; }
 /* 입장 암전 · 「1F · AX Festival 2026」 */
@@ -452,3 +444,50 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3.rm .pola .pc, #axTour3.rm .pola .pm { animation: none; }
 #axTour3.rm .pola { transition: none; }
 @media (prefers-reduced-motion: reduce) { #axTour3 .pola .pc, #axTour3 .pola .pm, #axTour3 .pflash.go { animation: none; } #axTour3 .pola { transition: none; } }
+/* ═══ v6.91 룰렛 돌리기(사용자 261011) ═══ */
+/* 단추 묶음 = 사진 찍기 주 버튼과 같은 모양(O100 면 · onBrand 글 · 높이 52 · 처음 통통 두 번 · 숨 쉬는 빛) + 그 아래 흰 알약 「경품 보기」(높이 44) · 자리는 JS(placeSpin) */
+#axTour3 .spg { position: absolute; left: 50%; top: 0; z-index: 6; display: flex; flex-direction: column; align-items: center; gap: 10px; transform: translateX(-50%); pointer-events: none; }
+#axTour3 .spg > button { pointer-events: auto; -webkit-tap-highlight-color: transparent; }
+#axTour3 .spb { position: relative; display: flex; align-items: center; height: 52px; padding: 0 22px 0 14px; border-radius: 999px; background: var(--brand); color: var(--onBrand); box-shadow: 0 6px 16px rgba(229, 103, 30, .35); font-size: 17px; line-height: 22px; font-weight: 800; white-space: nowrap; }
+#axTour3 .spb .lk { width: 30px; height: 30px; display: grid; place-items: center; }
+#axTour3 .spb .lk svg { width: 24px; height: 24px; }
+#axTour3 .spb .lt { margin-left: 4px; }
+#axTour3 .spb .kh { right: -4px; top: -9px; }
+#axTour3 .spb::after { content: ""; position: absolute; inset: -4px; border-radius: inherit; box-shadow: 0 0 0 3px rgba(255, 127, 50, .55); opacity: 0; pointer-events: none; animation: shotGlow 2.4s ease-in-out .9s infinite; }
+#axTour3 .spb.pop { animation: spbPop .42s cubic-bezier(.3, .7, .4, 1) 2; }
+#axTour3 .spb:active { transform: scale(.96); }
+@keyframes spbPop { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } }
+#axTour3 .spz { display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 16px 0 12px; border-radius: 999px; background: rgba(255, 255, 255, .92); box-shadow: inset 0 0 0 1.5px rgba(255, 127, 50, .6), 0 4px 14px rgba(25, 31, 40, .14); color: var(--ink); font-size: 15px; line-height: 22px; font-weight: 700; white-space: nowrap; }
+#axTour3 .spz svg { color: var(--brand); }
+#axTour3 .spz:active { transform: scale(.96); }
+/* 장면 = 판만 가운데 · 뒷배경 짙은 글자색 40% · 열림 300ms(흐려짐 + 6px 떠오름 · ease) · 닫힘 180ms 흐려짐(mobile-popup-motion 장면 규격) */
+#axTour3 .spov { position: fixed; inset: 0; z-index: 52; max-width: 520px; margin: 0 auto; display: flex; align-items: center; justify-content: center; background: rgba(25, 31, 40, .4); overscroll-behavior: contain; touch-action: none; -webkit-tap-highlight-color: transparent; }
+#axTour3 .spov:focus { outline: none; }
+#axTour3 .spov.done { cursor: pointer; }
+#axTour3 .spov.in { animation: spFade .3s ease both; }
+#axTour3 .spov.in .spst { animation: spRise .3s ease both; }
+#axTour3 .spov.out { opacity: 0; pointer-events: none; transition: opacity .18s ease; }
+#axTour3 .spst { display: flex; flex-direction: column; align-items: center; gap: 28px; padding: 16px; }
+#axTour3 .spwh { position: relative; width: min(74vw, 300px, 44vh); aspect-ratio: 1; border-radius: 50%; box-shadow: 0 16px 40px rgba(25, 31, 40, .35); }
+#axTour3 .spwh.hit { animation: spHit .32s cubic-bezier(.3, .7, .3, 1); }
+#axTour3 .spd { position: absolute; inset: 0; border-radius: 50%; will-change: transform; }
+#axTour3 .spd svg { display: block; width: 100%; height: 100%; }
+#axTour3 .sppt { position: absolute; left: 50%; top: -16px; width: 28px; height: 34px; margin-left: -14px; z-index: 1; }
+#axTour3 .sppt svg { display: block; width: 100%; height: 100%; }
+#axTour3 .spfx { position: absolute; left: 50%; top: 50%; width: 0; height: 0; z-index: 2; pointer-events: none; }
+#axTour3 .spfx b { position: absolute; left: -60px; top: -60px; width: 120px; height: 120px; border-radius: 50%; box-shadow: inset 0 0 0 5px #FFFFFF; opacity: 0; animation: spRing .55s ease-out both; }
+#axTour3 .spfx i { position: absolute; left: -5px; top: -7px; width: 10px; height: 14px; border-radius: 2px; background: var(--c); opacity: 0; animation: spBurst .9s cubic-bezier(.2, .8, .3, 1) var(--d, 0s) both; }
+#axTour3 .spfx i.r { top: -5px; height: 10px; border-radius: 50%; }
+#axTour3 .spm { margin: 0; min-height: 76px; padding: 12px 20px; border-radius: 16px; background: rgba(25, 31, 40, .86); color: #FFFFFF; text-align: center; opacity: 0; }
+#axTour3 .spm span { display: block; white-space: nowrap; }
+#axTour3 .spm span:first-child { font-size: 19px; line-height: 28px; font-weight: 800; }
+#axTour3 .spm span + span { font-size: 16px; line-height: 24px; font-weight: 600; }
+#axTour3 .spov.done .spm { opacity: 1; animation: spRise .3s ease both; }
+@keyframes spFade { from { opacity: 0; } }
+@keyframes spRise { from { opacity: 0; transform: translateY(6px); } }
+@keyframes spHit { 0% { transform: scale(1); } 40% { transform: scale(1.05); } 100% { transform: scale(1); } }
+@keyframes spRing { 0% { opacity: .9; transform: scale(.4); } 100% { opacity: 0; transform: scale(2.6); } }
+@keyframes spBurst { 0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(.6); } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--x), var(--y)) rotate(var(--r)) scale(1); } }
+#axTour3.rm .spb.pop, #axTour3.rm .spb::after, #axTour3.rm .spov.in, #axTour3.rm .spov.in .spst, #axTour3.rm .spwh.hit, #axTour3.rm .spov.done .spm { animation: none; }
+#axTour3.rm .spov.out { transition: none; }
+@media (prefers-reduced-motion: reduce) { #axTour3 .spb.pop, #axTour3 .spb::after, #axTour3 .spov.in, #axTour3 .spov.in .spst, #axTour3 .spwh.hit, #axTour3 .spov.done .spm, #axTour3 .spfx b, #axTour3 .spfx i { animation: none; } #axTour3 .spov.out { transition: none; } }
