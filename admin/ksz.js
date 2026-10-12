@@ -46,7 +46,7 @@ function kszTotHtml(d, gv){
   var row=function(z){ var q=(a.qty||{})[z]||0, s=(a.st||{})[z]||0, k=(a.kit||{})[z]||0, g=(d.got||{})[z]||0, r=q-s-k; t[0]+=q; t[1]+=s; t[2]+=k; t[3]+=g;
     return '<tr><td><b>'+esc(ksLbl(z))+'</b></td>'+c(q)+c(s)+c(k)+(gv?c(g):"")+'<td class="n r">'+(r<0?tag("모자람 "+n0(-r),"warn"):"<b>"+n0(r)+"</b>")+'</td></tr>'; };
   var body=KS_SZ.map(row).join(""), tr=t[0]-t[1]-t[2];
-  return '<table class="tb kszt" data-qa="ksz.tot"><thead><tr><th>사이즈</th><th class="r">총수량</th><th class="r">스태프</th><th class="r">사전 신청</th>'+(gv?'<th class="r">지급</th>':"")+'<th class="r">남음</th></tr></thead><tbody>'+body+
+  return '<table class="tb kszt" data-qa="ksz.tot"><thead><tr><th>사이즈</th><th class="r">총수량</th><th class="r">스태프</th><th class="r">사전 신청자</th>'+(gv?'<th class="r">지급</th>':"")+'<th class="r">남음</th></tr></thead><tbody>'+body+
     '<tr><td class="cap">합계</td>'+c(t[0])+c(t[1])+c(t[2])+(gv?c(t[3]):"")+'<td class="n r"><b>'+n0(tr)+'</b></td></tr></tbody></table>';
 }
 function kszTotPut(){ var b=el("kszTot"); if(b) b.innerHTML=kszTotHtml(S.data.kss); }
@@ -101,4 +101,63 @@ function kszUndo(batch, inDlg){
     changed(["kit_size_list","kit_size_state"]); rosAfter(); kszPreview(); kszTotLoad();
     toast("되돌렸습니다 · "+r.n+"명"+(r.skip&&r.skip.length?" · 그 뒤 바뀐 "+r.skip.length+"명은 건너뜀":""));
   },function(e){ if(inDlg) dlgForce(); toast(why(e)); });
+}
+/* ── 261012 옷 재고현황 내려받기(카카오톡 공유 · 사용자 261012) · 명단 › 옷 신청 툴바 [재고현황 이미지 저장] [글로 복사]
+ * 저장 직전 kit_size_state 를 새로 받아 그린다 · 이름 · 사번 없음(사이즈별 수만) · 세로 PNG 400 × 배율 2 · 파일 이름 옷재고_YYMMDD_HHMM.png */
+var KSZ_C={ bg:"#F2F4F7", card:"#FFFFFF", tx:"#14171F", tx3:"#80848F", line:"#E5E7EB", line2:"#EFF0F3", soft:"#F9FAFB", navy:"#00205B", navy05:"#EEF0F7", warn:"#8A5A12", warnBg:"#FFF6E3" };
+function kszStock(d){
+  var a=(d&&d.all)||{ qty:(d&&d.qty)||{}, st:((d&&d.st)||{}).taken||{}, kit:(d&&d.taken)||{} }, t={ q:0, s:0, k:0, r:0 };
+  var rows=KS_SZ.map(function(z){ var q=(a.qty||{})[z]||0, s=(a.st||{})[z]||0, k=(a.kit||{})[z]||0; t.q+=q; t.s+=s; t.k+=k; return { lbl:ksLbl(z), q:q, s:s, k:k, r:q-s-k }; });
+  t.r=t.q-t.s-t.k;
+  var m=/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/.exec(String((d&&d.t)||"")), n=new Date(), p=function(v){ return (v<10?"0":"")+v; };
+  var Y=m?m[1]:String(n.getFullYear()), M=m?m[2]:p(n.getMonth()+1), D=m?m[3]:p(n.getDate()), h=m?m[4]:p(n.getHours()), i=m?m[5]:p(n.getMinutes());
+  return { rows:rows, tot:t, at:Y+". "+M+". "+D+" "+h+":"+i, file:"옷재고_"+Y.slice(2)+M+D+"_"+h+i+".png" };
+}
+function kszRemTxt(r){ return r<0?"모자람 "+n0(-r):n0(r); }
+function kszStockTxt(o){
+  var L=["기념품 옷 재고현황","기준 "+o.at];
+  o.rows.forEach(function(r){ L.push(r.lbl+" · 총수량 "+n0(r.q)+" · 스태프 "+n0(r.s)+" · 사전 신청자 "+n0(r.k)+" · 남음 "+kszRemTxt(r.r)); });
+  L.push("합계 · 총수량 "+n0(o.tot.q)+" · 스태프 "+n0(o.tot.s)+" · 사전 신청자 "+n0(o.tot.k)+" · 남음 "+kszRemTxt(o.tot.r));
+  return L.join("\n");
+}
+function kszCanvas(o){
+  var S2=2, W=400, rowH=44, top=110, H=top+34+rowH*(o.rows.length+1)+64, cv=document.createElement("canvas");
+  cv.width=W*S2; cv.height=H*S2;
+  var g=cv.getContext("2d"), ff=getComputedStyle(document.body).fontFamily||"sans-serif", C=KSZ_C;
+  g.scale(S2,S2);
+  var font=function(w, px){ g.font=w+" "+px+"px "+ff; }, txt=function(s, x, y, al, col){ g.textAlign=al||"left"; g.fillStyle=col||C.tx; g.fillText(s, x, y); };
+  var rr=function(x, y, w, h, r, col){ g.fillStyle=col; g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); g.fill(); };
+  var line=function(y, col){ g.fillStyle=col; g.fillRect(16, y, W-32, 1); };
+  g.fillStyle=C.bg; g.fillRect(0,0,W,H);
+  rr(16, 16, W-32, H-32, 12, C.card);
+  g.textBaseline="alphabetic";
+  font("700",22); txt("기념품 옷 재고현황", 36, 60);
+  font("400",13); txt("기준 "+o.at, 36, 86, "left", C.tx3);
+  var X=[36,170,222,296,364], hd=["사이즈","총수량","스태프","사전 신청자","남음"];
+  g.fillStyle=C.soft; g.fillRect(16, top, W-32, 34); line(top+33, C.line);
+  font("600",12); hd.forEach(function(s, j){ txt(s, X[j], top+22, j?"right":"left", C.tx3); });
+  var y=top+34, cell=function(r, y, bold){
+    font("700",15); txt(r.lbl, X[0], y+28, "left", C.tx);
+    font(bold?"700":"400",15); txt(n0(r.q), X[1], y+28, "right"); txt(n0(r.s), X[2], y+28, "right"); txt(n0(r.k), X[3], y+28, "right");
+    if(r.r<0){ var s="모자람 "+n0(-r.r); font("700",12); var w=g.measureText(s).width+12; rr(X[4]-w, y+11, w, 24, 12, C.warnBg); txt(s, X[4]-6, y+27, "right", C.warn); }
+    else { font("700",15); txt(n0(r.r), X[4], y+28, "right", C.navy); }
+  };
+  o.rows.forEach(function(r){ cell(r, y); y+=rowH; line(y-1, C.line2); });
+  g.fillStyle=C.navy05; g.fillRect(16, y, W-32, rowH);
+  cell({ lbl:"합계", q:o.tot.q, s:o.tot.s, k:o.tot.k, r:o.tot.r }, y, 1); y+=rowH;
+  font("400",12); txt("남음 = 총수량 − 스태프 − 사전 신청자", 36, y+30, "left", C.tx3);
+  return cv;
+}
+function kszStockGet(done){ call("kit_size_state",{},function(r){ if(!(r&&r.ok)){ toast("재고현황을 받지 못했습니다 · "+why(r)); return; } S.data.kss=r; done(kszStock(r)); },function(e){ toast("재고현황을 받지 못했습니다 · "+why(e)); }); }
+function kszImg(){
+  kszStockGet(function(o){
+    var go=function(){ var cv=kszCanvas(o); cv.toBlob(function(b){ if(!b){ toast("이미지를 만들지 못했습니다"); return; } var u=URL.createObjectURL(b), a=document.createElement("a"); a.href=u; a.download=o.file; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(u); },4000); toast("저장했습니다 · "+o.file); },"image/png"); };
+    if(document.fonts&&document.fonts.ready) document.fonts.ready.then(go,go); else go();
+  });
+}
+function kszCopy(){
+  kszStockGet(function(o){
+    var s=kszStockTxt(o), ok=function(){ toast("글로 복사했습니다 · 카카오톡에 붙여 넣기"); }, fb=function(){ var t=document.createElement("textarea"); t.value=s; t.style.position="fixed"; t.style.opacity="0"; document.body.appendChild(t); t.select(); var r=false; try{ r=document.execCommand("copy"); }catch(e){} t.remove(); if(r) ok(); else prompt("재고현황 글", s); };
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(s).then(ok, fb); else fb();
+  });
 }

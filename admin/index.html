@@ -494,7 +494,7 @@ header.top :focus-visible,.bar.bulk :focus-visible{outline-color:#fff}
 </div>
 <script src="../assets/server.js"></script>
 <script src="qrcode.js"></script>
-<script src="ksz.js?v=2610122"></script>
+<script src="ksz.js?v=2610123"></script>
 <script>
 /* ══ 0. 설정 ══ */
 var BE_DEFAULT = "https://script.google.com/macros/s/AKfycbwjCaSSUnQ7W1lrM8T426Cn_LgKs_UhI0Qi5XRVk-_eF-oD55-Wwjsot0DkPJCX9JqMBA/exec";
@@ -1060,8 +1060,8 @@ function rosShown(){
 function rosLocked(r){ var u=rosSt(); if(ROS_RO[u.kind]) return "보기만 하는 명단"; if(u.kind==="staff"&&r.sup) return "슈퍼관리자"; if(u.kind==="test"&&r.fixed) return "고정 시험 사번"; return ""; }
 function rosSync(){ var u=rosSt(), k=S.sub.p_list; if(k&&k!==u.kind&&ROS_KINDS.some(function(x){ return x[0]===k; })){ u.kind=k; u.filt=""; u.chk={}; u.cur=""; u.mode=""; u.show=ROS_SHOW; var b=el("rsL"); if(b) b.innerHTML=""; } }
 VIEWS.roster={
-  need:function(){ rosSync(); var u=rosSt(); return [{ k:"rstat", a:"roll_stat", ttl:60000 },{ k:"rl_"+u.kind, a:"roll_list", p:{ list:u.kind }, ttl:60000, sup:1 }]; },
-  right:function(){ var u=rosSt(); return ROS_RO[u.kind]?'<button class="btn" data-qa="ros.legacy" onclick="legacyOpen(\''+(u.kind==="lounge"?"p_lng":"p_kit")+'\',0)">'+(u.kind==="lounge"?"명단 통째 올리기 ›":"자동 배정 · 엑셀 ›")+'</button>':(u.kind==="staff"&&window.kszOpen?'<button class="btn" data-qa="ksz.open" onclick="kszOpen()">사이즈 일괄 입력</button>':'')+'<button class="btn pri" data-qa="ros.add" onclick="rosMode(\'add\')">+ 사람 넣기</button>'; },
+  need:function(){ rosSync(); var u=rosSt(); return [{ k:"rstat", a:"roll_stat", ttl:60000 },{ k:"rl_"+u.kind, a:"roll_list", p:{ list:u.kind }, ttl:60000, sup:1 }].concat(u.kind==="kit"?[{ k:"kss", a:"kit_size_state", ttl:60000 }]:[]); },
+  right:function(){ var u=rosSt(); return (u.kind==="kit"&&window.kszImg?'<button class="btn" data-qa="ksz.img" onclick="kszImg()">재고현황 이미지 저장</button><button class="btn" data-qa="ksz.copy" onclick="kszCopy()">글로 복사</button>':'')+(ROS_RO[u.kind]?'<button class="btn" data-qa="ros.legacy" onclick="legacyOpen(\''+(u.kind==="lounge"?"p_lng":"p_kit")+'\',0)">'+(u.kind==="lounge"?"명단 통째 올리기 ›":"자동 배정 · 엑셀 ›")+'</button>':(u.kind==="staff"&&window.kszOpen?'<button class="btn" data-qa="ksz.open" onclick="kszOpen()">사이즈 일괄 입력</button>':'')+'<button class="btn pri" data-qa="ros.add" onclick="rosMode(\'add\')">+ 사람 넣기</button>'); },
   mount:function(){
     rosSync(); var u=rosSt(), k=ROS_KINDS.filter(function(x){ return x[0]===u.kind; })[0];
     el("vb").innerHTML='<div class="fx" style="margin-bottom:6px"><span class="seg" id="rsKind"></span><span class="sp"></span><span class="cap">라운지 사전 신청 · 옷 신청 명단은 설정 › 고급 › 재고 · 그 밖 · '+ROS_OTHER.map(function(x){ return '<button class="lnk" data-qa="ros.other.'+x[0]+'" onclick="legacyOpen(\''+x[0]+'\',0)">'+esc(x[1])+'</button>'; }).join(" · ")+' (옛 콘솔)</span></div>'+
@@ -1181,7 +1181,7 @@ function rosPanel(){
   }
   var st=(S.data.rstat||{})[u.kind]||{};
   p.innerHTML='<div class="ph2"><div><h2>'+esc(ROS_KINDS.filter(function(x){ return x[0]===u.kind; })[0][1])+'</h2><div class="cap">행을 누르면 자세히 · 왼쪽 칸을 고르면 일괄</div></div></div><div class="bd"><dl class="kv"><dt>사람</dt><dd class="n">'+n0(st.n)+'명</dd><dt>앱 가입</dt><dd class="n">'+n0(st.acct)+'명</dd></dl>'+
-    '<p class="cap">넣기는 오른쪽 위 「+ 사람 넣기」 · 붙여 넣기 · 찾아서. 빼기는 줄을 고른 뒤 막대에서. 모든 일은 기록 › 활동 기록에 남고 그날 안에 되돌립니다.</p></div>';
+    (u.kind==="kit"&&window.kszTotHtml?'<h3 class="mt12" style="font-size:var(--fs-nav)">기념품 옷 총수량</h3><div class="mt8">'+kszTotHtml(S.data.kss)+'</div>':'')+'<p class="cap">넣기는 오른쪽 위 「+ 사람 넣기」 · 붙여 넣기 · 찾아서. 빼기는 줄을 고른 뒤 막대에서. 모든 일은 기록 › 활동 기록에 남고 그날 안에 되돌립니다.</p></div>';
 }
 /* ── 넣기 ── */
 function rosAddHtml(){
