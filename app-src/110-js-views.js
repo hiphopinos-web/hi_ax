@@ -183,7 +183,7 @@ var Views = {
         '<button type="button" class="ax-link axs-plain axs-self" onclick="IDEA.step=null;App.render()">한 줄 더 남기기</button></div>' +
         '<div class="ax-bottom axs-fix">' + pri + progBtn("내가 낸 아이디어 보기", "App.go(\'ideas_mine\')", pri ? "ax-button-weak" : "") + "</div>";   /* v5.67 둘러보기 복귀 = 떠 있는 「행사 둘러보기로 돌아가기」(trf) 하나 */
     }
-    /* v4.08 입력·제출 화면 = 전체 화면 · 하단 메뉴 숨김 · 아래 고정 주 버튼(5글자 이상이면 켜짐 · v6.07 50자 공백 포함) + 약한 버튼
+    /* v4.08 입력·제출 화면 = 전체 화면 · 하단 메뉴 숨김 · 아래 고정 주 버튼(5글자 이상이면 켜짐 · v6.07 50자 → 261012 30자 공백 포함) + 약한 버튼
        쓴 내용은 어떤 경우에도 지우지 않는다(IDEA.draft · 기기 저장 idea_draft · 다시 그려도 그대로) · 공백은 글자 수에서 뺀다 */
     /* v5.39 (사용자 261003 「2,000자 이상 · 아래 예시 및 분류는 없애자」) 최대 IDEA_MAX(3,000)자 · 칸은 쓰면 늘고 최대 높이 안에서 스크롤 · 예시 칩 · 분야 칩은 그리지 않는다(코드 IDEA_EX · ideaEx · pickTag 는 보존) · 분야는 빈 값으로 보낸다 */
     if (ideaGateOff() && !IDEA.cc) return '<div class="ax-stack">' + stampLineHtml("p5") + botHtml("아이디어 한 줄은 10월 26일에 열려요") + "</div>";   /* v5.90 사전 오픈 OFF · 행사 전 */

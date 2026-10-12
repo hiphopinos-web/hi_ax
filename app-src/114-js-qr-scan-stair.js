@@ -1654,8 +1654,8 @@ function qrScanClose() {
 }
 /* v4.06 qrHandle → qrRoute (3단계 절 · 링크와 스캐너가 같은 분기) */
 /* v4.08 글자 수 = 공백을 뺀 글자 · 5글자 이상이면 제출 버튼이 켜진다 · 입력은 지우지 않는다
-   v6.07 (사용자 261007 「아이디어 한 줄이 그래도 50자는 최소한」) 50자 · 공백 포함(앞뒤 공백만 뺀다) · 서버 IDEA_MIN 과 같다(모자라면 short) */
-var IDEA_MIN = 50;
+   v6.07 (사용자 261007 「아이디어 한 줄이 그래도 50자는 최소한」) 50자 → 261012 30자 · 공백 포함(앞뒤 공백만 뺀다) · 서버 IDEA_MIN 과 같다(모자라면 short) */
+var IDEA_MIN = 30;
 /* v5.39 (사용자 261003 「2,000자 이상」) 최대 3,000자 · 서버 IDEA_MAX 와 같다(서버는 넘으면 long 으로 거절) · 칸 maxlength 가 먼저 막는다 */
 var IDEA_MAX = 3000;
 /* 칸 높이 = 쓴 만큼(최대 높이는 CSS .axs-grow · 넘으면 칸 안에서 스크롤) · 키 입력마다 · 그린 직후 한 번 */
@@ -1673,7 +1673,7 @@ function ideaMineTxt(i) {
 function ideaMineOpen(id) { IDEA_OPEN[id] = !IDEA_OPEN[id]; App.render(); }
 function ideaLen(v) { return Array.from(String(v || "").trim()).length; }   /* v6.07 공백 포함 · 앞뒤 공백 제외 · 코드 포인트(서버 ideaLen_ 과 같은 셈 · 이모지 1) */
 function ideaDraft() { if (IDEA.draft == null) { IDEA.draft = String(S.get("idea_draft", "") || ""); IDEA.resume = !!IDEA.draft.trim(); } return IDEA.draft; }   /* v6.07 resume = 저장된 글로 다시 들어왔다(「이어 써요」) */
-/* v6.07 50자 전 = 「50자 이상 써 주세요 · 지금 n자」 · 3,000자 가까이(남은 300자부터) = 남은 글자 · 다 차면 더 쓸 수 없다고 */
+/* v6.07 50자(261012 30자) 전 = 「30자 이상 써 주세요 · 지금 n자」 · 3,000자 가까이(남은 300자부터) = 남은 글자 · 다 차면 더 쓸 수 없다고 */
 function ideaLeftTxt(n, v) {
   var left = IDEA_MAX - String(v || "").length;
   if (n < IDEA_MIN) return IDEA_MIN + "자 이상 써 주세요" + (n ? " · 지금 " + n + "자" : "");
