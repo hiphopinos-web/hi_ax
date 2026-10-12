@@ -165,7 +165,7 @@ var PRIZES = {
     { rk: "3등", nm: "AI 구독권 1개월", q: 3, img: "idea3" }] },
   /* v5.05 1F 타자왕 1~3위(17:00 Outro 시상) · v5.09 (261003 사용자 확정) 새 상품 · 사진 = 제조사 공식 컷 */
   type: { unit: "명", list: [
-    { rk: "1등", nm: "기계식 키보드", sub: "체리 G80-3872", q: 1, img: "ty1_cherry", flat: 1 },   /* v5.18 flat = 사진 2:1(위아래 여백 자르기) */
+    { rk: "1등", nm: "기계식 키보드", sub: "체리 MX Board 10.0 Low Profile", q: 1, img: "ty1_cherry_lp10", flat: 1 },   /* v5.18 flat = 사진 2:1(위아래 여백 자르기) */
     { rk: "2등", nm: "마우스", sub: "로지텍 MX Master 4", q: 1, img: "ty2_mxmaster4" },
     { rk: "3등", nm: "기계식 키보드", sub: "AULA F108 Pro", q: 1, img: "ty3_aula" }] }
 };
