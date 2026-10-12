@@ -105,6 +105,7 @@
   @media (prefers-reduced-motion: reduce) { .axs-pz-cv .cds button, .axs-pz-cv .cds .dn { transition: none; } .axs-pz-cv .cds button:active { transform: none; } }
   .axs-pz-sec { display: flex; flex-direction: column; gap: var(--ax-space-12); margin-top: var(--ax-space-40); }
   .axs-pz-sh { display: flex; flex-direction: column; gap: var(--ax-space-4); margin-bottom: var(--ax-space-4); scroll-margin-top: calc(var(--stick, 0px) + var(--ax-space-16)); }
+  .axs-dbody .axs-pz-sh { scroll-margin-top: var(--ax-space-16); }   /* v7.04 (사용자 261012 「선착순을 누르면 멈추는 위치가 어설프다」) 시트 안 = 스크롤 칸이 시트 머리 아래에서 시작하므로 앱 머리 높이(--stick)를 빼고 16px 만 · 룰렛 · 행운권 · 선착순 같은 기준 */
   .axs-pz-sh .en { margin: 0; font: var(--ax-type-caption); font-weight: 700; letter-spacing: 0.12em; color: var(--ax-color-brandText); }
   .axs-pz-sh h2 { margin: 0; font: var(--ax-type-t2); color: var(--ax-color-ink); }
   /* v5.74 「받으려면」 박스(사용자 261006) · 연주황 면(brandSoft · Weak 버튼과 같은 면 · 경고색 아님) · 반경 16 · 줄마다 주황 아이콘 24 + 굵은 한 줄(할 일 · ink) + 옅은 한 줄(body)

@@ -4,7 +4,7 @@
 /* v5.37 (사용자 261003 「이것들이 수정되면 정식 앱에 올리자」) 둘러보기 v3 = 시험 페이지와 같은 공용 모듈(tour3.js · tour3.css · 캐릭터 걷기 · 40도 시점 · 왼손 패드 · 오른손 십자 · 작은 지도 · 스태프 챗봇 · 판 보기 · 돋보기 2개 · 움직임 줄이기 · 입장 암전)
    같은 약속 AXTour.open/close/back/isOpen · 옛 v2(tour.js · tour.css · 자동 둘러보기 · 평면 지도 · 구역 시트)로 되돌리려면 아래 목록의 tour3 두 개를 tour.css · tour.js 로 바꾸면 된다(파일은 그대로 둠) */
 /* v5.38 (사용자 261003) 둘러보기 손질 · 캐릭터 겹침(스태프 원 충돌) · 늘 카메라 쪽을 봄 · 조그 패드 · 안내데스크 깜빡임(겹친 면) · 정문 회전문 또렷하게 · 로비 음악(Web Audio 합성 · 「음악 없이」 · 위쪽 스피커 버튼) · 파일 이름 그대로 · 캐시 깨기 ver v538 */
-var TOUR = { ver: "v699", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */   /* 261012 v699 = 기둥 포스터 부착안(시안 A ~ E · tour-data colFaces · d/p46s.webp) 캐시 깨기 */
+var TOUR = { ver: "v704", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */   /* 261012 v699 = 기둥 포스터 부착안(시안 A ~ E · tour-data colFaces · d/p46s.webp) 캐시 깨기 */
 try { localStorage.removeItem('axfT3Diag'); } catch (e) {} window.AXT3_DIAG = /[?&]t3diag=1(?:&|$)/.test(location.search);   /* v5.47 진단은 주소에 ?t3diag=1 이 있는 그 페이지에서만 · 기억하지 않는다 · 옛 기기 기억은 지운다(사용자 261004) */   /* v5.44 둘러보기 실기기 진단(주소 ?t3diag=1 · 이 기기에 기억 · ?t3diag=0 이면 끔) · 화면 왼쪽 위에 GPU · 깊이 비트 · highp · DPR · fps */
 /* 켜기 스위치 · v5.28 true = 전체 공개(사용자 261003 「1층 3D 전체 공개」) · false 로 두면 입구 3곳 · 판 퀴즈 힌트 링크 · 열기가 모두 숨는다 */
 var TOUR_ON = true;
@@ -113,7 +113,7 @@ var TOUR_HOST = {
     if (id === "lab") return ideaGateOff() ? [] : [{ lbl: "아이디어 한 줄 쓰기", run: go("ideas") }];   /* v5.90 사전 오픈 OFF · 행사 전 = 숨김 */
     if (id === "play") return [{ lbl: "체험 안내 보기", run: go("booth") }];
     if (id === "lounge") { var L = zoneLive(zoneById("lounge")); return [{ lbl: L.btn ? L.btn[0] : "상담 신청", run: function () { progOpen("dap"); } }]; }
-    if (id === "event") return [{ lbl: "룰렛 경품 보기", run: function () { prizeGo("roulette"); } }, { lbl: "1F 타자왕 순위", run: typeSiteRankGo }];
+    if (id === "event") return [{ lbl: "1F 타자왕 순위", run: typeSiteRankGo }];   /* v7.04 (사용자 261012 「경품 보기가 아직 살아 있어 헷갈린다」) 룰렛 = 둘러보기 「룰렛 돌리기」 하나 · 옛 「룰렛 경품 보기」 삭제 */
     if (id === "cafe") return [{ lbl: S.get("cchat", null) ? "내 커피챗 보기" : ideaMineN() ? "커피챗 희망" : "아이디어 쓰고 희망", run: cchatOpen }].concat(ideaGateOff() ? [] : [{ lbl: "아이디어 한 줄 쓰기", run: go("ideas") }]);   /* v5.65 신청 전 = 구역 상세(zone_d cchat) */
     return [];
   },
@@ -146,7 +146,7 @@ var TOUR_HOST = {
   /* v6.95 (사용자 261011 「권장대로」) 둘러보기 룰렛 경품 카드 자료 = PRIZES.roulette 한 곳(사본 없음) · 수량 글 = 상품 탭과 같은 형식(qt 또는 「60개」) · 아래 안내 줄 = rouletteNextLine() 한 곳 */
   roulette: function () {
     var g = PRIZES.roulette;
-    return { list: g.list.map(function (p) { return { rk: p.rk, nm: p.nm, q: p.qt || p.q.toLocaleString() + g.unit, img: [p.img, p.img2].filter(Boolean).map(function (n) { return PRIZE_DIR + n + ".webp"; }) }; }), next: rouletteNextLine() };
+    return { list: g.list.map(function (p) { return { rk: p.rk, nm: p.nm, img: [p.img, p.img2].filter(Boolean).map(function (n) { return PRIZE_DIR + n + ".webp"; }) }; }), next: rouletteNextLine() };
   },
   prizeGo: function (k) {
     var pose = window.AXTour && AXTour.pose ? AXTour.pose() : null, under = App.current;
