@@ -248,6 +248,7 @@ var App = {
     if (typeof ttBarHtml === "function") { var ttb = ttBarHtml(); if (ttb) tb.insertAdjacentHTML("afterbegin", ttb); }   /* 261007 시험 시각 띠 · 테스트 모드에서 켰을 때만 */
     tb.style.display = SIGNAGE.indexOf(v) >= 0 || v === "sscan" ? "none" : "";   /* v5.98 스태프 스캔 = 자기 머리 줄(닫기 · 자리 칩 · 톱니) */
     if (v === "type_site" && tsfOn()) tb.style.display = "none";   /* v4.32 셀프 모드 참가자 화면 · 헤더 없음 */
+    if (v === "type_site" && TSF.trialPg) tb.style.display = "none";   /* 261012 타자왕 PC 체험 안내(확인 중 · 체험 기간 아님) · 헤더 없음 */
     crumbFit();
     /* 헤더 높이를 실측해 sticky 기준선으로 넘긴다 */
     el("frame").style.setProperty("--stick", tb.offsetHeight + "px");

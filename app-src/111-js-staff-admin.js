@@ -10,6 +10,7 @@
  *   15초 = 실패(fail "timeout") · 네트워크 = "network" · JSON 아님 = "bad" · 참가자 일반 요청(beCall · JSONP)은 그대로 */
 function admCall(params, done, fail, again) {
   if (!GAS_URL || typeof fetch !== "function" || typeof URLSearchParams !== "function") { if (fail) fail("offline"); return; }
+  if (params && !params.dev && typeof tsfTrialDev === "function") { var tdv = tsfTrialDev(params.action); if (tdv) params.dev = tdv; }   /* 261012 타자왕 PC 체험 · 기기 이름 */
   var body = new URLSearchParams(), settled = false, ctl = typeof AbortController === "function" ? new AbortController() : null;
   for (var k in params) if (Object.prototype.hasOwnProperty.call(params, k) && params[k] != null) body.append(k, String(params[k]));
   var end = function (why) { if (settled) return; settled = true; clearTimeout(timer); if (fail) fail(why); };
@@ -20,6 +21,7 @@ function admCall(params, done, fail, again) {
       if (res && typeof sesSeen === "function") sesSeen(res, params);
       if (res && typeof endSeen === "function") endSeen(res, params);
       if (res && res.reason === "notopen" && typeof ogShow === "function") ogShow(res.open, params);
+      if (res && res.reason === "trial_off" && typeof tsfTrialOff === "function") tsfTrialOff();   /* 261012 타자왕 PC 체험 · 서버 설정이 꺼지면 체험 셀프 모드 끝 */
       if (res && res.moved && beMoved(res) && res.reason === "moved" && !again) { admCall(params, done, fail, 1); return; }
       if (done) done(res);
     }, function () { end("bad"); });

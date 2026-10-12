@@ -33,6 +33,7 @@
     if (navigator.webdriver) return;
     if (/^#(self|tv=)/i.test(h) || /cap/.test(h)) return;
     try { if (localStorage.getItem("axf_self_on") === "true" && JSON.parse(localStorage.getItem("axf_self_key") || "\"\"")) return; } catch (e) {}
+    try { if (ss && ss.getItem("axf_tsf_trial")) return; } catch (e) {}   /* 261012 타자왕 PC 체험 탭 */
     if (!W.matchMedia || mm("(hover: none) and (pointer: coarse)")) return;
     if (!mm("(min-width: 900px) and (min-height: 600px)")) return;
   }

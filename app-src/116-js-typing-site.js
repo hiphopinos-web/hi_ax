@@ -316,9 +316,41 @@ var TSF_WHY = { param: "확인하지 못했어요 · QR을 다시 찍어 주세�
   locked: "관리 연결이 잠시 막혔어요 · " + TSF_DESK,   /* v4.65 서버 잠금(같은 와이파이에서 코드를 30번 틀림) */
   dup: "다른 노트북에서 도전 중이에요 · 그 판이 끝나면 다시",   /* v5.61 같은 사번이 다른 노트북에서 4분 안에 시작(서버 type_self_start dup) */
   qr: "다시 한 번 비춰 주세요 · 폰 화면을 켜 둔 채로", qrexp: "다시 한 번 비춰 주세요 · 폰 화면을 켜 둔 채로", qrold: "앱에서 다시 로그인해 주세요 · 비밀번호로 로그인한 뒤 내 QR" };   /* v5.12 서버 QR 확인(selfQr_) · v5.61 문구 = 행동 한 줄 */
-function tsfTok() { return S.get("self_tok", ""); }   /* v4.65 스태프 토큰(type_self_cfg tok) · 잠금에 막히지 않는다 */
-function tsfOn() { return S.get("self_on", false) === true && !!S.get("self_key", ""); }
+function tsfTok() { return tsfStaff() ? S.get("self_tok", "") : tsfTrial() || S.get("self_tok", ""); }   /* v4.65 스태프 토큰(type_self_cfg tok) · 잠금에 막히지 않는다 · 261012 체험 PC = 체험 토큰 */
+function tsfStaff() { return S.get("self_on", false) === true && !!S.get("self_key", ""); }   /* 스태프가 관리코드로 켠 기기 */
+function tsfOn() { return tsfStaff() || !!tsfTrial(); }
 function tsfKey() { return S.get("self_key", ""); }
+/* 261012 (사용자 확정 「PC 체험 주소 신설」) 타자왕 PC 체험 주소 · typing/ → index.html#self-trial · 서버 설정 타자왕_체험 이 켜져 있을 때만(type_trial_cfg · 관리코드 없음)
+   체험 토큰은 이 탭(sessionStorage)에만 둔다 · 탭을 닫으면 끝(그 PC 의 앱은 그대로) · 관리코드 입력 화면은 나오지 않는다 · 끄기 · 효과음 · 스태프 메뉴 = 관리코드(서버 admin_check)
+   서버가 trial_off 로 답하면(설정 끔 · admCall 한 곳) 곧바로 체험 끝 화면 · 체험 PC 는 2분마다 설정을 다시 묻는다(tsfCfgPull) */
+var TSF_TRIAL_SS = "axf_tsf_trial";
+function tsfTrial() { try { return sessionStorage.getItem(TSF_TRIAL_SS) || ""; } catch (e) { return ""; } }
+function tsfTrialSet(t) { try { if (t) sessionStorage.setItem(TSF_TRIAL_SS, t); else sessionStorage.removeItem(TSF_TRIAL_SS); } catch (e) {} }
+function tsfTrialStart() {
+  tsfTrialSet(""); TSF.trialPg = "wait";
+  if (!BE.on) { TSF.trialPg = "net"; App.render(); return; }
+  admCall({ action: "type_trial_cfg" }, function (r) {
+    if (r && r.ok && r.tok) { tsfTrialSet(r.tok); TSF.trialPg = ""; TSF.cfg = r; TSF.cfgT = Date.now(); tsfReset(); App.go("type_site"); return; }
+    TSF.trialPg = r && r.reason === "trial_off" ? "off" : "net"; App.render();
+  }, function () { TSF.trialPg = "net"; App.render(); });
+}
+function tsfTrialOff() {
+  if (!tsfTrial() || tsfStaff()) return;
+  tsfTrialSet(""); TSF.trialPg = "off";
+  var L = TSF.lk; L.tok = ""; L.url = ""; L.gen++; L.busy = false; L.srv = false; L.hold = false;
+  if (RG.on && RG.mode === "site") rgStop();
+  modalClose(); tsfStop(); tsfReset(); App.go("type_site");
+}
+function tsfTrialHtml() {
+  var p = TSF.trialPg;
+  if (p === "wait") return '<div class="tsf-trial"><p class="ax-meta">확인 중</p></div>';
+  return '<div class="tsf-trial"><p class="tsf-trial-t">' + (p === "off" ? "지금은 체험 기간이 아니에요" : "서버에 연결할 수 없어요") + "</p>" +
+    (p === "net" ? '<button type="button" class="ax-button" onclick="tsfTrialStart()">다시 확인</button>' : "") +
+    '<button type="button" class="ax-button' + (p === "net" ? " ax-button-weak" : "") + '" onclick="tsfTrialApp()">앱으로 가기</button></div>';
+}
+/* 체험 PC 는 확인 · 닉네임 · 기록에 기기 이름(dev)을 붙인다(서버가 이 기기에서 확인한 사번만 받는다 · admCall 한 곳에서) */
+function tsfTrialDev(a) { return tsfTrial() && !tsfStaff() && /^type_(self_check|self_submit|nick_set)$/.test(a) ? tsfDev() : ""; }
+function tsfTrialApp() { TSF.trialPg = ""; tsfTrialSet(""); location.replace(location.pathname + location.search); }
 /* v5.61 노트북 이름 · 이 기기에서 한 번 만든다(조용한 저장 · 화면을 다시 그리지 않는다) · 방법 2 토큰과 같은 사번 두 노트북 동시 진행(dup)을 가른다 */
 function tsfDev() {
   var d = S.get("self_dev", "");
@@ -362,6 +394,7 @@ function tsfBw() {
 }
 /* ── 스태프 · 켜기 화면(셀프 모드가 꺼져 있을 때) ── */
 function tsfSetupHtml() {
+  if (TSF.trialPg) return tsfTrialHtml();   /* 261012 체험 주소로 들어온 탭 = 관리코드 화면 대신 확인 중 · 체험 기간 아님 · 연결 안 됨 */
   var on = TSF.snd !== false;
   return '<div class="ax-stack">' +
     '<section class="ax-card ax-stack-tight axs-gap12"><h2 class="ax-section-title">1F 현장 셀프 모드</h2>' +
@@ -393,8 +426,10 @@ function tsfEnable() {
 }
 /* v5.61 도전 시간 · 횟수를 10분마다 다시 받는다(관리코드 · 응답 tok 은 쓰지 않는다) · 시간 밖이면 스캔 · 접속 QR 을 끄고 안내만 */
 function tsfCfgPull() {
-  if (!BE.on || Date.now() - TSF.cfgT < 600000) return;
+  var tr = !tsfStaff() && !!tsfTrial();   /* 261012 체험 PC = 2분마다 type_trial_cfg(꺼지면 trial_off · 관리코드가 바뀌면 새 체험 토큰) */
+  if (!BE.on || Date.now() - TSF.cfgT < (tr ? 120000 : 600000)) return;
   TSF.cfgT = Date.now();
+  if (tr) { admCall({ action: "type_trial_cfg" }, function (r) { if (r && r.ok && r.tok) { tsfTrialSet(r.tok); TSF.cfg = r; tsfPaint(); } }, function () { TSF.cfgT = Date.now() - 60000; }); return; }
   admCall({ action: "type_self_cfg", key: tsfKey(), tok: tsfTok() }, function (r) { if (r && r.ok) { TSF.cfg = r; tsfPaint(); } }, function () { TSF.cfgT = Date.now() - 540000; });
 }
 function tsfKstMin() { var d = new Date(Date.now() + (typeof sesOff === "function" ? sesOff() : 0) + 9 * 3600000); return d.getUTCHours() * 60 + d.getUTCMinutes(); }
@@ -423,27 +458,33 @@ function tsfAdmin() {
     '<button type="button" class="ax-button ax-button-weak" onclick="modalClose()">닫기</button></div>', "스태프 전용");
   setTimeout(function () { var n = el("tsfOffCode"); if (n) n.focus(); }, 60);
 }
-function tsfCodeOk() {
+function tsfCodeOk(go) {
   var v = ((el("tsfOffCode") || {}).value || "").trim();
   if (v && v === tsfKey()) return true;
-  var m = el("tsfOffMsg"); if (m) m.textContent = "관리코드가 맞지 않아요";
+  var m = el("tsfOffMsg");
+  if (v && go && !tsfStaff() && tsfTrial() && BE.on) {   /* 261012 체험 PC 는 기기에 둔 관리코드가 없다 · 서버에 묻는다(관리 역할만) · 맞으면 go(true) */
+    if (m) m.textContent = "확인 중";
+    admCall({ action: "admin_check", key: v }, function (r) { if (r && r.ok && r.role === "admin") go(true); else if (m) m.textContent = r && r.reason === "locked" ? admLockedMsg(r) : "관리코드가 맞지 않아요"; }, function () { if (m) m.textContent = "서버에 연결할 수 없어요"; });
+    return false;
+  }
+  if (m) m.textContent = "관리코드가 맞지 않아요";
   return false;
 }
-function tsfOffGo() {
-  if (!tsfCodeOk()) return;
+function tsfOffGo(ok) {
+  if (ok !== true && !tsfCodeOk(tsfOffGo)) return;
   if (RG.on && RG.mode === "site") rgStop();
   tsfLinkDrop();
-  S.set("self_on", false); S.set("self_key", ""); S.set("self_tok", "");
+  S.set("self_on", false); S.set("self_key", ""); S.set("self_tok", ""); tsfTrialSet(""); TSF.trialPg = "";
   modalClose(); tsfStop(); tsfReset(); App.go("type_site");
 }
-function tsfSndGo() {
-  if (!tsfCodeOk()) return;
+function tsfSndGo(ok) {
+  if (ok !== true && !tsfCodeOk(tsfSndGo)) return;
   var on = !(S.get("site_sound", true) === true);
   S.set("site_sound", on);
   if (on) { sfxUnlock(); SFX.site = true; sfx("click"); }
   modalClose();
 }
-function tsfStaffView() { if (!tsfCodeOk()) return; modalClose(); TSF.sc.staff = performance.now(); tsfScanShow(true); }
+function tsfStaffView(ok) { if (ok !== true && !tsfCodeOk(tsfStaffView)) return; modalClose(); TSF.sc.staff = performance.now(); tsfScanShow(true); }
 /* ── 카메라 · 노트북 내장 카메라를 늘 켜 두고 읽는다 · v5.61 1080p 요청(없으면 카메라가 고른 값) · 초점 · 노출 연속(되는 카메라만) · 영상은 화면에 내지 않는다 ── */
 function tsfCamStart() {
   var C = TSF.cam;

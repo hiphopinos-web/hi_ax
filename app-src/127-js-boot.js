@@ -31,6 +31,16 @@
     fr.style.width = "448px"; fr.style.maxWidth = "none"; fr.style.boxShadow = "none";
   }
 
+  /* 261012 타자왕 PC 체험 주소(typing/ → #self-trial) · 스태프가 켠 셀프 노트북이 아니면 서버(type_trial_cfg)에 물어 켠다 · 열 때마다 다시 묻는다 · 관리코드 화면 없음 */
+  if (/^#self-trial/i.test(location.hash) && !tsfStaff()) {
+    splash.classList.add("gone");
+    el("frame").classList.remove("splash-mode");
+    el("app").hidden = false;
+    tsfTrialSet(""); TSF.trialPg = "wait";
+    App.go("type_site");
+    tsfTrialStart();
+    return;
+  }
   /* v4.32 1F 현장 셀프 모드 노트북 · 로그인 없음 · #self(스태프가 켜는 화면) 또는 이미 켠 기기(새로 고침 · 재부팅해도 참가자 화면으로) */
   if (/^#self/i.test(location.hash) || (tsfOn() && !/^#tv=type/i.test(location.hash))) {   /* v4.65 셀프 노트북에서도 #tv=type 주소는 TV 판으로 */
     splash.classList.add("gone");
