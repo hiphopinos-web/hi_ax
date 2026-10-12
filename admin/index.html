@@ -494,7 +494,7 @@ header.top :focus-visible,.bar.bulk :focus-visible{outline-color:#fff}
 </div>
 <script src="../assets/server.js"></script>
 <script src="qrcode.js"></script>
-<script src="ksz.js?v=261012"></script>
+<script src="ksz.js?v=2610122"></script>
 <script>
 /* ══ 0. 설정 ══ */
 var BE_DEFAULT = "https://script.google.com/macros/s/AKfycbwjCaSSUnQ7W1lrM8T426Cn_LgKs_UhI0Qi5XRVk-_eF-oD55-Wwjsot0DkPJCX9JqMBA/exec";
@@ -2086,12 +2086,9 @@ function ckVoidAsk(w, no0){
       pzCall("ck_void",{ no:no, why:wy },["ck_state"],function(r){ if(no0&&r&&r.ok) whoAfter(whoSt().cur); if(r&&r.ok) toast(r.no+" 무효"+(r.called?" · 다음 "+r.called.no+" 호출":"")); else toast("실패 · "+(r&&r.reason==="state"?"이미 끝났거나 무효인 번호입니다":r&&r.reason==="notfound"?"오늘 그 번호가 없습니다":pzWhy(r))); }); } });
 }
 function ckSizePaint(){
-  var box=el("ckSz"), d=S.data.kss; if(!box) return;
-  if(!d){ box.innerHTML='<div class="ch"><h2>사이즈별 남음</h2></div>'+skel(); return; }
-  if(!d.ok){ box.innerHTML='<div class="ch"><h2>사이즈별 남음</h2></div><div class="cb0">'+esc(unknownSrv(d)?"서버 배포 뒤":why(d))+'</div>'; return; }
-  var st=d.st||{}, row=function(z){ var q=(d.qty||{})[z]||0, g=(d.got||{})[z]||0, tk=(d.taken||{})[z]||0; return '<tr><td><b>'+esc(ksLbl(z))+'</b></td><td class="n r">'+n0(q)+'</td><td class="n r">'+n0(tk)+'</td><td class="n r">'+n0(g)+'</td><td class="n r"><b>'+n0(Math.max(0,q-g))+'</b></td></tr>'; };
-  box.innerHTML='<div class="ch"><h2>사이즈별 남음</h2><span class="cap">사전 신청 키트 · 자동 집계</span></div><div class="cb0"><table class="tb"><thead><tr><th>사이즈</th><th class="r">수량</th><th class="r">신청</th><th class="r">지급</th><th class="r">남음</th></tr></thead><tbody>'+KS_SZ.map(row).join("")+'</tbody></table>'+
-    '<p class="cap mt8">사이즈 안 고름 '+n0(d.none)+'명 · 라운지 초과 대체 '+n0(d.hum)+'명 · 스태프 풀 '+n0(st.elig)+'명(따로 전달)</p></div>';
+  var box=el("ckSz"), d=S.data.kss; if(!box) return;   /* 261012 총수량 한 표(ksz.js kszTotHtml) */
+  box.innerHTML='<div class="ch"><h2>사이즈별 남음</h2><span class="cap">기념품 옷 총수량 · 자동 집계</span></div><div class="cb0">'+(window.kszTotHtml?kszTotHtml(d,1):skel())+
+    (d&&d.ok?'<p class="cap mt8">남음 = 총수량 − 스태프 − 사전 신청 · 사이즈 안 고름 '+n0(d.none)+'명 · 라운지 초과 대체 '+n0(d.hum)+'명 · 스태프 '+n0((d.st||{}).elig)+'명(따로 전달)</p>':"")+'</div>';
 }
 function ckSwapPaint(){
   var box=el("ckSw"), iv=S.data.inv; if(!box) return;

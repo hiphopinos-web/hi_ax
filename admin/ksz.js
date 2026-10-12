@@ -4,7 +4,7 @@
 var KSZ_WORD="사이즈적용";
 var KSZ_ST={ set:["바꿈","pri"], "new":["처음 정함","pri"], same:["같음",""], add:["옷 명단에 없음","warn"], multi:["동명이인 고르기","warn"], none:["못 찾음","bad"], size:["사이즈 확인","bad"], dup:["앞 줄과 같은 사람",""], hum:["옷 없음(라운지 초과)",""] };
 function kszSt(){ var u=rosSt(); return u.sz||(u.sz={ text:"", addw:true, adda:false, pv:null, pick:{}, seq:0, err:"", last:null }); }
-function kszOpen(){ var u=rosSt(); u.chk={}; u.cur=""; u.mode=u.mode==="size"?"":"size"; rosPanel(); rosList(); if(u.mode==="size") setTimeout(function(){ var t=el("kszText"); if(t) t.focus(); },30); }
+function kszOpen(){ var u=rosSt(); u.chk={}; u.cur=""; u.mode=u.mode==="size"?"":"size"; rosPanel(); rosList(); if(u.mode==="size") kszTotLoad(); if(u.mode==="size") setTimeout(function(){ var t=el("kszText"); if(t) t.focus(); },30); }
 function kszCan(){ var a=kszSt(), v=a.pv; return !!(v&&(v.n||(a.adda&&v.appNew))); }
 function kszGoLbl(){ var a=kszSt(), v=a.pv||{}; return v.n?n0(v.n)+"명 적용":a.adda&&v.appNew?"폰 권한 "+n0(v.appNew)+"명 넣기":"0명 적용"; }
 function kszPick(){ var a=kszSt(), o=[]; for(var i in a.pick) o.push(i+":"+a.pick[i]); return o.join(";"); }
@@ -35,14 +35,29 @@ function kszList(box){
     }).join("")+'</tbody></table></div><div class="foot"><span class="n">'+n0(v.rows.length)+'줄</span><span class="sp"></span><span class="cap">사이즈 적용 '+n0(v.n)+'명</span></div>';
   listPut(box, "bksz", bar, rest);
 }
-function kszOverTxt(o){ var m=String(o).split(":"); return (m[0]==="staff"?"스태프 옷 ":"사전 신청 키트 ")+m[1]+" "+m[2]+"벌"; }
+function kszOverTxt(o){ var m=String(o).split(":"); return (m[0]==="all"?"총수량 ":m[0]==="staff"?"스태프 옷 ":"사전 신청 키트 ")+m[1]+" "+m[2]+"벌"; }
+/* 261012 기념품 옷 총수량 한 표(사용자 「총수량 하나로 바꿈」 · 서버 kit_size_state.all) · 사이즈 · 총수량 · 스태프 · 사전 신청 · (지급) · 남음 · 0 아래 = 모자람 배지
+ * 남음 = 총수량 − 스태프 − 사전 신청 · 스태프가 먼저 · 옛 서버(all 없음)는 qty · st.taken · taken 으로 같은 셈 · 체크인존 「사이즈별 남음」 카드와 사이즈 일괄 입력 패널이 같이 쓴다 */
+(function(){ try{ var st=document.createElement("style"); st.textContent=".tb.kszt{table-layout:auto}.tb.kszt td:first-child{white-space:nowrap}.tb.kszt th,.tb.kszt td{padding-left:6px;padding-right:6px}.tb.kszt td{height:36px}.tb.kszt th:first-child,.tb.kszt td:first-child{padding-left:12px}.tb.kszt th:last-child,.tb.kszt td:last-child{padding-right:12px}"; document.head.appendChild(st); }catch(e){} })();
+function kszTotHtml(d, gv){
+  if(!d) return skel();
+  if(!d.ok) return '<p class="cap">'+esc(unknownSrv(d)?"서버 배포 뒤":why(d))+'</p>';
+  var a=d.all||{ qty:d.qty||{}, st:(d.st||{}).taken||{}, kit:d.taken||{} }, t=[0,0,0,0], c=function(v){ return '<td class="n r">'+n0(v)+'</td>'; };
+  var row=function(z){ var q=(a.qty||{})[z]||0, s=(a.st||{})[z]||0, k=(a.kit||{})[z]||0, g=(d.got||{})[z]||0, r=q-s-k; t[0]+=q; t[1]+=s; t[2]+=k; t[3]+=g;
+    return '<tr><td><b>'+esc(ksLbl(z))+'</b></td>'+c(q)+c(s)+c(k)+(gv?c(g):"")+'<td class="n r">'+(r<0?tag("모자람 "+n0(-r),"warn"):"<b>"+n0(r)+"</b>")+'</td></tr>'; };
+  var body=KS_SZ.map(row).join(""), tr=t[0]-t[1]-t[2];
+  return '<table class="tb kszt" data-qa="ksz.tot"><thead><tr><th>사이즈</th><th class="r">총수량</th><th class="r">스태프</th><th class="r">사전 신청</th>'+(gv?'<th class="r">지급</th>':"")+'<th class="r">남음</th></tr></thead><tbody>'+body+
+    '<tr><td class="cap">합계</td>'+c(t[0])+c(t[1])+c(t[2])+(gv?c(t[3]):"")+'<td class="n r"><b>'+n0(tr)+'</b></td></tr></tbody></table>';
+}
+function kszTotPut(){ var b=el("kszTot"); if(b) b.innerHTML=kszTotHtml(S.data.kss); }
+function kszTotLoad(){ call("kit_size_state",{},function(r){ if(r&&r.ok) S.data.kss=r; kszTotPut(); },function(){ kszTotPut(); }); }
 function kszPanel(){
   var a=kszSt();
   var h='<textarea class="in" id="kszText" data-qa="ksz.text" rows="6" aria-label="이름 사이즈 줄" placeholder="줄마다 이름 사이즈 · 예) 홍길동 L" oninput="kszSt().text=this.value;kszQ()">'+esc(a.text)+'</textarea>'+
     '<p class="cap mt8">사이즈 SS · L · 2XL(XXL) · 3XL(XXXL)<br>「임원:」 머리말 · 한 줄에 여러 명도 됩니다</p>'+
     '<label class="fx mt12" style="gap:6px;font-size:var(--fs-nav)"><input type="checkbox" data-qa="ksz.addw" '+(a.addw?"checked":"")+' onchange="kszSt().addw=this.checked;kszPreview()">옷 명단에 없는 사람은 명단에 넣고 정하기</label>'+
     '<label class="fx mt8" style="gap:6px;font-size:var(--fs-nav)"><input type="checkbox" data-qa="ksz.adda" '+(a.adda?"checked":"")+' onchange="kszSt().adda=this.checked;kszSumPut();rosList()">폰 권한(앱 스태프 명단)에도 넣기</label>';
-  return h+'<div id="kszSum">'+kszSumHtml()+'</div><p class="cap mt12">본인이 나중에 앱에서 바꾸면 그 값이 남습니다. 적용 기록은 기록 › 활동 기록에 남고 그날 안에 되돌립니다.</p>';
+  return h+'<div id="kszSum">'+kszSumHtml()+'</div><h3 class="mt12" style="font-size:var(--fs-nav)">기념품 옷 총수량</h3><div id="kszTot" class="mt8">'+kszTotHtml(S.data.kss)+'</div><p class="cap mt12">본인이 나중에 앱에서 바꾸면 그 값이 남습니다. 적용 기록은 기록 › 활동 기록에 남고 그날 안에 되돌립니다.</p>';
 }
 function kszSumPut(){ var b=el("kszSum"); if(b) b.innerHTML=kszSumHtml(); }
 function kszSumHtml(){
@@ -55,7 +70,7 @@ function kszSumHtml(){
       (appN?'<div><span>폰 권한 없음</span><span class="w n">'+appN+'명'+(a.adda?' · 넣음':' · 넣지 않음')+'</span></div>':'')+
       (c.multi?'<div><span>동명이인</span><span class="w n">'+c.multi+'줄 · 표에서 고름</span></div>':'')+
       (c.none?'<div><span>못 찾음</span><span class="r n">'+c.none+'줄</span></div>':'')+(c.size?'<div><span>사이즈 확인</span><span class="r n">'+c.size+'줄</span></div>':'')+(c.dup?'<div><span>앞 줄과 같은 사람</span><span class="n">'+c.dup+'줄</span></div>':'')+(c.hum?'<div><span>옷 없음(라운지 초과)</span><span class="n">'+c.hum+'줄</span></div>':'')+'</div>';
-    if(v.over&&v.over.length) h+=band("warn","수량을 넘습니다 · "+esc(v.over.map(kszOverTxt).join(", "))+" 모자람. 그래도 적용됩니다(설정 스태프의류_수량).");
+    if(v.over&&v.over.length) h+=band("warn","총수량을 넘습니다 · "+esc(v.over.map(kszOverTxt).join(", "))+" 모자람. 스태프가 먼저라 그래도 적용됩니다 <span style=\"white-space:nowrap\">(설정 의류_총수량)</span>.");
     if(a.adda&&appN&&!v.appSet) h+=band("warn","폰 권한 명단이 아직 저장 전입니다. 넣으면 그때부터 이 명단에 있는 사람만 스태프 폰을 씁니다.");
     h+='<div class="acts"><button class="btn pri" data-qa="ksz.go" '+(kszCan()?"":"disabled")+' onclick="kszAsk()">'+kszGoLbl()+'</button><button class="btn ghost" data-qa="ksz.clear" onclick="var a=kszSt();a.text=\'\';a.pv=null;a.pick={};a.err=&quot;&quot;;rosPanel();rosList()">지우기</button></div>';
   }
@@ -72,7 +87,7 @@ function kszAsk(){
     onOk:function(){ callPost("kit_staff_size_apply",{ rows:a.text, sig:v.sig, pick:kszPick(), addw:a.addw?"1":"", adda:a.adda?"1":"", confirm:KSZ_WORD },function(r){ dlgForce();
       if(!(r&&r.ok)){ if(r&&r.reason==="state") kszPreview(); toast("적용하지 못했습니다 · "+(r&&r.reason==="wear"?"옷 명단에 넣지 못했습니다("+esc(r.why||"")+")":r&&r.reason==="none"?"적용할 사람이 없습니다":why(r))); return; }
       a.last={ batch:r.batch, n:r.n, app:r.app&&r.app.ok?r.app.n:0, at:r.t };
-      changed(["kit_size_list","kit_size_state"]); rosAfter(); kszPreview();
+      changed(["kit_size_list","kit_size_state"]); rosAfter(); kszPreview(); kszTotLoad();
       toast((r.n?"사이즈 "+r.n+"명을 적용했습니다":"사이즈는 그대로입니다")+(r.wear&&r.wear.n?" · 옷 명단 새로 "+r.wear.n+"명":"")+(r.app?(r.app.ok?" · 폰 권한 새로 "+r.app.n+"명":" · 폰 권한 넣기 실패"):"")+(r.gone&&r.gone.length?" · 그 사이 빠진 "+r.gone.length+"명":""),{ undo:function(){ kszUndo(r.batch); } });
     },function(e){ dlgForce(); toast(why(e)); }); } });
 }
@@ -83,7 +98,7 @@ function kszUndo(batch, inDlg){
     if(!(r&&r.ok)){ toast("되돌리지 못했습니다 · "+why(r)); return; }
     if(a.last&&a.last.batch===batch) a.last.undone=1;
     kszSumPut();
-    changed(["kit_size_list","kit_size_state"]); rosAfter(); kszPreview();
+    changed(["kit_size_list","kit_size_state"]); rosAfter(); kszPreview(); kszTotLoad();
     toast("되돌렸습니다 · "+r.n+"명"+(r.skip&&r.skip.length?" · 그 뒤 바뀐 "+r.skip.length+"명은 건너뜀":""));
   },function(e){ if(inDlg) dlgForce(); toast(why(e)); });
 }
