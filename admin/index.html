@@ -495,6 +495,7 @@ header.top :focus-visible,.bar.bulk :focus-visible{outline-color:#fff}
 <script src="../assets/server.js"></script>
 <script src="qrcode.js"></script>
 <script src="ksz.js?v=2610123"></script>
+<script src="acc.js?v=2610121"></script>
 <script>
 /* ══ 0. 설정 ══ */
 var BE_DEFAULT = "https://script.google.com/macros/s/AKfycbwjCaSSUnQ7W1lrM8T426Cn_LgKs_UhI0Qi5XRVk-_eF-oD55-Wwjsot0DkPJCX9JqMBA/exec";
@@ -771,6 +772,7 @@ var MENU_IC=(function(){ var s=function(d){ return '<svg viewBox="0 0 24 24" fil
 var NAV=[
   { id:"p_who", m:"pp", n:"찾기", r:"사번 · 이름으로 한 사람을 찾습니다. 카드에서 접속 · 스탬프 · 신청을 보고 바로 대신 처리합니다.", view:"who" },
   { id:"p_list", m:"pp", n:"명단", sup:1, r:"접속 허용 · 스태프 · 10F 사전 신청 · 시험 사번에 사람을 넣고 뺍니다.", view:"roster" },
+  { id:"p_acc", m:"pp", n:"접속 현황", sup:1, r:"앱 접속 범위 · 접속 허용 명단 · 들어오지 못한 사람 · 가입 · 오늘 접속을 한 곳에서 봅니다.", view:"acc" },
   { id:"p_pw", m:"pp", n:"PIN 분실", r:"참가자가 앱에서 보낸 PIN 분실 요청입니다. 본인 확인 뒤 초기화하고 처리 표시합니다.", view:"pw" },
   { id:"today", m:"td", g:"지금", n:"지금", tri:1, r:"이상 신호 · 스태프 요청 · 지금 할 일입니다. 누르면 그 일을 하는 화면으로 갑니다.", view:"today" },
   { id:"t_req", m:"td", g:"지금", n:"요청함", tri:1, r:"스태프 폰 「운영자에게 요청」입니다. 사람을 열어 대신 처리한 뒤 처리 · 안내 · 거절로 닫습니다.", view:"req" },
@@ -901,7 +903,7 @@ function unknownSrv(d){ return d&&d.ok===false&&/unknown action/.test(String(d.e
 function srvMissing(what){ return band("warn","이 서버는 아직 「"+esc(what)+"」 기능을 모릅니다. 서버 배포 뒤 씁니다. 그 전에는 옛 콘솔에서 합니다.",'<button class="btn sm" data-qa="legacy.fallback" onclick="legacyOpen(\'\')">옛 콘솔 열기</button>'); }
 function loadErr(d, retryK){ return band("bad","받지 못했습니다 · "+esc(why(d)),'<button class="btn sm" data-qa="retry" onclick="S.at[\''+retryK+'\']=0;load(true)">다시 시도</button>'); }
 
-var VIEWS={};
+var VIEWS={}; if(window.ACC_VIEW) VIEWS.acc=ACC_VIEW;
 VIEWS.legacy={
   mount:function(it){
     el("vb").innerHTML=card("", "", '<div class="empty"><b>이 화면은 옛 콘솔에서 엽니다</b><p class="mt8">새 틀로 옮기는 중입니다(10/23 까지). 옛 콘솔의 같은 화면이 새 탭으로 열리고, 로그인은 이어집니다.</p><div class="mt16"><button class="btn pri" data-qa="legacy.open.'+it.id+'" onclick="legacyOpen(\''+it.legacy[0]+'\','+(it.legacy[1]||0)+')">옛 콘솔에서 「'+esc(it.n)+'」 열기</button></div></div>', "", "pad");
@@ -1089,7 +1091,7 @@ function rosKpis(){
   var u=rosSt(), st=(S.data.rstat||{})[u.kind]; if(!st) return kpiCell({ l:"불러오는 중", v:"-" })+kpiCell({ l:"", v:"" })+kpiCell({ l:"", v:"" })+kpiCell({ l:"", v:"" });
   var c=function(f,l,v,s,cls,click){ return kpiCell({ l:l, v:n0(v), u:"명", s:s, on:u.filt===f&&!click, cls:cls, click:click||"rosFilt('"+f+"')", qa:"ros.k."+(f||"all") }); };
   if(u.kind==="gate") return c("","명단 전체",st.n,st.at?"마지막 변경 "+short(st.at):"")+c("acct","앱에 가입함",st.acct,pct(st.acct,st.n)+"% · 오늘 접속 "+n0(st.today))+c("noacct","아직 가입 안 함",st.n-st.acct,pct(st.n-st.acct,st.n)+"%")+
-    c("deny","들어오지 못한 사람",st.wait,"거부 기록 "+n0(st.deny)+"명 · 누르면 보기",st.wait?"warn":"","rosMode('deny')");
+    c("deny","들어오지 못한 사람",st.wait,"거부 기록 "+n0(st.deny)+"명 · 누르면 보기",st.wait?"warn":"","go('p_acc')");
   if(u.kind==="staff") return c("","스태프 전체",st.n,"폰 권한 ∪ 옷 명단")+c("app","폰 권한",st.app,st.appSet?"앱 스태프 명단 저장됨":"명단 저장 전 · 관리코드를 알면 누구나(옛 방식)",st.appSet?"":"warn")+c("wear","옷 명단",st.wear,"사이즈 고름 "+n0(st.sz)+"명")+c("scan","최근 30분 스캔",st.scan30,"지금 현장에서 찍는 사람");
   if(u.kind==="test") return c("","시험 사번",st.n,"상한 "+n0(st.max)+"명")+c("fixed","고정",st.fixed,"서버에 정해 둔 사번")+c("acct","앱 가입",st.acct,"")+c("today","오늘 접속",st.today,"");
   if(u.kind==="lounge") return c("","라운지 사전 신청",st.n,"등록 순")+c("kit","키트",st.kit,"수량 "+n0(st.q)+"개 안")+c("hum","가습기(초과)",st.hum,"수량을 넘은 순서",st.hum?"warn":"")+c("got","받음",st.got,"체크인존 지급");
@@ -1145,7 +1147,7 @@ function rosHdr(){ var u=rosSt(), vis=rosShown().slice(0,u.show).filter(function
 function rosSelAll(){ var u=rosSt(); rosShown().forEach(function(r){ if(!rosLocked(r)) u.chk[r.emp]=1; }); u.mode="sel"; rosList(); rosPanel(); }
 function rosClear(){ var u=rosSt(); u.chk={}; if(u.mode==="sel") u.mode=""; rosList(); rosPanel(); }
 function rosPick(emp){ var u=rosSt(); if(Object.keys(u.chk).length){ rosChk(emp); return; } u.cur=u.cur===emp&&u.mode==="one"?"":emp; u.mode=u.cur?"one":""; rosList(); rosPanel(); }
-function rosMode(m){ var u=rosSt(), was=u.mode; u.mode=u.mode===m?"":m; if(was==="size") rosList(); if(m==="add") u.add.pv=null; if(m==="deny") rosDenyLoad(); rosPanel(); if(m==="add") setTimeout(function(){ var t=el("raText")||el("raFq"); if(t) t.focus(); },30); }
+function rosMode(m){ var u=rosSt(), was=u.mode; u.mode=u.mode===m?"":m; if(was==="size") rosList(); if(m==="add") u.add.pv=null; rosPanel(); if(m==="add") setTimeout(function(){ var t=el("raText")||el("raFq"); if(t) t.focus(); },30); }
 function escHook(){ var u=S.ui.ros; if(u&&Object.keys(u.chk).length){ rosClear(); return; } if(u&&u.mode){ u.mode=""; rosPanel(); rosList(); } }
 function rosRow(emp){ return rosRows().filter(function(x){ return x.emp===emp; })[0]; }
 
@@ -1155,7 +1157,6 @@ function rosPanel(){
   var sel=Object.keys(u.chk);
   if(u.mode==="add") { p.innerHTML=hd("사람 넣기","입력은 이 칸에서만 합니다")+rosAddHtml()+'</div>'; return; }
   if(u.mode==="size"&&u.kind==="staff"&&window.kszPanel) { p.innerHTML=hd("사이즈 일괄 입력","줄마다 「이름 사이즈」 또는 「사번 사이즈」")+kszPanel()+'</div>'; return; }
-  if(u.mode==="deny") { p.innerHTML=hd("들어오지 못한 사람","명단 밖이라 로그인 · 쓰기가 거절된 사번입니다")+rosDenyHtml()+'</div>'; return; }
   if(sel.length){
     var rows=sel.map(rosRow).filter(Boolean), acct=rows.filter(function(r){ return r.acct; }).length, today=rows.filter(function(r){ return r.today; }).length, scan=rows.filter(function(r){ return r.scan30; }).length;
     var eff=u.kind==="gate"?"가입한 "+acct+"명은 클로즈 베타 동안 다음 쓰기부터 앱이 거절합니다(오늘 접속 "+today+"명)":u.kind==="staff"?"폰 권한을 빼면 그 폰의 스태프 화면이 다음 요청부터 멈춥니다(최근 30분 스캔 "+scan+"명)":"키트 · 끝 QR 자격 · 사이즈 신청이 같이 움직입니다";
@@ -1355,16 +1356,15 @@ function p10DelAsk(emps){
         function(it, ok){ if(ok){ delete u.chk[it.r.emp]; var d=rosData(); if(d&&d.rows) d.rows=d.rows.filter(function(x){ return x.emp!==it.r.emp; }); } },
         function(okN, bad){ if(u.cur&&!rosRow(u.cur)){ u.cur=""; u.mode=""; } if(!Object.keys(u.chk).length&&u.mode==="sel") u.mode=""; rosList(); rosPanel(); rosAfter(); toast(okN+"명을 10F 명단에서 뺐습니다"+(bad.length?" · "+bad.length+"명 실패("+why(bad[0].res)+")":"")); }); } });
 }
-function rosDenyLoad(){ var u=rosSt(); u.deny=null; call("og_deny_list",{},function(r){ u.deny=r||{ ok:false }; rosPanel(); },function(e){ u.deny=e||{ ok:false }; rosPanel(); }); }
-function rosDenyAll(){ var d=rosSt().deny, rows=((d&&d.rows)||[]).filter(function(x){ return x.open; }).slice(0,500); if(!rows.length) return;
+function rosDenyLoad(){ var u=rosSt(); u.deny=null; paint(); call("og_deny_list",{},function(r){ u.deny=r||{ ok:false }; paint(); },function(e){ u.deny=e||{ ok:false }; paint(); }); }
+function rosDenyAll(){ var d=rosSt().deny, rows=((d&&d.rows)||[]).filter(function(x){ return !x.open; }).slice(0,500); if(!rows.length) return;
   dialog({ t:"접속 허용 명단에 "+rows.length+"명을 넣을까요?", who:esc(rows.slice(0,5).map(function(x){ return x.name||x.emp; }).join(", "))+(rows.length>5?" 외 "+(rows.length-5)+"명":"")+"<span>들어오지 못한 사람 전부</span>", s:"넣으면 클로즈 베타 동안 바로 로그인할 수 있습니다. 7초 안 알림 · 활동 기록에서 그날 안에 되돌립니다.", ok:rows.length+"명 넣기",
     onOk:function(){ dlgForce(); rosAddGo("gate", rows.map(function(x){ return x.emp; }), rosDenyLoad); } }); }
 function rosDenyHtml(){
   var u=rosSt(), d=u.deny;
-  if(u.kind!=="gate") return '<p class="cap">접속 허용 명단에서만 봅니다.</p>';
   if(!d) return '<p class="cap"><span class="spin"></span>받는 중</p>';
   if(!d.ok) return band("bad",esc(why(d)));
-  var rows=(d.rows||[]).filter(function(x){ return x.open; });
+  var rows=(d.rows||[]).filter(function(x){ return !x.open; });
   if(!rows.length) return '<p class="cap">지금도 막혀 있는 사람이 없습니다(기록 '+n0(d.n)+'명).</p>';
   return '<p class="cap">지금도 막혀 있는 '+rows.length+'명 · 마지막 시도 순</p><ul class="mini">'+rows.slice(0,100).map(function(x){ return '<li><span style="flex:1;min-width:0"><b>'+esc(x.name||x.emp)+'</b><div class="cap">'+esc(x.dept||"")+' · '+esc(x.emp)+' · '+esc(short(x.last))+' · '+x.n+'번</div></span><button class="btn sm pri" data-qa="ros.deny.add" onclick="rosAddGo(\'gate\',[\''+jq(x.emp)+'\'],rosDenyLoad)">넣기</button></li>'; }).join("")+'</ul>'+
     (rows.length>1?'<div class="acts"><button class="btn pri" data-qa="ros.deny.addall" onclick="rosDenyAll()">'+Math.min(500,rows.length)+'명 모두 넣기</button></div>':'');
