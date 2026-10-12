@@ -552,10 +552,11 @@ function progBtn(lbl, on, cls, id, dis) {
 }
 /* v5.20 (사용자 261003 후킹 권장 4) 17F 연사 칸(spk = 큰 둥근 사각) · id = intro · key · road · l1 · l2 · outro
    v6.60 (사용자 261008) 그림 = SPK_IMG 에 있는 것만 · Opening Speech · Closing Speech = 연사 사진 · AWS · MS 강연 = 회사 로고(원형 그대로 · 흰 바탕 · 여백만 · .logo)
-   Keynote 둘 · 10F 강사 = 글자 그대로 · 그림이 안 뜨면 img 를 지우고 글자 그대로(이 세션 동안 다시 묻지 않는다) */
+   v7.02 (사용자 261012) Keynote 두 분(key · road)도 공식 사진 · 240 정사각 webp · 눈높이 · 얼굴 크기를 intro · outro 에 맞춰 자름
+   10F 강사 = 글자 그대로 · 그림이 안 뜨면 img 를 지우고 글자 그대로(이 세션 동안 다시 묻지 않는다) */
 function spkAv(w) { var n = String(w || "").split(" ")[0]; return n && n.length <= 4 ? n : "AX"; }   /* 261008 연사 칸 = 「이름 직함」(네임택 PDF) · 원 안 = 이름 */
 var SPK_DIR = "assets/speaker/", SPK_IDS = ["intro", "key", "road", "l1", "l2", "outro"], SPK_NA = {},
-  SPK_IMG = { intro: "sp_intro.webp", outro: "sp_outro.webp", l1: "logo_aws.svg", l2: "logo_ms.svg" }, SPK_LOGO = { l1: 1, l2: 1 };
+  SPK_IMG = { intro: "sp_intro.webp", key: "sp_key.webp", road: "sp_road.webp", outro: "sp_outro.webp", l1: "logo_aws.svg", l2: "logo_ms.svg" }, SPK_LOGO = { l1: 1, l2: 1 };
 function spkAvHtml(id, av) {
   var sp = SPK_IDS.indexOf(id) >= 0, f = sp && SPK_IMG[id], on = !!f && !SPK_NA[id], lg = on && !!SPK_LOGO[id];
   if (!on) return "";   /* v6.83 (디자인 D-7 · 전역 3절 「사람 목록에 장식 아바타 금지」) 그림이 없으면 칸 없이 이름 줄만(이름이 칸 안 · 옆 줄에 두 번 나오던 것) · 그림이 안 뜨면 칸째 지운다 */
