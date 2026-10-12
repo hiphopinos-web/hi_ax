@@ -496,6 +496,7 @@ header.top :focus-visible,.bar.bulk :focus-visible{outline-color:#fff}
 <script src="qrcode.js"></script>
 <script src="ksz.js?v=2610123"></script>
 <script src="acc.js?v=2610121"></script>
+<script src="idea.js?v=2610121"></script>
 <script>
 /* ══ 0. 설정 ══ */
 var BE_DEFAULT = "https://script.google.com/macros/s/AKfycbwjCaSSUnQ7W1lrM8T426Cn_LgKs_UhI0Qi5XRVk-_eF-oD55-Wwjsot0DkPJCX9JqMBA/exec";
@@ -777,7 +778,9 @@ var NAV=[
   { id:"today", m:"td", g:"지금", n:"지금", tri:1, r:"이상 신호 · 스태프 요청 · 지금 할 일입니다. 누르면 그 일을 하는 화면으로 갑니다.", view:"today" },
   { id:"t_req", m:"td", g:"지금", n:"요청함", tri:1, r:"스태프 폰 「운영자에게 요청」입니다. 사람을 열어 대신 처리한 뒤 처리 · 안내 · 거절로 닫습니다.", view:"req" },
   { id:"t_inc", m:"td", g:"지금", n:"장애 대응", tri:1, r:"증상 → 바로 할 일 → 대체 수단 → 복구 확인. 이상 신호를 누르면 해당 줄이 열립니다.", view:"inc" },
-  { id:"f_apply", m:"td", g:"현장 처리", n:"신청 처리", r:"AX 라운지 상담 · 커피챗 선정입니다. 다음 행동 단추 하나로 처리하고, 승인 · 선정은 알림이 나갑니다.", view:"apply" },
+  { id:"f_idea", m:"td", g:"신청 · 참여", n:"아이디어 한 줄", r:"앱 · 부스 · 상담에서 남긴 아이디어 한 줄 숫자와 목록입니다. 아이디어왕은 현장 › 시상에서 고릅니다.", view:"idea" },
+  { id:"f_cchat", m:"td", g:"신청 · 참여", n:"18F 커피챗", r:"18F AX 커피챗 희망 · 선정 · 참석입니다. 회차와 테이블을 넣어 선정하면 알림이 나갑니다.", view:"apply" },
+  { id:"f_apply", m:"td", g:"신청 · 참여", n:"1F AX 라운지", r:"1F AX 라운지 상담 신청 · 승인 · 체크인 · 완료입니다. 다음 행동 단추 하나로 처리하고, 승인은 알림이 나갑니다.", view:"apply" },
   { id:"f_ck", m:"td", g:"현장 처리", n:"체크인존", r:"1F 체크인존 번호표 · 창구별 대기 · 다음 번호입니다.", view:"ck" },
   { id:"f_crowd", m:"td", g:"현장 처리", n:"지금 현장", r:"참가자 홈 「지금 현장」 2×2 값 · 대리 제보 · 리허설 보정입니다.", view:"crowd" },
   { id:"f_fcfs", m:"td", g:"추첨 · 시상", n:"룰렛 · 선착순", r:"룰렛 사용과 자격 · 소진 안내 · 선착순 참여상 숫자입니다. 한 사람 처리는 사람 › 찾기 카드에서 합니다.", view:"fcfs" },
@@ -903,7 +906,7 @@ function unknownSrv(d){ return d&&d.ok===false&&/unknown action/.test(String(d.e
 function srvMissing(what){ return band("warn","이 서버는 아직 「"+esc(what)+"」 기능을 모릅니다. 서버 배포 뒤 씁니다. 그 전에는 옛 콘솔에서 합니다.",'<button class="btn sm" data-qa="legacy.fallback" onclick="legacyOpen(\'\')">옛 콘솔 열기</button>'); }
 function loadErr(d, retryK){ return band("bad","받지 못했습니다 · "+esc(why(d)),'<button class="btn sm" data-qa="retry" onclick="S.at[\''+retryK+'\']=0;load(true)">다시 시도</button>'); }
 
-var VIEWS={}; if(window.ACC_VIEW) VIEWS.acc=ACC_VIEW;
+var VIEWS={}; if(window.ACC_VIEW) VIEWS.acc=ACC_VIEW; if(window.IDEA_VIEW) VIEWS.idea=IDEA_VIEW;
 VIEWS.legacy={
   mount:function(it){
     el("vb").innerHTML=card("", "", '<div class="empty"><b>이 화면은 옛 콘솔에서 엽니다</b><p class="mt8">새 틀로 옮기는 중입니다(10/23 까지). 옛 콘솔의 같은 화면이 새 탭으로 열리고, 로그인은 이어집니다.</p><div class="mt16"><button class="btn pri" data-qa="legacy.open.'+it.id+'" onclick="legacyOpen(\''+it.legacy[0]+'\','+(it.legacy[1]||0)+')">옛 콘솔에서 「'+esc(it.n)+'」 열기</button></div></div>', "", "pad");
@@ -1488,7 +1491,7 @@ function pcHtml(d){
 function whoAfter(emp){ var k=normE(emp); if(WHO.info[k]) WHO.info[k]._at=0; delete ACTM[k]; changed(["usr_info","act_log","now_board","acct_page"]); S.at.apage=0; whoPanel(); load(false); }
 function pcAfter(emp){ whoAfter(emp); }
 function pcPush(emp){ var u=sendSt(), a=sendEmps().list; if(a.indexOf(emp)<0) a.push(emp); u.tgt="emps"; u.emps=a.join("\n"); u.pv=null; sendSave(); go("n_send"); }
-function apOpen(kind, emp){ var u=apSt(); u.kind=kind; u.f="all"; u.q=emp; u.chk={}; u.cur=kind==="cc"?normE(emp):""; S.sub.f_apply=kind; var b=el("apBar"); if(b) b._k=""; go("f_apply"); }
+function apOpen(kind, emp){ var u=apSt(); u.kind=kind; u.f="all"; u.q=emp; u.chk={}; u.cur=kind==="cc"?normE(emp):""; S.sub.f_apply=kind; var b=el("apBar"); if(b) b._k=""; go(kind==="cc"?"f_cchat":"f_apply"); }
 function pcRoll(list, op, emp){
   supNeed(function(){
     var lbl=list==="gate"?"접속 허용 명단":list==="staff_app"?"스태프 폰 권한":list==="staff_wear"?"스태프 옷 명단":"시험 사번";
@@ -1802,7 +1805,7 @@ var ADV=[
   ["값","공용 코드(관리코드 · 등급코드)","p_code",0],["값","명부 부서 올리기","s_rd",0],
   ["명단","관리자 명단(콘솔 · 앱 스태프)","p_ros",0],["명단","라운지 명단 통째 올리기","p_lng",0],["명단","기념품 옷 자동 배정 · 엑셀","p_kit",0],["명단","10F 명단 올리기(파일 통째)","p_pre10",0],
   ["현장","옛 혼잡 제보(로비 · 엘리베이터)","f_crowd",0],["현장","관람 시간표(발송 꺼짐)","n_sched",0],["현장","QR 전체 목록 · codes.json · 보관 QR","e_qr",1],["현장","재고 장부(룰렛 품목 · 입고)","e_inv",0],
-  ["게임","AX 퀴즈 · 게임 점수 계수 · 당일 잠금","e_game",0],["게임","타자왕 셀프 · 닉네임","e_type",1],["행사","아이디어 한 줄","r_idea",0],["행사","프로그램 명단 입장 · 노쇼","f_ros",0],["행사","스캔 기록(옛 화면)","f_scan",0],
+  ["게임","AX 퀴즈 · 게임 점수 계수 · 당일 잠금","e_game",0],["게임","타자왕 셀프 · 닉네임","e_type",1],["행사","아이디어 한 줄 옛 화면(엑셀) · 새 화면 = 현장 › 아이디어 한 줄","r_idea",0],["행사","프로그램 명단 입장 · 노쇼","f_ros",0],["행사","스캔 기록(옛 화면)","f_scan",0],
   ["알림","공지 · 푸시 보내기(사람 고르기 · 그룹 · 조건)","n_send",0],["알림","발송 설정 · 이력 · 그룹","n_push",0],
   ["숫자","접속","r_visit",0],["숫자","출석(17F)","r_att",0],["숫자","스탬프 현황","r_stamp",0],["숫자","게임별 통계","r_game",0],["숫자","설문","r_survey",0],["숫자","참가자 본인 확인","r_ses",0],
   ["위험","위험 구역 · 초기화","s_danger",0],["보관","지난 기능 보관(클로즈 베타 QR 등)","s_arch",0]
@@ -1878,9 +1881,9 @@ var DAYPLAN=[
     { id:"a10", x:"선착순 참여상 첫 지급", auto:function(b){ return b.fcfs&&b.fcfs.got>=1; }, go:"f_fcfs" },
     { id:"a11", x:"체크인 대기 0 · E 창구 안내", auto:function(b){ return b.ck&&b.ck.wait===0; }, go:"f_ck" } ] },
   { t:"12:00", n:"점심 · 커피챗 준비", rows:[
-    { id:"h6", x:"13:00 회차 커피챗 선정 확정", sub:"10분 전 알림이 나가기 전", go:"f_apply" },
+    { id:"h6", x:"13:00 회차 커피챗 선정 확정", sub:"10분 전 알림이 나가기 전", go:"f_cchat" },
     { id:"a12", x:"커피챗 10분 전 알림 예약 대기", auto:function(b){ return (b.sched||[]).some(function(x){ return x.kind==="cchat_remind"; }); }, go:"n_sched" } ] },
-  { t:"13:00", n:"커피챗 시작", rows:[ { id:"h7", x:"회차마다 선정자 확인", sub:"13:00 · 13:30 · 14:00 · 14:30 · 15:00 · 15:30", go:"f_apply" } ] },
+  { t:"13:00", n:"커피챗 시작", rows:[ { id:"h7", x:"회차마다 선정자 확인", sub:"13:00 · 13:30 · 14:00 · 14:30 · 15:00 · 15:30", go:"f_cchat" } ] },
   { t:"13:30", n:"AWS 강연 · 10F 실습", rows:[ { id:"a13", x:"AWS 입장 출석 들어옴", auto:function(b){ return b.att&&b.att.l1&&b.att.l1.in>=1; }, go:"r_num" } ] },
   { t:"14:30", n:"설문 열림", rows:[
     { id:"a14", x:"설문 첫 응답 들어옴", auto:function(b){ return b.survey>=1; }, go:"r_num" },
@@ -2011,7 +2014,7 @@ function numsHtml(b){
     k("선착순 참여상",n0(fx.left),"/ "+n0(fx.cap),"남음 · 지급 "+n0(fx.got)+(fx.on?"":" · 꺼짐"),"f_fcfs")+
     k("행운권",n0(st.tickets),"장","가진 사람 "+n0(st.holders)+"명","f_draw")+
     k("룰렛",n0(st.used),"/ "+n0(st.elig),"사용 / 자격(3개 이상)","f_fcfs")+
-    k("아이디어 한 줄",n0((b.idea||{}).n),"건",n0((b.idea||{}).people)+"명","")+
+    k("아이디어 한 줄",n0((b.idea||{}).n),"건",n0((b.idea||{}).people)+"명","f_idea")+
     k("17F 출석",n0((l1.in||0)+(l2.in||0)),"입장","AWS 입장 "+n0(l1.in)+" · 끝 "+n0(l1.out)+" · MS 입장 "+n0(l2.in)+" · 끝 "+n0(l2.out),"r_num")+
     k("설문 응답",n0(b.survey),"건","14:30 부터","r_num")+
     '<div class="k w2"><div class="l">스탬프 문턱별 인원 · 6개 = 선착순 · 4~6개 = 행운권 · 3개 = 룰렛</div><div class="stk">'+seg.map(function(x){ return '<i style="width:'+(x[0]/tot*100)+'%;background:'+x[2]+'" title="'+esc(x[1])+'"></i>'; }).join("")+'</div><div class="cap n">'+seg.map(function(x){ return esc(x[1])+" <b>"+n0(x[0])+"</b>"; }).join(" · ")+'</div></div>'+
@@ -2148,13 +2151,14 @@ VIEWS.apply={
   need:function(){ return [{ k:"resv", a:"resv_list", ttl:20000 },{ k:"cchat", a:"cchat_list", ttl:20000 },{ k:"noti", a:"sync", p:{ emp:"" }, ttl:30000 }]; },
   mount:function(){
     var u=apSt();
-    el("vb").innerHTML='<div class="fx" style="margin-bottom:10px"><span class="seg" id="apKind"></span><span class="sp"></span><span id="apCc"></span></div><div class="card kpis k5" id="apK"></div>'+
+    el("vb").innerHTML='<div class="fx" style="margin-bottom:10px"><span id="apKind"></span><span class="sp"></span><span id="apCc"></span></div><div class="card kpis k5" id="apK"></div>'+
       '<div class="work"><div class="card list" id="apL"></div><div class="card panel" id="apP"></div></div>'+
       memo('<p><b>AX 라운지</b> · 신청 → 승인 → 체크인 → 완료. 승인하면 승인 알림(푸시)이 바로 나갑니다. 체크인 · 완료는 스탬프를 주지 않습니다. 노쇼 · 취소는 7초 동안 되돌릴 수 있습니다.</p><p><b>커피챗</b> · 아이디어를 낸 사람이 희망하고 운영진이 회차(13:00~15:30 · 30분 간격 · 20분) · 테이블을 넣어 선정합니다. 선정하면 선정 알림과 10분 전 알림이 나갑니다. 여러 명을 고르면 같은 회차 · 테이블로 한 번에 선정합니다.</p><p><b>두 곳에서 동시에</b> · 앱에서 취소했거나 다른 콘솔에서 바꾸면 그 줄만 새 상태로 고쳐 보여 줍니다. 프로그램 명단 입장 · 노쇼 표시는 설정 › 고급 · 보관.</p>');
   },
   paint:function(){
-    var u=apSt(), k=u.kind, d=S.data[k==="cc"?"cchat":"resv"];
-    el("apKind").innerHTML=[["resv","AX 라운지 상담"],["cc","커피챗 선정"]].map(function(x){ var rows=apRows(x[0]), w=rows.filter(function(r){ return x[0]==="cc"?r.status==="대기":r.status==="신청"; }).length; return '<button class="'+(k===x[0]?"on":"")+'" data-qa="ap.kind.'+x[0]+'" onclick="apKind(\''+x[0]+'\')">'+esc(x[1])+(w?' <span class="badge">'+w+'</span>':'')+'</button>'; }).join("");
+    var u=apSt(), nk=S.nav==="f_cchat"?"cc":"resv"; if(u.kind!==nk){ u.kind=nk; u.f="todo"; u.chk={}; u.cur=""; }
+    var k=u.kind, d=S.data[k==="cc"?"cchat":"resv"];
+    el("apKind").innerHTML=k==="cc"?"":'<span class="cap">커피챗 선정은 <button class="lnk" data-qa="ap.moved" onclick="go(\'f_cchat\')">현장 › 18F 커피챗</button>으로 옮김(신청 처리 → 1F AX 라운지)</span>';
     el("apCc").innerHTML=k==="cc"?ccCloseHtml():"";
     if(!d){ el("apL").innerHTML=skel(); return; }
     if(!d.ok){ el("apL").innerHTML=loadErr(d,k==="cc"?"cchat":"resv"); return; }
