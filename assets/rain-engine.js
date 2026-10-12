@@ -42,6 +42,7 @@
      「문장을 먼저 읽어 두세요」 32 · 카운트다운 팡(rgBnsPop · rgBnsShake · GO 0.6초 보이기) · 아래 칸 = 판 높이에 맞춤 · 판정 · 점수 · 시간 그대로
    261012 사용자 직접 지적 세 가지 · ① 빠르기 = 단계 · 램프로만 오른다(rgGapWait · rgJit · 구름 단어 거리 맞춤 · 프레임 0.1초) · 느려지는 때는 목숨을 잃은 직후뿐 ·
      ② 보너스 들어가기 = 안내 「잠시 후에 문장이 나타납니다. 빠르게 따라 치세요.」 → 3 · 2 · 1 → 「시작!」과 함께 문장 · 입력(미리 읽기 없앰) · ③ 3 · 2 · 1 = 판 가운데 큰 숫자 · 테두리 번쩍(rgBnsFlash) · 박자음 rgcd · rgstart
+   261012 후속(사용자 실제 화면 「3 · 2 · 1 과 동시에 시작!」) · 첫 카운트다운이 3.2초를 3 · 2 · 1(0.2초) · GO(1초)로 나눠 1 과 GO 가 붙어 보였다 · 이제 3 · 2 · 1 각 1초 → 판 시작 = 「시작!」 팡(rgCdNum · rgCdDraw · RG.goT)
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* ═══ 단어 풀 · 여기 한 곳 ═══
@@ -586,7 +587,7 @@ function rgStart(mode, opt) {
   RG.lives = RG.lives0; RG.score = 0; RG.hits = 0; RG.tries = 0;
   RG.combo = 0; RG.maxCombo = 0; RG.stage = 1; RG.spawnT = 0.3; RG.shake = 0; RG.banner = null; RG.shot = null; RG.res = null; RG.ending = null; RG.heartHit = 0;
   RG.mas = { x: 90, tx: 90, hop: 0, set: false };
-  RG.cd = opt.cd != null ? opt.cd : 3.2; RG.t0 = 0; RG.on = true; RG.last = performance.now(); RG.L = null; RG.hud = "";
+  RG.cd = opt.cd != null ? opt.cd : 3; RG.cdQ = 0; RG.cdAt = 0; RG.goT = 0; RG.goAt = 0; RG.t0 = 0;   /* 261012 3.2 → 3 · 3 · 2 · 1 각 1초 · 대전은 서버 값(opt.cd) */ RG.on = true; RG.last = performance.now(); RG.L = null; RG.hud = "";
   RG.paused = false; RG.composing = false; RG.pendingEnter = false; RG.typed = ""; RG.lastHit = null; RG.latT = 0; RG.tip = false;
   RG.bonusOn = !!opt.bonus && RG.mode === "site"; RG.bonus = null; RG.bns = 0; RG.bnsN = 0; RG.bnsBag = null; RG.capBns = 0; RG.inMax = 12;   /* v5.12 1F 타자왕 */
   RG.race = RG.bonusOn ? (opt.race || null) : null; RG.raceRank = 0; RG.racePops = []; RG.raceSlide = 0;
@@ -682,13 +683,14 @@ function rgUpdate(dt, now) {
   }
   if (RG.wait) { rgFx(dt); return; }   /* v4.29 대기 · 스페이스를 기다린다 */
   if (RG.heartHit > 0) RG.heartHit -= dt;
-  if (RG.cd > 0) {
-    var before = Math.ceil(RG.cd);
+  if (RG.cd > 0) {   /* 261012 첫 카운트다운 = 3 · 2 · 1 각 한 박자(1초) → 판이 시작하는 순간 「시작!」(RG.goT 동안 판 위에 팡) · 옛 = 3.2초에 3 · 2 · 1(0.2초) · GO(1초)라 1 과 GO 가 겹쳐 보였다 */
     RG.cd -= dt;
-    if (Math.ceil(RG.cd) !== before && RG.cd > 0) rgSfx("tick");
-    if (RG.cd <= 0) { RG.t0 = now; rgSfx("go"); }
+    var q = rgCdNum(RG.cd);
+    if (q !== RG.cdQ) { RG.cdQ = q; RG.cdAt = now; if (q > 0) rgSfx("rgcd", q); }
+    if (RG.cd <= 0) { RG.t0 = now; RG.goT = RAIN_CLOUD.go; RG.goAt = now; rgSfx("rgstart"); }
     return;
   }
+  if (RG.goT > 0) RG.goT -= dt;   /* 「시작!」은 보이기만 · 판은 이미 돈다 */
   var L = RG.L; if (!L) return;
   if (RG.bonus) {   /* v5.12 보너스 스테이지 · 소나기 멈춤 · 게임 시계는 끝날 때 민다 */
     rgBonusTick(dt, now); rgFx(dt); rgRaceTick(dt);
@@ -880,6 +882,16 @@ function rtCount(ctx, cd, W, y0, y1, px) {
   rtText(ctx, cd > 1 ? String(Math.ceil(cd - 0.2)) : "GO", W / 2, (y0 + y1) / 2, px || 48, RAIN_PAL.o100, RAIN_PAL.ink);
   ctx.restore();
 }
+/* 261012 소나기 첫 카운트다운 · 남은 초 → 보일 숫자(3 · 2 · 1 · 0 = 끝) · 대전이 3초보다 길게 주면 3 이 그만큼 길다 */
+function rgCdNum(cd) { return cd > 0 ? Math.min(3, Math.ceil(cd - 1e-9)) : 0; }
+/* 261012 소나기 첫 카운트다운 그림 · 판을 옅게 덮고 숫자 팡(보너스 3 · 2 · 1 과 같은 rgBnsPop) · 「시작!」은 판이 시작한 뒤 rgDraw 가 따로 그린다(겹침 없음) */
+function rgCdDraw(ctx, L, now) {
+  var n = rgCdNum(RG.cd); if (!n) return;
+  ctx.save();
+  ctx.fillStyle = "rgba(255,255,255,0.55)"; ctx.fillRect(0, 0, L.W, L.floor);
+  ctx.restore();
+  rgBnsPop(ctx, L.W / 2, Math.round(L.floor * 0.42), String(n), RG.cdAt ? Math.min(1, (now - RG.cdAt) / 1000) : 0, L.big ? 128 : 64);
+}
 /* 떨어지는 단어 한 개 · 게임과 시작 화면 미리보기가 같이 쓴다 · on = 지금 치고 있는 단어 · danger = 바닥선 가까이 · tv = 친 앞부분 */
 function rgWordDraw(ctx, L, x, y, bw, text, on, danger, tv) {
   if (on) rtTag(ctx, x, y, bw, L.boxH, RAIN_PAL.o10, RAIN_PAL.w, RAIN_PAL.o30);
@@ -989,7 +1001,8 @@ function rgDraw(ctx, now) {
       { s: L.D, tp: L.big ? 48 : 32, sp: L.big ? 32 : 16, maxW: L.big ? 640 : 320 });
   }
   if (RG.wait) rgWaitDraw(ctx, L, now);
-  else if (RG.cd > 0) rtCount(ctx, RG.cd, L.W, 0, L.floor, L.big ? 96 : 64);
+  else if (RG.cd > 0) rgCdDraw(ctx, L, now);
+  else if (RG.goT > 0 && !RG.ending && !RG.bonus) rgBnsPop(ctx, L.W / 2, Math.round(L.floor * 0.42), RAIN_BNS_GO, Math.min(1, (now - RG.goAt) / 1000 / RAIN_CLOUD.go) * 0.85, L.big ? 96 : 64, true);   /* 261012 1 이 사라진 뒤 · 판 시작과 함께 */
   ctx.restore();
   if (L.pan) { rgLeftDraw(ctx, L); if (RG.race) rgRaceDraw(ctx, L, now); else rgSideDraw(ctx, L); }   /* v4.32 3단 · 흔들림 밖 · v5.12 1F 타자왕 = 오른쪽 판이 추월 레이스 */
   if (RG.bonus) rgTransDraw(ctx, L);   /* v5.30 보너스 들어갈 때 · 나올 때 전체 화면 전환 · 제목 카드 */
@@ -1794,4 +1807,4 @@ if (typeof module !== "undefined" && module.exports) module.exports = { RG: RG, 
   RAIN_BONUS_LINES: RAIN_BONUS_LINES, RAIN_BONUS: RAIN_BONUS, RAIN_LIFE_BONUS: RAIN_LIFE_BONUS, rgBonusLim: rgBonusLim, rgLev: rgLev, rgBonusScore: rgBonusScore, rgRaceRank: rgRaceRank,
   rgRaceTick: rgRaceTick, rgSubmit: rgSubmit, rgEnd: rgEnd, rgBonusStart: rgBonusStart, RAIN_CLOUD: RAIN_CLOUD, rgCloudStart: rgCloudStart, rgCloudRem: rgCloudRem, rgLive: rgLive, rgHgKey: rgHgKey,
   rgCloudGeo: rgCloudGeo, RAIN_CLOUD_FX: RAIN_CLOUD_FX, RAIN_TRANS: RAIN_TRANS, rgWordY: rgWordY,
-  RAIN_SITE: RAIN_SITE, RAIN_AUTO: RAIN_AUTO, RAIN_BNS_GUARD: RAIN_BNS_GUARD, rgSiteReset: rgSiteReset, rgAutoOn: rgAutoOn, rgFallSec: rgFallSec, rgSpawnSec: rgSpawnSec, rgStageSec: rgStageSec, rgRampSite: rgRampSite, rgGapWait: rgGapWait, rgSpawnFall: rgSpawnFall, rgJit: rgJit, rgEase: rgEase, RAIN_BNS_GUIDE: RAIN_BNS_GUIDE, RAIN_BNS_GO: RAIN_BNS_GO, rgClash: rgClash, rgPool: rgPool, rgBnsNorm: rgBnsNorm, rgBlk: rgBlk, rgCloudPick: rgCloudPick };
+  RAIN_SITE: RAIN_SITE, RAIN_AUTO: RAIN_AUTO, RAIN_BNS_GUARD: RAIN_BNS_GUARD, rgSiteReset: rgSiteReset, rgAutoOn: rgAutoOn, rgFallSec: rgFallSec, rgSpawnSec: rgSpawnSec, rgStageSec: rgStageSec, rgRampSite: rgRampSite, rgGapWait: rgGapWait, rgCdNum: rgCdNum, rgSpawnFall: rgSpawnFall, rgJit: rgJit, rgEase: rgEase, RAIN_BNS_GUIDE: RAIN_BNS_GUIDE, RAIN_BNS_GO: RAIN_BNS_GO, rgClash: rgClash, rgPool: rgPool, rgBnsNorm: rgBnsNorm, rgBlk: rgBlk, rgCloudPick: rgCloudPick };
