@@ -26,7 +26,7 @@
   function pgSize(p) {
     if (SIGNS.indexOf(p) >= 0 || p === 19) return [1.3, 0.4];
     if (p === 40) return [2.8, 0.6];
-    if (p === 46) return [0.84, 1.19];
+    if (p === 46 || /^46[b-e]$/.test(p)) return [0.84, 1.19];   /* 261012 기둥 포스터 시안 B ~ E = '46b' ~ '46e' */
     if (p >= 41) return [0.6, 1.8];
     return [1.0, 2.5];
   }
@@ -46,7 +46,11 @@
   var BLD = {
     outline: [[0, 0], [32.57, 0], [32.57, 20.2], [6.83, 20.2], [6.83, 27.0], [0, 23.8]],   /* 로비 + 코어(북쪽 끝 z 20.2) + 서쪽 날개(북서 사선 외벽) */
     lobbyN: 11.46, top: 27.0,                                /* top = 지도 맨 위(날개 북동 모서리) */
-    cols: [7.45, 13.9, 20.4, 26.9], colZ: 5.1,              /* 기둥 4개 · 면마다 ME to WE A0 포스터(PDF 12쪽 「기둥 4개 × 4면」) */
+    cols: [7.45, 13.9, 20.4, 26.9], colZ: 5.1,              /* 기둥 4개 · 면마다 A0 포스터(PDF 12쪽 「기둥 4개 × 4면 = 16면」 · 면별 시안 = 아래 colFaces) */
+    /* 261012 기둥 포스터 부착안(사용자 261012 「포스터는 이렇게 부착 예정」 · 전시 업체 MyFair 확인 그림 · 기둥 4개 가로 한 줄 · 위 · 아래 면 A · 왼쪽 | 오른쪽 면 = 아래 표)
+     *   방향 = PDF 2쪽 평면(북쪽 위 · 서쪽 왼쪽 · 아래 = 남쪽 유리벽 · 정문 회전문)과 같은 그림으로 읽음 · 위 · 아래 = 북 · 남 면(시안 A 2면) · 왼쪽 = 서쪽 면 · 오른쪽 = 동쪽 면 · 기둥 순서 = 서 → 동(cols 순서)
+     *   colFaces[기둥] = [서쪽 면, 동쪽 면] · 시안 그림 = POSTER(아래) */
+    colFaces: [['B', 'D'], ['C', 'E'], ['D', 'C'], ['E', 'B']],
     pier: [1.0, 5.1],                                        /* 서쪽 끝 기둥(포스터 없음) */
     revolve: 17.3, doorsS: [[10.9, 12.8], [22.3, 24.2]], doorE: [7.15, 10.6],   /* 동쪽 = 회전문 D(z 7.15~9.65) + 여닫이 E(9.7~10.6) */
     cores: [[6.83, 17.0], [19.8, 28.2]], coreN: 20.2, hall: 18.4,
@@ -112,5 +116,12 @@
   }
   function viewPages(z) { return zonePages(z).filter(function (p) { return NOVIEW.indexOf(p) < 0; }); }
   function zoneOfPg(p) { for (var i = 0; i < ZONES.length; i++) if (zonePages(ZONES[i]).indexOf(p) >= 0) return ZONES[i]; return null; }
-  window.TOUR_DATA = { PG: PG, SIGNS: SIGNS, pgSize: pgSize, ATLAS: ATLAS, CROP: CROP, cropOf: cropOf, cropSize: cropSize, BLD: BLD, ZONES: ZONES, PROPS: PROPS, UNPLACED: UNPLACED, HINT_PG: HINT_PG, GONE: GONE, OFF1F: OFF1F, rowLen: rowLen, Z: Z, zonePages: zonePages, zoneOfPg: zoneOfPg, NOVIEW: NOVIEW, viewPages: viewPages };
+  /* 261012 기둥 포스터 시안 A ~ E(1층 부스 기획안_수정본_261008.pdf 12쪽 「7. 기둥」 · A 16장 · B ~ E 4장씩)
+   *   그림 한 장 d/p46s.webp = 다섯 칸 가로(A · B · C · D · E 순 · 칸 = 그림 448 x 634 + 둘레 4px 가장자리 복사) · 3D 기둥 면과 2D 목록 썸네일이 같이 쓴다
+   *   A = 기존 d/p46t.webp(홍보부 디지털 원본 색 곡선) · B ~ E = PDF 12쪽 그림(894 x 1262 안팎) · 크게 보기 = d/c/p46b ~ p46e.webp */
+  var POSTER = { file: 'd/p46s.webp', order: 'ABCDE', sheet: [448, 634], pad: 4,
+    pg: { A: 46, B: '46b', C: '46c', D: '46d', E: '46e' },
+    name: { A: 'ME to WE', B: '구', C: '꽃', D: '달리는 사람', E: '점 원' } };
+  PG['46b'] = '기둥 포스터 · 시안 B(구)'; PG['46c'] = '기둥 포스터 · 시안 C(꽃)'; PG['46d'] = '기둥 포스터 · 시안 D(달리는 사람)'; PG['46e'] = '기둥 포스터 · 시안 E(점 원)';
+  window.TOUR_DATA = { POSTER: POSTER, PG: PG, SIGNS: SIGNS, pgSize: pgSize, ATLAS: ATLAS, CROP: CROP, cropOf: cropOf, cropSize: cropSize, BLD: BLD, ZONES: ZONES, PROPS: PROPS, UNPLACED: UNPLACED, HINT_PG: HINT_PG, GONE: GONE, OFF1F: OFF1F, rowLen: rowLen, Z: Z, zonePages: zonePages, zoneOfPg: zoneOfPg, NOVIEW: NOVIEW, viewPages: viewPages };
 })();

@@ -821,10 +821,29 @@
     });
     G.trueN = n;
   }
+  /* 261012 기둥 포스터 = 실제 부착안(사용자 261012 「포스터는 이렇게 부착 예정」 · tour-data BLD.colFaces · POSTER)
+   *   그림 = d/p46s.webp 한 장(시안 A ~ E 다섯 칸) · 면마다 UV(모형 원래 0 ~ 1)를 그 면 시안 칸으로 옮긴다 · 남 · 북 면 = A · 서 · 동 면 = 기둥마다 colFaces
+   *   면 가리기 = 정점의 도면 자리(가장 가까운 기둥) + 법선(동서 성분이 크면 옆면) · 같은 모양은 한 번만(G.posterUV = 옮긴 면 이름 · 진단) */
+  function posterUV(o) {
+    var geo = o.geometry; if (!geo || geo.userData.posterUV) return; geo.userData.posterUV = 1;   /* 모양마다 한 번(포스터 재질이 기둥 비우기로 여럿이면 그림을 여러 번 받는다) */
+    var P = D.POSTER, B = D.BLD, pos = geo.attributes.position, nrm = geo.attributes.normal, uv = geo.attributes.uv; if (!pos || !nrm || !uv) return;
+    var cw = P.sheet[0] + P.pad * 2, W = cw * 5, H = P.sheet[1] + P.pad * 2, v = new T.Vector3(), nm = new T.Matrix3().getNormalMatrix(o.matrixWorld), out = new Float32Array(uv.count * 2), seen = {};
+    for (var i = 0; i < uv.count; i++) {
+      v.set(pos.getX(i), pos.getY(i), pos.getZ(i)).applyMatrix4(o.matrixWorld); var x = v.x + 16;
+      v.set(nrm.getX(i), nrm.getY(i), nrm.getZ(i)).applyMatrix3(nm);
+      var k = 0; B.cols.forEach(function (c, j) { if (Math.abs(c - x) < Math.abs(B.cols[k] - x)) k = j; });
+      var f = Math.abs(v.x) > Math.abs(v.z) ? B.colFaces[k][v.x < 0 ? 0 : 1] : 'A', c = Math.max(0, P.order.indexOf(f));
+      seen[k + f + (Math.abs(v.x) > Math.abs(v.z) ? (v.x < 0 ? 'w' : 'e') : (v.z < 0 ? 'n' : 's'))] = 1;   /* three z 음수 = 도면 북쪽 */
+      out[i * 2] = (c * cw + P.pad + uv.getX(i) * P.sheet[0]) / W; out[i * 2 + 1] = (P.pad + uv.getY(i) * P.sheet[1]) / H;
+    }
+    geo.setAttribute('uv', new T.BufferAttribute(out, 2));
+    G.posterUV = (G.posterUV || []).concat(Object.keys(seen).sort());
+  }
   function posterTex(m) {
-    new T.TextureLoader().load(BASE + 'd/p46t.webp?v=' + LABVER, function (t) {
+    new T.TextureLoader().load(BASE + D.POSTER.file + '?v=' + LABVER, function (t) {
       t.flipY = false; t.colorSpace = T.SRGBColorSpace; t.wrapS = t.wrapT = T.ClampToEdgeWrapping; t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-      S.lobby.traverse(function (o) { if (o.isMesh && o.material && o.material.name === 'panel_46') { o.material.map = t; o.material.needsUpdate = true; } });   /* 기둥 비우기가 복제한 재질까지 */
+      S.lobby.updateMatrixWorld(true);
+      S.lobby.traverse(function (o) { if (o.isMesh && o.material && o.material.name === 'panel_46') { posterUV(o); o.material.map = t; o.material.needsUpdate = true; } });   /* 기둥 비우기가 복제한 재질까지 */
       G.posterHi = t.image ? [t.image.width, t.image.height] : null; G.need = true;
     });
   }
@@ -5322,5 +5341,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v6.95', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v6.99', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();

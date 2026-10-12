@@ -27,7 +27,21 @@
   function $(k) { return R && R.el[k]; }
 
   /* ─────────── 썸네일 = 아틀라스 칸(CSS 배경) ─────────── */
+  /* 261012 기둥 포스터 시안 A ~ E = tour-data POSTER 그림 한 장(d/p46s.webp · 3D 기둥 면과 같은 그림)의 칸 · 시안 글자 · 없으면 null */
+  function posterKey(p) { var P = D.POSTER; if (!P) return null; for (var k in P.pg) if (P.pg[k] === p) return k; return null; }
+  function posterThumb(k, w) {
+    var P = D.POSTER, c = P.order.indexOf(k), cw = P.sheet[0] + P.pad * 2, s = w / P.sheet[0], h = Math.round(P.sheet[1] * s);
+    return '<span class="th" aria-hidden="true" style="width:' + w + 'px;height:' + h + 'px;background-image:url(' + BASE + P.file + ');background-size:' + (cw * 5 * s).toFixed(1) + 'px ' + ((P.sheet[1] + P.pad * 2) * s).toFixed(1) + 'px;background-position:' + (-(c * cw + P.pad) * s).toFixed(1) + 'px ' + (-P.pad * s).toFixed(1) + 'px;background-repeat:no-repeat"></span>';
+  }
+  /* 기둥 포스터 한 줄 · A = 기둥마다 남 · 북 면 · B ~ E = 붙는 기둥(서쪽부터 1 ~ 4번) · 면(서 · 동) */
+  function posterLine(k) {
+    var P = D.POSTER, B = D.BLD, at = [];
+    if (k === 'A') return [D.PG[46] + ' · 시안 A', '기둥 4개마다 남 · 북 면'];
+    B.colFaces.forEach(function (f, i) { if (f[0] === k) at.push((i + 1) + '번 기둥 서쪽'); if (f[1] === k) at.push((i + 1) + '번 기둥 동쪽'); });
+    return [D.PG[P.pg[k]], at.join(' · ')];   /* [이름, 붙는 자리] · 목록에서 두 줄 */
+  }
   function thumbHtml(p, w, extraStyle) {
+    var pk = posterKey(p); if (pk) return posterThumb(pk, w);
     var a = D.ATLAS.at[p]; if (!a) return '<span class="th" style="width:' + w + 'px;height:' + w + 'px"></span>';
     var S = D.ATLAS.size[a[0]], cw = a[3] - 4, ch = a[4] - 4, k = w / cw, h = Math.round(ch * k);
     return '<span class="th" aria-hidden="true" style="width:' + w + 'px;height:' + h + 'px;background-image:url(' + BASE + D.ATLAS.files[a[0]] + ');background-size:' + (S * k).toFixed(1) + 'px ' + (S * k).toFixed(1) + 'px;background-position:' + (-(a[1] + 2) * k).toFixed(1) + 'px ' + (-(a[2] + 2) * k).toFixed(1) + 'px' + (extraStyle || '') + '"></span>';
@@ -471,7 +485,13 @@
     var hx = B.cores[1][1]; o += '<rect x="' + X(hx) + '" y="' + Y(CN) + '" width="' + (LW - hx) * s + '" height="' + (CN - LN) * s + '" fill="url(#trHz)"/><text class="lab" x="' + X((hx + LW) / 2) + '" y="' + Y(lz) + '" text-anchor="middle">행사 구역 아님</text>';
     B.rooms.forEach(function (r) { o += '<rect x="' + X(0) + '" y="' + Y(r[1]) + '" width="' + (3.6 * s) + '" height="' + ((r[1] - r[0]) * s) + '" fill="#F9FAFB" stroke="#D9DDE2"/>' + (r[2] ? '<text class="lab" x="' + X(1.9) + '" y="' + (Y((r[0] + r[1]) / 2) + 2.5) + '" text-anchor="middle">' + r[2] + '</text>' : ''); });
     if (B.room3) o += '<polygon points="' + B.room3.pts.map(function (q) { return X(q[0]) + ',' + Y(q[1]); }).join(' ') + '" fill="#F9FAFB" stroke="#D9DDE2"/><text class="lab" x="' + X(B.room3.at[0]) + '" y="' + (Y(B.room3.at[1]) + 2.5) + '" text-anchor="middle">' + B.room3.label + '</text>';   /* v5.34 미팅룸 3 = 날개 북쪽 삼각형 */
-    B.cols.forEach(function (x) { o += '<rect x="' + (X(x) - 4.5) + '" y="' + (Y(B.colZ) - 4.5) + '" width="9" height="9" fill="#C9CED4"/>'; });
+    B.cols.forEach(function (x, i) {
+      o += '<rect x="' + (X(x) - 4.5) + '" y="' + (Y(B.colZ) - 4.5) + '" width="9" height="9" fill="#C9CED4"/>';
+      /* 261012 기둥 포스터 면(부착안) · 남 · 북 = 시안 A(검정 바탕) · 서 · 동 = 시안 B ~ E(흰 바탕 · 주황 테) · 글자 = 시안 */
+      var f = B.colFaces[i], cx = X(x), cy = Y(B.colZ);
+      o += '<rect x="' + (cx - 4.5) + '" y="' + (cy - 6.5) + '" width="9" height="2" fill="#191F28"/><rect x="' + (cx - 4.5) + '" y="' + (cy + 4.5) + '" width="9" height="2" fill="#191F28"/>';
+      [[-1, f[0]], [1, f[1]]].forEach(function (q) { o += '<rect x="' + (cx + q[0] * 5.5 - 1) + '" y="' + (cy - 4.5) + '" width="2" height="9" fill="#FF7E31"/><text class="lab" x="' + (cx + q[0] * 10) + '" y="' + (cy + 2.5) + '" text-anchor="middle" style="font-weight:700;fill:#4E5968">' + q[1] + '</text>'; });
+    });
     o += '<line x1="0" y1="' + Y(0) + '" x2="' + X(LW) + '" y2="' + Y(0) + '" stroke="#B0B8C1" stroke-width="3"/>';
     o += '<path d="M' + (X(B.revolve) - 13) + ',' + Y(0) + ' A13,13 0 0 1 ' + (X(B.revolve) + 13) + ',' + Y(0) + '" fill="none" stroke="#8B95A1" stroke-width="1.5"/><text class="lab" x="' + X(B.revolve) + '" y="' + (Y(0) + 11) + '" text-anchor="middle" style="font-weight:700;fill:#4E5968">정문</text>';
     o += '<text class="lab" x="' + (X(LW) + 2) + '" y="' + (Y((B.doorE[0] + B.doorE[1]) / 2) + 2) + '">출입문</text>';
@@ -513,10 +533,14 @@
     }).join('') +
       '<section class="card" aria-label="모형 밖 안내물"><h2>모형 밖 안내물</h2><ol>' +
       [40, 47].map(function (p) { return '<li><button type="button" data-p="' + p + '">' + thumbHtml(p, D.pgSize(p)[0] > D.pgSize(p)[1] ? 56 : 28) + '<span>' + esc(D.PG[p]) + ' · 출입문 밖 체크인</span></button></li>'; }).join('') +
-      '<li><button type="button" data-p="46">' + thumbHtml(46, 40) + '<span>' + esc(D.PG[46]) + ' · 기둥 4개 · 면마다</span></button></li>' +
+      D.POSTER.order.split('').map(function (k) { return '<li><button type="button" data-p="' + D.POSTER.pg[k] + '" data-poster="1">' + thumbHtml(D.POSTER.pg[k], 28) + '<span>' + posterLine(k).map(esc).join('<br>') + '</span></button></li>'; }).join('') +   /* 261012 기둥 포스터 부착안(시안 A ~ E · tour-data colFaces) */
       D.UNPLACED.map(function (p) { return '<li><button type="button" data-p="' + p + '">' + thumbHtml(p, 28) + '<span>' + esc(D.PG[p]) + '</span></button></li>'; }).join('') + '</ol></section>';
     Array.prototype.forEach.call(l.querySelectorAll('button[data-i]'), function (b) { b.onclick = function () { var z = D.Z(b.getAttribute('data-z')); openViewer(D.zonePages(z), +b.getAttribute('data-i'), null, z); }; });
-    Array.prototype.forEach.call(l.querySelectorAll('button[data-p]'), function (b) { b.onclick = function () { var p = +b.getAttribute('data-p'); openViewer([p], 0, null, null); }; });
+    Array.prototype.forEach.call(l.querySelectorAll('button[data-p]'), function (b) { b.onclick = function () {
+      var a = b.getAttribute('data-p'), p = /^\d+$/.test(a) ? +a : a;
+      if (b.hasAttribute('data-poster')) { var L = D.POSTER.order.split('').map(function (k) { return D.POSTER.pg[k]; }); openViewer(L, Math.max(0, L.indexOf(p)), null, null); return; }   /* 기둥 포스터 = 시안 A ~ E 다섯 장 넘김 */
+      openViewer([p], 0, null, null);
+    }; });
     Array.prototype.forEach.call(l.querySelectorAll('button[data-act]'), function (b) { b.onclick = function () { runAct(acts(D.Z(b.getAttribute('data-act')))[0]); }; });
   }
 
