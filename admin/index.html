@@ -494,6 +494,7 @@ header.top :focus-visible,.bar.bulk :focus-visible{outline-color:#fff}
 </div>
 <script src="../assets/server.js"></script>
 <script src="qrcode.js"></script>
+<script src="ksz.js?v=261012"></script>
 <script>
 /* ══ 0. 설정 ══ */
 var BE_DEFAULT = "https://script.google.com/macros/s/AKfycbwjCaSSUnQ7W1lrM8T426Cn_LgKs_UhI0Qi5XRVk-_eF-oD55-Wwjsot0DkPJCX9JqMBA/exec";
@@ -710,7 +711,7 @@ var SUPV={ sp:"", until:0, busy:false, wait:[] };
 var SP_ACT={ test_reset:1, adm_roster:1, adm_roster_set:1, adm_code_set:1, acct_pwreset:1, pw_req_done:1, usr_reset_all:1, fin_export:1, ro_set:1, stamp_rotate:1, stair_rotate:1, att_rotate:1, att_wipe:1, visit_wipe:1, game_wipe:1,
   og_scope_state:1, og_scope_set:1, og_gate_preview:1, og_gate_apply:1, og_gate_find:1, og_gate_add:1, og_gate_remove:1, og_deny_list:1, og_deny_clear:1,
   roll_list:1, roll_apply:1, roll_undo:1, pre10_state:1, pre10_row_list:1, pre10_row_set:1, pre10_row_del:1, pre10_preview:1, pre10_apply:1, pre10_undo:1,
-  kit_size_list:1, kit_staff_find:1, kit_staff_add:1, kit_staff_remove:1, test_set:1, pre10_bulk:1, cfg_set:1, rosdept_state:1, lk7_export:1, fcfs_export:1, ideaking_export:1 };
+  kit_size_list:1, kit_staff_find:1, kit_staff_add:1, kit_staff_remove:1, kit_staff_size_preview:1, kit_staff_size_apply:1, kit_staff_size_undo:1, test_set:1, pre10_bulk:1, cfg_set:1, rosdept_state:1, lk7_export:1, fcfs_export:1, ideaking_export:1 };
 function supOk(){ return !!(SUPV.sp&&Date.now()<SUPV.until); }
 function supLeftMin(){ return Math.max(1,Math.ceil((SUPV.until-Date.now())/60000)); }
 function supAttach(action, params){ if(SUPV.sp&&SP_ACT[action]&&!("sp" in params)) params.sp=SUPV.sp; }
@@ -995,7 +996,7 @@ function actGenAsk(ref){
   dialog({ t:GEN_UNDO[u.a]+"를 할까요?", who:esc(r.name||r.emp||"")+'<span>'+esc(r.x)+'</span>', x:imp([["되돌리기",esc(u.lbl||GEN_UNDO[u.a]),"chg"],["처음 처리",esc(short(r.t))+" · "+esc(r.byName||r.by||"-")]]), s:esc(GEN_UNDO_NOTE[u.a]||""), ok:"되돌리기", danger:u.a==="stamp_revoke",
     onOk:function(){ (u.post?callPost:call)(u.a, p, function(x){ dlgForce(); if(x&&x.ok){ toast("되돌렸습니다 · "+(u.lbl||GEN_UNDO[u.a])); S.at.alog=0; changed(["act_log","resv_list","cchat_list","inv_state","roll_list","roll_stat","now_board"]); load(true); } else toast("되돌리지 못했습니다 · "+(x&&x.reason==="state"?"그 사이 상태가 바뀌었습니다":x&&x.reason==="roulette"?"룰렛을 이미 돌렸습니다":x&&x.reason==="tickets"?"행운권이 이미 나갔습니다":x&&x.reason==="fcfs"?"선착순 참여상을 받았습니다":x&&x.reason==="notlast"?"그 뒤에 10F 명단이 또 바뀌었습니다":why(x))); },function(e){ dlgForce(); toast(why(e)); }); } });
 }
-var WF_A={ resv_set:"상담 상태", cchat_set:"커피챗 선정", cchat_status:"커피챗 상태", fcfs_add:"선착순 수동 지급", fcfs_undo:"선착순 수령 되돌림", fcfs_void:"선착순 자격 취소", ck_next:"다음 번호", ck_void:"번호표 무효", inv_swap:"사이즈 교환", inv_undo:"원장 되돌림", stamp_grant:"스탬프 부여", stamp_revoke:"스탬프 취소", roll_apply:"명단 넣기 · 빼기", roll_undo:"명단 되돌리기", pre10_bulk:"10F 묶음 넣기", cfg_set:"운영 설정", notice_set:"공지", draw_cmd:"추첨 명령", lk7_rem:"룰렛 잔여", lk7_lock:"7등 대상 확정" };
+var WF_A={ resv_set:"상담 상태", cchat_set:"커피챗 선정", cchat_status:"커피챗 상태", fcfs_add:"선착순 수동 지급", fcfs_undo:"선착순 수령 되돌림", fcfs_void:"선착순 자격 취소", ck_next:"다음 번호", ck_void:"번호표 무효", inv_swap:"사이즈 교환", inv_undo:"원장 되돌림", stamp_grant:"스탬프 부여", stamp_revoke:"스탬프 취소", roll_apply:"명단 넣기 · 빼기", roll_undo:"명단 되돌리기", kit_staff_size_apply:"옷 사이즈 일괄 입력", pre10_bulk:"10F 묶음 넣기", cfg_set:"운영 설정", notice_set:"공지", draw_cmd:"추첨 명령", lk7_rem:"룰렛 잔여", lk7_lock:"7등 대상 확정" };
 function wfailHtml(d){
   var a=d.wfail||[]; if(!a.length) return "";
   return '<details class="memo" style="margin-bottom:12px;border-color:var(--bad-bd)"><summary style="color:var(--bad)">실패한 쓰기 '+n0(d.wfailN||a.length)+'건(오늘 · 이 서버 · 콘솔)</summary><div class="mb"><table class="tb"><thead><tr><th>시각</th><th>일</th><th>누가</th><th>대상</th><th>이유</th></tr></thead><tbody>'+
@@ -1060,7 +1061,7 @@ function rosLocked(r){ var u=rosSt(); if(ROS_RO[u.kind]) return "보기만 하�
 function rosSync(){ var u=rosSt(), k=S.sub.p_list; if(k&&k!==u.kind&&ROS_KINDS.some(function(x){ return x[0]===k; })){ u.kind=k; u.filt=""; u.chk={}; u.cur=""; u.mode=""; u.show=ROS_SHOW; var b=el("rsL"); if(b) b.innerHTML=""; } }
 VIEWS.roster={
   need:function(){ rosSync(); var u=rosSt(); return [{ k:"rstat", a:"roll_stat", ttl:60000 },{ k:"rl_"+u.kind, a:"roll_list", p:{ list:u.kind }, ttl:60000, sup:1 }]; },
-  right:function(){ var u=rosSt(); return ROS_RO[u.kind]?'<button class="btn" data-qa="ros.legacy" onclick="legacyOpen(\''+(u.kind==="lounge"?"p_lng":"p_kit")+'\',0)">'+(u.kind==="lounge"?"명단 통째 올리기 ›":"자동 배정 · 엑셀 ›")+'</button>':'<button class="btn pri" data-qa="ros.add" onclick="rosMode(\'add\')">+ 사람 넣기</button>'; },
+  right:function(){ var u=rosSt(); return ROS_RO[u.kind]?'<button class="btn" data-qa="ros.legacy" onclick="legacyOpen(\''+(u.kind==="lounge"?"p_lng":"p_kit")+'\',0)">'+(u.kind==="lounge"?"명단 통째 올리기 ›":"자동 배정 · 엑셀 ›")+'</button>':(u.kind==="staff"&&window.kszOpen?'<button class="btn" data-qa="ksz.open" onclick="kszOpen()">사이즈 일괄 입력</button>':'')+'<button class="btn pri" data-qa="ros.add" onclick="rosMode(\'add\')">+ 사람 넣기</button>'; },
   mount:function(){
     rosSync(); var u=rosSt(), k=ROS_KINDS.filter(function(x){ return x[0]===u.kind; })[0];
     el("vb").innerHTML='<div class="fx" style="margin-bottom:6px"><span class="seg" id="rsKind"></span><span class="sp"></span><span class="cap">라운지 사전 신청 · 옷 신청 명단은 설정 › 고급 › 재고 · 그 밖 · '+ROS_OTHER.map(function(x){ return '<button class="lnk" data-qa="ros.other.'+x[0]+'" onclick="legacyOpen(\''+x[0]+'\',0)">'+esc(x[1])+'</button>'; }).join(" · ")+' (옛 콘솔)</span></div>'+
@@ -1117,6 +1118,7 @@ function rosCells(r){
 }
 function rosList(){
   var u=rosSt(), box=el("rsL"); if(!box) return;
+  if(u.mode==="size"&&u.kind==="staff"&&window.kszList){ kszList(box); return; }
   var shown=rosShown(), all=rosRows(), nsel=Object.keys(u.chk).length, vis=shown.slice(0,u.show);
   var selIn=shown.filter(function(r){ return u.chk[r.emp]; }).length, hdr=selIn&&selIn===shown.filter(function(r){ return !rosLocked(r); }).length?"on":selIn?"mid":"";
   var bar;
@@ -1143,7 +1145,7 @@ function rosHdr(){ var u=rosSt(), vis=rosShown().slice(0,u.show).filter(function
 function rosSelAll(){ var u=rosSt(); rosShown().forEach(function(r){ if(!rosLocked(r)) u.chk[r.emp]=1; }); u.mode="sel"; rosList(); rosPanel(); }
 function rosClear(){ var u=rosSt(); u.chk={}; if(u.mode==="sel") u.mode=""; rosList(); rosPanel(); }
 function rosPick(emp){ var u=rosSt(); if(Object.keys(u.chk).length){ rosChk(emp); return; } u.cur=u.cur===emp&&u.mode==="one"?"":emp; u.mode=u.cur?"one":""; rosList(); rosPanel(); }
-function rosMode(m){ var u=rosSt(); u.mode=u.mode===m?"":m; if(m==="add") u.add.pv=null; if(m==="deny") rosDenyLoad(); rosPanel(); if(m==="add") setTimeout(function(){ var t=el("raText")||el("raFq"); if(t) t.focus(); },30); }
+function rosMode(m){ var u=rosSt(), was=u.mode; u.mode=u.mode===m?"":m; if(was==="size") rosList(); if(m==="add") u.add.pv=null; if(m==="deny") rosDenyLoad(); rosPanel(); if(m==="add") setTimeout(function(){ var t=el("raText")||el("raFq"); if(t) t.focus(); },30); }
 function escHook(){ var u=S.ui.ros; if(u&&Object.keys(u.chk).length){ rosClear(); return; } if(u&&u.mode){ u.mode=""; rosPanel(); rosList(); } }
 function rosRow(emp){ return rosRows().filter(function(x){ return x.emp===emp; })[0]; }
 
@@ -1152,6 +1154,7 @@ function rosPanel(){
   var hd=function(t, sub){ return '<div class="ph2"><div><h2>'+esc(t)+'</h2>'+(sub?'<div class="cap">'+sub+'</div>':'')+'</div><button class="x" aria-label="닫기" data-qa="ros.panel.x" onclick="rosMode(\'\');rosClear()">×</button></div><div class="bd">'; };
   var sel=Object.keys(u.chk);
   if(u.mode==="add") { p.innerHTML=hd("사람 넣기","입력은 이 칸에서만 합니다")+rosAddHtml()+'</div>'; return; }
+  if(u.mode==="size"&&u.kind==="staff"&&window.kszPanel) { p.innerHTML=hd("사이즈 일괄 입력","줄마다 「이름 사이즈」 또는 「사번 사이즈」")+kszPanel()+'</div>'; return; }
   if(u.mode==="deny") { p.innerHTML=hd("들어오지 못한 사람","명단 밖이라 로그인 · 쓰기가 거절된 사번입니다")+rosDenyHtml()+'</div>'; return; }
   if(sel.length){
     var rows=sel.map(rosRow).filter(Boolean), acct=rows.filter(function(r){ return r.acct; }).length, today=rows.filter(function(r){ return r.today; }).length, scan=rows.filter(function(r){ return r.scan30; }).length;
