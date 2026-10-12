@@ -40,6 +40,8 @@
      ③ 난이도(RAIN_SITE) · 단계 18초 · 낙하 · 등장 완만 · 단계별 동시 단어 · 목숨을 잃으면 1.2초 숨 돌리기 · 바닥 도착 간격 0.8초 · 붐비면 등장을 늦춘다.
    261007 보너스 스테이지 손질(사용자 「치다 보면 글자가 뭉개진다 · 엔터 없이 들어간다고 알려 주기 · 먼저 읽기 크게 · 3 2 1 팡팡팡」) · 친 줄 = 짝짓기(rgBnsAlign) · 자기 폭대로 이어 그림(옛 = 문장 칸에 끼워 띄어쓰기 하나만 빠져도 겹쳐 뭉개짐) ·
      「문장을 먼저 읽어 두세요」 32 · 카운트다운 팡(rgBnsPop · rgBnsShake · GO 0.6초 보이기) · 아래 칸 = 판 높이에 맞춤 · 판정 · 점수 · 시간 그대로
+   261012 사용자 직접 지적 세 가지 · ① 빠르기 = 단계 · 램프로만 오른다(rgGapWait · rgJit · 구름 단어 거리 맞춤 · 프레임 0.1초) · 느려지는 때는 목숨을 잃은 직후뿐 ·
+     ② 보너스 들어가기 = 안내 「잠시 후에 문장이 나타납니다. 빠르게 따라 치세요.」 → 3 · 2 · 1 → 「시작!」과 함께 문장 · 입력(미리 읽기 없앰) · ③ 3 · 2 · 1 = 판 가운데 큰 숫자 · 테두리 번쩍(rgBnsFlash) · 박자음 rgcd · rgstart
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* ═══ 단어 풀 · 여기 한 곳 ═══
@@ -205,12 +207,20 @@ function rgSpawnSec(st, sec) {
   if (!rgSiteOn()) return RAIN_SPAWN[st - 1] * rgRamp(sec);
   return rgSiteAt(RAIN_SITE.spawn, st) * rgRampSite(sec) * (RG.words.length >= RAIN_SITE.crowd ? RAIN_SITE.crowdMul : 1);   /* 판이 붐비면 다음 단어를 늦춘다 */
 }
-/* 바닥 도착 간격 · 새 단어가 판 위 단어와 RAIN_SITE.gap 초 안에 바닥에 닿으면 그만큼 늦게 닿게(조금 천천히) 내린다 · 두 단어가 한꺼번에 목숨을 가져가지 않게 */
-function rgGapFall(f) {
-  var g = RAIN_SITE.gap, a = RG.words.map(function (w) { return (1 - Math.min(1, w.p)) * w.fall; }).sort(function (x, y) { return x - y; });
-  for (var i = 0; i < a.length; i++) if (Math.abs(f - a[i]) < g) f = a[i] + g;
-  return f;
+/* 바닥 도착 간격 · 새 단어가 판 위 단어와 RAIN_SITE.gap 초 안에 바닥에 닿게 되면 그 단어를 늦게 내보낼 초(0 = 바로) · 두 단어가 한꺼번에 목숨을 가져가지 않게
+   261012 사용자 「3라운드쯤부터 단어마다 빠르고 느린 게 섞이고 중간에 느려진다」 · 옛 rgGapFall 은 새 단어를 느리게(낙하 시간을 늘려) 맞췄다 · 판이 붐비는 3단계부터 줄줄이 밀려 40%까지 느린 단어가 섞였다 ·
+   이제 속도는 그대로 두고 등장만 미룬다(도착 시각은 옛 규칙과 같다) */
+function rgGapWait(f) {
+  var g = RAIN_SITE.gap, t = f, a = RG.words.map(function (w) { return (1 - Math.min(1, w.p)) * w.fall; }).sort(function (x, y) { return x - y; });
+  for (var i = 0; i < a.length; i++) if (Math.abs(t - a[i]) < g) t = a[i] + g;
+  return t - f;
 }
+/* 261012 속도 = 화면 위 픽셀 속도 하나 · 판 높이(L.fallPx)를 rgFallSec 초에 내려오는 빠르기 · 구름 단어는 구름 아래(y0)에서 나와 거리가 짧은 만큼 시간도 짧다(옛 = 같은 시간이라 구름 단어만 느렸다)
+   흔들림(0.94~1.06배)은 대전(race · 시드)만 · 솔로(app · site)는 단어마다 같은 빠르기 · 그래서 빠르기는 단계 · 램프로만 오른다(단조 증가) · 느려지는 때는 목숨을 잃은 직후(RAIN_SITE.hurt)뿐 */
+function rgJit(r) { return RG.mode === "race" ? 0.94 + r * 0.12 : 1; }
+function rgClDist(y0) { var L = RG.L; return Math.max(10, L.floor - L.boxH - y0); }
+function rgClY0(L, now) { var G = rgCloudGeo(L, now); return Math.max(L.top, G.bottom - L.boxH); }
+function rgSpawnFall(sec, now) { var f = rgFallSec(RG.stage, sec), L = RG.L; return RG.cloud && L ? f * rgClDist(rgClY0(L, now)) / L.fallPx : f; }
 /* 판 단어끼리 자모 앞부분이 겹치면(가 · 감) 자동 클리어가 짧은 쪽을 먼저 터뜨린다 · 뽑을 때 건너뛴다 */
 function rgClash(w, list) {
   var j = rgJm(w);
@@ -612,7 +622,7 @@ function rgKeyDoc(e) {
 if (typeof document !== "undefined" && document && typeof document.addEventListener === "function") document.addEventListener("keydown", rgKeyDoc, true);
 function rgFrame() {
   if (!RG.on || RG.paused) return;
-  var now = performance.now(), dt = Math.min(0.05, (now - RG.last) / 1000);
+  var now = performance.now(), dt = Math.min(0.1, (now - RG.last) / 1000);   /* 261012 0.05 → 0.1 · 1F 노트북이 잠깐 버벅이면(20fps 아래) 단어가 느려지던 것을 막는다 · 화면을 떠났다 와도 한 번에 0.1초까지만 간다 */
   RG.last = now;
   rgUpdate(dt, now);
   rgFocusGuard();   /* 261007 입력칸이 포커스를 잃었으면 이 프레임에 되돌린다 */
@@ -642,8 +652,7 @@ function rgSpawn(sec) {
       cx = Math.round(lo + rgRnd() * (hi - lo));
       if (!near.some(function (w) { return rgWordY(w) < y0 + L.boxH * 2.5 && cx < w.x + w.bw + 8 && cx + bw + 8 > w.x; })) break;
     }
-    var wc = { text: text, bw: bw, x: cx, y0: y0, p: 0, fall: rgFallSec(RG.stage, sec) * (0.94 + rgRnd() * 0.12), cl: true };
-    if (rgSiteOn()) wc.fall = rgGapFall(wc.fall);   /* 261003 바닥 도착 간격 */
+    var wc = { text: text, bw: bw, x: cx, y0: y0, p: 0, fall: rgFallSec(RG.stage, sec) * rgJit(rgRnd()) * rgClDist(y0) / L.fallPx, cl: true };   /* 261012 거리에 맞춘 시간 · 판 단어와 같은 빠르기 · 도착 간격은 등장을 미뤄 맞춘다(rgUpdate · rgGapWait) */
     RG.words.push(wc); RG.seq++; RG.cloud.puff = RAIN_CLOUD_FX.puff;
     return true;
   }
@@ -654,8 +663,7 @@ function rgSpawn(sec) {
     var x = Math.round(Math.min(maxX, Math.max(8, 8 + lanes[k] * lw + jit * Math.max(0, lw - bw))));
     var clash = near.some(function (w) { return rgWordY(w) < upper && x < w.x + w.bw + 8 && x + bw + 8 > w.x; });
     if (!clash || k === lanes.length - 1) {
-      var wd = { text: text, bw: bw, x: x, p: 0, fall: rgFallSec(RG.stage, sec) * (0.94 + fj * 0.12) };
-      if (rgSiteOn()) wd.fall = rgGapFall(wd.fall);   /* 261003 바닥 도착 간격 */
+      var wd = { text: text, bw: bw, x: x, p: 0, fall: rgFallSec(RG.stage, sec) * rgJit(fj) };   /* 261012 흔들림 = 대전만 */
       if (cl) wd.cl = true;
       RG.words.push(wd);
       if (RG.seed) RG.ghost.push({ text: text, bw: bw, x: x, p: 0, fall: wd.fall });
@@ -708,7 +716,11 @@ function rgUpdate(dt, now) {
   /* 대전은 화면에 몇 개 남았는지로 등장을 막지 않는다(막으면 사람마다 단어 순서가 갈라진다) · 솔로는 원래대로 상한을 둔다 */
   var room = RG.seed ? RG.ghost.length <= L.maxWords + extra : RG.words.length < cap + extra;
   if (RG.cloud && !RG.cloud.seq.length) room = false;   /* v5.24 구름이 다 내렸다 · 남은 단어가 다 사라지면 걷힌다 */
-  if (RG.spawnT <= 0 && room && !(RG.hurt > 0)) RG.spawnT = rgSpawn(sec) ? rgSpawnSec(RG.stage, sec) : 0.25;
+  if (RG.spawnT <= 0 && room && !(RG.hurt > 0)) {
+    var gw = site ? rgGapWait(rgSpawnFall(sec, now)) : 0;   /* 261012 1F 셀프 · 도착 간격이 모자라면 느리게 내리지 않고 그만큼 늦게 내보낸다 */
+    if (gw > 0.02) RG.spawnT = gw;
+    else RG.spawnT = rgSpawn(sec) ? rgSpawnSec(RG.stage, sec) : 0.25;
+  }
   if (RG.cloud && RG.cloud.puff > 0) RG.cloud.puff -= dt;   /* v5.30 출렁임 */
   for (var i = RG.words.length - 1; i >= 0; i--) {
     var wd = RG.words[i];
@@ -1154,10 +1166,22 @@ var RAIN_BONUS_LINES = [
   { s: "아이디어 한 줄이 데이터 분석 과제로", w: ["아이디어", "데이터", "분석", "과제"] },
   { s: "라운지에서 함께 찾는 실행 방향", w: ["라운지", "함께", "실행", "방향"] }
 ];
-var RAIN_BONUS = { ch: 40, perfect: 600, sec: 50, intro: 2.6, show: 2.4, inMax: 40 };   /* v5.26(사용자 261003 「권장대로」) 비구름으로 문장이 한 판 1~3번으로 줄어 20 · 300 · 30 → 40 · 600 · 50 · 문장 하나 최대 = 20자 × 40 + 600 + 21초 × 50 = 2,450 · 3번 7,350 + 목숨 보너스 2,500 = 9,850 ≤ 서버 TYPE_PTS_BONUS 15,000 */   /* v5.24 intro 2.2 → 2.6(문장 먼저 읽기) · 그 뒤 카운트다운 RAIN_CLOUD.count */
+var RAIN_BONUS = { ch: 40, perfect: 600, sec: 50, intro: 2.2, show: 2.4, inMax: 40 };   /* v5.26(사용자 261003 「권장대로」) 비구름으로 문장이 한 판 1~3번으로 줄어 20 · 300 · 30 → 40 · 600 · 50 · 문장 하나 최대 = 20자 × 40 + 600 + 21초 × 50 = 2,450 · 3번 7,350 + 목숨 보너스 2,500 = 9,850 ≤ 서버 TYPE_PTS_BONUS 15,000 */   /* v5.24 intro 2.2 → 2.6(문장 먼저 읽기) · 그 뒤 카운트다운 RAIN_CLOUD.count */
 /* v5.24 비구름 · 리허설로 조절하는 손잡이 · n = 구름마다 내리는 단어 수(첫째 · 둘째 · 셋째) · key = 핵심 단어 하나가 몇 번 내리나 · gap = 구름이 걷힌 뒤 맑은 틈(게임 초) ·
    max = 한 판 최대 구름 수 · clear = 구름이 걷히는 연출 초 · count = 문장 입력 전 카운트다운 초 · 첫 구름 약 35~40초(1~3단계 · 간격 2.2~1.6초) · 보통 판 1~2번 */
-var RAIN_CLOUD = { n: [14, 16, 16], key: 2, gap: 15, max: 3, clear: 1.4, count: 3, go: 0.6 };   /* go = 카운트다운 뒤 GO 를 보이는 초(261003 부터 입력은 GO 와 함께 열린다 · 보이기만) · 261007 0.3 → 0.6(GO 팡 · 시간 · 점수 영향 없음) */
+var RAIN_CLOUD = { n: [14, 16, 16], key: 2, gap: 15, max: 3, clear: 1.4, count: 3, go: 0.8 };   /* 261012 go 0.6 → 0.8(「시작!」 팡 · 보이기만) · go = 카운트다운 뒤 GO 를 보이는 초(261003 부터 입력은 GO 와 함께 열린다 · 보이기만) · 261007 0.3 → 0.6(GO 팡 · 시간 · 점수 영향 없음) */
+/* 261012 보너스 들어가기(사용자 「문장을 미리 보여 주고 읽게 하는 것을 없앤다」) · 안내(문구 = 사용자 그대로) → 3 · 2 · 1 → 「시작!」 → 그때 문장이 나오고 입력이 열린다 · intro 2.6 → 2.2(읽을 문장이 없어 안내만)
+   IN · OUT = 전역 움직임 규격(mobile-popup-motion) 들어옴 300ms · 나감 180ms · 6px 떠오름 · ease · 동작 줄이기 = 바로 */
+var RAIN_BNS_GUIDE = ["잠시 후에 문장이 나타납니다.", "빠르게 따라 치세요."];
+var RAIN_BNS_GO = "시작!";
+var RAIN_BNS_IN = 0.3, RAIN_BNS_OUT = 0.18;
+/* CSS ease = cubic-bezier(.25, .1, .25, 1) · x 에서 y 를 찾는다(뉴턴 몇 번) */
+function rgEase(x) {
+  x = Math.max(0, Math.min(1, x));
+  var bz = function (t, a, b) { return 3 * a * t * (1 - t) * (1 - t) + 3 * b * t * t * (1 - t) + t * t * t; }, t = x;
+  for (var i = 0; i < 6; i++) { var d = (bz(t + 1e-4, 0.25, 0.25) - bz(t, 0.25, 0.25)) / 1e-4; if (!d) break; t = Math.max(0, Math.min(1, t - (bz(t, 0.25, 0.25) - x) / d)); }
+  return bz(t, 0.1, 1);
+}
 /* v5.30 구름 모양 손잡이 · w0 + w1 = 꽉 찬 구름 폭(판 대비) · w0 = 다 내린 구름 폭 · drift = 좌우 한 바퀴 초 · puff = 단어가 생길 때 출렁이는 초 */
 var RAIN_CLOUD_FX = { w0: 0.40, w1: 0.22, drift: 28, amp: 0.6, puff: 0.32 };   /* amp = 좌우로 갈 수 있는 거리 중 쓰는 비율 */
 /* v5.30 보너스 전환 · wipe = 전체 화면 도트 닫힘 · 열림 초 · title = BONUS STAGE 카드 초 · back = 나올 때 STAGE n 카드 초 */
@@ -1248,11 +1272,11 @@ function rgBonusTick(dt, now) {
   if (b.ph === "clear") { if (b.t <= 0) { b.ph = "win"; b.t = T.wipe; } return; }
   if (b.ph === "win") { if (b.t <= 0) { b.ph = "title"; b.t = T.title; rgSfx("rgjoin"); } return; }
   if (b.ph === "title") { if (b.t <= 0) { b.ph = "wout"; b.t = T.wipe; } return; }
-  if (b.ph === "wout") { if (b.t <= 0) { b.ph = "intro"; b.t = RAIN_BONUS.intro; if (inp) inp.placeholder = "문장을 먼저 읽어 두세요"; } return; }
-  if (b.ph === "intro") { if (b.t <= 0) { b.ph = "count"; b.t = RAIN_CLOUD.count; rgSfx("tick"); rgBnsShake(); } return; }
+  if (b.ph === "wout") { if (b.t <= 0) { b.ph = "intro"; b.t = RAIN_BONUS.intro; if (inp) inp.placeholder = "잠시 후에 문장이 나타납니다"; } return; }   /* 261012 문장은 아직 보이지 않는다 */
+  if (b.ph === "intro") { if (b.t <= 0) { b.ph = "count"; b.t = RAIN_CLOUD.count; rgSfx("rgcd", 3); rgBnsShake(); } return; }   /* 261012 박자음 = rgcd(숫자마다 한 음씩 높게) · 소리를 끈 기기는 조용하다 */
   if (b.ph === "count") {
-    if (b.t <= 0) { b.ph = "type"; b.typed = ""; b.go = RAIN_CLOUD.go; rgLock(false); RG.blkUntil = now + RAIN_BNS_GUARD * 1000; if (inp) inp.placeholder = "다 맞게 치면 엔터 없이 끝나요"; rgSfx("go"); rgBnsShake(); }   /* 261003 GO 가 보이는 순간 입력을 열고 시간을 잰다 · 카운트다운 중 누르던 키는 열린 뒤 RAIN_BNS_GUARD 초만 한 번 버린다(옛 GO 0.3초 막기 · 연타마다 늘던 막기 폐기) */
-    else if (Math.ceil(b.t) !== Math.ceil(was)) { rgSfx("tick"); rgBnsShake(); }   /* 261007 숫자가 바뀌는 순간 = 소리 · 팡(rgBnsPop) · 흔들림이 같은 박자 */
+    if (b.t <= 0) { b.ph = "type"; b.typed = ""; b.go = RAIN_CLOUD.go; rgLock(false); RG.blkUntil = now + RAIN_BNS_GUARD * 1000; if (inp) inp.placeholder = "다 맞게 치면 엔터 없이 끝나요"; rgSfx("rgstart"); rgBnsShake(); }   /* 261003 GO 가 보이는 순간 입력을 열고 시간을 잰다 · 카운트다운 중 누르던 키는 열린 뒤 RAIN_BNS_GUARD 초만 한 번 버린다(옛 GO 0.3초 막기 · 연타마다 늘던 막기 폐기) */
+    else if (Math.ceil(b.t) !== Math.ceil(was)) { rgSfx("rgcd", Math.ceil(b.t)); rgBnsShake(); }   /* 261007 숫자가 바뀌는 순간 = 소리 · 팡(rgBnsPop) · 흔들림이 같은 박자 */
     return;
   }
   if (b.ph === "type") {
@@ -1452,6 +1476,13 @@ function rgBonusDraw(ctx, L, now) {
   var bad = function (x, y, w, tc) { ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(Math.round(x), Math.round(y - fp * 0.62), Math.max(8, Math.ceil(w)), Math.round(fp * 1.24)); if (tc && tc !== " ") rtText(ctx, tc, x + Math.max(0, (w - ctx.measureText(tc).width) / 2), y, fp, RT_PAL.night, null); };
   var inL = px + 2 * s, inR = px + pw - 2 * s;
   ctx.textAlign = "left";
+  /* 261012 문장은 「시작!」과 함께 처음 나온다(사용자 「미리 보여 주고 읽게 하는 것을 없앤다」) · 그 전(wout · intro · count)에는 문장 줄을 그리지 않는다 ·
+     나올 때 = 들어옴 300ms · 6px 떠오름 · ease(전역 규격 mobile-popup-motion) · 동작 줄이기 = 바로 */
+  var areaTop = cy, areaBot = py + ph - 6 * s, areaMid = Math.round((areaTop + areaBot) / 2);
+  var nL = lines.length;
+  ctx.save();
+  if (pre) lines = [];
+  else if (cur && !rgReduced()) { var ein = rgEase(Math.min(1, (b.lim - b.left) / RAIN_BNS_IN)); ctx.globalAlpha = ein; ctx.translate(0, Math.round(6 * (1 - ein))); }
   lines.forEach(function (ln, li) {
     ctx.font = rtFont(fp);
     var lw = ctx.measureText(ln).width, x0 = Math.round(L.W / 2 - lw / 2), x = x0, y1 = cy + lh / 2, y2 = cy + lh + lh / 2, k = st[li];
@@ -1483,21 +1514,35 @@ function rgBonusDraw(ctx, L, now) {
     ctx.restore();
     cy += 2 * lh + rg;
   });
-  /* 시간 막대 · 남은 시간 · 결과 */
+  ctx.restore();
+  if (pre) cy += nL * (2 * lh + rg);
+  /* 시간 막대 · 남은 시간 · 결과 · 261012 시간 막대도 「시작!」부터(그 전엔 빈 판) */
   cy += 2;
   var bx = px + 6 * s, bwd = pw - 12 * s, bh = bh0, fr = pre ? 1 : b.left / b.lim;
-  ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(bx, cy, bwd, bh);
-  ctx.fillStyle = RT_PAL.bark; ctx.fillRect(bx + 2, cy + 2, bwd - 4, bh - 4);
-  ctx.fillStyle = fr < 0.25 ? RAIN_PAL.deep : RAIN_PAL.o100; ctx.fillRect(bx + 2, cy + 2, Math.max(0, Math.round((bwd - 4) * fr)), bh - 4);
+  if (!pre) {
+    ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(bx, cy, bwd, bh);
+    ctx.fillStyle = RT_PAL.bark; ctx.fillRect(bx + 2, cy + 2, bwd - 4, bh - 4);
+    ctx.fillStyle = fr < 0.25 ? RAIN_PAL.deep : RAIN_PAL.o100; ctx.fillRect(bx + 2, cy + 2, Math.max(0, Math.round((bwd - 4) * fr)), bh - 4);
+  }
   cy += bh + 12;
   var lp = big ? 32 : 16, zc = Math.round(cy + lpH / 2);
   ctx.textAlign = "center";
-  if (b.ph === "intro" || b.ph === "wout") {   /* 261007 먼저 읽기 · 32(노트북) · 문장(크림)보다 앞서지 않게 주황 한 줄 + 아래 작은 줄 */
-    rtText(ctx, "문장을 먼저 읽어 두세요", L.W / 2, zc - (big ? 16 : 10), lp, RAIN_PAL.o100, RAIN_PAL.ink);
-    rtText(ctx, "다 맞게 치면 엔터 없이 끝나요", L.W / 2, zc + (big ? 24 : 14), 16, RT_PAL.tan2, null);
+  var cdPx = Math.max(32, Math.min(big ? 128 : 64, Math.floor((areaBot - areaTop) * 0.62 / 16) * 16));   /* 261012 3 · 2 · 1 = 판 가운데 큰 숫자(노트북 128 · 좁은 판 64 · 도트 글꼴 16의 배수) */
+  if (b.ph === "intro" || b.ph === "count") {   /* 261012 안내(사용자 문구 그대로) · 들어옴 300ms 6px 떠오름 · 카운트다운이 시작되면 180ms 에 걷힌다 */
+    var gi = b.ph === "intro" ? rgEase(Math.min(1, (RAIN_BONUS.intro - b.t) / RAIN_BNS_IN)) : 1 - Math.min(1, (RAIN_CLOUD.count - b.t) / RAIN_BNS_OUT), gy = 0;
+    if (rgReduced()) gi = b.ph === "intro" ? 1 : 0;
+    else if (b.ph === "intro") gy = Math.round(6 * (1 - gi));
+    if (gi > 0) {
+      ctx.save(); ctx.globalAlpha = gi;
+      var gl = Math.round(lp * 1.5);
+      rtText(ctx, RAIN_BNS_GUIDE[0], L.W / 2, areaMid - gl / 2 + gy, lp, RT_PAL.cream, null);
+      rtText(ctx, RAIN_BNS_GUIDE[1], L.W / 2, areaMid + gl / 2 + gy, lp, RAIN_PAL.o100, RAIN_PAL.ink);
+      rtText(ctx, "다 맞게 치면 엔터 없이 끝나요", L.W / 2, areaBot - (big ? 18 : 12) + gy, 16, RT_PAL.tan2, null);
+      ctx.restore();
+    }
   }
-  else if (b.ph === "count") rgBnsPop(ctx, L.W / 2, zc, String(Math.max(1, Math.ceil(b.t))), Math.ceil(b.t) - b.t, popPx);   /* 261007 3 · 2 · 1 팡 · 한 숫자 = 1초 · 이 동안 입력칸은 막혀 있다 */
-  else if (b.ph === "type" && b.go > 0) rgBnsPop(ctx, L.W / 2, zc, "GO", (RAIN_CLOUD.go - b.go) / RAIN_CLOUD.go * 0.85, popPx);
+  if (b.ph === "count") { var cn = Math.max(1, Math.ceil(b.t)), ce = Math.ceil(b.t) - b.t; rgBnsFlash(ctx, px, py, pw, ph, s, ce); rgBnsPop(ctx, L.W / 2, areaMid, String(cn), ce, cdPx); }   /* 261007 3 · 2 · 1 팡 · 한 숫자 = 1초 · 이 동안 입력칸은 막혀 있다 · 261012 판 가운데 · 크게 · 테두리 번쩍 */
+  else if (b.ph === "type" && b.go > 0) { var ge = (RAIN_CLOUD.go - b.go) / RAIN_CLOUD.go; rgBnsFlash(ctx, px, py, pw, ph, s, ge * RAIN_CLOUD.go); rgBnsPop(ctx, L.W / 2, zc, RAIN_BNS_GO, ge * 0.85, popPx, true); }   /* 261012 「시작!」 = 문장 아래 칸 · 문장을 가리지 않는다 */
   else if (b.ph === "type") {   /* 261007 문장이 다 맞으면 엔터 없이 바로 채점(rgLive · rgAutoOn) · 틀린 채로 끝내려면 Enter */
     rtText(ctx, b.left.toFixed(1) + "초 · 다 맞으면 엔터 없이 끝", L.W / 2, zc - (big ? 14 : 9), 16, RT_PAL.cream, null);
     rtText(ctx, "Enter 여기까지 채점 · Esc 처음부터", L.W / 2, zc + (big ? 16 : 11), 16, RT_PAL.tan2, null);
@@ -1512,8 +1557,8 @@ function rgBonusDraw(ctx, L, now) {
 /* 261007 카운트다운 팡(사용자 261007 「3, 2, 1 도 좀 더 긴장감 있게 크게 팡팡팡」) · e = 이 숫자가 나온 뒤 흐른 초(0 ~ 1) · 박자 = 엔진 효과음 tick · go 와 같은 순간(rgBonusTick)
    크게 튀어나옴(2.2배) → 살짝 작게(0.9) → 제자리 · 네모 고리가 퍼지고 불꽃 여덟 개 · 숫자가 바뀔 때 판이 짧게 흔들린다(RG.shake) · 끝 0.14초는 작아지며 옅어진다
    움직임 줄이기 = 크기만(제자리 숫자 · 고리 · 불꽃 · 흔들림 없음) · 글자 크기 = 도트 글꼴이 또렷한 16의 배수(96 · 48) */
-function rgBnsPop(ctx, cx, cy, label, e, px) {
-  var rm = rgReduced(), sc = 1, a = 1;
+function rgBnsPop(ctx, cx, cy, label, e, px, strong) {
+  var rm = rgReduced(), sc = 1, a = 1, ns = strong ? 12 : 8;   /* 261012 strong = 「시작!」 · 불꽃 열둘 · 고리 두 겹 */
   e = Math.max(0, Math.min(1, e));
   ctx.save();
   if (!rm) {
@@ -1524,9 +1569,10 @@ function rgBnsPop(ctx, cx, cy, label, e, px) {
       var k = e / 0.45, r = px * (0.5 + 1.1 * k), lw = Math.max(2, Math.round(px / 16 * (1 - k)) * 2);
       ctx.globalAlpha = 1 - k; ctx.strokeStyle = RAIN_PAL.o100; ctx.lineWidth = lw;
       ctx.strokeRect(Math.round(cx - r), Math.round(cy - r * 0.7), Math.round(2 * r), Math.round(1.4 * r));
+      if (strong) { var r2 = r * 1.35; ctx.strokeStyle = RAIN_PAL.w; ctx.strokeRect(Math.round(cx - r2), Math.round(cy - r2 * 0.7), Math.round(2 * r2), Math.round(1.4 * r2)); }
       var q = Math.max(3, Math.round(px / 12 * (1 - k)));
-      for (var i = 0; i < 8; i++) {
-        var an = i * Math.PI / 4 + Math.PI / 8, d = px * (0.7 + 1.5 * k);
+      for (var i = 0; i < ns; i++) {
+        var an = i * Math.PI * 2 / ns + Math.PI / ns, d = px * (0.7 + 1.5 * k);
         ctx.fillStyle = i % 2 ? RAIN_PAL.o60 : RAIN_PAL.w;
         ctx.fillRect(Math.round(cx + Math.cos(an) * d - q / 2), Math.round(cy + Math.sin(an) * d * 0.7 - q / 2), q, q);
       }
@@ -1536,6 +1582,15 @@ function rgBnsPop(ctx, cx, cy, label, e, px) {
   ctx.translate(Math.round(cx), Math.round(cy)); ctx.scale(sc, sc);
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
   rtText(ctx, label, 0, 0, px, RAIN_PAL.o100, RAIN_PAL.ink);
+  ctx.restore();
+}
+/* 261012 박자마다 보너스 판 테두리가 주황으로 번쩍(180ms 에 걷힌다) · e = 박자 뒤 흐른 초 · 동작 줄이기 = 없음 */
+function rgBnsFlash(ctx, x, y, w, h, s, e) {
+  if (rgReduced() || !(e >= 0) || e >= RAIN_BNS_OUT) return;
+  var k = 1 - e / RAIN_BNS_OUT, lw = 3 * s;
+  ctx.save(); ctx.globalAlpha = k; ctx.strokeStyle = RAIN_PAL.o100; ctx.lineWidth = lw;
+  ctx.strokeRect(Math.round(x + lw / 2), Math.round(y + lw / 2), Math.round(w - lw), Math.round(h - lw));
+  ctx.globalAlpha = 0.12 * k; ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(x, y, w, h);
   ctx.restore();
 }
 /* v5.30 전체 화면 전환 · 캔버스 전체(양옆 판 포함)를 큰 도트 칸이 왼쪽 위에서 오른쪽 아래로 덮고(win · bin) · 같은 순서로 걷힌다(wout · bout) · 막 바뀐 칸은 주황 · 동작 줄이기 = 어둡게 페이드 */
@@ -1739,4 +1794,4 @@ if (typeof module !== "undefined" && module.exports) module.exports = { RG: RG, 
   RAIN_BONUS_LINES: RAIN_BONUS_LINES, RAIN_BONUS: RAIN_BONUS, RAIN_LIFE_BONUS: RAIN_LIFE_BONUS, rgBonusLim: rgBonusLim, rgLev: rgLev, rgBonusScore: rgBonusScore, rgRaceRank: rgRaceRank,
   rgRaceTick: rgRaceTick, rgSubmit: rgSubmit, rgEnd: rgEnd, rgBonusStart: rgBonusStart, RAIN_CLOUD: RAIN_CLOUD, rgCloudStart: rgCloudStart, rgCloudRem: rgCloudRem, rgLive: rgLive, rgHgKey: rgHgKey,
   rgCloudGeo: rgCloudGeo, RAIN_CLOUD_FX: RAIN_CLOUD_FX, RAIN_TRANS: RAIN_TRANS, rgWordY: rgWordY,
-  RAIN_SITE: RAIN_SITE, RAIN_AUTO: RAIN_AUTO, RAIN_BNS_GUARD: RAIN_BNS_GUARD, rgSiteReset: rgSiteReset, rgAutoOn: rgAutoOn, rgFallSec: rgFallSec, rgSpawnSec: rgSpawnSec, rgStageSec: rgStageSec, rgRampSite: rgRampSite, rgGapFall: rgGapFall, rgClash: rgClash, rgPool: rgPool, rgBnsNorm: rgBnsNorm, rgBlk: rgBlk, rgCloudPick: rgCloudPick };
+  RAIN_SITE: RAIN_SITE, RAIN_AUTO: RAIN_AUTO, RAIN_BNS_GUARD: RAIN_BNS_GUARD, rgSiteReset: rgSiteReset, rgAutoOn: rgAutoOn, rgFallSec: rgFallSec, rgSpawnSec: rgSpawnSec, rgStageSec: rgStageSec, rgRampSite: rgRampSite, rgGapWait: rgGapWait, rgSpawnFall: rgSpawnFall, rgJit: rgJit, rgEase: rgEase, RAIN_BNS_GUIDE: RAIN_BNS_GUIDE, RAIN_BNS_GO: RAIN_BNS_GO, rgClash: rgClash, rgPool: rgPool, rgBnsNorm: rgBnsNorm, rgBlk: rgBlk, rgCloudPick: rgCloudPick };

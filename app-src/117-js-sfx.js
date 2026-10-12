@@ -65,7 +65,7 @@ function sfxNoise(dur, o) {
 }
 var SFX_LEN = { tick: 0.06, go: 0.35, fanfare: 0.75, over: 0.5, best: 0.45, click: 0.04, tok: 0.06, shook: 0.14, ppok: 0.14, cascade: 0.2, kwang: 0.4, ttuk: 0.1,
   ppyong: 0.16, ppyong2: 0.16, ppyongS: 0.16, ting: 0.22, puck: 0.14, hit: 0.12, tik: 0.05, floor: 0.12, level: 0.3, tak: 0.05, dingdong: 0.65, kung: 0.34,
-  oxok: 0.22, oxup: 0.32, oxcrk: 0.08, oxsplash: 0.45, rgmiss: 0.16, rgcombo: 0.3, rglast: 0.45, scan: 0.2, rgpass: 0.3, rgjoin: 0.5, rgbonus: 0.6 };
+  oxok: 0.22, oxup: 0.32, oxcrk: 0.08, oxsplash: 0.45, rgmiss: 0.16, rgcombo: 0.3, rglast: 0.45, scan: 0.2, rgpass: 0.3, rgjoin: 0.5, rgbonus: 0.6, rgcd: 0.18, rgstart: 0.42 };
 /* 이름 → 소리 · p = 연쇄 단계·콤보 등 */
 function sfxPlay(name, p) {
   var T = sfxTone, N = sfxNoise;
@@ -111,6 +111,9 @@ function sfxPlay(name, p) {
     case "rgpass": var fp = 784 * Math.pow(1.06, Math.min(8, (p || 1) - 1)); [1, 1.26, 1.5].forEach(function (k, i) { T(fp * k, 0.07, { type: "square", vol: 0.22, delay: i * 0.05 }); }); break;
     case "rgjoin": T(988, 0.08, { type: "square", vol: 0.24 }); T(1319, 0.32, { type: "square", vol: 0.22, delay: 0.08 }); break;
     case "rgbonus": [523, 659, 784, 1047, 1319].forEach(function (f, i) { T(f, 0.09, { type: "square", vol: 0.2, delay: i * 0.08 }); }); break;
+    /* 261012 타자왕 문장 카운트다운 박자 · 3 · 2 · 1 = 낮은 「둥」 + 사각파 한 음(숫자가 줄수록 높게) · 시작! = 오르는 두 음 + 높은 화음 + 짧은 쉬익 */
+    case "rgcd": var fd = 523 * Math.pow(1.122, 3 - Math.max(1, Math.min(3, p || 3))); T(150, 0.16, { to: 70, vol: 0.7 }); T(fd, 0.16, { type: "square", vol: 0.26 }); T(fd * 2, 0.06, { vol: 0.12 }); break;
+    case "rgstart": T(110, 0.22, { to: 55, vol: 0.75 }); T(784, 0.1, { type: "square", vol: 0.24 }); T(1047, 0.32, { type: "square", vol: 0.24, delay: 0.08 }); T(1568, 0.3, { type: "triangle", vol: 0.2, delay: 0.08 }); N(0.2, { freq: 5000, filter: "highpass", vol: 0.1, delay: 0.06 }); break;
   }
 }
 /* 게임이 부르는 입구 · 꺼져 있으면 아무것도 안 한다 · 동시 8개 상한 */
