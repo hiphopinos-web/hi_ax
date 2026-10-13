@@ -27,7 +27,7 @@
  *  흩어졌다 모이기 · CFG.actEvery(단계마다 90~120초 → 40~55초)마다 5~7초 · 로고 점이 풀렸다 다시 모여 글자가 된다 · 변주 5가지(단계가 오를수록 늘고 · 커지고 · 잦아진다) · 도는 동안에도 혜성이 날아와 함께 앉는다
  *  단계마다 혜성이 없을 때도 보이는 차이(정지) · 250 로고 전부 점화 · 500 빛 번짐 짙게 + 끝나면 물결 · 1,000 씨앗 자리 하얀 별 + 끝나면 잔광 · 2,026 가장자리 흰 빛
  *  다시 보기 · CFG.tlEvery(240초)마다 로고가 흩어졌다가 오늘 모인 스탬프가 사방에서 날아들어 다시 로고가 되고 숫자가 0에서 n까지 오른다
- * 데이터 · 공개 집계 stats(관리코드 없음) 15초 폴링 · kinds 의 stamp:<8종> − unstamp:<8종> = 스탬프 수 · 실패하면 15 → 30 → 60초로 늦추고 마지막 값 유지 + 「연결 다시 시도 중」
+ * 데이터 · 공개 집계 stats(관리코드 없음) 15초 폴링 · kinds 의 stamp:<10종> − unstamp:<10종> = 스탬프 수(ln 은 ×2) · 실패하면 15 → 30 → 60초로 늦추고 마지막 값 유지 + 「연결 다시 시도 중」
  *        늘어난 수를 다음 15초(92%)에 고르게 나눠 혜성으로 · 몰리면 떼로 · 처음 열 때 · 새로고침 · 서버 수가 줄었을 때 = 지금 수로 바로(1차 완성 · 레벨 장면 다시 틀지 않음)
  * 주소 · ?o=land|port 방향 고정(없으면 화면 비율) · ?base=숫자 빼고 셈(비상용) · ?demo=1 서버 없이 0개부터(↑ +10 혜성 하나씩 · → +10 빨리 감기 · ↓ ← −10 · 숫자 + Enter · S 사이클 ×6 · 위 가운데 상태 줄) · 조작표 H(데모) · ?rec=1 녹화용 고정 시계 */
 (function () {
@@ -1611,12 +1611,12 @@
   }
 
   /* ════════ v6 · 방금 온 스탬프 종류(KIND) · 서버 변경 없음 · 공개 집계 kinds 의 종류별 증가분을 섞어 혜성에 붙인다(누가는 모른다 · 사람 정보 없음) ════════ */
-  var KNAME = { lg: "첫 로그인", qz: "AX 퀴즈", p4: "미니 게임", p2: "AX PLAY", p5: "아이디어 한 줄", p3: "프로그램 참여", st: "계단", sv: "설문" };
-  var KUP = { p3: 1, st: 1 };   /* 위층(10F · 17F · 18F · 계단)에서 받는 것 = 화면 위에서 내려온다 */
+  var KNAME = { lg: "첫 로그인", qz: "AX 퀴즈", p4: "미니 게임", p2: "AX PLAY", p5: "아이디어 한 줄", p3: "프로그램 참여", st: "계단", sv: "설문", cc: "커피챗", ln: "AX 라운지" };
+  var KUP = { p3: 1, st: 1, cc: 1 };   /* 위층(10F · 17F · 18F · 계단)에서 받는 것 = 화면 위에서 내려온다 */
   var KQ = [], KLAST = null, KPREV = null;
   function kindsIn(list) { for (var i = list.length - 1; i > 0; i--) { var j = Math.floor(RND() * (i + 1)), x = list[i]; list[i] = list[j]; list[j] = x; } KQ = KQ.concat(list); if (KQ.length > 600) KQ.splice(0, KQ.length - 600); }
   function kindNote(f) { KLAST = { k: f.kind, t0: T }; }
-  var DKW = [["lg", 25], ["qz", 15], ["p4", 10], ["p2", 10], ["p5", 12], ["p3", 12], ["st", 8], ["sv", 8]];
+  var DKW = [["lg", 22], ["qz", 14], ["p4", 10], ["p2", 9], ["p5", 11], ["p3", 11], ["st", 7], ["sv", 6], ["cc", 5], ["ln", 5]];
   function demoKinds(n) { var out = []; for (var i = 0; i < n; i++) { var r = DM.rnd() * 100, a = 0; for (var j = 0; j < DKW.length; j++) { a += DKW[j][1]; if (r < a) { out.push(DKW[j][0]); break; } } } return out; }
 
   /* ════════ 데이터 · 15초 묶음을 고르게 나눠 혜성으로 ════════ */
@@ -1658,10 +1658,10 @@
     lpReset();   /* v7 · 로고로 쉬는 데서 다시(그 단계의 루프) */
   }
   /* 운영 서버 읽기 · 공개 집계 stats(관리코드 없음) · v4c 와 같은 방식 */
-  var IDS = ["lg", "qz", "p4", "p2", "p5", "p3", "st", "sv"];
-  function stampsOf(k) { var n = 0; IDS.forEach(function (id) { n += (+k["stamp:" + id] || 0) - (+k["unstamp:" + id] || 0); }); return Math.max(0, n); }
+  var IDS = ["lg", "qz", "p4", "p2", "p5", "p3", "st", "sv", "cc", "ln"], UNIT = { ln: 2 };   /* 261013 · 10종 · ln(1F AX 라운지)은 한 번에 스탬프 2개(서버 STAMP_UNITS) */
+  function stampsOf(k) { var n = 0; IDS.forEach(function (id) { n += ((+k["stamp:" + id] || 0) - (+k["unstamp:" + id] || 0)) * (UNIT[id] || 1); }); return Math.max(0, n); }
   var KPER = null;   /* v6 · 종류별 지난 값 · 늘어난 몫만 종류 줄에 넣는다 */
-  function kindsOf(k) { var cur = {}, out = []; IDS.forEach(function (id) { cur[id] = Math.max(0, (+k["stamp:" + id] || 0) - (+k["unstamp:" + id] || 0)); if (KPER) for (var a = KPER[id] || 0; a < cur[id]; a++) out.push(id); }); KPER = cur; if (out.length) kindsIn(out); }
+  function kindsOf(k) { var cur = {}, out = []; IDS.forEach(function (id) { cur[id] = Math.max(0, (+k["stamp:" + id] || 0) - (+k["unstamp:" + id] || 0)) * (UNIT[id] || 1); if (KPER) for (var a = KPER[id] || 0; a < cur[id]; a++) out.push(id); }); KPER = cur; if (out.length) kindsIn(out); }
   function jsonp(params, done) {
     var url = window.AXF_SERVER || "";
     if (!/^https:\/\//.test(url)) { done({ ok: false, reason: "noserver" }); return; }
