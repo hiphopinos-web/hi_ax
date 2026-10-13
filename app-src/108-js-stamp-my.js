@@ -490,26 +490,9 @@ function tktHtml(k, v, tap) {
   if (k === "wait") return '<span class="tkt tk wait"><span class="tk-t">' + v + "</span></span>";
   return '<span class="tkt tk">' + DotGlyph.svg(String(v), { h: 12, label: String(v) }) + "</span>";
 }
-/* 룰렛 쿠폰 모달 · 내 QR + 사용 여부 (사용 여부는 서버 my.roulette 가 정본, sync 가 roulette_used 로 받아쓴다) */
-function ppRouletteOpen() {
-  var n = stampCount();
-  var used = S.get("roulette_used", false);
-  /* v4.13 상태 칩은 제목 줄이 아니라 본문 첫 줄(닫기 X 자리와 겹치지 않게) */
-  var head = '<div class="axs-chiprow">' + (used ? '<span class="axs-chip off">사용 완료</span>' : n >= 3 ? '<span class="axs-chip">사용 가능 · 1인 1회</span>' : '<span class="axs-chip off">스탬프 ' + n + " / 3</span>") + "</div>";
-  var body;
-  /* v3.33 룰렛 소진 안내 · 관리 콘솔 스탬프 탭(roulette_out)에서 켠다 */
-  if (S.get("roulette_out", false) && !used) {
-    body = '<p style="margin-top:8px;font-size:calc(14.5px * var(--fs));font-weight:800;color:var(--hi)">' + (roulCut() ? "룰렛 " + roulCutHm() + " 마감" : "룰렛 소진") + "</p>";   /* v5.90 시각 마감 = 소진과 같은 처리 */
-  } else if (used) {
-    body = "";
-  } else if (n < 3) {
-    body = needBoxHtml("받으려면", "룰렛 받으려면", pzNeedRows("roulette"));   /* 261008 받으려면 상자(경품 시트 룰렛 구역과 같은 줄) · 옛 회색 한 줄 「스탬프 3개 · 1F EVENT · 1인 1회」 */
-  } else {
-    body = needBoxHtml("받으려면", "룰렛 받으려면", pzNeedRows("roulette")) +   /* 261008 받으려면 상자 · 옛 회색 줄 「1F EVENT 룰렛 부스에서 QR 제시 / 룰렛 HH:MM 마감」(마감 시각은 상자 둘째 줄 보조 글) */
-      '<button type="button" class="ax-button" style="margin-top:10px" onclick="qrPanelOpen(\'mine\')">내 QR 보여주기</button>';   /* v5.23 내 QR 은 QR 화면 한 곳(룰렛 1회권 상태 줄 포함) */
-  }
-  modalOpen(head + body + prizeModalHtml("roulette") + '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>', "룰렛 1회권");   /* v5.04 경품표(사진 · 이름 · 수량) */
-}
+/* 261014 (사용자 확정 「룰렛 아이콘을 누르면 요약 시트 말고 스탬프 개수별 경품 시트의 룰렛 칸으로 바로」) 옛 「룰렛 1회권」 요약 모달(상태 칩 · 받으려면 상자 · 내 QR 보여주기 · 경품 한 줄 · 닫기)을 걷고 경품 시트 룰렛 구역으로 연다
+   내 진행 칩(스탬프 n / 3 · 사용 가능 · 사용 완료 · 소진 · 마감)은 경품 시트 구역 머리의 pzChipHtml 이 그린다 · 되살리기 = 루트 「정리 기록.md」 261014 절 */
+function ppRouletteOpen() { prizeGo("roulette"); }
 /* v4.42 응모권 보물상자 팝업 · 새 응모권이 생긴 순간 한 번(checkRewards → notice raffle) · 다시 보는 곳은 기존 추첨 안내 모달(ppDrawOpen) · 내 보상
    닫힌 상자(살짝 들썩) + 챗봇 한 줄 → 상자 또는 「상자 열기」 → 뚜껑이 열리며 새 번호 칩이 떠오른다 → 챗봇 「행운을 빌어요」
    번호는 서버가 발급한다(sync my.tickets) · 아직 없으면 챗봇 「꺼내는 중」 + 곧바로 beSync · 8초 안에 안 오면 「발급 중 · 곧 내 보상에」로 닫는다 */
@@ -582,21 +565,6 @@ function rfxLand(nums, late) {   /* nums = 번호 배열(없으면 null) · late
   if (nums && typeof stampBuzz === "function") stampBuzz(30);
   App.render();   /* 레일의 「새 번호 확인」 칩을 번호로 바꾼다 */
 }
-/* 추첨 안내 모달 · 구 ev_draw 화면 흡수 (v3.1) · v3.12 내 응모권 번호 표시 (서버 발급 · 데모는 결정적 목업) */
-function ppDrawOpen() {
-  var n = Math.min(REWARD_CAP, stampCount()), t = raffleTickets(n);
-  var tickets = "";
-  if (t) {
-    var nums = raffleNums().slice(0, t), op = rfxOpened(t);
-    var chips = "";
-    for (var i = 0; i < t; i++) {
-      chips += i >= op ? tktHtml("new", "새 번호 확인", "modalClose(); rfxReopen()") : i < nums.length ? tktHtml("no", nums[i]) : tktHtml("wait", "발급 중");   /* 261009 레일과 같은 티켓 칩(tktHtml) */
-    }
-    tickets = '<div class="tkts">' + chips + "</div>";
-  }
-  modalOpen('<div class="axs-chiprow"><span class="axs-chip' + (t ? "" : " off") + '">지금 ' + t + "장</span></div>" + tickets +   /* 261008 상태 = 룰렛 1회권 팝업과 같은 칩 한 줄 */
-    needBoxHtml("받으려면", "행운권 받으려면", [["stamp", "스탬프 4개 1장 · 5개 2장 · 6개 3장", "자동 발급"]].concat(pzNeedRows("draw").slice(1))) +   /* 261008 받으려면 상자 · 둘째 줄 = 경품 시트 행운권 추첨 구역 둘째 줄(참석 조건 lkcond 따라) · 옛 회색 줄 「스탬프 4개 1장 · 5개 2장 · 6개 3장 · 자동 발급」 · 「17:00 Closing Speech 현장 추첨 · 경품은 따로 전달」(lc 「· 16:40부터 17F 입구 QR 체크인」) */   /* v5.90 행운권_참석조건(sync lkcond) */   /* v4.79 무대 추첨 · v4.83 사용자 표시 용어 「행운권」 · v5.04 옛 「행운권 추첨 결과는 행사 후 개별 안내」 줄 삭제(사후 추첨 없음) */
-    prizeModalHtml("draw") +   /* v5.04 1~6등 10명 · 사진 · 이름 · 인원 */
-    '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>', "행운권");
-}
+/* 261014 행운권 아이콘 = 경품 시트의 행운권 추첨 구역으로 바로(옛 「행운권」 추첨 안내 모달 폐기 · 상태 칩 「지금 N장」은 pzChipHtml · 번호 칩은 레일 · 나의 보상에 있다 · 새 번호 확인은 레일 칩 rfxReopen) */
+function ppDrawOpen() { prizeGo("draw"); }
 

@@ -189,18 +189,11 @@ function prizePhHtml(p, w) {
   return '<span class="axs-ph' + (p.img2 ? " two" : "") + (p.fit ? " fit" : "") + '" aria-hidden="true">' + im(p.img) + (p.img2 ? im(p.img2) : "") +   /* v5.18 img2 = 사진 두 장 나란히 */
     (PRIZE_SAMPLE && p.s !== 0 ? '<span class="smp">샘플</span>' : "") + "</span>";
 }
-/* 모달 아래 경품 한 줄(룰렛 1회권 · 행운권 · 참여상 안내) · v5.08 옛 목록 대신 대표 사진 + 요약 + 「경품 보기」(포스터 그 구역으로) */
 /* v6.95 룰렛 아래 안내 줄 · 한 곳(둘러보기 경품 카드 · TOUR_HOST.roulette) · 상태별 문구는 사용자 결정 대기(261011) · 지금은 네 상태 모두 같은 한 줄
  *   상태 = rouletteState(): lt3(스탬프 3개 미만) · ready(3개 이상 · 아직 안 씀) · used(사용 완료) · out(룰렛 소진) · 문구를 바꿀 때는 ROUL_NEXT 만 고친다 */
 var ROUL_NEXT = { lt3: "1층에서 룰렛을 체험하세요.", ready: "1층에서 룰렛을 체험하세요.", used: "1층에서 룰렛을 체험하세요.", out: "1층에서 룰렛을 체험하세요." };
 function rouletteState() { return S.get("roulette_used", false) ? "used" : S.get("roulette_out", false) ? "out" : stampCount() >= 3 ? "ready" : "lt3"; }
 function rouletteNextLine() { return ROUL_NEXT[rouletteState()] || ROUL_NEXT.lt3; }
-function prizeModalHtml(kind) {
-  var g = PRIZES[kind]; if (!g) return "";
-  var p = g.list[0], sum = (p.rk ? p.rk + " " : "") + p.nm + (g.list.length > 1 ? " 외 " + (g.list.length - 1) + "종" : " " + (p.qt || p.q.toLocaleString() + g.unit));
-  return '<div class="axs-mprz"><button type="button" class="axs-pzm" onclick="prizeGo(\'' + kind + '\')">' + prizePhHtml(p) +
-    '<span class="tx"><b>' + esc(sum) + "</b><span>경품 보기</span></span>" + CHEV_SVG + "</button></div>";
-}
 function prizeByName(nm) {
   var hit = null; nm = String(nm || "");
   Object.keys(PRIZES).forEach(function (k) { PRIZES[k].list.forEach(function (p) { if (!hit && nm && (p.nm === nm || nm.indexOf(p.nm) >= 0 || p.nm.indexOf(nm) >= 0)) hit = p; }); });
@@ -279,9 +272,24 @@ function pzR3Html(k) {
       '<p class="cp" aria-hidden="true"><b>' + p.rk + "</b> · " + p.q + g.unit + "</p></article>";
   }).join("") + "</div>";
 }
+/* 261014 (사용자 확정 「룰렛 · 행운권 아이콘을 누르면 경품 시트 그 칸으로 · 옛 요약 시트의 내 진행 칩을 여기로」) 구역 머리 칩 = 내 진행 한 줄(룰렛 · 행운권 · 선착순 참여상만 · 그 밖의 구역은 칩 없음)
+   룰렛 = 스탬프 n / 3 · 사용 가능 · 1인 1회 · 사용 완료 · 룰렛 소진(마감 시각) / 행운권 = 지금 N장 / 선착순 참여상 = 스탬프 n / 6 · 받을 수 있어요(그날 시작 전 = 10:30부터 받을 수 있어요) · 수령 완료 · 마감 · 취소
+   칩 모양 = 옛 요약 시트와 같은 .axs-chip(brandSoft 면 · 못 받은 상태 .off 회색) */
+function pzChipHtml(k) {
+  var n = Math.min(REWARD_CAP, stampCount()), c = null;
+  if (k === "roulette") {
+    c = S.get("roulette_used", false) ? ["사용 완료", 1] : S.get("roulette_out", false) ? [roulCut() ? "룰렛 " + roulCutHm() + " 마감" : "룰렛 소진", 1] : n >= 3 ? ["사용 가능 · 1인 1회", 0] : ["스탬프 " + n + " / 3", 1];
+  } else if (k === "draw") {
+    var t = raffleTickets(n); c = ["지금 " + t + "장", t ? 0 : 1];
+  } else if (k === "fin") {
+    var f = fcfsMy();
+    c = fcfsReady(f) ? [fcfsPre() ? fcfsStartHm() + "부터 받을 수 있어요" : "받을 수 있어요", 0] : f && f.st === "done" ? ["수령 완료", 1] : f && f.st === "void" ? ["취소", 1] : fcfsGone(f) ? ["마감", 1] : n < STAMP_DENOM ? ["스탬프 " + n + " / " + STAMP_DENOM, 1] : null;
+  }
+  return c ? '<div class="axs-chiprow axs-pz-chip"><span class="axs-chip' + (c[1] ? " off" : "") + '">' + esc(c[0]) + "</span></div>" : "";
+}
 function prizeSecHtml(s) {
   var g = PRIZES[s.k]; if (!g || (s.on && !s.on())) return "";
-  var head = '<header class="axs-pz-sh" id="pz-' + s.k + '"><p class="en" aria-hidden="true">' + s.en + "</p><h2>" + s.t + "</h2></header>" + pzNeedHtml(s);   /* v5.74 머리 = 영문 장식 · 제목 · 「받으려면」 박스 */
+  var head = '<header class="axs-pz-sh" id="pz-' + s.k + '"><p class="en" aria-hidden="true">' + s.en + "</p><h2>" + s.t + "</h2>" + pzChipHtml(s.k) + "</header>" + pzNeedHtml(s);   /* 261014 구역 머리 = 제목 아래 내 진행 칩 */   /* v5.74 머리 = 영문 장식 · 제목 · 「받으려면」 박스 */
   var go = s.go ? '<button type="button" class="ax-button ax-button-weak" onclick="' + s.go[1] + '">' + s.go[0] + "</button>" : "";   /* v5.73 (사용자 261005 「실시간 순위는 가장 아래 위치에 있어야 할 것 같아」) 구역 버튼(타자왕 순위판) = 블록 맨 아래(경품 사진 · 이름 · 안내 다음) · 옛 v5.18 = 머리 바로 아래 */
   var hn = PZ_HERO[s.k] || 0, rest = g.list.slice(hn), solo = rest.filter(function (p) { return !p.img2; }).length, k = 0;
   if (s.r3) return '<section class="axs-pz-sec' + (s.sep ? " sep" : "") + '">' + head + pzR3Html(s.k) + go + "</section>";   /* v6.07 카드 3장 = pzR3Html 한 곳(아이디어 입력 화면 시상 묶음이 같은 함수를 부른다) */
@@ -438,11 +446,8 @@ function lk7WinSpec() {
     body: '<div class="axs-fcg axs-lkw"><img src="' + PRIZE_DIR + p.img + '.webp" alt="" width="600" height="600" decoding="async" onerror="this.remove()"><p class="rk">7등</p><p class="t">' + esc(p.nm) + '</p><p class="s">' + esc(p.sub || "") + "</p></div>",
     go: "sheetClose()", goLbl: "확인" };
 }
-function fcfsInfoOpen() {
-  var x = fxGet() || {};
-  modalOpen(needBoxHtml("받으려면", "선착순 참여상 받으려면", pzNeedRows("fin")) +   /* 261008 받으려면 상자(경품 시트 선착순 구역과 같은 줄) · 옛 회색 두 줄 「스탬프 6개를 모으고 / 1F 주차장 체크인존에 먼저 온 N명」 · v5.98 받기 선착순 */
-    prizeModalHtml("fin") + '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>', "선착순 참여상");
-}
+/* 261014 선착순 참여상 요약 팝업도 경품 시트의 선착순 구역으로 바로(옛 받으려면 상자 + 경품 한 줄 + 닫기 · 자격이 없어졌을 때 수령 안내 시트(fcfsGotOpen)의 되돌림 길) */
+function fcfsInfoOpen() { prizeGo("fin"); }
 /* 행운권 참석 조건(sync lkcond · 옛 서버 = 조건 있음) · 룰렛 마감 시각(sync rcut) · 아이디어왕 인원 */
 function lkCond() { var v = S.get("lkcond", null); return v === null ? true : !!v; }
 function drawWhenTxt() { return lkCond() ? "Closing Speech 현장 추첨은 17F 입구 QR 체크인" : "17:00 Closing Speech 현장 추첨 · 당첨자 발표"; }
