@@ -514,7 +514,6 @@ var LEGACY_URL = "legacy.html";
 /* ══ 1. 공통 ══ */
 function loungeName(s){ return String(s).replace(/1F AX LOUNGE 상담/g,"1F AX 라운지").replace(/AX LOUNGE 상담/g,"AX 라운지").replace(/AX LOUNGE/g,"AX 라운지"); }
 function esc(s){ return loungeName(String(s==null?"":s)).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
-/* onclick 안에 넣는 문자열 · 사번 · ID 는 영숫자라 그 밖의 글자는 버린다 */
 function jq(s){ return String(s==null?"":s).replace(/[^0-9A-Za-z_\-.:가-힣]/g,""); }
 function el(id){ return document.getElementById(id); }
 function aemp(){ try{ return sessionStorage.getItem("axf_adm_emp")||""; }catch(e){ return window.__e||""; } }
@@ -1373,7 +1372,7 @@ function rosDenyHtml(){
     (rows.length>1?'<div class="acts"><button class="btn pri" data-qa="ros.deny.addall" onclick="rosDenyAll()">'+Math.min(500,rows.length)+'명 모두 넣기</button></div>':'');
 }
 /* ══ 7. 사람 › 찾기 + 한 사람 카드 (acct_page · person_card · 옛 서버면 usr_info) ══ */
-var STAMP8=[["lg","01","최초 로그인"],["qz","02","AX 퀴즈"],["p4","03","미니 게임"],["p2","04","AX PLAY"],["p5","05","아이디어"],["p3","06","프로그램 참여"],["st","07","계단 이용"],["sv","08","오늘 한 판 설문"],["cc","09","18F 커피챗"],["ln","10","1F AX 라운지"]];
+var STAMP8=[["lg","01","최초 로그인"],["qz","02","AX 퀴즈"],["p4","03","미니 게임"],["p5","04","아이디어 한 줄"],["p2","05","AX PLAY"],["st","06","계단 이용"],["p3","07","프로그램 참여"],["sv","08","오늘 한 판 설문"]], PROG=[["p3","17F 오후 강연"],["cc","18F 커피챗"],["ln","1F AX 라운지"]];
 var GRANT_IDS=["p2","p3","st"];   /* 담당자 부여 = 현장 QR 셋(서버 REVOKE_FIELD_IDS 와 같음) · 앱 자동 · 설문은 앱에서만 */
 var VIS_ENTRY={ qr:"QR", push:"푸시", direct:"직접" }, PC_SRC={ "본인":"본인", "콘솔":"콘솔", "스태프":"스태프" };
 var WHO={ info:{}, busy:{}, old:0 };
@@ -1450,7 +1449,7 @@ function whoPanel(){
 function pcHtml(d){
   var e=d.emp, J=jq(e), sup=!!(S.me&&S.me.sup), L=d.lists||{}, v=d.visit||null;
   var st=pcStamps(d), by={}; st.forEach(function(x){ by[x.id]=x; });
-  var half=!!by.p3h&&!by.p3, n=d.n!=null?d.n:Math.min(6,st.filter(function(x){ return STAMP8.some(function(s){ return s[0]===x.id; }); }).length+(by.p3?1:0)+(by.ln?1:0)+(half?1:0));
+  var half=!!by.p3h&&!by.p3, pg=PROG.some(function(p){ return by[p[0]]; })?2:by.p3h?1:0, n=d.n!=null?d.n:Math.min(6,st.filter(function(x){ return x.id!=="p3"&&STAMP8.some(function(s){ return s[0]===x.id; }); }).length+pg+(by.ck?3:0));
   var h='<div class="ph2"><div style="min-width:0"><h2 id="pcH" tabindex="-1">'+esc(d.name||e)+'</h2><div class="cap">'+esc(d.dept||"")+' · <span class="n">'+esc(e)+'</span></div><div class="fx mt8">'+
     (d.test||L.test?tag("시험"):"")+(d.sup?tag("슈퍼관리자","pri"):"")+(L.staffApp?tag("스태프","pri"):"")+(d.acct?"":tag("가입 전"))+(d.stale?tag("다시 받는 중"):"")+'</div></div><button class="x" aria-label="카드 닫기" data-qa="who.x" onclick="whoPick(\'\')">×</button></div><div class="bd">';
   var rsLock=sup&&pcResetLock(d);
@@ -1459,11 +1458,12 @@ function pcHtml(d){
   h+='<div class="pcs mt12"><h3>접속</h3><div class="row2">'+(d.acct?'가입 <b class="n">'+esc(short(d.joined))+'</b> · 최근 <b class="n">'+esc(short(d.last)||"-")+'</b>':'아직 가입 안 함(명부만)')+(v?' · 오늘 <b class="n">'+n0(v.today)+'</b>회':'')+' · PIN '+(d.pw==null?"-":d.pw?"있음":"초기화 대기")+'</div>'+
     (v&&(v.rows||[]).length?'<div class="chips mt8" aria-label="최근 방문">'+v.rows.map(function(x){ return '<span class="pchip"><span class="n">'+esc(short(x.t).slice(-5))+'</span> '+esc(VIS_ENTRY[x.entry]||"직접")+'</span>'; }).join("")+'</div><p class="cap mt8">최근 방문 '+v.rows.length+'건 · 시각과 들어온 길만'+(v.from?' · '+esc(short(v.from))+' 부터 읽음':'')+'</p>':'')+'</div>';
   /* 스탬프 */
-  var cells=STAMP8.map(function(s){ var x=by[s[0]]||(s[0]==="p3"&&half?by.p3h:null), got=!!x, id=s[0]==="p3"&&half?"p3h":s[0], nm=s[1]+" "+s[2], act="";
-    if(got) act='<button class="btn sm danger" data-qa="who.st.rv" aria-label="'+esc(nm)+' 스탬프 취소" onclick="stRevokeAsk(\''+J+'\',\''+id+'\')">취소</button>';
-    else if(GRANT_IDS.indexOf(s[0])>=0&&d.acct) act='<button class="btn sm" data-qa="who.st.grant" aria-label="'+esc(nm)+' 스탬프 부여" onclick="stGrantAsk(\''+J+'\',\''+s[0]+'\')">부여</button>';
-    var sub=got?(x.at?esc(short(x.at).slice(-5)):"받음")+(x.src&&x.src!=="본인"?" · "+esc(x.byName||x.src):x.src?" · 본인":"")+(s[0]==="p3"&&half?" · 한쪽":""):"-";
-    return '<div class="c'+(got?" got":"")+'"><span class="no">'+s[1]+(s[0]==="p3"||s[0]==="ln"?" · 2개":"")+'</span><b>'+esc(s[2])+'</b><span class="cap">'+sub+'</span>'+act+'</div>'; }).join("");
+  var cell=function(k, no, t, sm){ var x=sm?null:by[k]||(k==="p3"&&half?by.p3h:null), got=sm?pg>0:!!x, id=k==="p3"&&half?"p3h":k, nm=no+" "+t, act="";
+    if(x) act='<button class="btn sm danger" data-qa="who.st.rv" aria-label="'+esc(nm)+' 스탬프 취소" onclick="stRevokeAsk(\''+J+'\',\''+id+'\')">취소</button>';
+    else if(!sm&&GRANT_IDS.indexOf(k)>=0&&d.acct) act='<button class="btn sm" data-qa="who.st.grant" aria-label="'+esc(nm)+' 스탬프 부여" onclick="stGrantAsk(\''+J+'\',\''+k+'\')">부여</button>';
+    var sub=sm?(pg?pg+"개"+(pg<2?" · 17F 한쪽":""):"-"):x?(x.at?esc(short(x.at).slice(-5)):"받음")+(x.src&&x.src!=="본인"?" · "+esc(x.byName||x.src):x.src?" · 본인":"")+(half&&k==="p3"?" · 한쪽":""):"-";
+    return '<div class="c'+(got?" got":"")+'"><span class="no">'+no+'</span><b>'+esc(t)+'</b><span class="cap">'+sub+'</span>'+act+'</div>'; };
+  var cells=STAMP8.map(function(s){ return cell(s[0],s[1],s[2],s[0]==="p3"); }).join("")+'</div><p class="cap mt8">07 프로그램 참여 · 하나만 해도 2개 · 최대 2개</p><div class="st8 mt8">'+PROG.map(function(p){ return cell(p[0],"07",p[1]); }).join("");
   var rl=d.roulette, ru=rl&&typeof rl==="object"?rl.used:rl, fx=d.fcfs;
   h+='<div class="pcs"><h3>스탬프 <b class="n" style="color:var(--tx);font-size:var(--fs-b)">'+Math.min(6,n)+' / 6</b> · 행운권 '+n0(d.tickets||0)+'장</h3><div class="st8">'+cells+'</div>'+
     '<div class="row2 mt8"><span>룰렛 '+(ru?"사용"+(rl.at?" "+esc(short(rl.at).slice(-5)):"")+(rl.gn?" · "+esc(rl.gn):""):"안 씀")+'</span>'+(ru?'<button class="btn sm" data-qa="who.rundo" onclick="rlUndoAsk(\''+J+'\')">사용 취소 …</button>':'')+'</div>'+
@@ -1506,9 +1506,9 @@ function pcP10Move(emp){
   supNeed(function(){ dialog({ t:"세션을 바꿀까요?", who:esc(d.name||emp)+"<span>"+esc(SESS10[cur]||cur)+" → "+esc(SESS10[to]||to)+"</span>", s:"앱 「내 세션」이 새 세션으로 바로 바뀝니다.", ok:"바꾸기",
     onOk:function(){ callPost("pre10_row_set",{ emp:emp, sid:to, from:cur, confirm:P10_RWORD },function(x){ dlgForce(); if(x&&x.ok){ toast("세션을 바꿨습니다 · "+(d.name||emp)); changed(["roll_list","roll_stat"]); pcAfter(emp); } else toast("바꾸지 못했습니다 · "+why(x)); },function(e){ dlgForce(); toast("바꾸지 못했습니다 · "+why(e)); }); } }); });
 }
-function stName(id){ var s=STAMP8.filter(function(x){ return x[0]===id; })[0]; return id==="p3h"?"06 프로그램 참여(한쪽)":s?s[1]+" "+s[2]:id; }
+function stName(id){ var s=PROG.map(function(p){ return [p[0],"07",p[1]]; }).concat(STAMP8).filter(function(x){ return x[0]===id; })[0]; return id==="p3h"?"07 17F 오후 강연(한쪽)":s?s[1]+" "+s[2]:id; }
 function stGrantAsk(emp, id){
-  dialog({ t:"스탬프를 부여할까요?", who:esc(pcName(emp))+'<span>사번 '+esc(emp)+' · '+esc(stName(id))+(id==="p3"?" · 2개":"")+'</span>', s:"참여 기록에 <b>「담당자 부여」</b>로 남습니다. 참가자 앱에는 다음 동기화에 반영됩니다.", ok:"부여",
+  dialog({ t:"스탬프를 부여할까요?", who:esc(pcName(emp))+'<span>사번 '+esc(emp)+' · '+esc(stName(id))+(id==="p3"?" · 묶음 2개":"")+'</span>', s:"참여 기록에 <b>「담당자 부여」</b>로 남습니다. 참가자 앱에는 다음 동기화에 반영됩니다.", ok:"부여",
     onOk:function(){ stGrantGo(emp, id, true); } });
 }
 function stGrantGo(emp, id, inDlg, quiet){
@@ -1800,7 +1800,7 @@ function ogScSet(sc, was, inDlg){
     function(e){ S.ui.ogBusy=0; if(inDlg) dlgForce(); paint(); toast("바뀌었는지 모릅니다 · "+why(e)+" · 다시 받아 확인합니다"); S.at.ogs=0; load(true); });
 }
 
-/* ══ 11. 설정 › 고급 · 보관 · 옛 콘솔 항목 목록(최종 설계안 · 옛 콘솔 링크는 여기 한 곳) ══ */
+/* ══ 11. 설정 › 고급 · 보관 ══ */
 var ADV=[
   ["값","공용 코드(관리코드 · 등급코드)","p_code",0],["값","명부 부서 올리기","s_rd",0],
   ["명단","관리자 명단(콘솔 · 앱 스태프)","p_ros",0],["명단","라운지 명단 통째 올리기","p_lng",0],["명단","기념품 옷 자동 배정 · 엑셀","p_kit",0],["명단","10F 명단 올리기(파일 통째)","p_pre10",0],
@@ -2121,7 +2121,7 @@ function invUndoAsk(rid){
 
 /* ══ 16. 현장 › 신청 처리 (B 패턴 mode:'state' · AX 라운지 상담 resv_set · 커피챗 cchat_set · cchat_status) ══ */
 var RESV_NEXT={ "신청":"승인", "승인":"체크인", "체크인":"완료" }, RESV_SIDE={ "신청":["취소"], "승인":["노쇼","취소"], "체크인":["노쇼"] }, RESV_UNDO={ "승인":1, "노쇼":1, "취소":1 };
-var ATT_KEPT={ roulette:"룰렛 사용", tickets:"행운권 발급", fcfs:"선착순 수령", fin:"참여상" };
+var ATT_RV="<b>참석 스탬프를 거둡니다</b>(묶음에 다른 참여가 있으면 개수 그대로 · 보상이 나갔으면 그대로).", ATT_KEPT={ roulette:"룰렛 사용", tickets:"행운권 발급", fcfs:"선착순 수령", fin:"참여상" };
 function attTxt(list){ var g=0, b=0; list.forEach(function(a){ if(a.revoked) b++; else if(!a.kept&&!a.dup) g++; }); return (g?" · 스탬프 지급 "+g+"명":"")+(b?" · 스탬프 회수 "+b+"명":""); }
 function attWarn(list){ var k=list.filter(function(a){ return a.kept; }); if(!k.length) return;
   dialog({ t:"스탬프는 거두지 않았습니다", s:k.map(function(a){ return "<b>"+esc(a.who||"")+"</b> · "+esc(a.name||"")+" · "+esc(ATT_KEPT[a.kept]||a.kept); }).join("<br>")+"<br>보상이 나가 상태만 바꿨습니다.", ok:"확인" }); }
@@ -2158,7 +2158,7 @@ VIEWS.apply={
     var u=apSt();
     el("vb").innerHTML='<div class="fx" style="margin-bottom:10px"><span id="apKind"></span><span class="sp"></span><span id="apCc"></span></div><div class="card kpis k5" id="apK"></div>'+
       '<div class="work"><div class="card list" id="apL"></div><div class="card panel" id="apP"></div></div>'+
-      memo('<p><b>AX 라운지</b> · 신청 → 승인 → 체크인 → 완료. 승인하면 승인 알림(푸시)이 바로 나갑니다. 체크인 = 스탬프 2개(커피챗 참석 1개) · 참석 취소 · 노쇼 = 회수. 노쇼 · 취소는 7초 동안 되돌릴 수 있습니다.</p><p><b>커피챗</b> · 아이디어를 낸 사람이 희망하고 운영진이 회차(13:00~15:30 · 30분 간격 · 20분) · 테이블을 넣어 선정합니다. 선정하면 선정 알림과 10분 전 알림이 나갑니다. 여러 명을 고르면 같은 회차 · 테이블로 한 번에 선정합니다.</p><p><b>두 곳에서 동시에</b> · 앱에서 취소했거나 다른 콘솔에서 바꾸면 그 줄만 새 상태로 고쳐 보여 줍니다. 프로그램 명단 입장 · 노쇼 표시는 설정 › 고급 · 보관.</p>');
+      memo('<p><b>AX 라운지</b> · 신청 → 승인 → 체크인 → 완료. 승인하면 승인 알림(푸시)이 바로 나갑니다. 체크인 · 커피챗 참석 = 스탬프 2개(프로그램 참여 묶음 · 최대 2) · 참석 취소 · 노쇼 = 회수. 노쇼 · 취소는 7초 동안 되돌릴 수 있습니다.</p><p><b>커피챗</b> · 아이디어를 낸 사람이 희망하고 운영진이 회차(13:00~15:30 · 30분 간격 · 20분) · 테이블을 넣어 선정합니다. 선정하면 선정 알림과 10분 전 알림이 나갑니다. 여러 명을 고르면 같은 회차 · 테이블로 한 번에 선정합니다.</p><p><b>두 곳에서 동시에</b> · 앱에서 취소했거나 다른 콘솔에서 바꾸면 그 줄만 새 상태로 고쳐 보여 줍니다. 프로그램 명단 입장 · 노쇼 표시는 설정 › 고급 · 보관.</p>');
   },
   paint:function(){
     var u=apSt(), nk=S.nav==="f_cchat"?"cc":"resv"; if(u.kind!==nk){ u.kind=nk; u.f="todo"; u.chk={}; u.cur=""; }
@@ -2251,11 +2251,11 @@ function resvDo(ids, status, undoMap){
   if(undoMap||status==="체크인"||status==="완료") return go();
   var danger=status==="취소"||status==="노쇼";
   dialog({ t:(rows.length>1?rows.length+"건을 ":"")+"「"+status+"」 할까요?", who:rows.length===1?esc(rows[0].name)+'<span>사번 '+esc(rows[0].emp)+' · 슬롯 '+esc(hhmm(rows[0].slot))+' · 지금 '+esc(rows[0].status)+'</span>':esc(rows.slice(0,6).map(function(r){ return r.name; }).join(", "))+(rows.length>6?" 외":""),
-    s:danger?"참가자 앱에 바로 반영됩니다. 7초 동안 알림의 <b>되돌리기</b>로 이전 상태로 돌립니다."+(rows.some(function(r){ return r.status==="체크인"; })?"<br>체크인한 사람은 <b>스탬프 2개를 거둡니다</b>.":"")+(skip?"<br>할 수 없는 "+skip+"건은 뺍니다.":""):"참가자 앱에 「승인」으로 뜨고 <b>승인 알림(푸시)이 바로 나갑니다</b>(나간 알림은 거둘 수 없습니다)."+(skip?"<br>신청 상태가 아닌 "+skip+"건은 뺍니다.":""),
+    s:danger?"참가자 앱에 바로 반영됩니다. 7초 동안 알림의 <b>되돌리기</b>로 이전 상태로 돌립니다."+(rows.some(function(r){ return r.status==="체크인"; })?"<br>체크인한 사람은 "+ATT_RV:"")+(skip?"<br>할 수 없는 "+skip+"건은 뺍니다.":""):"참가자 앱에 「승인」으로 뜨고 <b>승인 알림(푸시)이 바로 나갑니다</b>(나간 알림은 거둘 수 없습니다)."+(skip?"<br>신청 상태가 아닌 "+skip+"건은 뺍니다.":""),
     ok:status+(rows.length>1?" "+rows.length+"건":""), danger:danger, onOk:go });
 }
 function resvUnin(id){ var r=apBy("resv",id); if(!r||r.status!=="체크인") return;
-  dialog({ t:"참석 확인을 취소할까요?", who:esc(r.name)+'<span>'+esc(hhmm(r.slot))+' · 체크인</span>', s:"승인으로 돌아가고 <b>스탬프 2개를 거둡니다</b>(보상이 나갔으면 그대로).", ok:"참석 취소", danger:true, onOk:function(){ dlgForce(); var m={}; m[id]="승인"; resvDo([id],"",m); } }); }
+  dialog({ t:"참석 확인을 취소할까요?", who:esc(r.name)+'<span>'+esc(hhmm(r.slot))+' · 체크인</span>', s:"승인으로 돌아가고 "+ATT_RV, ok:"참석 취소", danger:true, onOk:function(){ dlgForce(); var m={}; m[id]="승인"; resvDo([id],"",m); } }); }
 function resvMemoSave(id){
   var r=apBy("resv",id), t=el("apMemo"); if(!r||!t) return;
   var m=t.value, old=r.memo;
@@ -2308,7 +2308,7 @@ function ccDo(emps, status){
         attWarn(AW);
       });
   };
-  if(status==="매칭") return dialog({ t:"커피챗 참석 확인을 취소할까요?", who:esc(rows[0].name)+'<span>지금 참석 · '+esc(hhmm(rows[0].round)||"-")+' · '+esc(rows[0].table||"-")+'</span>', s:"선정으로 돌아가고 <b>스탬프 1개를 거둡니다</b>(보상이 나갔으면 그대로).", ok:"참석 취소", danger:true, onOk:go });
+  if(status==="매칭") return dialog({ t:"커피챗 참석 확인을 취소할까요?", who:esc(rows[0].name)+'<span>지금 참석 · '+esc(hhmm(rows[0].round)||"-")+' · '+esc(rows[0].table||"-")+'</span>', s:"선정으로 돌아가고 "+ATT_RV, ok:"참석 취소", danger:true, onOk:go });
   if(status!=="취소") return go();
   dialog({ t:(rows.length>1?rows.length+"명의 ":"")+"커피챗 희망을 취소할까요?", who:rows.length===1?esc(rows[0].name)+'<span>지금 '+esc(ccLbl(rows[0].status))+'</span>':esc(rows.slice(0,6).map(function(r){ return r.name; }).join(", ")), s:"참가자 앱에 취소로 뜹니다. 7초 동안 알림의 <b>되돌리기</b>로 이전 상태로 돌립니다.", ok:"취소 처리", danger:true, onOk:go });
 }
@@ -2439,7 +2439,6 @@ function dcRejOff(seq){ DC.rejOff=seq; dcPaint(true); }
 function dcScreenUrl(){ try{ return new URL("../draw/?remote=1", location.href).href; }catch(e){ return "../draw/?remote=1"; } }
 function dcOpenScreen(){ window.open(dcScreenUrl(),"axf_draw"); }
 function dcWhy(w){ w=String(w||""); return DC_WHY[w]||w||"이유 없음"; }
-/* 큰 단추 = 화면 draw.js nextCmd 와 같은 표 · 키보드와 콘솔을 섞어 눌러도 늦게 온 쪽은 화면이 거절한다 */
 function dcNext(s){
   if(!s) return { c:"", n:"화면 보고 없음", sub:"추첨 화면을 먼저 엽니다(위 「추첨 화면 열기」)" };
   var R=s.round&&!/^\d+$/.test(String(s.round))?s.round:"다음 등수";
@@ -2814,7 +2813,7 @@ function tyPaint(b){
     (top.length?top.map(function(r){ return '<tr><td><b class="n">'+r.rank+'위</b></td><td><b>'+esc(r.nick||"-")+'</b></td><td>'+esc(r.name||"-")+' <span class="cap">'+esc(r.emp||"")+'</span></td><td class="n r"><b>'+n0(r.score)+'</b></td><td class="n r hm">'+esc(r.acc!=null?r.acc+"%":"-")+'</td><td class="n cap hm">'+esc(short(r.ts))+'</td></tr>'; }).join(""):'<tr><td colspan="6"><div class="empty"><b>아직 기록이 없습니다</b></div></td></tr>')+'</tbody></table>'+
     '<p class="cap mt8">집계 시간 '+esc((d.win||[]).join(" · ")||"-")+'</p>');
 }
-/* ══ 20. 오늘 › 장애 대응 (디자인 시안/콘솔 당일 진행판 261008/장애 대응표.md · 9줄 + 스태프 폰 멈춤) ══ */
+/* ══ 20. 오늘 › 장애 대응 ══ */
 var INC=[
   { k:"srv", t:"서버 · 앱이 안 열림 · 느림 · 저장 실패", sym:"이상 신호 「서버 지연」 빨강(2.5초 이상) · 「오류율」 빨강(5% 이상) · 현장에서 「앱이 안 열려요」 여러 건",
     act:["콘솔 새로고침 · 휴대폰 테더링으로도 열어 콘솔 회선인지 서버인지 가른다","Cloudflare 대시보드 Workers › hi 에서 오류 · 요청 그래프를 본다","과부하(바쁨)가 이어지면 설정 「폴링초」를 30에서 90으로(설정 › 고급)","푸시가 같이 나가고 있으면 알림 › 보내기에서 「공지 푸시 잠금」","쓰기를 멈춰야 하면 읽기 전용 스위치(슈퍼관리자 · 본인 확인 · 쓰기가 모두 멈춤)"],
