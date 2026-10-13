@@ -1449,7 +1449,7 @@ function whoPanel(){
 function pcHtml(d){
   var e=d.emp, J=jq(e), sup=!!(S.me&&S.me.sup), L=d.lists||{}, v=d.visit||null;
   var st=pcStamps(d), by={}; st.forEach(function(x){ by[x.id]=x; });
-  var half=!!by.p3h&&!by.p3, pg=PROG.some(function(p){ return by[p[0]]; })?2:by.p3h?1:0, n=d.n!=null?d.n:Math.min(6,st.filter(function(x){ return x.id!=="p3"&&STAMP8.some(function(s){ return s[0]===x.id; }); }).length+pg+(by.ck?3:0));
+  var half=!!by.p3h&&!by.p3, pg=Math.min(2,(by.p3?2:by.p3h?1:0)+(by.ln?2:0)+(by.cc?1:0)), n=d.n!=null?d.n:Math.min(6,st.filter(function(x){ return x.id!=="p3"&&STAMP8.some(function(s){ return s[0]===x.id; }); }).length+pg+(by.ck?3:0));
   var h='<div class="ph2"><div style="min-width:0"><h2 id="pcH" tabindex="-1">'+esc(d.name||e)+'</h2><div class="cap">'+esc(d.dept||"")+' · <span class="n">'+esc(e)+'</span></div><div class="fx mt8">'+
     (d.test||L.test?tag("시험"):"")+(d.sup?tag("슈퍼관리자","pri"):"")+(L.staffApp?tag("스태프","pri"):"")+(d.acct?"":tag("가입 전"))+(d.stale?tag("다시 받는 중"):"")+'</div></div><button class="x" aria-label="카드 닫기" data-qa="who.x" onclick="whoPick(\'\')">×</button></div><div class="bd">';
   var rsLock=sup&&pcResetLock(d);
@@ -1461,9 +1461,9 @@ function pcHtml(d){
   var cell=function(k, no, t, sm){ var x=sm?null:by[k]||(k==="p3"&&half?by.p3h:null), got=sm?pg>0:!!x, id=k==="p3"&&half?"p3h":k, nm=no+" "+t, act="";
     if(x) act='<button class="btn sm danger" data-qa="who.st.rv" aria-label="'+esc(nm)+' 스탬프 취소" onclick="stRevokeAsk(\''+J+'\',\''+id+'\')">취소</button>';
     else if(!sm&&GRANT_IDS.indexOf(k)>=0&&d.acct) act='<button class="btn sm" data-qa="who.st.grant" aria-label="'+esc(nm)+' 스탬프 부여" onclick="stGrantAsk(\''+J+'\',\''+k+'\')">부여</button>';
-    var sub=sm?(pg?pg+"개"+(pg<2?" · 17F 한쪽":""):"-"):x?(x.at?esc(short(x.at).slice(-5)):"받음")+(x.src&&x.src!=="본인"?" · "+esc(x.byName||x.src):x.src?" · 본인":"")+(half&&k==="p3"?" · 한쪽":""):"-";
+    var sub=sm?(pg?pg+"개":"-"):x?(x.at?esc(short(x.at).slice(-5)):"받음")+(x.src&&x.src!=="본인"?" · "+esc(x.byName||x.src):x.src?" · 본인":"")+(half&&k==="p3"?" · 한쪽":""):"-";
     return '<div class="c'+(got?" got":"")+'"><span class="no">'+no+'</span><b>'+esc(t)+'</b><span class="cap">'+sub+'</span>'+act+'</div>'; };
-  var cells=STAMP8.map(function(s){ return cell(s[0],s[1],s[2],s[0]==="p3"); }).join("")+'</div><p class="cap mt8">07 프로그램 참여 · 하나만 해도 2개 · 최대 2개</p><div class="st8 mt8">'+PROG.map(function(p){ return cell(p[0],"07",p[1]); }).join("");
+  var cells=STAMP8.map(function(s){ return cell(s[0],s[1],s[2],s[0]==="p3"); }).join("")+'</div><p class="cap mt8">07 프로그램 참여 · 17F 2 · 라운지 2 · 커피챗 1 · 최대 2개</p><div class="st8 mt8">'+PROG.map(function(p){ return cell(p[0],"07",p[1]); }).join("");
   var rl=d.roulette, ru=rl&&typeof rl==="object"?rl.used:rl, fx=d.fcfs;
   h+='<div class="pcs"><h3>스탬프 <b class="n" style="color:var(--tx);font-size:var(--fs-b)">'+Math.min(6,n)+' / 6</b> · 행운권 '+n0(d.tickets||0)+'장</h3><div class="st8">'+cells+'</div>'+
     '<div class="row2 mt8"><span>룰렛 '+(ru?"사용"+(rl.at?" "+esc(short(rl.at).slice(-5)):"")+(rl.gn?" · "+esc(rl.gn):""):"안 씀")+'</span>'+(ru?'<button class="btn sm" data-qa="who.rundo" onclick="rlUndoAsk(\''+J+'\')">사용 취소 …</button>':'')+'</div>'+
@@ -2121,7 +2121,7 @@ function invUndoAsk(rid){
 
 /* ══ 16. 현장 › 신청 처리 (B 패턴 mode:'state' · AX 라운지 상담 resv_set · 커피챗 cchat_set · cchat_status) ══ */
 var RESV_NEXT={ "신청":"승인", "승인":"체크인", "체크인":"완료" }, RESV_SIDE={ "신청":["취소"], "승인":["노쇼","취소"], "체크인":["노쇼"] }, RESV_UNDO={ "승인":1, "노쇼":1, "취소":1 };
-var ATT_RV="<b>참석 스탬프를 거둡니다</b>(묶음에 다른 참여가 있으면 개수 그대로 · 보상이 나갔으면 그대로).", ATT_KEPT={ roulette:"룰렛 사용", tickets:"행운권 발급", fcfs:"선착순 수령", fin:"참여상" };
+var ATT_RV="<b>참석 스탬프를 거둡니다</b>(남은 참여로 다시 셈 · 보상이 나갔으면 그대로).", ATT_KEPT={ roulette:"룰렛 사용", tickets:"행운권 발급", fcfs:"선착순 수령", fin:"참여상" };
 function attTxt(list){ var g=0, b=0; list.forEach(function(a){ if(a.revoked) b++; else if(!a.kept&&!a.dup) g++; }); return (g?" · 스탬프 지급 "+g+"명":"")+(b?" · 스탬프 회수 "+b+"명":""); }
 function attWarn(list){ var k=list.filter(function(a){ return a.kept; }); if(!k.length) return;
   dialog({ t:"스탬프는 거두지 않았습니다", s:k.map(function(a){ return "<b>"+esc(a.who||"")+"</b> · "+esc(a.name||"")+" · "+esc(ATT_KEPT[a.kept]||a.kept); }).join("<br>")+"<br>보상이 나가 상태만 바꿨습니다.", ok:"확인" }); }
@@ -2158,7 +2158,7 @@ VIEWS.apply={
     var u=apSt();
     el("vb").innerHTML='<div class="fx" style="margin-bottom:10px"><span id="apKind"></span><span class="sp"></span><span id="apCc"></span></div><div class="card kpis k5" id="apK"></div>'+
       '<div class="work"><div class="card list" id="apL"></div><div class="card panel" id="apP"></div></div>'+
-      memo('<p><b>AX 라운지</b> · 신청 → 승인 → 체크인 → 완료. 승인하면 승인 알림(푸시)이 바로 나갑니다. 체크인 · 커피챗 참석 = 스탬프 2개(프로그램 참여 묶음 · 최대 2) · 참석 취소 · 노쇼 = 회수. 노쇼 · 취소는 7초 동안 되돌릴 수 있습니다.</p><p><b>커피챗</b> · 아이디어를 낸 사람이 희망하고 운영진이 회차(13:00~15:30 · 30분 간격 · 20분) · 테이블을 넣어 선정합니다. 선정하면 선정 알림과 10분 전 알림이 나갑니다. 여러 명을 고르면 같은 회차 · 테이블로 한 번에 선정합니다.</p><p><b>두 곳에서 동시에</b> · 앱에서 취소했거나 다른 콘솔에서 바꾸면 그 줄만 새 상태로 고쳐 보여 줍니다. 프로그램 명단 입장 · 노쇼 표시는 설정 › 고급 · 보관.</p>');
+      memo('<p><b>AX 라운지</b> · 신청 → 승인 → 체크인 → 완료. 승인하면 승인 알림(푸시)이 바로 나갑니다. 체크인 = 스탬프 2개 · 커피챗 참석 = 1개(묶음 최대 2) · 참석 취소 · 노쇼 = 회수. 노쇼 · 취소는 7초 동안 되돌릴 수 있습니다.</p><p><b>커피챗</b> · 아이디어를 낸 사람이 희망하고 운영진이 회차(13:00~15:30 · 30분 간격 · 20분) · 테이블을 넣어 선정합니다. 선정하면 선정 알림과 10분 전 알림이 나갑니다. 여러 명을 고르면 같은 회차 · 테이블로 한 번에 선정합니다.</p><p><b>두 곳에서 동시에</b> · 앱에서 취소했거나 다른 콘솔에서 바꾸면 그 줄만 새 상태로 고쳐 보여 줍니다. 프로그램 명단 입장 · 노쇼 표시는 설정 › 고급 · 보관.</p>');
   },
   paint:function(){
     var u=apSt(), nk=S.nav==="f_cchat"?"cc":"resv"; if(u.kind!==nk){ u.kind=nk; u.f="todo"; u.chk={}; u.cur=""; }
