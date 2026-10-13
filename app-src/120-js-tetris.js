@@ -2,7 +2,7 @@
    왜 바꿨나: 휴대폰 한글 입력(IME)에 기대는 게임이라 실기에서 오류가 잦았다 → 글자 입력이 아예 없는 게임으로 바꾼다.
    1F 현장 타자왕전(노트북 · 물리 키보드 · 경품)은 그대로다 · 소나기 엔진과 화면은 type_site 전용으로 살아 있다.
    규칙: 10×20 · 블록 7종 · 회전(막히면 좌우·위로 한 칸씩 밀어 본다) · 한 칸 내리기 · 즉시 떨어뜨리기 ·
-        한 번에 지운 줄 1/2/3/4 = 100/300/500/800 × 레벨 · TT_LV_LINES 줄마다 레벨 +1 → 낙하가 빨라진다 · 시간 제한 없음(v6.05 · 블록이 맨 위까지 쌓이면 끝).
+        한 번에 지운 줄 1/2/3/4 = 100/300/500/800 × 레벨 · TT_LV_LINES 줄마다 레벨 +1 → 낙하가 빨라진다(v7.13 시간에 따라서도 · ttGrav) · 시간 제한 없음(v6.05 · 블록이 맨 위까지 쌓이면 끝).
    기록 = 버틴 시간(1/100초 · 길수록 좋다 · v3.87 사용자 확정) · 지운 줄·점수·레벨은 결과 카드의 보조 지표 · 올림픽 목표 60초.
    조작: 화면 아래 가상 버튼이 기본이다(늘 보인다 · 최소 54px + 히트 영역 5~8px · 좌·우·한 칸은 누르고 있으면 0.17초 뒤 0.05초마다 반복 · 마지막 누름 우선).
         쓸어넘기기(좌우 이동 · 아래 내리기 · 위로 즉시 떨어뜨리기 · 탭 회전)는 보조로 같이 동작한다.
@@ -188,8 +188,17 @@ function ttCollapse() {
   if (lv > TT.level) { TT.level = lv; TT.banner = { text: "LEVEL " + lv, t: 1.1 }; sfx("level"); }
   ttSpawn();
 }
-/* 레벨이 오를수록 빨라진다 · 15레벨에서 0.06초 → 어떤 실력이어도 결국 쌓여서 끝난다 */
-function ttGrav() { return Math.max(0.06, 0.85 * Math.pow(0.8, TT.level - 1)); }
+/* v7.13 (사용자 261013 「한 판 3분 ~ 최대 5분」) 낙하 속도 = 줄 레벨과 시간 레벨 중 빠른 쪽.
+   시간 레벨 = TT_SPD_SEC(20초)마다 +1 · 한 칸 간격 0.85초 × 0.8^(속도 레벨 - 1) · 하한 TT_G_MIN(0.08초, 옛 0.06초).
+   TT_LATE0(4분)부터 TT_LATE1(5분)까지 간격이 0 으로 줄어든다(5분이면 바로 바닥) · 잠김 0.5초 · 12번은 그대로.
+   옛 곡선(줄 레벨만)은 천천히 내리는 사람이 6~8분 이어졌다(봇 중앙값 · 「대상 참가자」 실측 3분 33초 · 20줄).
+   화면 · 결과 · 서버의 레벨(TT.level = 3줄마다 +1 · 서버 OLY_TT_LV 검증)은 그대로 · 시간 레벨은 속도에만 쓴다. */
+var TT_SPD_SEC = 20, TT_G_MIN = 0.08, TT_LATE0 = 240, TT_LATE1 = 300;
+function ttSpdLv() { return Math.max(TT.level, 1 + Math.floor((TT.surv || 0) / TT_SPD_SEC)); }
+function ttGrav() {
+  var g = Math.max(TT_G_MIN, 0.85 * Math.pow(0.8, ttSpdLv() - 1)), t = TT.surv || 0;
+  return t <= TT_LATE0 ? g : g * Math.max(0, (TT_LATE1 - t) / (TT_LATE1 - TT_LATE0));
+}
 function ttAct(k) {
   if (!TT.on || TT.paused || TT.ending || TT.cd > 0 || TT.flash || !TT.cur) return false;
   if (k === "L") return ttMove(-1);
