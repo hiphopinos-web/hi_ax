@@ -1216,7 +1216,7 @@ function scanDone(emp, sp, res) {
   /* v5.98 스태프 스캔 화면 결과 띠(sscBand) 문구 · 스탬프 = 「AX PLAY 적립 · 스탬프 n / 6」 · 룰렛 = 주황 「룰렛 1회 사용 · 남은 0」 */
   if (sp.kind === "stamp") SCAN.bd = dup ? { t: "이미 받음", s: sp.nm } : { t: sp.nm + " 적립", s: res.n ? "스탬프 " + res.n + " / 6" : "" };
   else if (sp.kind === "roulette") SCAN.bd = { c: "roul", t: "룰렛 1회 사용 · 남은 0", s: "스탬프 " + (res.n || "") + "개 · 바로 돌리세요" };
-  else if (sp.kind === "roster") SCAN.bd = dup ? { t: "이미 참석 확인", s: sp.nm } : { t: "참석 확인 · 스탬프 " + ((res.att && res.att.u) || sp.su || 1) + "개", s: res.att && res.att.n != null ? "스탬프 " + res.att.n + " / 6" + (res.att.dup ? " · 이미 받은 스탬프" : "") : sp.nm };   /* 261013 */
+  else if (sp.kind === "roster") SCAN.bd = dup ? { t: "이미 참석 확인", s: sp.nm } : { t: "참석 확인", s: "스탬프 +" + ((res.att && res.att.u) || sp.su || 1) + (res.att && res.att.n != null ? " · 지금 " + res.att.n + " / 6" : "") + (res.att && res.att.dup ? " · 이미 받은 스탬프" : "") };   /* 261013 띠 = 짧게(이름이 앞에 붙는다) */
   scanShow(dup ? "dup" : "ok", who || emp,
     sp.kind === "roster" ? (dup ? "이미 참석 확인됨" : "참석 확인 완료") :   /* 261013 */
     sp.kind === "sess" ? (dup ? "이미 입장 처리됨" : "입장 완료") :

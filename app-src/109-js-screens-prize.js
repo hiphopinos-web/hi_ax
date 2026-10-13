@@ -505,6 +505,7 @@ function stpMeta(s, got) {
   if (s.id === "p3") return progUnits() === 1 ? "2개 중 1개 · 하나 더" : "17F 오후 AWS · MS 강연";   /* v5.68 17F 입장이나 끝 한쪽만 받은 상태 · v5.94 오후 파트너 강연만 */
   if (s.id === "st") { var sst = stairState(); return sst.leg ? "진행 중 · " + sst.leg.fl + "F 시작" : stairLine(sst); }
   if (s.id === "sv") return SURVEY.open + "부터 · 60초";
+  if (got && (s.id === "cc" || s.id === "ln")) return "참석 확인";   /* 261013 받은 뒤 = 상태 한 마디 */
   if (s.id === "cc") { var c9 = S.get("cchat", null); return c9 && c9.status === "matched" && c9.round ? "선정 · " + c9.round + " · 내 QR 제시" : "선정되면 참석 확인"; }   /* 261013 */
   if (s.id === "ln") { var r9 = myResv(); return r9 && r9.status === "approved" ? "승인 · " + r9.slot + " · 내 QR 제시" : "승인되면 참석 확인"; }
   return s.where || "";

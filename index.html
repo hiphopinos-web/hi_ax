@@ -8999,6 +8999,7 @@ function stpMeta(s, got) {
   if (s.id === "p3") return progUnits() === 1 ? "2개 중 1개 · 하나 더" : "17F 오후 AWS · MS 강연";   /* v5.68 17F 입장이나 끝 한쪽만 받은 상태 · v5.94 오후 파트너 강연만 */
   if (s.id === "st") { var sst = stairState(); return sst.leg ? "진행 중 · " + sst.leg.fl + "F 시작" : stairLine(sst); }
   if (s.id === "sv") return SURVEY.open + "부터 · 60초";
+  if (got && (s.id === "cc" || s.id === "ln")) return "참석 확인";   /* 261013 받은 뒤 = 상태 한 마디 */
   if (s.id === "cc") { var c9 = S.get("cchat", null); return c9 && c9.status === "matched" && c9.round ? "선정 · " + c9.round + " · 내 QR 제시" : "선정되면 참석 확인"; }   /* 261013 */
   if (s.id === "ln") { var r9 = myResv(); return r9 && r9.status === "approved" ? "승인 · " + r9.slot + " · 내 QR 제시" : "승인되면 참석 확인"; }
   return s.where || "";
@@ -12533,7 +12534,7 @@ function scanDone(emp, sp, res) {
   /* v5.98 스태프 스캔 화면 결과 띠(sscBand) 문구 · 스탬프 = 「AX PLAY 적립 · 스탬프 n / 6」 · 룰렛 = 주황 「룰렛 1회 사용 · 남은 0」 */
   if (sp.kind === "stamp") SCAN.bd = dup ? { t: "이미 받음", s: sp.nm } : { t: sp.nm + " 적립", s: res.n ? "스탬프 " + res.n + " / 6" : "" };
   else if (sp.kind === "roulette") SCAN.bd = { c: "roul", t: "룰렛 1회 사용 · 남은 0", s: "스탬프 " + (res.n || "") + "개 · 바로 돌리세요" };
-  else if (sp.kind === "roster") SCAN.bd = dup ? { t: "이미 참석 확인", s: sp.nm } : { t: "참석 확인 · 스탬프 " + ((res.att && res.att.u) || sp.su || 1) + "개", s: res.att && res.att.n != null ? "스탬프 " + res.att.n + " / 6" + (res.att.dup ? " · 이미 받은 스탬프" : "") : sp.nm };   /* 261013 */
+  else if (sp.kind === "roster") SCAN.bd = dup ? { t: "이미 참석 확인", s: sp.nm } : { t: "참석 확인", s: "스탬프 +" + ((res.att && res.att.u) || sp.su || 1) + (res.att && res.att.n != null ? " · 지금 " + res.att.n + " / 6" : "") + (res.att && res.att.dup ? " · 이미 받은 스탬프" : "") };   /* 261013 띠 = 짧게(이름이 앞에 붙는다) */
   scanShow(dup ? "dup" : "ok", who || emp,
     sp.kind === "roster" ? (dup ? "이미 참석 확인됨" : "참석 확인 완료") :   /* 261013 */
     sp.kind === "sess" ? (dup ? "이미 입장 처리됨" : "입장 완료") :
