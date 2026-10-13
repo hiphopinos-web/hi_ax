@@ -1099,8 +1099,9 @@ var SCAN_SPOTS = [
   { id: "aws", nm: "10F 세션 D", kind: "sess", lb: "세션 D", will: "10F 세션 D 입장 처리" },
   { id: "ms1", nm: "10F 세션 E 1회차", kind: "sess", lb: "세션 E 1회차", will: "10F 세션 E 1회차 입장 처리" },
   { id: "ms2", nm: "10F 세션 E 2회차", kind: "sess", lb: "세션 E 2회차", will: "10F 세션 E 2회차 입장 처리" },
-  { id: "dap", nm: "1F AX 라운지", kind: "roster", lb: "AX 라운지 입장", tsub: "신청 명단", will: "AX 라운지 입장 처리", cond: "신청 명단에 있는 사람만" },
-  { id: "cchat", nm: "18F AX 커피챗", kind: "roster", lb: "커피챗 입장", tsub: "신청 명단", will: "커피챗 입장 처리", cond: "신청 명단에 있는 사람만" },
+  /* 261013 (사용자 「권장대로」) 라운지 · 커피챗 자리 = 참석 확인 + 스탬프(라운지 2개 · 커피챗 1개 · 서버 staff_mark in · attAward_) · 승인 · 선정된 줄 · 그 시간만(서버가 거절 nomatch · noshow · time) */
+  { id: "dap", nm: "1F AX 라운지", kind: "roster", lb: "AX 라운지 참석", tsub: "참석 확인 · 스탬프 2개", will: "AX 라운지 참석 확인", cond: "승인된 상담 · 상담 시간", su: 2 },
+  { id: "cchat", nm: "18F AX 커피챗", kind: "roster", lb: "커피챗 참석", tsub: "참석 확인 · 스탬프 1개", will: "커피챗 참석 확인", cond: "선정된 사람 · 내 회차", su: 1 },
   { id: "q_photo", nm: "1F AI 포토부스", kind: "photo", lb: "포토부스 입장", tsub: "다음 번호 호출", will: "포토부스 입장 · 다음 번호 호출", cond: "앱에서 받은 대기 번호" },   /* 번호는 참가자가 앱에서 받는다 · 찍으면 입장 + 다음 호출 */
   /* v4.83 (261001) 1F 전시(p1) 스탬프 폐지 · AX PLAY(p2) = 체험 뒤 스태프가 참가자 내 QR 을 찍어 적립(스탬프 4) */
   { id: "p2", nm: "AX PLAY", kind: "stamp", lb: "AX PLAY 스탬프", tsub: "체험 확인 · 적립", will: "AX PLAY 스탬프 적립", cond: "HiDI-Q 또는 Hi-Helper 체험을 마친 사람" },
@@ -1184,7 +1185,10 @@ function scanDone(emp, sp, res) {
       why === "qrold" ? "옛 QR이에요 · 참가자 앱을 새로 고친 뒤 다시 찍어 주세요" :
       why === "out" ? "룰렛 소진 · 차감하지 않았어요" :
       why === "window" ? "지금은 입장 시간이 아니에요 (" + (res.open || "") + ")" :
-      why === "notfound" ? (sp.kind === "photo" ? "대기 번호가 없어요 · 앱에서 번호 받기 안내" : "신청 명단에 없어요") :
+      why === "notfound" ? (sp.kind === "photo" ? "대기 번호가 없어요 · 앱에서 번호 받기 안내" : sp.id === "cchat" ? "선정 명단에 없어요" : sp.id === "dap" ? "승인된 상담이 없어요" : "신청 명단에 없어요") :
+      why === "nomatch" ? (sp.id === "cchat" ? "아직 선정 전이에요" : "아직 승인 전 상담이에요") :   /* 261013 참석 확인 거절 */
+      why === "noshow" ? "노쇼 상태인 상담이에요 · 콘솔에서 바꿔 주세요" :
+      why === "time" ? (sp.id === "cchat" ? res.at + " 회차예요 · 지금은 참석 확인 시간이 아니에요" : res.at + " 상담이에요 · 지금은 참석 확인 시간이 아니에요") :
         why === "skipped" ? res.no + "번은 건너뛴 번호예요 · 새 번호 받기 안내" :
           why === "already" ? res.no + "번은 이미 입장 처리됐어요" :
             why === "need" ? "스탬프 3개 미만 · 차감 불가 (현재 " + (res.n || 0) + "개)" :
@@ -1201,7 +1205,8 @@ function scanDone(emp, sp, res) {
   }
   if (sp.kind === "kit") { kitDone(emp, res); return; }   /* v5.34 */
   if (sp.kind === "fcfs") { fcfsDone(emp, res); return; }   /* v5.90 */
-  var ok = sp.kind === "sess" || sp.kind === "roster" ? (res.dup ? "이미 입장 처리됨" : "입장 확인") :
+  var ok = sp.kind === "roster" ? (res.dup ? "이미 참석 확인됨" : "참석 확인" + (res.att && !res.att.dup ? " · 스탬프 " + (res.att.u || sp.su || 1) + "개" : "")) :   /* 261013 */
+    sp.kind === "sess" ? (res.dup ? "이미 입장 처리됨" : "입장 확인") :
     sp.kind === "photo" ? res.no + "번 입장" + (res.early ? "(순서보다 먼저)" : "") + " · " + (res.next ? res.next.no + "번 호출" : "대기 번호 없음") :
       sp.kind === "stamp" ? (res.dup ? "이미 받은 스탬프" : "스탬프 적립 · " + sp.nm) :
         "룰렛 1회 차감 · 바로 돌리세요 (스탬프 " + (res.n || "") + "개)";
@@ -1211,8 +1216,10 @@ function scanDone(emp, sp, res) {
   /* v5.98 스태프 스캔 화면 결과 띠(sscBand) 문구 · 스탬프 = 「AX PLAY 적립 · 스탬프 n / 6」 · 룰렛 = 주황 「룰렛 1회 사용 · 남은 0」 */
   if (sp.kind === "stamp") SCAN.bd = dup ? { t: "이미 받음", s: sp.nm } : { t: sp.nm + " 적립", s: res.n ? "스탬프 " + res.n + " / 6" : "" };
   else if (sp.kind === "roulette") SCAN.bd = { c: "roul", t: "룰렛 1회 사용 · 남은 0", s: "스탬프 " + (res.n || "") + "개 · 바로 돌리세요" };
+  else if (sp.kind === "roster") SCAN.bd = dup ? { t: "이미 참석 확인", s: sp.nm } : { t: "참석 확인 · 스탬프 " + ((res.att && res.att.u) || sp.su || 1) + "개", s: res.att && res.att.n != null ? "스탬프 " + res.att.n + " / 6" + (res.att.dup ? " · 이미 받은 스탬프" : "") : sp.nm };   /* 261013 */
   scanShow(dup ? "dup" : "ok", who || emp,
-    sp.kind === "sess" || sp.kind === "roster" ? (dup ? "이미 입장 처리됨" : "입장 완료") :
+    sp.kind === "roster" ? (dup ? "이미 참석 확인됨" : "참석 확인 완료") :   /* 261013 */
+    sp.kind === "sess" ? (dup ? "이미 입장 처리됨" : "입장 완료") :
       sp.kind === "photo" ? res.no + "번 입장 완료" :
         sp.kind === "stamp" ? (dup ? "이미 받은 스탬프" : "스탬프 적립 완료") : "룰렛 체크인 완료",
     sp.kind === "photo" ? (res.next ? "다음 " + res.next.no + "번 호출" : "대기 번호 없음") + (res.early ? " · 순서보다 먼저" : "") :
@@ -1443,7 +1450,10 @@ function scanBig(why, sp, res, err) {
     why === "spare0" ? ["bad", "여유 키트 없음", "룰렛 굿즈로 대체해 주세요"] :
     /unknown action/i.test(String(err || "")) ? ["bad", "아직 쓸 수 없어요", "서버 갱신 뒤 다시 찍어 주세요"] :
     why === "window" ? ["bad", "입장 시간이 아니에요", res.open || ""] :
-    why === "notfound" ? (sp.kind === "photo" ? ["bad", "대기 번호 없음", "앱에서 번호 받기 안내"] : ["bad", "신청 명단에 없음", sp.nm]) :
+    why === "notfound" ? (sp.kind === "photo" ? ["bad", "대기 번호 없음", "앱에서 번호 받기 안내"] : sp.id === "cchat" ? ["bad", "선정 명단에 없음", sp.nm] : sp.id === "dap" ? ["bad", "승인된 상담 없음", sp.nm] : ["bad", "신청 명단에 없음", sp.nm]) :
+    why === "nomatch" ? ["bad", sp.id === "cchat" ? "선정 전" : "승인 전 상담", sp.nm] :   /* 261013 참석 확인 거절 · 담백한 사실 */
+    why === "noshow" ? ["bad", "노쇼 상태인 상담", "콘솔에서 바꿔 주세요"] :
+    why === "time" ? ["bad", (res.at || "") + (sp.id === "cchat" ? " 회차" : " 상담"), "참석 확인 " + (res.open || "")] :
     why === "skipped" ? ["bad", res.no + "번 건너뛴 번호", "새 번호 받기 안내"] :
     why === "already" ? ["dup", res.no + "번 이미 입장", ""] :
     why === "locked" ? ["bad", "관리 연결이 잠겼어요", admLockedMsg(res)] :

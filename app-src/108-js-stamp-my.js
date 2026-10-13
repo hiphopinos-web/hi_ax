@@ -173,6 +173,9 @@ function stampTagHtml(id, x) {
 function stampLineHtml(id, left) { return '<div class="axs-stline">' + (left || "<span></span>") + stampTagHtml(id) + "</div>"; }
 /* 프로그램 상세 · p3 에 들어가는 것 · v5.94 (사용자 결정 261006) 17F 오후 파트너 강연(AWS l1 · MS l2)만 · 오전 강연 · DAP 상담 · 커피챗 · 10F 는 도장 없음(옛 규칙 = hi_ax git v5.93) */
 var P3_PM = ["l1", "l2"];
+/* 261013 참석 확인 스탬프 · 커피챗(cc) · AX 라운지 상담(ln · 2개) 상세 · 신청 카드 오른쪽 위 도장 */
+function attStampId(s) { return s && s.id === "cchat" ? "cc" : s && s.id === "dap" ? "ln" : ""; }
+function attSealHtml(s) { var id = attStampId(s); return id ? stampTagHtml(id, id === "ln" ? 2 : 0) : ""; }
 function progStampId(s) {
   return s && P3_PM.indexOf(s.id) >= 0 ? "p3" : "";
 }
@@ -409,7 +412,7 @@ function ppAfterRender(n, oldN, glow) {
    완료 카드는 위로 올라온다(완료 그룹 상단, 그 안에서 기본 순서 유지) · 그룹 캡션은 미완료 구간에만 얇게. */
 var PP_ORDER_V1 = [["p1", "1F"], ["p2", "1F"], ["p7", "1F"], ["p3", "17F · 1F · 18F"], ["st", "계단"], ["p4", "앱"], ["p5", "앱"], ["sv", "앱"]];
 /* v4.83 새 8종 · 번호 순서 그대로 · 묶음 제목 없음(수단 칩은 2묶음) */
-var PP_ORDER_V2 = [["lg", ""], ["qz", ""], ["p4", ""], ["p2", ""], ["p5", ""], ["p3", ""], ["st", ""], ["sv", ""]];
+var PP_ORDER_V2 = [["lg", ""], ["qz", ""], ["p4", ""], ["p2", ""], ["p5", ""], ["p3", ""], ["st", ""], ["sv", ""], ["cc", ""], ["ln", ""]];   /* 261013 9 커피챗 · 10 AX 라운지 */
 var PP_ORDER = PP_ORDER_V2;
 /* v4.06 방금 적립한 현장 스탬프 · 같은 층에서 아직 안 한 현장 스탬프 하나 (QR 상호작용 기획 2-3) · 코칭 문장 없이 버튼 라벨만 */
 var PP_NEXT_V1 = { p1: ["p7", "p2"], p2: ["p7", "p1"], p7: ["p1", "p2"], p3: ["sv", "p5"] };

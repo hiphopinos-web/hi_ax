@@ -1764,10 +1764,12 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-apc .axs-kv dd { word-break: keep-all; }
   .axs-apc .bt { display: flex; flex-direction: column; align-items: stretch; gap: var(--ax-space-4); }
   .axs-apc .bt .ax-link { align-self: center; padding: 0 var(--ax-space-12); }
+  .axs-apc.axs-sthost > .hd, .axs-apc.axs-sthost > .k { padding-right: 60px; }   /* 261013 오른쪽 위 참석 확인 도장(52px) 자리 · 이름 · 칩 · 한 줄 소개가 도장 밑으로 들어가지 않게 */
   /* 좁은 폭(OS 글자 크게 · 폴더 바깥 화면 240~300) = 세그먼트 글자 한 단계 작게 · 카드 안쪽 여백 16 · 사실 표는 이름 위 · 값 아래 한 줄씩 */
   @media (max-width: 300px) {
     .axs-seg3 button { font-size: 0.875rem; letter-spacing: -0.02em; }
     .axs-apc { padding: var(--ax-space-16); }
+    .ax-card.axs-apc.axs-sthost > .axs-stag { top: 10px; right: var(--ax-space-16); }
     .axs-apc .axs-kv { grid-template-columns: minmax(0, 1fr); row-gap: 0; }
     .axs-apc .axs-kv dd { margin-bottom: var(--ax-space-8); }
   }

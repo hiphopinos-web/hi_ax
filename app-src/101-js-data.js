@@ -85,12 +85,17 @@ function stampDefV1(id) { return STAMPS_V1.filter(function (s) { return s.id ===
 /* v4.83 (261001 사용자 확정) 새 8종 · 번호 순서 = 1 최초 로그인 · 2 AX 퀴즈 · 3 미니 게임 · 4 AX PLAY · 5 아이디어 한 줄 · 6 프로그램 참여 · 7 계단 · 8 설문
    AX 퀴즈(O/X · 기억력)는 게임이 아니라 따로 둔다(사용자 수정 261001 · 이름 · 아이콘 · 진입 화면이 미니 게임과 다르다 · 순위 없음)
    옛 p1(1F 전시) · p7(전시 QR 퀴즈)은 뺐다 · 서버 기록은 남고 이 목록에 없어서 세지 않는다(stampGot) */
+/* 261013 (사용자 「권장대로」) 9 · 10 = 참석 확인 스탬프 · 선정된 커피챗(cc 1개) · 승인된 AX 라운지 상담(ln 2개 · x2)에 와서 담당자가 내 QR 을 찍는다(스태프 폰 「커피챗 참석」 「AX 라운지 참석」 · 콘솔 「참석」 「체크인」)
+   판정 · 회수는 서버(attAward_ · attTake_) · 담당자 적립(site) 대상 아님(참석 원장과 따로 놀지 않게) · 한도 6 그대로 */
+var STAMP_CC = { id: "cc", title: "18F 커피챗", short: "커피챗", desc: "선정된 커피챗 참석", where: "18F · 스태프 인증", staff: 1, tap: "cchatGo()", cta: "내 커피챗" };
+var STAMP_LN = { id: "ln", title: "1F AX 라운지", short: "AX 라운지", desc: "승인된 상담 참석", where: "1F · 스태프 인증", staff: 1, x2: 1, tap: "progOpen('dap')", cta: "내 상담" };
 var STAMPS_V2 = [
   { id: "lg", title: "최초 로그인", short: "로그인", desc: "로그인하면 자동 적립", where: "자동", inapp: 1, auto: 1 },
   { id: "qz", title: "AX 퀴즈", short: "AX 퀴즈", desc: "5문제 · 모두 답하면 완주", where: "AX 퀴즈", inapp: 1, tap: "App.go('quiz')", cta: "AX 퀴즈 풀기" },
   { id: "p4", title: "미니 게임", short: "미니 게임", desc: "AX 팡 · 점프 · 테트리스 3종 · 종목마다 한 판", where: "팡 · 점프 · 테트리스", inapp: 1, tap: "App.go('games')", cta: "미니 게임 하기" },
   STAMP_P2,
-  stampDefV1("p5"), stampDefV1("p3"), stampDefV1("st"), stampDefV1("sv")
+  stampDefV1("p5"), stampDefV1("p3"), stampDefV1("st"), stampDefV1("sv"),
+  STAMP_CC, STAMP_LN
 ];
 /* 지금 쓰는 체계 · 기본 = 새 8종(이 기기가 마지막으로 본 서버 판 · 없으면 2) · beSync 가 서버 stv 로 바꾼다(stampVerSet · PP_ORDER 정의 뒤에서 처음 부른다) */
 var STAMP_V = 2, STAMPS = STAMPS_V2;
@@ -108,6 +113,9 @@ var STAMP_ICONS = {
   p5: SICO + '<path d="M12 3a6 6 0 0 1 6 6c0 2.3-1.3 3.6-2.3 4.7-.6.7-.9 1.3-1 2.3h-5.4c-.1-1-.4-1.6-1-2.3C7.3 12.6 6 11.3 6 9a6 6 0 0 1 6-6z"/><path d="M9.8 19.5h4.4"/><path d="M10.6 22h2.8"/></svg>',
   st: SICO + '<path d="M3 20h5v-4h4v-4h4V8h5"/><path d="M3 20h18"/></svg>',
   sv: SICO + '<rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8 8.5h8M8 12.5h8M8 16.5h5"/></svg>',
+  /* 261013 cc = 김 나는 컵(커피챗) · ln = 마주 앉은 두 사람(1:1 상담) */
+  cc: SICO + '<path d="M5 9.5h11v4.5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 11h1.6a2.4 2.4 0 0 1 0 4.8H15.6"/><path d="M8.6 3.6c-.7 1 .7 1.7 0 2.9M12.2 3.6c-.7 1 .7 1.7 0 2.9"/></svg>',
+  ln: SICO + '<circle cx="7.5" cy="8" r="2.6"/><circle cx="16.5" cy="8" r="2.6"/><path d="M3 19.5a4.5 4.5 0 0 1 9 0"/><path d="M12 19.5a4.5 4.5 0 0 1 9 0"/></svg>',
   p7: SICO + '<rect x="3.2" y="3.2" width="7" height="7" rx="1.4"/><rect x="13.8" y="3.2" width="7" height="7" rx="1.4"/><rect x="3.2" y="13.8" width="7" height="7" rx="1.4"/><path d="M13.8 13.8h3.1v3.1h-3.1z"/><path d="M20.8 13.8v1.8M17.9 20.8h2.9M13.8 20.8h1.4"/></svg>'
 };
 /* 보상 (260909 확정) · 확정지급 사다리·즉석경품 응모권 폐지, 스탬프 개수 하나로만 계산한다.

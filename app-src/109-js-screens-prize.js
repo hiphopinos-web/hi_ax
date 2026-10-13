@@ -505,6 +505,8 @@ function stpMeta(s, got) {
   if (s.id === "p3") return progUnits() === 1 ? "2개 중 1개 · 하나 더" : "17F 오후 AWS · MS 강연";   /* v5.68 17F 입장이나 끝 한쪽만 받은 상태 · v5.94 오후 파트너 강연만 */
   if (s.id === "st") { var sst = stairState(); return sst.leg ? "진행 중 · " + sst.leg.fl + "F 시작" : stairLine(sst); }
   if (s.id === "sv") return SURVEY.open + "부터 · 60초";
+  if (s.id === "cc") { var c9 = S.get("cchat", null); return c9 && c9.status === "matched" && c9.round ? "선정 · " + c9.round + " · 내 QR 제시" : "선정되면 참석 확인"; }   /* 261013 */
+  if (s.id === "ln") { var r9 = myResv(); return r9 && r9.status === "approved" ? "승인 · " + r9.slot + " · 내 QR 제시" : "승인되면 참석 확인"; }
   return s.where || "";
 }
 /* 오른쪽 행동 [글, onclick] · onclick 이 없으면 글만(완료 · 열리는 시각) */
@@ -520,6 +522,8 @@ function stpAct(s, got) {
   if (s.id === "p3") return ["보기", "homeSched()"];
   if (s.id === "st") return [stairState().leg ? "이어 하기" : "안내", "stairOpen()"];   /* v6.83 (디자인 D-5) 오른쪽 = 행동 말(진행 중은 보조 줄이 말한다) */
   if (s.id === "sv") return surveyLock() === "time" ? [SURVEY.open, ""] : ["시작", "App.go('survey')"];
+  if (s.id === "cc") { var c8 = S.get("cchat", null); return c8 && c8.status === "matched" ? ["내 QR", "qrPanelOpen('mine')"] : ["보기", c8 ? "progOpen('cchat')" : "progApplyGo()"]; }   /* 261013 선정 = 내 QR · 아니면 신청 칸 */
+  if (s.id === "ln") { var r8 = myResv(); return r8 && r8.status === "approved" ? ["내 QR", "qrPanelOpen('mine')"] : ["보기", r8 && RESV_LIVE.indexOf(r8.status) >= 0 ? "progOpen('dap')" : "progApplyGo()"]; }
   return [s.cta ? "보기" : "", s.tap || ""];
 }
 function stpRowHtml(s, i, st, full) {
@@ -529,7 +533,7 @@ function stpRowHtml(s, i, st, full) {
   /* v4.95 행동이 있는 줄은 줄 전체를 눌러도 같은 행동(안의 버튼 · 타일은 그 버튼만) · 키보드는 오른쪽 버튼 */
   var tap = a[1] ? ' onclick="if (!event.target.closest(\'button\')) { ' + a[1].replace(/"/g, "&quot;") + '; }"' : "";
   /* v5.68 프로그램 참여 = 2개 · 17F 한쪽만(p3h) = 번호 칸 반 채움 「1/2」 · v6.56 (사용자 261008 「더블 스탬프인 것이 명확히 이해되지 않아」) 제목 옆 「×2」 → O100 알약 「● ● 스탬프 2개」(받은 만큼 점이 찬다 · 0 · 1 · 2) + 받기 전 둘째 보조 줄 「입장 QR 1개 + 끝 QR 1개」 */
-  var half = !!s.x2 && !got && st.indexOf(STAMP_HALF) >= 0;
+  var half = s.id === "p3" && !got && st.indexOf(STAMP_HALF) >= 0;   /* 261013 반 칸(p3h)은 프로그램 참여만 · AX 라운지(ln · 2개)는 한 번에 2개 */
   /* v6.83 (디자인 D-5) 오른쪽 = 누르는 행동 말만(같은 색 · 굵기) · 행동이 아닌 글은 오른쪽에 두지 않는다 · 완료 = 번호 칸 체크 · 자동 = 「자동」 칩 · 열리는 시각(14:30 · 10/26부터) = 둘째 줄 칩(보조 줄에 이미 있으면 생략) */
   var stat = a[0] && !a[1] && a[0] !== "완료" && a[0] !== "자동" && String(meta).indexOf(a[0]) < 0 ? a[0] : "";
   return '<div class="axs-stp' + (got ? " done" : full && !half ? " off" : "") + (tap ? " tap" : "") + '" data-stp="' + s.id + '"' + tap + ">" +
