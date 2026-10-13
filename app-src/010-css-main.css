@@ -2016,21 +2016,22 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-stp.done .axs-stpn { border-color: var(--ax-color-brand); background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
   .axs-stpn svg { width: 20px; height: 20px; display: block; }
   /* v6.88 (시안 A1) 번호 칸 = 도장 · 40px 칸 그대로 · 받기 전 = 브랜드 옅은 톤 0.55(꺼진 회색 아님) · 받으면 진한 씰 · 2개짜리 = 28px 두 개 겹침 */
-  .axs-stpn.axs-stpk, .axs-stp.done .axs-stpn.axs-stpk { border: 0; background: none; color: var(--ax-color-brand); }
+  .axs-stpn.axs-stpk, .axs-stp.done .axs-stpn.axs-stpk { border: 0; background: none; color: var(--ax-color-muted); }   /* 261013 오후 (사용자 확정) 받기 전 씰 = 회색(muted 0.8) · 받은 씰(.on) = 브랜드 주황 */
   .axs-stpk svg { display: block; width: 100%; height: 100%; }
-  .axs-stpk1 { display: block; width: 40px; height: 40px; opacity: 0.55; }
+  .axs-stpk1 { display: block; width: 40px; height: 40px; opacity: 0.8; }
   .axs-stpk1.on { opacity: 1; }
   .axs-stpk2 { display: flex; align-items: center; width: 40px; height: 40px; }
-  .axs-stpk2 > span { display: block; flex: none; width: 28px; height: 28px; opacity: 0.55; }
+  .axs-stpk2 > span { display: block; flex: none; width: 28px; height: 28px; opacity: 0.8; }
   .axs-stpk2 > span + span { margin-left: -16px; margin-top: 12px; }
   .axs-stpk2 > span.on { opacity: 1; position: relative; z-index: 1; }
+  .axs-stpk1.on, .axs-stpk2 > span.on, .axs-stpk3 > span.on { color: var(--ax-color-brand); }
   /* 261013 오후 (사용자 확정) 스탬프 판 = 하루 흐름 4단계 · 단계 제목 「n단계 · 이름」(본문색 굵게) + 옆 짧은 말(회색) · 단계 사이 간격 · 사전등록 체크인(3개) = 24px 씰 세 개 · 프로그램 참여 세 활동 「· 」 목록(무채색 점 · 둘째 줄 내어쓰기) */
   .axs-stg + .axs-stg { margin-top: var(--ax-space-16); }
   .axs-stgh { display: flex; align-items: baseline; gap: var(--ax-space-8); margin: 0 2px var(--ax-space-8); }
   .axs-stgh b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
   .axs-stgh span { font: var(--ax-type-t7); color: var(--ax-color-muted); }
   .axs-stpk3 { position: relative; display: block; width: 40px; height: 40px; }
-  .axs-stpk3 > span { position: absolute; display: block; width: 24px; height: 24px; opacity: 0.55; }
+  .axs-stpk3 > span { position: absolute; display: block; width: 24px; height: 24px; opacity: 0.8; }
   .axs-stpk3 > span:nth-child(1) { left: 0; top: 2px; }
   .axs-stpk3 > span:nth-child(2) { left: 16px; top: 2px; }
   .axs-stpk3 > span:nth-child(3) { left: 8px; top: 15px; }
