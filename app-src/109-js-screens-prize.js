@@ -565,8 +565,8 @@ function stpCellHtml(s, i, got, half) {
   var k = function (on, mid, ms) { return on ? stampSealSvg(40) : stampSealSvg(40, "currentColor", mid, ms); };
   if (s.x3) return '<span class="axs-stpn axs-stpk" role="img" aria-label="스탬프 3개 받는 활동, ' + (got ? "받음" : "아직") + '"><span class="axs-stpk3">' +
     [0, 1, 2].map(function () { return "<span" + (got ? ' class="on"' : "") + ">" + k(got, "") + "</span>"; }).join("") + "</span></span>";
-  var lb = s.x2 ? "스탬프 2개 받는 활동, 2개 중 " + (got ? 2 : half ? 1 : 0) + "개 받음" : (i + 1) + "번 스탬프, " + (got ? "받음" : "아직");
-  var inner = !s.x2 ? '<span class="axs-stpk1' + (got ? " on" : "") + '">' + k(got, String(i + 1), 34) + "</span>" :
+  var lb = s.x2 ? "스탬프 2개 받는 활동, 2개 중 " + (got ? 2 : half ? 1 : 0) + "개 받음" : s.title + " 스탬프, " + (got ? "받음" : "아직");   /* 261013 오후 (사용자) 받기 전 도장 번호 뺌 · 읽는 글 = 이름 */
+  var inner = !s.x2 ? '<span class="axs-stpk1' + (got ? " on" : "") + '">' + k(got, "") + "</span>" :
     '<span class="axs-stpk2"><span' + (got || half ? ' class="on"' : "") + ">" + k(got || half, "") + "</span><span" + (got ? ' class="on"' : "") + ">" + k(got, "") + "</span></span>";
   return '<span class="axs-stpn axs-stpk" role="img" aria-label="' + lb + '">' + inner + "</span>";
 }
