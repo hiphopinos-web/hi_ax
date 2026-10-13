@@ -1683,7 +1683,7 @@
   }
   function poll() {
     jsonp({ action: "stats" }, function (res) {
-      if (res && res.ok && res.kinds) { POLL.fails = 0; ST.off = false; ST.polls++; kindsOf(res.kinds); gotTotal(stampsOf(res.kinds)); }
+      if (res && res.ok && res.kinds) { POLL.fails = 0; ST.off = false; ST.polls++; kindsOf(res.kinds); gotTotal(typeof res.stampN === "number" ? res.stampN : stampsOf(res.kinds)); }   /* 261013 오후 · 개수 = 서버가 사람마다 센 stampN(묶음 최대 2 · 한 사람 6) · 옛 응답이면 종류별 계산 */
       else { POLL.fails++; if (POLL.fails >= 2) ST.off = true; }   /* 끊김 · 화면은 마지막 값 그대로 */
       var wait = POLL.fails ? Math.min(60, CFG.pollSec * Math.pow(2, Math.min(POLL.fails - 1, 2))) : CFG.pollSec;
       setTimeout(poll, wait * 1000);
