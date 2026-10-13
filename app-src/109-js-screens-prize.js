@@ -287,9 +287,14 @@ function pzChipHtml(k) {
   }
   return c ? '<div class="axs-chiprow axs-pz-chip"><span class="axs-chip' + (c[1] ? " off" : "") + '">' + esc(c[0]) + "</span></div>" : "";
 }
+/* 261014 (사용자 「권장대로」) 룰렛 칸 = 쓸 수 있을 때만(스탬프 3개 이상 · 아직 안 씀 · 소진 · 마감 전) 받으려면 상자 아래 「내 QR 보여주기」 · 내 QR 화면(qrPanelOpen mine) · 옛 룰렛 1회권 요약 시트에 있던 단추 */
+function pzQrBtnHtml(k) {
+  if (k !== "roulette" || stampCount() < 3 || S.get("roulette_used", false) || S.get("roulette_out", false) || roulCut()) return "";
+  return '<button type="button" class="ax-button axs-pz-qr" onclick="qrPanelOpen(\'mine\')">내 QR 보여주기</button>';
+}
 function prizeSecHtml(s) {
   var g = PRIZES[s.k]; if (!g || (s.on && !s.on())) return "";
-  var head = '<header class="axs-pz-sh" id="pz-' + s.k + '"><p class="en" aria-hidden="true">' + s.en + "</p><h2>" + s.t + "</h2>" + pzChipHtml(s.k) + "</header>" + pzNeedHtml(s);   /* 261014 구역 머리 = 제목 아래 내 진행 칩 */   /* v5.74 머리 = 영문 장식 · 제목 · 「받으려면」 박스 */
+  var head = '<header class="axs-pz-sh" id="pz-' + s.k + '"><p class="en" aria-hidden="true">' + s.en + "</p><h2>" + s.t + "</h2>" + pzChipHtml(s.k) + "</header>" + pzNeedHtml(s) + pzQrBtnHtml(s.k);   /* 261014 구역 머리 = 제목 아래 내 진행 칩 */   /* v5.74 머리 = 영문 장식 · 제목 · 「받으려면」 박스 */
   var go = s.go ? '<button type="button" class="ax-button ax-button-weak" onclick="' + s.go[1] + '">' + s.go[0] + "</button>" : "";   /* v5.73 (사용자 261005 「실시간 순위는 가장 아래 위치에 있어야 할 것 같아」) 구역 버튼(타자왕 순위판) = 블록 맨 아래(경품 사진 · 이름 · 안내 다음) · 옛 v5.18 = 머리 바로 아래 */
   var hn = PZ_HERO[s.k] || 0, rest = g.list.slice(hn), solo = rest.filter(function (p) { return !p.img2; }).length, k = 0;
   if (s.r3) return '<section class="axs-pz-sec' + (s.sep ? " sep" : "") + '">' + head + pzR3Html(s.k) + go + "</section>";   /* v6.07 카드 3장 = pzR3Html 한 곳(아이디어 입력 화면 시상 묶음이 같은 함수를 부른다) */
