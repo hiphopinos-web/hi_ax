@@ -2030,11 +2030,8 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-stgh { display: flex; align-items: baseline; gap: var(--ax-space-8); margin: 0 2px var(--ax-space-8); }
   .axs-stgh b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
   .axs-stgh span { font: var(--ax-type-t7); color: var(--ax-color-muted); }
-  .axs-stpk2.n3 { align-items: flex-start; }   /* 3개 겹침 = 같은 28px · 가로 간격만 좁혀 40px 칸 안 · 첫 씰 위 6px · 끝 씰 아래 끝 40px 은 2개짜리와 같다 */
-  .axs-stpk2.n3 > span:nth-child(1) { margin-top: 6px; }
-  .axs-stpk2.n3 > span + span { margin-left: -22px; }
-  .axs-stpk2.n3 > span:nth-child(2) { margin-top: 9px; }
-  .axs-stpk2.n3 > span:nth-child(3) { margin-top: 12px; }
+  .axs-stpk2.n3 > span { width: 22px; height: 22px; }   /* 3개 겹침 = 씰 22px · 간격 9px 로 테두리 원 3개가 따로 읽힘 · 40px 칸 · 세로 가운데 = 다른 줄 씰과 같다 */
+  .axs-stpk2.n3 > span + span { margin-left: -13px; margin-top: 0; }
   .axs-stpl { list-style: none; margin: 0; padding: 0; font: var(--ax-type-t7); color: var(--ax-color-muted); }
   .axs-stpl li { padding-left: 0.8em; text-indent: -0.8em; }
   .axs-stpl li::before { content: "\00B7\00A0"; }
