@@ -72,7 +72,7 @@ document.addEventListener("visibilitychange", function () {
 function beSync(after) {
   if (!BE.on) return;
   var u = S.get("user", {});
-  beCall({ action: "sync", emp: u.empId || "" }, function (res) {
+  beCall({ action: "sync", emp: u.empId || "", sv: svWantPre() ? 1 : "" }, function (res) {   /* v7.15 sv = 1 · 설문 화면에서 Q2-0 미리 체크를 아직 안 했을 때만 참석 목록(my.svPre)을 달라고 한다 */
     if (res && res.ok && res.poll >= 30 && res.poll <= 120) POLL.base = res.poll * 1000;   /* v4.57 운영이 붐비는 시간에 서버 설정으로 폴링을 늘린다(재배포 없이) */
     if (res && res.ok) wsCfg(res.ws);   /* v4.75 소켓 설정(새 서버만 보낸다 · 없거나 0 이면 소켓을 닫고 폴링만) */
     if (res && res.ok && typeof pushCfg === "function") pushCfg(res.push);   /* v4.76 웹 푸시 공개키(새 서버 · 비밀값 있는 Worker 만 · 없으면 알림 항목이 뜨지 않는다) */
@@ -170,6 +170,9 @@ function beSync(after) {
       /* v3.21 B 포토부스 번호표 · 서버가 정본(없으면 null) · 바뀐 경우에만 저장해 불필요한 재렌더를 막는다 */
       /* v3.35 · v3.99 서버 스탬프 목록에 설문(sv)이 있을 때만 · 관리자가 08 을 취소하면 답이 남아 있어도 다시 제출할 수 있다(GAS @74) */
       if (res.my.survey === true && !S.get("survey_done", false) && !testEmp() && (res.my.stamps || []).indexOf("sv") >= 0) S.set("survey_done", true);
+      /* v7.15 설문 열림 · Q2-0 미리 체크 = 서버 판정(svOpen = 오픈_범위 클로즈베타면 늘 · 그 밖은 행사 당일 설문_시작 이후 · svPre = 이 사람 참석 기록 · 열림 + 미제출일 때만) · 옛 서버는 필드가 없어 그대로 */
+      if (typeof res.my.svOpen === "boolean" && res.my.svOpen !== S.get("sv_open", null)) S.set("sv_open", res.my.svOpen);
+      if (Array.isArray(res.my.svPre)) S.put("sv_pre", res.my.svPre);
       if (res.my.queue) {
         var was = S.get("queue", {}), nowQ = res.my.queue, kq;
         for (kq in nowQ) {

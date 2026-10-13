@@ -79,7 +79,7 @@ var STAMPS_V1 = [
      site: 담당자 적립 가능 (서버 stamp_grant 가 st 를 받는다) */
   { id: "st", title: "계단 이용", short: "계단", desc: "방화문 앞 QR · 시작과 끝에 찍기 · 한 개 층 이상", where: "", site: 1, tap: "stairOpen()", cta: "계단 안내" },
   /* v3.35 오늘 한 판 설문 · 14:30 부터 · 제출만 하면 적립(답 내용 무관) · 판정·적립은 서버(survey_submit) */
-  { id: "sv", title: "오늘 한 판 설문", short: "설문", desc: "설문 제출", where: "60초", inapp: 1, tap: "App.go('survey')", cta: "설문 시작" }
+  { id: "sv", title: "오늘 한 판 설문", short: "설문", desc: "설문 제출", where: "1~2분", inapp: 1, tap: "App.go('survey')", cta: "설문 시작" }
 ];
 function stampDefV1(id) { return STAMPS_V1.filter(function (s) { return s.id === id; })[0]; }
 /* v4.83 (261001 사용자 확정) 새 8종 · 번호 순서 = 1 최초 로그인 · 2 AX 퀴즈 · 3 미니 게임 · 4 AX PLAY · 5 아이디어 한 줄 · 6 프로그램 참여 · 7 계단 · 8 설문
@@ -186,7 +186,7 @@ var TIMELINE = [
   { time: "15:10", end: "16:40", title: "AI와 친해지기", pid: "l2", short: "Microsoft 김한결, 이나경", place: "17F 대강당", desc: "입장 · 끝 QR로 출석", tag: "자유 참석", par: 1 },
   /* v3.50 사회자 순서 (사용자 확정 260917) · Outro 문항 기능 폐지 · 설문 참여 안내 → 17:00 Outro */
   /* v3.63 (사용자 확정 260918) 「일단 빼자」 · 항목은 남기고 off 로 일정 탭에서만 감춘다 (설문 기능·송출 화면·홈/스탬프 입구는 그대로) */
-  { off: 1, time: "16:45", end: "17:00", title: "설문 참여 안내", short: "오늘 한 판 설문 안내", place: "17F 대강당", desc: "60초 설문 · 스탬프 1개", tag: "자유 참석" },
+  { off: 1, time: "16:45", end: "17:00", title: "설문 참여 안내", short: "오늘 한 판 설문 안내", place: "17F 대강당", desc: "1~2분 설문 · 스탬프 1개", tag: "자유 참석" },
   { time: "17:00", end: "17:30", title: "Closing Speech", pid: "outro", short: "정경선 CSO", place: "17F 대강당", desc: "정경선 CSO · DAP 시상 · 현장 추첨", tag: "" }   /* v4.79 무대 추첨 = 추첨 QR 체크인한 사람 · v4.99 줄은 제목 · 시간 · 장소만 · 체크인 안내는 Outro 상세(STAGE.outro) */
 ];
 /* v4.91 (사용자 261001 「A~E 사전 신청 세션이 여기에 있을 이유가 있을까」 · main 결정) 10F 실습형 세션 A~E 줄은 「전체」 시간표 · 홈 「진행 중」 · 다음 일정에서 숨긴다
@@ -292,21 +292,47 @@ var ZONE_NM = { hall: "대강당", conf: "컨퍼런스룸", h01: "01 HEART", h06
 var PROG = { fl: 1, sid: null, cat: "all", mode: "list", tt: "all", seg: "time", zone: "", zchk: false, floor: 0, anchor: "", ttOpen: {}, scroll: 0, cf: null, ok: null };   /* v5.65 zchk = 구역 상세 「참여 전 확인」 펼침 · floor = 층 안내(floor_d) 층 */
 var MY = { seg: "" };   /* v5.65 나의 참여 갈래 · "sched" 나의 일정 / "rw" 나의 보상 / "" = 처음(일정이 있으면 나의 일정 · 없으면 나의 보상) */   /* v4.15 tt = 시간표 [전체 | 나의 일정] · ttOpen = 펼친 행 */   /* v4.13 mode = 프로그램 탭 보기 [목록 | 시간표](design.md A-5 5-10) */   /* v4.05 cat = P01 필터 · scroll = 목록 스크롤 · cf = 신청 확인 · ok = 신청 결과 */   /* fl = 선택 층 (v3.7 · 기본 1F · 탭 왕복에도 유지) */
 
-/* ═══ v3.52b 오늘 한 판 설문 = 틀만 (사용자 지시 260917 · 「문항이 아직 안 정해졌다 · 집만 지어 둬라」) ═══
-   ※ 문항 미확정 · 아래 SURVEY_Q 는 기본 3문항일 뿐이다(참여자 화면에는 이 사실을 쓰지 않는다 · 콘솔 설문 탭에만 표시).
-   화면은 SURVEY_Q 배열 하나로만 그린다 · 문항을 바꿀 때 이 배열만 고친다(서버는 문항 id 별로 그대로 저장·형식별 집계).
-   형식: single(보기 하나) · chips(칩 하나 + 기타 직접 입력) · scale(점수 min~max) · text(한 줄 · optional 가능) · places(오늘 다녀간 곳 카드 · 서버 기록 연동 · 기본 목록에는 넣지 않음) */
-var SURVEY = { open: "14:30" };
+/* ═══ v7.15 (사용자 확정 261013 밤) 오늘 한 판 설문 = 행사 사후 설문 · 정본 = 「기획 문서/설문/ax_festival_post_survey_v2.json」 ═══
+   옛 v3.52b 기본 3문항(sat · best · line) · 다녀간 곳 카드(SURVEY_PLACES)는 폐기 · 화면은 SURVEY_Q 한 줄 흐름으로만 그린다.
+   문항 id 짝(json → 앱 · 서버 칸) : Q1-1 q1_1 · Q1-2 q1_2 · Q1-3 q1_3 · Q2-0 q2_0 · Q2-1 ~ Q2-7 q2_1 ~ q2_7 · (새) 18F AX 커피챗 q2_8 · Q3-1 ~ Q3-3 q3_1 ~ q3_3 · Q4 q4
+   형식: intro(첫 화면) · single(보기 하나 · 고르면 AXM.MOVE 뒤 자동 넘김) · info(안내 · 진행 수에 세지 않음) · multi(Q2-0 · 여러 개 · none 단독) · text(Q4 · 선택 · 300자)
+   점수 = 보기 순서 위에서부터 5 · 4 · 3 · 2 · 1(SV_OPT 첫 칸 = 5점) · 서버 SV2_OPT 와 같다(검사 421절) */
+var SURVEY = { open: "14:30", id: "post2", max4: 300 };
+var SV_OPT = {
+  sat: ["매우 만족했다", "만족했다", "보통이었다", "다소 아쉬웠다", "매우 아쉬웠다"],
+  run: ["매우 원활했다", "원활했다", "보통이었다", "다소 불편했다", "매우 불편했다"],
+  again: ["꼭 그러고 싶다", "그러고 싶다", "보통이다", "별로 그렇지 않다", "전혀 그렇지 않다"],
+  use: ["매우 유익했다", "유익했다", "보통이었다", "별로 유익하지 않았다", "전혀 유익하지 않았다"],
+  know: ["주요 내용을 알고 있다", "대략적인 내용을 알고 있다", "이름과 핵심 키워드 정도는 알고 있다", "들어는 봤으나, 정확한 내용은 모른다", "처음 들어봤다"],
+  plan: ["적극적으로 사용할 계획이다", "사용할 계획이다", "사용할지 고민 중이다", "들어는 봤으나, 사용할 계획은 없다", "처음 들어봤다"]
+};
+/* Q2-0 프로그램 8개 · 이름은 앱 정본 표기(1F 구역 간판 · 17F 네임택 PDF) · pre = 이 스탬프가 있으면 미리 체크 · att = 이 17F 출석 기록이 있으면 미리 체크
+   기록이 없는 AX VISION · AX LAB · EVENT 는 미리 체크하지 않는다 · 정본 = 서버 sync my.svPre(옛 서버 · 시험 모드는 이 기기 기록 svPreIds) */
+var SV_PROGS = [
+  { id: "q2_1", fl: "1F", nm: "AX VISION", sub: "현대해상 AX 로드맵", q: "현대해상 AX 로드맵 소개는 어떠셨나요?" },
+  { id: "q2_2", fl: "1F", nm: "AX LAB", sub: "동료들이 만든 데이터분석 과제", q: "동료들이 만든 데이터분석 과제는 어떠셨나요?" },
+  { id: "q2_3", fl: "1F", nm: "AX PLAY", sub: "Hi-Helper, HiDI-Q", q: "Hi-Helper, HiDI-Q 체험은 어떠셨나요?", pre: "p2" },
+  { id: "q2_4", fl: "1F", nm: "EVENT", sub: "포토부스, 프롬프트 챌린지", q: "AI 포토부스, 프롬프트 챌린지는 어떠셨나요?" },
+  { id: "q2_5", fl: "1F", nm: "AX 라운지", sub: "1:1 DAP 과제 상담", q: "AX 라운지 1:1 DAP 과제 상담은 어떠셨나요?", pre: "ln" },
+  { id: "q2_6", fl: "17F", nm: "Agentic AI 시대 일하는 방식의 변화", sub: "AWS", q: "Agentic AI 시대 일하는 방식의 변화 세션은 어떠셨나요?", att: "l1" },
+  { id: "q2_7", fl: "17F", nm: "AI와 친해지기", sub: "MS", q: "AI와 친해지기 세션은 어떠셨나요?", att: "l2" },
+  { id: "q2_8", fl: "18F", nm: "AX 커피챗", sub: "", q: "AX 커피챗은 어떠셨나요?", pre: "cc" }
+];
 var SURVEY_Q = [
-  { id: "sat", type: "scale", q: "오늘 행사, 얼마나 만족하셨나요?", min: 0, max: 10, left: "아쉬웠어요", right: "아주 좋았어요" },
-  { id: "best", type: "chips", q: "오늘 가장 좋았던 것 하나를 골라 주세요", opts: ["1F 전시·부스", "17F 강연", "10F 실습", "18F 커피챗", "미니게임"], other: "기타" },
-  { id: "line", type: "text", q: "한 줄 남겨 주세요", optional: true, max: 200, ph: "비워도 제출됩니다" }
-];
-/* 다녀간 곳 카드 · 이 사람의 스탬프·신청 기록에서 다녀간 곳만 (안 간 곳은 묻지 않는다) */
-var SURVEY_PLACES = [
-  ["p1", "1F 부스"], ["p2", "1F AX PLAY"], ["p7", "전시 QR 퀴즈"],
-  ["p3", "17F 강연"], ["dap", "1F AX 라운지"], ["cchat", "18F AX 커피챗"]
-];
+  { id: "intro", type: "intro", t: "AX Festival 참가자 설문조사", q: "오늘 1F · 17F · 18F에서 경험하신 AX Festival, 어떠셨나요?", note: "10F 프로그램은 별도 설문으로 안내합니다.", kv: [["소요 시간", "1~2분"], ["참여 선물", "스탬프 1개"]] },
+  { id: "q1_1", type: "single", o: "sat", q: "AX Festival 프로그램에 전반적으로 만족하셨나요?" },
+  { id: "q1_2", type: "single", o: "run", q: "안내, 동선, 대기시간 등 행사 운영은 어떠셨나요?" },
+  { id: "q1_3", type: "single", o: "again", q: "다음 AX 행사가 열린다면 다시 참여하거나 동료에게 추천하고 싶으신가요?" },
+  { id: "i_prog", type: "info", t: "프로그램별 만족도", q: "다음은 귀하가 참여하신 프로그램에 대한 만족도 조사입니다." },
+  { id: "q2_0", type: "multi", q: "귀하가 금일 참여하거나, 관람한 프로그램을 선택해주세요.", tag: "복수 응답", none: "참여한 프로그램이 없다" }
+].concat(SV_PROGS.map(function (p) { return { id: p.id, type: "single", o: "use", q: p.q, prog: p.id }; })).concat([
+  { id: "i_und", type: "info", t: "이해도", q: "다음은 1F에서 소개한 기술지원부문 과제들에 대한 이해도를 묻는 조사입니다." },
+  { id: "q3_1", type: "single", o: "know", q: "귀하는 현대해상의 AX 3개년 로드맵에 대해 알고 계신가요?" },
+  { id: "q3_2", type: "single", o: "plan", q: "귀하는 현대해상의 Hi-Helper와 HiDI-Q를 업무에 사용할 계획이 있으신가요?" },
+  { id: "q3_3", type: "single", o: "know", q: "데이터분석프로젝트(DAP)에 대해 알고 계신가요?" },
+  { id: "q4", type: "text", optional: true, max: 300, ph: "비워도 제출됩니다", q: "오늘 행사에서 가장 인상 깊었던 점이나 개선했으면 하는 점을 자유롭게 남겨주세요." }
+]);
+var SURVEY_DONE = { t: "참여해 주셔서 감사합니다", q: "소중한 의견은 다음 AX 행사를 준비하는 데 반영하겠습니다." };
 var DEFAULT_NOTICES = [
   { id: "n1", title: "AX Festival 2026에 오신 것을 환영합니다", body: "당일 운영 안내와 바뀐 내용이 올라와요.", ts: 0, pinned: true }
 ];

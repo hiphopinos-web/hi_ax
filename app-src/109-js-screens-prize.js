@@ -504,7 +504,7 @@ function stpMeta(s, got) {
   if (s.id === "p5") return "1분 · AX LAB QR로도";
   if (s.id === "p3") return progUnits() === 1 ? "2개 중 1개 · 하나 더" : "최대 2개";   /* v5.68 17F 입장이나 끝 한쪽만 받은 상태 · 261013 오후 묶음(아래 세 줄 목록 stpProgListHtml) · 261013 밤 (사용자 확정) 활동마다 개수는 목록에 · 묶음 최대 2 한 줄 */
   if (s.id === "st") { var sst = stairState(); return sst.leg ? "진행 중 · " + sst.leg.fl + "F 시작" : stairLine(sst); }
-  if (s.id === "sv") return stampV2() ? "60초" : SURVEY.open + "부터 · 60초";   /* 261013 오후 14:30 은 4단계 제목에 */
+  if (s.id === "sv") return stampV2() ? "1~2분" : SURVEY.open + "부터 · 1~2분";   /* 261013 오후 14:30 은 4단계 제목에 */
   if (s.id === STAMP_CK) return "1F 주차장 체크인존 · 08:00부터";
   return s.where || "";
 }

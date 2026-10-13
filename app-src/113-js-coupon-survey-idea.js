@@ -23,102 +23,144 @@ function qrHtml() {
    이제 앱은 **스캔한 값을 그대로 서버에 넘기기만** 하고 어느 스탬프인지도 모른다.
    정규화(대소문자·공백·하이픈)도 서버가 한다. 여기서 손대면 서버 판정과 어긋난다. */
 /* v4.06 stampByCode · 대기열(scanQ*)은 「AX-TDS v1 3단계」 절로 옮겼다 (부스·계단 공용 · 찍은 순서대로) */
-/* ═══ v3.35 오늘 한 판 설문 ═══
-   5단계 · 60초 · 뒤로가기 · 중간 이탈 시 이어 하기(초안은 이 기기에만) · 1인 1회 · 14:30 부터.
-   서버는 답을 사번 없이 저장하고 제출 사실만 사번과 남긴다. */
-var SV = { card: 0, busy: false, aggAt: 0 };
-/* v3.52 설문 잠금 · "time" = 14:30 전 · "nostamp" = 다른 스탬프 0개 · "" = 열림 (서버 survey_submit 와 같은 조건) */
+/* ═══ v7.15 (사용자 확정 261013 밤) 오늘 한 판 설문 = 행사 사후 설문 ═══
+   흐름 = 첫 화면 → Q1-1~3 → 안내(프로그램별 만족도) → Q2-0 → 고른 프로그램만 Q2-x → 안내(이해도) → Q3-1~3 → Q4(선택) → 완료(SURVEY_Q · svFlow)
+   한 화면 한 문항 · 보기 하나 문항은 고르면 AXM.MOVE(0.25초) 뒤 자동으로 다음 · 「이전」으로 돌아가 고친다 · 진행 n / 전체 는 안내 화면을 세지 않는다
+   중간 이탈 = 이 기기 초안(survey_draft · v 2 · cur = 지금 화면 id)으로 이어 하기 · 1인 1회 · 제출하면 스탬프 1개(서버 survey_submit)
+   답은 사번과 함께 저장한다(사용자 결정 261013 · 옛 익명 저장 안내 폐기) · 열림 판정 = 서버 sync my.svOpen(옛 서버 = 이 기기 시각 규칙) */
+var SV = { card: 0, busy: false, aggAt: 0, adv: 0 };
+/* v3.52 설문 잠금 · "time" = 아직 닫힘 · "nostamp" = 다른 스탬프 0개 · "" = 열림 (서버 survey_submit 와 같은 조건) */
 function surveyLock() {
   if (!surveyOpen()) return "time";
   var other = S.get("stamps", []).filter(function (id) { return id !== "sv" && stampKnown(id); });   /* v5.68 p3h(17F 한쪽 1개)도 다른 스탬프 */
   return other.length ? "" : "nostamp";
 }
+/* v7.15 열림 = 서버 한 곳(설정 오픈_범위 클로즈베타면 시각 무관 · 그 밖은 행사 당일 설문_시작 이후 · 행사 뒤 포함)이 sync 로 준 sv_open
+   옛 서버(필드 없음) · 시험 모드 = 지금 규칙(행사 당일 14:30 이후 · 행사 뒤) */
 function surveyOpen() {
   if (testMode() && S.get("survey_force", false)) return true;
+  var so = S.get("sv_open", null);
+  if (!testMode() && typeof so === "boolean") return so;
   var ph = evPhase();
   if (ph === "after") return true;
   if (ph !== "live") return false;
   return hmNow() >= t2m(SURVEY.open);
 }
 function surveyDone() { return S.get("survey_done", false) || S.get("stamps", []).indexOf("sv") >= 0; }
-function surveyPlaces() {
-  var st = S.get("stamps", []), mr = myResv(), cc = S.get("cchat", null);
-  return SURVEY_PLACES.filter(function (p) {
-    if (p[0] === "dap") return !!(mr && mr.status === "checked");
-    if (p[0] === "cchat") return !!(cc && cc.status === "matched");
-    return st.indexOf(p[0]) >= 0;
-  });
+/* Q2-0 미리 체크 · 서버가 준 참석 목록(sync my.svPre) · 옛 서버 · 시험 모드 = 이 기기 스탬프(p2 · ln · cc) + 17F 출석(l1 AWS · l2 MS) */
+function svPreIds() {
+  var ok = SV_PROGS.map(function (p) { return p.id; }), sp = S.get("sv_pre", null);
+  if (!testMode() && Array.isArray(sp)) return ok.filter(function (id) { return sp.indexOf(id) >= 0; });
+  var st = S.get("stamps", []) || [];
+  return SV_PROGS.filter(function (p) { return (p.pre && st.indexOf(p.pre) >= 0) || (p.att && !!attMineAt(p.att)); }).map(function (p) { return p.id; });
 }
-function svDraft() { var d = S.get("survey_draft", null); return d && d.a ? d : { step: 1, a: {} }; }
+function svWantPre() { try { return App.current === "survey" && !surveyDone() && surveyOpen() && !Array.isArray(svDraft().a.q2_0); } catch (e) { return false; } }
+function svDraft() { var d = S.get("survey_draft", null); return d && d.a && d.v === 2 ? d : { v: 2, cur: "intro", a: {} }; }   /* 옛 초안(v 없음 · sat · best · line)은 버린다 */
 function svSave(d) { S.set("survey_draft", d); }
-function svGo(step) { var d = svDraft(); d.step = step; svSave(d); SV.card = 0; App.render(); window.scrollTo(0, 0); }
-function svSet(id, v, redraw) { var d = svDraft(); d.a[id] = v; if (redraw) { svSave(d); App.render(); } else S.put("survey_draft", d); }   /* v4.25 글자·막대 입력(redraw false)은 조용한 저장 · 다시 그리면 조합과 막대 끌기가 끊긴다 */
-function svEmpty(q, v) { return v == null || v === "" || (q.type === "chips" && v === q.other + ":") || (q.type === "places" && !Object.keys(v || {}).length); }
+function svSet(id, v, redraw) { var d = svDraft(); d.a[id] = v; if (redraw) { svSave(d); App.render(); } else S.put("survey_draft", d); }   /* v4.25 글자 입력(redraw false)은 조용한 저장 · 다시 그리면 조합이 끊긴다 */
+/* 지금 답으로 본 흐름 · Q2-0 을 아직 안 골랐으면(빈 목록 포함) 프로그램 8개 모두 센다(json progress 규칙) · none = 프로그램 문항 없음 */
+function svFlow(d) {
+  var sel = d.a.q2_0, on = Array.isArray(sel) && sel.length;
+  return SURVEY_Q.filter(function (q) { return !q.prog || !on || sel.indexOf(q.prog) >= 0; });
+}
+function svAsk(q) { return q.type === "single" || q.type === "multi" || q.type === "text"; }   /* 진행 수에 드는 문항(첫 화면 · 안내 제외) */
+function svEmpty(q, v) {
+  if (q.type === "single") return !(v >= 1 && v <= 5);
+  if (q.type === "multi") return !Array.isArray(v) || !v.length;
+  if (q.type === "text") return !String(v || "").trim();
+  return false;
+}
+function svCur(d, fl) { fl = fl || svFlow(d); for (var i = 0; i < fl.length; i++) if (fl[i].id === d.cur) return i; return 0; }
+function svGoId(id) {
+  var d = svDraft(); clearTimeout(SV.adv);
+  d.cur = id;
+  if (id === "q2_0" && !Array.isArray(d.a.q2_0)) { d.a.q2_0 = svPreIds(); d.pre = 1; }   /* 처음 열 때만 · 그 뒤로는 본인이 고른 그대로 */
+  svSave(d); SV.card = 0; App.render(); window.scrollTo(0, 0);
+  AXM.rise(el("svQ"));   /* 화면 안 전환 = 새 문항 6px 떠오름 0.3초(mobile-popup-motion · 동작 줄이기 = 바로) */
+}
 function svNext() {
-  var d = svDraft(), step = Math.max(1, d.step || 1), q = SURVEY_Q[step - 1];
-  if (q && !q.optional && svEmpty(q, d.a[q.id])) { toast("답을 골라 주세요"); return; }
-  svGo(step + 1);
+  var d = svDraft(), fl = svFlow(d), i = svCur(d, fl), q = fl[i];
+  if (q && svAsk(q) && !q.optional && svEmpty(q, d.a[q.id])) { toast("답을 골라 주세요"); return; }
+  if (q && q.type === "intro" && BE.on && !testMode()) beSync();   /* 시작하면 참석 목록(my.svPre)을 한 번 받아 둔다 · Q2-0 까지 문항 셋 */
+  if (i + 1 < fl.length) svGoId(fl[i + 1].id);
+}
+function svPrev() { var d = svDraft(), fl = svFlow(d), i = svCur(d, fl); if (i > 0) svGoId(fl[i - 1].id); }
+/* 보기 하나 · 고른 표시를 먼저 그리고 AXM.MOVE 뒤 다음 문항(그 사이 다시 고르면 시계를 새로) */
+function svChoose(id, v) {
+  if (SV.busy) return;
+  var d = svDraft(); d.a[id] = v; svSave(d); App.render();
+  clearTimeout(SV.adv);
+  SV.adv = setTimeout(function () { var d2 = svDraft(); if (App.current === "survey" && d2.cur === id && d2.a[id] === v) svNext(); }, AXM.MOVE);
+}
+/* Q2-0 · 여러 개 · none 은 단독(고르면 나머지 해제 · 다른 것을 고르면 none 해제) · 풀린 프로그램의 답은 지운다 */
+function svPick(pid) {
+  if (SV.busy) return;
+  var d = svDraft(), sel = Array.isArray(d.a.q2_0) ? d.a.q2_0.slice() : [];
+  if (pid === "none") sel = sel.indexOf("none") >= 0 ? [] : ["none"];
+  else { sel = sel.filter(function (x) { return x !== "none"; }); var k = sel.indexOf(pid); if (k >= 0) sel.splice(k, 1); else sel.push(pid); }
+  SV_PROGS.forEach(function (p) { if (sel.indexOf(p.id) < 0) delete d.a[p.id]; });
+  d.a.q2_0 = sel.indexOf("none") >= 0 ? ["none"] : SV_PROGS.map(function (p) { return p.id; }).filter(function (x) { return sel.indexOf(x) >= 0; });
+  svSave(d); App.render();
 }
 /* 형식별 입력 · 값은 draft.a[문항id] */
 function svInputHtml(q, v) {
   var id = q.id;
-  if (q.type === "single") return '<div class="ax-stack-tight">' + q.opts.map(function (o) {
-    return '<button type="button" class="axs-opt" aria-pressed="' + (v === o) + '" onclick="svSet(\'' + id + '\', \'' + esc(o) + '\', true)">' + esc(o) + "</button>";
+  if (q.type === "single") return '<div class="ax-stack-tight" role="group" aria-label="' + esc(q.q) + '">' + (SV_OPT[q.o] || []).map(function (o, i) {
+    var val = 5 - i;
+    return '<button type="button" class="axs-opt" aria-pressed="' + (v === val) + '" onclick="svChoose(\'' + id + '\', ' + val + ')">' + esc(o) + "</button>";
   }).join("") + "</div>";
-  if (q.type === "chips") {
-    var isOther = typeof v === "string" && v.indexOf(q.other + ":") === 0;
-    return '<div class="axs-chiprow">' + q.opts.map(function (o) {
-      return '<button type="button" class="axs-chip" aria-pressed="' + (v === o) + '" onclick="svSet(\'' + id + '\', \'' + esc(o) + '\', true)">' + esc(o) + "</button>";
-    }).join("") + (q.other ? '<button type="button" class="axs-chip" aria-pressed="' + isOther + '" onclick="svSet(\'' + id + '\', \'' + esc(q.other) + ':\', true)">' + esc(q.other) + "</button>" : "") + "</div>" +
-      (isOther ? '<input id="svOther_' + id + '" class="ax-field" maxlength="40" placeholder="직접 입력" value="' + esc(v.slice(q.other.length + 1)) + '" onfocus="kbFocus(this)" oninput="svSet(\'' + id + '\', \'' + esc(q.other) + ':\' + this.value, false)">' : "");
+  if (q.type === "multi") {
+    var sel = Array.isArray(v) ? v : [];
+    var row = function (pid, fl, nm, sub) {
+      var on = sel.indexOf(pid) >= 0;
+      return '<button type="button" class="axs-svck" role="checkbox" aria-checked="' + on + '" onclick="svPick(\'' + pid + '\')"><span class="bx" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>' +
+        (fl ? '<span class="fl">' + fl + "</span>" : "") + '<span class="tx"><span class="nm">' + esc(nm) + "</span>" + (sub ? '<span class="sb">' + esc(sub) + "</span>" : "") + "</span></button>";
+    };
+    return '<div class="axs-svcl">' + SV_PROGS.map(function (p) { return row(p.id, p.fl, p.nm, p.sub); }).join("") + "</div>" +
+      '<div class="axs-svcl">' + row("none", "", q.none, "") + "</div>";
   }
-  if (q.type === "scale") {
-    var mid = Math.round((q.min + q.max) / 2), nv = v == null ? mid : v;
-    if (v == null) setTimeout(function () { svSet(id, mid, false); }, 0);
-    return '<p class="disp" style="margin-top:12px;text-align:center;font-size:34px;color:var(--acc2)"><span id="svScale_' + id + '">' + nv + '</span><small style="font-size:15px;color:var(--faint)"> / ' + q.max + "</small></p>" +
-      '<input type="range" class="axs-range" aria-label="' + esc(q.q) + " " + q.min + "에서 " + q.max + '" aria-describedby="svScale_' + id + '" min="' + q.min + '" max="' + q.max + '" step="1" value="' + nv + '" oninput="svSet(\'' + id + '\', +this.value, false); var o=el(\'svScale_' + id + '\'); if (o) o.textContent=this.value">' +
-      '<div class="row" style="justify-content:space-between"><span class="muted" style="font-size:calc(12px * var(--fs))">' + q.min + " · " + esc(q.left || "") + '</span><span class="muted" style="font-size:calc(12px * var(--fs))">' + q.max + " · " + esc(q.right || "") + "</span></div>";
-  }
-  if (q.type === "text") return '<textarea id="svText_' + id + '" class="ax-field axs-ta" rows="3" maxlength="' + (q.max || 200) + '" placeholder="' + esc(q.ph || "") + '" onfocus="kbFocus(this)" oninput="svSet(\'' + id + '\', this.value, false)">' + esc(v || "") + "</textarea>";
-  if (q.type === "places") {
-    var pl = surveyPlaces(), cur = v || {};
-    if (!pl.length) return '<p class="muted" style="margin-top:6px">스탬프로 확인된 다녀간 곳이 아직 없어요. 다음으로 넘어가 주세요.</p>';
-    return pl.map(function (p) {
-      return '<div style="margin-top:10px"><p style="font-weight:800">' + esc(p[1]) + '</p><div class="row" style="gap:6px;margin-top:6px">' + [["meh", "아쉬웠어요"], ["good", "좋았어요"], ["best", "최고"]].map(function (b) {
-        return '<button type="button" class="axs-opt" aria-pressed="' + (cur[p[0]] === b[0]) + '" style="flex:1" onclick="svPlace(\'' + id + '\', \'' + p[0] + '\', \'' + b[0] + '\')">' + b[1] + "</button>";
-      }).join("") + "</div></div>";
-    }).join("");
+  if (q.type === "text") {
+    var n = String(v || "").length;
+    return '<textarea id="svText_' + id + '" class="ax-field axs-ta" rows="4" maxlength="' + (q.max || 300) + '" placeholder="' + esc(q.ph || "") + '" aria-label="' + esc(q.q) + '" onfocus="kbFocus(this)" oninput="svSet(\'' + id + '\', this.value, false); var c=el(\'svCnt\'); if (c) c.textContent=this.value.length">' + esc(v || "") + "</textarea>" +
+      '<p class="ax-meta axs-svcnt"><span id="svCnt">' + n + "</span> / " + (q.max || 300) + "</p>";
   }
   return "";
 }
-function svPlace(id, place, val) { var d = svDraft(), o = d.a[id] || {}; o[place] = val; d.a[id] = o; svSave(d); App.render(); }
 function svSubmit() {
-  var d = svDraft();
+  var d = svDraft(), fl = svFlow(d);
   if (SV.busy) return;
-  for (var qi = 0; qi < SURVEY_Q.length; qi++) {
-    var qq = SURVEY_Q[qi];
-    if (!qq.optional && svEmpty(qq, d.a[qq.id])) { toast("답을 골라 주세요"); svGo(qi + 1); return; }
+  clearTimeout(SV.adv);
+  for (var qi = 0; qi < fl.length; qi++) {
+    var qq = fl[qi];
+    if (svAsk(qq) && !qq.optional && svEmpty(qq, d.a[qq.id])) { toast("답을 골라 주세요"); svGoId(qq.id); return; }
   }
+  /* 서버 칸 = 문항 id · 객관식 = 점수 정수 5~1 · q2_0 = 고른 id 배열(없음 = ["none"]) · 고르지 않은 프로그램 문항은 보내지 않는다(서버가 빈 값) · q4 = 글(비면 보내지 않음) */
   var a = {};
-  SURVEY_Q.forEach(function (qq) { var v = d.a[qq.id]; if (!svEmpty(qq, v)) a[qq.id] = { t: qq.type, q: qq.q, v: v }; });
-  var ans = { a: a };
+  fl.forEach(function (qq) {
+    if (!svAsk(qq)) return;
+    var v = d.a[qq.id];
+    if (qq.type === "text") { v = String(v || "").trim(); if (v) a[qq.id] = { t: "text", v: v }; return; }
+    a[qq.id] = { t: qq.type, v: v };
+  });
+  var ans = { v: 2, id: SURVEY.id, a: a };
   var done = function () {
     S.set("survey_mine", d.a);
     S.set("survey_done", true); S.set("survey_draft", null);
-    App.render(); window.scrollTo(0, 0);
+    App.render(); window.scrollTo(0, 0); AXM.rise(el("svQ"));
   };
-  if (testMode()) { done(null); awardStamp("sv"); return; }
+  if (testMode()) { done(); awardStamp("sv"); return; }
   if (!BE.on) { toast("서버에 연결되지 않아 제출할 수 없어요."); return; }
   var u = S.get("user", {}) || {};
   SV.busy = true; App.render(); botWait(true, "제출하는 중");   /* v4.36 서버 기다리는 동안 챗봇 덮개 */
   beCall({ action: "survey_submit", emp: u.empId || "", ans: JSON.stringify(ans) }, function (res) {
     SV.busy = false; botWait(false);
+    if (res && typeof res.svOpen === "boolean") S.put("sv_open", res.svOpen);
     if (!res || !res.ok) {
       if (res && res.reason === "dup") { S.set("survey_done", true); S.set("survey_draft", null); App.render(); toast("이미 제출하셨어요"); return; }
-      toast(res && res.reason === "closed" ? "설문은 " + SURVEY.open + "부터 열려요" : "제출하지 못했어요. 다시 눌러 주세요.");
+      toast(res && res.reason === "closed" ? "설문이 아직 열리지 않았어요" : res && res.reason === "nostamp" ? "스탬프를 하나 모으면 제출할 수 있어요" : "제출하지 못했어요. 다시 눌러 주세요.");
       App.render(); return;
     }
-    done(res.agg);
+    done();
     stampSync(res.stamps);
     if (res.stamp && !res.stamp.dup && !stampOverlay("sv")) toast("스탬프 적립 · 오늘 한 판 설문");
     checkRewards();

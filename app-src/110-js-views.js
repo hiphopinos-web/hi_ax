@@ -203,26 +203,46 @@ var Views = {
       '<div class="ax-bottom axs-fix"><button type="button" class="ax-button" id="ideaGo" onclick="submitIdea()"' + (ideaOk(dr) ? "" : " disabled") + ">제출하기</button></div>";   /* v4.09 버튼 하나 · 나가기는 헤더 뒤로 */
   },
 
-  /* ═══ v3.35 오늘 한 판 설문 · v3.52b SURVEY_Q 한 곳으로 그리는 범용 단계 ═══ */
+  /* ═══ v7.15 (사용자 확정 261013 밤) 오늘 한 판 설문 = 행사 사후 설문 · SURVEY_Q 흐름(svFlow) 한 화면 한 문항 ═══
+     v4.08 입력·제출 화면 형식 · 전체 화면 · 하단 메뉴 숨김 · 아래 고정(다음 · 제출하기 + 이전) · 답은 그대로 저장(survey_draft · 이어 하기)
+     진행 「n / 전체」 = 문항만(첫 화면 · 안내 제외) · 문항 위 줄 = 층 · 프로그램 이름(Q2-x) · 바뀐 문항은 svGoId 가 떠오름(AXM.rise) */
   survey: function () {
-    var d = svDraft(), Q = SURVEY_Q, n = Q.length, priv = '<p class="scap" style="margin:0 2px 8px">답은 이름 없이 저장됩니다 · 제출하면 스탬프 1개</p>';
+    var d = svDraft();
     if (surveyDone()) {
-      return '<div class="card mb12">' + stampLineHtml("sv", '<b style="font-size:calc(17px * var(--fs));color:var(--hi)">제출 완료</b>') + "</div>";   /* 정리 #8(261005) 휴면 밸런스 막대 지움 */
+      return '<div class="ax-stack axs-form" id="svQ"><div class="ax-stack-tight axs-gap12 axs-sthost">' + stampTagHtml("sv") +
+        '<h1 class="ax-type-t3">' + esc(SURVEY_DONE.t) + '</h1><p class="ax-description">' + esc(SURVEY_DONE.q) + '</p><p class="ax-meta">스탬프 1개 적립</p></div></div>';   /* 정리 #8(261005) 휴면 밸런스 막대 지움 */
     }
-    if (!surveyOpen()) return '<div class="ax-stack">' + stampLineHtml("sv") + botHtml(SURVEY.open + "에 열려요") + "</div>";
+    if (!surveyOpen()) return '<div class="ax-stack">' + stampLineHtml("sv") + botHtml((evPhase() === "before" ? "행사 당일 " : "") + SURVEY.open + "에 열려요") + "</div>";
     if (surveyLock() === "nostamp") return '<div class="ax-stack">' + stampLineHtml("sv") + botHtml("스탬프를 하나 모으면 열려요") + '<button type="button" class="ax-button ax-button-weak" onclick="App.go(\'passport\')">스탬프 보기</button></div>';
-    /* v4.08 입력·제출 화면 형식 · 전체 화면 · 하단 메뉴 숨김 · 아래 고정(다음/제출하기 + 2번째 문항부터 이전) · 답은 그대로 저장(survey_draft)
-       v4.09 첫 문항의 약한 나가기 버튼 삭제(나가기는 헤더 뒤로) · 「이전」은 남긴다(헤더 뒤로는 설문 자체를 나가서 문항 이동을 대신하지 못한다) */
-    var step = Math.max(1, Math.min(d.step || 1, n)), q = Q[step - 1], last = step === n;
-    return '<div class="ax-stack axs-form">' +
-      '<div class="ax-stack-tight axs-gap12 axs-sthost">' + stampTagHtml("sv") + '<p class="ax-meta">' + step + " / " + n + " · 답은 이름 없이 저장돼요</p>" +
-      '<div class="axs-gauge" role="img" aria-label="' + step + " / " + n + '"><i style="width:' + Math.round(step / n * 100) + '%"></i></div>' +
-      '<h1 class="ax-type-t3">' + esc(q.q) + (q.optional ? ' <span class="axs-chip off">선택</span>' : "") + "</h1></div>" +
+    var fl = svFlow(d), i = svCur(d, fl), q = fl[i], last = i === fl.length - 1, prev = i > 0 && !SV.busy;
+    if (q.id === "q2_0" && !Array.isArray(d.a.q2_0)) { d.a.q2_0 = svPreIds(); d.pre = 1; S.put("survey_draft", d); }   /* 초안이 Q2-0 에서 멈춘 옛 기기 · 미리 체크 한 번 */
+    var bot = function (main) {
+      return '<div class="ax-bottom axs-fix">' + main + (i > 0 ? '<button type="button" class="ax-button ax-button-weak" onclick="svPrev()"' + (prev ? "" : " disabled") + ">이전</button>" : "") + "</div>";
+    };
+    if (q.type === "intro") {
+      return '<div class="ax-stack axs-form" id="svQ"><div class="ax-stack-tight axs-gap12 axs-sthost">' + stampTagHtml("sv") +
+        '<h1 class="ax-type-t3">' + esc(q.t) + '</h1><p class="ax-description axs-svlead">' + esc(q.q) + "</p></div>" +
+        '<dl class="axs-svkv">' + q.kv.map(function (r) { return "<div><dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd></div>"; }).join("") + "</dl>" +
+        '<p class="ax-meta">' + esc(q.note) + "</p></div>" +
+        bot('<button type="button" class="ax-button" onclick="svNext()">설문 시작하기</button>');
+    }
+    var asks = fl.filter(svAsk), n = asks.length, pos = 0;
+    for (var k = 0; k <= i; k++) if (svAsk(fl[k])) pos++;
+    var gauge = '<div class="axs-gauge" role="img" aria-label="' + pos + " / " + n + '"><i style="width:' + Math.round(pos / n * 100) + '%"></i></div>';
+    if (q.type === "info") {
+      return '<div class="ax-stack axs-form" id="svQ"><div class="ax-stack-tight axs-gap12 axs-sthost">' + stampTagHtml("sv") + gauge +
+        '<h1 class="ax-type-t3">' + esc(q.t) + '</h1><p class="ax-description axs-svlead">' + esc(q.q) + "</p></div></div>" +
+        bot('<button type="button" class="ax-button" onclick="svNext()">다음</button>');
+    }
+    var pg = q.prog ? SV_PROGS.filter(function (p) { return p.id === q.prog; })[0] : null;
+    var ready = q.optional || !svEmpty(q, d.a[q.id]);
+    return '<div class="ax-stack axs-form" id="svQ">' +
+      '<div class="ax-stack-tight axs-gap12 axs-sthost">' + stampTagHtml("sv") + '<p class="ax-meta">' + pos + " / " + n + "</p>" + gauge +
+      (pg ? '<p class="axs-svsec">' + pg.fl + " · " + esc(pg.nm) + "</p>" : "") +
+      '<h1 class="ax-type-t3">' + esc(q.q) + (q.tag ? ' <span class="axs-chip off">' + esc(q.tag) + "</span>" : "") + (q.optional ? ' <span class="axs-chip off">선택</span>' : "") + "</h1></div>" +
       '<div class="axs-svin">' + svInputHtml(q, d.a[q.id]) + "</div></div>" +
-      '<div class="ax-bottom axs-fix">' +
-      (last ? '<button type="button" class="ax-button" ' + (SV.busy ? 'disabled aria-busy="true"' : "") + ' onclick="svSubmit()">' + (SV.busy ? "제출하는 중" : "제출하기") + "</button>"
-        : '<button type="button" class="ax-button" onclick="svNext()">다음</button>') +
-      (step > 1 ? '<button type="button" class="ax-button ax-button-weak" onclick="svGo(' + (step - 1) + ')"' + (SV.busy ? " disabled" : "") + ">이전</button>" : "") + "</div>";
+      bot(last ? '<button type="button" class="ax-button" ' + (SV.busy ? 'disabled aria-busy="true"' : "") + ' onclick="svSubmit()">' + (SV.busy ? "제출하는 중" : "제출하기") + "</button>"
+        : '<button type="button" class="ax-button" onclick="svNext()"' + (ready ? "" : " disabled") + ">다음</button>");
   },
 
   ideas_mine: function () {

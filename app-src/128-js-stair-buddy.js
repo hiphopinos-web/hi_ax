@@ -62,7 +62,7 @@ function stbSugs() {
   var st = S.get("stamps", []) || [], has = function (id) { return st.indexOf(id) >= 0; };
   if (stampCount() >= STAMP_DENOM) return [];
   var ph = evPhase(), hm = hmNow(), out = [];
-  if (!has("sv") && surveyOpen()) out.push(["sv", "설문은 60초면 끝나요"]);   /* 14:30부터(서버 survey_submit 와 같은 surveyOpen) */
+  if (!has("sv") && surveyOpen()) out.push(["sv", "설문은 1~2분이면 끝나요"]);   /* 14:30부터(서버 survey_submit 와 같은 surveyOpen) */
   if (ph === "live" && progUnits() < 2 && hm >= 780 && hm < 1000) out.push(["p3", "17F 오후 강연, 스탬프 2개예요"]);   /* 13:00~16:40 · AWS 13:30 · MS 15:10 */
   if (ph === "live" && !has("p2") && hm >= 570 && hm < 990) out.push(["p2", "1F AX PLAY도 체험해 봐요"]);   /* 09:30~16:30 */
   if (!has("qz")) out.push(["qz", "AX 퀴즈 5문제도 있어요"]);

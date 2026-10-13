@@ -1975,6 +1975,26 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-attt input { min-height: var(--ax-touch-size); padding: 0 var(--ax-space-8); border: 1px solid var(--axs-field-line); border-radius: var(--ax-radius-12); background: var(--ax-color-surface); color: var(--ax-color-ink); font: var(--ax-type-t6); }
   .axs-svin { display: flex; flex-direction: column; gap: var(--ax-space-12); }
   .axs-svin .row { display: flex; gap: var(--ax-space-8); }
+  /* v7.15 (사용자 확정 261013 밤) 사후 설문 · 첫 화면 정보 줄(회색 라벨 | 굵은 값) · Q2-x 층 · 프로그램 줄 · Q2-0 체크 행(층 열 · 이름 + 보조 · 미리 체크 = 같은 모양) · Q4 글자 수 */
+  .axs-svlead { margin: 0; color: var(--ax-color-body); word-break: keep-all; }
+  .axs-svkv { display: flex; flex-direction: column; gap: var(--ax-space-8); margin: 0; padding: var(--ax-space-16); border-radius: var(--ax-radius-16); background: var(--ax-color-surface); }
+  .axs-svkv > div { display: flex; align-items: baseline; gap: var(--ax-space-12); }
+  .axs-svkv dt { flex: none; width: 5.5em; font: var(--ax-type-t7); color: var(--ax-color-body); }
+  .axs-svkv dd { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .axs-sthost > .axs-svsec { margin: 0; padding-right: 64px; font: var(--ax-type-t7); font-weight: 700; color: var(--ax-color-body); word-break: keep-all; }
+  .axs-svcl { display: flex; flex-direction: column; gap: var(--ax-space-8); }
+  .axs-svcl + .axs-svcl { margin-top: var(--ax-space-8); }
+  .axs-svck { display: flex; align-items: center; gap: var(--ax-space-12); width: 100%; min-height: var(--ax-touch-size); padding: var(--ax-space-8) var(--ax-space-16); border: 1px solid var(--ax-color-divider); border-radius: var(--ax-radius-12); background: var(--ax-color-surface); color: var(--ax-color-ink); text-align: left; font-family: inherit; cursor: pointer; }
+  .axs-svck .bx { flex: none; display: grid; place-items: center; width: 22px; height: 22px; border: 2px solid var(--ax-color-divider); border-radius: 6px; background: var(--ax-color-surface); }
+  .axs-svck .bx svg { width: 16px; height: 16px; fill: none; stroke: var(--ax-color-ink); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; opacity: 0; }
+  .axs-svck .fl { flex: none; width: 2.2em; font: var(--ax-type-t7); font-weight: 700; color: var(--ax-color-body); }
+  .axs-svck .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; word-break: keep-all; }
+  .axs-svck .nm { font: var(--ax-type-t6-strong); }
+  .axs-svck .sb { font: var(--ax-type-t7); color: var(--ax-color-body); }
+  .axs-svck[aria-checked="true"] { border-color: var(--ax-color-brand); background: var(--ax-color-brandSoft); }
+  .axs-svck[aria-checked="true"] .bx { border-color: var(--ax-color-brand); background: var(--ax-color-brand); }
+  .axs-svck[aria-checked="true"] .bx svg { opacity: 1; }
+  .axs-svcnt { margin: 0; text-align: right; }
   .axs-svin input[type=range] { display: block; width: 100%; height: 44px; margin: 0; accent-color: var(--ax-color-brand); cursor: pointer; }   /* v6.83 (접근성 A-4) 눌림 높이 16 → 44 · 손잡이 · 막대 모양은 그대로(가운데) */
   /* 포토부스 대기 번호 · 검정 호출 면 폐지 → 주황 면 + 짙은 글자 */
   /* v4.18 위계(사용자 결정 260923) · 줄어드는 앞 팀 수와 예상 시각이 주인공, 고정 번호는 아래 한 줄로 받친다 */
