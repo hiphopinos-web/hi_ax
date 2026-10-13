@@ -178,7 +178,7 @@ function progSegHtml() {
   return '<div class="axs-seg axs-seg3" role="tablist" aria-label="프로그램 보기">' +
     '<button type="button" role="tab" aria-selected="' + (g === "time") + '" onclick="progSeg(\'time\', this)">시간표</button>' +
     '<button type="button" role="tab" aria-selected="' + (g === "always") + '" onclick="progSeg(\'always\', this)">상시 운영</button>' +
-    '<button type="button" role="tab" aria-selected="' + (g === "apply") + '" onclick="progSeg(\'apply\', this)" data-seg="apply">신청<wbr>하기' +
+    '<button type="button" role="tab" aria-selected="' + (g === "apply") + '" onclick="progSeg(\'apply\', this)" data-seg="apply">참여<wbr>하기' +   /* 261013 오후 (사용자) 신청하기 → 참여하기 · 칸 = 스탬프 「프로그램 참여」 묶음과 1:1(17F 오후 강연 2 · AX 라운지 · 커피챗) */
     (dot ? '<i class="axs-sdot" aria-hidden="true"></i><span class="ax-sr-only"> · 신청 가능</span>' : "") + "</button></div>";
 }
 /* ═══ v5.21 시간표 = 점 노드 흐름 한 줄(사용자 261003 · 정본 「디자인 시안/프로그램 탭 개편/시간표 흐름/설계.md」 안 A · design.md A-5 5-10) ═══
@@ -358,11 +358,11 @@ function applyOpenN() {
    주 버튼 = 구역 상세 시트 주 버튼과 같은 동작(zoneLive btn) · 커피챗 = 아이디어 쓰고 신청하기 · 커피챗 신청하기(시간대 시트) · 내 신청 / 라운지 = 시간 고르기 · 내 신청
    숨김 = 커피챗 cchatState null · 라운지 마감 · 상담 완료(v5.82 줄과 같은 규칙) · 둘 다 숨으면 빈 상태 한 줄 */
 function applyCardHtml(o) {
-  return '<section class="ax-card axs-apc axs-sthost' + (o.mine ? " my" : "") + '" data-apply="' + o.k + '" aria-label="' + esc(o.nm) + '">' + attSealHtml({ id: o.k === "lounge" ? "dap" : o.k }) +   /* 261013 오른쪽 위 도장 · 커피챗 1개 · 라운지 ×2 */
+  return '<section class="ax-card axs-apc axs-sthost' + (o.mine ? " my" : "") + (o.tap ? " tap" : "") + '" data-apply="' + o.k + '" aria-label="' + esc(o.nm) + '"' + (o.tap ? ' onclick="if (!event.target.closest(\'button\')) { ' + o.tap + '; }"' : "") + ">" + (o.seal != null ? o.seal : attSealHtml({ id: o.k === "lounge" ? "dap" : o.k })) +   /* 261013 오른쪽 위 도장 · 오후 네 카드 모두 ×2(프로그램 참여 묶음) · 17F 카드 = 카드를 눌러 강연 상세 */
     '<div class="hd"><span class="fl">' + flFloor(o.fl) + '</span><h3 class="ax-card-title">' + esc(o.nm) + "</h3>" + (o.mine ? '<span class="axs-chip">' + esc(o.chip || "신청함") + "</span>" : "") + "</div>" +
     '<p class="k">' + esc(o.kor) + "</p>" +
     '<dl class="axs-kv">' + o.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + segHtml(esc(r[1])) + "</dd>"; }).join("") + "</dl>" + (o.extra || "") +
-    '<div class="bt">' + progBtn(esc(o.btn[0]), o.btn[1], "", "", !!o.btn[3]) +   /* v6.84 (사용자 261009 「라운지 시간 고르기도 주황으로」) 카드마다 자기 주 버튼 하나 = 같은 주황 주 버튼(옛 v6.83 D-1 라운지 약한 버튼 되돌림) · 꺼짐(마감)만 disabled */
+    '<div class="bt">' + (o.btn ? progBtn(esc(o.btn[0]), o.btn[1], "", "", !!o.btn[3]) : "") +   /* 261013 오후 17F 자유 참석 카드 = 주 버튼 없음 */   /* v6.84 (사용자 261009 「라운지 시간 고르기도 주황으로」) 카드마다 자기 주 버튼 하나 = 같은 주황 주 버튼(옛 v6.83 D-1 라운지 약한 버튼 되돌림) · 꺼짐(마감)만 disabled */
     '<button type="button" class="ax-link axs-plain" onclick="' + o.more + '">자세히 보기</button></div></section>';
 }
 function applyCchatHtml() {
@@ -383,9 +383,14 @@ function applyTenHtml() {
   if (!applyTenShow()) return "";
   return '<div class="axs-rows">' + rcHtml({ cls: "", onclick: "progTenGo()", link: true, left: rcIcon(App.ICONS.guide), title: "10F 실습형 세션", sub: "사전 신청자 참여" }).replace('<div class="rc', '<div data-apply="ten" class="rc') + "</div>";
 }
+/* 261013 오후 (사용자) 참여하기 칸 맨 위 = 17F 오후 파트너 강연 두 장(자유 참석 · 신청 버튼 없음 · 누르면 강연 상세 · 도장 ×2) · 표기 = 시간표(SESSIONS l1 · l2) 그대로 */
+function apply17Html(id) {
+  var x = SESSIONS.filter(function (q) { return q.id === id; })[0]; if (!x) return "";
+  return applyCardHtml({ k: id, nm: x.sub, fl: 17, kor: x.who, kv: [["시간", x.tm], ["참여", "자유 참석 · 입장 QR + 끝 QR"]], seal: stampTagHtml("p3", 2), tap: "progOpen(\'" + id + "\')", more: "progOpen(\'" + id + "\')" });
+}
 function progApplyTabHtml() {
-  var h = applyCchatHtml() + applyLoungeHtml();
-  return '<div class="axs-apply" aria-label="신청하기">' + (h || '<p class="ax-description axs-apnone">지금 신청할 수 있는 프로그램이 없어요</p>') + applyTenHtml() + "</div>";
+  var h = apply17Html("l1") + apply17Html("l2") + applyLoungeHtml() + applyCchatHtml();   /* 261013 오후 순서 = 17F AWS · 17F MS · 1F AX 라운지 · 18F 커피챗 */
+  return '<div class="axs-apply" aria-label="참여하기">' + (h || '<p class="ax-description axs-apnone">지금 신청할 수 있는 프로그램이 없어요</p>') + applyTenHtml() + "</div>";
 }
 /* v5.65 「참여 전 확인」 펼침 = 같은 화면 패널(시트 아님 · 설계안 결정 1) · 다시 그리지 않고 패널만 연다 · 닫는다
    v6.83 (사용자 261009 묶음 16 「참여 전 확인을 눌러서 추가 정보가 나올 필요 없음」) 부르는 곳 없음(구역 상세 = 펼친 상자) · 되살릴 때 쓴다 */
@@ -660,7 +665,7 @@ function progDetail(s) {
         r.status === "approved" ? "시작 5분 전까지 1F AX 라운지에서 체크인해 주세요. 시작 10분이 지나면 참석하지 않은 것으로 처리돼요." :
         r.status === "checked" ? "업무 설명 → 병목 → 개선방안 순서로 진행돼요." : "상담을 마쳤어요. 아래 코드를 AX 라운지 데스크에 보여 주고 사은품을 받으세요.";
       if (r.status === "done") D.after = '<div class="ax-inset ax-stack-tight axs-gift"><p class="ax-card-title">사은품 교환권 · 1회</p>' + qrHtml() + '<p class="ax-type-t5-strong axs-center-tx">GIFT-' + esc((S.get("user", {}) || {}).empId || "") + '</p></div>';   /* v5.60 W4 「중복 수령 방지 코드예요」 줄 삭제 */
-      if (r.status === "approved") D.need = needBoxHtml("스탬프 받으려면", "스탬프 받으려면", [["qr", "담당자에게 참석 확인 QR 보여 주기", "상담 시간에 1F AX 라운지에서"], ["stamp", "참석하면 스탬프 2개", ""]]);   /* 261013 참석 확인 스탬프 ln */
+      if (r.status === "approved") D.need = needBoxHtml("스탬프 받으려면", "스탬프 받으려면", [["qr", "담당자에게 참석 확인 QR 보여 주기", "상담 시간에 1F AX 라운지에서"], ["stamp", "참석하면 스탬프 2개", "17F 오후 강연 · 라운지 · 커피챗 합쳐 최대 2개"]]);   /* 261013 참석 확인 스탬프 ln */
       if (RESV_LIVE.indexOf(r.status) >= 0 && r.status !== "checked") { D.help = "참여가 어려우면 신청을 취소할 수 있어요"; D.btn = (r.status === "approved" ? progBtn("참석 확인 QR", "qrPanelOpen('mine')") : "") + cxBtn; }
       else { D.help = ""; D.btn = progBtn("나의 일정 보기", "mySched()", "ax-button-weak"); }
       return D;
@@ -703,7 +708,7 @@ function progDetail(s) {
       else {
         D.secB = mt ? "시작 5분 전까지 18F 해당 테이블에 앉아 주세요. 커피는 준비돼 있어요." : "희망한 분 중 선정해요.<br>" + CCHAT_NOTE;
         D.help = mt ? "참여가 어려우면 취소할 수 있어요" : "참여가 어려우면 희망을 취소할 수 있어요"; D.btn = mt ? progBtn("참석 확인 QR", "qrPanelOpen('mine')") + cxBtn : cxC;
-        if (mt) D.need = needBoxHtml("스탬프 받으려면", "스탬프 받으려면", [["qr", "담당자에게 참석 확인 QR 보여 주기", "내 회차에 18F 테이블에서"], ["stamp", "참석하면 스탬프 1개", ""]]);   /* 261013 참석 확인 스탬프 cc */
+        if (mt) D.need = needBoxHtml("스탬프 받으려면", "스탬프 받으려면", [["qr", "담당자에게 참석 확인 QR 보여 주기", "내 회차에 18F 테이블에서"], ["stamp", "참석하면 스탬프 2개", "17F 오후 강연 · 라운지 · 커피챗 합쳐 최대 2개"]]);   /* 261013 참석 확인 스탬프 cc · 오후 1개 → 2개(프로그램 참여 묶음) */
       }
     }
     return D;

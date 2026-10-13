@@ -497,17 +497,15 @@ function stpLineHtml(mode, meta) {
 /* 행 한 줄 설명 · 화면에 없는 장소 · 시간 · 조건만(문구 다이어트) · v4.95 375px 한 줄(종목 이름은 아래 타일 · 장소는 행동 화면에) */
 function stpMeta(s, got) {
   if (s.id === "lg") return "";
-  if (got && (s.id === "qz" || s.id === "p4")) return "스탬프 받음";   /* v5.16 받은 뒤 = 상태 한 마디 + 오른쪽 「다시 하기」 */
+  if (got && (s.id === "qz" || s.id === "p4" || s.id === "p3")) return "스탬프 받음";   /* v5.16 받은 뒤 = 상태 한 마디 + 오른쪽 「다시 하기」 · 261013 오후 프로그램 참여(묶음 2개)도 */
   if (s.id === "qz") return QZ_NEED <= 1 ? qzLenTxt() : QZ_NEED + "종 완주 · " + Math.min(QZ_NEED, qzDone()) + " / " + QZ_NEED;
   if (s.id === "p4") return (stampV2() ? "3종 완주 · " : "서로 다른 3종목 · ") + Math.min(MG_NEED, mgDone()) + " / " + MG_NEED;
-  if (s.id === "p2") return "1F · 체험 2종";   /* 「스태프 인증」 칩 옆 104px · 이름(HiDI-Q · Hi-Helper)은 구역 줄 · 체험 안내 화면에 */
+  if (s.id === "p2") return "1F · 체험 2종";   /* 이름(HiDI-Q · Hi-Helper)은 구역 줄 · 체험 안내 화면에 */
   if (s.id === "p5") return "1분 · AX LAB QR로도";
-  if (s.id === "p3") return progUnits() === 1 ? "2개 중 1개 · 하나 더" : "17F 오후 AWS · MS 강연";   /* v5.68 17F 입장이나 끝 한쪽만 받은 상태 · v5.94 오후 파트너 강연만 */
+  if (s.id === "p3") return progUnits() === 1 ? "2개 중 1개 · 하나 더" : "셋 중 하나만 해도 2개";   /* v5.68 17F 입장이나 끝 한쪽만 받은 상태 · 261013 오후 묶음(아래 세 줄 목록 stpProgListHtml) */
   if (s.id === "st") { var sst = stairState(); return sst.leg ? "진행 중 · " + sst.leg.fl + "F 시작" : stairLine(sst); }
-  if (s.id === "sv") return SURVEY.open + "부터 · 60초";
-  if (got && (s.id === "cc" || s.id === "ln")) return "참석 확인";   /* 261013 받은 뒤 = 상태 한 마디 */
-  if (s.id === "cc") { var c9 = S.get("cchat", null); return c9 && c9.status === "matched" && c9.round ? "선정 · " + c9.round + " · 내 QR 제시" : "선정되면 참석 확인"; }   /* 261013 */
-  if (s.id === "ln") { var r9 = myResv(); return r9 && r9.status === "approved" ? "승인 · " + r9.slot + " · 내 QR 제시" : "승인되면 참석 확인"; }
+  if (s.id === "sv") return stampV2() ? "60초" : SURVEY.open + "부터 · 60초";   /* 261013 오후 14:30 은 4단계 제목에 */
+  if (s.id === STAMP_CK) return "1F 주차장 체크인존 · 08:00부터";
   return s.where || "";
 }
 /* 오른쪽 행동 [글, onclick] · onclick 이 없으면 글만(완료 · 열리는 시각) */
@@ -518,42 +516,69 @@ function stpAct(s, got) {
   if (s.id === "lg") return ["자동", ""];
   if (s.id === "qz" && QZ_NEED <= 1) return ["시작", "App.go('quiz')"];   /* v4.95 (사용자 261002 「AX 퀴즈 박스 표시는 이제 없어도 된다」) 한 판뿐 · 타일 없이 줄을 누르면 시작 화면 */
   if (s.id === "qz" || s.id === "p4") return ["", ""];   /* 종목 타일이 행동이다 */
-  if (s.id === "p2") return ["내 QR", "qrPanelOpen('mine')"];
+  if (s.id === "p2" || s.id === STAMP_CK) return ["내 QR", "qrPanelOpen('mine')"];   /* 261013 오후 사전등록 체크인 = 체크인존에서 내 QR */
   if (s.id === "p5") return ["쓰기", "App.go('ideas')"];
-  if (s.id === "p3") return ["보기", "homeSched()"];
+  if (s.id === "p3") return ["보기", "progApplyGo()"];   /* 261013 오후 프로그램 › 참여하기 칸(묶음 세 활동과 1:1) */
   if (s.id === "st") return [stairState().leg ? "이어 하기" : "안내", "stairOpen()"];   /* v6.83 (디자인 D-5) 오른쪽 = 행동 말(진행 중은 보조 줄이 말한다) */
   if (s.id === "sv") return surveyLock() === "time" ? [SURVEY.open, ""] : ["시작", "App.go('survey')"];
-  if (s.id === "cc") { var c8 = S.get("cchat", null); return c8 && c8.status === "matched" ? ["내 QR", "qrPanelOpen('mine')"] : ["보기", c8 ? "progOpen('cchat')" : "progApplyGo()"]; }   /* 261013 선정 = 내 QR · 아니면 신청 칸 */
-  if (s.id === "ln") { var r8 = myResv(); return r8 && r8.status === "approved" ? ["내 QR", "qrPanelOpen('mine')"] : ["보기", r8 && RESV_LIVE.indexOf(r8.status) >= 0 ? "progOpen('dap')" : "progApplyGo()"]; }
   return [s.cta ? "보기" : "", s.tap || ""];
 }
+/* 261013 오후 (사용자 확정) 프로그램 참여 줄 아래 세 활동 · 「· 」 목록(무채색 점 · 둘째 줄 내어쓰기) · 선정 · 승인된 내 시각이 있으면 괄호로(통째로 넘김) */
+function stpProgListHtml() {
+  var c = S.get("cchat", null), r = typeof myResv === "function" ? myResv() : null, tm = function (t) { return ' <span class="axs-nwr">(' + esc(t) + ")</span>"; };
+  var rows = ["17F 오후 AWS · MS 강연" + tm("입장 1 + 끝 1"),
+    "1F AX 라운지 참석" + (r && r.status === "approved" && r.slot ? tm(hhmm(r.slot) + " 승인") : ""),
+    "18F 커피챗 참석" + (c && c.status === "matched" && c.round ? tm(c.round + " 선정") : "")];
+  return '<ul class="axs-stpl">' + rows.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
+}
 function stpRowHtml(s, i, st, full) {
-  var got = st.indexOf(s.id) >= 0, a = stpAct(s, got), mode = got ? "" : STAMP_MODE[s.id] || "", meta = stpMeta(s, got);   /* v4.99 받은 줄은 수단 칩(자동 · 폰으로 · 스태프 인증) 없음 · 받는 법은 받기 전에만 뜻이 있다 */
+  var got = stampHas(s.id, st), a = stpAct(s, got), meta = stpMeta(s, got);   /* 261013 오후 (사용자 확정) 받는 방식 칩(자동 · 폰으로 · 현장 · 스태프 인증) 없음 · 단계 제목이 대신 · 프로그램 참여 = 묶음 2개면 받음(stampHas) */
   var tiles = got ? "" : s.id === "qz" && QZ_NEED > 1 ? stpTilesHtml(OLY_QUIZ_KEYS) : s.id === "p4" ? stpTilesHtml(stampV2() ? OLY_MINI_KEYS : olyAllKeys()) : "";   /* v4.95 AX 퀴즈 타일 없음(한 판) · 받은 줄은 타일 없이(오른쪽 「완료」와 겹쳐 두 줄이 되던 자리) */
-  var test = !testMode() ? "" : got ? '<button type="button" class="axs-stpx" onclick="testStampUndo(\'' + s.id + '\')">테스트 · 완료 취소</button>' : '<button type="button" class="axs-stpx" onclick="testStamp(\'' + s.id + '\')">테스트 · 완료 처리</button>';
+  var test = !testMode() || s.id === STAMP_CK ? "" : got ? '<button type="button" class="axs-stpx" onclick="testStampUndo(\'' + s.id + '\')">테스트 · 완료 취소</button>' : '<button type="button" class="axs-stpx" onclick="testStamp(\'' + s.id + '\')">테스트 · 완료 처리</button>';
   /* v4.95 행동이 있는 줄은 줄 전체를 눌러도 같은 행동(안의 버튼 · 타일은 그 버튼만) · 키보드는 오른쪽 버튼 */
   var tap = a[1] ? ' onclick="if (!event.target.closest(\'button\')) { ' + a[1].replace(/"/g, "&quot;") + '; }"' : "";
-  /* v5.68 프로그램 참여 = 2개 · 17F 한쪽만(p3h) = 번호 칸 반 채움 「1/2」 · v6.56 (사용자 261008 「더블 스탬프인 것이 명확히 이해되지 않아」) 제목 옆 「×2」 → O100 알약 「● ● 스탬프 2개」(받은 만큼 점이 찬다 · 0 · 1 · 2) + 받기 전 둘째 보조 줄 「입장 QR 1개 + 끝 QR 1개」 */
-  var half = s.id === "p3" && !got && st.indexOf(STAMP_HALF) >= 0;   /* 261013 반 칸(p3h)은 프로그램 참여만 · AX 라운지(ln · 2개)는 한 번에 2개 */
-  /* v6.83 (디자인 D-5) 오른쪽 = 누르는 행동 말만(같은 색 · 굵기) · 행동이 아닌 글은 오른쪽에 두지 않는다 · 완료 = 번호 칸 체크 · 자동 = 「자동」 칩 · 열리는 시각(14:30 · 10/26부터) = 둘째 줄 칩(보조 줄에 이미 있으면 생략) */
-  var stat = a[0] && !a[1] && a[0] !== "완료" && a[0] !== "자동" && String(meta).indexOf(a[0]) < 0 ? a[0] : "";
+  /* v5.68 프로그램 참여 = 2개 · 17F 한쪽만(p3h) = 번호 칸 반 채움 · 261013 오후 커피챗 · 라운지 참석은 한 번에 2개(묶음) */
+  var half = s.id === "p3" && !got && progUnitsOf(st) === 1;
+  /* v6.83 (디자인 D-5) 오른쪽 = 누르는 행동 말만 · 행동이 아닌 글은 오른쪽에 두지 않는다 · 열리는 시각(10/26부터) = 둘째 줄 칩(보조 줄에 이미 있으면 생략) · 261013 오후 설문 14:30 은 단계 제목에 */
+  var stat = s.id !== "sv" && a[0] && !a[1] && a[0] !== "완료" && a[0] !== "자동" && String(meta).indexOf(a[0]) < 0 ? a[0] : "";
   return '<div class="axs-stp' + (got ? " done" : full && !half ? " off" : "") + (tap ? " tap" : "") + '" data-stp="' + s.id + '"' + tap + ">" +
     stpCellHtml(s, i, got, half) +   /* v6.88 (사용자 261009 「권장대로」 시안 A1) 번호 칸 = 도장(받기 전 번호가 든 옅은 자리 · 받으면 찍힌 씰 · 체크 원 대체) */
-    '<div class="axs-stpb"><p class="ax-card-title">' + esc(s.title) + "</p>" +   /* v6.86 2개짜리(프로그램 참여) = 제목 옆 「×2」 대신 줄 오른쪽 둥근 도장(stpSealHtml)이 받은 수를 읽어 준다 */
-    stpLineHtml(mode, esc(meta)) + (stat ? '<p class="axs-stpm"><span class="axs-stpc">' + esc(stat) + "</span></p>" : "") + (s.id === "p3" && !got ? '<p class="axs-stpm"><span>입장 QR 1개 + 끝 QR 1개</span></p>' : "") +
+    '<div class="axs-stpb"><p class="ax-card-title">' + esc(s.title) + "</p>" +
+    stpLineHtml("", esc(meta)) + (stat ? '<p class="axs-stpm"><span class="axs-stpc">' + esc(stat) + "</span></p>" : "") + (s.id === "p3" && !got ? stpProgListHtml() : "") +
     tiles + test + "</div>" +
     (a[0] && a[1] ? '<button type="button" class="axs-stpa" onclick="' + a[1] + '">' + esc(a[0]) + "</button>" : "") +
     "</div>";
 }
-/* v6.88 (사용자 261009 「권장대로」 · 시안 A1) 스탬프 8종 줄 왼쪽 번호 칸 = 도장 · 오른쪽 폭 · 줄 높이 · 줄바꿈 그대로(40px 칸 그대로)
+/* 261013 오후 (사용자 확정) 사전등록 체크인(ck 3개) 줄 · 1단계 접속 아래 · 보이는 사람 = ck 를 받은 사람 + 사전 신청자 본인(키트 명단 kit · 10F 사전 신청 세션) · 일반 참가자 화면에는 없다 */
+var STAMP_CK_ROW = { id: "ck", title: "사전등록 체크인", short: "체크인", x3: 1 };
+function stampCkRowOn(st) {
+  if ((st || S.get("stamps", [])).indexOf(STAMP_CK) >= 0) return true;
+  var k = S.get("kit", null);
+  return !!(k && k.pool === "kit") || !!(typeof tenMine === "function" && tenMine());
+}
+/* v6.88 (사용자 261009 「권장대로」 · 시안 A1) 스탬프 줄 왼쪽 번호 칸 = 도장 · 오른쪽 폭 · 줄 높이 · 줄바꿈 그대로(40px 칸 그대로)
    받기 전 = 같은 씰(stampSealSvg)에 가운데 번호 · 브랜드 옅은 톤 · 받으면 = 찍힌 씰(「완료」 · 기울임 그대로) · 2개짜리(프로그램 참여) = 작은 씰 두 개 겹침(받은 만큼 찍힘) · 읽는 글 「n번 스탬프, 받음 / 아직」
    클래스 axs-stpn 은 남긴다(도장 팝이 날아와 앉는 자리 · spTarget)
-   v6.89 (사용자 261009 「우측 스탬프 두 개 지우자」) 2개짜리 줄 오른쪽 46px 도장 두 개(v6.86 · 시안 A2 방향)를 걷었다 · 왼쪽 칸 작은 씰 두 개가 「도장 2개」 · 오른쪽 = 다른 줄과 같은 행동 글 · 읽는 글 「스탬프 2개 받는 활동, 2개 중 n개 받음」은 왼쪽 칸 */
+   v6.89 (사용자 261009 「우측 스탬프 두 개 지우자」) 2개짜리 줄 오른쪽 46px 도장 두 개(v6.86 · 시안 A2 방향)를 걷었다 · 왼쪽 칸 작은 씰 두 개가 「도장 2개」 · 오른쪽 = 다른 줄과 같은 행동 글 · 읽는 글 「스탬프 2개 받는 활동, 2개 중 n개 받음」은 왼쪽 칸
+   261013 오후 사전등록 체크인(x3) = 작은 씰 세 개 · 번호 없음(줄 번호 1~8 은 판 줄만) */
 function stpCellHtml(s, i, got, half) {
-  var lb = s.x2 ? "스탬프 2개 받는 활동, 2개 중 " + (got ? 2 : half ? 1 : 0) + "개 받음" : (i + 1) + "번 스탬프, " + (got ? "받음" : "아직"), k = function (on, mid, ms) { return on ? stampSealSvg(40) : stampSealSvg(40, "currentColor", mid, ms); };
+  var k = function (on, mid, ms) { return on ? stampSealSvg(40) : stampSealSvg(40, "currentColor", mid, ms); };
+  if (s.x3) return '<span class="axs-stpn axs-stpk" role="img" aria-label="스탬프 3개 받는 활동, ' + (got ? "받음" : "아직") + '"><span class="axs-stpk3">' +
+    [0, 1, 2].map(function () { return "<span" + (got ? ' class="on"' : "") + ">" + k(got, "") + "</span>"; }).join("") + "</span></span>";
+  var lb = s.x2 ? "스탬프 2개 받는 활동, 2개 중 " + (got ? 2 : half ? 1 : 0) + "개 받음" : (i + 1) + "번 스탬프, " + (got ? "받음" : "아직");
   var inner = !s.x2 ? '<span class="axs-stpk1' + (got ? " on" : "") + '">' + k(got, String(i + 1), 34) + "</span>" :
     '<span class="axs-stpk2"><span' + (got || half ? ' class="on"' : "") + ">" + k(got || half, "") + "</span><span" + (got ? ' class="on"' : "") + ">" + k(got, "") + "</span></span>";
   return '<span class="axs-stpn axs-stpk" role="img" aria-label="' + lb + '">' + inner + "</span>";
+}
+/* 261013 오후 (사용자 확정) 스탬프 탭 판 = 참여자의 하루 흐름 4단계(STAMP_STAGES) · 단계 제목 「n단계 · 이름」 + 옆 짧은 말 · 줄 번호 = STAMPS 순서 1~8 · 옛 서버(stv 1)는 한 목록 그대로 */
+function stpBoardHtml(st, full) {
+  if (!stampV2()) return '<div class="axs-stps">' + STAMPS.map(function (s, i) { return stpRowHtml(s, i, st, full); }).join("") + "</div>";
+  return STAMP_STAGES.map(function (g, n) {
+    var rows = g.ids.map(function (id) { var s = stampDef(id), i = STAMPS.indexOf(s); return s && i >= 0 ? stpRowHtml(s, i, st, full) : ""; }).join("");
+    if (n === 0 && stampCkRowOn(st)) rows += stpRowHtml(STAMP_CK_ROW, -1, st, full);
+    return '<div class="axs-stg"><p class="axs-stgh"><b>' + (n + 1) + "단계 · " + esc(g.t) + "</b><span>" + esc(g.s) + "</span></p>" +
+      '<div class="axs-stps">' + rows + "</div></div>";
+  }).join("");
 }
 /* 구경하고 겨루기 · 1F 타자왕 현장 순위(type_rank · v5.29 현장 순위판 하나) · 실시간 화면은 4묶음(type_live) */
 function typeSiteRankGo() { App.go("type_rank"); }   /* v5.29 탭 없음(현장 순위판 하나) */

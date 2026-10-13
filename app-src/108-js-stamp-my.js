@@ -83,7 +83,7 @@ function testStampUndo(id) {
   if (n < 3) {                              /* 룰렛 문턱 아래 · 열림·사용·글로우를 되돌려 3개째 연출이 다시 나오게 */
     S.set("roulette_open", false); S.set("roulette_used", false); S.set("pp_glow3", false);
   }
-  var sd = STAMPS.filter(function (x) { return x.id === id; })[0];
+  var sd = stampDef(id);
   toast("테스트 · 완료 취소 · " + (sd ? sd.title : id) + " · 스탬프 " + n + "개");
   App.render();
 }
@@ -165,7 +165,7 @@ var STAG_SZ = 52;
 /* v5.96 (사용자 261006 밤 「스탬프 모양이 두 개이거나 곱하기 2 표시」) x = 2 이상이면 도장 오른쪽 아래 O100 알약 「×2」(곱셈 기호 U+00D7) · 17F 오후 강연(p3 · 입장 1 + 끝 1) */
 function stampTagHtml(id, x) {
   var xb = x > 1 ? '<b class="axs-stx" aria-hidden="true">\u00D7' + x + "</b>" : "", xl = x > 1 ? " · " + x + "개" : "", w0 = xb ? '<span class="axs-stxw">' : "", w1 = xb ? xb + "</span>" : "";
-  if (S.get("stamps", []).indexOf(id) >= 0) return '<span class="axs-stag on" role="img" aria-label="스탬프 받음' + xl + '">' + w0 + stampSealSvg(STAG_SZ) + w1 + "</span>";
+  if (id === "p3" || id === "cc" || id === "ln" ? progUnits() >= 2 : S.get("stamps", []).indexOf(id) >= 0) return '<span class="axs-stag on" role="img" aria-label="스탬프 받음' + xl + '">' + w0 + stampSealSvg(STAG_SZ) + w1 + "</span>";   /* 261013 오후 17F 오후 강연 · 커피챗 · 라운지 도장 = 프로그램 참여 묶음(어느 쪽으로든 2개면 받음) */
   var mg = id === "p4" ? Math.min(MG_NEED, mgDone()) + "/" + MG_NEED : "";
   return '<span class="axs-stag" role="img" aria-label="' + (mg ? "스탬프 · 종목 " + mg : "스탬프 받기 전") + xl + '">' + w0 + stampSealSvg(STAG_SZ, "currentColor", mg || "스탬프", mg ? 22 : 17) + w1 + "</span>";
 }
@@ -175,7 +175,7 @@ function stampLineHtml(id, left) { return '<div class="axs-stline">' + (left || 
 var P3_PM = ["l1", "l2"];
 /* 261013 참석 확인 스탬프 · 커피챗(cc) · AX 라운지 상담(ln · 2개) 상세 · 신청 카드 오른쪽 위 도장 */
 function attStampId(s) { return s && s.id === "cchat" ? "cc" : s && s.id === "dap" ? "ln" : ""; }
-function attSealHtml(s) { var id = attStampId(s); return id ? stampTagHtml(id, id === "ln" ? 2 : 0) : ""; }
+function attSealHtml(s) { var id = attStampId(s); return id ? stampTagHtml(id, 2) : ""; }   /* 261013 오후 커피챗 · 라운지 모두 ×2(프로그램 참여 묶음) */
 function progStampId(s) {
   return s && P3_PM.indexOf(s.id) >= 0 ? "p3" : "";
 }
@@ -237,6 +237,7 @@ var SPOP = { q: [], cur: null, ids: {}, opt: {} };
 function stampPopDef(id) {
   if (id === STAMP_HALF) return { id: STAMP_HALF, title: "프로그램 참여 1 / 2" };
   if (id === "ck") return { id: "ck", title: "사전등록 체크인 ×3" };   /* v5.90 STAMP_CK(이 함수만 떼어 검사하므로 글자 그대로) */
+  if (id === "cc" || id === "ln") return { id: id, title: S.get("stamps", []).indexOf(STAMP_HALF) >= 0 ? "프로그램 참여 2 / 2" : "프로그램 참여 ×2" };   /* 261013 오후 커피챗 · 라운지 참석 = 프로그램 참여 줄(묶음) · 제자리도 그 줄 */
   var sd = STAMPS.filter(function (s) { return s.id === id; })[0];
   return sd && sd.x2 ? { id: sd.id, title: sd.title + " ×2" } : sd;
 }
@@ -257,7 +258,7 @@ function stampOverlay(id, op) {
 function spTarget(id) {
   var v = App.current, t = null, kind = "";
   if (v === "exp") {   /* v4.84 스탬프 탭 = 그 행의 번호 칸 */
-    t = document.querySelector('#view [data-stp="' + (id === STAMP_HALF ? "p3" : id) + '"] .axs-stpn'); if (t) kind = "card";   /* v5.68 p3h = 프로그램 참여 줄 */
+    t = document.querySelector('#view [data-stp="' + (id === STAMP_HALF || id === "cc" || id === "ln" ? "p3" : id) + '"] .axs-stpn'); if (t) kind = "card";   /* v5.68 p3h = 프로그램 참여 줄 · 261013 오후 커피챗 · 라운지도 */
   } else if (v === "home") {
     var rail = document.querySelector("#view .rail"), n = stampGot();
     if (rail) {
@@ -412,7 +413,7 @@ function ppAfterRender(n, oldN, glow) {
    완료 카드는 위로 올라온다(완료 그룹 상단, 그 안에서 기본 순서 유지) · 그룹 캡션은 미완료 구간에만 얇게. */
 var PP_ORDER_V1 = [["p1", "1F"], ["p2", "1F"], ["p7", "1F"], ["p3", "17F · 1F · 18F"], ["st", "계단"], ["p4", "앱"], ["p5", "앱"], ["sv", "앱"]];
 /* v4.83 새 8종 · 번호 순서 그대로 · 묶음 제목 없음(수단 칩은 2묶음) */
-var PP_ORDER_V2 = [["lg", ""], ["qz", ""], ["p4", ""], ["p2", ""], ["p5", ""], ["p3", ""], ["st", ""], ["sv", ""], ["cc", ""], ["ln", ""]];   /* 261013 9 커피챗 · 10 AX 라운지 */
+var PP_ORDER_V2 = [["lg", ""], ["qz", ""], ["p4", ""], ["p5", ""], ["p2", ""], ["st", ""], ["p3", ""], ["sv", ""]];   /* 261013 오후 하루 흐름 4단계 순서 · 커피챗 · AX 라운지는 프로그램 참여(p3) 줄의 묶음 */
 var PP_ORDER = PP_ORDER_V2;
 /* v4.06 방금 적립한 현장 스탬프 · 같은 층에서 아직 안 한 현장 스탬프 하나 (QR 상호작용 기획 2-3) · 코칭 문장 없이 버튼 라벨만 */
 var PP_NEXT_V1 = { p1: ["p7", "p2"], p2: ["p7", "p1"], p7: ["p1", "p2"], p3: ["sv", "p5"] };

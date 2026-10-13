@@ -151,7 +151,7 @@ function srShow(o) {
   SR = Object.assign({ st: "", id: "", name: "", why: "", open: "", test: false, stair: false, n: 0, at: "" }, o);
   if (App.current === "scan_res") App.render(); else App.go("scan_res");
 }
-function stampTitle(id) { var s = STAMPS.filter(function (x) { return x.id === id; })[0]; return s ? s.title : id; }
+function stampTitle(id) { var s = stampDef(id); return s ? s.title : id; }   /* 261013 오후 묶음 cc · ln 도 */
 function srDupPopup(id, name, at, test) {
   notice({ key: "claim:dup:" + id, title: "이미 받음", body: (name || stampTitle(id)) + (at ? " · " + at + " 받음" : "") + (test ? " · 테스트 계정" : ""),
     go: "card:" + id, goLbl: "스탬프 보기" });
@@ -390,7 +390,7 @@ function attSpec() {
     if (!r.stamp && (!attUi(r.id) || r.nost || r.remote)) return { id: "att", title: r.dup ? "이미 기록됐어요" : "출석이 기록됐어요", lead: "<b>" + esc(x.nm) + "</b>",   /* v5.96 오전 강연 · 송출 · 서버 범위 밖(nost) = 기록만 · 스탬프 기대를 만들지 않게 담담하게 · 오류로 만들지 않는다 */
       body: r.test ? '<p class="ax-meta">테스트 계정 · 테스트 기록</p>' : "", go: "sheetClose()", goLbl: "확인" };
     return { id: "att", title: r.dup ? "이미 출석했어요" : "출석했어요", lead: "<b>" + esc(x.nm) + "</b><br>" + (r.k === "out" ? "끝 " : "입장 ") + esc(r.at) + (r.remote ? " · 유튜브 송출 출석" : ""),
-      body: (r.stamp ? '<div class="ax-inset axs-attok"><p class="ax-card-title">스탬프 「프로그램 참여」 ' + (r.add > 1 ? r.add + "개" : "1개") + ' 적립</p><p class="ax-description">현재 스탬프 ' + r.stamp + " / " + STAMP_DENOM + "개</p></div>" : "") + more +
+      body: (r.stamp ? '<div class="ax-inset axs-attok"><p class="ax-card-title">스탬프 「프로그램 참여」 ' + (r.add > 1 ? r.add + "개" : "1개") + ' 적립</p><p class="ax-description">현재 스탬프 ' + r.stamp + " / " + STAMP_DENOM + "개</p></div>" : !r.dup && r.pg >= 2 && P3_PM.indexOf(r.id) >= 0 ? '<p class="ax-meta">프로그램 참여 스탬프 2개 받음</p>' : "") + more +   /* 261013 오후 묶음이 이미 2개(커피챗 · 라운지 · 다른 강연) = 출석만 · 받은 상태 한 줄 */
         (r.test ? '<p class="ax-meta">테스트 계정 · 출석은 테스트 기록 · 스탬프는 이 기기에만</p>' : ""),
       go: "sheetClose()", goLbl: "확인" };
   }
@@ -455,7 +455,7 @@ function attStamp(res) {
   var id = st.id === "p3" ? "p3" : STAMP_HALF;
   if (st.dry) {
     var s0 = S.get("stamps", []);
-    if (s0.indexOf("p3") >= 0 || s0.indexOf(id) >= 0) return 0;
+    if (s0.indexOf("p3") >= 0 || s0.indexOf(id) >= 0 || s0.indexOf("cc") >= 0 || s0.indexOf("ln") >= 0) return 0;   /* 261013 오후 묶음(커피챗 · 라운지)으로 이미 2개 */
     s0.push(id); S.set("stamps", s0);
   }
   else if (st.dup || !st.add) { if (st.stamps) stampSync(st.stamps); return 0; }   /* 이미 받음 · 기록만 = 팝 없음 */
@@ -1101,7 +1101,7 @@ var SCAN_SPOTS = [
   { id: "ms2", nm: "10F 세션 E 2회차", kind: "sess", lb: "세션 E 2회차", will: "10F 세션 E 2회차 입장 처리" },
   /* 261013 (사용자 「권장대로」) 라운지 · 커피챗 자리 = 참석 확인 + 스탬프(라운지 2개 · 커피챗 1개 · 서버 staff_mark in · attAward_) · 승인 · 선정된 줄 · 그 시간만(서버가 거절 nomatch · noshow · time) */
   { id: "dap", nm: "1F AX 라운지", kind: "roster", lb: "AX 라운지 참석", tsub: "참석 확인 · 스탬프 2개", will: "AX 라운지 참석 확인", cond: "승인된 상담 · 상담 시간", su: 2 },
-  { id: "cchat", nm: "18F AX 커피챗", kind: "roster", lb: "커피챗 참석", tsub: "참석 확인 · 스탬프 1개", will: "커피챗 참석 확인", cond: "선정된 사람 · 내 회차", su: 1 },
+  { id: "cchat", nm: "18F AX 커피챗", kind: "roster", lb: "커피챗 참석", tsub: "참석 확인 · 스탬프 2개", will: "커피챗 참석 확인", cond: "선정된 사람 · 내 회차", su: 2 },   /* 261013 오후 1개 → 2개(프로그램 참여 묶음) */
   { id: "q_photo", nm: "1F AI 포토부스", kind: "photo", lb: "포토부스 입장", tsub: "다음 번호 호출", will: "포토부스 입장 · 다음 번호 호출", cond: "앱에서 받은 대기 번호" },   /* 번호는 참가자가 앱에서 받는다 · 찍으면 입장 + 다음 호출 */
   /* v4.83 (261001) 1F 전시(p1) 스탬프 폐지 · AX PLAY(p2) = 체험 뒤 스태프가 참가자 내 QR 을 찍어 적립(스탬프 4) */
   { id: "p2", nm: "AX PLAY", kind: "stamp", lb: "AX PLAY 스탬프", tsub: "체험 확인 · 적립", will: "AX PLAY 스탬프 적립", cond: "HiDI-Q 또는 Hi-Helper 체험을 마친 사람" },
@@ -1205,7 +1205,9 @@ function scanDone(emp, sp, res) {
   }
   if (sp.kind === "kit") { kitDone(emp, res); return; }   /* v5.34 */
   if (sp.kind === "fcfs") { fcfsDone(emp, res); return; }   /* v5.90 */
-  var ok = sp.kind === "roster" ? (res.dup ? "이미 참석 확인됨" : "참석 확인" + (res.att && !res.att.dup ? " · 스탬프 " + (res.att.u || sp.su || 1) + "개" : "")) :   /* 261013 */
+  /* 261013 오후 au = 이번에 늘어난 프로그램 참여 개수(서버 att.u · 묶음이 이미 2개면 0 · 옛 서버는 칸 개수) · -1 = 스탬프 정보 없음 */
+  var au = sp.kind === "roster" && res.att && !res.att.dup ? (res.att.u != null ? Number(res.att.u) : sp.su || 1) : -1;
+  var ok = sp.kind === "roster" ? (res.dup ? "이미 참석 확인됨" : "참석 확인" + (au > 0 ? " · 스탬프 " + au + "개" : au === 0 ? " · 프로그램 참여 이미 2개" : "")) :   /* 261013 */
     sp.kind === "sess" ? (res.dup ? "이미 입장 처리됨" : "입장 확인") :
     sp.kind === "photo" ? res.no + "번 입장" + (res.early ? "(순서보다 먼저)" : "") + " · " + (res.next ? res.next.no + "번 호출" : "대기 번호 없음") :
       sp.kind === "stamp" ? (res.dup ? "이미 받은 스탬프" : "스탬프 적립 · " + sp.nm) :
@@ -1216,7 +1218,7 @@ function scanDone(emp, sp, res) {
   /* v5.98 스태프 스캔 화면 결과 띠(sscBand) 문구 · 스탬프 = 「AX PLAY 적립 · 스탬프 n / 6」 · 룰렛 = 주황 「룰렛 1회 사용 · 남은 0」 */
   if (sp.kind === "stamp") SCAN.bd = dup ? { t: "이미 받음", s: sp.nm } : { t: sp.nm + " 적립", s: res.n ? "스탬프 " + res.n + " / 6" : "" };
   else if (sp.kind === "roulette") SCAN.bd = { c: "roul", t: "룰렛 1회 사용 · 남은 0", s: "스탬프 " + (res.n || "") + "개 · 바로 돌리세요" };
-  else if (sp.kind === "roster") SCAN.bd = dup ? { t: "이미 참석 확인", s: sp.nm } : { t: "참석 확인", s: "스탬프 +" + ((res.att && res.att.u) || sp.su || 1) + (res.att && res.att.n != null ? " · 지금 " + res.att.n + " / 6" : "") + (res.att && res.att.dup ? " · 이미 받은 스탬프" : "") };   /* 261013 띠 = 짧게(이름이 앞에 붙는다) */
+  else if (sp.kind === "roster") SCAN.bd = dup ? { t: "이미 참석 확인", s: sp.nm } : { t: "참석 확인", s: (au === 0 ? "프로그램 참여 이미 2개" : "스탬프 +" + (au > 0 ? au : sp.su || 1)) + (res.att && res.att.n != null ? " · 지금 " + res.att.n + " / 6" : "") + (res.att && res.att.dup ? " · 이미 받은 스탬프" : "") };   /* 261013 띠 = 짧게(이름이 앞에 붙는다) · 오후 묶음이 이미 2개면 「프로그램 참여 이미 2개」 */
   scanShow(dup ? "dup" : "ok", who || emp,
     sp.kind === "roster" ? (dup ? "이미 참석 확인됨" : "참석 확인 완료") :   /* 261013 */
     sp.kind === "sess" ? (dup ? "이미 입장 처리됨" : "입장 완료") :

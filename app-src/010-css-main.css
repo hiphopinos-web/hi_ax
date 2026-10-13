@@ -1759,6 +1759,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-apc .hd { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ax-space-8); }
   .axs-apc .hd .fl { display: flex; flex: none; color: var(--ax-color-brand); }
   .axs-apc .hd h3 { margin: 0; }
+  .axs-apc[data-apply="l1"] .hd h3, .axs-apc[data-apply="l2"] .hd h3 { flex: 1 1 0; min-width: 0; word-break: keep-all; text-wrap: balance; }   /* 261013 오후 참여하기 칸 17F 강연 카드 · 긴 강연 제목은 층 글자 옆에서 고르게 두 줄(마지막 줄 한두 글자 없게) */
   .axs-apc .k { margin: 0; font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; text-wrap: balance; }   /* 261008 큰글씨에서 한 줄 소개 마지막 줄 한 낱말(「곳」) 막기 */
   .axs-apc .axs-kv { grid-template-columns: 76px minmax(0, 1fr); row-gap: var(--ax-space-8); }
   .axs-apc .axs-kv dd { word-break: keep-all; }
@@ -2023,6 +2024,21 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-stpk2 > span { display: block; flex: none; width: 28px; height: 28px; opacity: 0.55; }
   .axs-stpk2 > span + span { margin-left: -16px; margin-top: 12px; }
   .axs-stpk2 > span.on { opacity: 1; position: relative; z-index: 1; }
+  /* 261013 오후 (사용자 확정) 스탬프 판 = 하루 흐름 4단계 · 단계 제목 「n단계 · 이름」(본문색 굵게) + 옆 짧은 말(회색) · 단계 사이 간격 · 사전등록 체크인(3개) = 24px 씰 세 개 · 프로그램 참여 세 활동 「· 」 목록(무채색 점 · 둘째 줄 내어쓰기) */
+  .axs-stg + .axs-stg { margin-top: var(--ax-space-16); }
+  .axs-stgh { display: flex; align-items: baseline; gap: var(--ax-space-8); margin: 0 2px var(--ax-space-8); }
+  .axs-stgh b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .axs-stgh span { font: var(--ax-type-t7); color: var(--ax-color-muted); }
+  .axs-stpk3 { position: relative; display: block; width: 40px; height: 40px; }
+  .axs-stpk3 > span { position: absolute; display: block; width: 24px; height: 24px; opacity: 0.55; }
+  .axs-stpk3 > span:nth-child(1) { left: 0; top: 2px; }
+  .axs-stpk3 > span:nth-child(2) { left: 16px; top: 2px; }
+  .axs-stpk3 > span:nth-child(3) { left: 8px; top: 15px; }
+  .axs-stpk3 > span.on { opacity: 1; }
+  .axs-stpl { list-style: none; margin: 0; padding: 0; font: var(--ax-type-t7); color: var(--ax-color-muted); }
+  .axs-stpl li { padding-left: 0.8em; text-indent: -0.8em; }
+  .axs-stpl li::before { content: "\00B7\00A0"; }
+  .axs-nwr { white-space: nowrap; }
   /* v5.68 프로그램 참여 = 스탬프 2개 · 제목 옆 「×2」 알약 · 17F 한쪽만(p3h) = 번호 칸 아래 절반 주황 「1/2」 */
   /* v6.83 (사용자 261009 묶음 12 「스탬프 픽토그램 × 2」) 주황 알약(점 둘 + 「스탬프 2개」 · v6.56) → 하단 탭 스탬프 그림(#nav-stamp 그대로) + 「×2」 · 면 없음 · 무채색(받은 줄 = muted) · 한 덩어리(좁으면 통째로 다음 줄) */
   .axs-stpb { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: var(--ax-space-4); }

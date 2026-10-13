@@ -130,7 +130,7 @@ function stampSync(list) {
   if (testEmp()) return;   /* v3.19 테스트 사번: 서버 stamps 가 로컬 테스트 적립을 덮지 않는다 */
   /* v3.97 (버그 260919) 빈 목록도 정본이다 · 관리자가 취소해 0개가 되면 기기에서도 0개 · 목록 자체가 없는 응답만 건너뛴다 */
   if (!Array.isArray(list)) return;
-  list = list.filter(function (id) { return id === "p3h" || id === "ck" || STAMPS.some(function (s) { return s.id === id; }); });   /* v5.90 ck(사전등록 체크인 3개)도 지우지 않는다 */   /* v5.68 p3h(STAMP_HALF · 17F 입장이나 끝 한쪽만 · 1개)는 지우지 않는다 */
+  list = list.filter(function (id) { return id === "p3h" || id === "ck" || id === "cc" || id === "ln" || STAMPS.some(function (s) { return s.id === id; }); });   /* 261013 오후 묶음 cc · ln 도(판 줄 밖 · 이 함수만 떼어 검사하므로 글자 그대로) */   /* v5.90 ck(사전등록 체크인 3개)도 지우지 않는다 */   /* v5.68 p3h(STAMP_HALF · 17F 입장이나 끝 한쪽만 · 1개)는 지우지 않는다 */
   var pend = stampPend(), now = Date.now(), pchg = false;
   Object.keys(pend).forEach(function (id) {
     var p = pend[id] || {};
@@ -158,6 +158,8 @@ function stampSync(list) {
     S.set("stamps", list.slice()); checkRewards();
     if (ckNew) notice({ key: "ck:guide", first: true, run: function () { ckGuideOpen(); } });   /* 스탬프 연출(SPOP)이 끝난 뒤 noticePump 가 연다 · 같은 sync 의 행운권 상자보다 먼저(first) */
     /* v3.52 · 운영자가 찍은 입장 스캔·상담 체크인·커피챗 완료로 서버에서 새로 생긴 스탬프 · 앱이 켜진 채 받으면 팝 */
+    /* 261013 오후 프로그램 참여 묶음이 이미 2개였으면(17F · 커피챗 · 라운지 중 다른 것으로) 새 묶음 id 는 개수가 그대로라 팝 없이 본 것으로 */
+    if (cur.indexOf("p3") >= 0 || cur.indexOf("cc") >= 0 || cur.indexOf("ln") >= 0) { var pq = added.filter(function (id) { return id === "p3" || id === "cc" || id === "ln" || id === STAMP_HALF; }); if (pq.length) { S.set("pp_seen", S.get("pp_seen", []).concat(pq)); added = added.filter(function (id) { return pq.indexOf(id) < 0; }); } }
     if (STAMP_SYNC.warm && added.length && added.length <= 2) added.forEach(function (id) { if (S.get("pp_seen", []).indexOf(id) < 0) stampOverlay(id); });
     if (STAMP_SYNC.warm && typeof tourRetStamp === "function") added.forEach(function (id) { tourRetStamp(id); });   /* v5.57 AX PLAY = 스태프 인증 스탬프가 내 QR 화면에 들어온 순간이 마침 */
   }

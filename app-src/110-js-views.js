@@ -64,7 +64,7 @@ var Views = {
     return '<div class="ax-stack axs-stpv">' + testBar +
       '<section class="axs-sec">' + railHtml(n, glow, null, false) + "</section>" +
       '<section class="axs-sec"><div class="sect"><b>스탬프 ' + STAMPS.length + "종</b><span>" + (full ? STAMP_DENOM + "개 모두 모았어요" : STAMP_DENOM + "개까지 인정") + "</span></div>" +
-      '<div class="axs-stps">' + STAMPS.map(function (s, i) { return stpRowHtml(s, i, st, full); }).join("") + "</div>" +
+      stpBoardHtml(st, full) +   /* 261013 오후 (사용자 확정) 하루 흐름 4단계 · 단계 제목 아래 줄 · 사전등록 체크인 줄은 1단계 아래(대상자만) */
       scanQNote() + '<button type="button" class="lnk sub axs-stfgo" onclick="staffStampOpen()">' + lnkChev("담당자 적립") + "</button></section></div>";   /* v6.83 (접근성 B-3 · B-6) p → button · 눌림 높이 44 · 키보드 */   /* v4.91 1F 타자왕(스탬프 아님)은 프로그램 탭 「상시 운영」로 옮겼다 */
   },
   /* v4.84 옛 「현장에서 / 앱에서」 체험 화면은 지웠다 · 아래 exp_g(체험 안내) · 스캔 · 결과 · 계단은 그대로 */
@@ -246,7 +246,7 @@ var Views = {
   /* v4.93 (261001 사용자 확정 · IA 검토 8장 A1) 탭 맨 위 [시간표 | 상시 운영] · 상시 운영 = 1F 로비 6구역(현장 간판) + 18F AX 커피챗 · 판 문법 경계 axs-pan(design.md A-5 5-19) */
   guide: function () {
     var al = PROG.seg === "always", ap = PROG.seg === "apply";
-    return '<div class="ax-stack' + (al ? " axs-pan" : "") + '">' + progSegHtml() + (al ? progAlwaysHtml() : ap ? progApplyTabHtml() : progTimeHtml()) + progIvHtml() + "</div>";   /* v5.85 세 칸(사용자 261006) · 신청하기 = 커피챗 · AX 라운지 카드(v5.82 시간표 맨 위 신청 줄을 옮겼다) */
+    return '<div class="ax-stack' + (al ? " axs-pan" : "") + '">' + progSegHtml() + (al ? progAlwaysHtml() + progIvHtml() : ap ? progApplyTabHtml() : progTimeHtml()) + "</div>";   /* 261013 오후 (사용자) AI 활용 현장 인터뷰 카드 = 상시 운영 하단에만 */   /* v5.85 세 칸(사용자 261006) · 신청하기 = 커피챗 · AX 라운지 카드(v5.82 시간표 맨 위 신청 줄을 옮겼다) */
   },
 
   /* ═══ 전체 시간표 P05 / 내 일정 M02 · 라우트 guide_time 하나(SCHED.tab) · 옛 해시·딥링크·noticeGo(my_sched) 그대로 ═══

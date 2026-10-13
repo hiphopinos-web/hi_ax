@@ -122,7 +122,7 @@ function myScheduleHtml() {
   if (!rows.length) {
     return head + '<div class="axs-rows">' + schedNowRow() +
       (all0 ? rcHtml({ cls: "", onclick: "mySched()", link: true, left: rcIcon(App.ICONS.guide_time), title: "남은 일정 없음", sub: "지난 일정은 나의 일정에서" }) + ap
-        : ap || rcHtml({ cls: "", onclick: "progApplyGo()", link: true, left: rcIcon(App.ICONS.guide), title: "신청한 프로그램 없음", sub: "프로그램에서 신청" })) + "</div>";   /* v5.85 = 프로그램 › 신청하기 칸 */
+        : ap || rcHtml({ cls: "", onclick: "progApplyGo()", link: true, left: rcIcon(App.ICONS.guide), title: "신청한 프로그램 없음", sub: "프로그램 › 참여하기" })) + "</div>";   /* v5.85 = 프로그램 › 신청하기 칸 */
   }
   /* v4.13 (사용자 결정 260922) 카드 안 스크롤(창 안의 창) 폐지 · 3개만 · 4개 이상이면 목록 바로 아래 전폭 버튼 「일정 더보기 +N」(숨은 개수) → 나의 참여 › 내 일정 · 3개 이하면 버튼 없음 */
   var more = Math.max(0, rows.length - SCHED_VIEW);
@@ -141,8 +141,8 @@ function myCouponHtml() {
     railHtml(stampCount(), false, null, true);
 }
 /* v5.57 (사용자 261004 「다음 스탬프 없애자」) 홈 「다음 스탬프」 카드(v4.84 · nextStampHtml · nextStampPick · nxEvents · nxLectureNow)를 걷었다 · 홈 = 레일 → 나의 일정 · 다음 할 일은 스탬프 탭 한 목록에서
-   STAMP_MODE(수단 칩)는 스탬프 탭 줄(stpRowHtml)이 그대로 쓴다 · 카드 틀 CSS(axs-nx · axs-nx-c · axs-nx-t)는 최초 로그인 시트의 「찍은 QR」 카드가 쓰므로 남긴다(axs-nx-i · axs-nx1 은 지움) */
-var STAMP_MODE = { lg: "자동", qz: "폰으로", p4: "폰으로", p2: "스태프 인증", p5: "폰으로", p3: "현장", st: "현장", sv: "폰으로", p1: "현장", p7: "현장", cc: "스태프 인증", ln: "스태프 인증" };
+   카드 틀 CSS(axs-nx · axs-nx-c · axs-nx-t)는 최초 로그인 시트의 「찍은 QR」 카드가 쓰므로 남긴다(axs-nx-i · axs-nx1 은 지움)
+   261013 오후 (사용자 확정) 줄마다 붙던 받는 방식 칩(STAMP_MODE · 자동 · 폰으로 · 현장 · 스태프 인증)은 걷었다 · 스탬프 탭 단계 제목(STAMP_STAGES)이 대신한다 */
 /* v4.84 Outro 추첨 체크인 카드 · 16:40~17:25(서버 기본 창) · 체크인하면(draw_in 기록) 내린다 · 행사 중에만 */
 function drawCardHtml() {
   if (!lkCond()) return "";   /* v5.92 (사용자 261006) 행운권 참석 조건 OFF = 추첨 체크인 카드 없음 */
