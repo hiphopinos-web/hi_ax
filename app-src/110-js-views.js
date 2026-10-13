@@ -246,7 +246,7 @@ var Views = {
   /* v4.93 (261001 사용자 확정 · IA 검토 8장 A1) 탭 맨 위 [시간표 | 상시 운영] · 상시 운영 = 1F 로비 6구역(현장 간판) + 18F AX 커피챗 · 판 문법 경계 axs-pan(design.md A-5 5-19) */
   guide: function () {
     var al = PROG.seg === "always", ap = PROG.seg === "apply";
-    return '<div class="ax-stack' + (al ? " axs-pan" : "") + '">' + progSegHtml() + (al ? progAlwaysHtml() : ap ? progApplyTabHtml() : progTimeHtml()) + "</div>";   /* v5.85 세 칸(사용자 261006) · 신청하기 = 커피챗 · AX 라운지 카드(v5.82 시간표 맨 위 신청 줄을 옮겼다) */
+    return '<div class="ax-stack' + (al ? " axs-pan" : "") + '">' + progSegHtml() + (al ? progAlwaysHtml() : ap ? progApplyTabHtml() : progTimeHtml()) + progIvHtml() + "</div>";   /* v5.85 세 칸(사용자 261006) · 신청하기 = 커피챗 · AX 라운지 카드(v5.82 시간표 맨 위 신청 줄을 옮겼다) */
   },
 
   /* ═══ 전체 시간표 P05 / 내 일정 M02 · 라우트 guide_time 하나(SCHED.tab) · 옛 해시·딥링크·noticeGo(my_sched) 그대로 ═══

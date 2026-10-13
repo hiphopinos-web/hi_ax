@@ -332,3 +332,104 @@ setInterval(tlogTick, 1000);
 document.addEventListener("visibilitychange", function () { if (document.hidden) tlogClose(true); });
 window.addEventListener("pagehide", function () { tlogClose(true); });
 
+/* ═══ v7.05 AI 활용 현장 인터뷰(사용자 261013) · 프로그램 탭 맨 아래 카드(시간표 · 상시 운영 · 신청하기 세 칸 모두 · 모든 직원) ═══
+   카드 = 신청하기 카드(axs-apc)와 같은 모양 · 제목 → 한 줄 → 포스터 썸네일 → 주 버튼 [영상 보기]
+   [영상 보기] → 소리 확인 창(#modal · 기준 모션 · 게임 「효과음을 켤까요?」와 같은 부품) → 큰 화면 가로 재생(#ivPlayer)
+   가로 방식 · 안드로이드 · 크롬 = 전체 화면(#ivPlayer) + screen.orientation.lock("landscape")
+              · 아이폰 사파리 = 요소 전체 화면이 없다 · video 에 playsinline 을 달지 않아 재생과 함께 기본 전체 화면(webkitEnterFullscreen · 기기를 돌리면 가로)
+              · 대체(전체 화면 · 가로 고정 실패 · PC 창) = 화면 전체 검정 판 · 세로 화면이면 무대를 90도 돌려 꽉 차게(CSS orientation: portrait) · 가로가 되면 돌리지 않는다
+   닫기 = 오른쪽 위 큰 닫기 단추 · 기기 뒤로(라우터 popstate) · Esc · 전체 화면에서 나옴 · 아이폰 기본 플레이어 닫음 → 세로 원래 화면 · 스크롤 자리 그대로
+   소리 끄고 보기 = muted 재생 + 왼쪽 위 「소리 켜기」 단추 하나(누르면 소리 켜고 사라짐) · 효과음 설정(game_sound · site_sound)과는 별개 */
+/* 영상 주소 한 곳
+   · 실제 인터뷰 영상 파일 = assets/interview/ 에 넣고 src · poster 를 바꾼다(6~8분이면 loop: false)
+   · 유튜브 등 외부 주소 = 아래 page 한 줄을 page: "https://hiphopinos-web.github.io/hi_ax/interview/" 로 바꾼다
+     → [영상 보기]가 확인 창 없이 그 고정 주소를 새 창으로 연다(외부 영상 주소는 웹배포용/interview/index.html 의 VIDEO_URL 한 줄 · 여기서는 poster 만 썸네일로 쓴다) */
+var IV_VIDEO = { src: "assets/interview/sample.mp4", poster: "assets/interview/sample.webp", loop: true, page: "" };
+var IV_PLAY_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6.8v10.4a.8.8 0 0 0 1.2.7l8.3-5.2a.8.8 0 0 0 0-1.4l-8.3-5.2A.8.8 0 0 0 9 6.8z" fill="currentColor"/></svg>';
+function progIvHtml() {
+  return '<section class="ax-card axs-ivc" aria-labelledby="ivTtl"><h3 class="ax-card-title" id="ivTtl">AI 활용 현장 인터뷰</h3>' +
+    '<p class="k">현장 직원이 업무에 AI를 쓴 이야기</p>' +
+    '<button type="button" class="axs-ivth" onclick="ivAsk(this)" aria-label="AI 활용 현장 인터뷰 영상 보기"><img src="' + esc(IV_VIDEO.poster) + '" alt="" width="1280" height="720" decoding="async"><span class="pl">' + IV_PLAY_SVG + "</span></button>" +
+    '<button type="button" class="ax-button" onclick="ivAsk(this)">영상 보기</button></section>';
+}
+var IVP = { on: false, el: null, v: null, y: 0, from: null, fs: false, t: 0 };
+function ivAsk(b) {
+  if (IV_VIDEO.page) { try { window.open(IV_VIDEO.page, "_blank", "noopener"); } catch (e) { location.href = IV_VIDEO.page; } return; }
+  IVP.from = b || null;
+  modalOpen('<div class="ax-stack-tight axs-gap12">' +
+    '<button type="button" class="ax-button" onclick="ivPlay(true)">소리 켜고 보기</button>' +
+    '<button type="button" class="ax-button ax-button-weak" onclick="ivPlay(false)">소리 끄고 보기</button></div>', "소리를 켤까요?");
+}
+/* 아이폰 = 요소 전체 화면 없음 + video 기본 전체 화면 있음 */
+function ivIOS() {
+  var d = document.documentElement;
+  return !(d.requestFullscreen || d.webkitRequestFullscreen) && typeof document.createElement("video").webkitEnterFullscreen === "function";
+}
+function ivFsEl() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
+function ivSndHtml() { return '<button type="button" class="ivp-snd">' + sndIcon(true) + "<span>소리 켜기</span></button>"; }
+/* 확인 창 단추에서 부른다 · 누른 그 순간(사용자 동작) 안에 재생 · 전체 화면 · 가로 고정을 모두 요청한다 */
+function ivPlay(snd) {
+  if (IVP.on) return;
+  modalClose(true);
+  var ios = ivIOS(), w = document.createElement("div");
+  IVP.on = true; IVP.fs = false; IVP.y = window.scrollY || 0; IVP.t = Date.now();
+  w.id = "ivPlayer"; w.className = AXM.rm() ? "rm" : "";
+  w.setAttribute("role", "dialog"); w.setAttribute("aria-modal", "true"); w.setAttribute("aria-label", "AI 활용 현장 인터뷰 영상"); w.tabIndex = -1;
+  w.innerHTML = '<div class="ivp-st"><video class="ivp-v" preload="auto" controls controlslist="nodownload nofullscreen noremoteplayback" disablepictureinpicture' + (ios ? "" : " playsinline") + "></video>" +
+    '<button type="button" class="ivp-x" aria-label="닫기">' + X_SVG + "</button>" + (snd ? "" : ivSndHtml()) + "</div>";
+  var v = w.querySelector("video");
+  v.poster = IV_VIDEO.poster; v.loop = !!IV_VIDEO.loop; v.muted = !snd; v.defaultMuted = !snd; v.src = IV_VIDEO.src;
+  IVP.el = w; IVP.v = v;
+  document.body.appendChild(w);
+  document.documentElement.classList.add("ivp-lock");
+  w.querySelector(".ivp-x").addEventListener("click", function () { ivClose(); });
+  ivSndWire(w);
+  v.addEventListener("webkitendfullscreen", function () { if (IVP.v === v) ivClose(); });   /* 아이폰 기본 플레이어를 닫으면 세로 원래 화면으로 */
+  var p = null;
+  try { p = v.play(); } catch (e) {}
+  if (p && p.catch) p.catch(function () {   /* 소리 켠 재생을 브라우저가 막으면 소리 끄고 재생 + 소리 켜기 단추 */
+    if (IVP.v !== v || v.muted) return;
+    v.muted = true; try { var p2 = v.play(); if (p2 && p2.catch) p2.catch(function () {}); } catch (e) {}
+    if (!w.querySelector(".ivp-snd")) { w.querySelector(".ivp-st").insertAdjacentHTML("beforeend", ivSndHtml()); ivSndWire(w); }
+  });
+  if (ios) { try { v.webkitEnterFullscreen(); } catch (e) {} }   /* 메타데이터 전이면 실패할 수 있다 · 그때는 play() 가 기본 전체 화면으로 들어간다 */
+  else {
+    var req = w.requestFullscreen || w.webkitRequestFullscreen, lock = function () {
+      IVP.fs = !!ivFsEl();
+      try { var o = screen.orientation; if (o && o.lock) { var lp = o.lock("landscape"); if (lp && lp.catch) lp.catch(function () {}); } } catch (e) {}   /* 실패 = 세로 그대로 · CSS 가 무대를 돌린다 */
+    };
+    if (req) { try { var fp = req.call(w, { navigationUI: "hide" }); if (fp && fp.then) fp.then(lock, function () {}); else setTimeout(lock, 60); } catch (e) {} }
+  }
+  requestAnimationFrame(function () { if (IVP.el === w) { w.classList.add("in"); try { w.querySelector(".ivp-x").focus({ preventScroll: true }); } catch (e) {} } });
+}
+function ivSndWire(w) {
+  var b = w.querySelector(".ivp-snd"); if (!b || b._w) return; b._w = 1;
+  b.addEventListener("click", function () {
+    var v = IVP.v; if (!v) return;
+    v.muted = false; v.volume = 1; if (v.paused) { try { var p = v.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {} }
+    if (b.parentNode) b.parentNode.removeChild(b);
+    try { w.querySelector(".ivp-x").focus({ preventScroll: true }); } catch (e) {}
+  });
+}
+function ivClose() {
+  if (!IVP.on) return;
+  var w = IVP.el, v = IVP.v, y = IVP.y;
+  IVP.on = false; IVP.el = null; IVP.v = null; IVP.fs = false;
+  try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {}
+  if (ivFsEl()) { var ex = document.exitFullscreen || document.webkitExitFullscreen; if (ex) { try { var xp = ex.call(document); if (xp && xp.catch) xp.catch(function () {}); } catch (e) {} } }
+  if (v) { try { v.pause(); v.removeAttribute("src"); v.load(); } catch (e) {} }
+  document.documentElement.classList.remove("ivp-lock");
+  var back = function () { window.scrollTo(0, y); };
+  back(); setTimeout(back, 120); setTimeout(back, 420);   /* 가로 → 세로로 돌아오며 창 크기가 바뀌어도 원래 스크롤 자리 */
+  if (w) {
+    var fin = function () { if (w.parentNode) w.parentNode.removeChild(w); };
+    if (w.classList.contains("rm")) fin(); else { w.classList.remove("in"); w.classList.add("out"); setTimeout(fin, AXM.OUT + 40); }
+  }
+  try { var f = IVP.from; if (f && f.isConnected && f.focus) f.focus({ preventScroll: true }); } catch (e) {}
+}
+/* 전체 화면에서 나오면(안드로이드 뒤로 · Esc · 시스템 제스처) 영상도 닫는다 · 들어가는 중(0.6초)의 흔들림은 무시 */
+["fullscreenchange", "webkitfullscreenchange"].forEach(function (t) {
+  document.addEventListener(t, function () { if (IVP.on && IVP.fs && !ivFsEl()) ivClose(); else if (IVP.on && ivFsEl()) IVP.fs = true; });
+});
+document.addEventListener("keydown", function (e) { if (IVP.on && e.key === "Escape") { e.preventDefault(); e.stopPropagation(); ivClose(); } }, true);
+document.addEventListener("visibilitychange", function () { if (document.hidden && IVP.on && IVP.v) { try { IVP.v.pause(); } catch (e) {} } });

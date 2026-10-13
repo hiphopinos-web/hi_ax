@@ -392,6 +392,7 @@ window.addEventListener("popstate", function () {
   var app = el("app");
   if (!app || app.hidden) { navRepush(); return; }                       /* 입장 전 화면은 그대로 유지 */
   if (window.AXTour && AXTour.isOpen()) { AXTour.back(); navRepush(); return; }
+  if (typeof IVP === "object" && IVP.on) { ivClose(); navRepush(); return; }   /* v7.05 인터뷰 영상 가로 보기 · 뒤로 = 닫고 세로 원래 화면 */
   if (typeof KVW === "object" && KVW.on) { kitViewClose(); navRepush(); return; }   /* 261008 착용 사진 전체 화면 · 뒤로 = 닫고 시트(고른 칩 그대로) */   /* v5.11 1층 둘러보기 · 뒤로 = 한 층씩(판 보기 → 시트 → 둘러보기) */
   /* v4.18 바텀 시트가 열려 있으면 뒤로 = 시트 닫기 (통신 중에는 닫지 않고 그대로 둔다) */
   if (el("axsSheet")) { if (!SHEET.busy) sheetClose(); navRepush(); return; }
