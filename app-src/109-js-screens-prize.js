@@ -560,14 +560,14 @@ function stampCkRowOn(st) {
    받기 전 = 같은 씰(stampSealSvg)에 가운데 번호 · 브랜드 옅은 톤 · 받으면 = 찍힌 씰(「완료」 · 기울임 그대로) · 2개짜리(프로그램 참여) = 작은 씰 두 개 겹침(받은 만큼 찍힘) · 읽는 글 「n번 스탬프, 받음 / 아직」
    클래스 axs-stpn 은 남긴다(도장 팝이 날아와 앉는 자리 · spTarget)
    v6.89 (사용자 261009 「우측 스탬프 두 개 지우자」) 2개짜리 줄 오른쪽 46px 도장 두 개(v6.86 · 시안 A2 방향)를 걷었다 · 왼쪽 칸 작은 씰 두 개가 「도장 2개」 · 오른쪽 = 다른 줄과 같은 행동 글 · 읽는 글 「스탬프 2개 받는 활동, 2개 중 n개 받음」은 왼쪽 칸
-   261013 오후 사전등록 체크인(x3) = 작은 씰 세 개 · 번호 없음(줄 번호 1~8 은 판 줄만) */
+   261013 오후 사전등록 체크인(x3) = 작은 씰 세 개(프로그램 참여 줄처럼 겹침 · 번호 없음)(줄 번호 1~8 은 판 줄만) */
 function stpCellHtml(s, i, got, half) {
   var k = function (on, mid, ms) { return on ? stampSealSvg(40) : stampSealSvg(40, "currentColor", mid, ms); };
-  if (s.x3) return '<span class="axs-stpn axs-stpk" role="img" aria-label="스탬프 3개 받는 활동, ' + (got ? "받음" : "아직") + '"><span class="axs-stpk3">' +
-    [0, 1, 2].map(function () { return "<span" + (got ? ' class="on"' : "") + ">" + k(got, "") + "</span>"; }).join("") + "</span></span>";
+  var ov = function (ons) { return '<span class="axs-stpk2' + (ons.length === 3 ? " n3" : "") + '">' + ons.map(function (on) { return "<span" + (on ? ' class="on"' : "") + ">" + k(on, "") + "</span>"; }).join("") + "</span>"; };   /* 261013 오후 N개 겹침 하나로(2개 · 3개 같은 크기 · 같은 세로 중심) */
+  if (s.x3) return '<span class="axs-stpn axs-stpk" role="img" aria-label="스탬프 3개 받는 활동, ' + (got ? "3개 받음" : "아직") + '">' + ov([got, got, got]) + "</span>";
   var lb = s.x2 ? "스탬프 2개 받는 활동, 2개 중 " + (got ? 2 : half ? 1 : 0) + "개 받음" : s.title + " 스탬프, " + (got ? "받음" : "아직");   /* 261013 오후 (사용자) 받기 전 도장 번호 뺌 · 읽는 글 = 이름 */
   var inner = !s.x2 ? '<span class="axs-stpk1' + (got ? " on" : "") + '">' + k(got, "") + "</span>" :
-    '<span class="axs-stpk2"><span' + (got || half ? ' class="on"' : "") + ">" + k(got || half, "") + "</span><span" + (got ? ' class="on"' : "") + ">" + k(got, "") + "</span></span>";
+    ov([got || half, got]);
   return '<span class="axs-stpn axs-stpk" role="img" aria-label="' + lb + '">' + inner + "</span>";
 }
 /* 261013 오후 (사용자 확정) 스탬프 탭 판 = 참여자의 하루 흐름 4단계(STAMP_STAGES) · 단계 제목 「n단계 · 이름」 + 옆 짧은 말 · 줄 번호 = STAMPS 순서 1~8 · 옛 서버(stv 1)는 한 목록 그대로 */
