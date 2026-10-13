@@ -386,7 +386,7 @@ function applyTenHtml() {
 /* 261013 오후 (사용자) 참여하기 칸 맨 위 = 17F 오후 파트너 강연 두 장(자유 참석 · 신청 버튼 없음 · 누르면 강연 상세 · 도장 ×2) · 표기 = 시간표(SESSIONS l1 · l2) 그대로 */
 function apply17Html(id) {
   var x = SESSIONS.filter(function (q) { return q.id === id; })[0]; if (!x) return "";
-  return applyCardHtml({ k: id, nm: x.sub, fl: 17, kor: x.who, kv: [["시간", x.tm], ["참여", "자유 참석 · 입장 QR + 끝 QR"]], seal: stampTagHtml("p3", 2), tap: "progOpen(\'" + id + "\')", more: "progOpen(\'" + id + "\')" });
+  return applyCardHtml({ k: id, nm: x.sub, fl: 17, kor: x.who, kv: [["시간", x.tm], ["참여", "신청 없이 자유 참석"]], seal: stampTagHtml("p3", 2), tap: "progOpen(\'" + id + "\')", more: "progOpen(\'" + id + "\')" });
 }
 function progApplyTabHtml() {
   var h = apply17Html("l1") + apply17Html("l2") + applyLoungeHtml() + applyCchatHtml();   /* 261013 오후 순서 = 17F AWS · 17F MS · 1F AX 라운지 · 18F 커피챗 */
