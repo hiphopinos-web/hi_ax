@@ -312,7 +312,7 @@ var SV_PROGS = [
   { id: "q2_1", fl: "1F", nm: "AX VISION", sub: "현대해상 AX 로드맵", q: "현대해상 AX 로드맵 소개는 어떠셨나요?" },
   { id: "q2_2", fl: "1F", nm: "AX LAB", sub: "동료들이 만든 데이터분석 과제", q: "동료들이 만든 데이터분석 과제는 어떠셨나요?" },
   { id: "q2_3", fl: "1F", nm: "AX PLAY", sub: "Hi-Helper, HiDI-Q", q: "Hi-Helper, HiDI-Q 체험은 어떠셨나요?", pre: "p2" },
-  { id: "q2_4", fl: "1F", nm: "EVENT", sub: "포토부스, 프롬프트 챌린지", q: "AI 포토부스, 프롬프트 챌린지는 어떠셨나요?" },
+  { id: "q2_4", fl: "1F", nm: "EVENT", sub: "포토부스, 룰렛, 타자왕", q: "포토부스, 룰렛, 타자왕은 어떠셨나요?" },
   { id: "q2_5", fl: "1F", nm: "AX 라운지", sub: "1:1 DAP 과제 상담", q: "AX 라운지 1:1 DAP 과제 상담은 어떠셨나요?", pre: "ln" },
   { id: "q2_6", fl: "17F", nm: "Agentic AI 시대 일하는 방식의 변화", sub: "AWS", q: "Agentic AI 시대 일하는 방식의 변화 세션은 어떠셨나요?", att: "l1" },
   { id: "q2_7", fl: "17F", nm: "AI와 친해지기", sub: "MS", q: "AI와 친해지기 세션은 어떠셨나요?", att: "l2" },
