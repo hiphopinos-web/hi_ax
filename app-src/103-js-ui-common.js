@@ -206,7 +206,7 @@ function toast(msg) {
    rise = 바뀐 내용 · 도착한 곳 · 펼친 내용 떠오름 · scrollTo = 부드러운 스크롤 + 멈추면 도착한 곳 떠오름 · seg = 세그먼트 칸 바꾸기(기준 모션 그대로 · 어느 칸으로든)
    움직임 줄이기(prefers-reduced-motion) = 전부 바로(지금 규칙 그대로) · 끌어서 닫은 시트(data-drop)는 이미 내려가 있어 바로 치운다 */
 var AXM = {
-  IN: 300, OUT: 180, MOVE: 250,
+  IN: 300, OUT: 180, MOVE: 250, PICK: 450,
   rm: function () { return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); },
   open: function (w) {
     if (!w || AXM.rm()) return;

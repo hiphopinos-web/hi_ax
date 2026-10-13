@@ -28,7 +28,8 @@ function qrHtml() {
    한 화면 한 문항 · 보기 하나 문항은 고르면 AXM.MOVE(0.25초) 뒤 자동으로 다음 · 「이전」으로 돌아가 고친다 · 진행 n / 전체 는 안내 화면을 세지 않는다
    중간 이탈 = 이 기기 초안(survey_draft · v 2 · cur = 지금 화면 id)으로 이어 하기 · 1인 1회 · 제출하면 스탬프 1개(서버 survey_submit)
    답은 사번과 함께 저장한다(사용자 결정 261013 · 옛 익명 저장 안내 폐기) · 열림 판정 = 서버 sync my.svOpen(옛 서버 = 이 기기 시각 규칙) */
-var SV = { card: 0, busy: false, aggAt: 0, adv: 0 };
+var SV = { card: 0, busy: false, aggAt: 0, adv: 0, pend: 0 };
+var SV_AUTO = true;   /* v7.17 보기를 고르면 자동으로 다음 문항(false = 「다음」 단추만) · 고른 표시를 AXM.PICK(450ms) 보여 준 뒤 「다음」 단추와 같은 svNext 로 넘긴다 */
 /* v3.52 설문 잠금 · "time" = 아직 닫힘 · "nostamp" = 다른 스탬프 0개 · "" = 열림 (서버 survey_submit 와 같은 조건) */
 function surveyLock() {
   if (!surveyOpen()) return "time";
@@ -72,7 +73,7 @@ function svEmpty(q, v) {
 }
 function svCur(d, fl) { fl = fl || svFlow(d); for (var i = 0; i < fl.length; i++) if (fl[i].id === d.cur) return i; return 0; }
 function svGoId(id) {
-  var d = svDraft(); clearTimeout(SV.adv);
+  var d = svDraft(); clearTimeout(SV.adv); SV.pend = 0;
   d.cur = id;
   if (id === "q2_0" && !Array.isArray(d.a.q2_0)) { d.a.q2_0 = svPreIds(); d.pre = 1; }   /* 처음 열 때만 · 그 뒤로는 본인이 고른 그대로 */
   svSave(d); SV.card = 0; App.render(); window.scrollTo(0, 0);
@@ -84,13 +85,16 @@ function svNext() {
   if (q && q.type === "intro" && BE.on && !testMode()) beSync();   /* 시작하면 참석 목록(my.svPre)을 한 번 받아 둔다 · Q2-0 까지 문항 셋 */
   if (i + 1 < fl.length) svGoId(fl[i + 1].id);
 }
-function svPrev() { var d = svDraft(), fl = svFlow(d), i = svCur(d, fl); if (i > 0) svGoId(fl[i - 1].id); }
-/* 보기 하나 · 고른 표시를 먼저 그리고 AXM.MOVE 뒤 다음 문항(그 사이 다시 고르면 시계를 새로) */
+function svPrev() { var d = svDraft(), fl = svFlow(d), i = svCur(d, fl); clearTimeout(SV.adv); SV.pend = 0; if (i > 0) svGoId(fl[i - 1].id); }   /* 자동 넘김 기다리는 중 「이전」 = 넘김 취소 */
+/* 보기 하나 · 고른 표시(주황 테두리 · 체크)를 먼저 그리고 AXM.PICK 뒤 「다음」 단추와 같은 svNext(= svGoId · 화면 안 전환 떠오름)
+   넘기는 동안(SV.pend) 다른 보기 = 무시 · 「이전」 · 「다음」 = svPrev · svGoId 가 시계를 지움 · 동작 줄이기 = 기다림 없이 바로 */
 function svChoose(id, v) {
-  if (SV.busy) return;
-  var d = svDraft(); d.a[id] = v; svSave(d); App.render();
-  clearTimeout(SV.adv);
-  SV.adv = setTimeout(function () { var d2 = svDraft(); if (App.current === "survey" && d2.cur === id && d2.a[id] === v) svNext(); }, AXM.MOVE);
+  if (SV.busy || SV.pend) return;
+  var d = svDraft(); d.a[id] = v; svSave(d);
+  if (!SV_AUTO) { App.render(); return; }
+  if (AXM.rm()) { svNext(); return; }
+  SV.pend = 1; App.render(); clearTimeout(SV.adv);
+  SV.adv = setTimeout(function () { SV.pend = 0; var d2 = svDraft(); if (App.current === "survey" && d2.cur === id && d2.a[id] === v) svNext(); }, AXM.PICK);
 }
 /* Q2-0 · 여러 개 · none 은 단독(고르면 나머지 해제 · 다른 것을 고르면 none 해제) · 풀린 프로그램의 답은 지운다 */
 function svPick(pid) {
