@@ -91,3 +91,63 @@ var SV_NUM={
   paint:function(it){ var V=svV(); if(V.paint) V.paint(it); },
   right:function(it){ var V=svV(); return V.right?V.right(it):""; }
 };
+/* ── 261014 (사용자 확정) 설문 검토 의견 · 검토용 미리보기(survey-review/)에서 화면마다 남긴 의견 · 서버 sv_review_list(관리코드 · 사번 없음)
+ * 자리 = 설문 서브탭 Q4 자유 의견 카드 바로 아래 · 툴바 「검토 의견」 단추로 내려간다 · 보기 = 시간순 | 화면별 묶어 보기 · 「글로 복사」 = 화면 순서대로 묶은 글(나중에 한꺼번에 반영할 때)
+ * SV_VIEW 의 need · mount · paint 를 감싸 덧붙인다(위 설문 집계 코드는 그대로) */
+var SVR_ORD=["intro","q1_1","q1_2","q1_3","i_prog","q2_0","q2_1","q2_2","q2_3","q2_4","q2_5","q2_6","q2_7","q2_8","i_und","q3_1","q3_2","q3_3","q4","done","all"];
+function svrUi(){ var u=svSt(); if(u.rg==null) u.rg=false; return u; }
+function svrLbl(id){ return /^q\d/.test(id)?svQno(id):({ intro:"첫 화면", i_prog:"안내 · 프로그램별", i_und:"안내 · 이해도", done:"완료 화면", all:"전체 의견" })[id]||id; }
+function svrRows(){ var d=S.data.svr; return d&&d.ok&&d.rows?d.rows:[]; }
+function svrGroups(){
+  var by={}, ord=[];
+  svrRows().forEach(function(x){ if(!by[x.sid]){ by[x.sid]={ sid:x.sid, q:x.q, list:[] }; ord.push(x.sid); } by[x.sid].list.push(x); });
+  var ix=function(s){ var i=SVR_ORD.indexOf(s); return i<0?999:i; };
+  return ord.sort(function(a,b){ return ix(a)-ix(b)||(a<b?-1:1); }).map(function(k){ var g=by[k]; g.list=g.list.slice().reverse(); return g; });
+}
+function svrGrp(on){ var u=svrUi(); if(u.rg===!!on) return; u.rg=!!on; svrPaint(); }
+function svrWho(x){ return (x.nm?esc(x.nm):'<span class="cap">이름 없음</span>')+' · <span class="n">'+esc(short(x.t))+'</span>'; }
+function svrPaint(){
+  var box=el("svrL"), hd=el("svrH"), d=S.data.svr; if(!box) return;
+  var u=svrUi(), rows=svrRows();
+  if(hd) hd.innerHTML='<span class="seg" role="group" aria-label="검토 의견 보기"><button class="'+(u.rg?"":"on")+'" aria-pressed="'+!u.rg+'" data-qa="svr.time" onclick="svrGrp(false)">시간순</button><button class="'+(u.rg?"on":"")+'" aria-pressed="'+u.rg+'" data-qa="svr.grp" onclick="svrGrp(true)">화면별 묶어 보기</button></span><span class="sp"></span><span class="n">'+n0(rows.length)+'건</span><button class="btn sm" data-qa="svr.copy" onclick="svrCopy()"'+(rows.length?"":" disabled")+'>글로 복사</button>';
+  if(!d){ box.innerHTML=skel(); return; }
+  if(unknownSrv(d)){ box.innerHTML=srvMissing("설문 검토 의견(sv_review_list)"); return; }
+  if(!d.ok){ box.innerHTML=loadErr(d,"svr"); return; }
+  if(!rows.length){ box.innerHTML='<div class="empty"><b>아직 남긴 검토 의견이 없습니다</b></div>'; return; }
+  var tx=function(s){ return '<div class="svr-tx">'+esc(s)+'</div>'; };
+  if(!u.rg){
+    box.innerHTML='<div class="scrl"><table class="tb"><colgroup><col style="width:104px"><col style="width:120px"><col style="width:220px"><col></colgroup><thead><tr><th>시각</th><th>이름</th><th>화면</th><th>의견</th></tr></thead><tbody>'+
+      rows.map(function(x){ return '<tr><td class="n cap">'+esc(short(x.t))+'</td><td class="wrap">'+(x.nm?esc(x.nm):'<span class="cap">-</span>')+'</td><td class="wrap"><b>'+esc(svrLbl(x.sid))+'</b>'+(x.sid!=="all"&&x.q?'<div class="cap">'+esc(x.q)+'</div>':'')+'</td><td class="wrap">'+tx(x.txt)+'<div class="cap">'+esc(x.ver)+(x.dev?' · '+esc(x.dev):'')+'</div></td></tr>'; }).join("")+'</tbody></table></div>';
+    return;
+  }
+  box.innerHTML='<div class="svr-gs">'+svrGroups().map(function(g){
+    return '<div class="svr-g" data-qa="svr.g.'+esc(g.sid)+'"><div class="hd"><b>'+esc(svrLbl(g.sid))+'</b>'+(g.sid!=="all"&&g.q?'<span class="cap">'+esc(g.q)+'</span>':'')+'<span class="n">'+n0(g.list.length)+'건</span></div>'+
+      g.list.map(function(x){ return '<div class="it">'+tx(x.txt)+'<div class="cap">'+svrWho(x)+'</div></div>'; }).join("")+'</div>';
+  }).join("")+'</div>';
+}
+function svrText(){
+  var rows=svrRows(), gs=svrGroups(), out=["[설문 검토 의견] "+short((S.data.svr||{}).t||"")+" 기준 · "+rows.length+"건 · 화면 순서"];
+  gs.forEach(function(g){
+    out.push(""); out.push("■ "+svrLbl(g.sid)+(g.q&&g.sid!=="all"?" · "+g.q:"")+" ("+g.list.length+"건)");
+    g.list.forEach(function(x){ out.push("- "+String(x.txt).replace(/\n+/g," / ")+" ("+(x.nm||"이름 없음")+" · "+short(x.t)+")"); });
+  });
+  return out.join("\n");
+}
+function svrCopy(){
+  var t=svrText(), n=svrRows().length;
+  var fb=function(){ try{ var a=document.createElement("textarea"); a.value=t; a.setAttribute("readonly",""); a.style.position="fixed"; a.style.opacity="0"; document.body.appendChild(a); a.select(); var ok=document.execCommand("copy"); document.body.removeChild(a); if(ok){ toast("복사했습니다 · "+n0(n)+"건"); return; } }catch(e){} prompt("검토 의견",t); };
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function(){ toast("복사했습니다 · "+n0(n)+"건"); },fb); else fb();
+}
+function svrJump(){ var c=el("svrC"); if(c) c.scrollIntoView({ behavior:"smooth", block:"start" }); }
+(function(){ try{ var st=document.createElement("style"); st.textContent=".svr-tx{white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere}.svr-gs{display:grid;gap:12px;padding:12px 16px 16px}.svr-g{border:1px solid var(--line2);border-radius:var(--r-s);padding:12px 14px}.svr-g .hd{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:4px}.svr-g .hd .n{margin-left:auto}.svr-g .it{padding:8px 0;border-top:1px solid var(--line2)}.svr-g .it:first-of-type{border-top:0}"; document.head.appendChild(st); }catch(e){} })();
+(function(){
+  var need0=SV_VIEW.need, mount0=SV_VIEW.mount, paint0=SV_VIEW.paint;
+  SV_VIEW.need=function(it){ return need0(it).concat([{ k:"svr", a:"sv_review_list", p:{}, ttl:30000 }]); };
+  SV_VIEW.mount=function(it){
+    mount0(it);
+    var q4=el("svL"), bar=el("vb")&&el("vb").querySelector(".card .bar");
+    if(bar) bar.insertAdjacentHTML("beforeend",'<button class="btn" data-qa="svr.jump" onclick="svrJump()">검토 의견</button>');
+    if(q4&&q4.parentNode) q4.parentNode.insertAdjacentHTML("afterend",'<div class="card list mt16" id="svrC" data-qa="svr.card"><div class="bar"><h2 style="font-size:var(--fs-h2)">검토 의견</h2><span class="cap">검토용 미리보기(survey-review/)에서 남긴 글</span></div><div class="bar" id="svrH"></div><div id="svrL"></div></div>');
+  };
+  SV_VIEW.paint=function(it){ paint0(it); svrPaint(); };
+})();

@@ -71,6 +71,15 @@ function testOverlayDrop(id) {
   if (PP.seenT) { clearTimeout(PP.seenT); PP.seenT = null; }   /* 대기 중인 「본 스탬프·글로우 기록」 타이머 */
   PP.animOn = false;
 }
+/* 261014 (사용자 버그 신고) 테스트 사번 「테스트 · 완료 취소」 설문 · 예전에는 스탬프만 빼서 이 기기 완료 표시(survey_done)가 남아 완료 화면에서 다시 시작할 수 없었다
+   이 기기 완료 · 초안 · 내 답 · 넘김 상태를 지운다 · 서버에 연결된 테스트 사번이면 서버도 정리(sv_test_reset · 테스트 사번 판정은 서버 · 그 사번의 테스트 표시 설문 행만 지움 · unstamp:sv)
+   일반 사번은 이 단추가 없다(testMode) · 서버도 테스트 사번이 아니면 notest 로 거절한다(1인 1회 · 담당자 취소 뒤 재제출 규칙 그대로) */
+function svTestUndo() {
+  S.set("survey_done", false); S.set("survey_draft", null); S.del("survey_mine");
+  if (typeof SV !== "undefined") { clearTimeout(SV.adv); SV.pend = 0; SV.busy = false; }
+  var u = S.get("user", {}) || {};
+  if (BE.on && testEmp() && u.empId) beCall({ action: "sv_test_reset", emp: u.empId }, function () {}, function () {});
+}
 function testStampUndo(id) {
   if (!testMode()) return;
   var st = S.get("stamps", []);
@@ -78,6 +87,7 @@ function testStampUndo(id) {
   testOverlayDrop(id);
   S.set("pp_seen", S.get("pp_seen", []).filter(function (x) { return x !== id; }));   /* 다시 완료하면 도장 연출이 또 나오게 */
   S.set("stamps", st.filter(function (x) { return x !== id; }));
+  if (id === "sv") svTestUndo();   /* 261014 설문은 이 기기 완료 · 초안도 지워 첫 화면부터 */
   var n = stampCount();
   S.set("raffle_seen", raffleTickets(n)); if (S.get("raffle_opened", 0) > raffleTickets(n)) S.set("raffle_opened", raffleTickets(n));   /* 4개째를 다시 채우면 응모권 안내가 다시 뜨게 · 목업 번호는 개수에서 계산되므로 자동으로 줄어든다 */
   if (n < 3) {                              /* 룰렛 문턱 아래 · 열림·사용·글로우를 되돌려 3개째 연출이 다시 나오게 */

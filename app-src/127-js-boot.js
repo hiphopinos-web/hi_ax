@@ -60,6 +60,9 @@
     return;
   }
 
+  /* 261014 설문 검토용 미리보기(survey-review/ → index.html?svreview=1) · 로그인 없음 · 이 기기 저장소 · 앱 서버 호출 끊음(의견 저장만) · 113-js-survey-review.js */
+  if (svrMode()) { svrBoot(splash); return; }
+
   // 데모/캡처 훅: #demo=화면명 으로 열면 로그인·데이터 세팅 후 해당 화면으로 바로 진입 (스크린샷·시연용)
   var dm = location.hash.match(/^#demo(?:=(\w+))?/i);
   if (dm) {
