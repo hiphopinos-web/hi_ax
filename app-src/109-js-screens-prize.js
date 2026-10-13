@@ -502,7 +502,7 @@ function stpMeta(s, got) {
   if (s.id === "p4") return (stampV2() ? "3종 완주 · " : "서로 다른 3종목 · ") + Math.min(MG_NEED, mgDone()) + " / " + MG_NEED;
   if (s.id === "p2") return "1F · 체험 2종";   /* 이름(HiDI-Q · Hi-Helper)은 구역 줄 · 체험 안내 화면에 */
   if (s.id === "p5") return "1분 · AX LAB QR로도";
-  if (s.id === "p3") return progUnits() === 1 ? "2개 중 1개 · 하나 더" : "셋 중 하나만 해도 2개";   /* v5.68 17F 입장이나 끝 한쪽만 받은 상태 · 261013 오후 묶음(아래 세 줄 목록 stpProgListHtml) */
+  if (s.id === "p3") return progUnits() === 1 ? "2개 중 1개 · 하나 더" : "최대 2개";   /* v5.68 17F 입장이나 끝 한쪽만 받은 상태 · 261013 오후 묶음(아래 세 줄 목록 stpProgListHtml) · 261013 밤 (사용자 확정) 활동마다 개수는 목록에 · 묶음 최대 2 한 줄 */
   if (s.id === "st") { var sst = stairState(); return sst.leg ? "진행 중 · " + sst.leg.fl + "F 시작" : stairLine(sst); }
   if (s.id === "sv") return stampV2() ? "60초" : SURVEY.open + "부터 · 60초";   /* 261013 오후 14:30 은 4단계 제목에 */
   if (s.id === STAMP_CK) return "1F 주차장 체크인존 · 08:00부터";
@@ -526,9 +526,9 @@ function stpAct(s, got) {
 /* 261013 오후 (사용자 확정) 프로그램 참여 줄 아래 세 활동 · 「· 」 목록(무채색 점 · 둘째 줄 내어쓰기) · 선정 · 승인된 내 시각이 있으면 괄호로(통째로 넘김) */
 function stpProgListHtml() {
   var c = S.get("cchat", null), r = typeof myResv === "function" ? myResv() : null, tm = function (t) { return ' <span class="axs-nwr">(' + esc(t) + ")</span>"; };
-  var rows = ["17F 오후 AWS · MS 강연" + tm("입장 1 + 끝 1"),
-    "1F AX 라운지 참석" + (r && r.status === "approved" && r.slot ? tm(hhmm(r.slot) + " 승인") : ""),
-    "18F 커피챗 참석" + (c && c.status === "matched" && c.round ? tm(c.round + " 선정") : "")];
+  var rows = ["17F 오후 AWS · MS 강연 2개" + tm("입장 1 + 끝 1"),   /* 261013 밤 (사용자 확정) 활동마다 개수(17F 2 · 라운지 2 · 커피챗 1) */
+    "1F AX 라운지 참석 2개" + (r && r.status === "approved" && r.slot ? tm(hhmm(r.slot) + " 승인") : ""),
+    "18F 커피챗 참석 1개" + (c && c.status === "matched" && c.round ? tm(c.round + " 선정") : "")];
   return '<ul class="axs-stpl">' + rows.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
 }
 function stpRowHtml(s, i, st, full) {
@@ -537,7 +537,7 @@ function stpRowHtml(s, i, st, full) {
   var test = !testMode() || s.id === STAMP_CK ? "" : got ? '<button type="button" class="axs-stpx" onclick="testStampUndo(\'' + s.id + '\')">테스트 · 완료 취소</button>' : '<button type="button" class="axs-stpx" onclick="testStamp(\'' + s.id + '\')">테스트 · 완료 처리</button>';
   /* v4.95 행동이 있는 줄은 줄 전체를 눌러도 같은 행동(안의 버튼 · 타일은 그 버튼만) · 키보드는 오른쪽 버튼 */
   var tap = a[1] ? ' onclick="if (!event.target.closest(\'button\')) { ' + a[1].replace(/"/g, "&quot;") + '; }"' : "";
-  /* v5.68 프로그램 참여 = 2개 · 17F 한쪽만(p3h) = 번호 칸 반 채움 · 261013 오후 커피챗 · 라운지 참석은 한 번에 2개(묶음) */
+  /* v5.68 프로그램 참여 = 2개 · 17F 한쪽만(p3h) = 번호 칸 반 채움 · 261013 오후 라운지 참석은 한 번에 2개(묶음) · 261013 밤 커피챗 참석만(cc 1개)도 반 칸(progUnitsOf 1) */
   var half = s.id === "p3" && !got && progUnitsOf(st) === 1;
   /* v6.83 (디자인 D-5) 오른쪽 = 누르는 행동 말만 · 행동이 아닌 글은 오른쪽에 두지 않는다 · 열리는 시각(10/26부터) = 둘째 줄 칩(보조 줄에 이미 있으면 생략) · 261013 오후 설문 14:30 은 단계 제목에 */
   var stat = s.id !== "sv" && a[0] && !a[1] && a[0] !== "완료" && a[0] !== "자동" && String(meta).indexOf(a[0]) < 0 ? a[0] : "";

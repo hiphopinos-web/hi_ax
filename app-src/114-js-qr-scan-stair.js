@@ -455,7 +455,7 @@ function attStamp(res) {
   var id = st.id === "p3" ? "p3" : STAMP_HALF;
   if (st.dry) {
     var s0 = S.get("stamps", []);
-    if (s0.indexOf("p3") >= 0 || s0.indexOf(id) >= 0 || s0.indexOf("cc") >= 0 || s0.indexOf("ln") >= 0) return 0;   /* 261013 오후 묶음(커피챗 · 라운지)으로 이미 2개 */
+    if (s0.indexOf(id) >= 0 || (s0.indexOf("p3") >= 0 ? 2 : s0.indexOf("p3h") >= 0 ? 1 : 0) + (s0.indexOf("ln") >= 0 ? 2 : 0) + (s0.indexOf("cc") >= 0 ? 1 : 0) >= 2) return 0;   /* 261013 오후 묶음(커피챗 · 라운지)으로 이미 2개 · 261013 밤 커피챗만(1개)이면 17F 몫을 더 받는다 */
     s0.push(id); S.set("stamps", s0);
   }
   else if (st.dup || !st.add) { if (st.stamps) stampSync(st.stamps); return 0; }   /* 이미 받음 · 기록만 = 팝 없음 */
@@ -1101,7 +1101,7 @@ var SCAN_SPOTS = [
   { id: "ms2", nm: "10F 세션 E 2회차", kind: "sess", lb: "세션 E 2회차", will: "10F 세션 E 2회차 입장 처리" },
   /* 261013 (사용자 「권장대로」) 라운지 · 커피챗 자리 = 참석 확인 + 스탬프(라운지 2개 · 커피챗 1개 · 서버 staff_mark in · attAward_) · 승인 · 선정된 줄 · 그 시간만(서버가 거절 nomatch · noshow · time) */
   { id: "dap", nm: "1F AX 라운지", kind: "roster", lb: "AX 라운지 참석", tsub: "참석 확인 · 스탬프 2개", will: "AX 라운지 참석 확인", cond: "승인된 상담 · 상담 시간", su: 2 },
-  { id: "cchat", nm: "18F AX 커피챗", kind: "roster", lb: "커피챗 참석", tsub: "참석 확인 · 스탬프 2개", will: "커피챗 참석 확인", cond: "선정된 사람 · 내 회차", su: 2 },   /* 261013 오후 1개 → 2개(프로그램 참여 묶음) */
+  { id: "cchat", nm: "18F AX 커피챗", kind: "roster", lb: "커피챗 참석", tsub: "참석 확인 · 스탬프 1개", will: "커피챗 참석 확인", cond: "선정된 사람 · 내 회차", su: 1 },   /* 261013 오후 1개 → 2개(프로그램 참여 묶음) · 261013 밤 (사용자 확정) 1개로 되돌림(아이디어 한 줄 1개 › 참석 확인 1개) */
   { id: "q_photo", nm: "1F AI 포토부스", kind: "photo", lb: "포토부스 입장", tsub: "다음 번호 호출", will: "포토부스 입장 · 다음 번호 호출", cond: "앱에서 받은 대기 번호" },   /* 번호는 참가자가 앱에서 받는다 · 찍으면 입장 + 다음 호출 */
   /* v4.83 (261001) 1F 전시(p1) 스탬프 폐지 · AX PLAY(p2) = 체험 뒤 스태프가 참가자 내 QR 을 찍어 적립(스탬프 4) */
   { id: "p2", nm: "AX PLAY", kind: "stamp", lb: "AX PLAY 스탬프", tsub: "체험 확인 · 적립", will: "AX PLAY 스탬프 적립", cond: "HiDI-Q 또는 Hi-Helper 체험을 마친 사람" },

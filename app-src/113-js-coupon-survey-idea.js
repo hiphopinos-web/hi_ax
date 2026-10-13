@@ -158,8 +158,8 @@ function stampSync(list) {
     S.set("stamps", list.slice()); checkRewards();
     if (ckNew) notice({ key: "ck:guide", first: true, run: function () { ckGuideOpen(); } });   /* 스탬프 연출(SPOP)이 끝난 뒤 noticePump 가 연다 · 같은 sync 의 행운권 상자보다 먼저(first) */
     /* v3.52 · 운영자가 찍은 입장 스캔·상담 체크인·커피챗 완료로 서버에서 새로 생긴 스탬프 · 앱이 켜진 채 받으면 팝 */
-    /* 261013 오후 프로그램 참여 묶음이 이미 2개였으면(17F · 커피챗 · 라운지 중 다른 것으로) 새 묶음 id 는 개수가 그대로라 팝 없이 본 것으로 */
-    if (cur.indexOf("p3") >= 0 || cur.indexOf("cc") >= 0 || cur.indexOf("ln") >= 0) { var pq = added.filter(function (id) { return id === "p3" || id === "cc" || id === "ln" || id === STAMP_HALF; }); if (pq.length) { S.set("pp_seen", S.get("pp_seen", []).concat(pq)); added = added.filter(function (id) { return pq.indexOf(id) < 0; }); } }
+    /* 261013 오후 프로그램 참여 묶음이 이미 2개였으면(17F · 커피챗 · 라운지 중 다른 것으로) 새 묶음 id 는 개수가 그대로라 팝 없이 본 것으로 · 261013 밤 묶음 = 17F(p3 2 · p3h 1) + 라운지 2 + 커피챗 1 · 최대 2(이 함수만 떼어 검사하므로 글자 그대로) */
+    if ((cur.indexOf("p3") >= 0 ? 2 : cur.indexOf("p3h") >= 0 ? 1 : 0) + (cur.indexOf("ln") >= 0 ? 2 : 0) + (cur.indexOf("cc") >= 0 ? 1 : 0) >= 2) { var pq = added.filter(function (id) { return id === "p3" || id === "cc" || id === "ln" || id === STAMP_HALF; }); if (pq.length) { S.set("pp_seen", S.get("pp_seen", []).concat(pq)); added = added.filter(function (id) { return pq.indexOf(id) < 0; }); } }
     if (STAMP_SYNC.warm && added.length && added.length <= 2) added.forEach(function (id) { if (S.get("pp_seen", []).indexOf(id) < 0) stampOverlay(id); });
     if (STAMP_SYNC.warm && typeof tourRetStamp === "function") added.forEach(function (id) { tourRetStamp(id); });   /* v5.57 AX PLAY = 스태프 인증 스탬프가 내 QR 화면에 들어온 순간이 마침 */
   }

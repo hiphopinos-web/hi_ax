@@ -165,7 +165,7 @@ var STAG_SZ = 52;
 /* v5.96 (사용자 261006 밤 「스탬프 모양이 두 개이거나 곱하기 2 표시」) x = 2 이상이면 도장 오른쪽 아래 O100 알약 「×2」(곱셈 기호 U+00D7) · 17F 오후 강연(p3 · 입장 1 + 끝 1) */
 function stampTagHtml(id, x) {
   var xb = x > 1 ? '<b class="axs-stx" aria-hidden="true">\u00D7' + x + "</b>" : "", xl = x > 1 ? " · " + x + "개" : "", w0 = xb ? '<span class="axs-stxw">' : "", w1 = xb ? xb + "</span>" : "";
-  if (id === "p3" || id === "cc" || id === "ln" ? progUnits() >= 2 : S.get("stamps", []).indexOf(id) >= 0) return '<span class="axs-stag on" role="img" aria-label="스탬프 받음' + xl + '">' + w0 + stampSealSvg(STAG_SZ) + w1 + "</span>";   /* 261013 오후 17F 오후 강연 · 커피챗 · 라운지 도장 = 프로그램 참여 묶음(어느 쪽으로든 2개면 받음) */
+  if (id === "p3" || id === "cc" || id === "ln" ? progUnits() >= 2 || (id === "cc" && S.get("stamps", []).indexOf("cc") >= 0) : S.get("stamps", []).indexOf(id) >= 0) return '<span class="axs-stag on" role="img" aria-label="스탬프 받음' + xl + '">' + w0 + stampSealSvg(STAG_SZ) + w1 + "</span>";   /* 261013 오후 17F 오후 강연 · 커피챗 · 라운지 도장 = 프로그램 참여 묶음(어느 쪽으로든 2개면 받음) · 261013 밤 커피챗은 참석 확인(cc 1개)을 받았으면 받음 */
   var mg = id === "p4" ? Math.min(MG_NEED, mgDone()) + "/" + MG_NEED : "";
   return '<span class="axs-stag" role="img" aria-label="' + (mg ? "스탬프 · 종목 " + mg : "스탬프 받기 전") + xl + '">' + w0 + stampSealSvg(STAG_SZ, "currentColor", mg || "스탬프", mg ? 22 : 17) + w1 + "</span>";
 }
@@ -175,7 +175,7 @@ function stampLineHtml(id, left) { return '<div class="axs-stline">' + (left || 
 var P3_PM = ["l1", "l2"];
 /* 261013 참석 확인 스탬프 · 커피챗(cc) · AX 라운지 상담(ln · 2개) 상세 · 신청 카드 오른쪽 위 도장 */
 function attStampId(s) { return s && s.id === "cchat" ? "cc" : s && s.id === "dap" ? "ln" : ""; }
-function attSealHtml(s) { var id = attStampId(s); return id ? stampTagHtml(id, 2) : ""; }   /* 261013 오후 커피챗 · 라운지 모두 ×2(프로그램 참여 묶음) */
+function attSealHtml(s) { var id = attStampId(s); return id ? stampTagHtml(id, 2) : ""; }   /* 261013 오후 커피챗 · 라운지 모두 ×2(프로그램 참여 묶음) · 261013 밤 커피챗 ×2 = 아이디어 한 줄 1개 + 참석 확인 1개(두 시점 합 · 카드 「스탬프」 줄이 설명) */
 function progStampId(s) {
   return s && P3_PM.indexOf(s.id) >= 0 ? "p3" : "";
 }
@@ -235,9 +235,9 @@ var SPOP = { q: [], cur: null, ids: {}, opt: {} };
 /* v5.07 op = { to(): 제자리 { el, kind }, shake: 흔들 화면, done(spCur): 안착 직후 } · 최초 로그인 장면(lgxPop)이 쓴다 · 장면이 떠 있어도 이 팝은 장면 위에서 바로 돈다 */
 /* v5.68 프로그램 참여 = 2개 · 팝 제목 p3 = 「프로그램 참여 ×2」 · p3h(17F 한쪽 1개) = 「프로그램 참여 1 / 2」 · 제자리는 같은 p3 줄 */
 function stampPopDef(id) {
-  if (id === STAMP_HALF) return { id: STAMP_HALF, title: "프로그램 참여 1 / 2" };
+  if (id === STAMP_HALF) return { id: STAMP_HALF, title: typeof S === "object" && progUnitsOf(S.get("stamps", [])) >= 2 ? "프로그램 참여 2 / 2" : "프로그램 참여 1 / 2" };   /* 261013 밤 커피챗(1개)이 먼저 있었으면 2 / 2 */
   if (id === "ck") return { id: "ck", title: "사전등록 체크인 ×3" };   /* v5.90 STAMP_CK(이 함수만 떼어 검사하므로 글자 그대로) */
-  if (id === "cc" || id === "ln") return { id: id, title: S.get("stamps", []).indexOf(STAMP_HALF) >= 0 ? "프로그램 참여 2 / 2" : "프로그램 참여 ×2" };   /* 261013 오후 커피챗 · 라운지 참석 = 프로그램 참여 줄(묶음) · 제자리도 그 줄 */
+  if (id === "cc" || id === "ln") { var pst = S.get("stamps", []), pa = progUnitsOf(pst), pb = progUnitsOf(pst.filter(function (x) { return x !== id; })); return { id: id, title: pa < 2 ? "프로그램 참여 1 / 2" : pb === 1 ? "프로그램 참여 2 / 2" : "프로그램 참여 ×2" }; }   /* 261013 오후 커피챗 · 라운지 참석 = 프로그램 참여 줄(묶음) · 제자리도 그 줄 · 261013 밤 커피챗 1개(묶음 1이면 1 / 2 · 1에서 2가 되면 2 / 2) */
   var sd = STAMPS.filter(function (s) { return s.id === id; })[0];
   return sd && sd.x2 ? { id: sd.id, title: sd.title + " ×2" } : sd;
 }

@@ -361,14 +361,15 @@ function applyCardHtml(o) {
   return '<section class="ax-card axs-apc axs-sthost' + (o.mine ? " my" : "") + (o.tap ? " tap" : "") + '" data-apply="' + o.k + '" aria-label="' + esc(o.nm) + '"' + (o.tap ? ' onclick="if (!event.target.closest(\'button\')) { ' + o.tap + '; }"' : "") + ">" + (o.seal != null ? o.seal : attSealHtml({ id: o.k === "lounge" ? "dap" : o.k })) +   /* 261013 오른쪽 위 도장 · 오후 네 카드 모두 ×2(프로그램 참여 묶음) · 17F 카드 = 카드를 눌러 강연 상세 */
     '<div class="hd"><span class="fl">' + flFloor(o.fl) + '</span><h3 class="ax-card-title">' + esc(o.nm) + "</h3>" + (o.mine ? '<span class="axs-chip">' + esc(o.chip || "신청함") + "</span>" : "") + "</div>" +
     '<p class="k">' + esc(o.kor) + "</p>" +
-    '<dl class="axs-kv">' + o.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + segHtml(esc(r[1])) + "</dd>"; }).join("") + "</dl>" + (o.extra || "") +
+    '<dl class="axs-kv">' + o.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + (String(r[1]).indexOf(" › ") > 0 ? esc(r[1]).split(" › ").map(function (s, i) { return '<span class="axs-nwr">' + (i ? "› " : "") + s + "</span>"; }).join(" ") : segHtml(esc(r[1]))) + "</dd>"; }).join("") + "</dl>" + (o.extra || "") +   /* 261013 밤 「A › B」 값(커피챗 스탬프 줄)은 「›」 자리에서만 꺾는다(둘째 줄 「› 」 시작) */
     '<div class="bt">' + (o.btn ? progBtn(esc(o.btn[0]), o.btn[1], "", "", !!o.btn[3]) : "") +   /* 261013 오후 17F 자유 참석 카드 = 주 버튼 없음 */   /* v6.84 (사용자 261009 「라운지 시간 고르기도 주황으로」) 카드마다 자기 주 버튼 하나 = 같은 주황 주 버튼(옛 v6.83 D-1 라운지 약한 버튼 되돌림) · 꺼짐(마감)만 disabled */
     '<button type="button" class="ax-link axs-plain" onclick="' + o.more + '">자세히 보기</button></div></section>';
 }
+/* 261013 밤 (사용자 확정) 커피챗 스탬프 = 아이디어 한 줄(p5) 1개 › 선정 뒤 참석 확인(cc) 1개 · 참여하기 카드 「스탬프」 줄 · 커피챗 상세 「스탬프 받으려면」 같은 말(함수만 떼어 검사하므로 두 곳 글자 그대로) */
 function applyCchatHtml() {
   var s = cchatState(); if (!s) return "";
   var z = zoneById("cchat"), L = zoneLive(z), c = S.get("cchat", null), mt = !!(c && c.status === "matched");
-  var kv = [["지금", s.mine ? s.t : ideaMineN() ? "아이디어 제출 완료 · 희망 가능" : "아이디어 한 줄 쓰고 희망"], ["시간", mt && c.round ? "10월 26일 " + c.round : CCHAT_HOURS + " · 선정되면 안내"], ["사은품", APPLY_GIFT]];   /* v6.83 (사용자 261009 묶음 16) 카드 = 고르고 바로 신청하는 곳 · 사실 표 3줄(지금 · 시간 · 사은품) · 방식 · 신청 · 사은품 사진은 구역 상세 시트로 */   /* 261008 (사용자 「라운지도 같은 형태」) 두 카드 사실 표 = 지금 · 시간 · 방식 · 신청 · 사은품 같은 순서 · 같은 줄 수 */   /* v5.90 · v6.07 희망 → 선정 · 13:00~16:00 */
+  var kv = [["지금", s.mine ? s.t : ideaMineN() ? "아이디어 제출 완료 · 희망 가능" : "아이디어 한 줄 쓰고 희망"], ["시간", mt && c.round ? "10월 26일 " + c.round : CCHAT_HOURS + " · 선정되면 안내"], ["스탬프", "아이디어 한 줄 1개 › 참석 확인 1개"], ["사은품", APPLY_GIFT]];   /* 261013 밤 (사용자 확정) 스탬프 줄 = 받는 때 두 번(오른쪽 위 ×2 = 두 시점 합) */   /* v6.83 (사용자 261009 묶음 16) 카드 = 고르고 바로 신청하는 곳 · 사실 표 3줄(지금 · 시간 · 사은품) · 방식 · 신청 · 사은품 사진은 구역 상세 시트로 */   /* 261008 (사용자 「라운지도 같은 형태」) 두 카드 사실 표 = 지금 · 시간 · 방식 · 신청 · 사은품 같은 순서 · 같은 줄 수 */   /* v5.90 · v6.07 희망 → 선정 · 13:00~16:00 */
   return applyCardHtml({ k: "cchat", nm: "AX 커피챗", fl: 18, mine: s.mine, chip: s.chip, kor: z.kor, kv: kv, btn: L.btn, more: "cchatGo()" });
 }
 function applyLoungeHtml() {
@@ -708,7 +709,7 @@ function progDetail(s) {
       else {
         D.secB = mt ? "시작 5분 전까지 18F 해당 테이블에 앉아 주세요. 커피는 준비돼 있어요." : "희망한 분 중 선정해요.<br>" + CCHAT_NOTE;
         D.help = mt ? "참여가 어려우면 취소할 수 있어요" : "참여가 어려우면 희망을 취소할 수 있어요"; D.btn = mt ? progBtn("참석 확인 QR", "qrPanelOpen('mine')") + cxBtn : cxC;
-        if (mt) D.need = needBoxHtml("스탬프 받으려면", "스탬프 받으려면", [["qr", "담당자에게 참석 확인 QR 보여 주기", "내 회차에 18F 테이블에서"], ["stamp", "참석하면 스탬프 2개", "17F 오후 강연 · 라운지 · 커피챗 합쳐 최대 2개"]]);   /* 261013 참석 확인 스탬프 cc · 오후 1개 → 2개(프로그램 참여 묶음) */
+        if (mt) D.need = needBoxHtml("스탬프 받으려면", "스탬프 받으려면", [["qr", "담당자에게 참석 확인 QR 보여 주기", "내 회차에 18F 테이블에서"], ["stamp", "참석하면 스탬프 1개", "아이디어 한 줄 1개 › 참석 확인 1개"]]);   /* 261013 참석 확인 스탬프 cc · 오후 1개 → 2개 · 261013 밤 (사용자 확정) 1개로 되돌림 · 카드 「스탬프」 줄과 같은 말 */
       }
     }
     return D;
