@@ -85,7 +85,7 @@ function myScheduleHtml() {
   /* v3.35 · Outro 전 사회자 안내(16:45 설문 안내) 시간대에만 홈 첫 줄로 · 그 밖에는 스탬프 탭 카드가 입구 */
   var hm0 = hmNow();
   if (!surveyLock() && !surveyDone() && evPhase() === "live" && hm0 >= t2m("16:40") && hm0 < t2m("17:10"))
-    rows.push([-1, "App.go('survey')", "설문", "오늘 한 판 설문", "1~2분 · 스탬프 1개", "mine"]);
+    rows.push([-1, "App.go('survey')", "설문", "참가자 설문", "1~2분 · 스탬프 1개", "mine"]);
   var lkr = luckyRow(); if (lkr) rows.push(lkr);   /* 261008 럭키드로우 당첨 = 맨 위 한 줄(확인 전 주황 점) */
   var fgr = fcfsGotRow(); if (fgr) rows.push(fgr);   /* v5.97 선착순 참여상 수령 전 = 맨 위 한 줄(받으면 사라진다) */
   var ckr = ckGuideRow(); if (ckr) rows.push(ckr);   /* v5.94 사전등록 체크인 3개 → 룰렛 → 강의장(룰렛을 쓰면 사라진다) */

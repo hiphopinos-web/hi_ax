@@ -67,7 +67,7 @@ var App = {
     passport: "스탬프", rewards: "나의 보상", prizes: "경품", games: "미니 게임", quiz: "AX 퀴즈",
     notices: "공지", dap: "AX 라운지 신청",
     booth: "AX PLAY",
-    ideas: "아이디어 한 줄", ideas_mine: "내가 낸 아이디어", survey: "오늘 한 판 설문",
+    ideas: "아이디어 한 줄", ideas_mine: "내가 낸 아이디어", survey: "참가자 설문",
     sess_d: "프로그램", sess_cf: "신청 확인", sess_ok: "신청 완료",
     ev_cchat: "내 커피챗",
     floor1: "1F 부스", zone_d: "1F 구역",

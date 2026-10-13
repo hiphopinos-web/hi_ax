@@ -162,7 +162,7 @@ function svSubmit() {
     }
     done();
     stampSync(res.stamps);
-    if (res.stamp && !res.stamp.dup && !stampOverlay("sv")) toast("스탬프 적립 · 오늘 한 판 설문");
+    if (res.stamp && !res.stamp.dup && !stampOverlay("sv")) toast("스탬프 적립 · 참가자 설문");
     checkRewards();
   }, function () { SV.busy = false; botWait(false); App.render(); toast("서버에 연결할 수 없어요. 다시 눌러 주세요."); });
 }

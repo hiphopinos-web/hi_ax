@@ -376,7 +376,7 @@ function applyLoungeHtml() {
   var s = loungeState(); if (!s) return "";
   var z = zoneById("lounge"), L = zoneLive(z);
   var btn = s.mine ? ["내 신청", "progOpen('dap')"] : ["시간 고르기", "progOpen('dap')"];
-  return applyCardHtml({ k: "lounge", nm: "AX 라운지", fl: 1, mine: s.mine, kor: z.kor, kv: [["지금", s.mine ? s.t : s.t + " · 누구나 신청"], ["시간", L.tm], ["사은품", "상담 후 " + APPLY_GIFT]], btn: btn,   /* v6.83 (묶음 16) 사은품 사진 = 구역 상세 시트 한 곳 */ more: "zoneOpen('lounge')" });   /* 261008 사용자 「ax라운지도 같은 형태 · 되도록 사전 신청자 중심」 · 상담 완료 조건 유지(260918 예외) */
+  return applyCardHtml({ k: "lounge", nm: "AX 라운지", fl: 1, mine: s.mine, kor: z.kor, kv: [["지금", s.mine ? s.t : s.t + " · 누구나 신청"], ["시간", L.tm], ["스탬프", "참석 확인 2개"], ["사은품", "상담 후 " + APPLY_GIFT]], btn: btn,   /* v6.83 (묶음 16) 사은품 사진 = 구역 상세 시트 한 곳 */ more: "zoneOpen('lounge')" });   /* 261008 사용자 「ax라운지도 같은 형태 · 되도록 사전 신청자 중심」 · 상담 완료 조건 유지(260918 예외) */
 }
 /* 10F 실습형 세션 줄 = 사전 신청자(10F 명단 · tenMine)와 테스트 사번(testMode · 310555 · 데모)에게만 · 일반 직원에게는 없다(사용자 261006) */
 function applyTenShow() { return !!tenMine() || testMode(); }

@@ -79,7 +79,7 @@ var STAMPS_V1 = [
      site: 담당자 적립 가능 (서버 stamp_grant 가 st 를 받는다) */
   { id: "st", title: "계단 이용", short: "계단", desc: "방화문 앞 QR · 시작과 끝에 찍기 · 한 개 층 이상", where: "", site: 1, tap: "stairOpen()", cta: "계단 안내" },
   /* v3.35 오늘 한 판 설문 · 14:30 부터 · 제출만 하면 적립(답 내용 무관) · 판정·적립은 서버(survey_submit) */
-  { id: "sv", title: "오늘 한 판 설문", short: "설문", desc: "설문 제출", where: "1~2분", inapp: 1, tap: "App.go('survey')", cta: "설문 시작" }
+  { id: "sv", title: "참가자 설문", short: "설문", desc: "설문 제출", where: "1~2분", inapp: 1, tap: "App.go('survey')", cta: "설문 시작" }
 ];
 function stampDefV1(id) { return STAMPS_V1.filter(function (s) { return s.id === id; })[0]; }
 /* v4.83 (261001 사용자 확정) 새 8종 · 번호 순서 = 1 최초 로그인 · 2 AX 퀴즈 · 3 미니 게임 · 4 AX PLAY · 5 아이디어 한 줄 · 6 프로그램 참여 · 7 계단 · 8 설문
@@ -186,7 +186,7 @@ var TIMELINE = [
   { time: "15:10", end: "16:40", title: "AI와 친해지기", pid: "l2", short: "Microsoft 김한결, 이나경", place: "17F 대강당", desc: "입장 · 끝 QR로 출석", tag: "자유 참석", par: 1 },
   /* v3.50 사회자 순서 (사용자 확정 260917) · Outro 문항 기능 폐지 · 설문 참여 안내 → 17:00 Outro */
   /* v3.63 (사용자 확정 260918) 「일단 빼자」 · 항목은 남기고 off 로 일정 탭에서만 감춘다 (설문 기능·송출 화면·홈/스탬프 입구는 그대로) */
-  { off: 1, time: "16:45", end: "17:00", title: "설문 참여 안내", short: "오늘 한 판 설문 안내", place: "17F 대강당", desc: "1~2분 설문 · 스탬프 1개", tag: "자유 참석" },
+  { off: 1, time: "16:45", end: "17:00", title: "설문 참여 안내", short: "참가자 설문 안내", place: "17F 대강당", desc: "1~2분 설문 · 스탬프 1개", tag: "자유 참석" },
   { time: "17:00", end: "17:30", title: "Closing Speech", pid: "outro", short: "정경선 CSO", place: "17F 대강당", desc: "정경선 CSO · DAP 시상 · 현장 추첨", tag: "" }   /* v4.79 무대 추첨 = 추첨 QR 체크인한 사람 · v4.99 줄은 제목 · 시간 · 장소만 · 체크인 안내는 Outro 상세(STAGE.outro) */
 ];
 /* v4.91 (사용자 261001 「A~E 사전 신청 세션이 여기에 있을 이유가 있을까」 · main 결정) 10F 실습형 세션 A~E 줄은 「전체」 시간표 · 홈 「진행 중」 · 다음 일정에서 숨긴다
@@ -319,7 +319,7 @@ var SV_PROGS = [
   { id: "q2_8", fl: "18F", nm: "AX 커피챗", sub: "", q: "AX 커피챗은 어떠셨나요?", pre: "cc" }
 ];
 var SURVEY_Q = [
-  { id: "intro", type: "intro", t: "AX Festival 참가자 설문조사", q: "오늘 1F · 17F · 18F에서 경험하신 AX Festival, 어떠셨나요?", note: "10F 프로그램은 별도 설문으로 안내합니다.", kv: [["소요 시간", "1~2분"], ["참여 선물", "스탬프 1개"]] },
+  { id: "intro", type: "intro", t: "AX Festival 참가자 설문조사", q: "오늘 경험하신 AX Festival, 어떠셨나요?", note: "10F 프로그램은 별도 설문으로 안내합니다.", kv: [["소요 시간", "1~2분"], ["참여 선물", "스탬프 1개"]] },
   { id: "q1_1", type: "single", o: "sat", q: "AX Festival 프로그램에 전반적으로 만족하셨나요?" },
   { id: "q1_2", type: "single", o: "run", q: "안내, 동선, 대기시간 등 행사 운영은 어떠셨나요?" },
   { id: "q1_3", type: "single", o: "again", q: "다음 AX 행사가 열린다면 다시 참여하거나 동료에게 추천하고 싶으신가요?" },
