@@ -148,8 +148,18 @@ function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").
    한 줄에 다 들어가면 「A · B」 그대로 · 두 줄 이상이면 목록(.seglist) = 조각마다 줄 머리 「· 」(그 줄 글자색 · 무채색) + 꺾이면 점 뒤 글자 시작에 맞춘 들여쓰기
    같은 묶음은 같은 형식(묶음 = 같은 목록 칸 안 같은 클래스의 보조 줄 · 하나라도 나뉘면 묶음 전부 목록)
    목록으로 만들지 않는 곳 = 짧은 속성 나열(사실 표 값 dd · 메타 줄 .ax-meta) · 그곳은 v6.69 그대로(꺾이면 「· 」 자리에서 · 줄이 늘면 보통 흐름 .segflow) */
-function segHtml(h) {
-  var p = String(h == null ? "" : h).split(" · ");
+/* v7.23 (사용자 261014 「편집이 엉망」) 괄호 안 「 · 」는 나누지 않는다(괄호 묶음 통째로 · 태그 속 괄호는 세지 않음) · fn = 조각마다 덧입힐 함수(없으면 그대로) */
+function segHtml(h, fn) {
+  var t = String(h == null ? "" : h), p = [], d = 0, st = 0;
+  for (var i = 0; i < t.length; i++) {
+    var c = t.charAt(i);
+    if (c === "<") { var e = t.indexOf(">", i); if (e < 0) break; i = e; }
+    else if (c === "(") d++;
+    else if (c === ")") { if (d) d--; }
+    else if (!d && t.substr(i, 3) === " · ") { p.push(t.slice(st, i)); st = i + 3; i += 2; }
+  }
+  p.push(t.slice(st));
+  if (fn) p = p.map(fn);
   return p.length < 2 ? p[0] : p.map(function (s) { return "<ax-seg>" + s + "</ax-seg>"; }).join(" ");
 }
 var SEG_GRP = ".axs-sec, section, .axs-rows, .axs-stps, .axs-pz, ul, ol, .ax-stack";   /* 묶음 칸 · 이 안에서 같은 클래스의 보조 줄끼리 형식을 맞춘다 */

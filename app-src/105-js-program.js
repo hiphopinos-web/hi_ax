@@ -572,7 +572,15 @@ function spkAvHtml(id, av) {
 /* v5.60 10F 세션 안내 · 소제목 「하는 일」(1F 구역 상세와 같은 ink 굵게 + 얇은 구분선) · 주황 점 글머리 · 이름이 있으면 굵게 + 설명 아래 줄
    「준비할 것」은 사전 신청자(sessMine)에게만 · 한 줄 소개는 SESS_INTRO_ON 일 때만 · 다 비면 "" (블록 자체를 그리지 않는다) */
 function sessGuideHtml(s, mine) {
-  var li = function (it) { return '<li><span class="tx">' + (it.name ? "<b>" + esc(it.name) + "</b>" : "") + "<span>" + segHtml(esc(it.desc)) + "</span>" + (it.sub || []).map(function (x) { return '<span class="sb">' + segHtml(esc(x)) + "</span>"; }).join("") + "</span></li>"; };
+  /* v7.23 (사용자 261014) 괄호 묶음 = 한 덩어리(.kp · 넘치면 괄호째 다음 줄) · 쉼표 나열의 짧은 이름(Agent Builder · Copilot Studio)은 가르지 않고 쉼표 자리에서만 꺾임
+     실습 주제 줄(sb) = 번호 목록 · 주제마다 한 덩어리(「 · 」로 나누지 않는다) */
+  var kp = function (t) {
+    var a = [], d = 0, st = 0;
+    for (var i = 0; i < t.length; i++) { var c = t.charAt(i); if (c === "(") d++; else if (c === ")") { if (d) d--; } else if (!d && c === "," && t.charAt(i + 1) === " ") { a.push(t.slice(st, i + 1)); st = i + 2; } }
+    a.push(t.slice(st));
+    return a.map(function (x) { var y = x.replace(/\([^()]*\)/g, function (m) { return '<span class="kp">' + m.split(" · ").map(function (z) { return z.replace(/ /g, "&nbsp;"); }).join("&nbsp;· ") + "</span>"; });   /* 괄호가 한 줄보다 길면 안에서도 「 · 」 뒤에서만 꺾임 */ return a.length > 1 && y === x && x.length <= 16 ? '<span class="kp">' + x + "</span>" : y; }).join(" ");
+  };
+  var li = function (it) { return '<li><span class="tx">' + (it.name ? "<b>" + esc(it.name) + "</b>" : "") + "<span>" + segHtml(esc(it.desc), kp) + "</span>" + (it.sub || []).map(function (x, n) { return '<span class="sb"><i>' + (n + 1) + ".</i><span>" + kp(esc(x)) + "</span></span>"; }).join("") + "</span></li>"; };
   var intro = SESS_INTRO_ON && s.intro ? '<p class="intro">' + esc(s.intro) + "</p>" : "";
   var todo = (s.todo || []).length ? '<div class="sgg"><h3>하는 일</h3><ul>' + s.todo.map(li).join("") + "</ul></div>" : "";
   var pl = (s.prep || []).length, q10 = "";   /* v5.94 (사용자 결정 261006) 10F 끝 QR 스탬프 없음 · 옛 줄 「끝날 때 화면의 QR을 찍으면 스탬프 2개」(v5.71) 삭제 · 끝 QR 출석 자체는 그대로 된다 */
