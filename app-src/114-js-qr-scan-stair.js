@@ -339,7 +339,7 @@ function attKWin(x, k) { var w = attW(); return k === "out" ? { a: t2m(x.e) - w.
 function attFrom(x) { return attKWin(x, "in").a; }
 function attWinLbl(x, k) { var w = attKWin(x, k || "in"); return hm2(w.a) + "~" + hm2(w.b); }
 /* 그 강의의 출석 창이 모두 끝났는가(행사 뒤 = 늘 끝) */
-function attShut(x) { var ph = evPhase(); return !!x && (ph === "after" || (ph === "live" && attNow() > attKWin(x, "out").b)); }
+function attShut(x) { var ph = evPhase(); return !!x && !(typeof betaFree === "function" && betaFree()) && (ph === "after" || (ph === "live" && attNow() > attKWin(x, "out").b)); }
 function attTm() { var o = testMode() ? ttGet() : null; return o ? hm2(o.m) : ""; }   /* 261007 옛 att_tm → 시험 시각 tt 하나(ttGet · 테스트 모드만) */
 function attNow() { return hmNow(); }
 /* 261008 (사용자 「17층 출석체크는 지금도 되도록 · 이상한 데이터는 행사 전 초기화」) 행사일(10/26) 전이면 시간 창 없이 늘 열림 · 서버 attPreDay_ 와 같은 규칙

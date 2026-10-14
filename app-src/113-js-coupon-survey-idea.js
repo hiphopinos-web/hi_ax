@@ -40,6 +40,7 @@ function surveyLock() {
    옛 서버(필드 없음) · 시험 모드 = 지금 규칙(행사 당일 14:30 이후 · 행사 뒤) */
 function surveyOpen() {
   if (testMode() && S.get("survey_force", false)) return true;
+  if (typeof betaFree === "function" && betaFree()) return true;   /* 261014 클로즈 베타 시간 무관(서버 betaFree_ · svOpen 과 같은 판정 · 시험 모드도) */
   var so = S.get("sv_open", null);
   if (!testMode() && typeof so === "boolean") return so;
   var ph = evPhase();

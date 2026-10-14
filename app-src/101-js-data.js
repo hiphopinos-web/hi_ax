@@ -208,6 +208,9 @@ function ttGet() {
   var o = S.get("tt", null);
   return o && (o.d === "pre" || o.d === "day") && typeof o.m === "number" && o.m >= 0 && o.m < 1440 ? o : null;
 }
+/* 261014 클로즈 베타 = 시간 무관(사용자 확정 261014) · 판정 = 서버 한 곳(betaFree_ · 설정 오픈_범위 클로즈베타) · sync my.bf 를 S "bf" 로 받는다
+   옛 서버(필드 없음) · 범위를 바꾼 뒤(false) = 지금 규칙 · 시험 시각(tt)을 고른 테스트 계정은 그 시각 규칙을 본다 */
+function betaFree() { return !ttGet() && S.get("bf", false) === true; }
 function ttMs() { var o = ttGet(); return o ? new Date(2026, 9, o.d === "pre" ? 25 : 26, Math.floor(o.m / 60), o.m % 60).getTime() : null; }
 function appNow(srv) { var t = ttMs(); return new Date(t != null ? t : Date.now() + (srv && typeof sesOff === "function" ? sesOff() : 0)); }
 function hmNow() { var tm = ""; try { tm = attTm(); } catch (e) { tm = ""; } if (tm) return t2m(tm); var d = appNow(); return d.getHours() * 60 + d.getMinutes(); }

@@ -600,7 +600,7 @@ var RESV_HOLD = ["requested", "booked", "approved", "checked", "done"];
    taken = 서버 sync 의 resvTaken(시간 글자만 · 이름 없음 · 옛 서버는 보내지 않아 null = 예전과 같다) · miss = 방금 「다른 분이 신청」으로 돌아온 시간(다음 sync 까지) */
 var RESV_SRV = { taken: null, miss: {} };
 /* 261005 최종 QA · 행사 당일 이미 시작한 상담 시간 · 행사가 끝난 뒤 = 고를 수 없는 칸(마감) · 전에는 오후 3시에도 09:30 칸을 신청할 수 있었고 「남은 시간」이 지난 칸까지 셌다(v5.64 서버 resv_book 도 행사일 서버 시각으로 지난 시간을 past 로 거절) */
-function resvPast(slot) { var ph = evPhase(); return ph === "after" || (ph === "live" && t2m(slot) <= hmNow()); }
+function resvPast(slot) { if (typeof betaFree === "function" && betaFree()) return false; var ph = evPhase(); return ph === "after" || (ph === "live" && t2m(slot) <= hmNow()); }
 function resvTaken(slot) {
   if (resvPast(slot)) return true;
   if (resvAll().some(function (r) { return r.room === 2 && r.slot === slot && RESV_HOLD.indexOf(r.status) >= 0; })) return true;
@@ -654,7 +654,7 @@ var CCHAT_PREF = [["13", "13~14시"], ["14", "14~15시"], ["15", "15~16시"], ["
 var CCHAT_HOURS = "13:00~16:00", CCHAT_END_M = 16 * 60;   /* v6.07 커피챗 운영 시간(사용자 261007) · 끝나면 아직 선정 전인 희망 줄을 조용히 걷는다(cchatOver) */
 var CCHAT_NOTE = "선정되면 하이웍스 · 앱 알림으로 알려 드려요";   /* v6.07 (사용자 261007 「아이디어 한 줄 제출 > 커피챗 희망 여부 > 신청자 중 선정」) 옛 「매칭되면 하이웍스로 알려 드려요 · 앱 나의 참여에서도」 */
 /* v6.07 커피챗 하루가 끝났다(행사일 16:00 뒤 · 서버 시각 · 또는 행사 뒤) · 선정 안 된 희망은 알리지 않고 줄만 걷는다(소외 없음 톤) */
-function cchatOver() { if (evPhase() === "after") return true; var d = appNow(1); return d.getFullYear() === 2026 && d.getMonth() === 9 && d.getDate() === 26 && d.getHours() * 60 + d.getMinutes() >= CCHAT_END_M; }   /* 261007 시험 시각(appNow · 1 = 서버 시계 보정) */
+function cchatOver() { if (typeof betaFree === "function" && betaFree()) return false; if (evPhase() === "after") return true; var d = appNow(1); return d.getFullYear() === 2026 && d.getMonth() === 9 && d.getDate() === 26 && d.getHours() * 60 + d.getMinutes() >= CCHAT_END_M; }   /* 261007 시험 시각(appNow · 1 = 서버 시계 보정) */
 /* v4.46 서버(GAS)는 cchat_req 의 tag 를 이미 저장 · 콘솔에 돌려준다 · 선호 시간대를 tag 뒤에 붙여 보내 서버 수정 없이 콘솔 「희망 시간」에 보이게 한다(콘솔이 CCHAT_TAG_SEP 로 다시 나눈다) · pref 파라미터도 같이 보낸다(나중에 GAS 가 칸을 만들면 그쪽이 우선) */
 var CCHAT_TAG_SEP = " / 희망 ";
 /* v4.47 (사용자 260925 · 화요일 회의에서 숫자 확정 예정) 커피챗 선착순 · 멘토 2명 각자 테이블 · 회차당 최대 4명 · 20분

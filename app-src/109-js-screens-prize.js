@@ -355,6 +355,7 @@ function fcfsLeftN() { var x = fxGet(); return x && x.left > 0 ? x.left : 0; }
 function fxGet() { var x = S.get("fx", null); return x && typeof x === "object" && x.on ? x : null; }
 function fcfsOpen() { var x = fxGet(); return !!x && x.left !== 0 && !fcfsLate(); }   /* 남아 있고 마감 전 */
 function fcfsLate() {
+  if (typeof betaFree === "function" && betaFree()) return false;   /* 261014 클로즈 베타 = 마감 시각 없음 */
   var x = fxGet(), cut = String((x && x.cut) || "").split(":");
   if (cut.length < 2) return false;
   var d = appNow(true);
@@ -458,6 +459,7 @@ function lkCond() { var v = S.get("lkcond", null); return v === null ? true : !!
 function drawWhenTxt() { return lkCond() ? "Closing Speech 현장 추첨은 17F 입구 QR 체크인" : "17:00 Closing Speech 현장 추첨 · 당첨자 발표"; }
 function roulCutHm() { return String(S.get("rcut", "") || ""); }
 function roulCut() {
+  if (typeof betaFree === "function" && betaFree()) return false;   /* 261014 클로즈 베타 = 룰렛 마감 시각 없음 */
   var c = roulCutHm().split(":"); if (c.length < 2) return false;
   var d = appNow(true);
   return d.getFullYear() === 2026 && d.getMonth() === 9 && d.getDate() === 26 && d.getHours() * 60 + d.getMinutes() >= (+c[0]) * 60 + (+c[1]);
@@ -581,12 +583,13 @@ function stpCellHtml(s, i, got, half) {
   return '<span class="axs-stpn axs-stpk" role="img" aria-label="' + lb + '">' + inner + "</span>";
 }
 /* 261013 오후 (사용자 확정) 스탬프 탭 판 = 참여자의 하루 흐름 4단계(STAMP_STAGES) · 단계 제목 「n단계 · 이름」 + 옆 짧은 말 · 줄 번호 = STAMPS 순서 1~8 · 옛 서버(stv 1)는 한 목록 그대로 */
+/* 261014 클로즈 베타(betaFree) = 마무리(설문) 단계 옆 말 「14:30부터」 → 「언제든」 */
 function stpBoardHtml(st, full) {
   if (!stampV2()) return '<div class="axs-stps">' + STAMPS.map(function (s, i) { return stpRowHtml(s, i, st, full); }).join("") + "</div>";
   return STAMP_STAGES.map(function (g, n) {
     var rows = g.ids.map(function (id) { var s = stampDef(id), i = STAMPS.indexOf(s); return s && i >= 0 ? stpRowHtml(s, i, st, full) : ""; }).join("");
     if (n === 0 && stampCkRowOn(st)) rows += stpRowHtml(STAMP_CK_ROW, -1, st, full);
-    return '<div class="axs-stg"><p class="axs-stgh"><b class="axs-stgp">' + esc(g.t) + "</b><span>" + esc(g.s) + "</span></p>" +
+    return '<div class="axs-stg"><p class="axs-stgh"><b class="axs-stgp">' + esc(g.t) + "</b><span>" + esc(g.ids.indexOf("sv") >= 0 && (typeof betaFree === "function" && betaFree()) ? "언제든" : g.s) + "</span></p>" +
       '<div class="axs-stps">' + rows + "</div></div>";
   }).join("");
 }

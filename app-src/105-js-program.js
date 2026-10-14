@@ -608,7 +608,7 @@ function progDetail(s) {
       else { D.st = "자유 참석"; D.stc = "off"; D.btn = timeBtn; }   /* v5.96 (사용자 결정 261006 밤) 오전 출석 표시 끔(ATT_UI_PROGS) · 입장 · 끝 QR 줄 · 참여 전 확인 칸 · 출석 QR 스캔 단추 없음 */
       return D;
     }
-    var din = !!S.get("draw_in", false), hmD = hmNow(), dwin = evPhase() === "live" && hmD >= t2m("16:40") && hmD < t2m("17:25");   /* 창 = drawCardHtml 과 같은 서버 기본 창 */
+    var din = !!S.get("draw_in", false), hmD = hmNow(), dwin = (typeof betaFree === "function" && betaFree()) || (evPhase() === "live" && hmD >= t2m("16:40") && hmD < t2m("17:25"));   /* 창 = drawCardHtml 과 같은 서버 기본 창 · 261014 클로즈 베타 = 늘 열림(betaFree) */
     var lc = lkCond();   /* v5.92 (사용자 261006 「럭키드로우에서 체크인 요소는 일단은 없애 놓자 · 행운권 중에서 추첨」) 참석 조건 OFF(서버 lkcond) = 체크인 줄 · 추첨 QR 단추 · 체크인 안내 없음 */
     D.who = s.who; D.av = spkAv(s.who); D.whoSub = "";
     D.st = lc && din ? "추첨 체크인 완료" : "자유 참석"; D.stc = lc && din ? "ok" : "off";
@@ -642,7 +642,7 @@ function progDetail(s) {
     return D;
   }
   if (s.kind === "info") {
-    var mi = sessMine(s.id), ax = att10X(s), ao = mi ? attMineK(s.id, "out") : "", tn = attNow(), kw = attKWin(ax, "out"), wo = mi && !ao && (evPhase() === "live" || !!attTm()) && tn >= kw.a && tn <= kw.b;
+    var mi = sessMine(s.id), ax = att10X(s), ao = mi ? attMineK(s.id, "out") : "", tn = attNow(), kw = attKWin(ax, "out"), wo = mi && !ao && ((typeof betaFree === "function" && betaFree()) || ((evPhase() === "live" || !!attTm()) && tn >= kw.a && tn <= kw.b));   /* 261014 클로즈 베타 = 끝 창 없음 */
     D.cat = "실습형 세션 · " + s.ttl; D.title = s.sub;
     D.kv = [["일시", day + progTm(s.tm)], ["장소", pl]].concat(s.who ? [["강사", s.who.split(", ").map(function (n) { return n.replace(/ /g, "\u00a0"); }).join(", ")]] : [], [["정원", s.capNote || ""], ["참여 방법", "사전 신청자 참여"]]);   /* v5.60 T1 (design.md §7 배제로 읽히는 말) · v6.22 줄 이름 「강사」 · 이름 단위로만 줄이 꺾임(이름 안 공백 = 붙임 공백) · v6.21 진행 = 강사 · 발표자 실명 · 소속(261007 운영진 메신저 · 실명은 남기는 원칙 261004) */
     if (mi && ATT10_UI) D.kv.push(["끝 QR", ao ? ao + " 출석" : attWinLbl(ax, "out")]);   /* v5.71 10F 끝 QR(신청자만) · 출석하면 시각 */

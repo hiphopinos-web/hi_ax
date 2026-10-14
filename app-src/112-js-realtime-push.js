@@ -172,6 +172,8 @@ function beSync(after) {
       if (res.my.survey === true && !S.get("survey_done", false) && !testEmp() && (res.my.stamps || []).indexOf("sv") >= 0) S.set("survey_done", true);
       /* v7.15 설문 열림 · Q2-0 미리 체크 = 서버 판정(svOpen = 오픈_범위 클로즈베타면 늘 · 그 밖은 행사 당일 설문_시작 이후 · svPre = 이 사람 참석 기록 · 열림 + 미제출일 때만) · 옛 서버는 필드가 없어 그대로 */
       if (typeof res.my.svOpen === "boolean" && res.my.svOpen !== S.get("sv_open", null)) S.set("sv_open", res.my.svOpen);
+      var bf9 = res.my.bf === true;   /* 261014 클로즈 베타 시간 무관(서버 betaFree_) · 옛 서버(필드 없음) = false = 지금 규칙 */
+      if (bf9 !== S.get("bf", false)) S.set("bf", bf9);
       if (Array.isArray(res.my.svPre)) S.put("sv_pre", res.my.svPre);
       if (res.my.queue) {
         var was = S.get("queue", {}), nowQ = res.my.queue, kq;
