@@ -498,6 +498,7 @@ header.top :focus-visible,.bar.bulk :focus-visible{outline-color:#fff}
 <script src="acc.js?v=2610121"></script>
 <script src="idea.js?v=2610121"></script>
 <script src="survey.js?v=2610141"></script>
+<script src="att.js?v=2610142"></script>
 <script>
 /* ══ 0. 설정 ══ */
 var BE_DEFAULT = "https://script.google.com/macros/s/AKfycbwjCaSSUnQ7W1lrM8T426Cn_LgKs_UhI0Qi5XRVk-_eF-oD55-Wwjsot0DkPJCX9JqMBA/exec";
@@ -2511,32 +2512,6 @@ function drawRecHtml(d){
       (recs.length?recs.map(function(r){ return '<tr><td class="n cap">'+esc(short(r.t))+'</td><td class="n">'+esc(r.round||"-")+(r.slot?" · "+esc(r.slot):"")+'</td><td class="n"><b>'+esc(r.no||"-")+'</b></td><td>'+esc(r.name||r.nm||"")+(r.dept?' <span class="cap">'+esc(r.dept)+'</span>':'')+'</td><td>'+esc(r.prize||"")+'</td><td>'+drawRecTag(r)+'</td><td>'+drawAckTag(r)+'</td></tr>'; }).join(""):'<tr><td colspan="7"><div class="empty"><b>아직 추첨 기록이 없습니다</b></div></td></tr>')+
       '</tbody></table></div>'+(d.total>recs.length?'<p class="cap mt8">최근 '+recs.length+'줄 · 전체 '+n0(d.total)+'줄</p>':''));
 }
-function drawSetHtml(d){
-  var f='<div id="dwSet"><div class="fx"><label class="fld">추첨 코드(인쇄물과 같아야 함)<input id="dwCode" class="in n" style="width:150px" value="'+esc(d.code||"")+'" placeholder="AXD + 6자" autocomplete="off" spellcheck="false"></label>'+
-    '<label class="fld">체크인 시간<input id="dwWin" class="in n" style="width:130px" value="'+esc(d.win||"")+'" placeholder="16:40-17:25"></label>'+
-    '<label class="fld">날짜(비우면 매일)<input id="dwDay" class="in n" style="width:130px" value="'+esc(d.day||"")+'" placeholder="2026-10-26"></label>'+
-    '<button class="btn pri" style="align-self:flex-end" data-qa="draw.cfg.save" onclick="drawCfgSave()">저장</button></div>'+
-    '<p class="cap mt8">'+(d.code?"":"<b>코드가 비어 있어 체크인을 받지 않습니다.</b> ")+'시간 · 날짜 검사 '+(d.winOn?"켜짐":"꺼짐 · 지금은 시간 · 날짜를 보지 않습니다")+'</p></div>';
-  var cl='closed' in d?'<div class="fx">'+(d.closed?tag("체크인 마감","warn"):tag("체크인 받는 중","ok"))+'<button class="btn'+(d.closed?'':' danger')+'" data-qa="draw.close" onclick="drawCloseSet('+(d.closed?0:1)+')">'+(d.closed?'체크인 다시 열기':'체크인 마감')+'</button></div><p class="cap mt8">체크인 '+n0(d.in)+'명 · 행운권 있음 '+n0(d.withT)+'</p>':'<p class="cap">서버 배포 뒤</p>';
-  var av=d.att!=null?String(d.att).toUpperCase():null;
-  var at='<div class="fx">'+(av==null?tag("서버 갱신 뒤"):av==="OFF"?tag("OFF · 번호 전체가 풀","pri"):tag("ON · 17F 입구 체크인한 사람만","warn"))+(cfgRowOf("행운권_참석조건")?'<button class="btn sm" data-qa="draw.att" onclick="cfgEditAsk(\'행운권_참석조건\')">바꾸기</button>':'')+'</div>';
-  return '<div class="grid g2">'+card("추첨 코드 · 체크인 시간",esc(short(d.t))+" 기준",f)+card("17F 입구 체크인","사회자가 마감을 알리면",cl)+'</div>'+card("행운권 참석조건","무대 추첨 풀",at,"","mt16");
-}
-function drawCloseSet(v){
-  dialog({ t:v?"추첨 체크인을 마감할까요?":"추첨 체크인을 다시 열까요?", s:v?"아직 체크인하지 않은 사람은 QR 을 찍어도 「체크인이 마감됐어요」가 뜹니다. 이미 체크인한 사람은 그대로입니다.":"시간 안에 찍은 사람의 체크인을 다시 받습니다.", ok:v?"마감":"다시 열기", danger:!!v,
-    onOk:function(){ pzCall("draw_cfg",{ closed:String(v) },["draw_stats"],function(r){ toast(r&&r.ok?(v?"추첨 체크인을 마감했습니다":"추첨 체크인을 다시 열었습니다"):"실패 · "+why(r)); }); } });
-}
-function drawCfgSave(){
-  var d=S.data.draw||{}, c=el("dwCode").value.toUpperCase().replace(/[^A-Z0-9]/g,""), w=el("dwWin").value.replace(/\s+/g,"").replace("~","-"), dy=el("dwDay").value.trim();
-  var p={}, lines=[];
-  if(c!==(d.code||"")){ if(!/^AXD[A-Z0-9]{6}$/.test(c)){ toast(DRAW_WHY.code); return; } p.code=c; lines.push(["추첨 코드",esc((d.code||"(없음)")+" → "+c),"chg"]); }
-  if(w!==(d.win||"")){ p.win=w; lines.push(["체크인 시간",esc((d.win||"-")+" → "+w),"chg"]); }
-  if(dy!==(d.day||"")){ p.day=dy; lines.push(["날짜",esc((d.day||"(매일)")+" → "+(dy||"(매일)")),"chg"]); }
-  if(!lines.length){ toast("바뀐 것이 없습니다"); return; }
-  dialog({ t:"추첨 설정을 바꿀까요?", x:imp(lines), s:p.code?"<b>코드를 바꾸면 입구 인쇄물의 QR 로는 체크인되지 않습니다.</b>":"", ok:"저장", danger:!!p.code,
-    onOk:function(){ pzCall("draw_cfg",p,["draw_stats"],function(r){ toast(r&&r.ok?"추첨 설정을 저장했습니다":"실패 · "+(DRAW_WHY[r&&r.reason]||why(r))); }); } });
-}
-
 /* ══ 운영 설정 한 값 바꾸기 · cfg_list 의 한 줄(형 · 범위 · 수준) · 고급 표 · 럭키드로우 · 룰렛과 선착순이 함께 쓴다 ══ */
 function cfgRowOf(k){ var d=S.data.cfgl; return d&&d.ok?(d.rows||[]).filter(function(r){ return r.k===k; })[0]||null:null; }
 var CFG_TY={ onoff:"켜고 끄기", num:"숫자", hm:"시각", enum:"고르기", text:"글자" };
