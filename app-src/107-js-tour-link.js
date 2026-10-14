@@ -88,13 +88,9 @@ var TOUR_BOT_SM = '<g class="sm"><path d="M75.4 102.6 A6.2 6.2 0 0 1 87.1 102.6"
 function tourBotHtml() {
   return '<span class="ico tbot" style="--td:-' + (Date.now() % 9000) + 'ms">' + BOT_SVG.replace("</svg>", BOT_WAVE + TOUR_BOT_SM + "</svg>") + "</span>";
 }
-function tourHomeHtml() {   /* 당일 · 종료 뒤 · 나의 일정 아래(둘러보기를 한 번 연 뒤) */
-  return tourOn() && !tourHeroOn() ? tourLineHtml() : "";
+function tourHeroHtml() {   /* 261015 (사용자 확정) 홈 맨 위 고정 순서 = 옷 사이즈 카드 > 광고판 > 행사 둘러보기 · 시기 · 계정 · tour_seen 과 무관하게 광고판 바로 아래 · 옛 tourHomeHtml(나의 일정 아래) · tourHeroOn 은 없앴다 */
+  return tourOn() ? tourLineHtml() : "";
 }
-function tourHeroHtml() {   /* 행사 전 · 광고판 바로 아래 · v5.83 첫 방문(tour_seen 없음)은 당일에도 */
-  return tourOn() && tourHeroOn() ? tourLineHtml() : "";
-}
-function tourHeroOn() { return evPhase() === "before" || !S.get("tour_seen", false); }
 /* v5.83 (사용자 261006 「최초 진입 가볍게」 결정 3 · 옛 v5.46 사용자 261004 요청 번복) 둘러보기 초대 시트(tourinv · 봉투 · 「나중에 하기」) 삭제
    입구 = 홈 「행사 둘러보기」 카드 · 둘러보기를 처음 열기 전(기기 키 tour_seen 없음)에는 당일에도 광고판 바로 아래(tourHeroHtml) · 처음 열면 원래 자리(당일 = 나의 일정 아래)
    그림 assets/tour/inv/invite.jpg · CSS .axs-inv(봉투) 파일은 남긴다(참조만 끊음) · 옛 기기 키 tour_inv 는 쓰지 않는다 · 되살리기 = hi_ax git v5.82 */
