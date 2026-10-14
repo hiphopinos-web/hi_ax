@@ -305,6 +305,7 @@ function tlogSend(ev, beacon) {
       var ses = sesParam(p), b = new URLSearchParams();
       if (ses) p.ses = ses;
       for (var k in p) if (Object.prototype.hasOwnProperty.call(p, k)) b.append(k, p[k]);
+      if (typeof APP_VER === "string") b.append("av", APP_VER);   /* v7.22 서버 tail 한 줄(AXREQ)에 앱 버전 */
       if (navigator.sendBeacon(GAS_URL, b)) return;
       delete p.ses;
     }

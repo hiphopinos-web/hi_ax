@@ -13,6 +13,7 @@ function admCall(params, done, fail, again) {
   if (params && !params.dev && typeof tsfTrialDev === "function") { var tdv = tsfTrialDev(params.action); if (tdv) params.dev = tdv; }   /* 261012 타자왕 PC 체험 · 기기 이름 */
   var body = new URLSearchParams(), settled = false, ctl = typeof AbortController === "function" ? new AbortController() : null;
   for (var k in params) if (Object.prototype.hasOwnProperty.call(params, k) && params[k] != null) body.append(k, String(params[k]));
+  if (typeof APP_VER === "string" && !body.has("av")) body.append("av", APP_VER);   /* v7.22 서버 tail 한 줄(AXREQ)에 앱 버전 */
   var end = function (why) { if (settled) return; settled = true; clearTimeout(timer); if (fail) fail(why); };
   var timer = setTimeout(function () { try { if (ctl) ctl.abort(); } catch (e) {} end("timeout"); }, 15000);
   fetch(GAS_URL, { method: "POST", body: body, cache: "no-store", signal: ctl ? ctl.signal : undefined }).then(function (r) {
