@@ -1984,6 +1984,142 @@
     BU = { x: BX, z: BZ, g: g, cut: R.cut, plaque: R.plaque, top: YTOP };
     G.bust = BU;
   }
+  /* ═══════════ v7.26 로비 화분(흉상 동쪽 · 검은 받침 위) = 실물 영상에 가깝게 (사용자 261015 「똑같지는 않더라도 지금은 너무 단순해서」 · 참고 = 참고자료/20261015_125611.mp4) ═══════════
+   * 실물 = 검은 받침 위 흰 받침 접시(작은 발 4개) + 밝은 회색 시멘트 화분(얼룩 무늬 · 둥근 밑동 · 위로 조금 벌어짐) + 연보라 호접란 여러 대(짙은 잎) + 베이지 팜파스 이삭이 바깥으로 넓게 퍼짐
+   * 자리 · 검은 받침(0.46 · 높이 0.24) = 모형 그대로 · 모형의 옛 항아리 · 잎 덩이 · 흰 꽃 덩이만 지운다 · 걷기 지도(buildGrid) 다음에 바꿔 막힘 칸 · 카메라 막힘은 그대로
+   * 그리기 1번 = 한 덩어리(정점 색 + 캔버스 한 장 = 이삭 깃털 · 화분 얼룩 · 흰 칸) · 그림 파일 없음 · 누름(raycast)은 지나간다 · 되돌리기 = load() 의 buildPlant() 한 마디를 지운다 */
+  var PLANT = { dx: 0.86, base: 0.24, seed: 26101 };   /* dx = build/layout.py BUST_PED pot_dx */
+  /* 한 장 256 x 256 · 왼쪽 0~63 = 이삭 깃털(투명 바탕) · 80~176 x 8~120 = 화분 얼룩(밝은 바탕 + 회색 점) · 192~255 x 0~63 = 흰 칸(꽃 · 잎 · 줄기 · 접시) */
+  function plantAtlas() {
+    var c = bCv(256, 256), g = c.getContext('2d'), R = bRnd(PLANT.seed + 7), i;
+    g.fillStyle = '#FFFFFF'; g.fillRect(192, 0, 64, 64);
+    g.fillStyle = '#F6F5F2'; g.fillRect(72, 0, 120, 128);
+    for (i = 0; i < 50; i++) { g.fillStyle = R() < 0.6 ? 'rgba(255,255,255,' + (0.2 + R() * 0.3).toFixed(3) + ')' : 'rgba(160,156,150,' + (0.04 + R() * 0.05).toFixed(3) + ')'; g.beginPath(); g.ellipse(72 + R() * 120, R() * 128, 3 + R() * 9, 2 + R() * 7, R() * 3, 0, 6.3); g.fill(); }
+    for (i = 0; i < 2600; i++) { var y = R() * 128, k = 0.35 + 0.65 * y / 128; g.fillStyle = 'rgba(84,82,78,' + ((0.1 + R() * 0.32) * k).toFixed(3) + ')'; g.beginPath(); g.arc(72 + R() * 120, y, 0.3 + R() * R() * 0.9, 0, 6.3); g.fill(); }   /* 가는 점 · 아래로 갈수록 많이(영상) */
+    /* 이삭 · 아래(y 250) → 끝(y 6) · 심 둘레 솜털 덩이 + 가장자리 가는 털 */
+    var env = function (t) { return 29 * Math.pow(Math.sin(Math.PI * Math.min(1, 0.08 + t * 0.97)), 0.6) * Math.min(1, t / 0.07 + 0.3); }, gs = function () { return (R() + R() + R() - 1.5) / 1.5; };
+    for (i = 0; i < 2600; i++) {
+      var t = Math.pow(R(), 0.9), yy = 250 - t * 244 + (R() - 0.5) * 4, hw = env(t), xx = 32 + gs() * hw * 0.8;
+      var lu = Math.round(255 - R() * R() * 70); g.fillStyle = 'rgba(' + lu + ',' + (lu - 4) + ',' + (lu - 10) + ',' + (0.13 + R() * 0.27).toFixed(3) + ')'; g.beginPath(); g.ellipse(xx, yy, 0.8 + R() * 1.6, 1.2 + R() * 2.4, (xx - 32) * 0.04, 0, 6.3); g.fill();
+    }
+    g.lineCap = 'round';
+    for (i = 0; i < 1100; i++) {
+      var tt = Math.pow(R(), 0.9), y0 = 250 - tt * 244, hw2 = env(tt), sd = R() < 0.5 ? -1 : 1, len = hw2 * (0.4 + R() * 0.8), an = 0.3 + R() * 1.1, x0 = 32 + sd * R() * hw2 * 0.3;
+      g.strokeStyle = 'rgba(255,255,255,' + (0.3 + R() * 0.45).toFixed(3) + ')'; g.lineWidth = 0.6 + R() * 0.7;
+      g.beginPath(); g.moveTo(x0, y0); g.quadraticCurveTo(x0 + sd * Math.cos(an) * len * 0.6, y0 - Math.sin(an) * len * 0.3, x0 + sd * Math.cos(an) * len, y0 - Math.sin(an) * len); g.stroke();
+    }
+    return bTex(c, false);
+  }
+  function buildPlant() {
+    var at = D.BLD.bust; if (!at) return;
+    var PX = at[0] + PLANT.dx, PZ = at[1], Y0 = PLANT.base, R = bRnd(PLANT.seed), t0 = performance.now(), cut = 0, hid = 0, old0 = 0;
+    /* 모형의 옛 항아리 · 잎 덩이 · 흰 꽃 덩이(검은 받침 윗면 위 · 흉상 몸체 x BX + 0.62 동쪽)만 지운다 · 검은 받침은 남김 */
+    S.lobby.updateMatrixWorld(true);
+    var old = S.lobby.getObjectByName('bust');
+    if (old) old.traverse(function (o) {
+      if (!o.isMesh) return;
+      var n0 = o.geometry.index ? o.geometry.index.count / 3 : o.geometry.attributes.position.count / 3;
+      var c = regionCut(o, null, null, function (tri) { var cx = (tri[0].p[0] + tri[1].p[0] + tri[2].p[0]) / 3, cz = (tri[0].p[1] + tri[1].p[1] + tri[2].p[1]) / 3; return cx > PX - 0.24 && cx < PX + 0.45 && Math.abs(cz - PZ) < 0.45 && Math.max(tri[0].p[2], tri[1].p[2], tri[2].p[2]) > Y0 + 0.005; });
+      if (c) { cut += c; old0 += n0; if (o.geometry.index && o.geometry.index.count === 0) { o.visible = false; hid++; } }
+    });
+    var P = [], N = [], C = [], U = [], I = [], col = new T.Color(), Y = new T.Vector3(0, 1, 0), WU = [224 / 256, 1 - 32 / 256];
+    function rgb(hex, k) { col.set(hex); return [col.r * k, col.g * k, col.b * k]; }
+    function put(p, n, c, u, v) { P.push(p.x, p.y, p.z); N.push(n.x, n.y, n.z); C.push(c[0], c[1], c[2]); U.push(u, v); return P.length / 3 - 1; }
+    var _p = new T.Vector3(), _n = new T.Vector3();
+    /* three 도형(법선 있음) 붙이기 · colf(x, y, z) = 색 · uvf(u, v) = 지도 칸(없으면 흰 칸) */
+    function addGeo(geo, m, colf, uvf) {
+      if (m) geo.applyMatrix4(m);
+      var p = geo.attributes.position, n = geo.attributes.normal, uv = geo.attributes.uv, base = P.length / 3, k;
+      for (k = 0; k < p.count; k++) { var q = uvf && uv ? uvf(uv.getX(k), uv.getY(k)) : WU; put(_p.fromBufferAttribute(p, k), _n.fromBufferAttribute(n, k), colf(p.getX(k), p.getY(k), p.getZ(k)), q[0], q[1]); }
+      if (geo.index) for (k = 0; k < geo.index.count; k++) I.push(base + geo.index.getX(k)); else for (k = 0; k < p.count; k++) I.push(base + k);
+      geo.dispose();
+    }
+    var _m = new T.Matrix4(), _q = new T.Quaternion(), _s = new T.Vector3(1, 1, 1);
+    function rod(a, d, L, r0, r1, c0, c1) {   /* 줄기 · a 에서 d 방향으로 L · 네모 단면(옆면만) */
+      var g = new T.CylinderGeometry(r1, r0, L, 4, 1, true), mid = a.clone().addScaledVector(d, L / 2);
+      _q.setFromUnitVectors(Y, d); _m.compose(mid, _q, _s);
+      var lo = rgb(c0, 1), hi = rgb(c1, 1), ay = a.y, by = a.y + d.y * L;
+      addGeo(g, _m, function (x, y) { var t = by > ay ? Math.min(1, Math.max(0, (y - ay) / (by - ay))) : 0; return [lo[0] + (hi[0] - lo[0]) * t, lo[1] + (hi[1] - lo[1]) * t, lo[2] + (hi[2] - lo[2]) * t]; });
+    }
+    /* ① 받침 접시 + 발 4개 · 흰색 */
+    var PB = 0.03, PT = PB + 0.34, SOIL = PT - 0.035;
+    var V2 = function (a) { return a.map(function (q) { return new T.Vector2(q[0], q[1]); }); };
+    addGeo(new T.LatheGeometry(V2([[0, 0.018], [0.14, 0.018], [0.165, 0.022], [0.176, 0.032], [0.179, 0.046], [0.171, 0.048], [0.166, 0.035], [0.15, 0.028], [0, 0.028]]), 28), null, function (x, y) { return rgb('#F1F0EC', y < 0.025 ? 0.86 : 1); });
+    for (var f = 0; f < 4; f++) { var fa = Math.PI / 4 + f * Math.PI / 2; addGeo(new T.BoxGeometry(0.034, 0.018, 0.03), _m.compose(new T.Vector3(Math.cos(fa) * 0.128, 0.009, Math.sin(fa) * 0.128), _q.setFromAxisAngle(Y, -fa), _s), function () { return rgb('#E6E4DF', 0.95); }); }
+    /* ② 화분 · 둥근 밑동에서 위로 조금 벌어짐 · 바깥 = 얼룩 무늬 칸 · 안쪽 벽 · 아래 끝은 어둡게 */
+    addGeo(new T.LatheGeometry(V2([[0, PB], [0.098, PB], [0.116, PB + 0.006], [0.127, PB + 0.02], [0.132, PB + 0.045], [0.137, PB + 0.1], [0.143, PB + 0.17], [0.149, PB + 0.25], [0.155, PB + 0.33], [0.155, PT], [0.146, PT], [0.143, PT - 0.02], [0.141, SOIL]]), 30), null, function (x, y, z) {
+      var r = Math.hypot(x, z), inner = r < 0.1465 && y > SOIL - 0.002, k = inner ? 0.62 : y < PB + 0.03 ? 0.7 + (y - PB) * 8 : 1;
+      return rgb('#D3D1CC', k);
+    }, function (u, v) { return [(78 + 108 * u) / 256, 1 - (6 + 116 * (1 - v)) / 256]; });
+    /* ③ 흙 */
+    var soil = new T.CircleGeometry(0.142, 22); soil.rotateX(-Math.PI / 2); soil.translate(0, SOIL, 0);
+    addGeo(soil, null, function (x, y, z) { return rgb('#3E342A', 0.9 + 0.2 * Math.sin(x * 90) * Math.cos(z * 70)); });
+    /* ④ 호접란 잎 6장 · 짙은 초록 · 가장자리 넘어 처짐 */
+    for (var l = 0; l < 6; l++) {
+      var la = l / 6 * Math.PI * 2 + R() * 0.5, lo = new T.Vector3(Math.cos(la), 0, Math.sin(la)), ls = new T.Vector3(-Math.sin(la), 0, Math.cos(la)), Lf = 0.15 + R() * 0.05, W = 0.05 + R() * 0.016, lp = [], li = [];
+      for (var s = 0; s <= 6; s++) {
+        var t = s / 6, cx = lo.clone().multiplyScalar(0.07 + Lf * t), y = SOIL + 0.02 + 0.11 * t - 0.1 * t * t, w = W * Math.pow(Math.sin(Math.PI * (0.12 + 0.88 * t)), 0.8) / 2;
+        lp.push(cx.x - ls.x * w, y, cx.z - ls.z * w, cx.x, y + 0.006, cx.z, cx.x + ls.x * w, y, cx.z + ls.z * w);
+        if (s) { var b = (s - 1) * 3; li.push(b, b + 3, b + 1, b + 1, b + 3, b + 4, b + 1, b + 4, b + 2, b + 2, b + 4, b + 5); }
+      }
+      var lg = new T.BufferGeometry(); lg.setAttribute('position', new T.Float32BufferAttribute(lp, 3)); lg.setIndex(li); lg.computeVertexNormals();
+      var lk = 0.85 + R() * 0.25; addGeo(lg, null, function (x, y, z) { return rgb('#41603A', lk * (0.85 + 0.3 * ((Math.abs(x * 997 + z * 613) % 1)))); });
+    }
+    /* ⑤ 호접란 꽃대 18대 · 아래는 거의 곧게 · 위에서 바깥으로 휘며 꽃 5 ~ 7송이(지름 약 7cm) */
+    var PET = rgb('#AE8ADD', 1), PETe = rgb('#C4A6EB', 1), LIP = rgb('#7C2E78', 1), LIPe = rgb('#9E4C92', 1);
+    var SHP = [[0, 0.021, 0.011, 0.018, 0, -0.002], [-0.021, 0.004, 0.021, 0.018, 0.35, -0.004], [0.021, 0.004, 0.021, 0.018, -0.35, -0.004], [-0.012, -0.019, 0.009, 0.017, -0.5, -0.003], [0.012, -0.019, 0.009, 0.017, 0.5, -0.003], [0, -0.008, 0.008, 0.009, 0, 0.005]];
+    var uu = new T.Vector3(), vv = new T.Vector3(), q3 = new T.Vector3(), nn = new T.Vector3(), flowers = 0;
+    function bloom(c, fd, sc, tone) {
+      vv.copy(Y).addScaledVector(fd, -fd.y); if (vv.lengthSq() < 1e-4) vv.set(1, 0, 0); vv.normalize(); uu.crossVectors(vv, fd).normalize();
+      SHP.forEach(function (h, hi) {
+        var lip = hi === 5, ci = lip ? LIP : PET, ce = lip ? LIPe : PETe, cr = Math.cos(h[4]), sr = Math.sin(h[4]), base = P.length / 3;
+        var at = function (X, Yy, Dd) { return q3.copy(c).addScaledVector(uu, X * sc).addScaledVector(vv, Yy * sc).addScaledVector(fd, Dd * sc); };
+        put(at(h[0], h[1], h[5] + 0.002), fd, [ci[0] * tone * 0.92, ci[1] * tone * 0.92, ci[2] * tone * 0.92], WU[0], WU[1]);
+        for (var e = 0; e < 7; e++) {
+          var ph = e / 7 * Math.PI * 2, ex = h[2] * Math.cos(ph), ey = h[3] * Math.sin(ph), X = h[0] + ex * cr - ey * sr, Yy = h[1] + ex * sr + ey * cr, rr = Math.hypot(X, Yy);
+          nn.copy(fd).addScaledVector(uu, X * 9).addScaledVector(vv, Yy * 9).normalize();
+          put(at(X, Yy, h[5] - rr * 0.12), nn, [ce[0] * tone, ce[1] * tone, ce[2] * tone], WU[0], WU[1]);
+          I.push(base, base + 1 + e, base + 1 + (e + 1) % 7);
+        }
+      });
+      flowers++;
+    }
+    for (var k = 0; k < 18; k++) {
+      var a = k / 18 * Math.PI * 2 + R() * 0.4, o = new T.Vector3(Math.cos(a), 0, Math.sin(a)), sd = new T.Vector3(-o.z, 0, o.x), rb = 0.02 + R() * 0.07;
+      var b0 = new T.Vector3(o.x * rb, SOIL, o.z * rb), l1 = 0.05 + R() * 0.2, d1 = o.clone().multiplyScalar(Math.sin(l1)).addScaledVector(Y, Math.cos(l1)).normalize(), L1 = 0.27 + R() * 0.17;
+      var p1 = b0.clone().addScaledVector(d1, L1), l2 = l1 + 0.4 + R() * 0.35, d2 = o.clone().multiplyScalar(Math.sin(l2)).addScaledVector(Y, Math.cos(l2)).normalize(), L2 = 0.12 + R() * 0.08;
+      rod(b0, d1, L1, 0.0042, 0.0034, '#4F5E35', '#7D8656'); rod(p1, d2, L2, 0.0034, 0.0026, '#7D8656', '#8E8C62');
+      var nf = 5 + Math.floor(R() * 3), tone = 0.9 + R() * 0.18;
+      for (var fi = 0; fi < nf; fi++) {
+        var tt = (fi + 0.5) / nf, along = L1 * 0.5 + (L1 * 0.5 + L2) * tt, pt = along <= L1 ? b0.clone().addScaledVector(d1, along) : p1.clone().addScaledVector(d2, along - L1);
+        var alt = fi % 2 ? 1 : -1; pt.addScaledVector(sd, alt * 0.024).addScaledVector(Y, -0.02);
+        var fd = o.clone().addScaledVector(Y, 0.3 + R() * 0.25).addScaledVector(sd, alt * 0.45 + (R() - 0.5) * 0.3).normalize();
+        bloom(pt, fd, fi === nf - 1 ? 0.85 : 1.3 + R() * 0.3, tone);
+      }
+    }
+    /* ⑥ 팜파스 34대 · 가는 베이지 줄기 + 깃털 이삭(60도씩 엇갈린 판 세 장 · 세 마디로 끝이 바깥 · 아래로 처짐) · 법선은 바깥 위로(판 방향 따라 얼룩지지 않게) */
+    var VB = 1 - 252 / 256, VT = 1 - 6 / 256, UL = 1 / 256, UR = 63 / 256, PLC = ['#CDBDA3', '#C2B197', '#D8CAB2', '#BBAA90'];
+    for (var j = 0; j < 34; j++) {
+      var pa = (j + R() * 0.8) / 34 * Math.PI * 2, po = new T.Vector3(Math.cos(pa), 0, Math.sin(pa)), pr = 0.03 + R() * 0.08, lean = 0.1 + 0.66 * Math.pow(R(), 0.9);
+      var pb = new T.Vector3(po.x * pr, SOIL, po.z * pr), pd = po.clone().multiplyScalar(Math.sin(lean)).addScaledVector(Y, Math.cos(lean)).normalize(), PLn = 0.58 - lean * 0.3 + R() * 0.16;
+      rod(pb, pd, PLn, 0.0028, 0.0022, '#9E9070', '#C4B596');
+      var ptop = pb.clone().addScaledVector(pd, PLn), pl = 0.25 + R() * 0.12, pw = 0.12 + R() * 0.04, tw = (R() - 0.5) * 1.2;
+      var s1 = new T.Vector3(-Math.sin(pa), 0, Math.cos(pa)), s2 = new T.Vector3().crossVectors(pd, s1).normalize(), pls = [0, 1, 2].map(function (e) { var an = tw + e * Math.PI / 3; return s1.clone().multiplyScalar(Math.cos(an)).addScaledVector(s2, Math.sin(an)); });
+      var pc = rgb(PLC[j % 4], 0.92 + R() * 0.14), fn = po.clone().multiplyScalar(0.55).addScaledVector(Y, 0.85).normalize(), axis = [ptop.clone()], cur = ptop.clone();
+      for (var sg = 1; sg <= 3; sg++) { var dk = pd.clone().addScaledVector(po, 0.22 * sg / 3).addScaledVector(Y, -0.1 * sg / 3 * lean * 2).normalize(); cur = cur.clone().addScaledVector(dk, pl / 3); axis.push(cur); }
+      pls.forEach(function (sv) {
+        var base = P.length / 3;
+        axis.forEach(function (q, qi) { var v = VB + (VT - VB) * qi / 3; put(q.clone().addScaledVector(sv, -pw / 2), fn, pc, UL, v); put(q.clone().addScaledVector(sv, pw / 2), fn, pc, UR, v); });
+        for (var qi = 0; qi < 3; qi++) { var bq = base + qi * 2; I.push(bq, bq + 1, bq + 3, bq, bq + 3, bq + 2); }
+      });
+    }
+    var geo = new T.BufferGeometry();
+    geo.setAttribute('position', new T.Float32BufferAttribute(P, 3)); geo.setAttribute('normal', new T.Float32BufferAttribute(N, 3));
+    geo.setAttribute('color', new T.Float32BufferAttribute(C, 3)); geo.setAttribute('uv', new T.Float32BufferAttribute(U, 2)); geo.setIndex(I); geo.computeBoundingSphere();
+    var mesh = new T.Mesh(geo, new T.MeshLambertMaterial({ map: plantAtlas(), vertexColors: true, alphaTest: 0.42, side: T.DoubleSide }));
+    mesh.name = 'plantNew'; mesh.position.set(PX - 16, Y0, 6 - PZ); mesh.raycast = function () {}; S.lobby.add(mesh);
+    G.plant = { cut: cut, hid: hid, oldTris: old0, tris: I.length / 3, verts: P.length / 3, flowers: flowers, calls: 1, ms: Math.round(performance.now() - t0) };
+  }
   /* ═══════════ v5.98 흉상 몸체 = 실물 영상 4K 프레임 4장(정면 · 양쪽 비스듬히 · 오른쪽 옆)으로 만든 3D 모델(bust-hq.glb) (사용자 261006 밤 「동상은 실물처럼 작업을 빡세게 해줘」 · 「힉스필드 3D 생성」 승인) ═══════════
    * 받침 · 명판 · 나뭇잎 띠 · 벽 새김 무늬 · 동쪽 화분 = v5.73 그대로(사용자 「받침대 같은 것들은 그대로 둬」) · 바뀌는 것 = 받침 윗면 위 몸체만
    * 모델 = Hunyuan3D v3(20만 삼각형 · 같은 4장으로 만든 Meshy 판보다 옆 실루엣 · 몸 두께가 실물에 가까움) → 3만 삼각형(입가만 살짝 고름 · 실물은 다문 입) · 주름 · 옷깃은 고해상도에서 구운 법선 맵 · 오목한 곳 그늘(AO) · 영상 조명에 물든 주황 얼룩은 걷어 냄
@@ -2061,7 +2197,7 @@
       refit1F(); fixCoplanar(S.lobby); fixLightmaps(S.lobby); fixDesks(S.lobby); remodel(); buildBust(); buildGrid(S.lobby); patchPillars(S.lobby); buildDoor();   /* 261008 1층 수정본(refit1F) = 다른 손질보다 먼저 */
       var st = STOPS[0], f = nearestFree(st.x, st.z); flood(f[0], f[1]);
       STOPS.forEach(function (s) { var q = nearestFree(s.x, s.z); if (q) { s.x = q[0]; s.z = q[1]; } });
-      buildGuides(); buildRooms(); hideCheckin(); buildTypingTv(); buildLaptops(); buildTvs();   /* v5.51 오락기 3대 없앰(사용자 261004) */
+      buildGuides(); buildRooms(); hideCheckin(); buildTypingTv(); buildLaptops(); buildTvs(); buildPlant();   /* v5.51 오락기 3대 없앰(사용자 261004) */
       if (G.wallScr) { var wv = MOT.on ? motAdd(G.wallScr, 'wall') : tvAdd(G.wallScr, 64, Math.round(64 * WW.h / WW.w), 'wall'); wv.sphere.radius = Math.hypot(WW.w, WW.h) / 2 + 0.1; G.tvN = TVS.length; }   /* v5.45 가벽 전체 화면 · 같은 픽셀 광고 루프(행사명 → ME to WE → 물결) · 화면 비율대로 64 × 96 */
       STOPS.forEach(function (s) { if (!free(s.x, s.z)) { var q = nearestFree(s.x, s.z); if (q) { s.x = q[0]; s.z = q[1]; } } });   /* v5.38 멈춤 자리가 스태프 · TV 원 안이면 밖으로 */
       G.ceil = S.lobby.getObjectByName('ceiling');
@@ -5341,5 +5477,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v7.04', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v7.26', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();
