@@ -499,6 +499,7 @@ header.top :focus-visible,.bar.bulk :focus-visible{outline-color:#fff}
 <script src="idea.js?v=2610121"></script>
 <script src="survey.js?v=2610141"></script>
 <script src="att.js?v=2610142"></script>
+<script src="ckno.js?v=2610151"></script>
 <script>
 /* ══ 0. 설정 ══ */
 var BE_DEFAULT = "https://script.google.com/macros/s/AKfycbwjCaSSUnQ7W1lrM8T426Cn_LgKs_UhI0Qi5XRVk-_eF-oD55-Wwjsot0DkPJCX9JqMBA/exec";
@@ -1453,7 +1454,7 @@ function pcHtml(d){
   var st=pcStamps(d), by={}; st.forEach(function(x){ by[x.id]=x; });
   var half=!!by.p3h&&!by.p3, pg=Math.min(2,(by.p3?2:by.p3h?1:0)+(by.ln?2:0)+(by.cc?1:0)), n=d.n!=null?d.n:Math.min(6,st.filter(function(x){ return x.id!=="p3"&&STAMP8.some(function(s){ return s[0]===x.id; }); }).length+pg+(by.ck?3:0));
   var h='<div class="ph2"><div style="min-width:0"><h2 id="pcH" tabindex="-1">'+esc(d.name||e)+'</h2><div class="cap">'+esc(d.dept||"")+' · <span class="n">'+esc(e)+'</span></div><div class="fx mt8">'+
-    (d.test||L.test?tag("시험"):"")+(d.sup?tag("슈퍼관리자","pri"):"")+(L.staffApp?tag("스태프","pri"):"")+(d.acct?"":tag("가입 전"))+(d.stale?tag("다시 받는 중"):"")+'</div></div><button class="x" aria-label="카드 닫기" data-qa="who.x" onclick="whoPick(\'\')">×</button></div><div class="bd">';
+    (d.test||L.test?tag("시험"):"")+(d.ckno?tag("체크인 "+d.ckno+"번","pri"):"")+(d.sup?tag("슈퍼관리자","pri"):"")+(L.staffApp?tag("스태프","pri"):"")+(d.acct?"":tag("가입 전"))+(d.stale?tag("다시 받는 중"):"")+'</div></div><button class="x" aria-label="카드 닫기" data-qa="who.x" onclick="whoPick(\'\')">×</button></div><div class="bd">';
   var rsLock=sup&&pcResetLock(d);
   h+='<div class="acts" style="margin-top:0">'+(d.acct?'<button class="btn" data-qa="pc.push" onclick="pcPush(\''+J+'\')">이 사람에게 푸시</button><button class="btn" data-qa="who.pinreset" onclick="pinResetAsk(\''+J+'\')"'+(d.pw===0||d.pw===false?" disabled":"")+'>PIN 초기화</button>':'')+(sup?'<button class="btn danger" data-qa="pc.reset" onclick="pcResetAsk(\''+J+'\')"'+(rsLock?' disabled title="'+RS_DAY+'"':'')+'>초기화</button>':'')+'<button class="btn ghost" data-qa="pc.reload" onclick="whoInfo(\''+J+'\',true);whoPanel()">새로 받기</button></div>'+(rsLock?'<p class="cap mt8" data-qa="pc.reset.lock">'+RS_DAY+'</p>':'');
   /* 접속 */
@@ -2054,8 +2055,8 @@ function ckAvg(s){ var v=Number(s)||0; return v>0?(Math.round(v/6)/10)+"분":"-"
 var CKSW={ emp:"", from:"", to:"", memo:"" };
 VIEWS.ck={
   need:function(){ return [{ k:"ck", a:"ck_state", ttl:15000 },{ k:"kss", a:"kit_size_state", ttl:60000 }]; },
-  mount:function(){ el("vb").innerHTML='<div id="ckBand"></div><div class="card kpis" id="ckK"></div><div class="ckg" id="ckW"></div><details class="memo"><summary>사이즈별 남음(자동 집계) · 사이즈 교환 기록은 설정 › 고급 › 재고</summary><div class="mb" id="ckSz"></div></details>'+card("화면 열기","TV · 창구 태블릿 · 주소에는 코드가 없습니다",scrRows(ckScreens()),"","mt16")+
-    memo('<p><b>번호 흐름</b> · 접수 스태프가 참가자 QR 을 찍으면 사이즈에 맞는 창구 번호표(예 B-007)가 나옵니다. 창구 화면에서 「건넴」을 누르면 그 창구의 다음 번호가 저절로 호출됩니다.</p><p><b>다음 번호 부르기</b> · 비상용입니다. 호출 중인 사람을 건너뛰고 다음 번호를 부릅니다. 건너뛴 사람은 돌아와 창구에서 QR 을 찍으면 그대로 지급합니다.</p><p><b>사이즈 남음</b> · 신청 · 지급 기록에서 저절로 셉니다. 사람이 수량을 맞추지 않습니다.</p>'); },
+  mount:function(){ el("vb").innerHTML='<div id="ckNo"></div><div id="ckBand"></div><div class="card kpis" id="ckK"></div><div class="ckg" id="ckW"></div><details class="memo"><summary>사이즈별 남음(자동 집계) · 사이즈 교환 기록은 설정 › 고급 › 재고</summary><div class="mb" id="ckSz"></div></details>'+card("화면 열기","TV · 창구 태블릿 · 주소에는 코드가 없습니다",scrRows(ckScreens()),"","mt16")+
+    memo('<p><b>번호 흐름</b> · 접수 스태프가 참가자 QR 을 찍으면 사이즈에 맞는 창구 번호표(예 B-007)가 나옵니다. 창구 화면에서 「건넴」을 누르면 그 창구의 다음 번호가 저절로 호출됩니다.</p><p><b>다음 번호 부르기</b> · 비상용입니다. 호출 중인 사람을 건너뛰고 다음 번호를 부릅니다. 건너뛴 사람은 돌아와 창구에서 QR 을 찍으면 그대로 지급합니다.</p><p><b>사이즈 남음</b> · 신청 · 지급 기록에서 저절로 셉니다. 사람이 수량을 맞추지 않습니다.</p>'); if(window.cknoPaint) cknoPaint(); },
   paint:function(){
     var d=S.data.ck;
     if(!d){ el("ckW").innerHTML=skel(); return; }
@@ -2071,7 +2072,7 @@ VIEWS.ck={
         '<div class="ckn"><div><span>발급</span><b class="n">'+n0(s.issued)+'</b></div><div><span>완료</span><b class="n">'+n0(s.done)+'</b></div><div><span>대기</span><b class="n">'+n0(wait)+'</b></div><div><span>평균</span><b class="n">'+(Number(s.done)?ckAvg(s.avg):"-")+'</b></div></div>'+
         '<div class="ckc"><span class="cap">지금 호출</span>'+(cur?'<b class="n">'+esc(cur.no)+'</b> <span class="cap">'+esc(cur.nm||"")+'</span>':'<span class="cap">없음</span>')+'</div>'+
         '<div class="acts"><button class="btn sm pri" data-qa="ck.next" onclick="ckNextAsk(\''+w+'\')"'+(wait?'':' disabled')+'>다음 번호 부르기</button><button class="btn sm" data-qa="ck.void" onclick="ckVoidAsk(\''+w+'\')"'+(wait||cur?'':' disabled')+'>번호표 무효</button><button class="btn sm ghost" data-qa="ck.desk" onclick="openUrl(\''+esc(ckDesk(w))+'\')">창구 화면</button></div></div>'; }).join("");
-    ckSizePaint();
+    ckSizePaint(); if(window.cknoPaint) cknoPaint();
   }
 };
 function ckNextAsk(w){

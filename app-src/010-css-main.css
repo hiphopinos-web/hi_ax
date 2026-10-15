@@ -405,6 +405,8 @@
   /* v5.66 (디자인 감사 261005 D4) 내 QR 이름 · 안내 · 대기 줄 = AX-TDS 타입 토큰(옛 16.5 · 14.5 · 13.5px · 굵기 800) */
   .myqr-nm { margin-top: 10px; text-align: center; font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
   .myqr-nm span { margin-left: 8px; font: var(--ax-type-t6-strong); color: var(--ax-color-muted); }
+  .myqr-no { margin-top: 4px; text-align: center; font: var(--ax-type-t6-strong); color: var(--ax-color-muted); }   /* 261015 체크인 번호(가나다순 고정) */
+  .myqr-no b { margin-left: 4px; font: var(--ax-type-t5-strong); color: var(--ax-color-brand); }
   .myqr-hint { margin-top: 8px; text-align: center; font: var(--ax-type-t7); color: var(--ax-color-muted); }
   .myqr-hint b { font-weight: 600; color: var(--ax-color-ink); }
   .qstate { margin-top: 12px; border: 1.5px solid var(--line); border-radius: 14px; overflow: hidden; }

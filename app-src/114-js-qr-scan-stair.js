@@ -1048,7 +1048,8 @@ function qrPanelHtml(inner) {
   var h = !txt ?
     '<p class="myqr-hint">사번으로 입장하면 내 QR이 발급됩니다.</p>' :
     '<div class="myqr">' + myQrSvg(216) + "</div>" +
-    '<p class="myqr-nm">' + esc(u.name || "") + "<span>" + esc(u.empId || "") + "</span></p>";
+    '<p class="myqr-nm">' + esc(u.name || "") + "<span>" + esc(u.empId || "") + "</span></p>" +
+    (ckNoMy() ? '<p class="myqr-no">체크인 번호 <b>' + ckNoMy() + "번</b></p>" : "");   /* 261015 체크인 번호(가나다순 고정 · 번호가 있을 때만) */
   return inner ? h : '<div id="qrPanel">' + h + "</div>";
 }
 

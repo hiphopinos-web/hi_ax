@@ -166,6 +166,7 @@ function beSync(after) {
       }
       var kt9 = res.my.kit && typeof res.my.kit === "object" ? res.my.kit : null;   /* 261006 키트 사이즈 · 키트명단 사번만(없으면 null = 홈 카드 · 화면 · 설정 줄 없음) · 261008 스태프 의류 명단 사번도(pool staff) · 신청번호 no */
       if (JSON.stringify(kt9) !== JSON.stringify(S.get("kit", null))) S.set("kit", kt9);
+      var kn9 = Math.floor(Number(res.my.ckno) || 0); if (kn9 < 0) kn9 = 0; if (kn9 !== (Number(S.get("ckno", 0)) || 0)) S.set("ckno", kn9);   /* 261015 체크인 번호(가나다순 고정) · 없으면 0 */
       ckqIn(res.my.ckq || null);   /* 261007 체크인 번호표 · 오늘 번호가 있을 때만(없으면 카드 없음) */
       /* v3.21 B 포토부스 번호표 · 서버가 정본(없으면 null) · 바뀐 경우에만 저장해 불필요한 재렌더를 막는다 */
       /* v3.35 · v3.99 서버 스탬프 목록에 설문(sv)이 있을 때만 · 관리자가 08 을 취소하면 답이 남아 있어도 다시 제출할 수 있다(GAS @74) */
