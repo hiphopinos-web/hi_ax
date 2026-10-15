@@ -1055,3 +1055,117 @@ function lfBusy(btn, on, label) {
   else { btn.removeAttribute("aria-busy"); btn.textContent = label; }
 }
 
+/* ═══ 261016 로그인 두 단계 · 비밀번호 틀림 계단 (기획 문서/로그인 PIN · 설치 안내 개선_261015.md 4-1 · 4-2 · 사용자 결정 D2 · D3) ═══
+   1단계 = 사번 · 이름 · 「다음」 → 서버 login_peek → 2단계 갈래
+     new = 「비밀번호 4자리 정하기」(숫자 보임 · 숨기기) · reset = 같은 화면 + 「초기화됨 · 새로 정하기」 · pin = 「비밀번호 4자리」(가림 · 보기 · 정한 시각)
+     uni = 통합 화면(3초 안에 답이 없거나 옛 서버) · 두 줄 안내 · login 하나로 끝낸다
+   틀림 = 1 · 2회 「맞지 않아요 · 10/19 에 정한 4자리」 · 3회부터 + 「비밀번호 찾기」 · 잠김 = 남은 분 + 「비밀번호 찾기」 · 횟수 = 이 화면 세션(서버는 그대로 10분 10회)
+   찾기 요청을 보낸 기기 = 정한 계정 화면에 「초기화 요청 보냄」 알약(axf_pw_req_at · 초기화되면 peek 가 reset 을 준다 · 입장하면 지운다) */
+var LP = { step: 1, mode: "", name: "", reg: "", bad: {}, sa: false, PEEK_MS: 3000 };
+var LP_REQ = "axf_pw_req_at";
+var LP_WD = ["일", "월", "화", "수", "목", "금", "토"];
+function lpZ(n) { return (n < 10 ? "0" : "") + n; }
+/* ms → 'yyyy-MM-dd HH:mm'(서울 · 서버 peek reg 와 같은 모양) */
+function lpKst(ms) { var d = new Date((Number(ms) || Date.now()) + 9 * 3600000); return d.getUTCFullYear() + "-" + lpZ(d.getUTCMonth() + 1) + "-" + lpZ(d.getUTCDate()) + " " + lpZ(d.getUTCHours()) + ":" + lpZ(d.getUTCMinutes()); }
+function lpReg(reg) {
+  var m = String(reg || "").match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})/);
+  if (!m) return null;
+  var md = (+m[2]) + "/" + (+m[3]);
+  return { day: md, full: md + "(" + LP_WD[new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).getUTCDay()] + ") " + m[4] + ":" + m[5] };
+}
+function lpHint(reg) { var r = lpReg(reg); return r ? r.full + " 에 정한 4자리" : "처음 입장 때 정한 4자리"; }
+function lpBadTxt(reg) { var r = lpReg(reg); return "맞지 않아요 · " + (r ? r.day + " 에 정한 4자리" : "처음 입장 때 정한 4자리"); }
+function lpLockTxt(sec) { return "10분 동안 잠겼어요 · " + Math.max(1, Math.ceil((Number(sec) || 600) / 60)) + "분 뒤 풀림 · 비밀번호 찾기로 초기화 요청"; }
+function lpReqGet(emp) { try { var o = JSON.parse(localStorage.getItem(LP_REQ) || "null"); return o && emp && String(o.emp) === String(emp) && o.t ? o : null; } catch (e) { return null; } }
+function lpReqSet(emp) { try { localStorage.setItem(LP_REQ, JSON.stringify({ emp: String(emp), t: Date.now() })); } catch (e) {} }
+function lpReqClear(emp) { if (lpReqGet(emp)) { try { localStorage.removeItem(LP_REQ); } catch (e) {} } }
+function lpReqShow(wId, pId, emp) {
+  var w = el(wId), p = el(pId), o = lpReqGet(emp);
+  if (!w || !p) return;
+  w.hidden = !o;
+  if (!o) return;
+  var k = lpKst(o.t).match(/^\d{4}-(\d{2})-(\d{2}) (\d{2}:\d{2})/);
+  p.innerHTML = "<ax-seg>초기화 요청 보냄 " + (+k[1]) + "/" + (+k[2]) + " " + k[3] + "</ax-seg> <ax-seg>처리되면 사번 · 이름으로 다시 입장</ax-seg>";
+}
+/* 보기 · 숨기기 · 칸의 초점과 커서를 그대로 둔다(버튼은 mousedown 에서 초점을 가져가지 않는다) */
+function lpEye(id, b) {
+  var i = el(id);
+  if (!i || !b) return;
+  var show = i.type === "password", s = i.selectionStart, e2 = i.selectionEnd;
+  i.type = show ? "text" : "password";
+  b.textContent = show ? "숨기기" : "보기";
+  b.setAttribute("aria-pressed", show ? "true" : "false");
+  if (document.activeElement === i) { try { i.setSelectionRange(s, e2); } catch (x) {} }
+}
+/* 첫 화면 단계 바꾸기 · n = 1 | 2 · mode = new | reset | pin | uni */
+function lpStep(n, mode) {
+  var f = el("entryForm");
+  if (!f) return;
+  LP.step = n; LP.mode = n === 2 ? mode : "";
+  f.setAttribute("data-step", String(n));
+  [].forEach.call(f.querySelectorAll(".lf-s1"), function (x) { x.hidden = n !== 1 || (x.id === "saCard" && !LP.sa); });
+  [].forEach.call(f.querySelectorAll(".lf-s2"), function (x) { x.hidden = n !== 2; });
+  if (el("lgFindW")) el("lgFindW").hidden = true;
+  lfErrClear(f, el("err"));
+  var btn = f.querySelector("button[type=submit]"), pin = el("userPin"), eye = el("lgEye");
+  if (n === 1) { btn.textContent = "다음"; pin.value = ""; lfSoon(); return; }
+  var set = mode === "new" || mode === "reset";
+  el("lgWhoN").textContent = (LP.name || "") + "님";
+  el("lgWhoS").textContent = mode === "new" ? "· 처음 입장" : mode === "reset" ? "· 초기화됨 · 새로 정하기" : "";
+  el("lgPinL").textContent = set ? "비밀번호 4자리 정하기" : "비밀번호 4자리";
+  pin.value = ""; pin.type = set ? "text" : "password";
+  if (eye) { eye.textContent = set ? "숨기기" : "보기"; eye.setAttribute("aria-pressed", set ? "true" : "false"); }
+  el("pinNote").innerHTML = set ? segHtml("다음 입장부터 이 4자리 · 사내 비밀번호와 다르게") : mode === "pin" ? esc(lpHint(LP.reg)) : "· 처음 입장 : 새로 정할 4자리<br>· 다시 입장 : 정했던 4자리";
+  btn.textContent = set ? "이 번호로 입장" : "입장";
+  if (el("lgLost")) el("lgLost").hidden = set;   /* 정하기 화면 링크 = 「다른 사번으로」 하나 */
+  lpReqShow("lgReqW", "lgReq", set ? "" : el("empId").value.trim());
+  lfSoon();
+  [].forEach.call(f.querySelectorAll(".lf-s2"), function (x) { if (!x.hidden && typeof AXM !== "undefined") AXM.rise(x); });
+  setTimeout(function () { try { pin.focus(); } catch (e) {} }, 150);
+}
+function lpBtnLabel() { return LP.step !== 2 ? "다음" : LP.mode === "new" || LP.mode === "reset" ? "이 번호로 입장" : "입장"; }
+/* 「다른 사번으로」 = 1단계 · 사번 · 이름을 비운다 */
+function lgBack() {
+  el("empId").value = ""; el("userName").value = "";
+  lpStep(1);
+  setTimeout(function () { try { el("empId").focus(); } catch (e) {} }, 150);
+}
+/* 틀림 계단 · o = { box, err, find(찾기 줄 id), input, emp, reg, reason: pw | lock, retry } */
+function lpBad(o) {
+  var n = 0;
+  if (o.reason === "pw") n = LP.bad[o.emp] = (LP.bad[o.emp] || 0) + 1;
+  var msg = o.reason === "lock" ? lpLockTxt(o.retry) : lpBadTxt(o.reg);
+  lfErr(o.box, o.err, msg, o.input);
+  o.err.innerHTML = segHtml(esc(msg));
+  if (el(o.find)) el(o.find).hidden = !(o.reason === "lock" || n >= 3);
+  lfSoon();
+}
+/* 1단계 「다음」 · 서버에 먼저 묻는다 · 3초 안에 답이 없거나 옛 서버(모르는 액션) = 통합 화면 */
+function lpPeek(id, nm, btn, show) {
+  var done = false, reset = function () { lfBusy(btn, false, lpBtnLabel()); };
+  var uni = function () { LP.name = nm; LP.reg = ""; lpStep(2, "uni"); reset(); };
+  var t = setTimeout(function () { if (done) return; done = true; uni(); }, LP.PEEK_MS);
+  beCall({ action: "login_peek", emp: id, name: nm }, function (res) {
+    if (done) return;
+    done = true; clearTimeout(t);
+    if (res && res.ok && /^(new|pin|reset)$/.test(res.state)) {
+      LP.name = res.name || nm; LP.reg = res.state === "pin" ? String(res.reg || "") : "";
+      if (res.state !== "pin") lpReqClear(id);
+      lpStep(2, res.state); reset(); return;
+    }
+    if (res && (res.reason === "notopen" || res.reason === "ended")) { reset(); return; }   /* beCall 이 「열려요」 · 종료 안내 화면을 띄웠다 */
+    if (res && res.reason === "lock") {
+      LP.name = nm; LP.reg = ""; lpStep(2, "pin"); reset();
+      lpBad({ box: el("entryForm"), err: el("err"), find: "lgFindW", input: "userPin", emp: id, reg: "", reason: "lock", retry: res.retry });
+      return;
+    }
+    var m = res && {
+      notfound: ["사번을 확인하지 못했어요. 다시 확인해 주세요 · 계속되면 운영 데스크에 문의해 주세요", "empId"],
+      name: ["이름이 사번과 맞지 않아요. 다시 확인해 주세요", "userName"],
+      param: ["입력값을 다시 확인해주세요.", ""],
+      busy: ["연결에 실패했어요 · 다시 누르세요", ""]
+    }[res.reason];
+    if (m) { reset(); show(m[0], m[1]); return; }
+    uni();   /* 옛 서버(peek 없음 · unknown action) · 그 밖 */
+  }, function () { if (done) return; done = true; clearTimeout(t); reset(); show("연결에 실패했어요 · 다시 누르세요"); });
+}

@@ -232,3 +232,33 @@ function cnHomeHtml() { var h = crowdStripHtml(); return h ? '<section class="ax
 var NX_DAY = [2026, 9, 26];
 function nxDate() { var dn = appNow(true); return dn.getFullYear() + "-" + (dn.getMonth() + 1) + "-" + dn.getDate(); }
 function nxDay() { var dn = appNow(true); return dn.getFullYear() === NX_DAY[0] && dn.getMonth() === NX_DAY[1] && dn.getDate() === NX_DAY[2] && dn < EV_END; }
+/* ═══ 261016 홈 카드 「QR 없이 바로 열기」(기획 문서/로그인 PIN · 설치 안내 개선_261015.md 4-1 · 사용자 결정 D1 가) ═══
+   자리 = 고정 세 칸(옷 사이즈 > 광고판 > 행사 둘러보기) 바로 아래 · 모달 아님 · 로그인 직후 팝업 · 접속 질문은 그대로 없다(261006 「나」 중 홈 카드 1장만큼 연다)
+   보임 = 홈 화면 앱 아님 · 설치됨(A2HS.inst) 아님 · 설치 중(A2HS.pending) 아님 · 서버 연결(BE.on) · 데모 · TV · 캡처 주소 아님
+   「나중에」 = 이 기기 axf_a2hs_card {n, day} · 1번째 = 숨김 · 행사일(10/26) 첫 열림에 한 번 더 · 2번째 = 끝(총 2회)
+   버튼 = a2hsOpen()(크롬 설치 창이 준비돼 있으면 바로 · 아니면 안내 시트) · 인앱(카카오톡 · 네이버 · 그 밖) = 「방법 보기」(같은 시트의 인앱 갈래) */
+var A2C_KEY = "axf_a2hs_card";
+function a2cGet() { try { var o = JSON.parse(localStorage.getItem(A2C_KEY) || "null"); return o && typeof o === "object" ? o : {}; } catch (e) { return {}; } }
+function a2cOn() {
+  if (!BE.on || visitSkip() || isStandalone() || A2HS.inst || A2HS.pending) return false;
+  var o = a2cGet(), n = Number(o.n) || 0;
+  if (n <= 0) return true;
+  return n === 1 && nxDay() && o.day !== nxDate();
+}
+function a2cHtml() {
+  if (!a2cOn()) return "";
+  var ia = isInApp();
+  return '<section class="axs-a2c" id="a2cCard" aria-label="QR 없이 바로 열기"><p class="h">QR 없이 바로 열기</p>' +
+    (ia ? '<p class="b">지금은 ' + a2hsInAppName() + '</p><p class="s">메뉴에서 &ldquo;다른 브라우저로 열기&rdquo; 뒤 설치</p>'
+        : '<p class="b">홈 화면에 AX Festival 아이콘을 만들어요</p><p class="s"><ax-seg>앱 스토어 설치 아님</ax-seg> <ax-seg>폰에 남는 것은 사번 · 이름 · 로그인 상태</ax-seg></p>') +
+    '<div class="r"><button type="button" class="ax-button ax-button-weak" onclick="a2hsOpen()">' + (ia ? "방법 보기" : a2hsWord()) + '</button>' +
+    '<button type="button" class="ax-link a2c-later" onclick="a2cLater()">나중에</button></div></section>';
+}
+function a2cLater() {
+  var o = a2cGet();
+  try { localStorage.setItem(A2C_KEY, JSON.stringify({ n: (Number(o.n) || 0) + 1, day: nxDate() })); } catch (e) {}
+  var c = el("a2cCard");
+  if (!c || (typeof AXM !== "undefined" && AXM.rm())) { App.render(); return; }
+  c.classList.add("a2c-out");
+  setTimeout(function () { App.render(); }, typeof AXM !== "undefined" ? AXM.OUT : 180);
+}

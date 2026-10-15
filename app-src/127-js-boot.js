@@ -132,7 +132,7 @@
     return;
   }
   document.documentElement.classList.remove("axf-saved");
-  if (visitStandalone() && el("saCard")) { el("saCard").hidden = false; lfSoon(); }   /* v4.76 홈 화면 앱으로 처음 열림 · 로그인을 한 번 더 */
+  if (visitStandalone() && el("saCard")) { LP.sa = true; el("saCard").hidden = false; lfSoon(); }   /* v4.76 홈 화면 앱으로 처음 열림 · 로그인을 한 번 더 · 261016 1단계에서만(LP.sa) */
   var known = BE.on ? knownGet() : null;
   function quickLogin() {
     var pin = el("quickPin").value.trim();
@@ -150,22 +150,22 @@
           reset();
           if (res && res.reason === "notopen") return;   /* 261008 단계별 오픈 · beCall 이 「열려요」 화면을 띄웠다 */
           if (res && res.reason === "ended") return;   /* 261009 행사 종료 · beCall 이 종료 안내 화면을 띄웠다 */
+          el("quickPin").value = "";
+          if (res && (res.reason === "pw" || res.reason === "lock")) { lpBad({ box: el("quickForm"), err: qe, find: "qFindW", input: "quickPin", emp: known.empId, reg: known.reg, reason: res.reason, retry: res.retry }); return; }   /* 261016 틀림 계단 · 잠김 남은 분 */
           var msg = {
-            pw: "비밀번호가 맞지 않습니다. 처음 정한 4자리를 입력해 주세요.",
-            lock: "비밀번호를 여러 번 틀렸어요. 10분 뒤 다시 시도하거나 운영 데스크에 문의해 주세요.",
             notfound: "사번을 확인하지 못했어요. 다시 확인해 주세요 · 계속되면 운영 데스크에 문의해 주세요",   /* v5.60 T11 */
             name: "이름이 사번과 맞지 않아요. 다시 확인해 주세요",
             param: "다시 시도해주세요."
           };
-          show((res && msg[res.reason]) || "연결에 실패했어요. 잠시 후 다시 시도해주세요.", res && (res.reason === "pw" || res.reason === "lock") ? "quickPin" : "");
-          el("quickPin").value = "";
+          show((res && msg[res.reason]) || "연결에 실패했어요. 잠시 후 다시 시도해주세요.", "");
           return;
         }
+        lpReqClear(known.empId); LP.bad[known.empId] = 0;
         personClaim(known.empId);   /* v4.56 */
         S.set("user", { empId: known.empId, name: res.name || known.name, dept: res.dept || "", ses: res.ses || "" });   /* v4.67 참가자 세션 토큰(새 서버만) */
         staffMeIn(res.staff);   /* v6.00 앱 스태프 명단 사번 = 가운데 단추 「스캔」 */
         if (res.dept) S.set("dept", res.dept);
-        knownSet({ empId: known.empId, name: res.name || known.name, dept: res.dept || "" });
+        knownSet({ empId: known.empId, name: res.name || known.name, dept: res.dept || "", reg: known.reg || "" });   /* 261016 reg = 정한 시각(안내 줄) */
         /* v4.87 최초 로그인이면 장면 · 아니면 예전 입장 · v4.94 재방문 화면은 장면이 덮은 뒤(또는 예전 입장 직전)에 걷는다(장면이 이 화면의 점에서 시작)
            v4.95 버튼은 화면이 바뀔 때까지 「확인 중」(lgxEnter 가 최초 로그인 적립을 기다리는 동안 다시 누르지 않게) */
         lgxEnter(res, function () { el("quick").hidden = true; enterApp(); a2hsAuto(); setTimeout(reset, 1500); }, function () { el("quick").hidden = true; enterNow(true); reset(); });
@@ -178,6 +178,8 @@
     splash.classList.add("gone");
     el("qName").textContent = known.name || "";
     el("qEmp").textContent = known.empId;
+    if (el("qNote")) el("qNote").textContent = lpHint(known.reg);   /* 261016 「10/19(월) 14:02 에 정한 4자리」 · 모르면 「처음 입장 때 정한 4자리」 */
+    lpReqShow("qReqW", "qReq", known.empId);
     el("quick").hidden = false;
     lfMount(el("quick"));   /* v5.02 재방문도 첫 화면과 같은 틀(전체 오렌지 · 유동 배치) */
     setTimeout(function () { try { el("quickPin").focus(); } catch (e) {} }, 150);
@@ -216,39 +218,50 @@
     if (nm.length < 2) { show("이름을 입력해주세요.", "userName"); return; }
     lfErrClear(el("entryForm"), err);
 
-    if (!BE.on) {                       /* 서버 없이 단독 동작 (기존 방식) */
-      personClaim(id);   /* v4.56 */
-      S.set("user", { empId: id, name: nm });
-      enterApp();
-      a2hsAuto();
+    if (LP.step !== 2) {   /* 261016 1단계 = 사번 · 이름 · 「다음」 */
+      if (!BE.on) {                       /* 서버 없이 단독 동작 (기존 방식) */
+        personClaim(id);   /* v4.56 */
+        S.set("user", { empId: id, name: nm });
+        enterApp();
+        a2hsAuto();
+        return;
+      }
+      if (btn.disabled) return;
+      lfBusy(btn, true);   /* 누른 순간 「확인 중」 · 3초 안에 답이 없으면 통합 화면(lpPeek) */
+      lpPeek(id, nm, btn, show);
       return;
     }
-    if (!/^\d{4}$/.test(pin)) { show("비밀번호 4자리를 정해 주세요.", "userPin"); return; }
+    var setNew = LP.mode === "new" || LP.mode === "reset";
+    if (!/^\d{4}$/.test(pin)) { show(setNew ? "비밀번호 4자리를 정해 주세요." : "비밀번호 4자리를 입력해 주세요.", "userPin"); return; }
+    if (btn.disabled) return;
     try { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch (e) {}   /* v4.94 키보드를 먼저 닫는다(장면은 키보드 없는 화면에서 시작) */
 
     lfBusy(btn, true);   /* v4.95 로그인 두 화면 예외 · 덮개 없이 버튼 안에서만 */
-    var reset = function () { lfBusy(btn, false, "페스티벌 입장"); };
+    var reset = function () { lfBusy(btn, false, lpBtnLabel()); };
     beHash(id, pin).then(function (h) {
       beCall({ action: "login", emp: id, name: nm, h: h }, function (res) {
         if (!res || !res.ok) {
           reset();
           if (res && res.reason === "notopen") return;   /* 261008 단계별 오픈 · beCall 이 「열려요」 화면을 띄웠다 */
           if (res && res.reason === "ended") return;   /* 261009 행사 종료 · beCall 이 종료 안내 화면을 띄웠다 */
+          if (res && (res.reason === "pw" || res.reason === "lock")) { el("userPin").value = ""; lpBad({ box: el("entryForm"), err: err, find: "lgFindW", input: "userPin", emp: id, reg: LP.reg, reason: res.reason, retry: res.retry }); return; }   /* 261016 틀림 계단 */
           var msg = {
             notfound: "사번을 확인하지 못했어요. 다시 확인해 주세요 · 계속되면 운영 데스크에 문의해 주세요",   /* v5.60 T11 */
             name: "이름이 사번과 맞지 않아요. 다시 확인해 주세요",
-            pw: "비밀번호가 맞지 않습니다. 처음 정한 4자리를 입력해 주세요.",
-            lock: "비밀번호를 여러 번 틀렸어요. 10분 뒤 다시 시도하거나 운영 데스크에 문의해 주세요.",
             param: "입력값을 다시 확인해주세요."
           };
-          show((res && msg[res.reason]) || "연결에 실패했어요. 잠시 후 다시 시도해주세요.", { notfound: "empId", name: "userName", pw: "userPin", lock: "userPin" }[res && res.reason] || "");
+          var fld = { notfound: "empId", name: "userName" }[res && res.reason] || "";
+          if (fld) lpStep(1);   /* 통합 화면에서 사번 · 이름이 틀림 = 1단계로 돌아가 그 칸에 */
+          show((res && msg[res.reason]) || "연결에 실패했어요. 잠시 후 다시 시도해주세요.", fld);
           return;
         }
+        var reg = LP.mode === "pin" ? LP.reg : (setNew || res.isNew) ? lpKst(res.now) : "";   /* 261016 다음 #quick 안내 시각 · 통합 화면 기존 계정 = 모름 */
+        lpReqClear(id); LP.bad[id] = 0;
         personClaim(id);   /* v4.56 로그인 사번이 이 기기 기록 주인과 다르면 먼저 지운다 */
         S.set("user", { empId: id, name: res.name || nm, dept: res.dept || "", ses: res.ses || "" });   /* v4.67 참가자 세션 토큰(새 서버만) */
         staffMeIn(res.staff);   /* v6.00 앱 스태프 명단 사번 = 가운데 단추 「스캔」 */
         if (res.dept) S.set("dept", res.dept);
-        knownSet({ empId: id, name: res.name || nm, dept: res.dept || "" });   /* 다음 접속엔 비밀번호만 */
+        knownSet({ empId: id, name: res.name || nm, dept: res.dept || "", reg: reg });   /* 다음 접속엔 비밀번호만 */
         /* v4.87 최초 로그인이면 장면(띠가 화면 전체로 커진다) · 아니면 예전 입장 · 장면을 튼 새 계정에는 「비밀번호가 등록되었어요」 팝업을 띄우지 않는다(입력칸 아래 안내가 같은 말) */
         lgxEnter(res, function () {
           enterApp(); a2hsAuto(); setTimeout(reset, 1500);   /* v5.83 「비밀번호가 등록되었어요」 팝업 삭제(입력칸 아래 안내가 같은 말) */

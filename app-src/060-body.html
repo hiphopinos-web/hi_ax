@@ -12,14 +12,17 @@
       <h1 class="lf-title"><span>AX Festival</span> <span>2026</span></h1>
     </div>
     <form id="entryForm" class="lf-form" novalidate>
-      <div id="saCard" class="lf-clp" data-r="card" hidden><div class="axs-sacard"><b>홈 화면 앱으로 열렸어요</b><span>사번 · 이름 · 비밀번호 4자리로 한 번 더 입장해 주세요</span></div></div>
-      <label class="lf-f" data-r="field"><input id="empId" inputmode="numeric" pattern="[0-9]*" placeholder=" " autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next" oninput="numOnly(this, event)" data-imeend="num" aria-describedby="err"><span>사번</span></label>
-      <label class="lf-f" data-r="field"><input id="userName" placeholder=" " autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="next" aria-describedby="err"><span>이름</span></label>
-      <label class="lf-f" data-r="field"><input id="userPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" enterkeyhint="go" oninput="numOnly(this, event)" placeholder=" " autocomplete="off" aria-describedby="pinNote err"><span>비밀번호 숫자 4자리</span></label>
-      <div class="lf-clp" data-r="note"><p class="lf-note" id="pinNote">처음 입력한 4자리가 비밀번호&nbsp;· 사내 비밀번호 금지</p></div>
+      <div id="saCard" class="lf-clp lf-s1" data-r="card" hidden><div class="axs-sacard"><b>바로가기로 열렸어요</b><span>한 번 더 입장하면 다음부터 바로 열려요</span></div></div>
+      <p class="lf-who lf-s2" id="lgWho" data-r="who" hidden><b id="lgWhoN"></b><span id="lgWhoS"></span></p>
+      <label class="lf-f lf-s1" data-r="field"><input id="empId" inputmode="numeric" pattern="[0-9]*" placeholder=" " autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next" oninput="numOnly(this, event)" data-imeend="num" aria-describedby="err"><span>사번</span></label>
+      <label class="lf-f lf-s1" data-r="field"><input id="userName" placeholder=" " autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="go" aria-describedby="err"><span>이름</span></label>
+      <div class="lf-f lf-pw lf-s2" data-r="field" hidden><input id="userPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" enterkeyhint="go" oninput="numOnly(this, event)" placeholder=" " autocomplete="off" aria-describedby="pinNote err" aria-labelledby="lgPinL"><span id="lgPinL">비밀번호 4자리</span><button type="button" class="lf-eye" id="lgEye" onclick="lpEye('userPin', this)" onmousedown="event.preventDefault()">보기</button></div>
+      <div class="lf-s2" data-r="hint" hidden><p class="lf-note" id="pinNote"></p></div>
+      <div class="lf-clp lf-s2" data-r="pill" id="lgReqW" hidden><p class="ax-meta axs-pend" id="lgReq" role="status"></p></div>
       <p id="err" role="alert" data-r="err"></p>
-      <div class="lf-btn" data-r="btn"><button type="submit" class="ax-button ax-button-dark">페스티벌 입장</button></div>
-      <div class="lf-clp" data-r="links"><div class="lf-links"><button type="button" class="ax-link" onclick="pwLostOpen()">비밀번호를 잊었어요</button></div></div>
+      <div class="lf-find" data-r="find" id="lgFindW" hidden><button type="button" class="ax-button ax-button-weak" onclick="pwLostOpen()">비밀번호 찾기</button></div>
+      <div class="lf-btn" data-r="btn"><button type="submit" class="ax-button ax-button-dark">다음</button></div>
+      <div class="lf-clp lf-s2" data-r="links" hidden><div class="lf-links"><button type="button" class="ax-link" id="lgLost" onclick="pwLostOpen()">비밀번호를 잊었어요</button><button type="button" class="ax-link" onclick="lgBack()">다른 사번으로</button></div></div>
     </form>
   </section>
 
@@ -33,8 +36,11 @@
     </div>
     <div id="quickForm" class="lf-form">
       <p class="lf-who" data-r="who"><b id="qName"></b><span id="qEmp"></span></p>
-      <label class="lf-f" data-r="field"><input id="quickPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" enterkeyhint="go" placeholder=" " autocomplete="off" oninput="numOnly(this, event)" aria-describedby="qErr"><span>비밀번호 숫자 4자리</span></label>
+      <div class="lf-f lf-pw" data-r="field"><input id="quickPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" enterkeyhint="go" placeholder=" " autocomplete="off" oninput="numOnly(this, event)" aria-describedby="qNote qErr" aria-labelledby="qPinL"><span id="qPinL">비밀번호 4자리</span><button type="button" class="lf-eye" onclick="lpEye('quickPin', this)" onmousedown="event.preventDefault()">보기</button></div>
+      <div data-r="hint"><p class="lf-note" id="qNote">처음 입장 때 정한 4자리</p></div>
+      <div class="lf-clp" data-r="pill" id="qReqW" hidden><p class="ax-meta axs-pend" id="qReq" role="status"></p></div>
       <p id="qErr" role="alert" data-r="err"></p>
+      <div class="lf-find" data-r="find" id="qFindW" hidden><button type="button" class="ax-button ax-button-weak" onclick="pwLostOpen()">비밀번호 찾기</button></div>
       <div class="lf-btn" data-r="btn"><button type="button" id="qBtn" class="ax-button ax-button-dark">입장</button></div>
       <div class="lf-clp" data-r="links"><div class="lf-links"><button type="button" id="qOther" class="ax-link">다른 사번으로 입장</button><button type="button" class="ax-link" onclick="pwLostOpen()">비밀번호를 잊었어요</button></div></div>
     </div>
@@ -49,7 +55,7 @@
       <div class="ax-stack axs-pw-main">
         <div class="ax-stack-tight axs-gap12"><p class="ax-meta">AX Festival 2026</p><h1 class="ax-type-t2">비밀번호 찾기</h1></div>
         <div id="pwForm" class="ax-stack">
-          <p class="ax-body pw-msg">운영 데스크에 초기화 요청만 전달돼요<br>문자 · 메일 없이 데스크에서 본인 확인</p>
+          <p class="ax-body pw-msg">초기화 요청만 전달돼요<br>문자 · 메일 없이</p>
           <div class="ax-fields">
             <label class="ax-sr-only" for="pwEmp">사번</label><input id="pwEmp" class="ax-field" inputmode="numeric" pattern="[0-9]*" enterkeyhint="next" placeholder="사번" autocomplete="off" oninput="numOnly(this, event)" data-imeend="num" onfocus="kbFocus(this)">
             <label class="ax-sr-only" for="pwName">이름</label><input id="pwName" class="ax-field" placeholder="이름 (예: 홍길동)" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="send" onfocus="kbFocus(this)">
@@ -57,8 +63,8 @@
           <p class="pw-err" id="pwErr" role="alert"></p>
         </div>
         <div id="pwDone" class="ax-stack-tight axs-gap12" hidden>
-          <p class="pw-ok">운영 데스크에 요청이 전달됐어요<br>1F 체크인 데스크에서 확인해 주세요</p>
-          <p class="ax-body pw-msg">데스크에서 본인 확인을 하고 비밀번호를 지워 드립니다<br>그다음 앱에서 새 비밀번호 4자리를 넣으면 다시 들어올 수 있어요</p>
+          <p class="pw-ok" id="pwOk">운영진에 초기화 요청을 보냈어요</p>
+          <p class="ax-body pw-msg" id="pwOkS">보통 당일 처리<br>처리되면 사번 · 이름으로 다시 입장<br>&ldquo;정하기&rdquo; 화면이 나와요</p>
         </div>
       </div>
       <div class="ax-bottom axs-pw-bot">
@@ -122,7 +128,7 @@
     <div class="a-wrap">
       <span class="a-ico"><img src="icons/icon-192.png" alt=""></span>
       <p class="a-t" id="a2hsT">바로가기 설치</p>
-      <p class="a-s">다음부터 아이콘 한 번으로 열려요</p>
+      <p class="a-s">다음부터 QR 없이 아이콘 한 번으로</p>
       <div id="a2hsBody"></div>
       <button class="a-later" onclick="a2hsSheet(false)"><span class="axs-lk">닫기<svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
     </div>
