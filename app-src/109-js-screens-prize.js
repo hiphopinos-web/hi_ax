@@ -120,7 +120,7 @@ function rewItems() {
     why: "1F EVENT 룰렛 · 내 QR 제시", go: "ppRouletteOpen()" });
   if (t) items.push({ k: "raffle", used: false, chip: "자동 발급", off: false, nm: "행운권", big: t + "장", why: "스탬프 " + Math.min(n, REWARD_CAP) + "개 · 17:00 Closing Speech 현장 추첨", go: "ppDrawOpen()" });   /* v4.79 현장 추첨 안내는 추첨 안내 모달에 · v5.04 옛 「결과는 행사 후 개별 안내」 폐기 */
   /* v5.90 (261006 경품 기획 변경 · 계약.md 5.1) 선착순 참여상 · 서버 my.fcfs 가 있을 때만(없으면 카드 없음) · 상태 got · done · full · void · closed */
-  var f = fcfsMy(), fx = fxGet(), cap = fx ? fx.cap : 210;
+  var f = fcfsMy(), fx = fxGet(), cap = fx ? fx.cap : 200;
   if (fcfsReady(f)) items.push({ k: "fin", used: false, chip: fcfsLeftN() ? "남은 " + fcfsLeftN() : "선착순", nm: "선착순 참여상", big: "1개", why: fcfsAt("1F 주차장 체크인존 · 먼저 오는 순서로 드려요"), go: "fcfsGotOpen(true)", btn: "받는 곳 보기" });   /* v5.98 (사용자 261006 밤 「받기 선착순」) 예약 없음 · 「자격」 말 없음 */   /* v5.97 (사용자 261006 밤) 장소 「1F 주차장 체크인존」 · 버튼 = 수령 안내 시트 */
   if (f && f.st === "done") items.push({ k: "fin", used: true, chip: "수령 완료", off: true, nm: "선착순 참여상", big: "", why: "무선 무드등 가습기" });
   if (f && (f.st === "full" || f.st === "out")) items.push({ k: "fin", used: true, chip: "마감", off: true, nm: "선착순 참여상", big: "", why: cap + "개 모두 나갔어요 · 6개 달성은 행운권 3장" });
@@ -142,7 +142,7 @@ function rewItems() {
 var PRIZE_DIR = "assets/prize/", PRIZE_SAMPLE = false;   /* v5.90 (사용자 261006) 「샘플」 딱지 모두 뗌 · CSS .smp 는 남김 */
 var PRIZES = {
   roulette: { unit: "개", list: [
-    { rk: "1등", nm: "텀블러", q: 60, img: "rl1_tumbler_v2" },
+    { rk: "1등", nm: "텀블러", q: 50, img: "rl1_tumbler_v2" },
     { rk: "2등", nm: "커피 + 키캡 키링", q: 140, img: "rl2_coffee_v2", img2: "rl2_keyring_v2" },   /* v5.90 새 인쇄본 140 · 210 · 210 · 340 */   /* v5.18 합성 사진 대신 두 장 나란히(사용자 261003) */
     { rk: "3등", nm: "컵받침", q: 210, img: "rl3_coaster_v2" },
     { rk: "4등", nm: "판스티커", q: 210, img: "rl4_sticker_v2" },
@@ -156,7 +156,7 @@ var PRIZES = {
     { rk: "6등", nm: "현대백화점 상품권 10만원", q: 3, img: "ld6_hyundai" }] },
   /* v5.90 fin 칸 = 선착순 참여상(키는 그대로 · 구역 id pz-fin) · 7등 랜덤 굿즈(lk7 · v5.92 대표 그림 한 장 lk7_random_v2 = 룰렛 _v2 사진 여섯 장을 묶은 것 · 고정 세트 없음) · 아이디어왕(idea · AI 구독권 카드 그림 idea1 ~ 3 · 사용자 261006 「가」 · 바꿀 때는 파일만) */
   fin: { unit: "개", list: [
-    { rk: "", nm: "무선 무드등 가습기", q: 210, img: "fin_humidifier_v2" }] },
+    { rk: "", nm: "무선 무드등 가습기", q: 200, img: "fin_humidifier_v2" }] },
   lk7: { unit: "명", list: [
     { rk: "7등", nm: "랜덤 굿즈", sub: "무작위 경품", qt: "수량 추후 공개", img: "lk7_random_v2" }] },
   idea: { unit: "명", list: [
