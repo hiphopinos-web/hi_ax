@@ -1610,10 +1610,10 @@
   }
   /* ═══════════ 261015 받침대 TV 5대 낮추기 · 55인치로 맞추기 (사용자 「TV 가 너무 높아 뒤 판의 글씨가 가려진다 · 55인치(화면 121 x 68 · 베젤 123 x 71)로 · 받침 기둥을 줄여 낮춘다」) ═══════════
    * 받침대에 선 TV 전부(AX in Action · AX LAB 복사본 · AX PLAY 둘 · AX VISION) = 모형 몸체의 TV 꼭짓점(베젤 색 0.02 · 화면 색 0.012)과 기둥(흰 색 0.82 · 위로 1.22m)을 받은 뒤 옮긴다 · 벽걸이 · 세로 · 타자왕 · 노트북은 그대로
-   * 높이 = 베젤 아랫단 바닥에서 TOP.bot(0.62m) · 윗단 +0.71m(옛 1.12 ~ 1.86m) · 기둥 윗단은 같이 내려 TV 몸 안에 둔다 · 크기 = 베젤 바깥 123 x 71 · 화면 121 x 68 · 판과의 간격 · 받침 접시 · 걷기 막힘 칸(가로 폭 1.26 → 1.23 · 0.32m 여유 안)은 그대로
+   * 높이 = 베젤 아랫단 바닥에서 TVLO.bot(1.07m) · 윗단 +0.71m = 1.78m(옛 1.12 ~ 1.86m · 261015 한때 0.62 ~ 1.33m) · 사용자 결정 261016: 5대 모두 같은 높이 · 아랫단 = AX PLAY 책상 윗면(실측 1.02m · 노트북 1.04m)보다 5cm 위 · 기둥 윗단은 같이 내려 TV 몸 안에 둔다 · 크기 = 베젤 바깥 123 x 71 · 화면 121 x 68 · 판과의 간격 · 받침 접시 · 걷기 막힘 칸(가로 폭 1.26 → 1.23 · 0.32m 여유 안)은 그대로
    * AX VISION TV = 모형에서 왼쪽 13cm 가 판 3 칸 자르기(regionCut)에 베여 있었다(화면 1.11m · 왼쪽 베젤 없음 · 기둥이 가운데에서 6cm 치우침) → 기둥 가운데 기준으로 왼쪽을 늘려 121 x 68 로 되살린다
    * 화면 그림판(buildTvs)은 이 뒤에 모형 색으로 찾으므로 저절로 따라온다 · 되돌리기 = refit1F 의 ⑥ 한 줄을 지운다 */
-  var TVLO = { bot: 0.62, yc: 1.49, tvs: [ { m: 'zone_action_action_body', ax: 'x', c: 23.27, p: 1.35 }, { m: 'zone_lab_tv', ax: 'x', c: 29.9, p: 1.35 }, { m: 'zone_play_body', ax: 'x', c: 14.24, p: 1.35 }, { m: 'zone_play_body', ax: 'x', c: 7.01, p: 1.35 }, { m: 'zone_vision_vision_body', ax: 'z', c: 5.1, p: 31.15, cut: true } ] };
+  var TVLO = { bot: 1.07, yc: 1.49, tvs: [ { m: 'zone_action_action_body', ax: 'x', c: 23.27, p: 1.35 }, { m: 'zone_lab_tv', ax: 'x', c: 29.9, p: 1.35 }, { m: 'zone_play_body', ax: 'x', c: 14.24, p: 1.35 }, { m: 'zone_play_body', ax: 'x', c: 7.01, p: 1.35 }, { m: 'zone_vision_vision_body', ax: 'z', c: 5.1, p: 31.15, cut: true } ] };
   /* 꺾은선 사상 · xs(오름차순) 칸마다 ys 로 · 밖은 같은 기울기 1 로 이어 붙인다 */
   function tvPw(a, xs, ys) { if (a <= xs[0]) return ys[0] + (a - xs[0]); for (var i = 1; i < xs.length; i++) if (a <= xs[i]) return ys[i - 1] + (a - xs[i - 1]) * (ys[i] - ys[i - 1]) / (xs[i] - xs[i - 1]); return ys[ys.length - 1] + (a - xs[xs.length - 1]); }
   function lowerTvs(L) {
@@ -5513,5 +5513,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v7.27', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v7.35', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();
