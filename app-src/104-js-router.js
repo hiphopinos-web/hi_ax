@@ -237,7 +237,7 @@ var App = {
         gear + "</div>" +
         (v === "home"
           ? '<div class="axs-hgr"><span class="ax-meta">' + FESTIVAL.name + " · " + FESTIVAL.date.replace(/^2026\.\s*/, "") + " · " + FESTIVAL.place + "</span>" +   /* v5.10 헤더가 앱 이름이 되어 행사명은 홈 첫 줄에(시간은 프로그램 탭) */
-            '<h1 class="axs-hbig">' + (hu.name && ckNoMy() ? '<span style="white-space:nowrap">' + esc(hu.name) + "님(" + ckNoMy() + "번),</span> <span style=\"white-space:nowrap\">오늘 <b>하루의 코스</b></span></h1></div>" : (hu.name ? esc(hu.name) + "님, " : "") + "오늘 <b>하루의 코스</b></h1></div>")
+            '<h1 class="axs-hbig">' + (hu.name && ckNoMy() ? '<span style="white-space:nowrap">' + esc(hu.name) + "님(" + esc(ckNoMy()) + "),</span> <span style=\"white-space:nowrap\">오늘 <b>하루의 코스</b></span></h1></div>" : (hu.name ? esc(hu.name) + "님, " : "") + "오늘 <b>하루의 코스</b></h1></div>")
           : '<h1 class="axs-hroot">' + esc(this.title(v)) + "</h1>");   /* v6.83 (접근성 B-5) 화면 이름 = 제목 태그(모양은 그대로) */
     } else {
       tb.innerHTML = '<div class="axs-hrow"><button type="button" class="axs-back" onclick="App.back()" aria-label="뒤로">' + BACK_SVG + "</button>" +

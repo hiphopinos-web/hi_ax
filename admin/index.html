@@ -499,7 +499,7 @@ header.top :focus-visible,.bar.bulk :focus-visible{outline-color:#fff}
 <script src="idea.js?v=2610121"></script>
 <script src="survey.js?v=2610141"></script>
 <script src="att.js?v=2610142"></script>
-<script src="ckno.js?v=2610151"></script>
+<script src="ckno.js?v=2610161"></script>
 <script>
 /* ══ 0. 설정 ══ */
 var BE_DEFAULT = "https://script.google.com/macros/s/AKfycbwjCaSSUnQ7W1lrM8T426Cn_LgKs_UhI0Qi5XRVk-_eF-oD55-Wwjsot0DkPJCX9JqMBA/exec";
@@ -1454,7 +1454,7 @@ function pcHtml(d){
   var st=pcStamps(d), by={}; st.forEach(function(x){ by[x.id]=x; });
   var half=!!by.p3h&&!by.p3, pg=Math.min(2,(by.p3?2:by.p3h?1:0)+(by.ln?2:0)+(by.cc?1:0)), n=d.n!=null?d.n:Math.min(6,st.filter(function(x){ return x.id!=="p3"&&STAMP8.some(function(s){ return s[0]===x.id; }); }).length+pg+(by.ck?3:0));
   var h='<div class="ph2"><div style="min-width:0"><h2 id="pcH" tabindex="-1">'+esc(d.name||e)+'</h2><div class="cap">'+esc(d.dept||"")+' · <span class="n">'+esc(e)+'</span></div><div class="fx mt8">'+
-    (d.test||L.test?tag("시험"):"")+(d.ckno?tag("체크인 "+d.ckno+"번","pri"):"")+(d.sup?tag("슈퍼관리자","pri"):"")+(L.staffApp?tag("스태프","pri"):"")+(d.acct?"":tag("가입 전"))+(d.stale?tag("다시 받는 중"):"")+'</div></div><button class="x" aria-label="카드 닫기" data-qa="who.x" onclick="whoPick(\'\')">×</button></div><div class="bd">';
+    (d.test||L.test?tag("시험"):"")+(d.ckno?tag("체크인 "+(/^\d+$/.test(String(d.ckno))?d.ckno+"번":d.ckno),"pri"):"")+(d.sup?tag("슈퍼관리자","pri"):"")+(L.staffApp?tag("스태프","pri"):"")+(d.acct?"":tag("가입 전"))+(d.stale?tag("다시 받는 중"):"")+'</div></div><button class="x" aria-label="카드 닫기" data-qa="who.x" onclick="whoPick(\'\')">×</button></div><div class="bd">';
   var rsLock=sup&&pcResetLock(d);
   h+='<div class="acts" style="margin-top:0">'+(d.acct?'<button class="btn" data-qa="pc.push" onclick="pcPush(\''+J+'\')">이 사람에게 푸시</button><button class="btn" data-qa="who.pinreset" onclick="pinResetAsk(\''+J+'\')"'+(d.pw===0||d.pw===false?" disabled":"")+'>PIN 초기화</button>':'')+(sup?'<button class="btn danger" data-qa="pc.reset" onclick="pcResetAsk(\''+J+'\')"'+(rsLock?' disabled title="'+RS_DAY+'"':'')+'>초기화</button>':'')+'<button class="btn ghost" data-qa="pc.reload" onclick="whoInfo(\''+J+'\',true);whoPanel()">새로 받기</button></div>'+(rsLock?'<p class="cap mt8" data-qa="pc.reset.lock">'+RS_DAY+'</p>':'');
   /* 접속 */

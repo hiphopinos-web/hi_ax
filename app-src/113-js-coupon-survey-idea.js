@@ -266,8 +266,10 @@ function kitGetTxt(k) { return kitStaff(k) ? KIT_GET_ST : KIT_GET; }
    대기 = 「B 창구 · 앞에 n명 · 약 n분」 + 「차례가 되면 진동으로 알려요 · 근처에서 기다려도 돼요」(사용자 261007 줄 서지 않게)
    곧 차례(앞에 0 ~ 1명) = 「B 창구로 오세요」 · 호출 = 주황 카드 + 진동 + 알림 한 줄 + 「내 QR 열기」 · 놓친 번호(뒤 번호를 이미 부름) = 「아무 때나 B 창구에서」
    수령 뒤 = 「수령 완료」 + 사전등록 체크인 점 3개 + 다음 룰렛 · 닫으면(ckq_seen) 사라진다 · 서버도 30분 뒤 보내지 않는다 */
-/* 261015 (사용자 확정) 체크인 번호 · 가나다순 고정(서버 my.ckno · 키트명단에 있고 번호를 매긴 사람만) · 없으면 0 = 화면 그대로 */
-function ckNoMy() { var n = Math.floor(Number(S.get("ckno", 0)) || 0); return n > 0 ? n : 0; }
+/* 261015 (사용자 확정) 체크인 번호 · 가나다순 고정(서버 my.ckno · 키트명단에 있고 번호를 매긴 사람만) · 없으면 "" = 화면 그대로
+ * 261016 (사용자) 세션별 번호 「A-1」 글자 그대로 · 옛 서버 숫자 번호 = 「n번」 */
+function ckNoVal(v) { v = String(v == null ? "" : v).trim(); if (/^[A-E]-\d{1,4}$/.test(v)) return v; var n = Math.floor(Number(v) || 0); return n > 0 ? String(n) : ""; }
+function ckNoMy() { var v = ckNoVal(S.get("ckno", "")); return /^\d+$/.test(v) ? v + "번" : v; }
 function ckqMy() { var q = S.get("ckq", null); return q && typeof q === "object" && q.no ? q : null; }
 function ckqIn(q) {
   q = q && typeof q === "object" && q.no ? q : null;
