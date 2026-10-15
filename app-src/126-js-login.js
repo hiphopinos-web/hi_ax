@@ -1075,7 +1075,7 @@ function lpReg(reg) {
 }
 function lpHint(reg) { var r = lpReg(reg); return r ? r.full + " 에 정한 4자리" : "처음 입장 때 정한 4자리"; }
 function lpBadTxt(reg) { var r = lpReg(reg); return "맞지 않아요 · " + (r ? r.day + " 에 정한 4자리" : "처음 입장 때 정한 4자리"); }
-function lpLockTxt(sec) { return "10분 동안 잠겼어요 · " + Math.max(1, Math.ceil((Number(sec) || 600) / 60)) + "분 뒤 풀림 · 비밀번호 찾기로 초기화 요청"; }
+function lpLockTxt(sec) { return "10분 동안 잠겼어요 · 비밀번호 찾기로 초기화 요청"; }   /* v7.34 261016 「N분 뒤 풀림」 줄 삭제(사용자 확정) */
 function lpReqGet(emp) { try { var o = JSON.parse(localStorage.getItem(LP_REQ) || "null"); return o && emp && String(o.emp) === String(emp) && o.t ? o : null; } catch (e) { return null; } }
 function lpReqSet(emp) { try { localStorage.setItem(LP_REQ, JSON.stringify({ emp: String(emp), t: Date.now() })); } catch (e) {} }
 function lpReqClear(emp) { if (lpReqGet(emp)) { try { localStorage.removeItem(LP_REQ); } catch (e) {} } }
