@@ -164,7 +164,7 @@ window.addEventListener("message", typPromoTap);
    받기 = type_rank(site · n 10 · emp) · 새 서버 = unit pts · left(남은 기회 · v5.15 서버) · 옛 서버(unit 없음 = 버틴 시간 · left 없음) = 시간으로 쓰고 남은 기회 칸을 뺀다
    실명 없음(서버가 닉네임만 준다) · 부문 통계 없음 */
 var TYB = { iv: 0, keys: null, subT: 0, at: 0 };
-var TYB_REST = { on: false, nm: "" };   /* 4~10위 상품 줄 · 사용자 미정 · 기본 꺼짐 · on 이고 nm 이 있을 때만 줄마다 선물 표시 + 이름 한 줄 */
+var TYB_REST = { on: true, nm: "데스크 매트" };   /* 4~10위 상품 줄 · 261016 사용자 확정 = 데스크 매트(PRIZES.type 4~10등과 같은 글) · on 이고 nm 이 있을 때만 줄마다 선물 표시 + 이름 한 줄 */
 var TYB_PZ_SHORT = ["기계식 키보드", "마우스", "기계식 키보드"];   /* v5.35 경품명만(제품명은 좁은 칸 3열에 안 들어가 경품 화면 카드에만) */
 function tybVal(r, v) { return r && r.unit === "pts" ? Math.round(Number(v || 0)).toLocaleString() : typeSec(v); }
 function tybKeys(top) { var c = {}; return top.map(function (x) { var n = String(x.name || ""); c[n] = (c[n] || 0) + 1; return n + "#" + c[n]; }); }
@@ -191,7 +191,7 @@ function tybHtml(r) {
     '<p class="tyb-sub" id="tybSub" aria-live="polite">' + tybSubDef(r) + "</p>" +
     '<div class="tyb-list"><div class="tyb-in" id="tybIn">' + rows + "</div></div>" +
     '<div id="tybMe">' + tybMeHtml(r) + "</div>" +
-    '<button type="button" class="tyb-pz" onclick="prizeGo(\'type\')" aria-label="1F 타자왕 경품 보기">' + PRIZES.type.list.map(function (p) {
+    '<button type="button" class="tyb-pz" onclick="prizeGo(\'type\')" aria-label="1F 타자왕 경품 보기">' + PRIZES.type.list.slice(0, 3).map(function (p) {
       return '<span class="c"><b>' + p.rk + '</b><img src="' + PRIZE_DIR + p.img + '.webp" alt="" width="104" height="104" loading="lazy" decoding="async" onerror="this.remove()">' + (PRIZE_SAMPLE && p.s !== 0 ? "<i>샘플</i>" : "") + "</span>";
     }).join("") + "</button>" +
     '<p class="tyb-pzn tyb-pzr">' + TYB_PZ_SHORT.map(function (n) { return "<span>" + n + "</span>"; }).join("") + "</p>" +
@@ -927,10 +927,10 @@ var TSF_ADS = ["hook", "prize", "top", "how"];
 function tsfAdIdx() { return Math.floor(Math.max(0, performance.now() - TSF.adAt) / TSF_AD_MS) % TSF_ADS.length; }
 function tsfAdCard(k) {
   if (k === "prize") {
-    var li = (typeof PRIZES !== "undefined" && PRIZES.type && PRIZES.type.list) || [];
+    var li = ((typeof PRIZES !== "undefined" && PRIZES.type && PRIZES.type.list) || []).slice(0, 3);   /* 261016 4~10등 데스크 매트는 아래 한 줄 */
     return '<p class="tsf-adk">1~3위 경품</p><div class="tsf-adp">' + li.map(function (x) {
       return '<figure><span class="ph"><img src="' + PRIZE_DIR + x.img + '.webp" alt="" loading="eager" decoding="async"></span><figcaption><b>' + esc(x.rk) + "</b>" + esc(x.nm) + "<small>" + esc(x.sub || "") + "</small></figcaption></figure>";
-    }).join("") + '</div><p class="tsf-ads">17:00 마감 · 1~3위 Closing Speech 시상</p>';
+    }).join("") + '</div><p class="tsf-ads">4~10위 · 엑셀 단축키 데스크 매트</p><p class="tsf-ads">17:00 마감 · 1~3위 Closing Speech 시상</p>';
   }
   if (k === "top") {
     var t = (TSF.top && TSF.top.top) || [], a = t[0];
@@ -1344,7 +1344,7 @@ function hsHtml() {
     '<div class="hs-list">' + rows + "</div>" +
     '<div class="hs-foot">' + (u ? '<img class="hs-bot" src="' + u + '" alt="">' : '<span class="hs-bot">' + BOT_SVG + "</span>") +
     "<p>1인 " + tries + "회 · 최고 점수 1개로 순위<br>17:00 마감 · 1~3위 Closing Speech 시상</p></div>" +
-    '<p class="hs-prz">1등 기계식 키보드 · 2등 마우스 · 3등 기계식 키보드</p></div></div>';   /* v5.09 (261003 사용자 확정) 새 경품 짧은 이름 · v5.06 바닥 경품 한 줄 · 가격 없음 · v5.05 결선 없음 · 1~3위 */
+    '<p class="hs-prz">1등 기계식 키보드 · 2등 마우스 · 3등 기계식 키보드<br>4~10등 데스크 매트</p></div></div>';   /* v5.09 (261003 사용자 확정) 새 경품 짧은 이름 · v5.06 바닥 경품 한 줄 · 가격 없음 · v5.05 결선 없음 · 1~3위 */
 }
 
 /* v3.50 시상 · AX 올림픽 탭 · 종합 1~3위 호명(닉네임 + 실명) · 관리코드 oly_result */
