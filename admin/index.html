@@ -494,6 +494,7 @@ header.top :focus-visible,.bar.bulk :focus-visible{outline-color:#fff}
 </div>
 <script src="../assets/server.js"></script>
 <script src="qrcode.js"></script>
+<script src="att10.js?v=2610161"></script>
 <script src="ksz.js?v=2610123"></script>
 <script src="acc.js?v=2610121"></script>
 <script src="idea.js?v=2610121"></script>
@@ -784,6 +785,7 @@ var NAV=[
   { id:"f_cchat", m:"td", g:"신청 · 참여", n:"18F 커피챗", r:"18F AX 커피챗 희망 · 선정 · 참석입니다. 회차와 테이블을 넣어 선정하면 알림이 나갑니다.", view:"apply" },
   { id:"f_apply", m:"td", g:"신청 · 참여", n:"1F AX 라운지", r:"1F AX 라운지 상담 신청 · 승인 · 체크인 · 완료입니다. 다음 행동 단추 하나로 처리하고, 승인은 알림이 나갑니다.", view:"apply" },
   { id:"f_ck", m:"td", g:"현장 처리", n:"체크인존", r:"1F 체크인존 번호표 · 창구별 대기 · 다음 번호입니다.", view:"ck" },
+  { id:"f_att10", m:"td", g:"현장 처리", n:"10F 출석", r:"10F 실습 세션 A~E 입장 · 종료 QR 출석입니다. 세션마다 신청 · 입장 · 종료 · 입장 안 함과 사람 표. 스탬프 없음.", view:"att10" },
   { id:"f_crowd", m:"td", g:"현장 처리", n:"지금 현장", r:"참가자 홈 「지금 현장」 2×2 값 · 대리 제보 · 리허설 보정입니다.", view:"crowd" },
   { id:"f_fcfs", m:"td", g:"추첨 · 시상", n:"룰렛 · 선착순", r:"룰렛 사용과 자격 · 소진 안내 · 선착순 참여상 숫자입니다. 한 사람 처리는 사람 › 찾기 카드에서 합니다.", view:"fcfs" },
   { id:"f_draw", m:"td", g:"추첨 · 시상", n:"럭키드로우", r:"Closing Speech 행운권 무대 추첨을 큰 단추 하나로 진행합니다. 추첨 화면 Space 와 같습니다.", view:"draw" },
@@ -908,7 +910,7 @@ function unknownSrv(d){ return d&&d.ok===false&&/unknown action/.test(String(d.e
 function srvMissing(what){ return band("warn","이 서버는 아직 「"+esc(what)+"」 기능을 모릅니다. 서버 배포 뒤 씁니다. 그 전에는 옛 콘솔에서 합니다.",'<button class="btn sm" data-qa="legacy.fallback" onclick="legacyOpen(\'\')">옛 콘솔 열기</button>'); }
 function loadErr(d, retryK){ return band("bad","받지 못했습니다 · "+esc(why(d)),'<button class="btn sm" data-qa="retry" onclick="S.at[\''+retryK+'\']=0;load(true)">다시 시도</button>'); }
 
-var VIEWS={}; if(window.ACC_VIEW) VIEWS.acc=ACC_VIEW; if(window.IDEA_VIEW) VIEWS.idea=IDEA_VIEW; VIEWS.sv=window.SV_NUM;
+var VIEWS={}; if(window.ACC_VIEW) VIEWS.acc=ACC_VIEW; if(window.ATT10_VIEW) VIEWS.att10=ATT10_VIEW; if(window.IDEA_VIEW) VIEWS.idea=IDEA_VIEW; VIEWS.sv=window.SV_NUM;
 VIEWS.legacy={
   mount:function(it){
     el("vb").innerHTML=card("", "", '<div class="empty"><b>이 화면은 옛 콘솔에서 엽니다</b><p class="mt8">새 틀로 옮기는 중입니다(10/23 까지). 옛 콘솔의 같은 화면이 새 탭으로 열리고, 로그인은 이어집니다.</p><div class="mt16"><button class="btn pri" data-qa="legacy.open.'+it.id+'" onclick="legacyOpen(\''+it.legacy[0]+'\','+(it.legacy[1]||0)+')">옛 콘솔에서 「'+esc(it.n)+'」 열기</button></div></div>', "", "pad");
@@ -3032,6 +3034,7 @@ function qvItems(){
   out.push({ id:"idea", grp:"idea", label:"아이디어 한 줄", sub:"“이거 AI로 되겠는데?” 한 줄 남기기", data:B+"#q=idea" });
   (((S.data.stair||{}).rows)||[]).slice().sort(function(a,b){ return a.fl-b.fl||a.r-b.r; }).forEach(function(r){ out.push({ id:qvStId(r.fl,r.r), grp:"stair", label:"계단 이용 · "+r.fl+"F · 비상계단 "+r.r, sub:"시작과 끝에 찍기", note:"뛰지 마세요 · 방화문은 닫아 주세요", acc:r.fl+"F", data:B+"#s="+r.code+"&fl="+r.fl+"&r="+r.r, off:!r.on }); });
   if(al&&al.ok&&al.code){ var pids=(al.progs||[]).map(function(p){ return p.id; }); QV_LEC.forEach(function(a){ if(pids.indexOf(a[1])<0) return; out.push({ id:a[0], grp:"lec", small:true, label:a[3], sub:a[4], data:B+"#s="+al.code+"&p="+a[1]+"&k="+a[2] }); }); }
+  if(al&&al.ok&&al.code10) (al.progs10||[]).forEach(function(x){ [["in","입장"],["out","종료"]].forEach(function(k){ out.push({ id:"att10_"+x.id+"_"+k[0], grp:"lec10", small:true, label:x.n+" · "+k[1]+" QR", sub:"10F "+((window.ATT10_PL||{})[x.id]||"")+" · "+k[1]+" 출석", data:B+"#s="+al.code10+"&p="+x.id+"&k="+k[0] }); }); });   /* 261016 10F 실습 세션 입장 · 종료 12장(qr_variants.json att10_* 와 같은 문구) */
   return out;
 }
 function qvCanvas(it, px, label){
@@ -3078,21 +3081,22 @@ function qvZipGrp(grp, nm){
   })();
 }
 function qvTile(it){ var src=typeof qrcode==="function"?qvPrev(it):"";
-  return '<div class="qv"><div class="qvi">'+(src?'<img alt="" src="'+src+'">':'')+'</div><b>'+esc(it.label)+'</b><span class="cap">'+esc(it.sub||"")+'</span>'+(it.off?tag("꺼짐"):'')+'<div class="acts" style="margin-top:8px"><button class="btn sm pri" data-qa="qr.png" onclick="qvDl(\''+jq(it.id)+'\',0)">PNG</button>'+(it.grp==="lec"?'<button class="btn sm" data-qa="qr.only" onclick="qvDl(\''+jq(it.id)+'\',1)">QR만</button>':'')+'</div></div>'; }
+  return '<div class="qv"><div class="qvi">'+(src?'<img alt="" src="'+src+'">':'')+'</div><b>'+esc(it.label)+'</b><span class="cap">'+esc(it.sub||"")+'</span>'+(it.off?tag("꺼짐"):'')+'<div class="acts" style="margin-top:8px"><button class="btn sm pri" data-qa="qr.png" onclick="qvDl(\''+jq(it.id)+'\',0)">PNG</button>'+(it.grp==="lec"||it.grp==="lec10"?'<button class="btn sm" data-qa="qr.only" onclick="qvDl(\''+jq(it.id)+'\',1)">QR만</button>':'')+'</div></div>'; }
 VIEWS.qr={
   need:function(){ return qrSub()==="check"?[{ k:"sstat", a:"stair_stats", ttl:60000 },{ k:"qrs", a:"qr_stats", ttl:60000 },{ k:"alist", a:"att_list", ttl:300000 }]:[{ k:"alist", a:"att_list", ttl:300000 },{ k:"stair", a:"stair_list", ttl:300000 }]; },
   right:function(){ return '<button class="btn" data-qa="qr.legacy" onclick="legacyOpen(\'e_qr\',2)">codes.json · 보관 QR ›</button>'; },
   mount:function(){ el("vb").innerHTML='<div class="fx" style="margin-bottom:12px">'+subSeg("s_qr",[["img","QR 그림"],["check","설치 점검"]],qrSub())+'</div><div id="qrB"></div>'+
-    memo('<p>그림은 이 화면이 서버 코드로 바로 그립니다. 그림 파일은 공개 저장소 · 공유 드라이브 · 메신저에 올리지 않습니다(코드가 퍼지면 현장에 오지 않고도 적립됩니다). 규칙은 QR코드/qr_mother.py 와 같습니다.</p><p>강의장 출석은 17F 오후 AWS · MS 입장 · 끝 4장만 씁니다. 오전 Keynote · 유튜브 송출 · 10F 끝 · 부스 · 추첨 QR 은 게시하지 않아 옛 화면(오른쪽 위)에만 둡니다. 코드 전면 교체는 고급 · 보관 › 위험 구역.</p>'); },
+    memo('<p>그림은 이 화면이 서버 코드로 바로 그립니다. 그림 파일은 공개 저장소 · 공유 드라이브 · 메신저에 올리지 않습니다(코드가 퍼지면 현장에 오지 않고도 적립됩니다). 규칙은 QR코드/qr_mother.py 와 같습니다.</p><p>강의장 출석은 17F 오후 AWS · MS 입장 · 끝 4장, 10F 실습 세션 입장 · 종료 12장(스탬프 없음 · 출석 기록만 · 현장 › 10F 출석)을 씁니다. 오전 Keynote · 유튜브 송출 · 부스 · 추첨 QR 은 게시하지 않아 옛 화면(오른쪽 위)에만 둡니다. 코드 전면 교체는 고급 · 보관 › 위험 구역.</p>'); },
   paint:function(){
     var b=el("qrB"); if(!b) return;
     if(qrSub()==="check") return qrCheck(b);
     var all=qvItems(), by=function(g){ return all.filter(function(x){ return x.grp===g; }); }, grid=function(l){ return '<div class="qvg">'+l.map(qvTile).join("")+'</div>'; };
     if(typeof qrcode!=="function"){ b.innerHTML=band("bad","QR 그리기 파일(qrcode.js)을 받지 못했습니다. 새로고침합니다."); return; }
-    var st=by("stair"), lec=by("lec");
+    var st=by("stair"), lec=by("lec"), l10=by("lec10");
     b.innerHTML=card("1 · 앱","출력용 · 앱 주소 하나",grid(by("app")))+card("2 · 아이디어 한 줄","1층 부서 출력용 · 서버 코드 없음",grid(by("idea")),"","mt16")+
       card("3 · 계단실","방화문 앞 · "+st.length+"장",st.length?grid(st):(S.data.stair?'<p class="cap">설치된 계단 지점이 없습니다.</p>':skel()),'<button class="btn sm pri" data-qa="qr.zip.stair" onclick="qvZipGrp(\'stair\',\'계단실\')"'+(st.length?'':' disabled')+'>'+st.length+'장 ZIP</button>',"mt16")+
-      card("4 · 강의장 출석 · 17F 오후 AWS · MS","입장 · 끝 "+lec.length+"장(PPT)",lec.length?grid(lec):(S.data.alist?'<p class="cap">출석 코드가 없습니다.</p>':skel()),'<button class="btn sm pri" data-qa="qr.zip.lec" onclick="qvZipGrp(\'lec\',\'강의장출석\')"'+(lec.length?'':' disabled')+'>'+lec.length+'장 ZIP</button>',"mt16");
+      card("4 · 강의장 출석 · 17F 오후 AWS · MS","입장 · 끝 "+lec.length+"장(PPT)",lec.length?grid(lec):(S.data.alist?'<p class="cap">출석 코드가 없습니다.</p>':skel()),'<button class="btn sm pri" data-qa="qr.zip.lec" onclick="qvZipGrp(\'lec\',\'강의장출석\')"'+(lec.length?'':' disabled')+'>'+lec.length+'장 ZIP</button>',"mt16")+
+      card("5 · 10F 실습 세션 출석 · A~E","입장 · 종료 "+l10.length+"장 · 스탬프 없음",l10.length?grid(l10):(S.data.alist?'<p class="cap">10F 출석 코드가 없습니다.</p>':skel()),'<button class="btn sm pri" data-qa="qr.zip.lec10" onclick="qvZipGrp(\'lec10\',\'10F출석\')"'+(l10.length?'':' disabled')+'>'+l10.length+'장 ZIP</button>',"mt16");
   }
 };
 function qrCheck(b){
