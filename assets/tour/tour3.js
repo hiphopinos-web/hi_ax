@@ -1590,7 +1590,7 @@
    * ⑤ Welcome 천막 묶음(천막 · 현수막 40 · 엑스배너 47 · 출입구 안내 41) = 동쪽 출입문 정면 북쪽(38.2, 10.5)으로 · 모형에서는 여전히 숨김(hideCheckin · 사용자 261003)
    * 옮긴 물체의 바닥 그림자는 옛 자리 기준(새 자리는 그림자 없음 · 몇 % 밝기 차) · 다시 굽기(안 B)는 별도 작업 */
   var REFIT = { DROP: [3, 19, 20, 21, 43, 44, 45], VIS: { x0: 30.5, x1: 32.6, z0: 4.6, z1: 5.6, dz: -1.0 }, LDESK: { x0: 8.15, x1: 9.2, z0: 9.6, z1: 10.2, to: [5.6, 12.175], from: [8.67, 9.9] },   /* v6.83 (사용자 261009 「여기 책상 벽에 붙여줘」) to z 11.81 → 12.175 = 데스크 뒷면(12.435)이 가벽 앞면(WW.z - t/2 = 12.44)에 닿게(5mm · 면 겹침 없음) · 데스크 z 11.915 ~ 12.435 */
-    LOLD: { x0: 6.84, x1: 10.05, z0: 8.95, z1: 11.46, sh: 3.2 }, VOLD: { x0: 30.6, x1: 32.57, z0: 5.66, z1: 6.85, lit: [30.0, 7.6] }, TV: { x0: 22.3, x1: 24.2, z0: 0.62, z1: 2.5, dx: 6.63 }, CK: [-4.4, -1.0] };
+    LOLD: { x0: 6.84, x1: 10.05, z0: 8.95, z1: 11.46, sh: 3.2 }, VOLD: { x0: 30.6, x1: 32.57, z0: 5.66, z1: 6.85, lit: [30.0, 7.6] }, TV: { x0: 22.3, x1: 24.2, z0: 0.62, z1: 2.5, dx: 6.63 }, CK: [-4.4, -1.0], XB: { dx: -2.3, f: { x0: 16.3, x1: 16.5, z0: 10.55, z1: 10.95 } } };
   function inLobby(o) { while (o) { if (o === S.lobby) return true; o = o.parent; } return false; }
   /* 메시 꼭짓점 중 도면 (x, z) 가 sel 을 만족하는 것만 도면 dx · dz 만큼 옮긴다 · 양자화(정수) 위치는 먼저 실수로 */
   function shiftWhere(o, sel, dx, dz) {
@@ -1607,6 +1607,36 @@
     o.position.x += dx; o.position.z -= dz; o.updateMatrix(); o.updateMatrixWorld(true);
     o.traverse(function (q) { if (q.userData && q.userData.c && q.userData.face) { q.userData.c = q.userData.c.clone(); q.userData.c.x += dx; q.userData.c.z -= dz; } });
     return 1;
+  }
+  /* ═══════════ 261015 받침대 TV 5대 낮추기 · 55인치로 맞추기 (사용자 「TV 가 너무 높아 뒤 판의 글씨가 가려진다 · 55인치(화면 121 x 68 · 베젤 123 x 71)로 · 받침 기둥을 줄여 낮춘다」) ═══════════
+   * 받침대에 선 TV 전부(AX in Action · AX LAB 복사본 · AX PLAY 둘 · AX VISION) = 모형 몸체의 TV 꼭짓점(베젤 색 0.02 · 화면 색 0.012)과 기둥(흰 색 0.82 · 위로 1.22m)을 받은 뒤 옮긴다 · 벽걸이 · 세로 · 타자왕 · 노트북은 그대로
+   * 높이 = 베젤 아랫단 바닥에서 TOP.bot(0.62m) · 윗단 +0.71m(옛 1.12 ~ 1.86m) · 기둥 윗단은 같이 내려 TV 몸 안에 둔다 · 크기 = 베젤 바깥 123 x 71 · 화면 121 x 68 · 판과의 간격 · 받침 접시 · 걷기 막힘 칸(가로 폭 1.26 → 1.23 · 0.32m 여유 안)은 그대로
+   * AX VISION TV = 모형에서 왼쪽 13cm 가 판 3 칸 자르기(regionCut)에 베여 있었다(화면 1.11m · 왼쪽 베젤 없음 · 기둥이 가운데에서 6cm 치우침) → 기둥 가운데 기준으로 왼쪽을 늘려 121 x 68 로 되살린다
+   * 화면 그림판(buildTvs)은 이 뒤에 모형 색으로 찾으므로 저절로 따라온다 · 되돌리기 = refit1F 의 ⑥ 한 줄을 지운다 */
+  var TVLO = { bot: 0.62, yc: 1.49, tvs: [ { m: 'zone_action_action_body', ax: 'x', c: 23.27, p: 1.35 }, { m: 'zone_lab_tv', ax: 'x', c: 29.9, p: 1.35 }, { m: 'zone_play_body', ax: 'x', c: 14.24, p: 1.35 }, { m: 'zone_play_body', ax: 'x', c: 7.01, p: 1.35 }, { m: 'zone_vision_vision_body', ax: 'z', c: 5.1, p: 31.15, cut: true } ] };
+  /* 꺾은선 사상 · xs(오름차순) 칸마다 ys 로 · 밖은 같은 기울기 1 로 이어 붙인다 */
+  function tvPw(a, xs, ys) { if (a <= xs[0]) return ys[0] + (a - xs[0]); for (var i = 1; i < xs.length; i++) if (a <= xs[i]) return ys[i - 1] + (a - xs[i - 1]) * (ys[i] - ys[i - 1]) / (xs[i] - xs[i - 1]); return ys[ys.length - 1] + (a - xs[xs.length - 1]); }
+  function lowerTvs(L) {
+    var Q = TVLO, n = 0, by = {}, T0 = Q.bot + 0.355, dyP = Q.yc - T0, XA = [-0.63, -0.605, 0.605, 0.63], YA = [-0.615, -0.605, 0.605, 0.615], XV = [-0.5, 0.605, 0.63], YV = [-0.605, 0.605, 0.615], XH = [-0.37, -0.345, 0.345, 0.37], YH = [-0.355, -0.34, 0.34, 0.355];
+    Q.tvs.forEach(function (t) { (by[t.m] = by[t.m] || []).push(t); });
+    Object.keys(by).forEach(function (nm) {
+      var o = L.getObjectByName(nm); if (!o || !o.geometry || !o.geometry.attributes.position) return;
+      o.updateMatrixWorld(true); var geo = o.geometry; geo.setAttribute('position', f32Pos(geo.attributes.position));
+      var pa = geo.attributes.position, col = geo.attributes.color, m = o.matrixWorld, inv = m.clone().invert(), v = new T.Vector3(), k = 0;
+      for (var i = 0; i < pa.count; i++) {
+        v.fromBufferAttribute(pa, i).applyMatrix4(m); var x = v.x + 16, z = 6 - v.z, y = v.y, c = col ? col.getX(i) : 1, hit = false;
+        for (var q = 0; q < by[nm].length && !hit; q++) {
+          var t = by[nm][q], a = (t.ax === 'x' ? x : z) - t.c, pd = (t.ax === 'x' ? z : x) - t.p; if (Math.abs(pd) > 0.05) continue;
+          if (c <= 0.021 && y > 1.1 && y < 1.88 && a > -0.66 && a < 0.66) {   /* TV 베젤 · 화면 꼭짓점 */
+            var a2 = t.c + tvPw(a, t.cut ? XV : XA, t.cut ? YV : YA), y2 = T0 + tvPw(y - Q.yc, XH, YH);
+            if (t.ax === 'x') v.x = a2 - 16; else v.z = 6 - a2; v.y = y2; hit = true;
+          } else if (c > 0.8 && c < 0.84 && Math.abs(a) < 0.04 && y > 0.5 && y < 1.3) { v.y = y - dyP; hit = true; }   /* 받침 기둥 윗단 */
+        }
+        if (hit) { v.applyMatrix4(inv); pa.setXYZ(i, v.x, v.y, v.z); k++; }
+      }
+      if (k) { pa.needsUpdate = true; geo.computeBoundingSphere(); geo.computeBoundingBox(); n += k; }
+    });
+    return n;
   }
   /* 비운 자리 빛 = 옆 자리(도면 dx · dz 만큼 떨어진 같은 높이)의 구운 빛을 옮겨 칠한다 · 벽 높이 따라 바뀌는 밝기 그대로 · 옆 자리에 면이 없으면 그 꼭짓점은 그대로 */
   function relightShift(o, R, dx, dz) {
@@ -1663,6 +1693,12 @@
     /* ⑤ */
     var ck = L.getObjectByName('checkin'); if (ck) R.ck += shiftNode(ck, REFIT.CK[0], REFIT.CK[1]);
     var p41 = L.getObjectByName('panel_41'); if (p41) R.ck += shiftNode(p41, REFIT.CK[0], REFIT.CK[1]);
+    /* ⑥ 261015 받침대 TV 5대 = 55인치 · 낮게(아래 lowerTvs 주석) */
+    R.tvl = lowerTvs(L);
+    /* ⑦ 261015 층별 안내 엑스배너(판 42) = 흉상 동쪽 화분 뒤 → 흉상 서쪽(룰렛 쪽) · 벽과의 간격(z 10.6 · 북쪽 벽 11.46 에서 0.86m) · 방향 · 크기 · 내용 그대로 · x 만 REFIT.XB.dx(흉상 15.25 기준 반대쪽 같은 간격 · 화분 쪽 16.4 → 14.1) */
+    var XB = REFIT.XB, p42 = L.getObjectByName('panel_42'), pbd = L.getObjectByName('props_body'); R.xb = 0;
+    if (p42) R.xb += shiftNode(p42, XB.dx, 0);
+    if (pbd) R.xb += shiftWhere(pbd, function (x, z, y) { return x > XB.f.x0 && x < XB.f.x1 && z > XB.f.z0 && z < XB.f.z1 && y < 0.05; }, XB.dx, 0);   /* 배너 발(바닥 5 x 30cm 띠 · 10면) */
     L.updateMatrixWorld(true);
     R.ms = Math.round(performance.now() - t0); G.refit = R;   /* 진단 · 고친 수 · 걸린 시간 */
   }
@@ -5477,5 +5513,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v7.26', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v7.27', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();
