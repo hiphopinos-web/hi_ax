@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>AXF CONTROL</title>
+<link rel="stylesheet" href="v2.css?v=2610161">
+</head>
+<body>
+<!-- AXF CONTROL v2 · 콘솔 재구축 화면 1단계(261016) · 탭 7개 고정 · 지금 콘솔(../)은 그대로 운영 · 바꿔 끼우는 시점은 따로 정한다 -->
+<div class="app" id="app">
+  <header class="top">
+    <span class="brand">AXF CONTROL</span><span class="env" id="envTx"></span>
+    <span id="topL" style="display:flex;gap:8px;align-items:center;min-width:0"></span>
+    <span class="sp"></span>
+    <input class="search" id="gq" type="search" placeholder="사번 · 이름 찾기  /" aria-label="사람 찾기" onkeydown="searchGo(event)">
+    <button type="button" class="chip-s" id="upd" onclick="refreshAll()" aria-label="다시 받기">갱신</button>
+  </header>
+  <main class="main" id="main"><div id="view"></div></main>
+  <nav class="tabs" id="tabs" aria-label="메뉴"></nav>
+</div>
+<div class="lockscr" id="lock" hidden>
+  <div class="card">
+    <h1>AXF CONTROL</h1>
+    <p class="cap">AX Festival 2026 운영 콘솔</p>
+    <label>사번<input id="aemp" inputmode="text" autocomplete="username" autocapitalize="characters"></label>
+    <label>관리코드<input id="key" type="password" autocomplete="current-password"></label>
+    <button class="btn pri big" type="button" id="lockGo">들어가기</button>
+    <div class="err" id="lockErr" role="alert"></div>
+  </div>
+</div>
+<div class="dlg-bg" id="dlg" hidden><div class="dlg" id="dlgCard" role="dialog" aria-modal="true" aria-labelledby="dlgT"></div></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<script src="../../assets/server.js"></script>
+<script src="core.js?v=2610161"></script>
+<script src="table.js?v=2610161"></script>
+<script src="now.js?v=2610161"></script>
+<script src="inbox.js?v=2610161"></script>
+<script src="prize.js?v=2610161"></script>
+<script src="more.js?v=2610161"></script>
+<script>boot();</script>
+</body>
+</html>
