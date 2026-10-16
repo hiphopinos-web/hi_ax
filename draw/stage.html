@@ -140,7 +140,24 @@
   #toast { position: absolute; right: 120px; bottom: 40px; font-size: 24px; font-weight: 600; color: var(--faint); opacity: 0; }
   #toast.soft { color: var(--sub); }
   #mixSkip { position: absolute; right: 28px; bottom: 18px; font-size: 15px; font-weight: 500; color: rgba(255,255,255,.34); opacity: 0; pointer-events: none; letter-spacing: .02em; }
-  #kTip { position: absolute; right: 28px; bottom: 40px; font-size: 18px; font-weight: 500; color: rgba(255,255,255,.5); opacity: 0; pointer-events: none; transition: opacity .2s; }
+  /* 261016 스태프 표시줄 · 왼쪽 아래 작게 · 낮은 대비 · 다음 Space 가 할 일 · 받음(반짝) · 안 받음(흔들림 · N초 뒤 다시) · 3 · 2 · 1등 「한 번 더」(남은 시간 막대) */
+  #kBar { position: absolute; left: 34px; bottom: 12px; display: flex; align-items: center; gap: 8px; height: 26px; padding: 0 10px 0 8px; border-radius: 13px; font-family: var(--f); font-size: 16px; font-weight: 600; letter-spacing: .01em;
+    color: rgba(255,255,255,.3); white-space: nowrap; pointer-events: none; overflow: hidden; }
+  #kBar i { flex: none; width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid currentColor; box-sizing: border-box; }
+  #kBar em { position: absolute; left: 8px; right: 10px; bottom: 1px; height: 2px; background: currentColor; transform-origin: 0 50%; transform: scaleX(0); }
+  #kBar.ok { color: rgba(255,255,255,.95); background: rgba(0,0,0,.36); }
+  #kBar.ok i, #kBar.arm i { background: currentColor; }
+  #kBar.no { color: rgba(255,255,255,.82); background: rgba(0,0,0,.36); }
+  #kBar.no i { border-radius: 1px; }
+  #kBar.arm { color: #fff; background: rgba(0,0,0,.5); }
+  #kBar.info { color: rgba(255,255,255,.7); }
+  #kBar.hit i { animation: kbHit .35s cubic-bezier(.2,.8,.2,1); }
+  #kBar.no.hit { animation: kbNo .3s ease-out; }
+  @keyframes kbHit { from { transform: scale(2.4); } to { transform: scale(1); } }
+  @keyframes kbNo { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+  body[data-scene="start"] #kBar, body[data-scene="restore"] #kBar { display: none; }
+  body.mouse #kBar { bottom: 74px; }   /* 운영 줄(마우스)이 나오면 그 위로 */
+  @media (prefers-reduced-motion: reduce) { #kBar.hit i, #kBar.no.hit { animation: none; } }
   #hud { position: absolute; left: 120px; bottom: 80px; font-size: 22px; color: #9f9; font-family: Consolas, monospace; display: none; }
   body.hud-on #hud { display: block; }
 
@@ -230,6 +247,14 @@
   #redoBtn em { font-style: normal; font-size: 16px; font-weight: 600; color: rgba(255,255,255,.8); }
   #redoBtn.arm { background: #fff; border-color: #fff; }
   #redoBtn.arm b { color: var(--o); }
+  /* 261016 되돌리기 · 마우스를 움직이면 오른쪽 아래 · 두 번 누름 · 화면만 앞 「보여 주기 화면」으로(공개 · 뽑는 중에는 없음) */
+  #backBtn { position: absolute; right: 40px; bottom: 24px; display: none; flex-direction: column; align-items: flex-end; gap: 1px; padding: 9px 16px; border-radius: 12px; border: 2px solid rgba(255,255,255,.55); background: rgba(0,0,0,.5);
+    color: #fff; font-family: var(--f); cursor: pointer; pointer-events: auto; text-align: right; }
+  body.mouse #backBtn.on { display: flex; }
+  #backBtn b { font-size: 20px; font-weight: 800; }
+  #backBtn em { font-style: normal; font-size: 14px; font-weight: 600; color: rgba(255,255,255,.75); }
+  #backBtn.arm { background: #fff; border-color: #fff; }
+  #backBtn.arm b { color: var(--o); }
 </style>
 </head>
 <body>
@@ -310,9 +335,10 @@
   </div><div class="lk7" id="eLk7"></div></section>
 
   <button id="redoBtn" type="button"></button>
+  <button id="backBtn" type="button"></button>
   <div id="toast"></div>
   <div id="mixSkip"></div>
-  <div id="kTip"></div>
+  <div id="kBar"><i></i><span></span><em></em></div>
   <div id="hud"></div>
 
 </div>

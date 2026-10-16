@@ -929,7 +929,7 @@
     keepAwake();
     SFX.ensure();   /* 소리 준비(처음 한 번 0.2초 안팎) · F(전체 화면) 같은 첫 키에서 미리 끝내 첫 「다음」이 멈칫하지 않게 */
     switch (cmd) {
-      case "mute": SFX.ensure(); SFX.mute(SFX.on); toast(SFX.on ? "소리 켬" : "소리 끔"); pushCtl(); opPaint(); return;
+      case "mute": SFX.ensure(); SFX.mute(SFX.on); toast(SFX.on ? "소리 켬" : "소리 끔"); kbNote(SFX.on ? "소리 켬" : "소리 끔"); pushCtl(); opPaint(); return;
       case "fs": if (!document.fullscreenElement) document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); else document.exitFullscreen && document.exitFullscreen(); return;
     }
     if (SC === "start") return;                       /* 261016 시작 화면에서는 진행 키가 없다(데모 · 라이브를 먼저 고른다) */
@@ -945,6 +945,7 @@
       case "redraw": return keyRun("absent", ST.pending || "");   /* 두 번 누름 확인은 단추가 한다(redoClick) */
       case "restart": return restartMode();
       case "reset": return resetToStart();
+      case "back": return backRun();                  /* 261016 되돌리기 단추(두 번 누름) · 화면만 · 콘솔 원격 명령(CMDS)에는 없다 */
     }
   }
   /* 다음 동작 하나 · Space 와 콘솔 「추첨 › 진행」 큰 버튼이 같은 순서(콘솔 dcNext 와 같은 표) */
@@ -966,11 +967,12 @@
     return { c: "", n: "끝" };
   }
   function runNext() {
-    var nx = nextCmd();
-    if (!nx.c) { if (nx.n !== "잠시만") toast(nx.n, true); return; }
-    if (nx.c === "skip") { if (SC === "intro") { vidCut("intro"); lock(0.5); } else if (canSkipMix()) skipMix(); return; }
-    if (nx.c === "confirm" && topRank()) return twice("confirm", curRound().name + " 확정 · Space 한 번 더", function () { keyRun("confirm", nx.arg); });   /* 261016 3 · 2 · 1등 = 두 번 눌러 확정(부재면 그 사이 「다시 추첨」) */
-    keyRun(nx.c, nx.arg);
+    var nx = nextCmd(), nm = kbName(nx, true);
+    if (!nx.c) { if (nx.n === "잠시만") kbNo(); else { KB.noN++; kbNote(nx.n); } return; }   /* 261016 버려진 누름도 스태프 표시줄에 보인다(소리 없이 버리지 않는다) */
+    if (nx.c === "skip") { if (SC === "intro") { vidCut("intro"); lock(0.5); kbOk(nm); } else if (canSkipMix()) { skipMix(); kbOk(nm); } else kbNo(); return; }
+    if (nx.c === "confirm" && topRank() && cmdWhy("confirm", nx.arg)) return keyFail(cmdWhy("confirm", nx.arg));   /* 공개 1.4초 안 = 첫 누름으로 세지 않는다 */
+    if (nx.c === "confirm" && topRank()) return twice("confirm", curRound().name + " 확정 · Space 한 번 더", function () { keyRun("confirm", nx.arg, nm); });   /* 261016 3 · 2 · 1등 = 두 번 눌러 확정(부재면 그 사이 「다시 추첨」) */
+    keyRun(nx.c, nx.arg, nm);
   }
   /* 261016 등수 숫자(1 ~ 6) · 3 · 2 · 1등만 부재 · 다시 추첨(사용자 확정 · 6 · 5 · 4등은 이름만 호명하고 끝) */
   function rankNo(r) { var n = parseInt(r && r.name, 10); return n >= 1 && n <= 6 ? n : 9; }
@@ -978,11 +980,15 @@
   var WHY_TXT = { busy: "", scene: "지금 장면에서는 할 수 없습니다", drawing: "뽑는 중입니다", same: "", done: "", notclosed: "추첨 준비가 먼저입니다", round: "없는 등수입니다",
     loading: "공을 넣는 중입니다", full: "", empty: "남은 행운권이 없습니다", none: "", id: "다른 당첨입니다", arg: "완주 경품 추첨 숫자가 없습니다", unknown: "모르는 명령입니다", error: "오류",
     rank: "6 · 5 · 4등은 다시 추첨하지 않습니다", local: "" };
-  function keyRun(c, arg) {
+  function keyRun(c, arg, nm) {
     var why = runCmd(c, arg == null ? "" : String(arg));
-    if (!why) return;
+    if (!why) { kbOk(nm || c); return; }
+    keyFail(why);
+  }
+  function keyFail(why) {
     var w = String(why).split(":"), t = w[0] === "mixing" ? "섞는 중 · " + w[1] + "초 뒤 뽑기" : WHY_TXT[w[0]];
-    if (t) toast(t, true);
+    if (w[0] === "busy" || w[0] === "drawing" || !t) { kbNo(); return; }
+    KB.noN++; kbNote(t);
   }
   var FINREQ = false;
   function finFromServer() {
@@ -1020,8 +1026,8 @@
     else { scene("idle"); lock(0.4); }
   }
   function twice(k, msg, fn) {
-    if (confirmKey === k && T - confirmT < 2.5) { confirmKey = null; toast(""); fn(); return; }
-    confirmKey = k; confirmT = T; toast(msg);
+    if (confirmKey === k && T - confirmT < 2.5) { confirmKey = null; fn(); return; }
+    confirmKey = k; confirmT = T; KB.arm = msg; KB.armN++; KB.k = ""; kbPaint(true);   /* 261016 첫 누름 = 스태프 표시줄 「한 번 더」 + 남은 시간(대형 화면 가운데에는 띄우지 않는다) */
   }
   function startCheckin() {
     if (CFG.mode === "demo" && (!ST.pool || ST.pool.kind !== "demo")) ST.pool = demoPool(CFG.demoN, ST.seed, CFG.demoT);
@@ -1614,14 +1620,49 @@
     if ((tickN++ % 6) !== 0) return;
     if (SC === "idle" || SC === "checkin" || SC === "closed") uiPool();
     if (WHO.fail && !WHO.busy) whoFetch();            /* 261008 실명 받기 실패 뒤 다시 */
-    uiHelp(); redoPaint();
+    uiHelp(); redoPaint(); kbPaint();
     if (document.body.classList.contains("hud-on")) set("hud", Math.round(FPS.v) + " fps · 단계 " + QL.tier + " · 공 " + liveCount() + "/" + NB + " · " + vw + "×" + vh + " · 물리 " + PH.ms.toFixed(1) + "ms · 그리기 " + RD.ms.toFixed(1) + "ms");
   }
-  var toastUntil = 0, kTipT = null;
-  function keyTip(msg) {
-    var el = $("kTip"); if (!el) return;
-    el.textContent = msg || ""; el.style.opacity = msg ? "1" : "0";
-    clearTimeout(kTipT); if (msg) kTipT = setTimeout(function () { el.style.opacity = "0"; }, 2600);
+  var toastUntil = 0;
+  function keyTip(msg) { if (msg) kbNote(msg); }   /* 라이브 · 진행자 안내 = 스태프 표시줄 */
+  /* ── 261016 스태프 표시줄(#kBar) · 왼쪽 아래 작게 · 낮은 대비 · 데모 · 라이브 모두 ──
+   *   평상시 = 다음 Space 가 할 일 한 줄(nextCmd 표 이름) · 받은 누름 = 반짝 「다음 · ○○」 · 버려진 누름 = 흔들림 「안 받음 · 연출 중 · N초 뒤 다시」(lock(99) = 「뽑는 중」)
+   *   3 · 2 · 1등 첫 누름 = 「○등 확정 · Space 한 번 더」 + 남은 시간 · Enter · PageDown · → 도 같은 길(act("next"))
+   *   화면 글자만 바꾼다 · 연출 · 당첨 · 서버 기록 · 잠금(busyUntil)은 읽기만 */
+  var KB = { k: "", msg: "", until: 0, arm: "", okN: 0, noN: 0, armN: 0, txt: "", cls: "" };
+  function kbName(nx, plain) { return nx.c === "confirm" ? curRound().name + " 확정" + (topRank() && !plain ? " · 두 번" : "") : nx.n; }
+  function kbWait() {                               /* 다음 누름을 받을 때까지 남은 초 · -1 = 셀 수 없음(뽑는 중) · 0 = 지금 받음 */
+    if (drawingNow() || busyUntil - T > 30) return -1;
+    var w = Math.max(0, busyUntil - T);
+    if (NEXTCARD) w = Math.max(w, NEXTCARD - T + 0.8);
+    else if (SC === "card") w = Math.max(w, 0.81 - sT());
+    else if (SC === "mix") w = Math.max(w, 0.46 - sT());
+    else if (SC === "reveal") w = Math.max(w, 1.41 - sT());
+    return w > 0.05 ? w : 0;
+  }
+  function kbOk(nm) { KB.okN++; kbFlash("ok", "다음 · " + nm, 1.4); }
+  function kbNo() { KB.noN++; kbFlash("no", "", Math.max(1.6, kbWait() + 0.2)); }
+  function kbNote(msg) { kbFlash("info", msg, 2.6); }
+  function kbFlash(k, msg, sec) { KB.k = k; KB.msg = msg; KB.until = T + sec; kbPaint(true); }
+  function kbView() {
+    if (confirmKey && T - confirmT < 2.5) return { cls: "arm", txt: KB.arm + " · " + Math.max(0, 2.5 - (T - confirmT)).toFixed(1) + "초", p: Math.max(0, 1 - (T - confirmT) / 2.5) };
+    var w = kbWait(), nx = nextCmd();
+    if (KB.k && T < KB.until) {
+      if (KB.k === "no") return { cls: "no", txt: w < 0 ? "안 받음 · 뽑는 중" : w > 0 ? "안 받음 · 연출 중 · " + w.toFixed(1) + "초 뒤 다시" : "안 받음 · 지금 다시 · " + (nx.c ? kbName(nx) : nx.n) };
+      return { cls: KB.k, txt: KB.msg };
+    }
+    KB.k = "";
+    if (w < 0) return { cls: "", txt: "뽑는 중" };
+    if (w > 0) return { cls: "", txt: "연출 중 · " + w.toFixed(1) + "초" };
+    return { cls: "", txt: nx.c ? "Space · " + kbName(nx) : nx.n };
+  }
+  function kbPaint(hit) {
+    var el = $("kBar"); if (!el || SC === "start" || SC === "restore") return;
+    var v = kbView(), cls = v.cls;
+    if (v.txt !== KB.txt) { KB.txt = v.txt; el.querySelector("span").textContent = v.txt; }
+    if (cls !== KB.cls) { el.classList.remove("ok", "no", "arm", "info"); if (cls) el.classList.add(cls); KB.cls = cls; }
+    el.querySelector("em").style.transform = "scaleX(" + (v.p || 0).toFixed(3) + ")";
+    if (hit) { el.classList.remove("hit"); void el.offsetWidth; el.classList.add("hit"); }
   }
   /* 3차 · 진행자 키 안내 · 부저 화면에서 오른쪽 아래 아주 작게 4초만 · 화면 가운데에는 글자를 띄우지 않는다 */
   var bzTipT = null;
@@ -1837,6 +1878,7 @@
   function opClick(k) { mouseSeen(); var w = holdWhy(); if (w) { toast(w, true); ARM.k = ""; opPaint(); return; } if (armed(k)) act(k); }
   function redoShow() { return SC === "reveal" && topRank() && sT() > 1.4 && (ST.batch || []).length === 1; }
   function redoPaint() {
+    backPaint();
     var el = $("redoBtn"); if (!el) return;
     var on = redoShow(); el.classList.toggle("on", on);
     if (!on) return;
@@ -1845,6 +1887,51 @@
     el.classList.toggle("arm", ARM.k === "redo");
   }
   function redoClick() { mouseSeen(); if (!redoShow()) return; if (armed("redo")) act("redraw"); }
+  /* ── 261016 되돌리기(사용자 「화면을 누르는 단추처럼」) · 오른쪽 아래 · 마우스를 움직이면 · 두 번 누름(3초) ──
+   *   화면만 한 단계 앞 「보여 주기 화면」으로 · 당첨을 새로 뽑지 않고 · 서버 기록을 지우거나 바꾸지 않는다(serverLog · jsonp 부르지 않음)
+   *   다음 등수 카드 · 부저 화면(그 등수 기록 0) → 앞 등수 공개 화면(같은 당첨 · 확정은 다시 Space · 3 · 2 · 1등은 「다시 추첨」도 그대로)
+   *   6등 카드 · 부저 화면(기록 0) → 추첨 준비 끝 · 결과판 → 마지막 공개 · 끝 화면 → 결과판
+   *   공개 · 뽑는 중 · 대기 · 공 넣기 · 준비 끝 = 없음(공개에서 부저 전으로 가는 길 없음 · 당첨을 바꾸는 길은 「다시 추첨」 하나) */
+  function backTarget() {
+    if (SC === "start" || SC === "restore" || SC === "reveal" || drawingNow() || ST.drawing) return null;
+    if (SC === "card" || SC === "mix") {
+      var ri = ST.round;
+      if (ST.results.some(function (r) { return r.round === ri && r.st !== "undone"; })) return null;   /* 이 등수에 기록(당첨 · 부재)이 있으면 없음 · 옛 취소 줄은 세지 않는다 */
+      if (ri === 0) return ST.closed ? { k: "closed", n: "추첨 준비 끝" } : null;
+      var pw = roundWins(ri - 1);
+      return pw.length ? { k: "reveal", ri: ri - 1, ids: pw.map(function (r) { return r.id; }), n: rounds()[ri - 1].name + " 공개" } : null;
+    }
+    if (SC === "board") {
+      var lw = null; for (var k = ST.results.length - 1; k >= 0 && !lw; k--) if (ST.results[k].st === "win") lw = ST.results[k];
+      if (!lw) return null;
+      return { k: "reveal", ri: lw.round, ids: roundWins(lw.round).map(function (r) { return r.id; }), n: rounds()[lw.round].name + " 공개" };
+    }
+    if (SC === "end") return { k: "board", n: "결과판" };
+    return null;
+  }
+  function backRun() {
+    var b = backTarget();
+    if (!b) { KB.noN++; kbNote("되돌릴 화면이 없습니다"); return; }
+    NEXTCARD = 0; confirmKey = null;                 /* 잠금(busyUntil) 중에도 된다 · 뽑는 중은 backTarget 이 먼저 막는다 */
+    if (b.k === "closed") { stageTo("black"); DRM.mode = "spin"; scene("closed"); lock(0.5); }
+    else if (b.k === "reveal") { ST.round = b.ri; ST.batch = b.ids.slice(); ST.pending = b.ids[b.ids.length - 1]; persist(); SC = "exit"; restoreReveal(); lock(0.6); }   /* restoreReveal 의 sendBatch = 이미 보낸 기록(q 없음)은 다시 보내지 않는다 */
+    else if (b.k === "board") { rebuildBalls(); MEsetIdle(); stageTo("black"); scene("board"); lock(0.5); }
+    KB.okN++; kbFlash("ok", "되돌림 · " + b.n + " 화면", 1.6);
+  }
+  function backPaint() {
+    var el = $("backBtn"); if (!el) return;
+    var b = backTarget(), on = !!b;
+    el.classList.toggle("on", on);
+    if (!on) { if (ARM.k === "back") ARM.k = ""; el.classList.remove("arm"); return; }
+    set("backBtn", ARM.k === "back" ? "<b>한 번 더 누르면 " + esc(b.n) + " 화면으로</b>" : "<b>되돌리기</b><em>" + esc(b.n) + " 화면으로</em>");
+    el.classList.toggle("arm", ARM.k === "back");
+  }
+  function backClick() {
+    mouseSeen(); var b = backTarget(); if (!b) return;
+    if (ARM.k === "back" && ARM.n !== b.n) ARM.k = "";   /* 첫 누름과 갈 곳이 달라졌으면 다시 첫 누름 */
+    ARM.n = b.n;
+    if (armed("back")) act("back");
+  }
   var MOUSE = { tm: null };
   function mouseSeen() { document.body.classList.add("mouse"); clearTimeout(MOUSE.tm); MOUSE.tm = setTimeout(function () { document.body.classList.remove("mouse"); }, 4000); }
   function startBind() {
@@ -1861,6 +1948,7 @@
     $("opRestart").addEventListener("click", function () { opClick("restart"); });
     $("opReset").addEventListener("click", function () { opClick("reset"); });
     $("redoBtn").addEventListener("click", redoClick);
+    $("backBtn").addEventListener("click", backClick);
     document.addEventListener("mousemove", mouseSeen);
   }
 
@@ -2140,7 +2228,8 @@
     window.__axs = {
       act: act, scene: function () { return SC; }, state: function () { return ST; }, cfg: function () { return CFG; },
       net: function () { return { calls: NET.calls, blocked: NET.blocked, live: isLive(), mode: ST.mode || "", srv: SERVER_URL, queue: SRV.queue.length, sandbox: SANDBOX, ctl: CONSOLE_CTL }; },   /* 261016 시험 · 서버 호출 수 */
-      ui: { demo: pickDemo, live: liveOpen, go: liveGo, redo: redoClick, op: opClick, lv: function () { return { step: LV.step, err: LV.err, why: LV.why.slice(), sum: LV.step === "sum" ? liveSum() : null }; } },
+      ui: { demo: pickDemo, live: liveOpen, go: liveGo, redo: redoClick, op: opClick, back: backClick, backTo: function () { var b = backTarget(); return b ? b.n : ""; },
+        kb: function () { return { cls: KB.cls, txt: KB.txt, ok: KB.okN, no: KB.noN, arm: KB.armN }; }, lv: function () { return { step: LV.step, err: LV.err, why: LV.why.slice(), sum: LV.step === "sum" ? liveSum() : null }; } },
       perf: function (reset) { var o = { tier: QL.tier, qlog: QL.log.slice(), fps: Math.round(FPS.v), long: PERF.long, worstMs: Math.round(PERF.worst * 1000), px: vw + "x" + vh, sc: {} };
         for (var k in PERF.sc) { var p = PERF.sc[k]; o.sc[k] = { avg: +(p.n / Math.max(1e-6, p.t)).toFixed(1), min1s: p.min1 === 999 ? null : +p.min1.toFixed(1), worstMs: Math.round(p.worst * 1000), sec: +p.t.toFixed(1) }; }
         if (reset) { PERF.sc = {}; PERF.long = 0; PERF.worst = 0; } return o; },
