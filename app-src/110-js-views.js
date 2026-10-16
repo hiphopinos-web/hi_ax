@@ -177,7 +177,7 @@ var Views = {
           var off = ccRoundOff(t), on = !off && d.r.indexOf(t) >= 0;
           return '<button type="button" class="axs-slot" aria-pressed="' + on + '"' + (off ? ' disabled aria-label="' + t + ' 마감"' : ' onclick="ccPick(\'' + t + '\')"') + ">" + t + (off ? '<small aria-hidden="true">마감</small>' : "") + "</button>";
         }).join("") + "</div>" +
-        '<ul class="axs-ccdl"><li>18F · 회차 ' + CC_DUR + "분 · 회차마다 " + CC_CAP + "명</li><li>운영진이 선정해 알려 드려요</li></ul></div>" +
+        '<ul class="axs-ccdl"><li>18F · 1:1 · ' + CC_DUR + "분</li><li>신청 순서대로 시간을 정해 알려 드려요</li></ul></div>" +   /* v7.52 (사용자 확정 261016 미팅 개편) 옛 「회차 20분 · 회차마다 4명」 · 「운영진이 선정해 알려 드려요」 */
         '<div class="ax-bottom axs-fix"><button type="button" class="ax-button" id="ccNext" onclick="ccStep(2)"' + (d.r.length ? "" : " disabled") + ">다음</button></div>";
     }
     setTimeout(function () { var t = el("ccText"); if (t) { t.style.height = "auto"; t.style.height = (t.scrollHeight + 2) + "px"; } }, 0);

@@ -522,7 +522,21 @@ function stampPendRetry() {
    화면 1 「가능한 시간」(회차 여러 개 · 지난 회차 꺼짐) → 화면 2 「어떤 상담을 하고 싶으세요?」(상담하고 싶은 내용 · 아이디어 한 줄과 같은 길이 IDEA_MIN ~ IDEA_MAX) → cchat_req(round · text · cid) → 완료 「신청을 접수했어요」(선정 전)
    신청 글 = 서버가 아이디어 한 줄(경로 cchat)로 함께 등록 · 신청을 마치면 아이디어 한 줄 스탬프(p5 · 이미 있으면 그대로) · 운영진 선정 → 상담 마치면 스태프가 내 QR 확인(cc)
    옛 조건 「아이디어 한 줄을 먼저 내야 커피챗」(v4.45 · v5.82 noidea · 제출 직후 질문 ideaCchat · 희망 시트 cchatSheetSpec · 시간대 칩 cchatPrefHtml)은 걷었다(되살릴 때 = git 이력 v7.38) */
-var CC_ROUNDS = ["13:00", "13:30", "14:00", "14:30", "15:00", "15:30"], CC_DUR = 20, CC_CAP = 4;   /* 서버 커피챗_회차 기본값 · 회차 20분 · 커피챗_회차정원 기본값(화면 안내 글) */
+var CC_ROUNDS = ["13:00", "13:20", "13:40", "14:00", "14:20", "14:40", "15:00", "15:20", "15:40"], CC_DUR = 20, CC_CAP = 2;   /* v7.52 (사용자 확정 261016 미팅 개편) 1:1 · 20분 간격 9회차 · 회차마다 TABLE A · B 두 명(CC_CAP 는 화면에 쓰지 않는다) · 서버 설정 커피챗_회차와 같은 값 · 옛 6회차 30분 간격 · 4명 */
+/* v7.52 (261016 미팅 탭 S2) 커피챗 신청 시작 = sync ccOpen(「2026-10-21 00:00」 · 클로즈 베타 = 빈칸 = 문 없음) · 받은 적 없으면(옛 서버 · 데모) 상수 · 테스트 사번 = 서버가 문을 열어 둔다(attTest_)
+   그 전 = 주 버튼 자리에 꺼진 단추 「10/21(수) 00:00부터 신청」 · 서버 거절 ccwait(at) 도 같은 글(옛 notopen 「열려요」 화면으로 가지 않는다) */
+var CC_OPEN_DEF = "2026-10-21 00:00";
+function ccOpenAt() { var v = S.get("cc_open", null); return v === null ? CC_OPEN_DEF : String(v || ""); }
+function ccOpenTxt(at) {
+  var m = /^(\d{4})-(\d\d)-(\d\d) (\d\d:\d\d)/.exec(String(at || "")); if (!m) return "";
+  var d = new Date(+m[1], +m[2] - 1, +m[3]);
+  return +m[2] + "/" + +m[3] + "(" + "일월화수목금토".charAt(d.getDay()) + ") " + m[4] + "부터 신청";
+}
+function ccWaitTxt() {
+  if (typeof betaFree === "function" && betaFree() || typeof testEmp === "function" && testEmp()) return "";
+  var at = ccOpenAt(), m = /^(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/.exec(at); if (!m) return "";
+  return appNow(1).getTime() < new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]).getTime() ? ccOpenTxt(at) : "";
+}
 var CCA = { step: 1, busy: false, err: "", res: null, open: null };   /* step 1 시간 · 2 상담 내용 · "done" 완료 · open = 서버가 past 로 돌려준 지금 받는 회차 */
 function ccDraft() { var d = S.get("cc_draft", null); return d && typeof d === "object" && Array.isArray(d.r) ? d : { r: [], t: "", cid: "" }; }
 function ccDraftPut(d) { S.put("cc_draft", d); }   /* 조용한 저장 · 쓰는 중 다시 그리지 않는다(한글 조합 보호) */
@@ -555,6 +569,7 @@ function ccP5Line() {
 /* 입구 하나 · 참여하기 카드 · 18F 구역 상세 · 둘러보기 카페 · 홈 줄 · 신청이 있으면 내 커피챗 */
 function ccApplyGo() {
   if (S.get("cchat", null) || S.get("cchat_att", false)) { progOpen("cchat"); return; }
+  var w = ccWaitTxt(); if (w) { toast(w); return; }   /* v7.52 신청 시작 전 · 둘러보기 카페 · 홈 줄 같은 다른 입구도 그 자리 안내 */
   CCA.step = 1; CCA.busy = false; CCA.err = ""; CCA.res = null;
   var d = ccDraft(); d.r = d.r.filter(function (r) { return CC_ROUNDS.indexOf(r) >= 0 && !ccRoundOff(r); }); ccDraftPut(d);
   App.go("cc_apply");
@@ -575,7 +590,8 @@ function ccInput(v) {
   if (b) b.disabled = !ideaOk(v) || CCA.busy;
 }
 /* 서버 거절 사유마다 담백한 한 줄(서버 cchatReq_ · short · long · round · past · closed · noidea) · 쓴 글은 지우지 않는다 */
-function ccErrTxt(r) {
+function ccErrTxt(r, at) {
+  if (r === "ccwait") return ccOpenTxt(at || ccOpenAt()) || "신청 시작 전이에요";   /* v7.52 신청 시작 전(서버 ccwait · at) */
   return r === "short" ? "상담 내용을 " + IDEA_MIN + "자 이상 써 주세요" : r === "long" ? IDEA_MAX.toLocaleString() + "자까지 쓸 수 있어요" : r === "round" ? "고른 시간을 다시 골라 주세요" :
     r === "past" ? "고른 시간이 모두 시작됐어요" : r === "closed" ? "커피챗 신청이 마감됐어요" : r === "net" ? "연결이 불안정해 신청하지 못했어요" : "신청하지 못했어요";
 }
@@ -598,11 +614,12 @@ function ccSubmit() {
     App.render(); window.scrollTo(0, 0);
     pushAsk("cchat", {});   /* 가치 순간 ② 「선정되면 알려 드려요」 */
   };
-  var bad = function (r, open) {
+  var bad = function (r, open, at) {
     CCA.busy = false; botWait(false);
+    if (r === "ccwait" && /^\d{4}-\d\d-\d\d \d\d:\d\d/.test(String(at || ""))) S.set("cc_open", String(at).slice(0, 16));   /* v7.52 서버가 알려 준 시작 시각 · 카드 단추도 같은 글 */
     if (r === "past" && Array.isArray(open)) { CCA.open = open; d.r = d.r.filter(function (x) { return open.indexOf(x) >= 0; }); ccDraftPut(d); CCA.step = 1; }
     if (r === "round") CCA.step = 1;
-    CCA.err = ccErrTxt(r); App.render();
+    CCA.err = ccErrTxt(r, at); App.render();
   };
   if (!BE.on || !u.empId) {   /* 데모 · 서버 없이 같은 화면 */
     var had = S.get("stamps", []).indexOf("p5") >= 0, later = !had && ideaStampLater();
@@ -614,11 +631,11 @@ function ccSubmit() {
   CCA.busy = true; CCA.err = ""; App.render(); botWait(true, "보내는 중");
   beCall({ action: "cchat_req", emp: u.empId, name: u.name || "", dept: S.get("dept", null) || "", round: d.r.join(","), text: text, cid: d.cid }, function (res) {
     if (res && res.ok) fin(res);
-    else bad(res && res.reason || "etc", res && res.open);
+    else bad(res && res.reason || "etc", res && res.open, res && res.at);
   }, function () { bad("net"); });
 }
 function matchCoffeechat() {
-  var rounds = ["13:30", "14:00", "14:30", "15:00", "15:30"];
+  var rounds = CC_ROUNDS.slice(1);   /* v7.52 데모 회차 = 운영 회차에서 */
   S.set("cchat", { status: "matched", round: rounds[Math.floor(Math.random() * rounds.length)], table: Math.random() < 0.5 ? "A" : "B", ts: Date.now() });
   checkMyState();   /* v3.53 매칭 팝업은 checkMyState 한 곳 */
 }

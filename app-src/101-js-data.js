@@ -274,7 +274,7 @@ var SESSIONS = [
     capNote: "20명",
     todo: [{ desc: "초급 과정 · Chat, Word, PPT, Agent Builder, Copilot Studio" }], prep: [] },
   /* v5.64 AI 포토부스 프로그램 상세(photo · kind queue) 삭제 · v5.05 포토부스 대기 폐지 뒤 들어가는 길이 없는 빈 상세였다(정리 기록.md) */
-  { id: "dap", fl: 1, zone: "dap", kind: "link", go: "dap", ttl: "AX 라운지", sub: "데이터사이언스파트 · 1:1 30분", who: "", tm: "09:30~16:30",
+  { id: "dap", fl: 1, zone: "dap", kind: "link", go: "dap", ttl: "AX 라운지", sub: "데이터사이언스파트 · 1:1 30분", who: "", tm: "09:30~16:00",   /* v7.52 (사용자 확정 261016) 라운지 16:00 끝 */
     /* v3.54 사은품 문구는 사용자 확정으로 유지 (CLAUDE.md 「참여자 앱에 사은품 안내 없음」의 예외 · 260918) */
     desc: "데이터사이언스파트 1:1 상담 30분 · 상담 완료 시 사은품" },
   { id: "cchat", fl: 18, zone: "lounge", kind: "link", go: "ev_cchat", ttl: "AX 커피챗", sub: "비슷한 고민을 나누고 다음 한 걸음 찾기", who: "", tm: "",   /* v4.13 ⓛ 시작 시각 미정(사용자 260922) · 시각을 앱에 두지 않는다 */
@@ -343,6 +343,6 @@ var DEFAULT_NOTICES = [
 
 /* ════════════════ v10 신규 데이터 · 기획서 v2(260822 1층 반영) ════════════════ */
 /* A. 과제상담 예약 · 슬롯은 하드코딩 금지, 콘솔 설정값으로 생성 (v5 p23~25) */
-var RESV_CONF = { start: "09:30", end: "16:30", step: 30, lunch: "12:00", lunchEnd: "13:00" };
+var RESV_CONF = { start: "09:30", end: "16:00", step: 30, lunch: "12:00", lunchEnd: "13:00" };   /* v7.52 (사용자 확정 261016 미팅 개편) 끝 16:00 · 서버 라운지_상담종료와 같은 값 · 옛 16:30 */
 /* v4.16 옛 상담 목업 8건(m1~m8) 삭제 · 기기에 저장된 상담 목록이 없으면 빈 배열이 기본값이다(서버 연결 시 resv 값으로 바뀐다) */
 

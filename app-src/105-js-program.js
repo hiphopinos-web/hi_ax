@@ -326,12 +326,12 @@ function zoneExHtml(z) {
 /* v5.65 18F = AX 커피챗 하나(「라운지」 표기 없음) · 1F AX LOUNGE 와 같은 구역 상세(zone_d) 틀 · 한 줄 = 질문 3줄(q) · 시간은 매칭 후 앱에서 안내(운영 시간 확정 문서 없음)
    상태 · 주 버튼 = zoneLive cchat(옛 프로그램 탭 18F 줄 ccSub · 옛 상세 progDetail 신청 전 분기를 옮겼다) · 신청한 뒤 「내 신청」 = 프로그램 상세(sess_d · 매칭 · 취소) */
 var FLOOR18 = [
-  { id: "cchat", grp: "", sign: "AX COFFEE CHAT", hdr: "AX 커피챗", kor: "비슷한 고민을 여럿이 모여 나누는 곳", fact: "", st: "",   /* v5.94 (사용자 결정 261006) 커피챗은 스탬프 없음 */
-    q: ["내 업무에 AI를 쓸 수 있을까?", "나와 비슷한 고민을 하는 사람이 있을까?", "어떻게 시작하지?"],
-    todo: ["멘토와 한 테이블에서 아이디어를 나눠요"],   /* v6.83 (사용자 261009 묶음 11) 「아이디어 한 줄을 내고 커피챗 희망을 남겨요」 덜기 = 사실 표 「지금 · 아이디어 한 줄 쓰고 희망」 · 주 버튼과 같은 말 */
-    gd: ["키우고 싶은 업무를 1:1로 상담해요", "1F AX 라운지 보기", "lounge"], gl: "1:1 상담은 1F AX 라운지",
+  { id: "cchat", grp: "", sign: "AX COFFEE CHAT", hdr: "AX 커피챗", kor: "AI로 바꾸고 싶은 내 업무를 1:1로 이야기하는 곳", fact: "", st: "",   /* v7.52 (사용자 확정 261016 미팅 개편) 1:1 · 20분 · TABLE A · B · 옛 「비슷한 고민을 여럿이 모여 나누는 곳」 */   /* v5.94 (사용자 결정 261006) 커피챗은 스탬프 없음 */
+    q: ["내 업무에 AI를 쓸 수 있을까?", "내 업무 중 무엇부터 바꿀까?", "어떻게 시작하지?"],
+    todo: ["호스트와 1:1로 이야기해요"],   /* v6.83 (사용자 261009 묶음 11) 「아이디어 한 줄을 내고 커피챗 희망을 남겨요」 덜기 = 사실 표 「지금 · 아이디어 한 줄 쓰고 희망」 · 주 버튼과 같은 말 */
+    gd: ["DAP 과제 상담은 1F AX 라운지", "1F AX 라운지 보기", "lounge"], gl: "DAP 과제 상담은 1F AX 라운지",
     gift: "",   /* 사은품 표 값 = gift + APPLY_GIFT · v6.83 (사용자 261009 묶음 16 · 보충 2) 사실 표 = 지금 · 시간 · 장소 · 사은품만 · 진행 · 선정 · 알림 · 방식 = 「참여 전 확인」 상자(17F 강연 「스탬프 받으려면」과 같은 부품 needBoxHtml) · 옛 접힘 표 chk(진행 · 시간 · 선정 · 알림) 삭제 */
-    need: ["참여하려면", [["time", "시간 고르고 상담 내용 쓰기", "운영진이 선정해 알려 드려요"], ["talk", "주제 소개 → 고민 나누기 → 다음 한 걸음", "소규모 · 회차 20분"]]] }   /* v7.39 (사용자 261016) 아이디어 한 줄 조건 없음 · 첫 줄 = 신청 전 「지금」과 같은 말(사실 표에서 지금 줄을 뺀다) */
+    need: ["참여하려면", [["time", "시간 고르고 상담 내용 쓰기", "신청 순서대로 시간을 정해 알려 드려요"], ["talk", "주제 소개 → 고민 나누기 → 다음 한 걸음", "1:1 · 20분"]]] }   /* v7.39 (사용자 261016) 아이디어 한 줄 조건 없음 · 첫 줄 = 신청 전 「지금」과 같은 말(사실 표에서 지금 줄을 뺀다) */
 ];
 function zoneById(id) { return FLOOR1.concat(FLOOR18).filter(function (z) { return z.id === id; })[0] || null; }
 function zoneOpen(id) { PROG.zone = id; PROG.zchk = false; App.go("zone_d"); }
@@ -348,6 +348,7 @@ function cchatState() {
   if (st === "over") return { t: "선정 마감", mine: true, chip: "마감", cc: "off" };
   if (st === "wait") return { t: "신청 접수 · 선정되면 알림", mine: true, chip: "선정 전", cc: "" };
   if (cchatOver() || cchatClosed() || ccAllOff()) return null;
+  var w = ccWaitTxt(); if (w) return { t: w, mine: false, wait: w };   /* v7.52 신청 시작 전(sync ccOpen) · 카드 주 버튼 꺼짐 · 신청 점(applyOpenN) 없음 */
   return { t: "시간 고르고 상담 내용 쓰기", mine: false };
 }
 /* 홈 나의 일정 · 신청 전에만(신청한 뒤에는 나의 일정 커피챗 줄이 맡는다) · 장소는 아래 줄 */
@@ -363,7 +364,7 @@ function resvDur(r) { var m = resvMin(r); return m % 60 ? m + "분" : m / 60 + "
 function resvRng(r) { if (!r || !r.slot) return ""; return r.rng || r.slot + "~" + hm2(t2m(r.slot) + resvMin(r)); }
 function resvPlace(r) { return (r && r.place || "1F AX 라운지") + (r && +r.seat > 0 ? " · 상담석 " + r.seat : ""); }
 /* 신청 전이고 지금 신청할 수 있는 곳 수(세그먼트 주황 점) · v7.39 = 커피챗만(라운지 앱 신청 없음) */
-function applyOpenN() { var c = cchatState(); return c && !c.mine ? 1 : 0; }
+function applyOpenN() { var c = cchatState(); return c && !c.mine && !c.wait ? 1 : 0; }   /* v7.52 신청 시작 전 = 점 없음 */
 /* ═══ v5.85 프로그램 › 참여하기 칸 = 17F AWS · 17F MS · 18F 커피챗(v7.39 라운지 카드 없음) + 맨 아래 묶음 한 줄 + 10F 줄(사전 신청자 · 테스트 사번만) ═══
    카드 = 층 점 글자 + 이름 + (상태 칩) → 한 줄 → 사실 표 → 주 버튼 + 약한 「자세히 보기」(구역 상세 시트)
    v7.39 (사용자 261016 계획서 0-2-4) 사실 표 「스탬프」 줄 = 같은 문법 목록(「· 무엇을 하면 몇 개」 · 무채색 점 · 둘째 줄 내어쓰기) · 값이 배열이면 목록 */
@@ -385,8 +386,8 @@ function ccStampRows() { return [S.get("stamps", []).indexOf("p5") >= 0 ? "아�
 function applyCchatHtml() {
   var s = cchatState(); if (!s) return "";
   var z = zoneById("cchat");
-  var kv = (s.mine ? [["지금", s.t]] : []).concat([["시간", CCHAT_HOURS + " · 회차 20분"]], s.mine ? [] : [["신청", "시간 고르고 상담 내용 쓰기 › 선정되면 상담"]], [["스탬프", ccStampRows()], ["사은품", APPLY_GIFT]]);
-  return applyCardHtml({ k: "cchat", nm: "AX 커피챗", fl: 18, mine: s.mine, chip: s.chip, chipC: s.cc, kor: z.kor, kv: kv, btn: s.mine ? ["내 커피챗", "progOpen('cchat')"] : ["커피챗 신청하기", "ccApplyGo()", "ccApplyBtn"], more: "cchatGo()" });
+  var kv = (s.mine ? [["지금", s.t]] : []).concat([["시간", CCHAT_HOURS + " · 1:1 20분"]], s.mine ? [] : [["신청", "시간 고르고 상담 내용 쓰기 › 신청 순서대로 시간 배정"]], [["스탬프", ccStampRows()], ["사은품", APPLY_GIFT]]);
+  return applyCardHtml({ k: "cchat", nm: "AX 커피챗", fl: 18, mine: s.mine, chip: s.chip, chipC: s.cc, kor: z.kor, kv: kv, btn: s.mine ? ["내 커피챗", "progOpen('cchat')"] : s.wait ? [s.wait, "", "ccApplyBtn", true] : ["커피챗 신청하기", "ccApplyGo()", "ccApplyBtn"], more: "cchatGo()" });   /* v7.52 신청 시작 전 = 꺼진 단추 「10/21(수) 00:00부터 신청」 */
 }
 /* 10F 실습형 세션 줄 = 사전 신청자(10F 명단 · tenMine)와 테스트 사번(testMode · 310555 · 데모)에게만 · 일반 직원에게는 없다(사용자 261006) */
 function applyTenShow() { return !!tenMine() || testMode(); }
@@ -444,7 +445,7 @@ function zoneStampHtml(z) {
 function zoneLive(z) {
   var o = { fact: z.fact, chip: null, kv: null, btn: z.btn && !(z.btnOff && z.btnOff()) ? z.btn : null };   /* v5.90 btnOff = 입구 숨김(아이디어 사전 오픈 OFF · 행사 전) */
   if (z.id === "lounge") {
-    /* v7.39 (사용자 261016 계획서 3-2 · 3-3) 전면 사전 신청 · 앱 신청 없음 · 사전 신청자 = 내 상담(시간 · 상담석) · 그 밖 = 사실만(「09:30~16:30 · 사전 신청자 상담」 · 신청 단추 없음) */
+    /* v7.39 (사용자 261016 계획서 3-2 · 3-3) 전면 사전 신청 · 앱 신청 없음 · 사전 신청자 = 내 상담(시간 · 상담석) · 그 밖 = 사실만(「09:30~16:00 · 사전 신청자 상담」 · 신청 단추 없음 · v7.52 RESV_CONF.end 16:00) */
     var r = loungeMine(), dn = r && r.status === "done", rg = resvRng(r), rc = resvConf();
     o.tm = rc.start + "~" + rc.end;
     o.fact = r ? (dn ? "상담 완료" : (rg || "시간 안내 예정") + " · 내 상담") : o.tm + " · 사전 신청자 상담";
@@ -455,12 +456,13 @@ function zoneLive(z) {
     /* v7.39 (사용자 261016 계획서 0-2) 시간 고르고 상담 내용 쓰기 → 운영진 선정 · 아이디어 한 줄 조건 없음 · 신청 뒤 네 상태(선정 전 · 선정 · 마감 · 완료) */
     var st = cchatSt(), c = S.get("cchat", null) || {}, ov = !st && cchatOver(), cl = !st && !ov && (cchatClosed() || ccAllOff());
     var cnow = st === "done" ? "상담 완료" : st === "pick" ? "선정" + (c.table ? " · TABLE " + c.table : "") : st === "over" ? "선정 마감" : st === "wait" ? "신청 접수 · 선정되면 알림" : ov ? "오늘 커피챗은 끝났어요" : cl ? "신청 마감" : "시간 고르고 상담 내용 쓰기";
-    o.tm = st === "pick" && c.round ? "10월 26일 " + c.round : CCHAT_HOURS + " · 회차 20분";
+    o.tm = st === "pick" && c.round ? "10월 26일 " + c.round : CCHAT_HOURS + " · 1:1 20분";
     o.tm0 = o.tm;
-    o.fact = st === "pick" && c.round ? cnow.replace("선정", "선정 · " + c.round) : st || ov || cl ? cnow : CCHAT_HOURS + " · 회차 20분";
+    o.fact = st === "pick" && c.round ? cnow.replace("선정", "선정 · " + c.round) : st || ov || cl ? cnow : CCHAT_HOURS + " · 1:1 20분";
     o.chip = st === "done" ? ["완료", "ok"] : st === "pick" ? ["선정", ""] : st === "over" ? ["마감", "off"] : st === "wait" ? ["선정 전", ""] : ov ? ["끝", "off"] : cl ? ["마감", "off"] : null;
     o.kv = [["지금", cnow], ["장소", "18F"]];
-    o.btn = st ? ["내 커피챗", "progOpen('cchat')"] : ov ? ["오늘 커피챗은 끝났어요", "", "", true] : cl ? ["신청 마감", "", "", true] : ["커피챗 신청하기", "ccApplyGo()", "ccApplyBtn"];
+    var cw = !st && !ov && !cl ? ccWaitTxt() : "";   /* v7.52 신청 시작 전 */
+    o.btn = st ? ["내 커피챗", "progOpen('cchat')"] : ov ? ["오늘 커피챗은 끝났어요", "", "", true] : cl ? ["신청 마감", "", "", true] : cw ? [cw, "", "ccApplyBtn", true] : ["커피챗 신청하기", "ccApplyGo()", "ccApplyBtn"];
   } else if (z.id === "event") {
     o.kv = [["운영 시간", "08:30~17:00"], ["선착순 오전", "커피 50잔"], ["선착순 14:00", "쿠키 세트 50세트 · 커피 50잔"], ["받는 조건", "포토부스 사진 촬영"], ["받는 곳", "1F EVENT 포토부스 앞"], ["마감", "소진 시까지"]];   /* v7.48 (사용자 261016) 선착순 두 줄 · 오전은 시작 시각 없이 */   /* v5.05 포토부스 대기 없음 · 운영 시간만 */
   }

@@ -97,6 +97,7 @@ function beSync(after) {
     if ("lkcond" in res) sv9("lkcond", res.lkcond ? 1 : 0);
     if ("idea" in res) sv9("idea_pub", res.idea && typeof res.idea === "object" ? res.idea : null);
     if (res.lng && typeof res.lng === "object" && "end" in res.lng) sv9("lng_end", String(res.lng.end || ""));
+    if ("ccOpen" in res) sv9("cc_open", String(res.ccOpen || ""));   /* v7.52 커피챗 신청 시작(빈칸 = 문 없음 · 클로즈 베타) · 카드 주 버튼 「10/21(수) 00:00부터 신청」 */
     if ("cchatOut" in res && !!res.cchatOut !== S.get("cchat_out", false)) S.set("cchat_out", !!res.cchatOut);   /* v4.47 GAS 가 생기면 */
     if ("betaForm" in res && (res.betaForm || "") !== S.get("beta_form", "")) S.set("beta_form", res.betaForm || "");   /* v4.55 클로즈 베타 배너 링크(없으면 빈 문자열) */
     if (res.crowd) crowdStore(res.crowd);   /* v4.71 혼잡 제보(새 서버만 보낸다 · 없으면 「제보 없음」 그대로) */
@@ -572,7 +573,7 @@ function pushSheetWait(ctx, opt, n) {
 var PUSH_T = { photo: "차례가 되면 알려 드려요", cchat: "선정되면 알려 드려요", crowd: "풀리면 알려 드려요", dap: "승인되면 알려 드려요", first: "알림을 켤까요?" };   /* v5.83 dap = DAP 과제상담 신청 직후(가치 순간 · 최초 진입 가볍게) */
 function pushExHtml(ctx, opt) {
   var t = "포토부스 입장하세요", b = "1F · " + (opt.no || 14) + "번 · 10분 안에 입장";   /* v4.78 A10 실제 푸시 문구와 같게(제목에 주제어) */
-  if (ctx === "cchat" || ctx === "first") { t = "커피챗에 선정됐어요"; b = "18F · 15:00 · TABLE 3"; }   /* v5.05 포토부스 대기 폐지면 처음 안내 예시도 커피챗 */
+  if (ctx === "cchat" || ctx === "first") { t = "커피챗에 선정됐어요"; b = "18F · 15:00 · TABLE A"; }   /* v7.52 테이블 A · B */   /* v5.05 포토부스 대기 폐지면 처음 안내 예시도 커피챗 */
   if (ctx === "dap") { t = "AX 라운지 시간 안내"; b = "14:20~14:40 · 1F AX 라운지"; }   /* v5.83 실제 알림(notifyUser)과 같은 말 · v7.39 사전 신청 시간 안내(시간 · 상담석) */
   if (ctx === "kit") { t = "기념품 옷 수령 안내"; b = kitStaff(kitMy()) ? "수령 방법 안내" : "10/26(월) 08:00부터 · 1F 주차장 체크인존"; }   /* 261006 키트 사이즈 정한 직후 · 261008 스태프 = 수령 방법 안내 */
   if (ctx === "crowd") { t = opt.tgt === "lobby" ? "1F 로비 혼잡이 풀렸어요" : "엘리베이터 혼잡이 풀렸어요"; b = (opt.tgt === "lobby" ? "1F 로비" : "1F 승강기 홀") + " · 15:07"; }
