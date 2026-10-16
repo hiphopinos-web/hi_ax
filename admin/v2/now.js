@@ -24,18 +24,21 @@ function median(a){ if(!a.length) return 0; a=a.slice().sort(function(x,y){ retu
 function nowSignals(){
   var b=S.data.nb; if(!b||!b.ok) return [];
   var sc=b.scan||{}, m10=num(sc.m10), bad=num(sc.bad10), rate=m10?Math.round(bad*1000/m10)/10:0;
-  var q=num(b.ck&&b.ck.wait)+num(b.resv&&b.resv.wait)+num(b.cchat&&b.cchat.wait);
+  var q=num(b.resv&&b.resv.wait)+num(b.cchat&&b.cchat.wait);
   var ms=median(NET.slice(-20).map(function(x){ return x.ms; })), fails=NET.slice(-20).filter(function(x){ return !x.ok; }).length;
   var al=b.alarm||{}, pf=al.pushFail!=null?num(al.pushFail):num(b.push&&b.push.today&&b.push.today.fail), pe=al.pushFailWhy||(b.push&&b.push.err);
   var lv=function(v,w,x){ return v>=x?"bad":v>=w?"warn":"ok"; };
   return [
     { l:"스캔 실패", v:String(rate), u:"%", st:m10<5?"ok":lv(rate,10,25), s:"최근 10분 "+n0(m10)+"건", go:"go('log')" },
-    { l:"대기 줄", v:n0(q), u:"명", st:lv(q,10,30), s:"체크인 "+n0(b.ck&&b.ck.wait)+" · 상담 "+n0(b.resv&&b.resv.wait)+" · 커피챗 "+n0(b.cchat&&b.cchat.wait), go:"go('inbox')" },
+    { l:"대기 줄", v:n0(q), u:"명", st:lv(q,10,30), s:"라운지 신청 "+n0(b.resv&&b.resv.wait)+" · 커피챗 희망 "+n0(b.cchat&&b.cchat.wait), go:"go('inbox')" },
     { l:"서버 지연", v:(ms/1000).toFixed(2), u:"초", st:fails>=3?"bad":lv(ms,1500,3000), s:"콘솔 왕복 중앙값"+(fails?" · 실패 "+fails:""), go:"" },
     { l:"푸시 실패", v:n0(pf), u:"건", st:pe?"bad":pf?"warn":"ok", s:pe?"오류 · "+String(pe).slice(0,20):"오늘 발송 "+n0(b.push&&b.push.today&&b.push.today.jobs)+"건", go:"go('notify')" }
   ];
 }
 var STN={ ok:"정상", warn:"주의", bad:"위험" };
+/* 스탬프 종류 순서 · 이름(서버 now_board st.kind 의 id 로 사람 수를 가져온다) · 261016 ck(옛 사전등록 체크인) 뺌 · p10 · p10h(10F 실습) 넣음 */
+var NB_KIND=[["lg","최초 로그인"],["qz","AX 퀴즈"],["p4","미니 게임"],["p5","아이디어 한 줄"],["p2","AX PLAY"],["st","계단 이용"],["p3","17F 강연(2개)"],["p3h","17F 강연 한쪽(1개)"],["p10","10F 실습(2개)"],["p10h","10F 실습 한쪽(1개)"],["ln","AX 라운지 완료(2개)"],["cc","18F 커피챗 완료(1개)"],["sv","설문 참여"]];
+function nbKinds(kinds){ var m={}; kinds.forEach(function(k){ m[k.id]=k; }); return NB_KIND.map(function(x){ var k=m[x[0]]; return { id:x[0], n:x[1], c:k?k.c:null }; }); }
 SCREENS.now={
   title:"지금", desc:"이상 신호 · 지금 단계 · 접속 · 스탬프 · 경품 · 스태프 요청",
   need:function(){ return [{ k:"rst", a:"roll_stat", ttl:60000 },{ k:"sreqo", a:"sreq_list", p:{ st:"open", n:20 }, ttl:15000 },{ k:"inv", a:"inv_state", ttl:60000 },{ k:"kss", a:"kit_size_state", ttl:60000 }]; },
@@ -73,10 +76,11 @@ function nwAcc(b){
 }
 function nwStamp(b){
   var st=b.st||{}, d=st.d||[], tot=d.reduce(function(a,x){ return a+num(x); },0)||1, mx=Math.max.apply(null,[1].concat(d.map(num)));
-  var kinds=st.kind&&st.kind.length?st.kind:null, body;   /* 서버 계약 3-1 st.kind = [{ id, n 이름, c 사람 수 }] */
+  var kinds=st.kind&&st.kind.length?nbKinds(st.kind):null, body, miss=kinds?kinds.filter(function(k){ return k.c==null; }):[];   /* 서버 계약 3-1 st.kind = [{ id, n 이름, c 사람 수 }] */
   if(kinds&&kinds.length){
     var km=Math.max.apply(null,[1].concat(kinds.map(function(k){ return num(k.c); })));
-    body='<table class="tb"><thead><tr><th>스탬프</th><th class="n" style="width:80px">발행</th><th class="barc" style="width:40%"></th></tr></thead><tbody>'+kinds.map(function(k){ return '<tr><td>'+esc(k.n||k.id)+'</td><td class="n">'+n0(k.c)+'</td><td class="barc"><div class="bar"><i style="width:'+Math.round(num(k.c)*100/km)+'%"></i></div></td></tr>'; }).join("")+'</tbody></table>';
+    body='<table class="tb"><thead><tr><th>스탬프</th><th class="n" style="width:80px">발행</th><th class="barc" style="width:40%"></th></tr></thead><tbody>'+kinds.map(function(k){ return '<tr><td>'+esc(k.n||k.id)+'</td><td class="n">'+(k.c==null?'<span class="cap">-</span>':n0(k.c))+'</td><td class="barc"><div class="bar"><i style="width:'+Math.round(num(k.c)*100/km)+'%"></i></div></td></tr>'; }).join("")+'</tbody></table>'+
+      (miss.length?'<div class="mt">'+laterH(miss.map(function(k){ return k.n; }).join(" · ")+" 발행 수")+'</div>':'');
   } else {
     body='<table class="tb"><thead><tr><th>모은 개수</th><th class="n" style="width:80px">사람</th><th class="barc" style="width:45%"></th></tr></thead><tbody>'+[1,2,3,4,5,6].map(function(i){ return '<tr><td>'+i+'개'+(i===3?' · 룰렛 자격':i===6?' · 상한':'')+'</td><td class="n">'+n0(d[i])+'</td><td class="barc"><div class="bar"><i style="width:'+Math.round(num(d[i])*100/mx)+'%"></i></div></td></tr>'; }).join("")+'</tbody></table>'+
       '<div class="mt">'+laterH("종류별 발행 수(01 최초 로그인 ~ 08 설문)")+'</div>';
@@ -88,7 +92,7 @@ function nwPrize(b){
   var fx=b.fcfs||{}, st=b.st||{}, inv=S.data.inv, rl="";
   if(inv&&inv.ok){ var r=(inv.items||[]).filter(function(x){ return x.src==="roul"; }), lf=r.reduce(function(a,x){ return a+num(x.left); },0), q=r.reduce(function(a,x){ return a+num(x.q); },0); rl=n0(lf)+'<small> / '+n0(q)+'</small>'; }
   return '<div class="card"><h2>경품 <span class="cap">남은 수</span><span class="r"><button class="btn sm" type="button" onclick="go(\'prize\')">경품 · 재고</button></span></h2>'+
-    rowH("선착순 가습기","지급 "+n0(fx.got)+" · 17:00 마감"+(fx.on?"":" · 꺼짐"),'<span class="big">'+n0(fx.left)+'<small> / '+n0(fx.cap)+'</small></span>')+
+    rowH("선착순 가습기","지급 "+n0(fx.got)+" · 달성순 · 17:00 마감"+(fx.on?"":" · 꺼짐"),'<span class="big">'+n0(fx.left)+'<small> / '+n0(fx.cap)+'</small></span>')+
     rowH("룰렛","사용 "+n0(st.used)+"명 · 소진 안내 "+(b.rout?"켜짐":"꺼짐"),(rl?'<span class="big">'+rl+'</span>':'')+(b.rout?tag("소진 안내","warn"):tag("진행 중","ok")))+
     rowH("행운권","가진 사람 "+n0(st.holders)+"명",'<span class="big">'+n0(st.tickets)+'<small> 장</small></span>')+'</div>';
 }
@@ -107,15 +111,17 @@ function nwFocus(b, ph){
       rowH("추첨 화면 연결","17F 노트북 · 15초 안 신호",dr==null?stt("warn","연결 없음"):dr>15?stt("warn",n0(dr)+"초 전"):stt("ok","연결"))+
       rowH("읽기 전용","행사 중에는 꺼짐",b.ro?stt("bad","켜짐"):stt("ok","꺼짐"));
   } else if(id==="ck"){ t="체크인존";
-    var ck=b.ck||{}, k=S.data.kss, sz="";
+    var iv=S.data.inv, kt=iv&&iv.ok?iv.kit||{}:{}, fq=b.fcfs||{}, k=S.data.kss, sz="";
     if(k&&k.ok){ sz=(k.sizes||[]).map(function(z){ var l=num(k.left&&k.left[z]); return z+" "+n0(l); }).join(" · "); }
-    h=rowH("접수 대기",ck.on?"창구 열림":"창구 꺼짐",'<span class="big">'+n0(ck.wait)+'<small> 명</small></span>')+rowH("호출 중 · 받음","번호표 "+n0(ck.issued)+"장",'<span class="big">'+n0(ck.call)+'<small> · '+n0(ck.done)+'</small></span>')+
-      rowH("사이즈 남음",sz||"-","")+'<div class="mt"><button class="btn sm" type="button" onclick="go(\'inbox\',\'ck\')">체크인존 열기</button></div>';
+    h=rowH("키트 지급","사전 신청 "+n0(kt.pre)+"명 중",'<span class="big">'+n0(kt.givenPre)+'<small> 명</small></span>')+
+      rowH("스태프 옷 지급","스태프 의류 명단",'<span class="big">'+(kt.givenStaff==null?"-":n0(kt.givenStaff))+'<small> 명</small></span>')+
+      rowH("선착순 참여상","남음 "+n0(fq.left)+" · 달성순 · 17:00 마감",'<span class="big">'+n0(fq.got)+'<small> 지급</small></span>')+
+      rowH("사이즈 남음",sz||"-","")+'<div class="mt"><button class="btn sm" type="button" onclick="go(\'inbox\',\'ck\')">체크인존 지급 현황</button></div>';
   } else if(id==="am"){ t="오전 · 라운지 · 룰렛";
     var rv=b.resv||{}, st=b.st||{};
     h=rowH("AX 라운지","신청 "+n0(rv.wait)+" · 승인 "+n0(rv.ok)+" · 체크인 "+n0(rv["in"])+" · 완료 "+n0(rv.done),'<button class="btn sm pri" type="button" onclick="go(\'inbox\',\'lounge\')">배치판</button>')+
       rowH("룰렛","자격 "+n0(st.elig)+"명 중 사용",'<span class="big">'+n0(st.used)+'<small> 명</small></span>')+
-      rowH("선착순 가습기","10:30부터 · 6개 달성자",'<span class="big">'+n0(b.fcfs&&b.fcfs.got)+'<small> 지급</small></span>');
+      rowH("선착순 가습기","10:30부터 · 달성순 · 17:00 마감",'<span class="big">'+n0(b.fcfs&&b.fcfs.got)+'<small> 지급</small></span>');
   } else if(id==="pm"){ t="오후 · 커피챗 · 출석 · 설문";
     var cc=b.cchat||{}, at=b.att||{};
     h=rowH("18F 커피챗","희망 "+n0(cc.wait)+" · 선정 "+n0(cc.match)+" · 참석 "+n0(cc["in"]),'<button class="btn sm pri" type="button" onclick="go(\'inbox\',\'cchat\')">선정</button>')+

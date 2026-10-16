@@ -1,12 +1,12 @@
-/* AXF CONTROL v2 · 재고 장부 · E 창구 · 체크인 번호 (261016 3단계 · 지금 콘솔에만 있던 재고 조정 · 입고 · E 창구 기록 · 번호표 명단)
+/* AXF CONTROL v2 · 재고 장부 · 사이즈 교환 · 체크인 번호 (261016 3단계 · 지금 콘솔에만 있던 재고 조정 · 입고 · 교환 기록 · 체크인 번호 명단 · 261016 창구 글자 걷음)
  * 경품 · 재고 › 재고 장부 = inv_state 품목 표(공통 명단 표) · 줄 누르면 서랍(남은 수 · 맞추기 · 총수량 · 입고 · 누가 받았나 inv_list · 기록 되돌리기 inv_undo)
  *   남은 수 맞추기 = inv_adjust(id · cnt · why · memo) · 총수량 · 입고 = inv_cfg(id · q · memo) · 확인 창만(PIN 없음 · 콘솔 사람 입장이면 서버가 받는다)
- * 처리함 › 체크인존 = E 창구 사이즈 교환(inv_swap · 되돌리기 inv_undo) · 교환 기록(inv_state swap) · 명단 밖 지급(inv_list k1 · 명단 밖 줄)
- *   체크인 번호 = ck_no_state(세션별 현황) · 번호 매기기 ck_no_assign(확인 문구 「번호매기기」) · 번호표 명단 ck_no_list(공통 명단 표 · 엑셀)
+ * 처리함 › 체크인존 = 사이즈 교환(inv_swap · 되돌리기 inv_undo) · 교환 기록(inv_state swap) · 명단 밖 지급(inv_list k1 · 명단 밖 줄)
+ *   체크인 번호 = ck_no_state(세션별 현황) · 번호 매기기 ck_no_assign(확인 문구 「번호매기기」) · 체크인 번호 명단 ck_no_list(공통 명단 표 · 엑셀)
  * 금액 표시 없음 · 사번 · 이름만(부문 통계 없음). */
 var IV={ g:null, lat:{}, list:{}, gsw:null, gout:null, gno:null };
 var IV_KIND={ give:"나감", box:"박스 개봉", chk:"체크인", adj:"남은 수 맞추기", cfg:"품목 편집", "void":"되돌림", auto:"자동", swap:"사이즈 교환" };
-var IV_PLACE={ swap:"E 창구 교환", roulette:"룰렛", gate:"체크인존", box:"박스", console:"콘솔", lucky:"행운권", fin:"참여상 추첨", type:"타자왕", dap:"상담", fcfs:"선착순", lk7:"7등 굿즈", idea:"아이디어왕" };
+var IV_PLACE={ swap:"사이즈 교환", roulette:"룰렛", gate:"체크인존", box:"박스", console:"콘솔", lucky:"행운권", fin:"참여상 추첨", type:"타자왕", dap:"상담", fcfs:"선착순", lk7:"7등 굿즈", idea:"아이디어왕" };
 var IV_WHY0=["분실","파손","추가 입고","세기 오류","기타"];
 var KS4=["SS","L","2XL","3XL"], KS4_AB={ SS:"A", L:"B", "2XL":"C", "3XL":"D" };
 function ivWhy(r){ r=r||{}; return { dup:"이 사번은 이미 받았습니다", notfound:"품목이나 기록을 찾지 못했습니다", already:"이미 되돌린 기록입니다", kind:"조정 · 편집 기록은 되돌리지 않습니다(다시 맞춥니다)", noq:"총수량이 정해진 품목만 맞춥니다", memo:"사유를 2~60자로 넣습니다", same:"바뀐 것이 없습니다", drawn:"참여상 추첨 뒤라 룰렛 · 가습기 수량은 바꾸지 않습니다", q:"총수량을 확인합니다", size:"두 사이즈를 다르게 고릅니다", word:"확인 문구가 다릅니다" }[r.reason]||why(r); }
@@ -81,10 +81,10 @@ function ivUndoAsk(rid, id){
     done:function(r){ toast("되돌렸습니다 · "+(r.n||(it&&it.n)||"")); delete IV.list[id]; reload(["inv"]); if(id==="k1") ckExtra(); setTimeout(function(){ if(DRW.k==="inv:"+id) ivOpen(id); },900); } });
 }
 
-/* ── 처리함 › 체크인존 · E 창구(사이즈 교환 · 명단 밖) · 체크인 번호 ── */
+/* ── 처리함 › 체크인존 · 사이즈 교환 · 명단 밖 지급 · 체크인 번호 ── */
 function ckExtraHtml(){
-  return '<div class="card mt"><h2>E 창구 · 사이즈 교환 <span class="cap" id="swCap"></span><span class="r"><button class="btn sm pri" type="button" onclick="swAsk()">교환 기록</button></span></h2><div id="swL"></div></div>'+
-    '<div class="card mt"><h2>E 창구 · 명단 밖 지급 <span class="cap">여유 키트 · 체크인존 QR</span></h2><div id="outL"></div></div>'+
+  return '<div class="card mt"><h2>사이즈 교환 <span class="cap" id="swCap"></span><span class="r"><button class="btn sm pri" type="button" onclick="swAsk()">교환 기록</button></span></h2><div id="swL"></div></div>'+
+    '<div class="card mt"><h2>명단 밖 지급 <span class="cap">여유 키트 · 재고 장부 기록</span></h2><div id="outL"></div></div>'+
     '<div class="card mt"><h2>체크인 번호 <span class="cap">10F 사전 신청자 · 세션별 가나다순 고정</span></h2><div id="cnK"></div><div id="cnL" class="mt"></div></div>';
 }
 function ckExtra(){ delete IV.list.k1; ivListLoad("k1"); }
@@ -92,16 +92,16 @@ function ckExtraPaint(){
   /* 교환 기록 · inv_state swap */
   var iv=S.data.inv, sw=iv&&iv.ok?iv.swap:null, net=sw?KS4.map(function(z){ var v=num((sw.net||{})[z]); return KS4_AB[z]+"("+z+") "+(v>0?"+":"")+v; }).join(" · "):"";
   if(el("swCap")) el("swCap").textContent=sw?"지금까지 "+n0(sw.n)+"건 · 현물 "+net:"";
-  if(!IV.gsw) IV.gsw=XG.make({ id:"swap", file:"E 창구 교환 기록", key:function(r){ return r.rid; }, sort:{ k:"t", d:-1 },
+  if(!IV.gsw) IV.gsw=XG.make({ id:"swap", file:"사이즈 교환 기록", key:function(r){ return r.rid; }, sort:{ k:"t", d:-1 },
     cols:[{ k:"t", t:"시각", type:"date", w:100 },{ k:"emp", t:"사번", w:84 },{ k:"name", t:"이름", w:90 },{ k:"why", t:"교환", w:200, v:function(r){ return String(r.why||"").replace(/^교환 /,""); } },{ k:"by", t:"처리", w:90 },
       { t:"", w:96, act:function(r){ return '<button class="btn sm" type="button" onclick="ivUndoAsk(\''+jq(r.rid)+'\',\'k1\')">되돌리기</button>'; } }],
     src:{ a:"inv_state", pick:function(res){ return (res.swap&&res.swap.rows)||[]; } }, empty:"교환 기록이 없습니다", h:300 });
-  var gt=dataGate("inv","교환 기록"); IV.gsw.gate=gt?gt:(iv&&iv.ok&&!sw?laterH("E 창구 교환 기록"):"");
+  var gt=dataGate("inv","교환 기록"); IV.gsw.gate=gt?gt:(iv&&iv.ok&&!sw?laterH("사이즈 교환 기록"):"");
   XG.set(IV.gsw, gt?null:(sw?swRows(sw.rows||[]):[]), el("swL"));
   /* 명단 밖 지급 · inv_list k1 */
   ivListLoad("k1");
   var L=IV.list.k1;
-  if(!IV.gout) IV.gout=XG.make({ id:"kout", file:"E 창구 명단 밖 지급", key:function(r){ return r.rid||(r.emp+r.t); }, sort:{ k:"t", d:-1 },
+  if(!IV.gout) IV.gout=XG.make({ id:"kout", file:"명단 밖 지급", key:function(r){ return r.rid||(r.emp+r.t); }, sort:{ k:"t", d:-1 },
     chips:[["all","전체",null],["give","지급",function(r){ return r.k==="give"&&!r.v; }],["chk","체크인만",function(r){ return r.k==="chk"; }],["v","되돌림",function(r){ return !!r.v; }]],
     cols:[{ k:"t", t:"시각", type:"date", w:100 },{ k:"emp", t:"사번", w:84 },{ k:"name", t:"이름", w:90 },{ k:"kk", t:"구분", w:100, v:function(r){ return (IV_KIND[r.k]||r.k)+(r.v?" · 되돌림":""); } },{ k:"by", t:"처리", w:90 },
       { t:"", w:96, act:function(r){ return !r.v&&r.rid&&r.k==="give"?'<button class="btn sm" type="button" onclick="ivUndoAsk(\''+jq(r.rid)+'\',\'k1\')">되돌리기</button>':''; } }],
@@ -115,7 +115,7 @@ function swWho(){ var m={}, L=IV.list.k1; if(L&&L.ok) (L.rows||[]).forEach(funct
 function outRows(rows){ return rows.filter(function(r){ return /명단 밖/.test(r.why||""); }); }
 function swAsk(){
   var op=function(id){ return '<select class="in" id="'+id+'" onchange="gateUpd()"><option value="">사이즈</option>'+KS4.map(function(z){ return '<option value="'+z+'">'+KS4_AB[z]+' ('+z+')</option>'; }).join("")+'</select>'; };
-  confirmBox({ t:"사이즈 교환을 기록할까요?", who:"E 창구 · 재고 장부에 교환 한 줄", sub:"키트 나감 · 체크인 수는 그대로 · 잘못 적으면 되돌리기",
+  confirmBox({ t:"사이즈 교환을 기록할까요?", who:"재고 장부에 교환 한 줄", sub:"키트 나감 · 체크인 수는 그대로 · 잘못 적으면 되돌리기",
     body:'<label class="fld">사번<input class="in n" id="swE" inputmode="numeric" maxlength="12" autocomplete="off" oninput="gateUpd()"></label><label class="fld">돌려받은 사이즈'+op("swF")+'</label><label class="fld">새로 가져간 사이즈'+op("swT")+'</label><label class="fld">메모(선택)<input class="in" id="swM" maxlength="40" autocomplete="off"></label>',
     focus:"swE", ok:"교환 기록", gate:function(){ var e=String((el("swE")||{}).value||"").trim(), f=(el("swF")||{}).value, t=(el("swT")||{}).value; return /^[0-9A-Za-z]{3,12}$/.test(e)&&!!f&&!!t&&f!==t; },
     run:function(){ return call("inv_swap",{ emp:String(el("swE").value).trim(), from:el("swF").value, to:el("swT").value, memo:String(el("swM").value||"").trim() }); },
@@ -138,11 +138,11 @@ function cnPaint(){
       '<div class="btns mt"><button class="btn'+(d.pend?" pri":"")+'" type="button" onclick="cnAsk()"'+(d.pend?'':' disabled')+'>'+(d.pend?(d.has?"새 "+n0(d.pend)+"명 번호 매기기":"번호 매기기 · "+n0(d.pend)+"명"):"새로 매길 사람 없음")+'</button></div>'+
       '<p class="cap mt">'+(d.at?"마지막으로 매긴 시각 "+esc(fmtD(d.at))+" · ":"")+'번호 = 세션 글자 + 세션 안 순번(A-1 · E 는 두 회차 한 줄) · 한 번 매긴 번호는 바뀌지 않습니다</p>';
   }
-  if(!IV.gno) IV.gno=XG.make({ id:"ckno", file:"체크인 번호표 명단", key:function(r){ return r.no; }, sort:{ k:"no", d:1 },
+  if(!IV.gno) IV.gno=XG.make({ id:"ckno", file:"체크인 번호 명단", key:function(r){ return r.no; }, sort:{ k:"no", d:1 },
     chips:[["all","전체",null]].concat(["A","B","C","D","E"].map(function(g){ return [g,g,function(r){ return r.seg===g; }]; })),
     cols:[{ k:"seg", t:"세션", w:60 },{ k:"no", t:"번호", w:80, v:function(r){ return r.no; }, f:function(r){ return '<b>'+esc(r.no)+'</b>'; } },{ k:"name", t:"이름", w:100 },{ k:"dept", t:"부서", w:140 },{ k:"sz", t:"사이즈", w:100, v:function(r){ return r.hum?"가습기 대체":r.sz||""; } }],
     src:{ a:"ck_no_list" }, empty:"번호를 매긴 사람이 없습니다", h:420, onRow:function(k){ rowDetail(IV.gno,k,{ title:function(r){ return r.no+" · "+(r.name||""); } }); } });
-  var L=S.data.cnl, g2=dataGate("cnl","번호표 명단"); IV.gno.gate=g2||"";
+  var L=S.data.cnl, g2=dataGate("cnl","체크인 번호 명단"); IV.gno.gate=g2||"";
   XG.set(IV.gno, g2?null:cnSort(L.rows||[]), el("cnL"));
 }
 function cnSort(rows){ return rows.map(function(r){ var o={}; for(var k in r) o[k]=r[k]; var m=String(r.no||"").match(/^([A-E])-(\d+)$/); o._k=m?m[1]+("000"+m[2]).slice(-4):String(r.no); return o; }); }

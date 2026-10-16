@@ -65,7 +65,8 @@ function ppUpBack(){ S.ui.pup=0; UP=null; render(); load(false); }
 
 /* ── 한 사람 카드(오른쪽 서랍) ── */
 var STAMP8=[["lg","01","최초 로그인"],["qz","02","AX 퀴즈"],["p4","03","미니 게임"],["p5","04","아이디어 한 줄"],["p2","05","AX PLAY"],["st","06","계단 이용"],["p3","07","프로그램 참여"],["sv","08","설문"]];
-var PROG=[["p3","17F 강연"],["cc","18F 커피챗"],["ln","1F AX 라운지"]];
+var PROG=[["p3","17F 강연"],["p10","10F 실습"],["ln","1F AX 라운지"],["cc","18F 커피챗"]];
+var PG_HALF={ p3:"p3h", p10:"p10h" };   /* 입장이나 끝 한쪽만 = 1개(서버 progUnits_ 와 같은 짝) */
 var GRANT_IDS=["p2","p3","st"];   /* 서버 REVOKE_FIELD_IDS(담당자 부여 = 현장 셋) · 앱 자동 · 설문은 앱에서만 */
 var PC={ emp:"", d:null, att:null, g:null, seq:0 };
 var RESV_TAG={ "신청":"warn", "승인":"", "체크인":"", "완료":"ok", "노쇼":"bad", "취소":"off" };
@@ -83,11 +84,11 @@ function pcDraw(){
   drwOpen(k, pcHtml(d), o);
 }
 function pcStamps(d){ return (d.stamps||[]).map(function(x){ return typeof x==="string"?{ id:x }:x; }); }
-function stName(id){ var s=STAMP8.filter(function(x){ return x[0]===id; })[0], p=PROG.filter(function(x){ return x[0]===id; })[0]; return id==="p3h"?"07 17F 강연(한쪽)":id==="ck"?"사전등록 체크인(3개)":p&&id!=="p3"?"07 "+p[1]:s?s[1]+" "+s[2]:id; }
+function stName(id){ var s=STAMP8.filter(function(x){ return x[0]===id; })[0], p=PROG.filter(function(x){ return x[0]===id; })[0]; return id==="p3h"?"07 17F 강연(한쪽)":id==="p10h"?"07 10F 실습(한쪽)":id==="ck"?"옛 사전등록 체크인(0개)":p&&id!=="p3"?"07 "+p[1]:s?s[1]+" "+s[2]:id; }
 function pcHtml(d){
   var e=d.emp, J=jq(e), L=d.lists||{}, v=d.visit||{}, st=pcStamps(d), by={};
   st.forEach(function(x){ by[x.id]=x; });
-  var pg=Math.min(2,(by.p3?2:by.p3h?1:0)+(by.ln?2:0)+(by.cc?1:0));
+  var pg=Math.min(2,(by.p3?2:by.p3h?1:0)+(by.p10?2:by.p10h?1:0)+(by.ln?2:0)+(by.cc?1:0));   /* 서버 progUnits_ 와 같은 셈 · ck = 0개 */
   var tags=(d.test||L.test?" "+tag("시험","off"):"")+(d.acct?"":" "+tag("가입 전","off"))+(L.staffApp?" "+tag("스태프"):"")+(d.ckno?" "+tag("체크인 "+d.ckno+"번"):"");
   var h=drwHead(d.name||e, [d.dept,"사번 "+e].filter(Boolean).join(" · "), tags);
   h+='<div class="btns mt">'+(d.acct?'<button class="btn" type="button" onclick="pcPush(\''+J+'\')">이 사람에게 푸시</button>':'')+(d.acct&&d.pw?'<button class="btn" type="button" onclick="pcPinAsk(\''+J+'\')">PIN 초기화</button>':'')+'<button class="btn" type="button" onclick="pcLoad()">새로 받기</button></div>';
@@ -99,22 +100,22 @@ function pcHtml(d){
     else if(!sm&&GRANT_IDS.indexOf(id)>=0&&d.acct) act='<button class="btn sm" type="button" aria-label="'+esc(no+" "+nm)+' 스탬프 부여" onclick="stGrantAsk(\''+J+'\',\''+id+'\')">부여</button>';
     var sub=sm?(pg?pg+"개":"-"):x?((x.at?fmtD(x.at):"받음")+(x.src&&x.src!=="본인"?" · "+(x.byName||x.src):"")+(rid==="p3h"?" · 한쪽":"")):"-";
     return '<div class="pc-c'+(got?" got":"")+'"><span class="no">'+esc(no)+'</span><b>'+esc(nm)+'</b><span class="cap">'+esc(sub)+'</span>'+act+'</div>'; };
-  var pgRow=function(id, nm){ var x=by[id]||(id==="p3"&&by.p3h&&!by.p3?by.p3h:null), rid=id==="p3"&&!by.p3&&by.p3h?"p3h":id, act="";
+  var pgRow=function(id, nm){ var hf=PG_HALF[id], x=by[id]||(hf&&by[hf]?by[hf]:null), rid=!by[id]&&hf&&by[hf]?hf:id, act="";
     if(x) act='<button class="btn sm dng" type="button" aria-label="07 '+esc(nm)+' 스탬프 취소" onclick="stRevokeAsk(\''+J+'\',\''+rid+'\')">취소</button>';
     else if(id==="p3"&&d.acct) act='<button class="btn sm" type="button" aria-label="07 '+esc(nm)+' 스탬프 부여" onclick="stGrantAsk(\''+J+'\',\'p3\')">부여</button>';
-    var sub=x?((x.at?fmtD(x.at):"받음")+(x.src&&x.src!=="본인"?" · "+(x.byName||x.src):"")+(rid==="p3h"?" · 한쪽":"")):"";
+    var sub=x?((x.at?fmtD(x.at):"받음")+(x.src&&x.src!=="본인"?" · "+(x.byName||x.src):"")+(rid!==id?" · 한쪽":"")):"";
     return '<div class="pc-pr'+(x?" got":"")+'"><span class="t"><b>'+esc(nm)+'</b>'+(sub?'<span class="cap">'+esc(sub)+'</span>':'')+'</span>'+(act||'<span class="cap">'+(x?"":"없음")+'</span>')+'</div>'; };
   var rl=d.roulette||{};
   h+=pcSec('스탬프 <b class="n">'+Math.min(6,num(d.n))+' / 6</b> · 행운권 <b class="n">'+n0(d.tickets||0)+'</b>장',
     '<div class="pc-st">'+STAMP8.filter(function(s){ return s[0]!=="p3"; }).map(function(s){ return cell(s[0],s[1],s[2]); }).join("")+
     /* 261016 3단계 · 07 프로그램 참여 한 칸(세부 세 줄 · 상태 · 부여 · 취소 · 규칙 한 줄) */
-    '<div class="pc-c pc-pg'+(pg?" got":"")+'"><div class="pc-pgh"><span class="no">07</span><b>프로그램 참여</b><span class="n pc-pgn">'+pg+' / 2</span></div><div class="cap">17F 강연 2 · 라운지 2 · 커피챗 1 · 최대 2개</div>'+
-      PROG.map(function(p){ return pgRow(p[0],p[1]); }).join("")+'</div>'+(by.ck?cell("ck","+3","사전등록 체크인"):"")+'</div>', 1);
+    '<div class="pc-c pc-pg'+(pg?" got":"")+'"><div class="pc-pgh"><span class="no">07</span><b>프로그램 참여</b><span class="n pc-pgn">'+pg+' / 2</span></div><div class="cap">17F 강연 · 10F 실습 · 라운지 · 커피챗, 합쳐 최대 2개</div>'+
+      PROG.map(function(p){ return pgRow(p[0],p[1]); }).join("")+'</div>'+(by.ck?cell("ck","0","옛 체크인(0개)"):"")+'</div>', 1);
   /* 경품 · 옷 */
   var fx=d.fcfs, kit=d.kit, lg=d.lounge, gr=[];
   gr.push(rowH("룰렛", rl.used?"사용 "+fmtD(rl.at)+(rl.gn?" · "+rl.gn:""):"안 씀", rl.used?'<button class="btn sm" type="button" onclick="rlUndoAsk(\''+J+'\')">사용 취소</button>':tag("안 씀","off")));
-  gr.push(rowH("선착순 가습기", !fx?"기록 없음":fx.st==="done"?"수령 "+fmtD(fx.gotAt)+(fx.gotBy?" · "+fx.gotBy:""):fx.st==="void"?"자격 취소됨":fx.st==="full"?"대기 마감":"수령 전"+(fx.rk?" · "+fx.rk+"번":""), (fx&&fx.st==="done"?tag("받음","ok"):fx?tag("받기 전","off"):"")+(typeof pcFxBtns==="function"?pcFxBtns(d):"")));
-  if(kit) gr.push(rowH(kit.pool==="staff"?"스태프 옷":"사전 신청 키트 · 옷", "사이즈 "+(kit.sz||"아직")+(kit.how==="auto"?"(자동)":"")+(kit.no?" · "+kit.no:""), kit.got?tag("받음 "+fmtD(kit.got),"ok"):kit.pool==="staff"?tag("따로 전달","off"):tag("받기 전","off")));
+  gr.push(rowH("선착순 가습기"+(fx&&fx.rk?" · 달성 "+n0(fx.rk)+"번째":""), !fx?"6개 전 · 달성순 · 17:00 마감":fx.st==="done"?"수령 "+fmtD(fx.gotAt)+(fx.gotBy?" · "+fx.gotBy:""):fx.st==="void"?"자격 취소됨":fx.st==="full"?"수량 넘음":"수령 전 · 17:00 마감", (fx&&fx.st==="done"?tag("받음","ok"):fx?tag("받기 전","off"):"")+(typeof pcFxBtns==="function"?pcFxBtns(d):"")));
+  if(kit) gr.push(rowH(kit.pool==="staff"?"스태프 옷":"사전 신청 키트 · 옷", "사이즈 "+(kit.sz||"아직")+(kit.how==="auto"?"(자동)":"")+(kit.no?" · "+kit.no:""), kit.got?tag("받음 "+fmtD(kit.got),"ok"):tag("받기 전","off")));
   if(lg) gr.push(rowH("라운지 사전 신청 "+n0(lg.rk)+"번째", lg.kit?"키트":"가습기", lg.got?tag("받음 "+fmtD(lg.got),"ok"):tag("받기 전","off")));
   h+=pcSec("경품 · 옷 수령", gr.join(""));
   /* 라운지 · 커피챗 */

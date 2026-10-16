@@ -2,14 +2,14 @@
  * 칩 = 활동 기록 · 급한 단추 · 서버 상태 · 화면 주소 · 스태프 코드
  * 활동 기록 = act_log(오늘 · 최근 200줄) 명단 · 줄을 누르면 서랍 · 되돌리기(roll_undo 묶음 · resv_set · cchat_status · stamp_revoke · inv_undo · pre10_undo · 서버가 준 undo 그대로)
  * 급한 단추 3개 = 룰렛 소진 안내(roulette_out · 되돌리기 토스트) · 푸시 정지(push_cfg · 알림 탭과 같은 함수) · 앱 접속 범위(og_scope_set · 확인 창)
- * 서버 상태 = now_board · 이 콘솔의 최근 호출(NET) · 화면 주소 = 추첨 · 창구 · 대기판 · 타자왕 TV · 스탬프 월(열기 · 복사)
+ * 서버 상태 = now_board · 이 콘솔의 최근 호출(NET) · 화면 주소 = 추첨 · 타자왕 TV · 스탬프 월(열기 · 복사) · 261016 체크인 창구 · 대기판 걷음
  * 스태프 코드 = adm_roster.staffCode(설정됨 · 비어 있음만 · 값은 받지도 그리지도 않음) · 바꾸기 · 비우기 = adm_code_set(POST · 확인 창) · 운영 설정 76개 「바꾸기」는 넣지 않는다(결정 · 대화로 처리) */
 var LG_SUBS=[["log","활동 기록"],["urgent","급한 단추"],["srv","서버 상태"],["urls","화면 주소"],["qr","현장 QR"],["code","스태프 코드"]];
-var LOG_CAT=[["all","전체",null],["p","사람",function(r){ return r.cat==="p"; }],["r","명단",function(r){ return r.cat==="r"; }],["s","스탬프 · 경품",function(r){ return r.cat==="s"; }],["n","알림",function(r){ return r.cat==="n"; }],["c","설정",function(r){ return r.cat==="c"; }],["x","스캔",function(r){ return r.cat==="x"; }],["u","되돌릴 수 있음",function(r){ return !!(r.undo&&r.undo.ok&&!r.undo.done); }],["f","실패",function(r){ return /^x:/.test(r.res||""); }]];
+var LOG_CAT=[["all","전체",null],["p","사람",function(r){ return r.cat==="p"; }],["r","명단",function(r){ return r.cat==="r"; }],["s","스탬프 · 경품",function(r){ return r.cat==="s"; }],["n","알림",function(r){ return r.cat==="n"; }],["c","설정",function(r){ return r.cat==="c"; }],["x","스캔",function(r){ return r.cat==="x"; }],["ck","체크인존",function(r){ return r.k==="ck_gate"; }],["u","되돌릴 수 있음",function(r){ return !!(r.undo&&r.undo.ok&&!r.undo.done); }],["f","실패",function(r){ return /^x:/.test(r.res||""); }]];
 var BYK_N={ "콘솔":"콘솔", "스태프":"스태프 폰", "기기":"코드 기기", "서버":"서버 자동" };
 var GEN_UNDO={ roll_undo:"명단 넣기 · 빼기 되돌리기", resv_set:"라운지 상담 상태 되돌리기", cchat_status:"커피챗 상태 되돌리기", stamp_revoke:"담당자 스탬프 취소", inv_undo:"교환 기록 되돌리기", pre10_undo:"10F 묶음 넣기 되돌리기" };
 var GEN_NOTE={ roll_undo:"그 뒤에 따로 바뀐 사람은 건너뜀", resv_set:"참가자 앱에 바로 반영 · 승인으로 되돌리면 승인 알림이 다시 나갈 수 있음", cchat_status:"참가자 앱에 바로 반영", stamp_revoke:"룰렛 · 행운권 · 선착순과 엮이면 서버가 막음", inv_undo:"원장에 되돌림 한 줄이 남음(지우지 않음)", pre10_undo:"그 뒤에 10F 명단이 또 바뀌었으면 되돌리지 못함" };
-var SCR_URLS=[["추첨 화면","17F 대형 스크린 · 원격 모드","../../draw/?remote=1"],["창구 화면","1F 체크인 창구 A~D","../../tv/checkin/desk.html"],["체크인 대기판","1F 체크인존 TV","../../tv/checkin/"],["타자왕 TV","1F 타자왕 순위판","../../tv/typing/"],["스탬프 월","1F 스탠바이미","../../wall/"],["타자왕 체험","1F 현장 노트북","../../typing/"]];
+var SCR_URLS=[["추첨 화면","17F 대형 스크린 · 원격 모드","../../draw/?remote=1"],["타자왕 TV","1F 타자왕 순위판","../../tv/typing/"],["스탬프 월","1F 스탠바이미","../../wall/"],["타자왕 체험","1F 현장 노트북","../../typing/"]];
 function lgSub(){ return subsOf(LG_SUBS,"log"); }
 SCREENS.log={
   title:"기록 · 설정", desc:"",
@@ -29,7 +29,7 @@ SCREENS.log={
     if(s==="qr"){ qrMount(vb,h); return; }
     if(s==="urgent"){ vb.innerHTML=h+'<div class="grid g2"><div class="col"><div class="card" id="urR"></div><div class="card" id="urP"></div></div><div class="card" id="ogC"></div></div>'; return; }
     if(s==="srv"){ vb.innerHTML=h+'<div class="grid g2"><div class="card" id="svA"></div><div class="card" id="svB"></div></div>'; return; }
-    if(s==="urls"){ vb.innerHTML=h+'<div class="card"><table class="tb"><thead><tr><th>화면</th><th>어디</th><th>주소</th><th></th></tr></thead><tbody>'+SCR_URLS.map(function(x,i){ var u=scrUrl(x[2]); return '<tr><td><b>'+esc(x[0])+'</b></td><td class="cap">'+esc(x[1])+'</td><td class="cap ur-u">'+esc(u)+'</td><td class="n"><span class="btns ur-b"><a class="btn sm" href="'+esc(u)+'" target="_blank" rel="noopener">열기</a><button class="btn sm" type="button" onclick="copyTx(scrUrl(SCR_URLS['+i+'][2]),\'주소를 복사했습니다\')">복사</button></span></td></tr>'; }).join("")+'</tbody></table><p class="cap mt">추첨 화면 · 창구 화면은 화면에서 관리코드를 한 번 넣습니다 · 추첨 진행은 무대 › 행운권 추첨</p></div>'; return; }
+    if(s==="urls"){ vb.innerHTML=h+'<div class="card"><table class="tb"><thead><tr><th>화면</th><th>어디</th><th>주소</th><th></th></tr></thead><tbody>'+SCR_URLS.map(function(x,i){ var u=scrUrl(x[2]); return '<tr><td><b>'+esc(x[0])+'</b></td><td class="cap">'+esc(x[1])+'</td><td class="cap ur-u">'+esc(u)+'</td><td class="n"><span class="btns ur-b"><a class="btn sm" href="'+esc(u)+'" target="_blank" rel="noopener">열기</a><button class="btn sm" type="button" onclick="copyTx(scrUrl(SCR_URLS['+i+'][2]),\'주소를 복사했습니다\')">복사</button></span></td></tr>'; }).join("")+'</tbody></table><p class="cap mt">추첨 화면은 화면에서 관리코드를 한 번 넣습니다 · 추첨 진행은 무대 › 행운권 추첨</p></div>'; return; }
     vb.innerHTML=h+'<div class="card" id="scB"></div>';
   },
   paint:function(){ var s=lgSub();
