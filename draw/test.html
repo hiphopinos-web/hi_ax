@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>럭키드로우 시험</title>
+<meta name="robots" content="noindex">
+<!-- 261016 럭키드로우 시험 페이지(사용자 확정 「별도 페이지에서 손쉽게 시험」)
+     무대 화면(stage.html)을 ?sandbox=1 로 품는다 · 데모 고정 · 가짜 이름 · 서버 호출 0 · 저장 키 따로(axfDraw.state.v1.test · 무대 노트북의 진짜 기록과 섞이지 않는다)
+     한 번에 6등 → 1등 자동 진행 · 3 · 2 · 1등 다시 추첨 · 새로 고침 복원 · 키 오작동을 눌러 보고 결과를 아래 표로 확인한다 -->
+<link rel="icon" href="../icons/icon-192.png">
+<style>
+  @font-face { font-family: "AXP"; src: url("assets/PretendardVariable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+  :root { --o: #FF7E31; --o25: #FFD8C1; --bg: #0b0b0b; --card: #151515; --line: rgba(255,255,255,.14); --txt: #fff; --sub: rgba(255,255,255,.62); --f: "AXP", "Pretendard Variable", Pretendard, "Malgun Gothic", sans-serif; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: var(--bg); color: var(--txt); font-family: var(--f); word-break: keep-all; }
+  .wrap { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; padding: 16px; min-height: 100vh; }
+  .stage { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); }
+  .stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  h1 { font-size: 22px; font-weight: 800; }
+  h1 + p { font-size: 14px; color: var(--sub); line-height: 1.5; margin-top: 4px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+  .card h2 { font-size: 15px; font-weight: 700; color: var(--sub); margin-bottom: 10px; }
+  .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  button { height: 42px; border-radius: 9px; border: 1px solid rgba(255,255,255,.3); background: #000; color: #fff; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; padding: 0 10px; }
+  button:hover { border-color: #fff; }
+  button.main { background: var(--o); border-color: var(--o); grid-column: 1 / -1; }
+  button.on { background: #fff; color: #000; }
+  label { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--sub); margin-top: 10px; }
+  .now { font-size: 14px; line-height: 1.6; color: var(--sub); }
+  .now b { color: #fff; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 6px 4px; border-top: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--sub); font-weight: 500; }
+  td.n { font-variant-numeric: tabular-nums; color: var(--o); font-weight: 700; }
+  .ck { list-style: none; font-size: 14px; line-height: 1.5; }
+  .ck li { padding: 4px 0; border-top: 1px solid var(--line); display: flex; gap: 8px; }
+  .ck li:first-child { border-top: 0; }
+  .ck .m { flex: none; width: 22px; font-weight: 800; }
+  .ck .y { color: #fff; } .ck .x { color: var(--o); }
+  #log { font-size: 13px; line-height: 1.5; color: var(--sub); max-height: 180px; overflow: auto; }
+  @media (max-width: 960px) { .wrap { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <div class="stage"><iframe id="fr" src="stage.html?sandbox=1" title="무대 화면 · 데모" allow="autoplay; fullscreen"></iframe></div>
+    <p class="now" style="margin-top:10px">무대 화면을 눌러 두면 Space 로 직접 진행할 수 있다. 가짜 이름만 · 서버 호출 0 · 무대 노트북 기록과 따로 저장.</p>
+  </div>
+  <div class="side">
+    <div><h1>럭키드로우 시험</h1><p>데모 고정 · 6등 3 → 5등 2 → 4등 2 → 3등 1 → 2등 1 → 1등 1</p></div>
+    <div class="card">
+      <h2>진행</h2>
+      <div class="btns">
+        <button class="main" id="bAuto" type="button">자동 진행 · 6등 → 1등</button>
+        <button id="bNext" type="button">Space 한 번</button>
+        <button id="bRedo" type="button">다시 추첨 단추</button>
+        <button id="bReload" type="button">새로 고침 시험</button>
+        <button id="bKeys" type="button">키 오작동 시험</button>
+        <button id="bSpam" type="button">Space 연타 10번</button>
+        <button id="bRestart" type="button">처음부터</button>
+      </div>
+      <label><input type="checkbox" id="cRedo" checked> 자동 진행 중 3등 · 1등에서 한 번씩 다시 추첨</label>
+    </div>
+    <div class="card"><h2>지금</h2><p class="now" id="now"></p></div>
+    <div class="card"><h2>점검</h2><ul class="ck" id="ck"></ul></div>
+    <div class="card"><h2>당첨 기록</h2><table id="tb"></table></div>
+    <div class="card"><h2>시험 기록</h2><div id="log"></div></div>
+  </div>
+</div>
+<script>
+(function () {
+  "use strict";
+  var fr = document.getElementById("fr"), A = { on: false, last: "", t: 0, redo: {}, wait: 0 };
+  function X() { try { return fr.contentWindow && fr.contentWindow.__axs; } catch (e) { return null; } }
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function log(m) { var d = new Date(), t = ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2) + ":" + ("0" + d.getSeconds()).slice(-2); $("log").innerHTML = "<div>" + t + " · " + esc(m) + "</div>" + $("log").innerHTML; }
+  var SCN = { start: "시작 화면", idle: "대기", intro: "인트로", checkin: "공 넣는 중", closed: "추첨 준비 끝", card: "등수 카드", mix: "부저 대기", spin: "회전", tension: "감속", exit: "배출", reveal: "당첨 공개", board: "결과판", end: "끝 화면" };
+  function rounds(x) { return x.cfg().rounds; }
+  /* 점검 · 화면 저장 상태만 읽는다 */
+  function checks(x) {
+    var st = x.state(), rs = rounds(x), wins = st.results.filter(function (r) { return r.st === "win"; }), abs = st.results.filter(function (r) { return r.st === "absent"; });
+    var pk = {}, dup = 0; wins.forEach(function (r) { if (pk[r.pk]) dup++; pk[r.pk] = 1; });
+    var no = {}, dupNo = 0; wins.forEach(function (r) { if (no[r.no]) dupNo++; no[r.no] = 1; });
+    var absWin = abs.filter(function (r) { return pk[r.pk]; }).length;
+    var over = rs.some(function (r, i) { return wins.filter(function (w) { return w.round === i; }).length > r.count; });
+    var lowAbs = abs.filter(function (r) { var n = parseInt(rs[r.round].name, 10); return n > 3; }).length;
+    var net = x.net();
+    return [
+      ["같은 사람 두 번 당첨 0", dup === 0],
+      ["같은 번호 두 번 당첨 0", dupNo === 0],
+      ["다시 추첨으로 빠진 사람이 다시 당첨 0", absWin === 0],
+      ["등수별 인원을 넘지 않음", !over],
+      ["6 · 5 · 4등 다시 추첨 0", lowAbs === 0],
+      ["서버 호출 0(데모)", net.calls === 0 && !net.live],
+      ["시험 저장 키 · 데모 고정", net.sandbox && net.mode === "demo"]
+    ];
+  }
+  function paint() {
+    var x = X(); if (!x) return;
+    var st = x.state(), rs = rounds(x), s = x.scene(), r = rs[Math.min(st.round, rs.length - 1)];
+    var w = st.results.filter(function (q) { return q.st === "win"; }).length, a = st.results.filter(function (q) { return q.st === "absent"; }).length;
+    $("now").innerHTML = "장면 <b>" + esc(SCN[s] || s) + "</b> · 등수 <b>" + esc(r.name) + "</b> · 당첨 <b>" + w + "</b> / 10 · 다시 추첨 <b>" + a + "</b>" + (A.on ? " · 자동 진행 중" : "");
+    $("ck").innerHTML = checks(x).map(function (c) { return '<li><span class="m ' + (c[1] ? "y" : "x") + '">' + (c[1] ? "✓" : "✕") + "</span><span>" + esc(c[0]) + "</span></li>"; }).join("");
+    $("tb").innerHTML = "<tr><th>등수</th><th>번호</th><th>이름 · 부서(가짜)</th><th>상태</th></tr>" + st.results.filter(function (q) { return q.st !== "undone"; }).map(function (q) {
+      return "<tr><td>" + esc(rs[q.round] ? rs[q.round].name : "") + "</td><td class=\"n\">" + esc(q.no) + "</td><td>" + esc((q.fn || q.nm || "") + (q.fd ? " · " + q.fd : "")) + "</td><td>" + (q.st === "win" ? "당첨" : "다시 추첨") + "</td></tr>";
+    }).join("");
+    $("bAuto").classList.toggle("on", A.on); $("bAuto").textContent = A.on ? "자동 진행 멈춤" : "자동 진행 · 6등 → 1등";
+  }
+  /* 자동 진행 · 사람이 Space 를 누르는 간격 그대로(부저 1.8초 · 공개 2.8초 뒤) */
+  function tick() {
+    var x = X(); if (!x) return;
+    var s = x.scene(); if (s !== A.last) { A.last = s; A.t = Date.now(); }
+    var dt = Date.now() - A.t; paint();
+    if (!A.on || Date.now() < A.wait) return;
+    var st = x.state(), rs = rounds(x), r = rs[Math.min(st.round, rs.length - 1)], top = parseInt(r.name, 10) <= 3;
+    if ((s === "idle" || s === "closed" || s === "board") && dt > 900) { x.act("next"); A.wait = Date.now() + 600; }
+    else if (s === "mix" && dt > 1800) { x.act("next"); A.wait = Date.now() + 600; }
+    else if (s === "reveal" && dt > 2800) {
+      if (top && $("cRedo").checked && (r.name === "3등" || r.name === "1등") && !A.redo[r.name]) { A.redo[r.name] = 1; x.ui.redo(); x.ui.redo(); log(r.name + " 다시 추첨(두 번 누름)"); }
+      else { x.act("next"); if (top) x.act("next"); }
+      A.wait = Date.now() + 600;
+    }
+    else if (s === "end") { A.on = false; log("끝 화면 · 자동 진행 끝"); }
+  }
+  setInterval(tick, 200);
+  $("bAuto").onclick = function () {
+    var x = X(); if (!x) return;
+    A.on = !A.on; if (A.on) { A.redo = {}; if (x.scene() === "end") { x.act("restart"); x.act("restart"); } log("자동 진행 시작"); }
+    paint();
+  };
+  $("bNext").onclick = function () { var x = X(); if (x) x.act("next"); };
+  $("bRedo").onclick = function () { var x = X(); if (!x) return; x.ui.redo(); log(x.scene() === "reveal" ? "다시 추첨 단추 한 번(한 번 더 누르면 다시 추첨)" : "지금은 다시 추첨 단추가 없다(3 · 2 · 1등 공개 중에만)"); };
+  $("bRestart").onclick = function () { var x = X(); if (!x) return; A.on = false; x.ui.op("restart"); x.ui.op("restart"); log("처음부터"); };
+  $("bReload").onclick = function () {
+    var x = X(); if (!x) return;
+    var b = JSON.stringify(x.state().results.map(function (r) { return [r.id, r.st]; })), sc0 = x.scene(), r0 = x.state().round;
+    fr.contentWindow.location.reload();
+    var n = 0, iv = setInterval(function () {
+      var y = X(); if (!y || ++n > 60) { if (n > 60) { clearInterval(iv); log("새로 고침 · 화면이 안 떴다"); } return; }
+      clearInterval(iv);
+      setTimeout(function () {
+        var a = JSON.stringify(y.state().results.map(function (r) { return [r.id, r.st]; }));
+        log("새로 고침 · 당첨 기록 " + (a === b ? "그대로 ✓" : "달라짐 ✕") + " · 등수 " + (y.state().round === r0 ? "그대로 ✓" : "달라짐 ✕") + " · 장면 " + (SCN[sc0] || sc0) + " → " + (SCN[y.scene()] || y.scene()));
+      }, 1200);
+    }, 250);
+  };
+  /* 키 오작동 · 없앤 키(R · U · E · I · K · P · H · G · V · A · 1 ~ 9)를 눌러도 장면 · 기록이 바뀌지 않는지 */
+  $("bKeys").onclick = function () {
+    var x = X(); if (!x) return;
+    var d = fr.contentWindow.document, b = JSON.stringify(x.state().results), s0 = x.scene(), r0 = x.state().round;
+    "rRuUeEiIkKpPhHgGvVaA123456789?".split("").forEach(function (k) { d.dispatchEvent(new fr.contentWindow.KeyboardEvent("keydown", { key: k, bubbles: true })); });
+    setTimeout(function () { var same = JSON.stringify(x.state().results) === b && x.scene() === s0 && x.state().round === r0; log("키 오작동 31개 · " + (same ? "바뀐 것 없음 ✓" : "바뀜 ✕ " + s0 + " → " + x.scene())); }, 400);
+  };
+  /* Space 연타 · 부저 · 확정이 한 번만 먹는지(뽑는 중 · 공개 직후 잠금) */
+  $("bSpam").onclick = function () {
+    var x = X(); if (!x) return;
+    var n0 = x.state().results.filter(function (r) { return r.st === "win"; }).length, s0 = x.scene();
+    for (var k = 0; k < 10; k++) x.act("next");
+    setTimeout(function () { var n1 = x.state().results.filter(function (r) { return r.st === "win"; }).length; log("Space 10번 · " + (SCN[s0] || s0) + " → " + (SCN[x.scene()] || x.scene()) + " · 당첨 " + n0 + " → " + n1); }, 500);
+  };
+  fr.addEventListener("load", function () { log("무대 화면 열림(sandbox)"); });
+})();
+</script>
+</body>
+</html>
