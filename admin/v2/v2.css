@@ -352,6 +352,9 @@ details.memo summary{cursor:pointer;font-weight:600;min-height:32px;display:flex
 /* 서랍 · 가로 넘침 0 · 넓은 화면(1280 이상)은 본문을 서랍 폭만큼 줄여 나란히 · 좁은 화면은 위에 덮음 */
 .cc-drawer{overflow-x:hidden}
 .cc-drawer .card,.cc-drawer dl,.cc-drawer .btns,.cc-drawer .row{min-width:0;max-width:100%}
+/* 서랍 단추 줄 · 글자 폭만큼 잡고 모자라면 줄을 바꿔 남는 폭을 채움(글자 잘림 0) */
+.cc-drawer .btns>.btn,#lgSide .btns>.btn{flex:1 1 auto}
+.cc-drawer .btns>.btn:first-child:nth-last-child(3){flex-basis:100%}
 @media (min-width:1280px){ body.drw-on .main{margin-right:360px} body.drw-on.drw-wide .main{margin-right:480px} }
 /* 한 사람 카드 · 07 프로그램 참여 한 칸 */
 .pc-pg{grid-column:1/-1;gap:4px}

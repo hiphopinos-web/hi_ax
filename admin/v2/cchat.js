@@ -68,9 +68,9 @@ function ccPaint(){
 function ccDet(){
   var box=el("ccDet"); if(!box) return;
   var r=CC.sel?ccRow(CC.sel):null;
-  if(!r){ CC.sel=null; box.classList.remove("on"); box.setAttribute("aria-hidden","true"); if(CC.g&&CC.g.sel!=null){ CC.g.sel=null; XG.paint(CC.g); } return; }
+  if(!r){ CC.sel=null; box.classList.remove("on"); box.setAttribute("aria-hidden","true"); document.body.classList.remove("drw-on"); if(CC.g&&CC.g.sel!=null){ CC.g.sel=null; XG.paint(CC.g); } return; }
   if(CC.g&&CC.g.sel!==CC.sel){ CC.g.sel=CC.sel; XG.paint(CC.g); }
-  box.classList.add("on"); box.setAttribute("aria-hidden","false");
+  box.classList.add("on"); box.setAttribute("aria-hidden","false"); document.body.classList.add("drw-on"); document.body.classList.remove("drw-wide");   /* 넓은 화면 = 본문을 서랍 폭만큼 줄여 나란히(v2.css) */
   var e=jq(r.emp), st=r.status, A="";
   var b=function(to,lab,cls){ return '<button class="btn '+(cls||"")+'" type="button" onclick="ccSet(\''+e+'\',\''+to+'\')">'+esc(lab)+'</button>'; };
   if(st==="대기") A='<button class="btn pri big" type="button" onclick="ccPick(\''+e+'\')">선정 · 알림 보내기</button><div class="btns mt">'+b("취소","신청 취소","dng")+'</div>';

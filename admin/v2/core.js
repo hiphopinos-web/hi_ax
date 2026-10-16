@@ -240,7 +240,7 @@ function topPaint(){
   var r=el("upd"); r.textContent=t||"갱신"; r.className="chip-s"+(stale?" old":"");
 }
 function render(){
-  var sc=SCREENS[S.tab]; if(DRW.k&&!DRW.keep) drwClose(); DRW.keep=0;
+  var sc=SCREENS[S.tab]; if(DRW.k&&!DRW.keep) drwClose(); DRW.keep=0; if(!DRW.k) document.body.classList.remove("drw-on","drw-wide");
   el("view").innerHTML='<div class="ph"><h1>'+esc(sc.title)+'</h1><span class="cap" id="phCap">'+esc(sc.desc)+'</span></div><div id="vb"></div>';
   sc.mount&&sc.mount(el("vb"));
   paint();
