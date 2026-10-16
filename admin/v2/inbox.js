@@ -18,7 +18,7 @@ SCREENS.inbox={
     vb.innerHTML='<div class="chips" id="ibChips" role="tablist" aria-label="처리함"></div><div id="ibB"></div>';
     var b=el("ibB");
     if(s==="lounge"&&S.ui.lup&&UP){ upMount(b); return; }
-    if(s==="lounge") b.innerHTML='<div class="up-bar"><span class="cap">사전 명단 = 「사번 · 시간 · 상담석」 엑셀</span><button class="btn sm pri" type="button" onclick="lgUpOpen()">명단 올리기</button><button class="btn sm" type="button" onclick="lngUndoAsk()">마지막 올리기 되돌리기</button></div><div id="lgErr"></div><div class="grid gside"><div class="card" style="padding:8px 12px" id="lgBoard"></div><div class="col" id="lgSide"></div></div><div class="card mt"><h2>AX 라운지 신청 명단</h2><div id="lgList"></div></div>';
+    if(s==="lounge") b.innerHTML='<div class="up-bar"><span class="cap">사전 명단 = 「사번 · 시간 · 상담석」 엑셀</span><button class="btn sm pri" type="button" onclick="lgUpOpen()">명단 올리기</button><button class="btn sm" type="button" onclick="lngUndoAsk()">마지막 올리기 되돌리기</button></div><div class="card mb" id="lgAdd"></div><div id="lgErr"></div><div class="grid gside"><div class="card" style="padding:8px 12px" id="lgBoard"></div><div class="col" id="lgSide"></div></div><div class="card mt"><h2>AX 라운지 신청 명단</h2><div id="lgList"></div></div>';
     else if(s==="cchat") ccMount(b);
     else if(s==="ck") b.innerHTML='<div id="ckTop"></div><div class="grid g4" id="ckK"></div><div class="card mt"><h2>최근 지급 명단 <span class="cap">체크인존에서 찍은 사람 · 줄을 누르면 한 사람 카드</span></h2><div id="ckL"></div></div>'+ckExtraHtml();
     else if(s==="req") b.innerHTML='<div class="card"><h2>스태프 요청</h2><div id="rqList"></div></div>';
@@ -72,7 +72,7 @@ function lgPaint(){
     (P.none.length?'<div class="band mt" id="lgNone"><span><b>칸 미정 '+P.none.length+'명</b> · 이름을 눌러 칸에 넣습니다</span><span>'+P.none.map(function(r){ return '<button type="button" class="btn sm'+(LG.sel==="n:"+r.id?" pri":"")+'" onclick="lgPick(\'n:'+jq(r.id)+'\')">'+esc(r.name||r.emp)+'</button>'; }).join(" ")+'</span></div>':'')+
     (P.out.length?'<div class="band warn mt">칸 밖 신청 '+P.out.length+'건 · '+esc(P.out.map(function(r){ return hm(r.slot)+" "+(r.name||r.emp); }).join(", "))+'</div>':'')+
     '<div class="cap mt">취소 '+P.cx.length+'건은 아래 명단에'+(cf.srv?"":" · 칸 설정은 서버 갱신 뒤 서버 값")+'</div>';
-  LG.P=P; lgSide();
+  LG.P=P; lgAddPaint(); lgSide();
   if(!LG.g) LG.g=XG.make({ id:"lounge", file:"AX 라운지 신청", key:function(r){ return r.id; }, sort:{ k:"slot", d:1 },
     chips:[["all","전체",null],["w","신청",function(r){ return r.status==="신청"; }],["ok","승인",function(r){ return r.status==="승인"; }],["in","체크인",function(r){ return r.status==="체크인"; }],["dn","완료",function(r){ return r.status==="완료"; }],["no","노쇼",function(r){ return r.status==="노쇼"; }],["cx","취소",function(r){ return r.status==="취소"; }]],
     cols:[{ k:"slot", t:"시간", w:70, v:function(r){ return hm(r.slot)||"칸 미정"; } },{ k:"seat", t:"상담석", w:60 },{ k:"name", t:"이름", w:110 },{ k:"emp", t:"사번", w:90 },{ k:"dept", t:"부서", w:130 },{ k:"status", t:"상태", w:80, f:function(r){ return tag(r.status, RV_TAG[r.status]); } },{ k:"memo", t:"메모", w:160 },{ k:"ts", t:"신청 시각", type:"date", w:110 },{ k:"cxAt", t:"취소 시각", type:"date", w:110 }],
@@ -102,13 +102,13 @@ function lgSide(){
   if(!LG.sel){ box.innerHTML='<div class="card">'+emptyH("대기 중인 신청이 없습니다")+'<p class="cap">칸을 누르면 여기에 나옵니다</p></div>'+lgNext(); return; }
   if(LG.mv){ var rm=rvRow(LG.mv); if(rm){ box.innerHTML=lgMoveH(rm)+lgNext(); return; } LG.mv=null; }
   if(LG.sel.indexOf("n:")===0){ var rn=rvRow(LG.sel.slice(2)); if(!rn||hm(rn.slot)){ LG.sel=null; return lgPaint(); }
-    box.innerHTML='<div class="card"><h2>칸 미정 '+tag(rn.status,RV_TAG[rn.status])+'</h2>'+rowH(rn.name||rn.emp,[rn.dept,"사번 "+rn.emp,rn.memo].filter(Boolean).join(" · "))+'<div class="mt"><button class="btn pri big" type="button" onclick="LG.mv=\''+jq(rn.id)+'\';lgPaint()">칸에 넣기</button></div></div>'+lgNext(); return; }
+    box.innerHTML='<div class="card"><h2>칸 미정 '+tag(rn.status,RV_TAG[rn.status])+'</h2>'+rowH(rn.name||rn.emp,[rn.dept,"사번 "+rn.emp,rn.memo].filter(Boolean).join(" · "))+'<div class="mt"><button class="btn pri big" type="button" onclick="LG.mv=\''+jq(rn.id)+'\';lgPaint()">칸에 넣기</button> <button class="btn dng" type="button" onclick="laDelAsk(\''+jq(rn.id)+'\')">명단에서 빼기</button></div></div>'+lgNext(); return; }
   var ij=LG.sel.split(":"), i=num(ij[0]), j=num(ij[1]), r=(P.grid[i]||[])[j], t=m2hm(P.s0+i*P.cf.step)+"~"+m2hm(P.s0+i*P.cf.step+P.cf.step);
   if(!r){ box.innerHTML='<div class="card"><h2>'+t+' · 상담석 '+(j+1)+' '+tag("빈 자리","off")+'</h2><p class="cap">칸 미정인 사람은 위 「칸 미정」에서 고르고, 다른 칸 사람은 그 칸을 눌러 「다른 시간으로」로 옮깁니다</p></div>'+lgNext(); return; }
   var st=r.status, A="";
   var b=function(to,lab,cls){ return '<button class="btn '+(cls||"")+'" type="button" onclick="rvAsk(\''+jq(r.id)+'\',\''+to+'\')">'+esc(lab)+'</button>'; };
-  if(st==="신청") A='<button class="btn pri big" type="button" onclick="rvAsk(\''+jq(r.id)+'\',\'승인\')">승인 · 알림 보내기</button><div class="btns mt"><button class="btn" type="button" onclick="LG.mv=\''+jq(r.id)+'\';lgPaint()">다른 시간으로</button>'+b("취소","취소","dng")+'</div>';
-  else if(st==="승인") A='<button class="btn pri big" type="button" onclick="rvAsk(\''+jq(r.id)+'\',\'체크인\')">체크인</button><div class="btns mt"><button class="btn" type="button" onclick="LG.mv=\''+jq(r.id)+'\';lgPaint()">다른 시간으로</button>'+b("노쇼","노쇼","dng")+b("취소","취소","dng")+'</div>';
+  if(st==="신청") A='<button class="btn pri big" type="button" onclick="rvAsk(\''+jq(r.id)+'\',\'승인\')">승인 · 알림 보내기</button><div class="btns mt"><button class="btn" type="button" onclick="LG.mv=\''+jq(r.id)+'\';lgPaint()">다른 시간으로</button>'+b("취소","취소","dng")+'<button class="btn dng" type="button" onclick="laDelAsk(\''+jq(r.id)+'\')">명단에서 빼기</button></div>';
+  else if(st==="승인") A='<button class="btn pri big" type="button" onclick="rvAsk(\''+jq(r.id)+'\',\'체크인\')">체크인</button><div class="btns mt"><button class="btn" type="button" onclick="LG.mv=\''+jq(r.id)+'\';lgPaint()">다른 시간으로</button>'+b("노쇼","노쇼","dng")+b("취소","취소","dng")+'<button class="btn dng" type="button" onclick="laDelAsk(\''+jq(r.id)+'\')">명단에서 빼기</button></div>';
   else if(st==="체크인") A='<button class="btn pri big" type="button" onclick="rvAsk(\''+jq(r.id)+'\',\'완료\')">상담 완료</button><div class="btns mt">'+b("승인","체크인 되돌리기")+b("노쇼","노쇼","dng")+'</div>';
   else if(st==="완료") A='<div class="btns">'+b("체크인","완료 되돌리기")+'</div>';
   else if(st==="노쇼") A='<div class="btns">'+b("승인","노쇼 되돌리기")+'</div>';
