@@ -243,7 +243,7 @@ function progTenRowHtml() {
 function progFlowBrk(o, hmN) { return '<div class="fbk' + (hmN >= o.b ? " past" : "") + '" data-fl="brk"><b>' + esc(o.ttl) + '</b><span class="e">~' + o.t1 + "</span></div>"; }
 function progFlowCard(o, hmN, isF) {
   if (o.brk) return progFlowBrk(o, hmN);
-  var past = hmN >= o.b, ac = isF && o.lec && !o.chip ? '<span class="ac">입장 · 끝 QR로 출석</span>' : "";   /* v5.68 */
+  var past = hmN >= o.b, ac = isF && o.lec && !o.chip ? '<span class="ac">시작 · 종료 출석체크로 출석</span>' : "";   /* v5.68 */
   return '<button type="button" class="fc' + (past ? " past" : "") + (isF ? " focus" : "") + '"' + (o.go ? ' onclick="' + o.go + '"' : " disabled") + ' data-fl="' + esc(o.k) + '">' +
     '<span class="mt">' + (o.fl ? flFloor(o.fl) : "") + '<span class="pl">' + esc(o.pl) + '</span><span class="e">~' + o.t1 + "</span></span>" +
     '<span class="t">' + (isF ? '<span class="ax-sr-only">진행 중 </span>' : "") + '<span class="tt">' + esc(o.ttl) + "</span>" + (o.chip ? '<span class="axs-chip">' + esc(o.chip) + "</span>" : "") + "</span>" +
@@ -584,7 +584,7 @@ function attStLbl(id) { var ai = attMineK(id, "in"), ao = attMineK(id, "out"); r
 function attDetailFill(D, ap, timeBtn) {
   var ai = attMineK(ap.id, "in"), ao = attMineK(ap.id, "out"), shut = attShut(ap);   /* 261008 「지금 · 입장 약 N명」 줄 삭제(입장 QR 수 · 지금 현장 2×2 가 맡는다) */
   D.st = attStLbl(ap.id) || "자유 참석"; D.stc = attStLbl(ap.id) ? "ok" : "off";   /* v6.83 (디자인 D-4) 「자유 참석」 = 회색 칩(나의 일정과 같은 색 · 초록은 출석한 뒤만) */
-  if (ai || ao) { D.kv.push(["입장 QR", ai ? ai + " 출석" : "아직"]); D.kv.push(["끝 QR", ao ? ao + " 출석" : "아직"]); }   /* 261008 (사용자 「통제하지 말자」) QR 시간 창 표기 없음 */
+  if (ai || ao) { D.kv.push(["시작 출석체크", ai ? ai + " 출석" : "아직"]); D.kv.push(["종료 출석체크", ao ? ao + " 출석" : "아직"]); }   /* 261008 (사용자 「통제하지 말자」) QR 시간 창 표기 없음 */
   else D.kv.push(["출석 QR", "강연 중 화면의 QR"]);
   D.help = ai && ao ? "" : shut ? "출석 시간이 지났어요" : "";
   D.btn = (ai && ao) || shut ? timeBtn : progBtn("출석 QR 스캔", "scanOpen(\'a17\')");
@@ -631,12 +631,12 @@ function progDetail(s) {
     D.kv = [["일시", s.id === "expo" ? "10월 26일 · 행사 시간 중" : day + progTm(s.tm)], ["장소", pl], ["참여 방법", s.id === "expo" ? "신청 없이 자유 관람" : "신청 없이 자유 참석"]];
     D.secB = s.id === "expo" ? segHtml("1F 로비 6구역 · AX VISION · AX LAB · AX in Action · AX PLAY · AX 라운지 · EVENT") :
       ap && par ? (s.desc ? esc(s.desc) : "") :   /* 261008 오후 AWS · MS = 아래 받으려면 상자(D.need) */
-      ap ? "입장할 때 QR 한 번, 끝날 때 화면의 QR 한 번 찍어요." + (s.desc ? "<br>" + esc(s.desc) : "") :   /* v5.96 (사용자 261006 밤 도장 ×2) 강연 하나로 2개를 다 채운다는 뜻 */   /* v5.68 입장 1 + 끝 1 · v5.94 (사용자 결정 261006) 스탬프 줄은 오후 파트너 강연만 · 오전 강연은 출석만 */
+      ap ? "시작 · 종료 출석체크를 한 번씩 찍어요." + (s.desc ? "<br>" + esc(s.desc) : "") :   /* v5.96 (사용자 261006 밤 도장 ×2) 강연 하나로 2개를 다 채운다는 뜻 */   /* v5.68 입장 1 + 끝 1 · v5.94 (사용자 결정 261006) 스탬프 줄은 오후 파트너 강연만 · 오전 강연은 출석만 */
       s.desc ? esc(s.desc) : "";   /* v5.96 오전 강연 = 참여 전 확인 칸 없음(일시 · 장소 · 참여 방법 표와 같은 말을 되풀이하지 않는다) */
     if (s.id === "expo") D.link = '<button type="button" class="ax-link axs-plain axs-self" onclick="App.go(\'floor1\')">1F 부스 6구역 보기</button>';
     if (ap) attDetailFill(D, ap, timeBtn);   /* v5.68 입장 QR · 끝 QR 두 줄 · 지금 입장 수 · 창이 끝나면 시간표(261005 최종 QA 규칙 그대로) */
     else { D.help = ""; D.btn = timeBtn; }
-    if (ap && par) D.need = needBoxHtml("스탬프 받으려면", "스탬프 받으려면", [["qr", "입장 · 끝 QR 한 번씩", ""], ["stamp", "입장 1개 + 끝 1개 = 스탬프 2개", "AWS · MS 합쳐 2개까지"]]);   /* 261008 (사용자 「참여 전 확인 아래 부분을 받으려면 부분처럼」) 옛 회색 세 줄 「입장할 때 QR 한 번, 끝날 때 화면의 QR 한 번 찍어요 / 입장 1개 + 끝 1개 = 스탬프 2개 / AWS · MS 합쳐 2개까지」 · 시간 · 규칙 강조 없음 */
+    if (ap && par) D.need = needBoxHtml("스탬프 받으려면", "스탬프 받으려면", [["qr", "시작 출석체크 시 1개 부여", "강의장 화면 QR을 폰 카메라로"], ["stamp", "종료 출석체크 시 1개 부여", "AWS · MS 합쳐 2개까지"]]);   /* 261008 (사용자 「참여 전 확인 아래 부분을 받으려면 부분처럼」) 옛 회색 세 줄 「입장할 때 QR 한 번, 끝날 때 화면의 QR 한 번 찍어요 / 입장 1개 + 끝 1개 = 스탬프 2개 / AWS · MS 합쳐 2개까지」 · 시간 · 규칙 강조 없음 */
     /* 261008 (사용자 「굳이 있어야 될까?」) 오후 파트너 강연 경품 보기 입구 뺌 */
     return D;
   }
@@ -647,7 +647,7 @@ function progDetail(s) {
     if (mi && ATT10_UI) D.kv.push(["끝 QR", ao ? ao + " 출석" : attWinLbl(ax, "out")]);   /* v5.71 10F 끝 QR(신청자만) · 출석하면 시각 */
     if (ao && ATT10_UI) { D.st = "출석 완료"; D.stc = "ok"; }   /* v5.96 10F 끝 QR 표시 끔 */
     D.sg = sessGuideHtml(s, !!mi);   /* v5.60 세션 안내 = (한 줄 소개) → 하는 일 → 준비할 것(신청자만) · 셋 다 없으면 블록 없음 */
-    if (mi) D.sg += '<section class="axs-dsec">' + needBoxHtml("스탬프 받으려면", "스탬프 받으려면", [["qr", "입장 · 끝 QR 한 번씩", ""], ["stamp", "입장 1개 + 끝 1개 = 스탬프 2개", progSrcTxt() + " 합쳐 최대 2개"]]) + "</section>";   /* 261016 (사용자) 10F 실습 = 입장 1 + 끝 1(17F 오후 강연과 같은 방식 · 프로그램 참여 묶음) · 사전 신청자에게만 · 10F 상세는 sg 가 참여 전 확인 칸을 대신한다 */
+    if (mi) D.sg += '<section class="axs-dsec">' + needBoxHtml("스탬프 받으려면", "스탬프 받으려면", [["qr", "시작 출석체크 시 1개 부여", "현장 QR을 폰 카메라로"], ["stamp", "종료 출석체크 시 1개 부여", progSrcTxt() + " 합쳐 최대 2개"]]) + "</section>";   /* 261016 (사용자) 10F 실습 = 입장 1 + 끝 1(17F 오후 강연과 같은 방식 · 프로그램 참여 묶음) · 사전 신청자에게만 · 10F 상세는 sg 가 참여 전 확인 칸을 대신한다 */
     D.help = mi ? "사전 신청 내역은 나의 일정에서 확인할 수 있어요" : "17F 강연 · 1F 전시 · 18F 커피챗은 누구나 참여해요";   /* v5.60 T2 */
     D.btn = wo && ATT10_UI ? progBtn("끝 QR 스캔", "qrScanOpen()") : mi ? progBtn("나의 일정 보기", "mySched()", "ax-button-weak") : progBtn("전체 시간표 보기", "homeSched()", "ax-button-weak");   /* v5.60 시안 = 약한 버튼 · v5.71 끝 창이 열렸고 아직이면 스캔 */
     return D;

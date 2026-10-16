@@ -140,7 +140,7 @@ var SR_WHY = {
   param: ["사번으로 입장한 뒤 스캔해 주세요", "exp", "확인"],
   server: ["서버에 연결되지 않았어요", "scan", "다시 스캔"],
   stair: ["계단 QR은 계단 화면에서 처리돼요", "scan", "다시 스캔"],
-  att: ["17F 오후 강연은 입장 · 끝 QR로 적립돼요", "scan", "다시 스캔"],
+  att: ["17F 오후 강연은 시작 · 종료 출석체크로 적립돼요", "scan", "다시 스캔"],
   staff: ["체험을 마치면 스태프가 내 QR을 찍어 적립해요", "myqr", "내 QR 보여주기"],   /* v5.97 (261006 감사 상2 · 사용자 D1=A) AX PLAY 부스 코드 = 서버 staff · 오류 연출 없이 안내만(scanResHtml) */   /* v5.94 오후 파트너 강연만 */   /* v4.26 옛 17F 좌석 QR(p3 코드) */
   dwin: ["추첨 체크인 시간이 아니에요", "exp", "확인"],   /* v4.79 창 · 날짜 밖(서버 window · day) */
   preday: ["행사 당일(10/26) 적립", "exp", "확인"],   /* 261016 (사용자) 행사 전 가드(서버 preday) */
@@ -376,21 +376,21 @@ function attByCode(code, fixId, k) {
 function attRowHtml(x, t, mine) {
   var wi = attKWin(x, "in"), wo = attKWin(x, "out"), s0 = t2m(x.s), ai = mine[x.id], ao = mine[x.id + ".out"];
   var can = (attOpenK(x, "in", t) && !ai) || (attOpenK(x, "out", t) && !ao), on = can && ATT.sel === x.id;   /* 261008 행사일 전 = 늘 열림 */
-  var st = ai && ao ? "입장 · 끝 출석" : can ? (t >= s0 ? "진행 중" : x.s + " 시작") : ai ? "입장 " + ai : ao ? "끝 " + ao : t > wo.b ? "종료" : x.s + " 시작";
+  var st = ai && ao ? "시작 · 종료 출석" : can ? (t >= s0 ? "진행 중" : x.s + " 시작") : ai ? "시작 " + ai : ao ? "종료 " + ao : t > wo.b ? "종료" : x.s + " 시작";
   return '<button type="button" class="axs-att" role="radio" aria-checked="' + on + '"' + (can ? ' onclick="attPick(\'' + x.id + '\')"' : " disabled") + ">" +
     '<span class="rd" aria-hidden="true"></span><span class="nm">' + esc(x.nm) + "</span>" +   /* 한 줄 · 큰글씨 360×640 에서도 시트 안 스크롤 없게(design.md A 5-7) · 시각은 상태 칸과 강연 상세 */
     '<span class="st">' + esc(st) + "</span></button>";
 }
-function attKLbl(k) { return k === "out" ? "끝 QR" : k === "in" ? "입장 QR" : "출석"; }
+function attKLbl(k) { return k === "out" ? "종료 출석체크" : k === "in" ? "시작 출석체크" : "출석"; }
 /* 시트 내용 · 고르기 · 시간 밖 · 결과 세 모양 (M03 바텀 시트 · 자유 입력 없음) */
 function attSpec() {
   var r = ATT.res, tmRow = testMode() ? '<label class="axs-attt">테스트 · 시각<input type="time" value="' + esc(attTm()) + '" onchange="attTmSet(this.value)"></label>' : "";
   if (r) {
     var x = attProg(r.id) || { nm: r.id };
-    var more = !r.dup && r.pg === 1 && r.k === "in" && P3_PM.indexOf(r.id) >= 0 && !attShut(x) ? '<p class="ax-meta">끝날 때 화면의 QR을 찍으면 1개 더</p>' : "";   /* v5.94 스탬프는 오후 파트너 강연만 */
+    var more = !r.dup && r.pg === 1 && r.k === "in" && P3_PM.indexOf(r.id) >= 0 && !attShut(x) ? '<p class="ax-meta">종료 출석체크 시 1개 더</p>' : "";   /* v5.94 스탬프는 오후 파트너 강연만 */
     if (!r.stamp && (!attUi(r.id) || r.nost || r.remote)) return { id: "att", title: r.dup ? "이미 기록됐어요" : "출석이 기록됐어요", lead: "<b>" + esc(x.nm) + "</b>",   /* v5.96 오전 강연 · 송출 · 서버 범위 밖(nost) = 기록만 · 스탬프 기대를 만들지 않게 담담하게 · 오류로 만들지 않는다 */
       body: (r.pre ? '<p class="ax-meta">스탬프 · 행사 당일(10/26) 적립</p>' : "") + (r.test ? '<p class="ax-meta">테스트 계정 · 테스트 기록</p>' : ""), go: "sheetClose()", goLbl: "확인" };
-    return { id: "att", title: r.dup ? "이미 출석했어요" : "출석했어요", lead: "<b>" + esc(x.nm) + "</b><br>" + (r.k === "out" ? "끝 " : "입장 ") + esc(r.at) + (r.remote ? " · 유튜브 송출 출석" : ""),
+    return { id: "att", title: r.dup ? "이미 출석했어요" : "출석했어요", lead: "<b>" + esc(x.nm) + "</b><br>" + (r.k === "out" ? "종료 " : "시작 ") + esc(r.at) + (r.remote ? " · 유튜브 송출 출석" : ""),
       body: (r.stamp ? '<div class="ax-inset axs-attok"><p class="ax-card-title">스탬프 「프로그램 참여」 ' + (r.add > 1 ? r.add + "개" : "1개") + ' 적립</p><p class="ax-description">현재 스탬프 ' + r.stamp + " / " + STAMP_DENOM + "개</p></div>" : r.pre ? '<p class="ax-meta">스탬프 · 행사 당일(10/26) 적립</p>' : !r.dup && r.pg >= 2 && P3_PM.indexOf(r.id) >= 0 ? '<p class="ax-meta">프로그램 참여 스탬프 2개 받음</p>' : "") + (r.pre ? "" : more) +   /* 261013 오후 묶음이 이미 2개(커피챗 · 라운지 · 다른 강연) = 출석만 · 받은 상태 한 줄 */
         (r.test ? '<p class="ax-meta">테스트 계정 · 출석은 테스트 기록 · 스탬프는 이 기기에만</p>' : ""),
       go: "sheetClose()", goLbl: "확인" };
@@ -399,7 +399,7 @@ function attSpec() {
     return { id: "att", title: "17F 강연 출석", lead: "<b>" + esc(fx.nm) + "</b>" + (ATT.k && attUi(fx.id) ? "<br>" + attKLbl(ATT.k) : ""), body: tmRow, go: "attGo()", goLbl: "출석하기", goBusy: "출석하는 중" }; }
   var t = attNow(), w = attWin(t), mine = attMine();
   var list = '<div class="axs-attl" role="radiogroup" aria-label="출석할 강연">' + attUiProgs().map(function (x) { return attRowHtml(x, t, mine); }).join("") + "</div>";
-  if (w.sel) return { id: "att", title: "17F 강연 출석", lead: "입장할 때 한 번, 끝날 때 한 번", body: list + tmRow,
+  if (w.sel) return { id: "att", title: "17F 강연 출석", lead: "시작 한 번, 종료 한 번", body: list + tmRow,
     go: "attGo()", goLbl: "출석하기", goBusy: "출석하는 중", goOff: !ATT.sel };
   var lead = w.open.length ? "지금 출석할 수 있는 강연은<br>모두 출석했어요" :
     w.next ? "다음 강연 · <b>" + esc(w.next.nm) + "</b><br>" + w.next.s + " 시작" : "오늘 17F 강연 출석이 끝났어요";
