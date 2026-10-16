@@ -544,7 +544,7 @@ function stpProgListHtml() {
   /* v7.39 (사용자 261016 계획서 0-2-3) 목록으로 나누고 끝 줄 「합쳐 2개까지」(합계 오해 방지) · 라운지 줄 = 사전 신청자에게만(D7 · 내 상담 줄 · 받은 ln) · 선정 · 내 시각이 있으면 괄호로(통째로 넘김) */
   var c = S.get("cchat", null), r = typeof loungeMine === "function" ? loungeMine() : null, tm = function (t) { return ' <span class="axs-nwr">(' + esc(t) + ")</span>"; };
   var st0 = S.get("stamps", []), ten = (typeof tenMine === "function" && tenMine()) || st0.indexOf("p10") >= 0 || st0.indexOf("p10h") >= 0;   /* 261016 (사용자) 10F 실습 = 사전 신청자(10F 명단 · tenMine)에게만 · 받은 p10 · p10h */
-  var rows = ["17F 오후 강연 입장 1 + 끝 1"].concat(ten ? ["10F 실습 입장 1 + 끝 1"] : [])
+  var rows = ["17F 오후 강연 시작 · 종료 출석체크 시 각 1개"].concat(ten ? ["10F 실습 시작 · 종료 출석체크 시 각 1개"] : [])
     .concat(r || st0.indexOf("ln") >= 0 ? ["1F AX 라운지 참석 2" + (r && r.status === "approved" && r.slot ? tm(resvRng(r)) : "")] : [])
     .concat(["18F 커피챗 상담 1" + (c && c.status === "matched" && c.round && !S.get("cchat_att", false) ? tm(c.round + " 선정") : ""), "합쳐 2개까지"]);
   return '<ul class="axs-stpl">' + rows.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";

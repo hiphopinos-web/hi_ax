@@ -381,13 +381,13 @@ function applyCchatHtml() {
 function applyTenShow() { return !!tenMine() || testMode(); }
 function applyTenHtml() {
   if (!applyTenShow()) return "";
-  return '<div class="axs-rows">' + rcHtml({ cls: "", onclick: "progTenGo()", link: true, left: rcIcon(App.ICONS.guide), title: "10F 실습형 세션", sub: "사전 신청자 · 입장 1 + 끝 1" }).replace('<div class="rc', '<div data-apply="ten" class="rc') + "</div>";
+  return '<div class="axs-rows">' + rcHtml({ cls: "", onclick: "progTenGo()", link: true, left: rcIcon(App.ICONS.guide), title: "10F 실습형 세션", sub: '<span class="axs-nwr">· 사전 신청자</span><br><span class="axs-nwr">· 시작 · 종료 출석체크 시 각 1개</span>' }).replace('<div class="rc', '<div data-apply="ten" class="rc') + "</div>";
 }
 /* 261013 오후 (사용자) 참여하기 칸 맨 위 = 17F 오후 파트너 강연 두 장(자유 참석 · 신청 버튼 없음 · 누르면 강연 상세 · 도장 ×2) · 표기 = 시간표(SESSIONS l1 · l2) 그대로
-   v7.39 (사용자 261016) 스탬프 줄 = 「· 입장할 때 화면 QR 1개」 「· 끝날 때 화면 QR 1개」(커피챗 카드와 같은 문법) */
+   v7.39 (사용자 261016) 스탬프 줄 = 두 줄 목록(커피챗 카드와 같은 문법) · v7.44 (사용자 261016) 「· 시작 출석체크 시 1개 부여」 「· 종료 출석체크 시 1개 부여」(옛 「입장할 때 화면 QR 1개」 「끝날 때 화면 QR 1개」 대체) */
 function apply17Html(id) {
   var x = SESSIONS.filter(function (q) { return q.id === id; })[0]; if (!x) return "";
-  return applyCardHtml({ k: id, nm: x.sub, fl: 17, kor: x.who, kv: [["시간", x.tm], ["참여", "신청 없이 자유 참석"], ["스탬프", ["입장할 때 화면 QR 1개", "끝날 때 화면 QR 1개"]]], seal: stampTagHtml("p3", 2), tap: "progOpen(\'" + id + "\')", more: "progOpen(\'" + id + "\')" });
+  return applyCardHtml({ k: id, nm: x.sub, fl: 17, kor: x.who, kv: [["시간", x.tm], ["참여", "신청 없이 자유 참석"], ["스탬프", ["시작 출석체크 시 1개 부여", "종료 출석체크 시 1개 부여"]]], seal: stampTagHtml("p3", 2), tap: "progOpen(\'" + id + "\')", more: "progOpen(\'" + id + "\')" });
 }
 /* 261016 (사용자) 묶음 출처 글 · 10F 실습은 사전 신청자(applyTenShow)에게만 · 받으려면 상자 · 칸 맨 아래 줄이 같이 쓴다 */
 function progSrcTxt() { return "17F 강연 · " + (applyTenShow() ? "10F 실습 · " : "") + "라운지 · 커피챗"; }
