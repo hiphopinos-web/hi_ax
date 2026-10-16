@@ -872,6 +872,92 @@
     if (u1) G.kioskRelit = regionCut(mt, { x0: 1.3, x1: 2.3, z0: 7.8, z1: 8.9 }, u1);
     G.kioskCut = n;
   }
+  /* ═══════════ 261016 v7.51 룰렛 = 실물 룰렛판(사용자 영상 레퍼런스/20261016_144142.mp4 · 영상 · 사진은 앱에 넣지 않고 그림은 코드로 그린다) ═══════════
+   * 실물 = 흰 사각 기둥(앞면 위쪽에 휠) + 위 흰 간판 상자(금빛 H · 「현대해상」 · 앞으로 조금 나옴) + 간판 밑 검정 세모 바늘(아래를 가리킴) + 기둥 앞 휠 아래 「마음이 (하트) 합니다」(황토 글자)
+   *   휠 = 크기가 서로 다른 10칸 · 12시부터 시계 방향 3등 · 1등 · 3등 · 5등 · 2등 · 4등 · 2등 · 1등 · 5등 · 4등 · 색 = 황토(5등) · 연노랑(3등 · 2등) · 흰(1등 · 4등)
+   *   글자 = 등수만(경품 이름 · 가격 없음) · 갈색 · 칸 가운데 방향 · 위가 바깥 · 가운데 = 갈색 원 + 흰 하트 · 테 = 짙은 쇠 테 + 바깥으로 핀 20개
+   * 자리 · 크기 = 옛 소품 그대로(휠 가운데 D.PROPS.wheel · 높이 1.6m · 반지름 0.6m · 판 38 앞 · 동쪽을 봄) · 기둥 앞면 = 옛 받침 가운데(도면 x 1.45) · 기둥 = 폭 0.8 · 깊이 0.5 · 높이 2.3m + 간판 0.3m
+   *   옛 소품(휠 면 zone_event_body_1 · 흰 받침 상자 · 은색 기둥) = 지운다(받침 매트는 그대로 · cutKiosk 와 같은 방식)
+   * 그림 = 캔버스 세 장(휠 512 x 512 · 간판 512 x 144 · 기둥 글자 256 x 256 · 0.56m) · 파일 받기 없음 · 메시 5개(흰 몸 · 짙은 쇠 · 휠 면 · 간판 글자 · 기둥 글자) · 걷기 막힘 = buildGrid 가 저절로(remodel 안)
+   * 2D 「룰렛 돌리기」 판(SP_COL · spSvg)은 그대로 */
+  var WH3 = { r: 0.6, y: 1.6, n: [1, 0], colW: 0.8, colD: 0.5, colH: 2.3, hdW: 0.98, hdH: 0.3, hdD: 0.6, hdOut: 0.08, pegs: 20,
+    seg: [['3등', 38, 1], ['1등', 18, 0], ['3등', 30, 1], ['5등', 54, 2], ['2등', 18, 1], ['4등', 42, 0], ['2등', 32, 1], ['1등', 22, 0], ['5등', 62, 2], ['4등', 44, 0]],
+    col: ['#FFFFFF', '#F2E7B2', '#C99E66'], ink: '#8E5F3A', hub: '#8A684D', gold: '#C49B5F', iron: 0x2A2724, body: 0xF2F2F0, bodyC: '#F2F2F0', glow: 0.45 };
+  var WH3_F = '"Pretendard Variable", Pretendard, sans-serif';
+  function wh3Heart(g, x, y, s) { g.beginPath(); g.moveTo(x, y + s * 0.85); g.bezierCurveTo(x - s * 1.25, y + s * 0.05, x - s * 0.85, y - s * 0.95, x, y - s * 0.38); g.bezierCurveTo(x + s * 0.85, y - s * 0.95, x + s * 1.25, y + s * 0.05, x, y + s * 0.85); g.closePath(); g.fill(); }
+  function wh3Face(cv) {   /* 휠 면 · 12시부터 시계 방향(캔버스 각 = 시계 방향) */
+    var g = cv.getContext('2d'), c = 256, r = 254, a = -Math.PI / 2;
+    g.clearRect(0, 0, 512, 512);
+    WH3.seg.forEach(function (s) { var a1 = a + s[1] * Math.PI / 180; g.beginPath(); g.moveTo(c, c); g.arc(c, c, r, a, a1); g.closePath(); g.fillStyle = WH3.col[s[2]]; g.fill(); a = a1; });
+    a = -Math.PI / 2; g.fillStyle = WH3.ink; g.font = '700 30px ' + WH3_F; g.textAlign = 'center'; g.textBaseline = 'middle';
+    WH3.seg.forEach(function (s) { var a1 = a + s[1] * Math.PI / 180, m = (a + a1) / 2; g.save(); g.translate(c + Math.cos(m) * r * 0.64, c + Math.sin(m) * r * 0.64); g.rotate(m + Math.PI / 2); g.fillText(s[0], 0, 0); g.restore(); a = a1; });
+    g.fillStyle = WH3.hub; g.beginPath(); g.arc(c, c, 48, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#FFFFFF'; wh3Heart(g, c, c + 2, 25);
+    g.strokeStyle = '#2A2724'; g.lineWidth = 5; g.beginPath(); g.arc(c, c, r - 2, 0, Math.PI * 2); g.stroke();
+  }
+  function wh3Sign(cv) {   /* 간판 앞면 · 금빛 H + 「현대해상」 */
+    var g = cv.getContext('2d'); g.fillStyle = WH3.bodyC; g.fillRect(0, 0, 512, 144);
+    g.fillStyle = WH3.gold; g.font = '900 92px ' + WH3_F; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('H', 128, 78);
+    g.fillStyle = '#26232A'; g.font = '700 84px ' + WH3_F; g.textAlign = 'left'; g.fillText('현대해상', 178, 78);
+  }
+  function wh3Slogan(cv) {   /* 기둥 앞 · 「마음이 (하트) 합니다」 */
+    var g = cv.getContext('2d'); g.fillStyle = WH3.bodyC; g.fillRect(0, 0, 256, 256);
+    g.fillStyle = WH3.gold; g.font = '600 58px ' + WH3_F; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText('마음이', 128, 42); wh3Heart(g, 128, 128, 38); g.fillText('합니다', 128, 216);
+  }
+  function wh3Tex(w, h, draw) {
+    var cv = document.createElement('canvas'); cv.width = w; cv.height = h; draw(cv);
+    var t = new T.CanvasTexture(cv); t.colorSpace = T.SRGBColorSpace; t.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { draw(cv); t.needsUpdate = true; G.need = true; });   /* 글꼴이 늦게 오면 다시 그림 */
+    return t;
+  }
+  function wh3Merge(list) {   /* 위치 · 법선 · uv 를 한 덩어리로(그리기 한 번) */
+    var P = [], N = [], U = [];
+    list.forEach(function (g) {
+      g = g.index ? g.toNonIndexed() : g; var p = g.attributes.position, n = g.attributes.normal, u = g.attributes.uv;
+      for (var i = 0; i < p.count; i++) { P.push(p.getX(i), p.getY(i), p.getZ(i)); N.push(n.getX(i), n.getY(i), n.getZ(i)); U.push(u ? u.getX(i) : 0, u ? u.getY(i) : 0); }
+    });
+    var o = new T.BufferGeometry(); o.setAttribute('position', new T.Float32BufferAttribute(P, 3)); o.setAttribute('normal', new T.Float32BufferAttribute(N, 3)); o.setAttribute('uv', new T.Float32BufferAttribute(U, 2));
+    o.computeBoundingSphere(); o.computeBoundingBox(); return o;
+  }
+  function buildWheel() {
+    var Q = WH3, W0 = D.PROPS.wheel, R = { face: 0, cut: 0, relit: 0, tris: 0 }, kill = [];
+    if (!W0) return;
+    S.lobby.updateMatrixWorld(true);
+    S.lobby.traverse(function (o) { if (o.isMesh && o.material && o.material.name === 'wheel_face') kill.push(o); });
+    kill.forEach(function (o) { var i = S.picks.indexOf(o); if (i >= 0) S.picks.splice(i, 1); o.parent.remove(o); R.face++; });
+    S.lobby.traverse(function (o) {   /* 옛 받침 상자 · 은색 기둥 = 세 점이 모두 상자 안 · 매트 윗면(0.04 아래)은 남김 */
+      if (!o.isMesh || !/^zone_event_body/.test(o.name)) return;
+      R.cut += regionCut(o, null, null, function (tri) { return Math.max(tri[0].p[2], tri[1].p[2], tri[2].p[2]) > 0.04 && tri.every(function (V) { return V.p[0] > 1.1 && V.p[0] < 1.85 && V.p[1] > 10.25 && V.p[1] < 11.05; }); });
+    });
+    var mt = S.lobby.getObjectByName('zone_event_body_2'), u1 = mt && attrAt(mt, 'uv1', 1.9, 9.9, 0.027);   /* 옛 받침 밑 · 앞 매트 = 구운 빛이 까맣다(받침 그늘) · 옆 매트 한 점의 빛으로 다시 칠한다(cutKiosk 와 같다) */
+    if (u1) R.relit = regionCut(mt, { x0: 1.3, x1: 1.8, z0: 10.3, z1: 11.0 }, u1);
+    var bx = function (w, h, d, x, y, z) { var b = new T.BoxGeometry(w, h, d); b.translate(x, y, z); return b; };
+    /* 흰 몸 = 기둥 + 간판 상자 */
+    var body = wh3Merge([bx(Q.colW, Q.colH, Q.colD, 0, Q.colH / 2, -Q.colD / 2), bx(Q.hdW, Q.hdH, Q.hdD, 0, Q.colH + Q.hdH / 2, Q.hdOut - Q.hdD / 2)]);
+    /* 짙은 쇠 = 휠 판 몸 · 축 · 테 · 핀 20개 · 바늘 + 바늘 받침 */
+    var iron = [], wb = new T.CylinderGeometry(Q.r, Q.r, 0.03, 64); wb.rotateX(Math.PI / 2); wb.translate(0, Q.y, 0.045); iron.push(wb);
+    var ax = new T.CylinderGeometry(0.035, 0.035, 0.03, 12); ax.rotateX(Math.PI / 2); ax.translate(0, Q.y, 0.015); iron.push(ax);
+    var rim = new T.TorusGeometry(Q.r, 0.013, 6, 64); rim.translate(0, Q.y, 0.058); iron.push(rim);
+    for (var k = 0; k < Q.pegs; k++) { var pa = (k + 0.5) * Math.PI * 2 / Q.pegs, pg = new T.BoxGeometry(0.012, 0.075, 0.012); pg.translate(0, Q.r + 0.03, 0); pg.rotateZ(pa); pg.translate(0, Q.y, 0.058); iron.push(pg); }
+    var sh = new T.Shape(); sh.moveTo(-0.07, 0); sh.lineTo(0.07, 0); sh.lineTo(0, -0.2); sh.closePath();
+    var ptr = new T.ShapeGeometry(sh); ptr.translate(0, Q.colH + 0.06, Q.hdOut + 0.006); iron.push(ptr);
+    iron.push(bx(0.05, 0.05, Q.hdOut + 0.004, 0, Q.colH - 0.02, Q.hdOut / 2));
+    var face = new T.CircleGeometry(Q.r - 0.004, 72); face.translate(0, Q.y, 0.0605);
+    var sign = new T.PlaneGeometry(Q.hdW * 0.9, Q.hdW * 0.9 * 144 / 512); sign.translate(0, Q.colH + Q.hdH / 2, Q.hdOut + 0.002);
+    var slog = new T.PlaneGeometry(0.56, 0.56); slog.translate(0, 0.64, 0.002);
+    var g = new T.Group(); g.name = 'wheel3';
+    var c = toThree(W0[0], W0[1]); g.position.set(c.x, 0, c.z); g.rotation.y = Math.atan2(Q.n[0], -Q.n[1]);   /* 앞(+z) = 도면 n 방향 */
+    var ud = { zone: 'event' }, add = function (geo, mat, nm) { var m = new T.Mesh(geo, mat); m.name = nm; m.userData = ud; g.add(m); R.tris += (geo.index ? geo.index.count : geo.attributes.position.count) / 3; return m; };
+    var lit = function (o) { var m = new T.MeshLambertMaterial(o); m.emissive.set(o.map ? 0xFFFFFF : o.color); if (o.map) m.emissiveMap = o.map; m.emissiveIntensity = Q.glow; return m; };   /* 구운 빛 모형(흰 벽)과 밝기를 맞춤 · 면마다 그늘은 남김 */
+    add(body, lit({ color: Q.body }), 'wheel3_body');
+    add(wh3Merge(iron), new T.MeshLambertMaterial({ color: Q.iron, side: T.DoubleSide }), 'wheel3_iron');
+    add(face, lit({ map: wh3Tex(512, 512, wh3Face) }), 'wheel3_face');
+    add(sign, lit({ map: wh3Tex(512, 144, wh3Sign) }), 'wheel3_sign');
+    add(slog, lit({ map: wh3Tex(256, 256, wh3Slogan) }), 'wheel3_slogan');
+    S.lobby.add(g); g.updateMatrixWorld(true);
+    R.tris = Math.round(R.tris); G.wheel3 = R;   /* 진단 · 지운 휠 면 · 지운 받침 삼각형 · 새 삼각형 수 */
+  }
 
   /* ═══════════ v5.58 AX 포토부스(사용자 261004 「포토부스에는 ME to WE 광고가 아니라 같이 찍은 포토 사진 · 나랑 비슷하게 생긴 챗봇들이 단체 사진(웃으면서) · 사진은 벽체 쪽에서 찍는 거야」 · 「3칸의 가운데에 기계가 있어야」) ═══════════
    * 부스 = 판 3칸(34 · 35 「AX Festival 2026」 + 36 「AI 포토부스」 · 부스 발주 설명 PDF 10쪽 EVENT 02 · 서쪽 벽) · 판이 사진 배경
@@ -1738,7 +1824,7 @@
     G.tvStand = { boxes: nb, tris: i0.length / 3 };
   }
   function remodel() {
-    trueColors(S.lobby); cutKiosk();   /* v5.58 판 · 포스터 참 색 · 포토부스 옛 기계(판 36 앞) 지움 */
+    trueColors(S.lobby); cutKiosk(); buildWheel();   /* v7.51 룰렛 = 실물 룰렛판(buildWheel) · v5.58 판 · 포스터 참 색 · 포토부스 옛 기계(판 36 앞) 지움 */
     boothColors(S.lobby); tvStands(S.lobby);   /* v7.38 부스 바닥 매트 · 판 틀 색 · 받침대 TV 받침 */
     var t0 = performance.now(), R = { eh: 0, floor: 0, wing: 0 }, sideN = S.lobby.getObjectByName('side_n'), sideE = S.lobby.getObjectByName('side_e') || S.lobby;
     S.lobby.updateMatrixWorld(true);
@@ -5556,5 +5642,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v7.45', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v7.51', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();
