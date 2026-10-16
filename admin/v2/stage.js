@@ -16,13 +16,13 @@ SCREENS.stage={
     return [{ k:"lk", a:"lk7_state", ttl:20000 },{ k:"inv", a:"inv_state", ttl:60000 }]; },
   mount:function(vb){
     var s=sgSub();
-    el("phCap").textContent={ draw:"17F Outro 행운권 1~6등 · 추첨 화면에 명령 보내기", rec:"추첨 화면이 보낸 당첨 · 부재 · 취소 · 실명은 상품 전달용", ik:"아이디어왕 1등 1 · 2등 1 · 3등 3 · AI 구독권", type:"1F 현장 타자왕 1~10위 · 1~3위 시상", lk7:"7등 랜덤 굿즈 · 17:00 잔여 → 대상 확정 → 추첨(한 번) → 사내 우편" }[s];
+    el("phCap").textContent={ draw:"17F Outro 행운권 1~6등 · 진행은 무대 노트북(Space) · 이 판은 보기", rec:"추첨 화면이 보낸 당첨 · 부재(3 · 2 · 1등만) · 취소 · 실명은 상품 전달용", ik:"아이디어왕 1등 1 · 2등 1 · 3등 3 · AI 구독권", type:"1F 현장 타자왕 1~10위 · 1~3위 시상", lk7:"7등 랜덤 굿즈 · 17:00 잔여 → 대상 확정 → 추첨(한 번) → 사내 우편" }[s];
     var h=chipsH(SG_SUBS,s)+(stageDim()?band("info","16:00 전입니다 · 리허설 때 눌러 보며 확인합니다"):"");
     if(s==="draw"){ vb.innerHTML=h+'<div id="dcRoot">'+skel()+'</div>'; DC.sig=""; dcStart(); return; }
     if(s==="rec"){
       gridOf("drawrec",{ file:"추첨 당첨 기록", key:function(r){ return r.id; }, sort:{ k:"t", d:-1 }, onRow:function(k){ rowDetail(MG.drawrec,k); },
-        chips:[["all","전체",null],["win","당첨",function(r){ return r.st==="win"&&r.live; }],["absent","부재",function(r){ return r.st==="absent"; }],["undo","취소",function(r){ return !r.live||r.st==="undo"; }]],
-        cols:[{ k:"t", t:"시각", type:"date", w:96 },{ k:"round", t:"등수 · 칸", w:110, v:function(r){ return (r.round||"")+(r.slot?" · "+r.slot:""); } },{ k:"no", t:"행운권", w:84 },{ k:"name", t:"이름", w:100, v:function(r){ return r.name||r.nm||""; } },{ k:"dept", t:"부서", w:140 },{ k:"prize", t:"경품", w:160 },
+        chips:[["all","전체",null],["win","당첨",function(r){ return r.st==="win"&&r.live; }],["absent","부재 · 3 · 2 · 1등",function(r){ return r.st==="absent"&&(dcAbsOk(r)||!dcRk(r)); }],["undo","취소",function(r){ return !r.live||r.st==="undo"; }]],
+        cols:[{ k:"t", t:"시각", type:"date", w:96 },{ k:"round", t:"등수 · 칸", w:110, v:function(r){ var k=dcRk(r); return (k?k+"등":(r.round||""))+(r.slot?" · "+r.slot:""); } },{ k:"no", t:"행운권", w:84 },{ k:"name", t:"이름", w:100, v:function(r){ return r.name||r.nm||""; } },{ k:"dept", t:"부서", w:140 },{ k:"prize", t:"경품", w:160 },
           { k:"st", t:"상태", w:90, v:function(r){ return r.st==="win"?(r.live?"당첨":"당첨 · 취소됨"):r.st==="absent"?(r.live?"부재":"부재 · 취소됨"):"취소"; } },{ k:"ack", t:"폰 확인", w:90, v:function(r){ return r.st==="win"&&r.live?(r.ack?"확인 "+r.ack:"미확인"):""; } }],
         empty:"아직 추첨 기록이 없습니다", h:520 });
       vb.innerHTML=h+'<div class="grid g4 mb" id="rcK"></div><div class="card"><div id="mg_drawrec"></div></div>'; return; }
@@ -38,7 +38,7 @@ SCREENS.stage={
   },
   paint:function(){ var s=sgSub();
     if(s==="draw") return dcPaint();
-    if(s==="rec"){ var d=S.data.draw; el("rcK").innerHTML=d&&d.ok?kpi({ l:"당첨", v:n0(d.wins), u:"명", s:"취소 뺀 수" })+kpi({ l:"부재", v:n0(d.absent), u:"명", s:"다시 뽑은 수" })+kpi({ l:"추첨 대상", v:n0(d.pool&&d.pool.n), u:"명", s:"행운권 "+n0(d.pool&&d.pool.balls)+"장" })+kpi({ l:"추첨 화면", v:(d.scrs||[]).length?"연결":"없음", st:(d.scrs||[]).length?"ok":"warn", stt:(d.scrs||[]).length?"정상":"주의", s:"2분 안 보고" }):"";
+    if(s==="rec"){ var d=S.data.draw; el("rcK").innerHTML=d&&d.ok?kpi({ l:"당첨", v:n0(d.wins), u:"명", s:"취소 뺀 수" })+kpi({ l:"부재", v:n0(d.absent), u:"명", s:"3 · 2 · 1등 다시 추첨" })+kpi({ l:"추첨 대상", v:n0(d.pool&&d.pool.n), u:"명", s:"행운권 "+n0(d.pool&&d.pool.balls)+"장" })+kpi({ l:"추첨 화면", v:(d.scrs||[]).length?"연결":"없음", st:(d.scrs||[]).length?"ok":"warn", stt:(d.scrs||[]).length?"정상":"주의", s:"2분 안 보고" }):"";
       gridPaint("drawrec","draw","추첨",function(x){ return x.recs||[]; }); return; }
     if(s==="ik") return ikPaint();
     if(s==="type"){ gridPaint("tyres","tres","타자왕",function(x){ return (x.top||[]).slice(0,10); }); var t=S.data.tres; el("tyWin").textContent=t&&t.ok?"집계 시간 "+((t.win||[]).join(" · ")||"-")+" · 1~3위는 사회자가 닉네임으로 부르고 실명으로 상품 전달 · 부문 통계 없음":""; return; }
@@ -46,11 +46,18 @@ SCREENS.stage={
   }
 };
 
+/* 등수 · 상품 글자(상품권 6 · 마사지기 5 · 에어팟 4 · 음식물 3 · 뷔페 2 · 아이패드 1)가 먼저, 없으면 「N등」 글자, 없으면 칸 번호(0 = 6등 ... 5 = 1등) · 모르면 0 */
+var DC_RKP=[["아이패드",1],["뷔페",2],["신라호텔",2],["음식물",3],["미닉스",3],["에어팟",4],["마사지",5],["풀리오",5],["상품권",6]];
+function dcRk(r){ var t=String((r&&r.prize)||""), i, m;
+  for(i=0;i<DC_RKP.length;i++) if(t.indexOf(DC_RKP[i][0])>=0) return DC_RKP[i][1];
+  m=/^([1-6])\s*등/.exec(String((r&&r.round)||"")); if(m) return +m[1];
+  m=/^[0-5]$/.exec(String((r&&r.round)||"")); return m?6-(+m[0]):0; }
+function dcAbsOk(r){ var k=dcRk(r); return k>=1&&k<=3; }
 /* ══ 행운권 추첨 진행판 · 지금 콘솔 「추첨 원격」과 같은 서버 액션 ══ */
 var DC_SCN={ idle:"대기", checkin:"추첨 준비 · 공 넣는 중", closed:"추첨 준비 끝", card:"등수 카드", mix:"부저 화면", spin:"부저 · 회전", tension:"감속 · 배출 대기", exit:"배출", reveal:"당첨 공개", board:"결과판", end:"끝 화면", intro:"인트로", fin:"완주 경품 추첨 발표" };
 var DC_BTN=[ { c:"checkin", n:"추첨 준비 · 공 넣기" }, { c:"round", n:"등수 시작" }, { c:"mix", n:"부저 화면" }, { c:"draw", n:"부저" }, { c:"confirm", n:"확정" },
   { c:"absent", n:"부재 · 다시 뽑기", two:1 }, { c:"undo", n:"마지막 취소", two:1 }, { c:"board", n:"결과판" }, { c:"end", n:"끝 화면", two:1 }, { c:"idle", n:"대기 화면" },
-  { c:"intro", n:"인트로 영상" }, { c:"close", n:"체크인 마감 · 시험용", two:1 }, { c:"fin", n:"완주 경품 추첨 발표" }, { c:"reset_screen", n:"화면 초기화", two:1 } ];
+  { c:"intro", n:"인트로 영상" }, { c:"close", n:"체크인 마감 · 시험용", two:1 }, { c:"fin", n:"완주 경품 추첨 발표" }, { c:"reset_screen", n:"화면 초기화", two:1, hide:1 } ];
 var DC_MAP={ idle:["checkin","intro","board","end","fin"], intro:["idle","checkin"], checkin:["close","idle"], closed:["round","idle","fin"], card:["mix","undo","board","idle"], mix:["draw"], spin:[], tension:[], exit:[],
   reveal:["confirm","absent","undo"], board:["round","undo","end","idle","fin"], end:["idle","fin"], fin:["end","idle","fin"] };
 var DC_NAME={}; DC_BTN.forEach(function(b){ DC_NAME[b.c]=b.n; });
@@ -133,9 +140,9 @@ function dcNext(s){
     case "checkin": return { c:"", n:"공을 넣는 중", sub:"약 10초 · 다 넣으면 첫 등수 단추가 켜집니다" };
     case "closed": return { c:"round", n:R+" 추첨 시작", sub:"등수 · 경품 카드가 나옵니다" };
     case "card": return { c:"mix", n:"부저 화면", sub:"3.2초 뒤 저절로 넘어갑니다" };
-    case "mix": if(Array.isArray(s.ready)&&s.ready.indexOf("draw")<0) return { c:"", n:"공을 넣는 중", sub:"잠시 뒤 뽑기가 켜집니다" }; return { c:"draw", n:"부저 · "+R+" 뽑기", sub:"부저는 무대 노트북 Space 로도 됩니다" };
+    case "mix": if(Array.isArray(s.ready)&&s.ready.indexOf("draw")<0) return { c:"", n:"공을 넣는 중", sub:"잠시 뒤 뽑기가 켜집니다" }; return { c:"draw", n:"부저 · "+R+" 뽑기", sub:"부저는 무대 노트북 Space" };
     case "spin": case "tension": case "exit": return { c:"", n:"뽑는 중", sub:"공이 나오면 당첨 공개" };
-    case "reveal": return { c:"confirm", n:"확정", arg:(s.last&&s.last.id)||"", sub:"당첨자가 나오면 확정 · 안 계시면 오른쪽 「부재 · 다시 뽑기」" };
+    case "reveal": return { c:"confirm", n:"확정", arg:(s.last&&s.last.id)||"", sub:dcAbsOk({ prize:s.last&&s.last.prize, round:s.round&&String(s.round) })?"확정 · 다시 추첨은 무대 화면 오른쪽 아래 단추":"호명으로 마무리 · 부재 처리 없음" };
     case "board": return finOn()?{ c:"fin", n:"완주 경품 추첨 발표", sub:"완주 경품 추첨 결과(숫자)" }:{ c:"end", n:"끝 화면", two:1, sub:"ME to WE 마무리 화면 · 7등 랜덤 굿즈는 행사 뒤 추첨" };
     case "fin": return { c:"end", n:"끝 화면", sub:"ME to WE 마무리 화면" };
     case "end": return { c:"", n:"끝", sub:"모든 순서를 마쳤습니다" };
@@ -163,18 +170,18 @@ function dcBody(d){
   var rej=s&&s.rej&&s.rej.seq&&s.rej.seq>DC.rejOff&&(!DC.cmd||s.rej.seq>=DC.cmd.seq-3)?band("bad",'<b>화면이 「'+esc(DC_NAME[s.rej.cmd]||s.rej.cmd)+'」(#'+s.rej.seq+')를 받지 않았습니다</b> · '+esc(DC_WHY[s.rej.why]||s.rej.why||""),'<button class="btn sm" type="button" onclick="dcRejOff('+Number(s.rej.seq)+')">확인</button>'):"";
   var k="go:"+nx.c, arm=DC.arm&&DC.arm.c===k, ok=!!nx.c&&dcReady(nx.c)&&!DC.busy, busy=DC.busy&&DC.busy===nx.c;
   var go='<button class="dc-go'+(arm?" arm":"")+'" type="button"'+(ok?'':' disabled')+' onclick="dcGo()"><b>'+(busy?"보내는 중":arm?"한 번 더 누르면 "+esc(nx.n):esc(nx.n))+'</b><em>'+(nx.c?(arm?"3초 안에 한 번 더":nx.two?"두 번 누름":"누르면 추첨 화면이 바로 바뀜"):"기다리는 중")+'</em></button>';
-  var abs=sc==="reveal"?(function(){ var a=DC.arm&&DC.arm.c==="absent"; return '<button class="dc-abs'+(a?" arm":"")+'" type="button"'+(dcReady("absent")&&!DC.busy?'':' disabled')+' onclick="dcPress(\'absent\')"><b>'+(a?"한 번 더 누르면 부재":"부재 · 다시 뽑기")+'</b><em>'+(a?"3초 안에":"두 번 누름")+'</em></button>'; })():"";
+  var abs=sc==="reveal"&&dcAbsOk({ prize:s.last&&s.last.prize, round:s.round&&String(s.round) })?(function(){ var a=DC.arm&&DC.arm.c==="absent"; return '<button class="dc-abs'+(a?" arm":"")+'" type="button"'+(dcReady("absent")&&!DC.busy?'':' disabled')+' onclick="dcPress(\'absent\')"><b>'+(a?"한 번 더 누르면 부재":"부재 · 다시 뽑기")+'</b><em>'+(a?"3초 안에":"두 번 누름")+'</em></button>'; })():"";
   var now='<div class="dc-now"><span class="cap">지금 화면</span><b>'+esc(s?(DC_SCN[sc]||sc||"-"):"화면 보고 없음")+'</b>'+(s&&s.round&&!/^\d+$/.test(String(s.round))&&DC_STEPS[1][1].indexOf(sc)>=0?tag(s.round+(s.slot?" · "+s.slot:"")):'')+'</div>';
   var kp='<div class="grid g4 mb">'+kpi({ l:"추첨 대상", v:pl?n0(pl.n):n0(d["in"]), u:"명", s:aOff?"행운권 번호 전체":"17F 체크인 "+n0(d["in"])+"명"+(d.closed?" · 마감":"") })+kpi({ l:"통 안의 공", v:n0(s?s.pool:d.balls), u:"개", s:"당첨 확률은 공 단위" })+kpi({ l:"당첨", v:n0(d.wins), u:"명", s:"부재 "+n0(d.absent)+" · 취소 뺀 수" })+kpi({ l:"마지막 명령", v:DC.cmd?"#"+DC.cmd.seq:"-", s:DC.cmd?(DC_NAME[DC.cmd.cmd]||DC.cmd.cmd)+(DC.sent&&DC.sent.seq===DC.cmd.seq?" · "+DC.sent.ms+"ms":""):"보낸 명령 없음" })+'</div>';
-  var main='<div class="card">'+dcSteps(s)+now+'<div class="dc-gorow">'+go+abs+'</div><p class="cap mt">'+esc(nx.sub||"")+'</p></div>';
+  var main='<div class="card">'+dcSteps(s)+now+'<div class="dc-gorow">'+go+abs+'</div><p class="cap mt"><b>진행은 무대 노트북(Space) · 이 판은 보기</b></p><p class="cap mt4">'+esc(nx.sub||"")+'</p></div>';
   var btn=function(b){ var ok2=dcReady(b.c)&&(b.c!=="fin"||finOn()), a=DC.arm&&DC.arm.c===b.c, bz=DC.busy===b.c; return '<button class="btn sm'+(a?" pri":"")+(b.two?" dng":"")+'" type="button"'+(ok2&&!DC.busy?'':' disabled')+' onclick="dcPress(\''+b.c+'\')">'+(bz?"보내는 중":a?"한 번 더 · "+esc(b.n):esc(b.n))+'</button>'; };
-  var more='<details class="memo mt"'+(DC.more?" open":"")+' ontoggle="DC.more=this.open"><summary>세부 명령 · 화면이 지금 받는 명령만 켜짐 · 빨간 단추는 두 번</summary><div class="dc-pad mt">'+DC_BTN.filter(function(b){ return b.c!=="fin"||finOn(); }).map(btn).join("")+'</div>'+(s&&s.ver?'<p class="cap mt4">화면 '+esc(s.ver)+'</p>':'')+'</details>';
+  var more='<details class="memo mt"'+(DC.more?" open":"")+' ontoggle="DC.more=this.open"><summary>세부 명령 · 화면이 지금 받는 명령만 켜짐 · 빨간 단추는 두 번</summary><div class="dc-pad mt">'+DC_BTN.filter(function(b){ return !b.hide&&(b.c!=="fin"||finOn())&&(b.c!=="absent"||(sc==="reveal"&&dcAbsOk({ prize:s&&s.last&&s.last.prize, round:s&&s.round&&String(s.round) }))); }).map(btn).join("")+'</div>'+(s&&s.ver?'<p class="cap mt4">화면 '+esc(s.ver)+'</p>':'')+'</details>';
   var last=s&&s.last&&s.last.no?s.last:null, rec=null;
   if(last&&last.id) rec=((d.recs||[]).filter(function(r){ return r.id===last.id; })[0])||null;
   var won=last?'<div class="win"><span class="cap">'+esc((last.round||"")+(last.slot?" · "+last.slot:""))+'</span><div class="no">'+esc(last.no)+'</div><b>'+esc(whoOf(rec||{ nm:last.nm }).n||"-")+'</b><span class="cap">'+esc(whoSub(rec||{ nm:last.nm }))+'</span>'+whoFlags(whoOf(rec||{ nm:last.nm }))+'<div>'+(last.st&&last.st!=="win"?tag(last.st==="absent"?"부재":"취소","off"):tag("당첨","ok"))+' '+esc(last.prize||(rec&&rec.prize)||"")+'</div>'+(rec&&rec.st==="win"?'<div class="cap">폰 확인 '+(rec.ack?rec.ack:"아직")+'</div>':'')+'</div>':'<p class="cap">아직 당첨 공개가 없습니다</p>';
   var w=((d.recs)||[]).filter(function(r){ return r.st==="win"&&r.live; }).slice(0,12), ackN=w.filter(function(r){ return !!r.ack; }).length;
   var ack=w.length?'<div class="card mt"><h2>당첨자 폰 확인 <span class="cap">'+ackN+' / '+w.length+'</span></h2><table class="tb"><tbody>'+w.map(function(r){ return '<tr><td class="n"><b>'+esc(r.no||"-")+'</b></td><td class="n">'+esc(whoOf(r).e||"-")+'</td><td>'+esc(whoOf(r).d||"-")+'</td><td>'+esc(whoOf(r).n||"-")+whoFlags(whoOf(r))+'</td><td>'+esc(r.prize||"")+'</td><td>'+(r.ack?tag("확인 "+r.ack,"ok"):tag("미확인","warn"))+'</td></tr>'; }).join("")+'</tbody></table></div>':"";
-  return head+rej+(!aOff?band("warn","행운권 참석조건 ON · 추첨 화면 조작 창(P)에서 「체크인 화면 쓰기」를 함께 켭니다"):"")+kp+'<div class="grid g32"><div>'+main+more+'</div><div><div class="card"><h2>방금 당첨 <span class="cap">실명 · 부서는 상품 전달용</span></h2>'+won+'</div>'+ack+'</div></div>';
+  return head+rej+(!aOff?band("warn","행운권 참석조건 ON · 체크인 화면은 옛 추첨 화면(?classic=1&ck=1)에서 씁니다"):"")+kp+'<div class="grid g32"><div>'+main+more+'</div><div><div class="card"><h2>방금 당첨 <span class="cap">실명 · 부서는 상품 전달용</span></h2>'+won+'</div>'+ack+'</div></div>';
 }
 
 /* ══ 아이디어왕 ══ */
