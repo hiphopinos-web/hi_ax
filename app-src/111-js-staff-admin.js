@@ -129,13 +129,15 @@ function staffMeIn(v) {
   if (!on && App.current === "sscan") App.go("home");
 }
 var SSC_CK = { busy: false };
-function sscCodeAsk() {
-  modalOpen('<p class="ax-body">처음 한 번만 입력해요</p>' +
+function sscCodeAsk() {   /* v7.37 (사용자 261016 Q11 권장안) 코드 창 세 곳(스캔 · 지금 현장 제보 · 스태프 요청) 같은 창 · 안내 두 줄 · 「내 QR 보기」(명단 사번이 코드 없이 내 QR) */
+  modalOpen('<p class="ax-body ssc-codetx"><span>스태프 코드는 사전 교육 때 <i>안내할 예정이에요.</i></span><span>코드를 받으면 처음 한 번만 입력해요.</span></p>' +
     '<label class="ax-sr-only" for="sscCode">스태프 코드</label>' +
     '<input id="sscCode" class="ax-field ssc-code" inputmode="numeric" pattern="[0-9]*" enterkeyhint="go" autocomplete="off" placeholder="코드를 입력해 주세요" onkeydown="onEnter(event, sscCodeGo)">' +
-    '<button type="button" class="ax-button ssc-codego" id="sscCodeGo" onclick="sscCodeGo()">확인하기</button>', "스태프 코드");
+    '<button type="button" class="ax-button ssc-codego" id="sscCodeGo" onclick="sscCodeGo()">확인하기</button>' +
+    '<button type="button" class="ax-button ax-button-weak ssc-codeqr" onclick="sscCodeMine()">내 QR 보기</button>', "스태프 코드");
   setTimeout(function () { try { el("sscCode").focus(); } catch (e) {} }, 150);
 }
+function sscCodeMine() { SSC_CK.then = null; modalClose(true); qrPanelOpen("mine"); }   /* v7.37 코드 창 「내 QR 보기」 = 창을 바로 치우고 내 QR 화면(코드 확인 없음 · 이어서 열 시트 버림) */
 function sscCodeGo() {
   var v = String((el("sscCode") || {}).value || "").trim(), b = el("sscCodeGo");
   if (SSC_CK.busy) return;
