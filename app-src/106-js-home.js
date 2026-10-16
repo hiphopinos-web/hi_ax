@@ -249,7 +249,7 @@ function a2cHtml() {
   var ia = isInApp();
   return '<section class="axs-a2c" id="a2cCard" aria-label="QR 없이 바로 열기"><p class="h">QR 없이 바로 열기</p>' +
     (ia ? '<p class="b">지금은 ' + a2hsInAppName() + '</p><p class="s">메뉴에서 &ldquo;다른 브라우저로 열기&rdquo; 뒤 설치</p>'
-        : '<p class="b">홈 화면에 AX Festival 아이콘을 만들어요</p><p class="s"><ax-seg>앱 스토어 설치 아님</ax-seg> <ax-seg>폰에 남는 것은 사번 · 이름 · 로그인 상태</ax-seg></p>') +
+        : '<p class="b">홈 화면에 AX Festival 아이콘을 만들어요</p><p class="s"><ax-seg>행사가 끝나면 바로가기는 삭제하세요</ax-seg></p>') +
     '<div class="r"><button type="button" class="ax-button ax-button-weak" onclick="a2hsOpen()">' + (ia ? "방법 보기" : a2hsWord()) + '</button>' +
     '<button type="button" class="ax-link a2c-later" onclick="a2cLater()">나중에</button></div></section>';
 }
