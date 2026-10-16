@@ -362,7 +362,7 @@ function loungeMine() { var r = myResv(); return r && RESV_HOLD.indexOf(r.status
 function resvMin(r) { var a = r && r.slot ? t2m(r.slot) : 0, b = r && r.to ? t2m(r.to) : 0; return b > a ? b - a : RESV_CONF.step || 30; }
 function resvDur(r) { var m = resvMin(r); return m % 60 ? m + "분" : m / 60 + "시간"; }
 function resvRng(r) { if (!r || !r.slot) return ""; return r.rng || r.slot + "~" + hm2(t2m(r.slot) + resvMin(r)); }
-function resvPlace(r) { return (r && r.place || "1F AX 라운지") + (r && +r.seat > 0 ? " · 상담석 " + r.seat : ""); }
+function resvPlace(r) { return String(r && r.place || "1F AX 라운지").replace(/상담석/g, "미팅룸") + (r && +r.seat > 0 ? " · 미팅룸 " + r.seat : ""); }   /* v7.53 (사용자 261016) 화면 글자 상담석 → 미팅룸 · 서버 값(seat · place)은 그대로 받고 보여 줄 때만 */
 /* 신청 전이고 지금 신청할 수 있는 곳 수(세그먼트 주황 점) · v7.39 = 커피챗만(라운지 앱 신청 없음) */
 function applyOpenN() { var c = cchatState(); return c && !c.mine && !c.wait ? 1 : 0; }   /* v7.52 신청 시작 전 = 점 없음 */
 /* ═══ v5.85 프로그램 › 참여하기 칸 = 17F AWS · 17F MS · 18F 커피챗(v7.39 라운지 카드 없음) + 맨 아래 묶음 한 줄 + 10F 줄(사전 신청자 · 테스트 사번만) ═══

@@ -873,16 +873,16 @@
     G.kioskCut = n;
   }
   /* ═══════════ 261016 v7.51 룰렛 = 실물 룰렛판(사용자 영상 레퍼런스/20261016_144142.mp4 · 영상 · 사진은 앱에 넣지 않고 그림은 코드로 그린다) ═══════════
-   * 실물 = 흰 사각 기둥(앞면 위쪽에 휠) + 위 흰 간판 상자(금빛 H · 「현대해상」 · 앞으로 조금 나옴) + 간판 밑 검정 세모 바늘(아래를 가리킴) + 기둥 앞 휠 아래 「마음이 (하트) 합니다」(황토 글자)
+   * 실물 = 흰 사각 기둥(앞면 위쪽에 휠) + 위 흰 간판 상자(금빛 H · 「현대해상」 · 앞으로 조금 나옴) + 간판 밑 검정 세모 바늘(아래를 가리킴) + 기둥 앞 휠 아래 「마음이 (하트) 합니다」(v7.53 = 사용자 로고 그림 maeum-logo.webp · 604 x 179 · 주황 그라데이션 하트)
    *   휠 = 크기가 서로 다른 10칸 · 12시부터 시계 방향 3등 · 1등 · 3등 · 5등 · 2등 · 4등 · 2등 · 1등 · 5등 · 4등 · 색 = 황토(5등) · 연노랑(3등 · 2등) · 흰(1등 · 4등)
    *   글자 = 등수만(경품 이름 · 가격 없음) · 갈색 · 칸 가운데 방향 · 위가 바깥 · 가운데 = 갈색 원 + 흰 하트 · 테 = 짙은 쇠 테 + 바깥으로 핀 20개
    * 자리 · 크기 = 옛 소품 그대로(휠 가운데 D.PROPS.wheel · 높이 1.6m · 반지름 0.6m · 판 38 앞 · 동쪽을 봄) · 기둥 앞면 = 옛 받침 가운데(도면 x 1.45) · 기둥 = 폭 0.8 · 깊이 0.5 · 높이 2.3m + 간판 0.3m
    *   옛 소품(휠 면 zone_event_body_1 · 흰 받침 상자 · 은색 기둥) = 지운다(받침 매트는 그대로 · cutKiosk 와 같은 방식)
-   * 그림 = 캔버스 세 장(휠 512 x 512 · 간판 512 x 144 · 기둥 글자 256 x 256 · 0.56m) · 파일 받기 없음 · 메시 5개(흰 몸 · 짙은 쇠 · 휠 면 · 간판 글자 · 기둥 글자) · 걷기 막힘 = buildGrid 가 저절로(remodel 안)
+   * 그림 = 캔버스 세 장(휠 512 x 512 · 간판 512 x 144 · v7.53 기둥 로고 = 그림 파일 maeum-logo.webp) · 파일 받기 없음 · 메시 5개(흰 몸 · 짙은 쇠 · 휠 면 · 간판 글자 · 기둥 글자) · 걷기 막힘 = buildGrid 가 저절로(remodel 안)
    * 2D 「룰렛 돌리기」 판(SP_COL · spSvg)은 그대로 */
   var WH3 = { r: 0.6, y: 1.6, n: [1, 0], colW: 0.8, colD: 0.5, colH: 2.3, hdW: 0.98, hdH: 0.3, hdD: 0.6, hdOut: 0.08, pegs: 20,
     seg: [['3등', 38, 1], ['1등', 18, 0], ['3등', 30, 1], ['5등', 54, 2], ['2등', 18, 1], ['4등', 42, 0], ['2등', 32, 1], ['1등', 22, 0], ['5등', 62, 2], ['4등', 44, 0]],
-    col: ['#FFFFFF', '#F2E7B2', '#C99E66'], ink: '#8E5F3A', hub: '#8A684D', gold: '#C49B5F', iron: 0x2A2724, body: 0xF2F2F0, bodyC: '#F2F2F0', glow: 0.45 };
+    col: ['#FFFFFF', '#F2E7B2', '#C99E66'], ink: '#8E5F3A', hub: '#8A684D', gold: '#C49B5F', iron: 0x2A2724, body: 0xF2F2F0, bodyC: '#F2F2F0', glow: 0.45, logo: 'maeum-logo.webp', logoV: 'v753' };
   var WH3_F = '"Pretendard Variable", Pretendard, sans-serif';
   function wh3Heart(g, x, y, s) { g.beginPath(); g.moveTo(x, y + s * 0.85); g.bezierCurveTo(x - s * 1.25, y + s * 0.05, x - s * 0.85, y - s * 0.95, x, y - s * 0.38); g.bezierCurveTo(x + s * 0.85, y - s * 0.95, x + s * 1.25, y + s * 0.05, x, y + s * 0.85); g.closePath(); g.fill(); }
   function wh3Face(cv) {   /* 휠 면 · 12시부터 시계 방향(캔버스 각 = 시계 방향) */
@@ -899,11 +899,6 @@
     var g = cv.getContext('2d'); g.fillStyle = WH3.bodyC; g.fillRect(0, 0, 512, 144);
     g.fillStyle = WH3.gold; g.font = '900 92px ' + WH3_F; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('H', 128, 78);
     g.fillStyle = '#26232A'; g.font = '700 84px ' + WH3_F; g.textAlign = 'left'; g.fillText('현대해상', 178, 78);
-  }
-  function wh3Slogan(cv) {   /* 기둥 앞 · 「마음이 (하트) 합니다」 */
-    var g = cv.getContext('2d'); g.fillStyle = WH3.bodyC; g.fillRect(0, 0, 256, 256);
-    g.fillStyle = WH3.gold; g.font = '600 58px ' + WH3_F; g.textAlign = 'center'; g.textBaseline = 'middle';
-    g.fillText('마음이', 128, 42); wh3Heart(g, 128, 128, 38); g.fillText('합니다', 128, 216);
   }
   function wh3Tex(w, h, draw) {
     var cv = document.createElement('canvas'); cv.width = w; cv.height = h; draw(cv);
@@ -945,7 +940,7 @@
     iron.push(bx(0.05, 0.05, Q.hdOut + 0.004, 0, Q.colH - 0.02, Q.hdOut / 2));
     var face = new T.CircleGeometry(Q.r - 0.004, 72); face.translate(0, Q.y, 0.0605);
     var sign = new T.PlaneGeometry(Q.hdW * 0.9, Q.hdW * 0.9 * 144 / 512); sign.translate(0, Q.colH + Q.hdH / 2, Q.hdOut + 0.002);
-    var slog = new T.PlaneGeometry(0.56, 0.56); slog.translate(0, 0.64, 0.002);
+    var slog = new T.PlaneGeometry(0.72, 0.72 * 298 / 1006); slog.translate(0, 0.66, 0.002);   /* v7.53 사용자 로고 그림 비율 그대로(1006 x 298) */
     var g = new T.Group(); g.name = 'wheel3';
     var c = toThree(W0[0], W0[1]); g.position.set(c.x, 0, c.z); g.rotation.y = Math.atan2(Q.n[0], -Q.n[1]);   /* 앞(+z) = 도면 n 방향 */
     var ud = { zone: 'event' }, add = function (geo, mat, nm) { var m = new T.Mesh(geo, mat); m.name = nm; m.userData = ud; g.add(m); R.tris += (geo.index ? geo.index.count : geo.attributes.position.count) / 3; return m; };
@@ -954,7 +949,8 @@
     add(wh3Merge(iron), new T.MeshLambertMaterial({ color: Q.iron, side: T.DoubleSide }), 'wheel3_iron');
     add(face, lit({ map: wh3Tex(512, 512, wh3Face) }), 'wheel3_face');
     add(sign, lit({ map: wh3Tex(512, 144, wh3Sign) }), 'wheel3_sign');
-    add(slog, lit({ map: wh3Tex(256, 256, wh3Slogan) }), 'wheel3_slogan');
+    var sm = add(slog, new T.MeshBasicMaterial({ transparent: true, depthWrite: false, toneMapped: false, color: 0xF2F2F0 }), 'wheel3_slogan'); sm.visible = false;   /* 그림을 받은 뒤에만 보인다 · 로고 색 그대로(판 참 색과 같다 · 기둥 흰 몸 밝기에 맞춰 살짝 낮춤) */
+    new T.TextureLoader().load(BASE + WH3.logo + '?v=' + WH3.logoV, function (t) { t.colorSpace = T.SRGBColorSpace; t.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy()); sm.material.map = t; sm.material.needsUpdate = true; sm.visible = true; G.need = true; });
     S.lobby.add(g); g.updateMatrixWorld(true);
     R.tris = Math.round(R.tris); G.wheel3 = R;   /* 진단 · 지운 휠 면 · 지운 받침 삼각형 · 새 삼각형 수 */
   }
@@ -1267,25 +1263,35 @@
    *     감속 후반 2.0초(SP_DR) = 판이 돌면서 작아지며(약 40%) 위로 · 목록 머리가 된다(spRise) · 멈춤 = 다 올라간 순간 · 곡선 cubic-bezier(.4, 0, .2, 1) 하나(판 이동 · 목록 · 문구)
    *     「행운을 빌어요.」 · 「체험용 룰렛」 = 이동 시작에 0.45초 흐려짐 · 목록 「이런 경품이 걸려 있어요」 1~5등 = 0.3초 뒤 아래 45%에서 투명 → 불투명으로 함께 올라와 판과 같이 선다(아래에 붙은 시트 · 위 모서리 32px)
    *     판 이동 2.0초 = 시트 규격 250ms 예외(사용자 연출) · 닫기 = 그대로([닫기] · 목록 밖 톡 · Esc · 뒤로 = 180ms 흐려짐) · 움직임 줄이기 = 누르자마자 마지막 화면(판 = 칸 경계 · 목록 펼침) */
-  var SP = { near: false, on: false, ph: '', popped: false, t0: 0, st: 0, dur: 0, a0: 0, A: 0, ang: 0, raf: 0, tm: [], seg: 0, tickT: 0, ticks: 0, snd: 0, n: 0, tab: null, out: null, stopMs: 0, cardMs: 0, log: [] };
+  var SP = { aim: '', u: 0, near: false, on: false, ph: '', popped: false, t0: 0, st: 0, dur: 0, a0: 0, A: 0, ang: 0, raf: 0, tm: [], seg: 0, tickT: 0, ticks: 0, snd: 0, n: 0, tab: null, out: null, stopMs: 0, cardMs: 0, log: [] };
   var SP_R = 3.0, SP_R2 = 3.3, SP_SEG = 10, SP_OUT = 180, SP_GAP = 45, SP_DT = 4200, SP_DR = 2000, SP_ACC = 350;   /* v7.40 SP_DT = 누름 → 멈춤 · SP_DR = 작아지며 위로(멈춤과 같이 끝남) · SP_ACC = 처음 부드럽게 빨라지는 시간 */
-  var SP_COL = ['#FF7E31', '#FFB284', '#FFD8C1', '#FFEBE0', '#FFFFFF'];   /* 3D 소품 wheel.webp 와 같은 순서(10칸 = 두 번) */
-  var SP_RK = ['5등', '1등', '5등', '3등', '4등', '5등', '2등', '5등', '3등', '4등'];   /* v6.93 칸 등수(예시) · 시계 방향 · 0 = 3시 방향 칸 */
+  /* v7.53 (사용자 261016 「2D 판도 실물처럼」) 판 = 3D 룰렛(WH3)과 같은 실물 룰렛판 · 크기가 다른 10칸 · 12시부터 시계 방향 3 · 1 · 3 · 5 · 2 · 4 · 2 · 1 · 5 · 4등
+   *   색 = 5등 황토 · 2 · 3등 연노랑 · 1 · 4등 흰 · 등수 글자 갈색(위가 바깥) · 가운데 갈색 원 + 흰 하트 · 짙은 쇠 테 + 핀 20개 · 바늘 = 위 검정 세모(그대로)
+   *   멈춤 = 칸 안(spAim · 칸 경계에서 min(6도, 칸의 30%) 안쪽 · 다른 등수로 보이지 않게) · 멈출 칸 = 판 넓이대로 무작위(SP.aim 이 있으면 그 등수 칸 · 시험용) · 서버 호출 없음 그대로
+   *   째깍 = 핀(SP_PEG 20개 · 18도마다) · 옛 v7.40 「칸 경계에서 멈춤 · 경계선」은 걷음 */
+  var SP_COL = WH3.col, SP_RK = WH3.seg.map(function (s) { return s[0]; }), SP_W = WH3.seg.map(function (s) { return s[1]; }), SP_CUM = [0], SP_PEG = 20;
+  SP_W.forEach(function (w, i) { SP_CUM.push(SP_CUM[i] + w); });   /* 칸 시작 각(12시부터 시계 방향) · 끝 = 360 */
   var SP_MSG = ['행운을 빌어요.', '1층에서 룰렛을 체험하세요.'];   /* 사용자 문구 그대로(띄어쓰기만 「체험하세요」) */
   function spSvg() {
-    var c = 256, r = 248, o = '<svg viewBox="0 0 512 512" aria-hidden="true" focusable="false">';
-    for (var i = 0; i < SP_SEG; i++) {
-      var a0 = i * 2 * Math.PI / SP_SEG, a1 = (i + 1) * 2 * Math.PI / SP_SEG;
-      o += '<path d="M256 256L' + (c + r * Math.cos(a0)).toFixed(2) + ' ' + (c + r * Math.sin(a0)).toFixed(2) + 'A248 248 0 0 1 ' + (c + r * Math.cos(a1)).toFixed(2) + ' ' + (c + r * Math.sin(a1)).toFixed(2) + 'Z" fill="' + SP_COL[i % SP_COL.length] + '"/>';
+    var c = 256, r = 228, o = '<svg viewBox="0 0 512 512" aria-hidden="true" focusable="false">', P = function (deg, rr) { var t = (deg - 90) * Math.PI / 180; return (c + rr * Math.cos(t)).toFixed(2) + ' ' + (c + rr * Math.sin(t)).toFixed(2); };
+    for (var i = 0; i < SP_SEG; i++) o += '<path d="M256 256L' + P(SP_CUM[i], r) + 'A' + r + ' ' + r + ' 0 0 1 ' + P(SP_CUM[i + 1], r) + 'Z" fill="' + SP_COL[WH3.seg[i][2]] + '"/>';
+    for (var j = 0; j < SP_SEG; j++) {   /* 등수 글자 · 칸 가운데 방향 · 위 = 바깥 */
+      var md = (SP_CUM[j] + SP_CUM[j + 1]) / 2, xy = P(md, 165).split(' ');
+      o += '<text x="' + xy[0] + '" y="' + xy[1] + '" transform="rotate(' + md.toFixed(1) + ' ' + xy[0] + ' ' + xy[1] + ')" text-anchor="middle" dominant-baseline="central" fill="' + WH3.ink + '" font-size="30" font-weight="700">' + SP_RK[j] + '</text>';
     }
-    for (var j = 0; j < SP_SEG; j++) {   /* v6.93 등수 글자 · 칸 가운데 각도 · 위 = 바깥 */
-      var m = (j + 0.5) * 2 * Math.PI / SP_SEG, tx = (c + 168 * Math.cos(m)).toFixed(1), ty = (c + 168 * Math.sin(m)).toFixed(1);
-      o += '<text x="' + tx + '" y="' + ty + '" transform="rotate(' + (m * 180 / Math.PI + 90).toFixed(1) + ' ' + tx + ' ' + ty + ')" text-anchor="middle" dominant-baseline="central" fill="#191F28" font-size="46" font-weight="800" letter-spacing="-1">' + SP_RK[j] + '</text>';
-    }
-    for (var q = 0; q < SP_SEG; q++) { var bq = q * 2 * Math.PI / SP_SEG; o += '<line x1="256" y1="256" x2="' + (c + r * Math.cos(bq)).toFixed(2) + '" y2="' + (c + r * Math.sin(bq)).toFixed(2) + '" stroke="#191F28" stroke-opacity=".3" stroke-width="2.5"/>'; }   /* v7.40 칸 경계선(바늘이 경계에 멈춘 것이 보이게) */
-    return o + '<circle cx="256" cy="256" r="242" fill="none" stroke="#FF7E31" stroke-width="12"/><circle cx="256" cy="256" r="30" fill="#FFFFFF"/></svg>';
+    for (var q = 0; q < SP_PEG; q++) { var pd = (q + 0.5) * 360 / SP_PEG; o += '<line x1="' + P(pd, 234).split(' ').join('" y1="') + '" x2="' + P(pd, 252).split(' ').join('" y2="') + '" stroke="#2A2724" stroke-width="5" stroke-linecap="round"/>'; }   /* 핀 */
+    var hs = 30, hy = 258, hp = 'M256 ' + (hy + hs * 0.85) + 'C' + (256 - hs * 1.25) + ' ' + (hy + hs * 0.05) + ' ' + (256 - hs * 0.85) + ' ' + (hy - hs * 0.95) + ' 256 ' + (hy - hs * 0.38) + 'C' + (256 + hs * 0.85) + ' ' + (hy - hs * 0.95) + ' ' + (256 + hs * 1.25) + ' ' + (hy + hs * 0.05) + ' 256 ' + (hy + hs * 0.85) + 'Z';
+    return o + '<circle cx="256" cy="256" r="' + (r + 2) + '" fill="none" stroke="#2A2724" stroke-width="9"/><circle cx="256" cy="256" r="52" fill="' + WH3.hub + '"/><path d="' + hp + '" fill="#FFFFFF"/></svg>';
   }
-  function spBound(a) { return a + ((18 - a) % 36 + 36) % 36; }   /* v7.40 a 이상 가장 가까운 칸 경계 각(바늘 12시 = 270도 · 경계 = 회전각 18 + 36k) */
+  function spRankAt(a) { var u = ((-a % 360) + 360) % 360; for (var j = 0; j < SP_SEG; j++) if (u < SP_CUM[j + 1]) return SP_RK[j]; return SP_RK[SP_SEG - 1]; }   /* 바늘 아래 칸 등수(확인용) */
+  function spAim(rk) {   /* 멈출 판 자리 u(12시부터 시계 방향 각) · rk 가 있으면 그 등수 칸 중 하나 · 없으면 넓이대로 무작위 · 칸 경계에서 여유 안쪽 */
+    var js = [], j0 = 0, x = Math.random() * 360;
+    for (var j = 0; j < SP_SEG; j++) if (SP_RK[j] === rk) js.push(j);
+    if (js.length) j0 = js[Math.floor(Math.random() * js.length)]; else while (j0 < SP_SEG - 1 && x >= SP_CUM[j0 + 1]) j0++;
+    var w = SP_W[j0], m = Math.min(6, w * 0.3);
+    return SP_CUM[j0] + m + Math.random() * (w - 2 * m);
+  }
+  function spBound(a, u) { return a + (((-u - a) % 360) + 360) % 360; }   /* a 이상 가장 가까운 회전각 · 바늘(12시) 아래 = 판 자리 u */
   function spTab(T) {   /* v7.40 속도 v(u) = 부드러운 출발(SP_ACC · smoothstep) × (1 - u)^2 · 누적해 0 ~ 1(600칸) · 속도가 끊기는 점 없음 · 끝 속도 0 */
     var N = 600, r = SP_ACC / T, tb = [0], acc = 0, prev = 0;
     for (var i = 1; i <= N; i++) { var u = i / N, x = Math.min(1, u / r), v = x * x * (3 - 2 * x) * (1 - u) * (1 - u); acc += (prev + v) / 2 / N; prev = v; tb.push(acc); }
@@ -1329,12 +1335,12 @@
     setRun(false); G.runKey = false; G.stick = null; G.path = null; G.goal = null; G.tapAct = null; G.mode = 'free'; $('dest').hidden = true; G.push = 0; G.pushK = 0; HOLD = null;
     G.sheetOpen = true;   /* 연출 동안 = 걷기 · 점프 · 화면 누름 · 다른 단추 · 키 막음(스탬프 카드와 같은 잠금) */
     $('spm').innerHTML = '<span>' + SP_MSG[0] + '</span>'; spCardReset();   /* v7.37 「행운을 빌어요.」 = 누르자마자 판 아래 */
-    SP.a0 = SP.ang % 360; spSet(SP.a0); SP.seg = Math.floor(SP.a0 / (360 / SP_SEG));
+    SP.a0 = SP.ang % 360; spSet(SP.a0); SP.seg = Math.floor(SP.a0 / (360 / SP_PEG));
     ov.hidden = false; ov.classList.remove('out', 'in', 'rise', 'card'); ov.style.removeProperty('--spdT'); void ov.offsetWidth; if (!RM) ov.classList.add('in');
     try { ov.focus({ preventScroll: true }); } catch (e) {}
     if (RM) { spRise(true); return; }   /* v7.40 움직임 줄이기 = 누르자마자 마지막 화면(판 = 칸 경계 · 목록 펼침) */
-    var tg = 18 + 36 * Math.floor(Math.random() * SP_SEG);   /* v7.40 멈출 칸 경계 = 무작위 열 곳 중 하나(어느 칸도 고르지 않음) */
-    SP.A = 360 * (4 + Math.floor(Math.random() * 2)) + ((tg - SP.a0) % 360 + 360) % 360; SP.dur = SP_DT; SP.tab = spTab(SP_DT);
+    var tg = spAim(SP.aim); SP.u = tg;   /* v7.53 멈출 판 자리 = 칸 안(spAim) */
+    SP.A = 360 * (4 + Math.floor(Math.random() * 2)) + (spBound(SP.a0, tg) - SP.a0); SP.dur = SP_DT; SP.tab = spTab(SP_DT);
     SP.ph = 'spin'; SP.st = performance.now(); spLog('spin'); SP.raf = requestAnimationFrame(spFrame);   /* 누른 순간부터 돈다 */
     spLater(spRise, SP_DT - SP_DR);
   }
@@ -1343,7 +1349,7 @@
     SP.raf = 0; if (!SP.on || (SP.ph !== 'spin' && SP.ph !== 'card')) return;
     var now = performance.now(), k = clamp((now - SP.st) / SP.dur, 0, 1), a = SP.a0 + SP.A * spCurve(k);
     spSet(a);
-    var sg = Math.floor(a / (360 / SP_SEG));
+    var sg = Math.floor(a / (360 / SP_PEG));   /* v7.53 째깍 = 핀 */
     if (sg !== SP.seg) { SP.seg = sg; if (now - SP.tickT >= SP_GAP) { SP.tickT = now; SP.ticks++; if (spTick(k)) SP.snd++; } }   /* 째깍 = 칸 경계 · 너무 빠를 때는 45ms 간격으로 묶음 */
     if (k >= 1) { SP.stopMs = Math.round(now - SP.t0); spLog('stop'); return; }
     SP.raf = requestAnimationFrame(spFrame);
@@ -1352,7 +1358,7 @@
     if (!SP.on || (SP.ph !== 'spin' && SP.ph !== 'in')) return;
     var ov = $('spov'), c = $('spc'), wh = $('spwh'), T = rm ? 0 : SP_DR;
     SP.rows = spCardHtml(); c.hidden = false;
-    if (rm) spSet(spBound(SP.a0));
+    if (rm) spSet(spBound(SP.a0, spAim(SP.aim)));
     ov.style.setProperty('--spdT', T + 'ms');
     ov.classList.remove('in'); ov.classList.add('rise', 'card'); void wh.offsetWidth;
     var oh = ov.clientHeight, ch = c.offsetHeight, wr = wh.getBoundingClientRect(), orr = ov.getBoundingClientRect();   /* 목록 높이 = 큰 글씨 · 낮은 화면이면 판이 작아진다(최소 80px) */
@@ -5429,7 +5435,8 @@
     var r = $('cv').getBoundingClientRect(); ray.setFromCamera(new T.Vector2((x - r.left) / r.width * 2 - 1, -((y - r.top) / r.height) * 2 + 1), camera);
     return ray.intersectObject(S.lobby, true).slice(0, 8).map(function (h) { var o = h.object, n = [], q = o; while (q && q !== S.lobby && n.length < 4) { n.push(q.name || q.type); q = q.parent; } var u = o.userData || {}; return { n: n.join('<'), d: +h.distance.toFixed(2), y: +h.point.y.toFixed(2), shown: isShown(o), st: u.stamp || null, pg: u.pg || null, z: u.zone || null }; });
   };
-  G.api.sp = function () { var ov = $('spov'); return { card: !$('spc').hidden, rows: $('spcl').children.length, next: $('spcn').textContent, cardMs: SP.cardMs, on: SP.on, ph: SP.ph, near: SP.near, n: SP.n, ang: +SP.ang.toFixed(1), dur: SP.dur, A: Math.round(SP.A), stopMs: SP.stopMs, ticks: SP.ticks, snd: SP.snd, rise: ov.classList.contains('rise'), whT: $('spwh').style.transform, wheel: !$('spst').hidden, raf: !!SP.raf, tm: SP.tm.length, out: !!SP.out, ov: !ov.hidden, cls: ov.className, msg: $('spm').innerText, spg: !$('spg').hidden, sheet: !!G.sheetOpen, rm: !!RM, log: SP.log.slice() }; };   /* v6.91 확인용 */
+  G.api.spAim = function (rk) { SP.aim = rk || ''; return SP.aim; };   /* v7.53 시험용 · 멈출 등수 칸 */
+  G.api.sp = function () { var ov = $('spov'); return { card: !$('spc').hidden, rows: $('spcl').children.length, next: $('spcn').textContent, cardMs: SP.cardMs, on: SP.on, ph: SP.ph, near: SP.near, n: SP.n, ang: +SP.ang.toFixed(1), dur: SP.dur, A: Math.round(SP.A), stopMs: SP.stopMs, ticks: SP.ticks, snd: SP.snd, rise: ov.classList.contains('rise'), whT: $('spwh').style.transform, wheel: !$('spst').hidden, raf: !!SP.raf, tm: SP.tm.length, out: !!SP.out, ov: !ov.hidden, cls: ov.className, msg: $('spm').innerText, rank: spRankAt(SP.ang), u: SP.u, spg: !$('spg').hidden, sheet: !!G.sheetOpen, rm: !!RM, log: SP.log.slice() }; };   /* v6.91 확인용 */
   G.api.spNear = function () { return spNear(); };
   G.api.taps = function () { return { act: G.tapAct ? G.tapAct.k : null, pend: G.tapPend || null, done: G.tapDone || [], log: G.tapLog || [], frames: G.tapFrames || 0, rings: TAPS.rings.length, op: TAPS.mat ? +TAPS.mat.opacity.toFixed(3) : null, vis: TAPS.fr ? TAPS.fr.visible : null, hint: !$('hint').hidden, hint2: !$('hint2').hidden, hfg: !$('hfg').hidden, hintAt: G.hintAt || null, hintN: G.hintN || 0, hintV: VIS.hintN || 0, idle: Math.round(performance.now() - (G.idleAt || 0)), learned: store.get('axfTour3TapUsed') === '1', sq: !!G.squeeze, scn: G.scn, sheet: !!G.sheetOpen, scard: !!SCARD, ph: !!PH.on, talk: G.talk ? G.talk.id : null, bub: !$('gbub').hidden }; };   /* v5.91 확인용 */
   G.api.tapGo = function (k, id) { if (k === 'coin') { var b = BLOCKS.filter(function (q) { return q.id === id; })[0]; if (b) tapGo({ k: 'coin', b: b }); return; } if (k === 'guide') { var g = guides.filter(function (q) { return q.zone === id || q.id === id; })[0]; if (g) tapGo({ k: 'guide', gd: g }); return; } if (k === 'board') { tapGo({ k: 'board', z: D.Z(id[0]), pg: id[1] || null }); return; } tapGo({ k: k }); };
@@ -5642,5 +5649,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v7.51', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v7.53', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();
