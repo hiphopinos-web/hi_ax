@@ -819,8 +819,20 @@
       var m = o.material; if (!/^panel_\d+$/.test(m.name || '') || seen[m.uuid]) return; seen[m.uuid] = 1; n++;
       m.lightMap = null; m.toneMapped = false; if (m.map) m.map.colorSpace = T.SRGBColorSpace; m.needsUpdate = true;
       if (m.name === 'panel_46') posterTex(m);
+      if (m.name === 'panel_37') wallTex(m, 'w/p37.webp');   /* v7.38 룰렛 판 둘째 줄 = 「스탬프 3개를 모아 이벤트에 참여하세요.」(모형 안 그림은 그대로 · 실행 중 바꿔 끼움) */
     });
     G.trueN = n;
+  }
+  /* 261016 v7.38 룰렛 판(판 37) 벽 그림 교체 · 부스 최종 시안 · 정본 261008 10쪽 문구 · 모형(lobby.glb)은 그대로 두고 같은 512 x 1280 그림(w/p37.webp · 같은 조판 원천 · 글꼴 · 크기 · 자리)을 받아 재질 그림만 바꾼다 · 못 받으면 모형 그림 그대로 */
+  function wallTex(m, file) {
+    if (m.userData.wt) return; m.userData.wt = 1;
+    var old = m.map;
+    new T.TextureLoader().load(BASE + file + '?v=' + BDVER, function (t) {
+      t.flipY = false; t.colorSpace = T.SRGBColorSpace; t.wrapS = t.wrapT = T.ClampToEdgeWrapping; t.anisotropy = old ? old.anisotropy : 1;
+      if (old) { t.minFilter = old.minFilter; t.magFilter = old.magFilter; t.generateMipmaps = old.generateMipmaps; }
+      S.lobby.traverse(function (o) { if (o.isMesh && o.material && o.material.name === 'panel_37') { o.material.map = t; o.material.needsUpdate = true; } });
+      G.wallFix = (G.wallFix || []).concat(37); G.need = true;
+    });
   }
   /* 261012 기둥 포스터 = 실제 부착안(사용자 261012 「포스터는 이렇게 부착 예정」 · tour-data BLD.colFaces · POSTER)
    *   그림 = d/p46s.webp 한 장(시안 A ~ E 다섯 칸) · 면마다 UV(모형 원래 0 ~ 1)를 그 면 시안 칸으로 옮긴다 · 남 · 북 면 = A · 서 · 동 면 = 기둥마다 colFaces
@@ -1613,6 +1625,7 @@
    * 높이 = 베젤 아랫단 바닥에서 TVLO.bot(1.07m) · 윗단 +0.71m = 1.78m(옛 1.12 ~ 1.86m · 261015 한때 0.62 ~ 1.33m) · 사용자 결정 261016: 5대 모두 같은 높이 · 아랫단 = AX PLAY 책상 윗면(실측 1.02m · 노트북 1.04m)보다 5cm 위 · 기둥 윗단은 같이 내려 TV 몸 안에 둔다 · 크기 = 베젤 바깥 123 x 71 · 화면 121 x 68 · 판과의 간격 · 받침 접시 · 걷기 막힘 칸(가로 폭 1.26 → 1.23 · 0.32m 여유 안)은 그대로
    * AX VISION TV = 모형에서 왼쪽 13cm 가 판 3 칸 자르기(regionCut)에 베여 있었다(화면 1.11m · 왼쪽 베젤 없음 · 기둥이 가운데에서 6cm 치우침) → 기둥 가운데 기준으로 왼쪽을 늘려 121 x 68 로 되살린다
    * 화면 그림판(buildTvs)은 이 뒤에 모형 색으로 찾으므로 저절로 따라온다 · 되돌리기 = refit1F 의 ⑥ 한 줄을 지운다 */
+  var R_FLAT = 0;   /* v7.38 진단 · 매트 색으로 칠한 받침판 꼭짓점 수 */
   var TVLO = { bot: 1.07, yc: 1.49, tvs: [ { m: 'zone_action_action_body', ax: 'x', c: 23.27, p: 1.35 }, { m: 'zone_lab_tv', ax: 'x', c: 29.9, p: 1.35 }, { m: 'zone_play_body', ax: 'x', c: 14.24, p: 1.35 }, { m: 'zone_play_body', ax: 'x', c: 7.01, p: 1.35 }, { m: 'zone_vision_vision_body', ax: 'z', c: 5.1, p: 31.15, cut: true } ] };
   /* 꺾은선 사상 · xs(오름차순) 칸마다 ys 로 · 밖은 같은 기울기 1 로 이어 붙인다 */
   function tvPw(a, xs, ys) { if (a <= xs[0]) return ys[0] + (a - xs[0]); for (var i = 1; i < xs.length; i++) if (a <= xs[i]) return ys[i - 1] + (a - xs[i - 1]) * (ys[i] - ys[i - 1]) / (xs[i] - xs[i - 1]); return ys[ys.length - 1] + (a - xs[xs.length - 1]); }
@@ -1623,6 +1636,29 @@
       var o = L.getObjectByName(nm); if (!o || !o.geometry || !o.geometry.attributes.position) return;
       o.updateMatrixWorld(true); var geo = o.geometry; geo.setAttribute('position', f32Pos(geo.attributes.position));
       var pa = geo.attributes.position, col = geo.attributes.color, m = o.matrixWorld, inv = m.clone().invert(), v = new T.Vector3(), k = 0;
+      var ix = geo.index, kept = [], dropN = 0, flat = [], u1 = null, uv1 = geo.attributes.uv1;   /* v7.38 옛 받침(흰 0.82 · 발자국 0.62 x 0.62 · 높이 1.3 아래) 삼각형 지움 · 새 받침은 remodel 의 tvStands · 바닥에 깔린 받침판(높이 0.05 아래)은 매트가 비지 않게 남겨 매트 색 · 빛으로 칠한다 */
+      if (ix && col) {
+        for (var q0 = 0; q0 < ix.count; q0 += 3) {
+          var gone = true, ymx = -9;
+          for (var k0 = 0; k0 < 3 && gone; k0++) {
+            var i1 = ix.getX(q0 + k0); v.fromBufferAttribute(pa, i1).applyMatrix4(m); var x1 = v.x + 16, z1 = 6 - v.z, c1 = col.getX(i1), hit1 = false; ymx = Math.max(ymx, v.y);
+            by[nm].forEach(function (t) { var a1 = (t.ax === 'x' ? x1 : z1) - t.c, d1 = (t.ax === 'x' ? z1 : x1) - t.p; if (Math.abs(a1) < 0.31 && Math.abs(d1) < 0.31) hit1 = true; });
+            if (!(hit1 && c1 > 0.8 && c1 < 0.84 && v.y < 1.3)) gone = false;
+          }
+          if (!gone) kept.push(ix.getX(q0), ix.getX(q0 + 1), ix.getX(q0 + 2)); else if (ymx < 0.05) { kept.push(ix.getX(q0), ix.getX(q0 + 1), ix.getX(q0 + 2)); flat.push(ix.getX(q0), ix.getX(q0 + 1), ix.getX(q0 + 2)); } else dropN++;
+        }
+        if (dropN) { geo.setIndex(kept); n += dropN; }
+        if (flat.length && uv1) {   /* 받침판 = 같은 통로 쪽 0.45m 옆 매트 한 점의 빛 + 매트 색 */
+          by[nm].forEach(function (t) {
+            var x2 = t.ax === 'x', sp = x2 ? [[t.c, t.p + 0.45], [t.c + 0.9, t.p + 0.45], [t.c - 0.9, t.p + 0.45]] : [[t.p - 0.45, t.c], [t.p - 0.45, t.c + 0.9], [t.p - 0.45, t.c - 0.9]]; u1 = null;
+            for (var a = 0; a < sp.length && !u1; a++) for (var yy = -0.01; yy < 0.05 && !u1; yy += 0.004) { var cand = attrAt(o, 'uv1', sp[a][0], sp[a][1], yy); if (cand) u1 = cand; }
+            if (!u1) return;
+            var seenV = {};
+            flat.forEach(function (vi) { if (seenV[vi]) return; v.fromBufferAttribute(pa, vi).applyMatrix4(m); var xv = v.x + 16, zv = 6 - v.z, aa = (x2 ? xv : zv) - t.c, dd = (x2 ? zv : xv) - t.p; if (Math.abs(aa) > 0.32 || Math.abs(dd) > 0.32) return; seenV[vi] = 1; uv1.setXY(vi, u1[0], u1[1]); col.setXYZ(vi, BOOTH.carpetTo[0], BOOTH.carpetTo[1], BOOTH.carpetTo[2]); R_FLAT++; });
+          });
+          uv1.needsUpdate = true; col.needsUpdate = true;
+        }
+      }
       for (var i = 0; i < pa.count; i++) {
         v.fromBufferAttribute(pa, i).applyMatrix4(m); var x = v.x + 16, z = 6 - v.z, y = v.y, c = col ? col.getX(i) : 1, hit = false;
         for (var q = 0; q < by[nm].length && !hit; q++) {
@@ -1702,8 +1738,57 @@
     L.updateMatrixWorld(true);
     R.ms = Math.round(performance.now() - t0); G.refit = R;   /* 진단 · 고친 수 · 걸린 시간 */
   }
+  /* ═══════════ 261016 v7.38 부스 최종 시안(rev261016) 반영 · 바닥 매트 · 판 틀 색 · TV 받침 ═══════════
+   * 부스 몸체(zone_*_body · 꼭짓점 색 x 구운 빛) 안 색: 매트 = 0.102(짙은 숯) → 연회색 · 판 틀(알루미늄) = 0.549 0.561 0.58 + 따뜻한 빛 = 구리빛으로 보임 → 흰 · 은색
+   *   EVENT(주황 판)의 틀은 그대로 · 다른 색(흰 몸체 0.82 · 간판 주황 · TV 검정)은 건드리지 않는다 · 모형 다시 굽지 않음(꼭짓점 색 값만 · 앞 층 복사본과 같은 속성이라 한 번에 따라온다)
+   * 받침대 TV 5대 받침 = 실물(사용자 261016 사진): 검정 무광 철제 이동식 스탠드 · 세로 기둥 둘 + 가운데 가로대(H) + 기둥마다 앞뒤로 긴 바닥 다리 + 작은 바퀴 · 옛 은색 기둥 하나 + 둥근 받침은 lowerTvs 가 지운다
+   *   상자 9개 x 5대 = 한 덩어리 한 번 그림 · 걷기 막힘은 옛 받침과 같은 발자국(가로 0.60 · 세로 0.60)이라 그대로 */
+  var BOOTH = { carpet: [0.102, 0.102, 0.106], carpetTo: [0.46, 0.47, 0.49], alu: [0.549, 0.561, 0.58], aluTo: [0.74, 0.76, 0.79] };
+  function boothColors(root) {
+    var seen = new Set(), nc = 0, na = 0;
+    function near(r, g, b, c) { return Math.abs(r - c[0]) < 0.006 && Math.abs(g - c[1]) < 0.006 && Math.abs(b - c[2]) < 0.006; }
+    root.traverse(function (o) {
+      if (!o.isMesh || !/^zone_/.test(o.name) || !o.geometry) return;
+      var col = o.geometry.attributes.color; if (!col || seen.has(col)) return; seen.add(col);
+      var ev = /^zone_event/.test(o.name);
+      for (var i = 0; i < col.count; i++) {
+        var r = col.getX(i), g = col.getY(i), b = col.getZ(i);
+        if (near(r, g, b, BOOTH.carpet)) { col.setXYZ(i, BOOTH.carpetTo[0], BOOTH.carpetTo[1], BOOTH.carpetTo[2]); nc++; }
+        else if (!ev && near(r, g, b, BOOTH.alu)) { col.setXYZ(i, BOOTH.aluTo[0], BOOTH.aluTo[1], BOOTH.aluTo[2]); na++; }
+      }
+      col.needsUpdate = true;
+    });
+    G.boothCol = { carpet: nc, alu: na };
+  }
+  function tvStands(root) {
+    var Q = TVLO, v0 = [], i0 = [], nb = 0, mat = new T.MeshLambertMaterial({ color: 0x17181A });
+    function box(t, u, y, w, su, sy, sw) {   /* u = TV 가로 방향 · w = 앞(보는 쪽) 방향 · 도면 → 세 좌표 */
+      var s = t.ax === 'x' ? 1 : -1, px = t.ax === 'x' ? t.c + u : t.p + w * s, pz = t.ax === 'x' ? t.p + w * s : t.c + u;
+      var g = new T.BoxGeometry(t.ax === 'x' ? su : sw, sy, t.ax === 'x' ? sw : su);
+      g.translate(px - 16, y, 6 - pz); var pa = g.attributes.position, nr = g.attributes.normal, ix = g.index, base = v0.length / 6;
+      for (var i = 0; i < pa.count; i++) v0.push(pa.getX(i), pa.getY(i), pa.getZ(i), nr.getX(i), nr.getY(i), nr.getZ(i));
+      for (var k = 0; k < ix.count; k++) i0.push(base + ix.getX(k));
+      g.dispose(); nb++;
+    }
+    Q.tvs.forEach(function (t) {
+      var UX = 0.26, LH = 0.075, post = Q.bot + 0.56;
+      [-1, 1].forEach(function (sg) {
+        box(t, sg * UX, post / 2 + 0.06, -0.08, 0.045, post - 0.12, 0.04);                    /* 세로 기둥(TV 뒤) */
+        box(t, sg * UX, 0.105, 0, 0.045, 0.05, 0.60);                                         /* 바닥 다리(앞뒤로 길게) */
+        [-1, 1].forEach(function (sw) { box(t, sg * UX, 0.035, sw * 0.265, 0.035, 0.07, 0.04); });   /* 바퀴 */
+      });
+      box(t, 0, Q.bot - 0.23, -0.08, 2 * UX, 0.04, 0.035);                                    /* 가운데 가로대(H) */
+    });
+    var geo = new T.BufferGeometry(), pp = new Float32Array(v0.length / 2), nn = new Float32Array(v0.length / 2);
+    for (var q = 0; q < v0.length / 6; q++) { pp[q * 3] = v0[q * 6]; pp[q * 3 + 1] = v0[q * 6 + 1]; pp[q * 3 + 2] = v0[q * 6 + 2]; nn[q * 3] = v0[q * 6 + 3]; nn[q * 3 + 1] = v0[q * 6 + 4]; nn[q * 3 + 2] = v0[q * 6 + 5]; }
+    geo.setAttribute('position', new T.BufferAttribute(pp, 3)); geo.setAttribute('normal', new T.BufferAttribute(nn, 3)); geo.setIndex(i0);
+    geo.computeBoundingSphere(); geo.computeBoundingBox();
+    var m = new T.Mesh(geo, mat); m.name = 'tvStands'; m.raycast = function () {}; m.matrixAutoUpdate = false; root.add(m);
+    G.tvStand = { boxes: nb, tris: i0.length / 3 };
+  }
   function remodel() {
     trueColors(S.lobby); cutKiosk();   /* v5.58 판 · 포스터 참 색 · 포토부스 옛 기계(판 36 앞) 지움 */
+    boothColors(S.lobby); tvStands(S.lobby);   /* v7.38 부스 바닥 매트 · 판 틀 색 · 받침대 TV 받침 */
     var t0 = performance.now(), R = { eh: 0, floor: 0, wing: 0 }, sideN = S.lobby.getObjectByName('side_n'), sideE = S.lobby.getObjectByName('side_e') || S.lobby;
     S.lobby.updateMatrixWorld(true);
     /* ── ① 동쪽 빈 공간 ── 자르기 전에 대리석 결 · 빛을 옆 벽에서 읽어 둔다 */
@@ -3161,7 +3246,7 @@
     var a = f.userData.c, b = lf.userData.c; return Math.hypot(a.x - b.x, a.z - b.z) < 6 ? f : lf;
   }
   /* 판 보기 데이터(새 조판 · tour-boards.js · .css) · 둘러보기를 처음 열 때 한 번 받는다(약 42KB) · 받기 전에 열면 옛 판 그림 */
-  var BDVER = 'v665';   /* v5.60 tour-boards.css 뿌리 규칙 범위 */
+  var BDVER = 'v738';   /* v5.60 tour-boards.css 뿌리 규칙 범위 */
   function loadBoards() {
     if (window.TOUR_BOARDS || G.bdLoading) return; G.bdLoading = true;
     var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = BASE + 'tour-boards.css?v=' + BDVER; document.head.appendChild(l);
@@ -5513,5 +5598,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v7.37', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v7.38', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();
