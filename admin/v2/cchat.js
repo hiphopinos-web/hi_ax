@@ -53,6 +53,7 @@ function ccPaint(){
     '<tr><th scope="row">희망</th>'+cf.rounds.map(function(t){ return '<td class="n">'+n0(K.c[t].want)+'</td>'; }).join("")+'<td class="n">'+n0(K.any)+'</td></tr></tbody></table>';
   if(!CC.g) CC.g=XG.make({ id:"cchat2", file:"18F 커피챗", key:function(r){ return jq(r.emp); }, sort:{ k:"ts", d:1 }, find:["emp","text"],
     onRow:function(k){ CC.sel=k; ccDet(); },
+    select:1, onAdd:function(){ paOpen(ccAddSp()); }, cancel:{ kind:"cchat", what:"18F 커피챗 신청", sub:"상태 = 취소(줄 · 회차 · 테이블 칸은 남음) · 완료였으면 커피챗 스탬프 거둠 · 선정이었으면 대기 알림 거둠", after:function(){ reload(["cc"]); } },
     chips:[["all","전체",null],["w","희망",function(r){ return r.status==="대기"&&!r.overAt; }],["m","선정",function(r){ return r.status==="매칭"; }],["in","참석 · 완료",function(r){ return r.status==="참석"||r.status==="완료"; }],["ov","미선정",function(r){ return r.status==="대기"&&!!r.overAt; }],["cx","취소",function(r){ return r.status==="취소"; }]],
     cols:[{ k:"ts", t:"신청", type:"date", w:96 },{ k:"name", t:"이름", w:76 },{ k:"emp", t:"사번", w:76 },{ k:"dept", t:"부서", w:110 },
       { k:"pref", t:"희망 회차", w:100, v:ccPrefTx },
@@ -141,4 +142,16 @@ function ccClose(){
     gate:function(){ var q=el("ccEndQ"); return !!q&&q.value.trim()==="마감"; },
     run:function(){ return call("cchat_close",{}); },
     done:function(x){ var at=new Date().toISOString(); ccRows().forEach(function(r){ if(r.status==="대기"&&!r.overAt) r.overAt=at; }); ccPaint(); reload(["cc","nb"]); toast("마감했습니다 · 미선정 "+n0(x.n)+"명 · 알림 받는 사람 "+n0(x.sent)+"명"); } });
+}
+/* 261016 저녁 「추가」 창(edit.js paOpen) · cchat_add(emp · memo 40자 · 희망 = 언제든) · 취소 줄이 있으면 대기로 되살림 · 되돌리기 = 그 사람 선택 취소 */
+var CC_ADDWHY={ param:"사번을 확인하세요", noros:"명부 · 계정에 없는 사번입니다", dup:"진행 중인 커피챗 줄이 있습니다" };
+function ccAddSp(){
+  CC.memo="";
+  return { t:"커피챗 신청 추가", cap:"명부에서 찾기 → 넣기 · 희망 회차 = 언제든 · 선정은 줄을 눌러 상세에서",
+    have:function(e){ var r=ccRows().filter(function(x){ return normE(x.emp)===e&&x.status!=="취소"; })[0]; return r?"이미 "+ccView(r)+" 상태로 있습니다":""; },
+    opts:function(){ return '<label class="nt-f"><span class="nt-l">관심 분야 · 메모(선택)</span><input class="xg-q" id="ccMemo" maxlength="40" autocomplete="off" placeholder="40자까지" aria-label="관심 분야 · 메모" value="'+esc(CC.memo||"")+'" oninput="CC.memo=this.value" style="width:100%;max-width:360px"></label>'; },
+    run:function(p){ return call("cchat_add",{ emp:normE(p.emp), memo:String(CC.memo||"").trim().slice(0,40)||null }); },
+    fail:function(r){ return r&&r.reason==="dup"?"이미 "+ccSt(r.cur||"진행 중")+" 줄이 있습니다":CC_ADDWHY[r&&r.reason]||""; },
+    done:function(r, p){ var e=normE(r.emp||p.emp); reload(["cc"]);
+      toast((r.how==="back"?"되살렸습니다 · ":"넣었습니다 · ")+(r.name||p.name||e)+" · 희망", { undo:function(){ call("list_rows_cancel",{ kind:"cchat", keys:e, rid:"u"+Date.now().toString(36) }).then(function(x){ reload(["cc"]); var ok=x&&x.ok&&num(x.done)>0; toast(ok?"되돌렸습니다 · 취소":"되돌리지 못했습니다 · "+(x&&x.rows&&x.rows[0]?xgCxWhy(x.rows[0]):why(x)),{ bad:!ok }); }); } }); } };
 }

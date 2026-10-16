@@ -4,13 +4,14 @@
  * 한 사람 카드 = person_card + list_get(att10 · att17, q = 사번)
  *   처리 = 스탬프 부여(stamp_grant · 확인 창 · 되돌리기 토스트) · 취소(stamp_revoke dry → 확인 창) · PIN 초기화(acct_pwreset)
  *          이 사람에게 푸시(알림 탭 받는 사람 칩) · 한 사람 초기화(test_reset dry → 확인 문구 「처음상태」 · 행사일 실사번은 서버가 거절 eventday)
- * 명단 = list_get(visit · gate · staff · pre10 · att10 · att17) · 명단 올리기 = upload.js(10F 사전 신청 · 접속 허용 · 스태프 옷) · 261016 PIN 없음 */
-var PP_SUBS=[["find","찾기"],["visit","가입자"],["gate","접속 허용"],["staff","스태프"],["pre10","10F 사전 신청"],["att10","10F 출석"],["att17","17F 출석"],["up","명단 올리기"]];
+ * 명단 = list_get(visit · gate · staff · pre10 · test · att10 · att17) · 261016 저녁 접속 허용 · 스태프 · 10F 사전 신청 · 시험 사번 = 선택 칸 · 추가 · 선택 삭제(edit.js · table.js) · 명단 올리기 = upload.js(10F 사전 신청 · 접속 허용 · 스태프 옷) · 261016 PIN 없음 */
+var PP_SUBS=[["find","찾기"],["visit","가입자"],["gate","접속 허용"],["staff","스태프"],["pre10","10F 사전 신청"],["test","시험 사번"],["att10","10F 출석"],["att17","17F 출석"],["up","명단 올리기"]];
 var PP_LG={
   visit:{ kind:"visit", file:"가입자", cap:"앱에 가입한 사람 · 시험 사번은 「시험」 칸", sort:{ k:"last", d:-1 }, chips:lgChipsOf("",[["today","오늘 접속"],["pin","PIN 대기"],["test","시험"]]) },
-  gate:{ kind:"gate", file:"접속 허용", cap:"클로즈 베타 · 사전 신청 기간에 앱에 들어올 사람 · 한 사람 넣기 · 줄을 누르면 빼기 · 통째 바꾸기는 명단 올리기", sort:{ k:"at", d:-1 }, chips:lgChipsOf("",[["acct","가입"],["today","오늘 접속"]]) },
-  staff:{ kind:"staff", file:"스태프", cap:"폰 권한(앱 스태프 화면) + 스태프 옷 명단 · 한 사람 넣기 · 줄을 누르면 빼기 · 통째 바꾸기는 명단 올리기", sort:{ k:"name", d:1 }, chips:ppNoWear(lgChipsOf("",[["app","폰 권한"],["wear","옷"],["today","오늘 접속"]]),"staff"), sheets:function(v){ return [ppPivot(v,"staff")]; } },
-  pre10:{ kind:"pre10", file:"10F 사전 신청", cap:"10F 실습 세션 A~E 사전 신청자 · 한 사람 넣기 · 줄을 누르면 세션 바꾸기 · 빼기", sort:{ k:"sn", d:1 }, chips:ppNoWear(lgChipsOf("sn",[["kit","키트 받음"],["att","출석"]]),"pre10"), sheets:function(v){ return [ppPivot(v,"pre10")]; } },
+  gate:{ kind:"gate", file:"접속 허용", cap:"클로즈 베타 · 사전 신청 기간에 앱에 들어올 사람 · 추가 · 선택 삭제 · 통째 바꾸기는 명단 올리기", cx:1, sort:{ k:"at", d:-1 }, chips:lgChipsOf("",[["acct","가입"],["today","오늘 접속"]]) },
+  staff:{ kind:"staff", file:"스태프", cap:"폰 권한(앱 스태프 화면) + 스태프 옷 명단 · 추가 · 선택 삭제 · 통째 바꾸기는 명단 올리기", cx:1, sort:{ k:"name", d:1 }, chips:ppNoWear(lgChipsOf("",[["app","폰 권한"],["wear","옷"],["today","오늘 접속"]]),"staff"), sheets:function(v){ return [ppPivot(v,"staff")]; } },
+  pre10:{ kind:"pre10", file:"10F 사전 신청", cap:"10F 실습 세션 A~E 사전 신청자 · 추가 · 선택 삭제 · 줄을 누르면 세션 바꾸기", cx:1, sort:{ k:"sn", d:1 }, chips:ppNoWear(lgChipsOf("sn",[["kit","키트 받음"],["att","출석"]]),"pre10"), sheets:function(v){ return [ppPivot(v,"pre10")]; } },
+  test:{ kind:"test", file:"시험 사번", cap:"스탬프 · 순위 숫자에서 빠지는 사번 · 추가 · 선택 삭제", cx:1, sort:{ k:"emp", d:1 }, chips:lgChipsOf("",[["acct","가입"],["today","오늘 접속"]]) },
   att10:{ kind:"att10", file:"10F 출석", cap:"10F 세션 입장 · 종료 QR", sort:{ k:"pn", d:1 }, chips:lgChipsOf("pn",[["out","종료"]]) },
   att17:{ kind:"att17", file:"17F 출석", cap:"17F 강연 입장 · 종료", sort:{ k:"pn", d:1 }, chips:lgChipsOf("pn",[["out","종료"]]) }
 };
@@ -38,7 +39,8 @@ SCREENS.people={
       return;
     }
     var x=PP_LG[s];
-    gridOf("pp_"+s,{ file:x.file, key:function(r){ return r.emp; }, sort:x.sort, chips:[["all","전체",null]], lgChips:x.chips, sheets:x.sheets, cols:[{ k:"emp", t:"사번", w:90 }], lg:x.kind, h:520, onRow:function(k){ pcOpen(k, MG["pp_"+s]); } });
+    gridOf("pp_"+s,{ file:x.file, key:function(r){ return r.emp; }, sort:x.sort, chips:[["all","전체",null]], lgChips:x.chips, sheets:x.sheets, cols:[{ k:"emp", t:"사번", w:90 }], lg:x.kind, h:520, onRow:function(k){ pcOpen(k, MG["pp_"+s]); },
+      select:!!x.cx, onAdd:x.cx?function(){ paOpen(s); }:null, cancel:x.cx?ppCx(s):null });
     vb.innerHTML=h+'<div class="card"><div id="mg_pp_'+s+'"></div></div>';
   },
   paint:function(){

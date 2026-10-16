@@ -1,10 +1,10 @@
-/* AXF CONTROL v2 · 처리함 › AX 라운지 · 사전 명단 한 사람 넣기 · 빼기 (261016 사용자 결정 · 10F 명단 한 사람 넣기(edit.js)와 같은 모양)
+/* AXF CONTROL v2 · 처리함 › AX 라운지 · 사전 명단 넣기 · 빼기 (261016 사용자 결정 · 261016 저녁 표 위 「추가」 창 · 선택 삭제로 옮김 · edit.js paOpen · table.js)
  * 넣기 = lng_pre_row_add(POST · PIN 없음 · emp · time · seat · memo) · 시간 없으면 칸 미정 · 상담석은 시간과 함께
  *   거절 = param · noros · dup · time · seat · cap · clash(with = 그 자리 사번) → 쉬운 한국어로 확인 창에 표시
  * 빼기 = lng_pre_row_del(POST · emp) · 거절 = param · notfound · done(체크인 · 완료 줄 있음 · cur = 그 상태)
  * 시간 · 상담석 바꾸기는 resv_move(inbox.js lgMoveAsk) 그대로 · 줄 되돌리기는 활동 기록(서버가 lng_pre 종류를 되돌림)
  * 넣은 뒤 · 뺀 뒤 표와 배치판을 다시 읽는다(reload resv) · 입력은 처리함 갱신(5초)이 지우지 않게 한 번만 그린다 */
-var LA={ q:"", rows:null, pick:null, time:"", seat:0, memo:"", seq:0, done:0 };
+var LA={ time:"", seat:0, memo:"", pre:0 };
 var LA_WHY={ param:"사번을 확인하세요", noros:"명부에 없는 사번입니다", dup:"이미 라운지 명단에 있습니다", time:"그 시간은 칸 밖입니다", seat:"상담석이 범위 밖이거나, 시간 없이 상담석만 골랐습니다", cap:"그 칸은 정원이 찼습니다" };
 var LA_DWHY={ param:"사번을 확인하세요", notfound:"라운지 명단에 없습니다 · 목록을 다시 받습니다" };
 function laWhoAt(emp){ var e=normE(emp), r=((S.data.resv&&S.data.resv.rows)||[]).filter(function(x){ return normE(x.emp)===e; })[0]; return r?(r.name||"")+" · 사번 "+r.emp:"사번 "+emp; }
@@ -15,53 +15,37 @@ function laFail(r){
 }
 /* 이 사람의 지금 라운지 줄(취소 제외) */
 function laHave(emp){ var e=normE(emp); return ((S.data.resv&&S.data.resv.rows)||[]).filter(function(x){ return normE(x.emp)===e&&x.status!=="취소"; })[0]||null; }
-function lgAddPaint(){ var b=el("lgAdd"); if(b&&!b.getAttribute("data-on")){ b.setAttribute("data-on","1"); laPaint(); } }
-function laPaint(){
-  var b=el("lgAdd"); if(!b) return;
-  b.innerHTML='<h2>한 사람 넣기 <span class="cap">명부에서 찾기 → 시간 · 상담석 고르기 → 넣기 · 시간을 비우면 칸 미정</span></h2>'+
-    '<div class="pp-find mt4"><input class="xg-q pp-q" id="laQ" type="search" autocomplete="off" placeholder="이름 · 사번" aria-label="라운지 명단에 넣을 사람 찾기" value="'+esc(LA.q)+'" oninput="LA.q=this.value" onkeydown="if(event.key===\'Enter\'&&!event.isComposing){ event.preventDefault(); laFind(this.value); }"><button class="btn" type="button" onclick="laFind(el(\'laQ\').value)">찾기</button></div><div id="laR"></div>';
-  laRes();
+/* 261016 저녁 「추가」 창(edit.js paOpen · 맨 위 「한 사람 넣기」 카드 대신) · 시간 · 상담석 · 메모 고르기 */
+function laTime(t){ LA.time=LA.time===t?"":t; if(!LA.time) LA.seat=0; paPaint(); }
+function laSeat(s){ LA.seat=LA.seat===s?0:s; paPaint(); }
+function laSp(){
+  LA.time=""; LA.seat=0; LA.memo="";
+  return { t:"AX 라운지 사전 명단 추가", cap:"명부에서 찾기 → 시간 · 상담석 고르기 → 넣기 · 시간을 비우면 칸 미정 · 키트명단 라운지 줄과 상담 신청 줄이 같이 생김",
+    init:function(){ LA.time=""; LA.seat=0; LA.memo=""; },
+    have:function(e){ var hv=laHave(e); return hv?"이미 "+hv.status+" 상태로 있습니다"+(hm(hv.slot)?" · "+hm(hv.slot):" · 칸 미정")+" · 시간 바꾸기는 배치판에서":""; },
+    opts:function(){
+      var P=LG.P, cf=lgCfg(), tm="", h="";
+      if(P){ tm='<button type="button" role="radio" aria-checked="'+(!LA.time)+'" class="chip'+(!LA.time?" on":"")+'" onclick="laTime(\'\')">칸 미정</button>';
+        for(var i=0;i<cf.n;i++){ var t=m2hm(P.s0+i*cf.step), used=P.grid[i].filter(function(x){ return x&&RV_ON.indexOf(x.status)>=0; }).length, left=cf.seats-used, on=LA.time===t;
+          tm+='<button type="button" role="radio" aria-checked="'+on+'" class="chip'+(on?" on":"")+'" onclick="laTime(\''+t+'\')">'+t+' <span class="c">'+(left>0?left+"자리":"마감")+'</span></button>'; } }
+      h+='<div class="nt-f"><div class="nt-l">시간</div><div class="chips" role="radiogroup" aria-label="시간 칸">'+tm+'</div></div>';
+      if(LA.time&&P){ var ti=Math.floor((mins(LA.time)-P.s0)/cf.step), sh='<button type="button" role="radio" aria-checked="'+(!LA.seat)+'" class="chip'+(!LA.seat?" on":"")+'" onclick="laSeat(0)">자동 · 빈 자리</button>';
+        for(var s=1;s<=cf.seats;s++){ var o=(P.grid[ti]||[])[s-1], busy=o&&RV_ON.indexOf(o.status)>=0, on2=LA.seat===s;
+          sh+='<button type="button" role="radio" aria-checked="'+on2+'" class="chip'+(on2?" on":"")+'"'+(busy?' disabled aria-disabled="true"':'')+' onclick="laSeat('+s+')">상담석 '+s+(busy?' <span class="c">'+esc(o.name||o.emp)+'</span>':'')+'</button>'; }
+        h+='<div class="nt-f"><div class="nt-l">상담석</div><div class="chips" role="radiogroup" aria-label="상담석">'+sh+'</div></div>'; }
+      return h+'<label class="nt-f"><span class="nt-l">메모(선택)</span><input class="xg-q" id="laMemo" maxlength="60" autocomplete="off" placeholder="60자까지" aria-label="메모" value="'+esc(LA.memo)+'" oninput="LA.memo=this.value" style="width:100%;max-width:360px"></label>'; },
+    run:function(p){ var e=normE(p.emp), t=LA.time, s=t&&LA.seat?LA.seat:0, memo=String(LA.memo||"").trim().slice(0,60); return call("lng_pre_row_add",{ emp:e, time:t||null, seat:s?String(s):null, memo:memo||null }); },
+    fail:laFail,
+    done:function(r, p){ var e=normE(p.emp); LA.time=""; LA.seat=0; LA.memo=""; reload(["resv"]);
+      toast("넣었습니다 · "+(r.name||p.name||e)+" · "+(r.slot?r.slot+(r.seat?" · 상담석 "+r.seat:""):"칸 미정")+(r.over?" · 정원 넘음":""), { undo:function(){ laDel(e, 1); } }); } };
 }
-function laFind(q){
-  q=String(q||"").trim(); LA.q=q; LA.pick=null; LA.time=""; LA.seat=0;
-  if(!q){ LA.rows=null; laRes(); return; }
-  var s=++LA.seq; LA.rows="busy"; laRes();
-  call("og_gate_find",{ by:"name", q:q.slice(0,30) }).then(function(r){ if(s!==LA.seq) return; LA.rows=r&&r.ok?(r.rows||[]):{ err:why(r) }; if(Array.isArray(LA.rows)&&LA.rows.length===1) LA.pick=LA.rows[0]; laRes(); });
-}
-function laPick(i){ LA.pick=(LA.rows||[])[i]||null; LA.time=""; LA.seat=0; laRes(); }
-function laTime(t){ LA.time=LA.time===t?"":t; if(!LA.time) LA.seat=0; laRes(); }
-function laSeat(s){ LA.seat=LA.seat===s?0:s; laRes(); }
-function laRes(){
-  var b=el("laR"); if(!b) return; var R=LA.rows;
-  if(R==null){ b.innerHTML=""; return; }
-  if(R==="busy"){ b.innerHTML=skel(); return; }
-  if(R.err){ b.innerHTML=band("warn","찾지 못했습니다 · "+esc(R.err)); return; }
-  if(!R.length){ b.innerHTML='<p class="cap mt4">명부에 없는 이름 · 사번입니다</p>'; return; }
-  var h='<div class="chips mt4" role="radiogroup" aria-label="찾은 사람">'+R.slice(0,20).map(function(x,i){ var on=LA.pick&&LA.pick.emp===x.emp, hv=laHave(x.emp);
-    return '<button type="button" role="radio" aria-checked="'+on+'" class="chip'+(on?" on":"")+'" onclick="laPick('+i+')">'+esc(x.name||"-")+' · '+esc(x.emp)+(x.dept?' · '+esc(x.dept):'')+(hv?' · 명단에 있음':'')+'</button>'; }).join("")+'</div>';
-  var p=LA.pick;
-  if(p){
-    var hv=laHave(p.emp), P=LG.P, cf=lgCfg(), tm="";
-    if(P){ tm='<button type="button" role="radio" aria-checked="'+(!LA.time)+'" class="chip'+(!LA.time?" on":"")+'" onclick="laTime(\'\')">칸 미정</button>';
-      for(var i=0;i<cf.n;i++){ var t=m2hm(P.s0+i*cf.step), used=P.grid[i].filter(function(x){ return x&&RV_ON.indexOf(x.status)>=0; }).length, left=cf.seats-used, on=LA.time===t;
-        tm+='<button type="button" role="radio" aria-checked="'+on+'" class="chip'+(on?" on":"")+'" onclick="laTime(\''+t+'\')">'+t+' <span class="c">'+(left>0?left+"자리":"마감")+'</span></button>'; } }
-    h+='<div class="nt-f"><div class="nt-l">시간</div><div class="chips" role="radiogroup" aria-label="시간 칸">'+tm+'</div></div>';
-    if(LA.time&&P){ var ti=Math.floor((mins(LA.time)-P.s0)/cf.step), sh='<button type="button" role="radio" aria-checked="'+(!LA.seat)+'" class="chip'+(!LA.seat?" on":"")+'" onclick="laSeat(0)">자동 · 빈 자리</button>';
-      for(var s=1;s<=cf.seats;s++){ var o=(P.grid[ti]||[])[s-1], busy=o&&RV_ON.indexOf(o.status)>=0, on2=LA.seat===s;
-        sh+='<button type="button" role="radio" aria-checked="'+on2+'" class="chip'+(on2?" on":"")+'"'+(busy?' disabled aria-disabled="true"':'')+' onclick="laSeat('+s+')">상담석 '+s+(busy?' <span class="c">'+esc(o.name||o.emp)+'</span>':'')+'</button>'; }
-      h+='<div class="nt-f"><div class="nt-l">상담석</div><div class="chips" role="radiogroup" aria-label="상담석">'+sh+'</div></div>'; }
-    h+='<label class="nt-f"><span class="nt-l">메모(선택)</span><input class="xg-q" id="laMemo" maxlength="60" autocomplete="off" placeholder="60자까지" aria-label="메모" value="'+esc(LA.memo)+'" oninput="LA.memo=this.value" style="width:100%;max-width:360px"></label>';
-    if(hv) h+=band("info",esc(p.name||p.emp)+" 님은 이미 "+esc(hv.status)+" 상태로 있습니다"+(hm(hv.slot)?" · "+hm(hv.slot):" · 칸 미정")+" · 시간 바꾸기는 배치판에서");
-    h+='<div class="btns mt"><button class="btn pri" type="button" onclick="laGo()"'+(hv?' aria-disabled="true" disabled':'')+'>'+esc((p.name||p.emp)+" 넣기")+'</button></div>';
-  }
-  b.innerHTML=h;
-}
-function laGo(){
-  var p=LA.pick; if(!p||laHave(p.emp)) return; var e=normE(p.emp), t=LA.time, s=t&&LA.seat?LA.seat:0, memo=String(LA.memo||"").trim().slice(0,60);
-  confirmBox({ t:"라운지 사전 명단에 넣을까요?", who:(p.name||"")+" · 사번 "+e+(p.dept?" · "+p.dept:""), sub:(t?t+" 칸"+(s?" · 상담석 "+s:" · 빈 자리"):"칸 미정")+(memo?" · 메모 "+memo:"")+" · 키트명단 라운지 줄과 상담 신청 줄이 같이 생김", ok:"넣기",
-    run:function(){ return call("lng_pre_row_add",{ emp:e, time:t||null, seat:s?String(s):null, memo:memo||null }); }, fail:laFail,
-    done:function(r){ LA.pick=null; LA.rows=null; LA.q=""; LA.time=""; LA.seat=0; LA.memo=""; laPaint(); reload(["resv"]);
-      toast("넣었습니다 · "+(r.name||p.name||e)+" · "+(r.slot?r.slot+(r.seat?" · 상담석 "+r.seat:""):"칸 미정")+(r.over?" · 정원 넘음":""), { undo:function(){ laDel(e, 1); } }); } });
+/* 선택 삭제 · 상담 줄 취소(kind lounge · 줄 id) · 「사전 명단에서도 뺌」을 고르면 kind lounge_pre(사번 · 명단 · 라운지시간에서 빠지고 신청 · 승인 줄 취소) */
+function laCx(){
+  return { what:"AX 라운지 신청", sub:"상담 줄 상태 = 취소(이전 상태 남김) · 완료였으면 라운지 스탬프 거둠",
+    opts:function(){ LA.pre=0; return '<label class="nt-f" style="display:flex;gap:8px;align-items:center"><input type="checkbox" onchange="LA.pre=this.checked?1:0">사전 명단에서도 뺌(키트 · 가습기 대상에서 빠짐 · 체크인 · 완료한 사람은 못 함)</label>'; },
+    kind:function(){ return LA.pre?"lounge_pre":"lounge"; },
+    keys:function(rows, kind){ var seen={}; return rows.map(function(r){ return kind==="lounge_pre"?normE(r.emp):String(r.id); }).filter(function(k){ if(seen[k]) return false; seen[k]=1; return true; }); },
+    after:function(){ LG.sel=null; LG.mv=null; reload(["resv"]); } };
 }
 /* 빼기 · 배치판 오른쪽 카드 단추 · 확인 창 뒤 lng_pre_row_del */
 function laDelAsk(id){

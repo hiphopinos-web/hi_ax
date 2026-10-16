@@ -6,11 +6,15 @@
  *       SheetJS(cdnjs 고정 버전)를 그때 불러온다 · 못 불러오면 UTF-8 BOM CSV 로 대신 받는다
  * 줄 누르기 = o.onRow(key) · 고른 줄 g.sel 강조 · 키보드 Enter
  * 추가 시트 = o.sheets(지금 보이는 줄) → [{ name, aoa, wch }] · 첫 시트(명단) 뒤에 붙인다 · CSV 대신 받기면 첫 시트만
+ * 261016 저녁 선택 · 추가 · 선택 삭제(사용자 확정 「사람을 관리하는 명단 전부 같은 모양」 · 3_서버 계약 3-6)
+ *   o.select = 맨 왼쪽 선택 칸(머리 칸 = 보이는 줄 전체) · o.onAdd() = 표 위 오른쪽 「추가」(엑셀 다운로드 옆)
+ *   o.cancel = { kind | kind() · keys(rows) 서버 열쇠(기본 사번) · what 명단 이름 · sub 영향 한 줄 · opts() 확인 창 추가 html · part() · after(res) 다시 읽기 }
+ *   「선택 n명 삭제」 = 확인 창 → list_rows_cancel(취소 처리 · 기록 남음) → 못 한 줄은 이유 표 · 토스트 「되돌리기」 = roll_undo(batch)
  * 열 정의 c = { k 키 · t 머리 글자 · w 너비 · type(num | date | text) · v(row) 값 · f(row) 화면 html · x(row) 엑셀 값 · act(row) 단추 html(엑셀 제외) · sort:false } */
 var XLSX_URL="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
-var XG={ reg:{}, MAXROWS:500 };
+var XG={ reg:{}, MAXROWS:500, CXMAX:200 };
 XG.make=function(o){
-  var g={ o:o, id:o.id, rows:null, err:null, q:"", chip:(o.chips&&o.chips[0]&&o.chips[0][0])||"", sort:o.sort?{ k:o.sort.k, d:o.sort.d||1 }:null, sel:null };
+  var g={ o:o, id:o.id, rows:null, err:null, q:"", chip:(o.chips&&o.chips[0]&&o.chips[0][0])||"", sort:o.sort?{ k:o.sort.k, d:o.sort.d||1 }:null, sel:null, pick:{}, busy:0 };
   var keep=lsGet("axf_v2_xg_"+o.id,null); if(keep){ if(keep.sort) g.sort=keep.sort; if(keep.chip&&(o.chips||[]).some(function(c){ return c[0]===keep.chip; })) g.chip=keep.chip; }
   XG.reg[o.id]=g; return g;
 };
@@ -39,10 +43,9 @@ XG.put=function(g, ph){
   if(!ph.querySelector('[data-xg="'+g.id+'"]')){
     var o=g.o, cols=xgCols(g);
     ph.innerHTML='<div class="xg" data-xg="'+g.id+'">'+
-      '<div class="xg-bar"><input class="xg-q" type="search" placeholder="'+esc(o.ph||"이름 · 부서 · 사번 찾기")+'" aria-label="'+esc((o.file||"명단")+" 검색")+'" value="'+esc(g.q)+'" oninput="XG.find(\''+g.id+'\',this.value)"><span class="xg-cnt" data-c="cnt"></span>'+
-      (o.noDl?'':'<button class="btn sm xg-dl" type="button" onclick="XG.dl(\''+g.id+'\')">엑셀 다운로드</button>')+'</div>'+
+      '<div class="xg-bar"><input class="xg-q" type="search" placeholder="'+esc(o.ph||"이름 · 부서 · 사번 찾기")+'" aria-label="'+esc((o.file||"명단")+" 검색")+'" value="'+esc(g.q)+'" oninput="XG.find(\''+g.id+'\',this.value)"><span class="xg-cnt" data-c="cnt"></span><span class="xg-acts" data-c="acts"></span></div>'+
       '<div class="xg-chips" role="group" aria-label="구분" data-c="chips"></div>'+
-      '<div class="xg-wrap" style="--xg-h:'+(o.h||460)+'px"><table class="xg-t"><colgroup>'+cols.map(function(c){ return '<col'+(c.w?' style="width:'+c.w+'px"':'')+'>'; }).join("")+'</colgroup><thead><tr data-c="head"></tr></thead><tbody data-c="body"></tbody></table></div><div data-c="note"></div></div>';
+      '<div class="xg-wrap" style="--xg-h:'+(o.h||460)+'px"><table class="xg-t"><colgroup>'+(o.select?'<col style="width:44px">':'')+cols.map(function(c){ return '<col'+(c.w?' style="width:'+c.w+'px"':'')+'>'; }).join("")+'</colgroup><thead><tr data-c="head"></tr></thead><tbody data-c="body"></tbody></table></div><div data-c="note"></div></div>';
   }
   XG.paint(g);
 };
@@ -51,7 +54,7 @@ XG.root=function(g){ return document.querySelector('[data-xg="'+g.id+'"]'); };
 XG.paint=function(g){
   var root=XG.root(g); if(!root) return;
   var o=g.o, cols=xgCols(g), q=function(n){ return root.querySelector('[data-c="'+n+'"]'); };
-  q("head").innerHTML=cols.map(function(c){ var n=c.type==="num"?" n":"", on=g.sort&&g.sort.k===c.k;
+  q("head").innerHTML=(o.select?'<th class="ck" scope="col"><label class="xg-ckl"><input type="checkbox" data-c="all" aria-label="보이는 줄 모두 선택" onchange="XG.pickAll(\''+g.id+'\',this.checked)"></label></th>':'')+cols.map(function(c){ var n=c.type==="num"?" n":"", on=g.sort&&g.sort.k===c.k;
     if(c.act||c.sort===false||!c.k) return '<th class="na'+n+'" scope="col">'+esc(c.t||"")+'</th>';
     return '<th class="'+n.trim()+'" scope="col"'+(on?' aria-sort="'+(g.sort.d>0?"ascending":"descending")+'"':'')+'><button type="button" onclick="XG.sortBy(\''+g.id+'\',\''+c.k+'\')">'+esc(c.t)+'<span class="ar" aria-hidden="true">'+(on?(g.sort.d>0?"▲":"▼"):"")+'</span></button></th>'; }).join("");
   var chips=q("chips"), all=g.rows||[];
@@ -59,21 +62,81 @@ XG.paint=function(g){
   if(chips&&!chips.hidden) chips.innerHTML=o.chips.map(function(c){ var n=c[2]?all.filter(c[2]).length:all.length;
     return '<button type="button" class="chip'+(g.chip===c[0]?" on":"")+'" aria-pressed="'+(g.chip===c[0])+'" onclick="XG.chipBy(\''+g.id+'\',\''+c[0]+'\')">'+esc(c[1])+' <span class="c">'+(g.rows?n0(n):"-")+'</span></button>'; }).join("");
   var body=q("body"), note=q("note"), cnt=q("cnt");
-  if(g.rows==null){ body.innerHTML=""; cnt.innerHTML=""; note.innerHTML='<div class="xg-note">'+(g.gate||skel())+'</div>'; return; }
+  if(g.rows==null){ body.innerHTML=""; cnt.innerHTML=""; note.innerHTML='<div class="xg-note">'+(g.gate||skel())+'</div>'; g.pick={}; xgActs(g); return; }
   var v=xgView(g), shown=v.slice(0,XG.MAXROWS);
+  if(o.select){ var vk={}; shown.forEach(function(r){ vk[xgKey(g,r)]=1; }); Object.keys(g.pick).forEach(function(k){ if(!vk[k]) delete g.pick[k]; }); }   /* 선택 = 보이는 줄 안에서만(구분 · 검색을 바꾸면 안 보이는 줄은 풀림) */
   cnt.innerHTML='<b>'+n0(v.length)+'</b>건'+(v.length!==all.length?' / 전체 '+n0(all.length):'');
-  body.innerHTML=shown.length?shown.map(function(r){ var k=o.key?o.key(r):"";
-    return '<tr'+(g.sel!=null&&k===g.sel?' class="sel"':'')+(o.onRow?' data-k="'+esc(k)+'" tabindex="0" onclick="XG.rowBy(this,event)" onkeydown="XG.rowKey(this,event)"':'')+'>'+cols.map(function(c){ var cls=c.act?"a":c.type==="num"?"n":c.type==="date"?"d":"";
+  body.innerHTML=shown.length?shown.map(function(r){ var k=o.key?o.key(r):"", on=g.sel!=null&&k===g.sel, pk=o.select&&g.pick[xgKey(g,r)];
+    return '<tr'+(on||pk?' class="'+(on?"sel":"")+(pk?" pk":"")+'"':'')+(o.select?' data-xk="'+esc(xgKey(g,r))+'"':'')+(o.onRow?' data-k="'+esc(k)+'" tabindex="0" onclick="XG.rowBy(this,event)" onkeydown="XG.rowKey(this,event)"':'')+'>'+(o.select?'<td class="ck"><label class="xg-ckl"><input type="checkbox"'+(pk?" checked":"")+' aria-label="'+esc(xgWho(r)+" 선택")+'" onchange="XG.pickEl(this)"></label></td>':'')+cols.map(function(c){ var cls=c.act?"a":c.type==="num"?"n":c.type==="date"?"d":"";
       var h=c.act?c.act(r):c.f?c.f(r):esc(xgText(c,r)); return '<td class="'+cls+'" title="'+esc(c.act?"":xgText(c,r))+'">'+h+'</td>'; }).join("")+'</tr>'; }).join("")
     :"";
+  xgActs(g);
   note.innerHTML=(shown.length?"":emptyH(g.q?"찾는 줄이 없습니다":(o.empty||"아직 줄이 없습니다")))+(g.gate?'<div class="xg-note">'+g.gate+'</div>':"")+(v.length>shown.length?'<div class="cap" style="padding:6px 2px">앞 '+n0(XG.MAXROWS)+'줄만 보입니다 · 검색으로 좁힙니다 · 엑셀은 전체 '+n0(v.length)+'줄</div>':'');
 };
 /* 줄 누르기(o.onRow(key)) · 줄 안 단추를 누른 것은 빼다 */
-XG.rowBy=function(tr, ev){ var x=tr.closest("[data-xg]"), g=x&&XG.reg[x.getAttribute("data-xg")]; if(!g||!g.o.onRow) return; if(ev&&ev.target&&ev.target.closest&&ev.target.closest("button,a,input")) return; g.sel=tr.getAttribute("data-k"); XG.paint(g); g.o.onRow(g.sel); };
+XG.rowBy=function(tr, ev){ var x=tr.closest("[data-xg]"), g=x&&XG.reg[x.getAttribute("data-xg")]; if(!g||!g.o.onRow) return; if(ev&&ev.target&&ev.target.closest&&ev.target.closest("button,a,input,label")) return; g.sel=tr.getAttribute("data-k"); XG.paint(g); g.o.onRow(g.sel); };
 XG.rowKey=function(tr, ev){ if(ev.target!==tr) return; if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); XG.rowBy(tr, ev); } };
 XG.find=function(id, v){ var g=XG.reg[id]; g.q=String(v||""); XG.paint(g); };
 XG.sortBy=function(id, k){ var g=XG.reg[id]; if(g.sort&&g.sort.k===k) g.sort.d=-g.sort.d; else g.sort={ k:k, d:1 }; xgSave(g); XG.paint(g); };
 XG.chipBy=function(id, c){ var g=XG.reg[id]; g.chip=c; xgSave(g); XG.paint(g); if(g.o.onChip) g.o.onChip(c); };
+
+/* ── 261016 저녁 선택 · 추가 · 선택 삭제 ── */
+function xgKey(g, r){ return String(g.o.key?g.o.key(r):r.emp); }
+function xgWho(r){ return String((r.name||"")+(r.emp?(r.name?" ":"")+r.emp:"")).trim()||"줄"; }
+function xgPicked(g){ return (g.rows||[]).filter(function(r){ return g.pick[xgKey(g,r)]; }); }
+/* 오른쪽 단추 칸 · 선택 n명 삭제(고른 줄이 있을 때) · 추가 · 엑셀 다운로드 · 머리 칸 체크 상태 */
+function xgActs(g){
+  var root=XG.root(g); if(!root) return; var o=g.o, a=root.querySelector('[data-c="acts"]'), n=o.select?xgPicked(g).length:0, id=g.id;
+  if(a) a.innerHTML=(n||g.busy?'<button class="btn sm dng" type="button" onclick="XG.cxAsk(\''+id+'\')"'+(g.busy?' disabled aria-disabled="true"':'')+'>'+(g.busy?"처리 중":"선택 "+n0(n)+(o.unit||"명")+" 삭제")+'</button>':'')+
+    (o.onAdd?'<button class="btn sm" type="button" onclick="XG.addBy(\''+id+'\')"'+(g.busy?' disabled':'')+'>추가</button>':'')+
+    (o.noDl?'':'<button class="btn sm xg-dl" type="button" onclick="XG.dl(\''+id+'\')">엑셀 다운로드</button>');
+  var all=root.querySelector('[data-c="all"]');
+  if(all){ var trs=root.querySelectorAll('tbody tr[data-xk]'), on=0; for(var i=0;i<trs.length;i++) if(g.pick[trs[i].getAttribute("data-xk")]) on++;
+    all.checked=!!trs.length&&on===trs.length; all.indeterminate=on>0&&on<trs.length; all.disabled=!trs.length||!!g.busy; }
+}
+XG.pickEl=function(cb){ var tr=cb.closest("tr"), x=cb.closest("[data-xg]"), g=x&&XG.reg[x.getAttribute("data-xg")]; if(!g||!tr) return; var k=tr.getAttribute("data-xk");
+  if(cb.checked) g.pick[k]=1; else delete g.pick[k]; tr.classList.toggle("pk",cb.checked); xgActs(g); };
+XG.pickAll=function(id, on){ var g=XG.reg[id], root=XG.root(g); if(!root) return; var trs=root.querySelectorAll('tbody tr[data-xk]');
+  for(var i=0;i<trs.length;i++){ var k=trs[i].getAttribute("data-xk"), cb=trs[i].querySelector('td.ck input'); if(on) g.pick[k]=1; else delete g.pick[k]; trs[i].classList.toggle("pk",on); if(cb) cb.checked=on; }
+  xgActs(g); };
+XG.addBy=function(id){ var g=XG.reg[id]; if(g&&g.o.onAdd&&!g.busy) g.o.onAdd(g); };
+/* 줄 거절 이유(3_서버 계약 3-6 · 줄마다 why) */
+var XG_CXWHY={ param:"사번 형식이 맞지 않습니다", notfound:"명단에 없습니다", err:"서버 오류로 처리하지 못했습니다", same:"이미 취소된 줄입니다", state:"그 사이 상태가 바뀌었습니다",
+  done:"체크인 · 완료한 상담이 있어 뺄 수 없습니다", sup:"슈퍼관리자(맨 앞 사번)는 뺄 수 없습니다", self:"지금 이 콘솔을 쓰는 본인은 뺄 수 없습니다", fixed:"고정 시험 사번은 풀 수 없습니다",
+  none:"아직 사이즈를 고르지 않았습니다", hum:"가습기 대상이라 옷 사이즈가 없습니다", got:"이미 옷을 받았습니다", have:"그 사이 다시 들어왔습니다", taken:"그 자리가 찼습니다", dup:"진행 중인 다른 줄이 있습니다", sold:"그 사이즈가 남지 않았습니다" };
+function xgCxWhy(x){ return (XG_CXWHY[x.why]||x.why||"처리하지 못했습니다")+(x.cur?" · 지금 "+x.cur:""); }
+XG.cxAsk=function(id){
+  var g=XG.reg[id], o=g.o, c=o.cancel; if(!c||g.busy) return; var rows=xgPicked(g), n=rows.length; if(!n) return;
+  if(n>XG.CXMAX){ toast("한 번에 "+XG.CXMAX+"명까지 삭제합니다 · 지금 "+n0(n)+"명 선택",{ bad:1, ms:4000 }); return; }
+  var nm=rows.slice(0,3).map(xgWho).join(", ")+(n>3?" 외 "+n0(n-3)+"명":"");
+  confirmBox({ t:"선택한 "+n0(n)+(o.unit||"명")+"을 삭제할까요?", who:(c.what||o.file||"명단")+" · "+nm, sub:c.sub||"", ok:"선택 삭제", danger:true, gate:c.gate,
+    body:(c.opts?c.opts(rows):"")+'<p class="cap mt4">취소로 남고 활동 기록에서 되돌릴 수 있음</p>',
+    run:function(){
+      var kind=typeof c.kind==="function"?c.kind(rows):c.kind, keys=c.keys?c.keys(rows,kind):rows.map(function(r){ return r.emp; }), p={ kind:kind, keys:keys.join(","), rid:"x"+Date.now().toString(36)+Math.random().toString(36).slice(2,6) };
+      if(c.part){ var pt=c.part(); if(pt) p.part=pt; }
+      g.busy=1; xgActs(g);
+      return call("list_rows_cancel",p).then(function(r){ g.busy=0; xgActs(g); if(r&&r.ok) r._rows=rows; return r; });
+    },
+    fail:function(r){ return r&&r.reason==="rows"?"한 번에 "+(r.max||XG.CXMAX)+"명까지입니다":""; },
+    done:function(r){ g.pick={}; xgCxDone(g, r); } });
+};
+function xgCxDone(g, r){
+  var c=g.o.cancel, bad=(r.rows||[]).filter(function(x){ return !x.ok; }), dn=num(r.done), u=g.o.unit||"명";
+  var byK={}; (r._rows||[]).forEach(function(x){ byK[x.emp]=x; byK[xgKey(g,x)]=x; if(x.id!=null) byK[x.id]=x; });
+  if(c.after) c.after(r); else XG.paint(g);
+  toast(dn?"삭제했습니다 · "+n0(dn)+u+(bad.length?" · 못 함 "+n0(bad.length):""):"삭제하지 못했습니다", dn&&r.batch?{ undo:function(){ XG.undo(g.id, r.batch); } }:{ bad:!dn });
+  if(!bad.length) return;
+  setTimeout(function(){ confirmBox({ t:n0(dn)+u+" 삭제 · "+n0(bad.length)+u+" 못 함", who:c.what||g.o.file||"명단", sub:"못 한 줄은 그대로 남았습니다", ok:"확인",
+    body:'<div class="xg-wrap" style="--xg-h:280px"><table class="tb xg-fail"><thead><tr><th scope="col">이름</th><th scope="col">사번</th><th scope="col">이유</th></tr></thead><tbody>'+
+      bad.map(function(x){ var w=byK[x.k]||byK[x.emp]||{}; return '<tr><td>'+esc(w.name||"-")+'</td><td>'+esc(x.emp||w.emp||x.k)+'</td><td>'+esc(xgCxWhy(x))+'</td></tr>'; }).join("")+'</tbody></table></div>',
+    run:function(){ return Promise.resolve({ ok:true }); } }); },220);   /* 앞 확인 창이 닫히는 시간(dlgClose 180ms) 뒤에 연다 */
+}
+XG.undo=function(id, batch){
+  var g=XG.reg[id], c=g&&g.o.cancel;
+  call("roll_undo",{ batch:batch }).then(function(x){ var d=x&&x.ok?(Array.isArray(x.done)?x.done.length:num(x.done)):0, sk=(x&&x.skip||[]).length+(x&&x.fail||[]).length;
+    if(c&&c.after) c.after(x);
+    toast(x&&x.ok?"되돌렸습니다 · "+n0(d)+(g.o.unit||"명")+(sk?" · 건너뜀 "+sk:""):"되돌리지 못했습니다 · "+(x&&x.reason==="expired"?"다른 날 처리한 묶음입니다":x&&x.reason==="done"?"이미 되돌렸습니다":why(x)),{ bad:!(x&&x.ok) }); });
+};
 
 /* ── 엑셀 다운로드 · 확인 창 · 서버 dl=1 ── */
 XG.dl=function(id){

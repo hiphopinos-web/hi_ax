@@ -18,7 +18,7 @@ SCREENS.inbox={
     vb.innerHTML='<div class="chips" id="ibChips" role="tablist" aria-label="처리함"></div><div id="ibB"></div>';
     var b=el("ibB");
     if(s==="lounge"&&S.ui.lup&&UP){ upMount(b); return; }
-    if(s==="lounge") b.innerHTML='<div class="up-bar"><span class="cap">사전 명단 = 「사번 · 시간 · 상담석」 엑셀</span><button class="btn sm pri" type="button" onclick="lgUpOpen()">명단 올리기</button><button class="btn sm" type="button" onclick="lngUndoAsk()">마지막 올리기 되돌리기</button></div><div class="card mb" id="lgAdd"></div><div id="lgErr"></div><div class="grid gside"><div class="card" style="padding:8px 12px" id="lgBoard"></div><div class="col" id="lgSide"></div></div><div class="card mt"><h2>AX 라운지 신청 명단</h2><div id="lgList"></div></div>';
+    if(s==="lounge") b.innerHTML='<div class="up-bar"><span class="cap">사전 명단 = 「사번 · 시간 · 상담석」 엑셀</span><button class="btn sm pri" type="button" onclick="lgUpOpen()">명단 올리기</button><button class="btn sm" type="button" onclick="lngUndoAsk()">마지막 올리기 되돌리기</button></div><div id="lgErr"></div><div class="grid gside"><div class="card" style="padding:8px 12px" id="lgBoard"></div><div class="col" id="lgSide"></div></div><div class="card mt"><h2>AX 라운지 신청 명단</h2><div id="lgList"></div></div>';
     else if(s==="cchat") ccMount(b);
     else if(s==="ck") b.innerHTML='<div id="ckTop"></div><div class="grid g4" id="ckK"></div><div class="card mt"><h2>최근 지급 명단 <span class="cap">체크인존에서 찍은 사람 · 줄을 누르면 한 사람 카드</span></h2><div id="ckL"></div></div>'+ckExtraHtml();
     else if(s==="req") b.innerHTML='<div class="card"><h2>스태프 요청</h2><div id="rqList"></div></div>';
@@ -72,11 +72,11 @@ function lgPaint(){
     (P.none.length?'<div class="band mt" id="lgNone"><span><b>칸 미정 '+P.none.length+'명</b> · 이름을 눌러 칸에 넣습니다</span><span>'+P.none.map(function(r){ return '<button type="button" class="btn sm'+(LG.sel==="n:"+r.id?" pri":"")+'" onclick="lgPick(\'n:'+jq(r.id)+'\')">'+esc(r.name||r.emp)+'</button>'; }).join(" ")+'</span></div>':'')+
     (P.out.length?'<div class="band warn mt">칸 밖 신청 '+P.out.length+'건 · '+esc(P.out.map(function(r){ return hm(r.slot)+" "+(r.name||r.emp); }).join(", "))+'</div>':'')+
     '<div class="cap mt">취소 '+P.cx.length+'건은 아래 명단에'+(cf.srv?"":" · 칸 설정은 서버 갱신 뒤 서버 값")+'</div>';
-  LG.P=P; lgAddPaint(); lgSide();
+  LG.P=P; lgSide();
   if(!LG.g) LG.g=XG.make({ id:"lounge", file:"AX 라운지 신청", key:function(r){ return r.id; }, sort:{ k:"slot", d:1 },
     chips:[["all","전체",null],["w","신청",function(r){ return r.status==="신청"; }],["ok","승인",function(r){ return r.status==="승인"; }],["in","체크인",function(r){ return r.status==="체크인"; }],["dn","완료",function(r){ return r.status==="완료"; }],["no","노쇼",function(r){ return r.status==="노쇼"; }],["cx","취소",function(r){ return r.status==="취소"; }]],
     cols:[{ k:"slot", t:"시간", w:70, v:function(r){ return hm(r.slot)||"칸 미정"; } },{ k:"seat", t:"상담석", w:60 },{ k:"name", t:"이름", w:110 },{ k:"emp", t:"사번", w:90 },{ k:"dept", t:"부서", w:130 },{ k:"status", t:"상태", w:80, f:function(r){ return tag(r.status, RV_TAG[r.status]); } },{ k:"memo", t:"메모", w:160 },{ k:"ts", t:"신청 시각", type:"date", w:110 },{ k:"cxAt", t:"취소 시각", type:"date", w:110 }],
-    src:{ a:"resv_list", p:{} }, h:360 });
+    src:{ a:"resv_list", p:{} }, h:360, select:1, onAdd:function(){ paOpen(laSp()); }, cancel:laCx() });
   XG.set(LG.g, rows, el("lgList"));
 }
 function lgPick(key){ LG.sel=key; LG.mv=null; lgPaint(); }
