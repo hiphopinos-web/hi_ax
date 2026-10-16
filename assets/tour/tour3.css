@@ -460,7 +460,6 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 /* 장면 = 판만 가운데 · 뒷배경 짙은 글자색 40% · 열림 300ms(흐려짐 + 6px 떠오름 · ease) · 닫힘 180ms 흐려짐(mobile-popup-motion 장면 규격) */
 #axTour3 .spov { position: fixed; inset: 0; z-index: 52; max-width: 520px; margin: 0 auto; display: flex; align-items: center; justify-content: center; background: rgba(25, 31, 40, .4); overscroll-behavior: contain; touch-action: none; -webkit-tap-highlight-color: transparent; }
 #axTour3 .spov:focus { outline: none; }
-#axTour3 .spov.done { cursor: pointer; }
 #axTour3 .spov.in { animation: spFade .3s ease both; }
 #axTour3 .spov.in .spst { animation: spRise .3s ease both; }
 #axTour3 .spov.out { opacity: 0; pointer-events: none; transition: opacity .18s ease; }
@@ -471,27 +470,20 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3 .spd svg { display: block; width: 100%; height: 100%; }
 #axTour3 .sppt { position: absolute; left: 50%; top: -16px; width: 28px; height: 34px; margin-left: -14px; z-index: 1; }
 #axTour3 .sppt svg { display: block; width: 100%; height: 100%; }
-#axTour3 .spfx { position: absolute; left: 50%; top: 50%; width: 0; height: 0; z-index: 2; pointer-events: none; }
-#axTour3 .spfx b { position: absolute; left: -60px; top: -60px; width: 120px; height: 120px; border-radius: 50%; box-shadow: inset 0 0 0 5px #FFFFFF; opacity: 0; animation: spRing .55s ease-out both; }
-#axTour3 .spfx i { position: absolute; left: -5px; top: -7px; width: 10px; height: 14px; border-radius: 2px; background: var(--c); opacity: 0; animation: spBurst .9s cubic-bezier(.2, .8, .3, 1) var(--d, 0s) both; }
-#axTour3 .spfx i.r { top: -5px; height: 10px; border-radius: 50%; }
-#axTour3 .spst.gone { opacity: 0; transition: opacity .18s cubic-bezier(.4, 0, 1, 1); }
-#axTour3 .spst.fade { opacity: 0; transition: opacity .3s ease; }   /* v7.37 멈추기 전에 판이 사라짐(도는 채로) */
-/* v7.37 「당첨!」 = 등수 · 경품 이름 없이 큰 글 하나(짙은 알약 · 흰 글) · 들어옴 320ms 살짝 부풂 · 나감 180ms */
-#axTour3 .spw { position: relative; margin: 0; padding: 16px 40px; border-radius: 24px; background: rgba(25, 31, 40, .86); color: #FFFFFF; font-size: 48px; line-height: 1.2; font-weight: 900; letter-spacing: -1px; white-space: nowrap; }
-#axTour3 .spw.in { animation: spPop .32s cubic-bezier(.3, .7, .3, 1) both; }
-#axTour3 .spw.gone { opacity: 0; transition: opacity .18s cubic-bezier(.4, 0, 1, 1); }
 #axTour3 .spm { margin: 0; min-height: 76px; padding: 12px 20px; border-radius: 16px; background: rgba(25, 31, 40, .86); color: #FFFFFF; text-align: center; }   /* v7.37 누르자마자 보임(판과 함께 떠오름) */
 #axTour3 .spm span { display: block; white-space: nowrap; }
 #axTour3 .spm span:first-child { font-size: 19px; line-height: 28px; font-weight: 800; }
 #axTour3 .spm span + span { font-size: 16px; line-height: 24px; font-weight: 600; }
 #axTour3 .spm { min-height: 0; }
-/* v6.95 하얀 점 폭죽(캔버스) · 경품 카드(한 화면 · 큰 글씨 = 앱 --fs 배율) */
-#axTour3 .spcv { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; }
-#axTour3 .spc { position: relative; width: min(400px, calc(100% - 32px)); max-height: calc(100% - 32px); overflow: auto; overscroll-behavior: contain; padding: 20px 16px 16px; border-radius: 24px; background: var(--surface); color: var(--ink); text-align: left; box-shadow: 0 16px 40px rgba(25, 31, 40, .3); --f: var(--fs, 1); }
-#axTour3 .spc.in { animation: spRise .3s ease both; }
-#axTour3 .spck { display: inline-block; margin: 0; padding: 3px 12px; border-radius: 999px; background: var(--brandSoft); color: var(--brandText); font-size: calc(13px * var(--f)); line-height: 1.5; font-weight: 700; }
-#axTour3 .spc .spct { margin: 8px 0 0; font-size: calc(21px * var(--f)); line-height: 1.35; font-weight: 800; }
+/* v7.40 판이 돌면서 작아지며 위로(--spdT = SP_DR 2초 · 판 이동은 시트 규격 250ms 예외 · 사용자 연출) · 목록 = 0.3초 뒤 아래 45%에서 투명 → 불투명 · 곡선 하나 cubic-bezier(.4, 0, .2, 1) */
+#axTour3 .spwh { transform-origin: 50% 50%; }
+#axTour3 .spov.rise .spwh { transition: transform var(--spdT, 0ms) cubic-bezier(.4, 0, .2, 1); }
+#axTour3 .spk, #axTour3 .spm { transition: opacity .45s cubic-bezier(.4, 0, .2, 1); }
+#axTour3 .spov.rise .spk, #axTour3 .spov.rise .spm { opacity: 0; }
+/* 경품 목록 = 아래에 붙은 시트(위 모서리 32px · 큰 글씨 = 앱 --fs 배율 · 넘치면 안에서 스크롤) */
+#axTour3 .spc { position: absolute; left: 0; right: 0; bottom: 0; max-height: calc(100% - 112px); overflow: auto; overscroll-behavior: contain; padding: 20px 16px calc(16px + env(safe-area-inset-bottom)); border-radius: 32px 32px 0 0; background: var(--surface); color: var(--ink); text-align: left; box-shadow: 0 -8px 32px rgba(25, 31, 40, .22); --f: var(--fs, 1); }
+#axTour3 .spov.rise .spc { animation: spLiftT calc(var(--spdT, 0ms) - 300ms) cubic-bezier(.4, 0, .2, 1) 300ms both, spLiftO calc((var(--spdT, 0ms) - 300ms) * .6) cubic-bezier(.4, 0, .2, 1) 300ms both; }
+#axTour3 .spc .spct { margin: 0; font-size: calc(21px * var(--f)); line-height: 1.35; font-weight: 800; }
 #axTour3 .spcl { list-style: none; margin: 12px 0 0; padding: 0; }
 #axTour3 .spcl li { display: flex; align-items: center; gap: 10px; min-height: 60px; padding: 6px 8px; border-radius: 14px; }
 #axTour3 .spcl li + li { margin-top: 2px; }
@@ -505,11 +497,11 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3 .spc .spcx { display: block; width: 100%; height: 56px; margin-top: 16px; font-size: calc(18px * var(--f)); }
 #axTour3 .spcg { display: block; width: 100%; min-height: 48px; margin-top: 4px; border: 0; border-radius: 14px; background: none; color: var(--body); font-size: calc(16px * var(--f)); font-weight: 600; cursor: pointer; }
 #axTour3 .spcg:active { background: var(--canvas); }
+@media (max-height: 700px) { #axTour3 .spcl { margin-top: 8px; } #axTour3 .spcl li { min-height: 50px; padding: 3px 8px; } #axTour3 .spcl .ph { width: 40px; height: 40px; } #axTour3 .spcn { margin-top: 8px; } #axTour3 .spc .spcx { margin-top: 12px; } }   /* v7.40 낮은 화면(360 x 640 큰 글씨) = 줄 높이만 줄여 넘치지 않게 */
 @keyframes spFade { from { opacity: 0; } }
 @keyframes spRise { from { opacity: 0; transform: translateY(6px); } }
-@keyframes spPop { 0% { opacity: 0; transform: scale(.6); } 60% { opacity: 1; transform: scale(1.08); } 100% { opacity: 1; transform: scale(1); } }
-@keyframes spRing { 0% { opacity: .9; transform: scale(.4); } 100% { opacity: 0; transform: scale(2.6); } }
-@keyframes spBurst { 0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(.6); } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--x), var(--y)) rotate(var(--r)) scale(1); } }
-#axTour3.rm .spb.pop, #axTour3.rm .spb::after, #axTour3.rm .spov.in, #axTour3.rm .spov.in .spst, #axTour3.rm .spw.in, #axTour3.rm .spc.in { animation: none; }
-#axTour3.rm .spov.out, #axTour3.rm .spst.fade, #axTour3.rm .spw.gone { transition: none; }
-@media (prefers-reduced-motion: reduce) { #axTour3 .spb.pop, #axTour3 .spb::after, #axTour3 .spov.in, #axTour3 .spov.in .spst, #axTour3 .spw.in, #axTour3 .spc.in, #axTour3 .spfx b, #axTour3 .spfx i { animation: none; } #axTour3 .spov.out, #axTour3 .spst.fade, #axTour3 .spw.gone { transition: none; } }
+@keyframes spLiftT { from { transform: translateY(45%); } }
+@keyframes spLiftO { from { opacity: 0; } }
+#axTour3.rm .spb.pop, #axTour3.rm .spb::after, #axTour3.rm .spov.in, #axTour3.rm .spov.in .spst, #axTour3.rm .spov.rise .spc { animation: none; }
+#axTour3.rm .spov.out, #axTour3.rm .spov.rise .spwh, #axTour3.rm .spk, #axTour3.rm .spm { transition: none; }
+@media (prefers-reduced-motion: reduce) { #axTour3 .spb.pop, #axTour3 .spb::after, #axTour3 .spov.in, #axTour3 .spov.in .spst, #axTour3 .spov.rise .spc { animation: none; } #axTour3 .spov.out, #axTour3 .spov.rise .spwh, #axTour3 .spk, #axTour3 .spm { transition: none; } }
