@@ -2,9 +2,11 @@
  * 흐름: ① 엑셀(.xlsx · .xls · .csv)을 고르거나 붙여넣기 → ② 열 고르기 → ③ 미리 세기(서버) 결과를 명단 표(XG)로 → ④ 문제가 없을 때만 「적용」(확인 창) → 배치판
  * 파일 읽기 = 명단 표 내려받기와 같은 SheetJS(cdnjs 0.18.5 · xgLoadLib) · 파일은 서버로 보내지 않고 고른 열만 줄 글자로 보낸다.
  * 명단마다 다른 것은 sp(명세) 하나에 모은다 = 열(fields) · 줄 글자(line) · 미리 세기 · 적용 액션 · 줄 판정(judge) · 숫자(kpis).
- *   지금은 라운지(LNG_UP)만. 10F 사전 신청 · 접속 허용 · 스태프도 미리 세기 · 적용 모양이 같아서 명세만 더하면 붙는다. */
+ *   라운지(LNG_UP · 처리함) · 10F 사전 신청(PRE10_UP) · 접속 허용(GATE_UP) · 스태프 옷(KSTAFF_UP) · 뒤 셋은 사람 › 명단 올리기(261016 2단계)
+ * 이름만 있는 줄(sp.byName) = og_gate_find(이름) 로 명부에서 찾는다 · 한 명이면 그 사번 · 여럿이면 「동명이인」 줄 → 줄을 눌러 고름(UP.pick) · 없으면 문제 줄
+ * 사번과 이름이 다 있으면 명부 이름과 대조(다르면 문제 줄) */
 var UP=null;
-function upNew(sp){ return { sp:sp, src:"", wb:null, sh:0, aoa:null, head:true, map:{}, mode:"replace", pv:null, sent:null, rows:null, busy:false, err:"", g:null }; }
+function upNew(sp){ return { sp:sp, src:"", wb:null, sh:0, aoa:null, head:true, map:{}, mode:"replace", pv:null, sent:null, rows:null, busy:false, err:"", g:null, pick:{}, nmc:{} }; }
 function upOpen(sp){ UP=upNew(sp); }
 
 /* ── 값 다듬기 ── */
@@ -21,7 +23,10 @@ function upTime(v){
 }
 /* 상담석 = 1 ~ 9 한 자리(「2」 「2번」 「상담석 2」) · 빈칸 = 자리 고정 없음 · 못 읽으면 null */
 function upSeat(v){ var s=upCell(v); if(!s) return ""; var m=s.match(/^(?:상담석\s*)?(\d+)\s*(?:번|석)?$/); return m&&Number(m[1])>=1&&Number(m[1])<=9?String(Number(m[1])):null; }
-function upEmp(v){ var e=normE(upCell(v)); return /^[0-9A-Z]{3,12}$/.test(e)?e:null; }
+function upEmp(v){ var e=normE(upCell(v)); return /^[0-9A-Z]{3,12}$/.test(e)&&/\d/.test(e)?e:null; }
+/* 이름 비교 · 띄어쓰기 · 괄호 안(직급 등) 빼기 */
+function upNm(v){ return upCell(v).replace(/\([^)]*\)/g,"").replace(/\s+/g,""); }
+function upNameOk(a, b){ a=upNm(a); b=upNm(b); return !a||!b||a===b||a.indexOf(b)>=0||b.indexOf(a)>=0; }
 function upCol(i){ var s="", n=i+1; while(n>0){ var r=(n-1)%26; s=String.fromCharCode(65+r)+s; n=Math.floor((n-1)/26); } return s; }
 
 /* ── 1 · 파일 · 붙여넣기 ── */
@@ -65,27 +70,59 @@ function upGuess(){
   var a=UP.aoa, h=UP.head?a[0]:[], body=UP.head?a.slice(1):a, n=Math.max.apply(null,a.map(function(r){ return r.length; })), used={}, map={};
   UP.sp.fields.forEach(function(f){
     var i=h.findIndex(function(c){ return f.re.test(c); });
-    if(i<0&&f.shape){ for(var j=0;j<n;j++){ if(used[j]) continue; var vs=body.slice(0,20).map(function(r){ return r[j]||""; }).filter(Boolean); if(vs.length&&vs.every(f.shape)){ i=j; break; } } }
+    if(i<0&&f.shape){ for(var j=0;j<n;j++){ if(used[j]) continue; var vs=body.slice(0,20).map(function(r){ return r[j]||""; }).filter(Boolean); if(vs.length&&vs.filter(f.shape).length>=Math.max(1,Math.ceil(vs.length*(UP.sp.byName&&f.k==="emp"?0.5:1)))){ i=j; break; } } }
     if(i>=0&&!used[i]){ map[f.k]=i; used[i]=1; } else map[f.k]=-1;
   });
+  /* 사번 · 이름이 한 열에 섞여 있으면(「사번 또는 이름」) 이름도 그 열 */
+  if(UP.sp.byName&&map.name<0&&map.emp>=0&&body.slice(0,40).some(function(r){ var v=r[map.emp]||""; return v&&!upEmp(v)&&/[가-힣A-Za-z]/.test(v); })) map.name=map.emp;
   UP.map=map;
 }
-function upMap(k, v){ UP.map[k]=Number(v); UP.pv=null; UP.rows=null; upPaint(); }
+function upMap(k, v){ UP.map[k]=Number(v); UP.pv=null; UP.rows=null; UP.pick={}; upPaint(); }
 function upHead(on){ UP.head=!!on; UP.pv=null; UP.rows=null; upPaint(); }
 function upMode(m){ UP.mode=m; UP.pv=null; UP.rows=null; upPaint(); }
 
 /* ── 2 · 줄 만들기 · 3 · 미리 세기 ── */
 function upRecs(){
   var a=UP.aoa||[], body=UP.head?a.slice(1):a, m=UP.map, base=UP.head?2:1;
-  return body.map(function(r,i){ var o={ no:base+i }; Object.keys(m).forEach(function(k){ o[k+"0"]=m[k]>=0?upCell(r[m[k]]):""; }); return o; }).filter(function(o){ return o.emp0||o.t0||o.s0; });
+  return body.map(function(r,i){ var o={ no:base+i }; Object.keys(m).forEach(function(k){ o[k+"0"]=m[k]>=0?upCell(r[m[k]]):""; }); return o; }).filter(function(o){ return Object.keys(m).some(function(k){ return !!o[k+"0"]; }); });
 }
+/* 이름만 있는 줄 · 명부에서 찾기(og_gate_find by=name · 한 번에 6개씩) · 결과는 UP.nmc 에 모아 둔다 */
+function upResolve(recs){
+  if(!UP.sp.byName) return Promise.resolve();
+  var need={};
+  recs.forEach(function(o){ if(UP.pick[o.no]){ o.emp0=UP.pick[o.no]; o.via="고름"; return; } if(!upEmp(o.emp0)&&upNm(o.name0)) need[upNm(o.name0)]=1; });
+  var names=Object.keys(need).filter(function(n){ return !UP.nmc[n]||UP.nmc[n].err; }), i=0;
+  var next=function(){ var b=names.slice(i,i+6); i+=6; if(!b.length) return Promise.resolve();
+    return Promise.all(b.map(function(n){ return call("og_gate_find",{ by:"name", q:n.slice(0,30) }).then(function(r){ UP.nmc[n]=r&&r.ok?(r.rows||[]).filter(function(x){ return upNm(x.name)===n; }):{ err:why(r) }; }); })).then(next); };
+  return next().then(function(){
+    recs.forEach(function(o){ if(o.via==="고름"||upEmp(o.emp0)) return; var n=upNm(o.name0); if(!n) return; var c=UP.nmc[n];
+      if(!c||c.err){ o.nbad="이름으로 찾지 못함 · "+(c&&c.err||""); return; }
+      if(c.length===1){ o.emp0=c[0].emp; o.via="이름"; }
+      else if(!c.length) o.nbad="명부에 없는 이름";
+      else { o.cand=c; o.nbad="동명이인 "+c.length+"명 · 줄을 눌러 고름"; } });
+  });
+}
+function upPick(no, emp){ UP.pick[no]=emp; drwClose(); upPreview(); }
+function upRowOpen(k){
+  var o=(UP.rows||[]).filter(function(x){ return String(x.no)===String(k); })[0]; if(!o) return;
+  if(o.cand&&o.cand.length){
+    drwOpen("up:"+k, drwHead(o.name0||"동명이인","파일 "+o.no+"번째 줄 · 같은 이름 "+o.cand.length+"명")+'<p class="cap mt4">명부에서 고릅니다 · 고르면 미리 세기를 다시 합니다</p><div class="col mt">'+
+      o.cand.map(function(c){ return '<button class="btn up-cand" type="button" onclick="upPick('+Number(o.no)+',\''+jq(c.emp)+'\')"><b>'+esc(c.name)+'</b><span>'+esc([c.dept,c.emp].filter(Boolean).join(" · "))+'</span></button>'; }).join("")+'</div></div>', { g:UP.g, label:"동명이인 고르기" });
+    return; }
+  rowDetail(UP.g, k);
+}
+function upKeyOk(){ return UP.map.emp>=0||(UP.sp.byName&&UP.map.name>=0); }
 function upPreview(){
-  if(!UP.aoa||UP.map.emp<0||UP.busy) return;
-  var recs=upRecs(), lines=[];
-  recs.forEach(function(o){ var x=UP.sp.line(o); o.bad=x.bad||""; o.emp=x.emp||o.emp0; o.t=x.t; o.s=x.s; if(!x.bad){ o.li=lines.length; lines.push(x.txt); } });
-  if(!recs.length){ UP.err="사번 열에 값이 없습니다"; upPaint(); return; }
+  if(!UP.aoa||!upKeyOk()||UP.busy) return;
+  var recs=upRecs();
+  if(!recs.length){ UP.err="고른 열에 값이 없습니다"; upPaint(); return; }
   UP.busy=true; UP.err=""; upPaint();
-  var txt=lines.join("\n");
+  upResolve(recs).then(function(){ upPreview2(recs); });
+}
+function upPreview2(recs){
+  var lines=[];
+  recs.forEach(function(o){ var x=UP.sp.line(o); o.bad=x.bad||""; o.bk=x.k||""; o.emp=x.emp||o.emp0; o.t=x.t; o.s=x.s; o.sid=x.sid; if(!x.bad){ o.li=lines.length; lines.push(x.txt); } });
+  var txt=lines.join(UP.sp.sep||"\n");
   (lines.length?call(UP.sp.preview,{ rows:txt, mode:UP.mode },30000):Promise.resolve({ ok:true, rows:[], diff:{ add:0, del:0, keep:0 }, n:0, resv:{ add:0, move:0, keep:0, none:0, left:0, err:[], cap:[], dupSeat:[] } })).then(function(r){
     UP.busy=false;
     if(!r||r.ok===false){ UP.err=r&&r.reason==="rows"?"한 번에 "+n0(r.max)+"줄까지 올립니다":"미리 세지 못했습니다 · "+why(r); upPaint(); return; }
@@ -99,8 +136,8 @@ function upApply(){
   var pv=UP.pv, sp=UP.sp; if(!pv||upBad()||!UP.rows.length) return;
   var s=sp.sum(pv, UP.mode);
   confirmBox({ t:sp.askT, who:s.who, sub:s.sub, ok:"적용", danger:s.danger,
-    run:function(){ return call(sp.apply,{ rows:UP.sent, mode:UP.mode, sig:pv.sig, confirm:sp.word },30000); },
-    fail:function(r){ return r&&r.reason==="state"?"미리 센 뒤 명단이나 상담 줄이 바뀌었습니다 · 미리 세기를 다시 합니다":r&&(r.reason==="fmt"||r.reason==="cap")?"서버가 다시 센 결과에 문제가 있습니다 · 미리 세기를 다시 합니다":""; },
+    run:function(){ return call(sp.apply,Object.assign({ rows:UP.sent, mode:UP.mode, sig:pv.sig, confirm:sp.word },sp.ap?sp.ap(pv):{}),30000); },
+    fail:function(r){ return r&&r.reason==="state"?"미리 센 뒤 명단이 바뀌었습니다 · 미리 세기를 다시 합니다":r&&(r.reason==="fmt"||r.reason==="cap"||r.reason==="count")?"서버가 다시 센 결과가 다릅니다 · 미리 세기를 다시 합니다":r&&r.reason==="empty"?"올릴 사람이 없습니다":""; },
     done:function(r){ sp.done(r); } });
 }
 
@@ -110,7 +147,7 @@ function upStep(){ return UP.rows?3:UP.aoa?2:1; }
 function upPaint(){
   if(!UP||!el("upTop")) return;
   var sp=UP.sp, st=upStep();
-  el("upTop").innerHTML='<div class="card"><h2>'+esc(sp.title)+' <span class="cap">'+esc(sp.desc)+'</span><span class="r"><button class="btn sm" type="button" onclick="UP.sp.back()">배치판으로</button></span></h2>'+
+  el("upTop").innerHTML='<div class="card"><h2>'+esc(sp.title)+' <span class="cap">'+esc(sp.desc)+'</span><span class="r"><button class="btn sm" type="button" onclick="UP.sp.back()">'+esc(sp.backT||"배치판으로")+'</button></span></h2>'+
     '<ol class="up-steps">'+["파일 · 붙여넣기","열 고르기","미리 세기","적용"].map(function(t,i){ return '<li class="'+(i+1<st?"done":i+1===st?"on":"")+'"><b>'+(i+1)+'</b>'+esc(t)+'</li>'; }).join("")+'</ol>'+
     (UP.err?band("warn",esc(UP.err)):"")+'</div>';
   /* 1 */
@@ -118,7 +155,7 @@ function upPaint(){
   el("upS1").innerHTML='<h2>1 · 파일 고르기 <span class="cap">.xlsx · .xls · .csv · 첫 시트부터</span></h2>'+
     '<label class="btn pri up-file">파일 고르기<input type="file" accept=".xlsx,.xls,.csv" onchange="upFile(this)"></label>'+
     (UP.src?'<div class="cap mt4">'+esc(UP.src)+(UP.aoa?' · '+n0(UP.aoa.length)+'줄':'')+'</div>':'')+wbs+
-    '<label class="up-f mt">또는 붙여넣기 <span class="cap">엑셀에서 복사한 줄 · 「사번 시간 상담석」</span><textarea id="upTx" rows="4" placeholder="990001	10:30	2&#10;990002	11:30	1">'+esc(UP.tx||"")+'</textarea></label>'+
+    '<label class="up-f mt">또는 붙여넣기 <span class="cap">엑셀에서 복사한 줄 · 「'+esc(sp.pasteT||"사번 시간 상담석")+'」</span><textarea id="upTx" rows="4" placeholder="'+(sp.pasteEx||"990001	10:30	2&#10;990002	11:30	1")+'">'+esc(UP.tx||"")+'</textarea></label>'+
     '<button class="btn sm mt4" type="button" onclick="upPaste()">붙여넣은 줄 읽기</button>'+(UP.busy&&!UP.aoa?'<div class="cap mt4">읽는 중</div>':'');
   /* 2 */
   var s2=el("upS2");
@@ -133,13 +170,13 @@ function upPaint(){
       '<table class="up-smp"><thead><tr>'+fs.map(function(f){ return '<th>'+esc(f.t)+'</th>'; }).join("")+'</tr></thead><tbody>'+smp.map(function(r){ return '<tr>'+fs.map(function(f){ var i=UP.map[f.k]; return '<td>'+esc(i>=0?r[i]||"":"")+'</td>'; }).join("")+'</tr>'; }).join("")+'</tbody></table>'+
       '<div class="chips mt" role="group" aria-label="올리는 방식">'+sp.modes.map(function(m){ return '<button type="button" class="chip'+(UP.mode===m[0]?" on":"")+'" aria-pressed="'+(UP.mode===m[0])+'" onclick="upMode(\''+m[0]+'\')">'+esc(m[1])+'</button>'; }).join("")+'</div>'+
       '<div class="cap">'+esc((sp.modes.filter(function(m){ return m[0]===UP.mode; })[0]||[])[2]||"")+'</div>'+
-      '<button class="btn pri mt" type="button"'+(UP.map.emp<0||UP.busy?' aria-disabled="true"':'')+' onclick="upPreview()">'+(UP.busy?"세는 중":"미리 세기")+'</button>'+(UP.map.emp<0?'<span class="cap"> · 사번 열을 고릅니다</span>':'');
+      '<button class="btn pri mt" type="button"'+(!upKeyOk()||UP.busy?' aria-disabled="true"':'')+' onclick="upPreview()">'+(UP.busy?"세는 중":"미리 세기")+'</button>'+(!upKeyOk()?'<span class="cap"> · '+(sp.byName?"사번 또는 이름 열을 고릅니다":"사번 열을 고릅니다")+'</span>':'');
   }
   /* 3 · 4 */
   var s3=el("upS3");
   if(!UP.rows){ s3.innerHTML='<h2>3 · 미리 세기 결과</h2>'+emptyH(UP.aoa?"「미리 세기」를 누르면 줄마다 결과가 보입니다":"파일을 먼저 고릅니다"); return; }
   var bad=upBad(), pv=UP.pv;
-  if(!UP.g) UP.g=XG.make({ id:sp.id, file:sp.file, key:function(r){ return String(r.no); }, sort:{ k:"no", d:1 }, chips:sp.chips, cols:sp.cols, h:420, empty:"줄이 없습니다", ph:"사번 · 이름 찾기" });
+  if(!UP.g) UP.g=XG.make({ id:sp.id, file:sp.file, key:function(r){ return String(r.no); }, sort:{ k:"no", d:1 }, chips:sp.chips, cols:sp.cols, h:420, empty:"줄이 없습니다", ph:"사번 · 이름 찾기", onRow:upRowOpen });
   if(!el("upKp")) s3.innerHTML='<h2>3 · 미리 세기 결과</h2><div id="upKp"></div><div id="upBand"></div><div id="upTbl"></div><div class="up-go" id="upGo"></div>';
   el("upKp").innerHTML=sp.kpis(pv, UP.rows, UP.mode);
   el("upBand").innerHTML=bad?band("bad","문제 "+n0(bad)+"줄 · 파일을 고친 뒤 다시 올립니다 · 문제가 있으면 적용하지 않습니다"):UP.rows.length?band("info","문제 없음 · 적용할 수 있습니다"):band("warn","올릴 줄이 없습니다");
@@ -204,4 +241,88 @@ var LNG_UP={
   },
   back:function(){ S.ui.lup=0; render(); load(false); },
   done:function(r){ var x=r&&r.resv||{}; S.ui.lup=0; UP=null; render(); reload(["resv","nb"]); toast("명단을 적용했습니다 · "+n0(r.n)+"명 · 새 승인 "+n0(x.add)+" · 시간 바꿈 "+n0(x.move)+(x.over&&x.over.length?" · 칸이 차서 미정 "+x.over.length:"")); }
+};
+
+/* ── 명세 · 사람 › 명단 올리기(261016 2단계) · 10F 사전 신청 · 접속 허용 · 스태프 옷 ── */
+function upN(x){ return Array.isArray(x)?x.length:num(x); }
+function upNameJ(o, pr){ if(o.name0&&!upEmp(o.name0)&&pr&&pr.name&&!upNameOk(o.name0,pr.name)) return { k:"name", msg:"파일 이름과 명부 이름이 다름" }; return null; }
+var UP_EMPF={ k:"emp", t:"사번", re:/사번|사원\s*번호|직원\s*번호|emp/i, shape:function(v){ return !!upEmp(v)&&/\d{4,}/.test(v); } };
+var UP_NAMEF={ k:"name", t:"이름", re:/이름|성명|name/i };
+var UP_MODES=[["replace","명단 통째 교체","올린 사람이 명단 전부 · 명단에서 빠지는 사람이 생김"],["add","추가만","지금 명단에 더함 · 빠지는 사람 없음"]];
+var UP_COLS0=[{ k:"no", t:"파일 줄", type:"num", w:70 },{ k:"emp", t:"사번", w:90 },{ k:"name0", t:"이름(파일)", w:100, v:function(r){ return upEmp(r.name0)?"":r.name0; } },{ k:"nm", t:"이름(명부)", w:100 }];
+var UP_COLK={ k:"k", t:"결과", w:130, v:function(r){ return r.k==="ok"?(r.res||"정상"):r.k==="pick"?"고르기":"문제"; }, f:function(r){ return r.k==="ok"?tag(r.res||"정상",r.res&&/그대로|겹침/.test(r.res)?"off":"ok"):r.k==="pick"?tag("고르기","warn"):tag("문제","bad"); } };
+var UP_COLM={ k:"msg", t:"내용", w:260, v:function(r){ return (r.via==="이름"?"이름으로 찾음 · ":r.via==="고름"?"동명이인에서 고름 · ":"")+(r.msg||""); } };
+function upChips(extra){ return [["all","전체",null],["ok","정상",function(r){ return r.k==="ok"; }],["bad","문제 전체",function(r){ return r.k!=="ok"; }],["pick","동명이인",function(r){ return r.k==="pick"; }],["noros","명부에 없음",function(r){ return r.k==="noros"; }],["dup","겹침",function(r){ return r.k==="dup"; }],["name","이름 다름",function(r){ return r.k==="name"; }]].concat(extra||[]).concat([["fmt","모양 오류",function(r){ return r.k==="fmt"; }]]); }
+function upLine1(o){ if(o.nbad) return { bad:o.nbad, k:o.cand?"pick":"noros", emp:o.emp0 }; var e=upEmp(o.emp0); if(!e) return { bad:o.emp0?"사번 모양":"사번 · 이름 없음", emp:o.emp0 }; return { emp:e, txt:e }; }
+function upJudge1(o, pr, extra){
+  if(o.bad) return { k:o.bk||"fmt", msg:o.bad };
+  if(!pr) return { k:"fmt", msg:"서버 줄 없음" };
+  if(pr.st==="noros") return { k:"noros", msg:"명부에 없는 사번" };
+  if(pr.st==="dup") return { k:"dup", msg:"같은 사번 두 번" };
+  var nj=upNameJ(o, pr); if(nj) return nj;
+  return extra?extra(pr):{ k:"ok", res:"정상" };
+}
+function upKp(pv, rows, mode, l1, l2){
+  var d=pv.diff||{}, bad=rows.filter(function(r){ return r.k!=="ok"; }).length, del=mode==="replace"?upN(d.del):0;
+  return '<div class="grid up-kp">'+kpi({ l:"적용 뒤 명단", v:n0(pv.n), u:"명", s:l1||"" })+kpi({ l:"새로 들어옴", v:n0(upN(d.add)), u:"명", s:l2||"" })+kpi({ l:"그대로", v:n0(upN(d.keep)), u:"명", s:"이미 명단에 있음" })+
+    kpi({ l:"빠지는 사람", v:n0(del), u:"명", s:mode==="replace"?"명단 통째 교체":"추가만 · 빠짐 없음", st:del?"warn":"" })+
+    kpi({ l:"문제", v:n0(bad), u:"줄", s:bad?"고친 뒤 다시 올림":"없음", st:bad?"bad":"ok", stt:bad?"적용 안 됨":"적용 가능" })+'</div>';
+}
+function upDone(lab){ return function(r){ var d=r&&r.diff||r||{}; S.ui.pup=0; UP=null; ppStale(); render(); load(true); toast(lab+" 명단을 적용했습니다 · "+n0(r.n)+"명 · 새로 "+n0(upN(d.add))+" · 빠짐 "+n0(upN(d.del))); }; }
+
+/* 10F 세션 글자 → 서버 세션 id · 「A」 「세션 B」 「C 리서치」 「E 1회」 「E2」 「MS Copilot 2회」 「fld」 · E 만 있으면 e(서버 기본 회차) · 못 읽으면 "" */
+function upSid(v){
+  var s=upCell(v); if(!s) return ""; var u=s.toUpperCase().replace(/\s+/g,"");
+  if(/^(FLD|TA|TB|AWS|MS1|MS2)$/.test(u)) return u.toLowerCase();
+  var r=function(n){ var m=u.match(/([12])회/)||u.match(/(?:^|[^A-Z])E-?([12])(?:$|[^0-9])/)||u.match(/^E-?([12])$/)||u.match(/MS-?([12])/); return m?"ms"+m[1]:n; };
+  var m=u.match(/^(?:세션)?([A-E])(?:세션|$|[^A-Z])/)||u.match(/세션([A-E])/);
+  if(m) return m[1]==="A"?"fld":m[1]==="B"?"ta":m[1]==="C"?"tb":m[1]==="D"?"aws":r("e");
+  if(/영업|보상/.test(s)) return "fld"; if(/통계|리포팅/.test(s)) return "ta"; if(/리서치/.test(s)) return "tb"; if(/바이브|CLAUDECODE|AWS/.test(u)) return "aws"; if(/COPILOT|^MS/.test(u)) return r("e");
+  return "";
+}
+var PRE10_UP={
+  people:1, byName:1, sep:";", id:"p10up", file:"10F 사전 신청 미리 세기", title:"10F 사전 신청 올리기", desc:"사번 또는 이름 · 세션 A~E", backT:"명단 고르기로", askT:"10F 사전 신청 명단을 적용할까요?", word:"명단적용",
+  pasteT:"사번 세션 이름", pasteEx:"990001	A	홍길동&#10;990002	E 2회	김가나",
+  preview:"pre10_preview", apply:"pre10_apply", ap:function(pv){ return { n:pv.n }; },
+  fields:[UP_EMPF,{ k:"sid", t:"세션", need:1, re:/세션|과정|강의|트랙|session/i, shape:function(v){ return !!upSid(v)&&!/\d{5,}/.test(v); } },UP_NAMEF],
+  modes:[["replace","명단 통째 교체","올린 사람이 10F 명단 전부 · 빠지는 사람은 키트 · 끝 QR 자격도 빠짐 · 운영진 줄은 그대로"],["add","추가 · 세션 바꾸기","지금 명단에 더하고 이미 있는 사람은 세션만 바꿈 · 빠지는 사람 없음"]],
+  line:function(o){ var x=upLine1(o); if(x.bad) return x; var s=upSid(o.sid0); if(!s) return { bad:o.sid0?"세션을 읽지 못함 · "+o.sid0:"세션 없음", emp:x.emp }; return { emp:x.emp, sid:s, txt:x.emp+":"+s }; },
+  judge:function(o, pr, pv){
+    if(!o.bad&&pr&&pr.st==="multi") return { k:"dup", msg:"같은 사번이 다른 세션 줄에도 있음" };
+    return upJudge1(o, pr, function(p){
+      if(p.st==="staff") return { k:"ok", res:"그대로(운영진)", msg:"운영진 줄은 명단 올리기로 바꾸지 않음" };
+      var D=pv.diff||{}, ch=(D.chg||[]).filter(function(c){ return c.emp===p.emp; })[0];
+      return ch?{ k:"ok", res:"세션 바꿈", msg:(TEN_N[ch.from]||ch.from)+" → "+(TEN_N[ch.to]||ch.to) }:(D.add||[]).indexOf(p.emp)>=0?{ k:"ok", res:"새로", msg:p.eq?"E 회차 = 서버 기본값":"" }:{ k:"ok", res:"그대로", msg:"" }; }); },
+  chips:upChips(),
+  cols:UP_COLS0.concat([{ k:"sid", t:"세션", w:150, v:function(r){ return r.sid?(TEN_N[r.sid]||(r.sid==="e"?"E (기본 회차)":r.sid)):r.sid0||""; } },UP_COLK,UP_COLM]),
+  sum:function(pv, mode){ var d=pv.diff||{}, kd=(pv.kitGivenDel||[]).length, sd=(pv.stamped||[]).length;
+    return { who:n0(pv.n)+"명 · 새로 "+n0(upN(d.add))+" · 세션 바꿈 "+n0(upN(d.chg))+" · 그대로 "+n0(upN(d.keep)),
+      sub:(mode==="replace"?"빠지는 사람 "+n0(upN(d.del))+"명 · ":"")+(kd?"키트를 받은 사람 "+kd+"명이 빠지거나 바뀜 · ":"")+(sd?"10F 출석 기록이 있는 사람 "+sd+"명 빠짐 · ":"")+"앱 「내 세션」에 바로 반영",
+      danger:mode==="replace"&&upN(d.del)>0 }; },
+  kpis:function(pv, rows, mode){ var by=pv.by||{}; return upKp(pv, rows, mode, ["fld","ta","tb","aws"].map(function(k){ return TEN_N[k].charAt(0)+" "+num(by[k]); }).concat(["E1 "+num(by.ms1),"E2 "+num(by.ms2)]).join(" · "), "세션 바꿈 "+n0(upN((pv.diff||{}).chg))); },
+  back:function(){ ppUpBack(); }, done:upDone("10F 사전 신청")
+};
+var GATE_UP={
+  people:1, byName:1, id:"gtup", file:"접속 허용 미리 세기", title:"접속 허용 올리기", desc:"사번 또는 이름", backT:"명단 고르기로", askT:"접속 허용 명단을 적용할까요?", word:"접속허용명단",
+  pasteT:"사번 이름", pasteEx:"990001	홍길동&#10;김가나",
+  preview:"og_gate_preview", apply:"og_gate_apply",
+  fields:[UP_EMPF,UP_NAMEF], modes:UP_MODES,
+  line:upLine1,
+  judge:function(o, pr){ return upJudge1(o, pr, function(){ return { k:"ok", res:"정상", msg:"" }; }); },
+  chips:upChips(), cols:UP_COLS0.concat([UP_COLK,UP_COLM]),
+  sum:function(pv, mode){ var d=pv.diff||{}; return { who:n0(pv.n)+"명 · 새로 "+n0(d.add)+" · 그대로 "+n0(d.keep), sub:(mode==="replace"?"빠지는 사람 "+n0(d.del)+"명 · 클로즈 베타 · 사전 신청 기간에 다음 접속부터 막힘 · ":"")+"남는 사람의 메모 · 넣은 시각은 그대로", danger:mode==="replace"&&num(d.del)>0 }; },
+  kpis:function(pv, rows, mode){ return upKp(pv, rows, mode, "", ""); },
+  back:function(){ ppUpBack(); }, done:upDone("접속 허용")
+};
+var KSTAFF_UP={
+  people:1, byName:1, id:"ksup", file:"스태프 옷 미리 세기", title:"스태프 옷 올리기", desc:"사번 또는 이름 · 스태프 의류 명단", backT:"명단 고르기로", askT:"스태프 옷 명단을 적용할까요?", word:"스태프의류명단",
+  pasteT:"사번 이름", pasteEx:"990001	홍길동&#10;김가나",
+  preview:"kit_staff_preview", apply:"kit_staff_apply",
+  fields:[UP_EMPF,UP_NAMEF], modes:[["replace","명단 통째 교체","올린 사람이 스태프 옷 명단 전부 · 빠진 사람이 고른 사이즈 몫은 풀림"],["add","추가만","지금 명단 뒤에 더함 · 빠지는 사람 없음"]],
+  line:upLine1,
+  judge:function(o, pr){ return upJudge1(o, pr, function(p){ return p.st==="kit"?{ k:"ok", res:"사전 신청과 겹침", msg:"넣지만 옷은 사전 신청 쪽 하나만" }:{ k:"ok", res:"정상", msg:"" }; }); },
+  chips:upChips([["kit","사전 신청과 겹침",function(r){ return r.res==="사전 신청과 겹침"; }]]), cols:UP_COLS0.concat([UP_COLK,UP_COLM]),
+  sum:function(pv, mode){ var d=pv.diff||{}; return { who:n0(pv.n)+"명 · 새로 "+n0(d.add)+" · 그대로 "+n0(d.keep), sub:(mode==="replace"?"빠지는 사람 "+n0(d.del)+"명 · 고른 사이즈 몫이 풀림 · ":"")+"남는 사람의 사이즈 · 신청번호는 그대로", danger:mode==="replace"&&num(d.del)>0 }; },
+  kpis:function(pv, rows, mode){ return upKp(pv, rows, mode, "", ""); },
+  back:function(){ ppUpBack(); }, done:upDone("스태프 옷")
 };

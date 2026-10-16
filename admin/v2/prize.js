@@ -1,5 +1,6 @@
 /* AXF CONTROL v2 · S4 경품 · 재고 (261016)
- * 왼쪽 = 옷 한 화면(숫자 카드 4 → 구분 칩 → 사이즈 표 → 사람 명단 표) · 오른쪽 = 룰렛 5등급 · 선착순 가습기 · 지급품(커피 박스)
+ * 왼쪽 = 옷 한 화면(숫자 카드 4 → 구분 칩 → 사이즈 표) · 오른쪽 = 룰렛 5등급 · 선착순 가습기 · 지급품(커피 박스)
+ * 명단(옷 · 선착순 가습기 수령)은 카드 아래 전체 폭 한 칸 · 줄을 누르면 오른쪽 서랍(261016 2단계 · 모든 명단 같은 규칙)
  * 데이터 = kit_size_state · roll_list(kit · lounge) · ck_state(창구) · inv_state · fcfs_list · lk7_state · 읽기 · 쓰기 PIN 없음(261016)
  * 룰렛 소진 안내 = L1(바로 · 되돌리기 토스트) · 17:00 잔여 입력 = L2(확인 창) */
 var PZ={ chip:"all", g:null, gf:null };
@@ -9,8 +10,10 @@ SCREENS.prize={
   title:"경품 · 재고", desc:"옷 · 키트 / 룰렛 / 선착순 / 지급품",
   need:function(){ return [{ k:"kb", a:"kit_board", ttl:60000 },{ k:"kss", a:"kit_size_state", ttl:60000 },{ k:"kit", a:"roll_list", p:{ list:"kit" }, ttl:60000, rd:1 },{ k:"lng", a:"roll_list", p:{ list:"lounge" }, ttl:60000, rd:1 },{ k:"ck", a:"ck_state", ttl:60000 },{ k:"inv", a:"inv_state", ttl:60000 },{ k:"fxl", a:"fcfs_list", p:{ page:1 }, ttl:30000 },{ k:"lk", a:"lk7_state", ttl:60000 }]; },
   mount:function(vb){
-    vb.innerHTML='<div class="grid g32"><div class="col"><div class="grid g4" id="pzK"></div><div class="chips" id="pzC" role="group" aria-label="구분" style="margin:0"></div><div class="card" id="pzT"></div><div class="card"><h2>옷 명단 <span class="cap">구분 · 사이즈 · 받음</span></h2><div id="pzP"></div></div></div>'+
-      '<div class="col"><div class="card" id="pzR"></div><div class="card" id="pzF"></div><div class="card" id="pzB"></div><div class="card"><h2>선착순 가습기 수령 명단</h2><div id="pzFL"></div></div>'+oldLink("재고 조정 · 입고 · E 창구 교환 기록")+'</div></div>';
+    vb.innerHTML='<div class="grid g32"><div class="col"><div class="grid g4" id="pzK"></div><div class="chips" id="pzC" role="group" aria-label="구분" style="margin:0"></div><div class="card" id="pzT"></div></div>'+
+      '<div class="col"><div class="card" id="pzR"></div><div class="card" id="pzF"></div><div class="card" id="pzB"></div></div></div>'+
+      '<div class="card mt"><h2>옷 명단 <span class="cap">구분 · 사이즈 · 받음 · 줄을 누르면 상세</span></h2><div id="pzP"></div></div>'+
+      '<div class="card mt"><h2>선착순 가습기 수령 명단 <span class="cap">줄을 누르면 상세</span></h2><div id="pzFL"></div></div>'+oldLink("재고 조정 · 입고 · E 창구 교환 기록");
   },
   paint:function(){ pzKpi(); pzTable(); pzPeople(); pzRoul(); pzFcfs(); pzBox(); pzFcfsList(); }
 };
@@ -66,7 +69,7 @@ function pzPeople(){
     cols:[{ k:"no", t:"신청번호", w:88 },{ k:"name", t:"이름", w:100 },{ k:"emp", t:"사번", w:84 },{ k:"dept", t:"부서", w:120 },{ k:"pool", t:"구분", w:96, v:function(r){ var p=pzPool(r); return p==="staff"?"스태프":p==="lng"?"라운지 사전":"사전 신청자"; } },
       { k:"sz", t:"사이즈", w:70, f:function(r){ return r.sz?'<b>'+esc(r.sz)+'</b>':tag("미신청","warn"); } },{ k:"how", t:"고른 방식", w:80, v:function(r){ return r.how==="auto"?"자동":r.how==="pick"?"직접":""; } },{ k:"at", t:"고른 시각", type:"date", w:100 },
       { k:"got", t:"받음", w:96, v:function(r){ return r.got||""; }, x:function(r){ return r.got?"받음 "+r.got:r.pool==="staff"?"따로 전달":"받기 전"; }, f:function(r){ return r.got?tag("받음 "+fmtD(r.got),"ok"):r.pool==="staff"?tag("따로 전달","off"):tag("받기 전","off"); } }],
-    src:{ a:"roll_list", p:{ list:"kit" } }, h:360 });
+    src:{ a:"roll_list", p:{ list:"kit" } }, h:460, onRow:function(k){ rowDetail(PZ.g,k); } });
   if(PZ.chip!=="all"&&PZ.g.chip!=="none") PZ.g.chip=PZ.chip;
   var gt=dataGate("kit","옷 명단"); PZ.g.gate=gt||""; XG.set(PZ.g, gt?null:pzRows(), el("pzP"));
 }
@@ -80,13 +83,7 @@ function pzRoul(){
     '<div class="btns mt"><button class="btn'+(out?"":" dng")+'" type="button" onclick="rlOut('+(out?0:1)+')">'+(out?"소진 안내 끄기":"소진 안내 켜기")+'</button><button class="btn" type="button" onclick="lkRem()">17:00 잔여 입력</button></div>'+
     (rem?'<p class="cap mt">17:00 잔여 저장됨 · '+esc(fmtD(rem.at||""))+'</p>':'');
 }
-/* 룰렛 소진 안내 · L1 · 바로 바꾸고 7초 되돌리기 */
-function rlOut(on){
-  call("roulette_out",{ on:on?"1":"0" }).then(function(r){
-    if(r&&r.ok){ if(S.data.nb) S.data.nb.rout=r.out?1:0; paint(); toast(r.out?"룰렛 소진 안내를 켰습니다":"룰렛 소진 안내를 껐습니다",{ undo:function(){ rlOut(on?0:1); } }); reload(["nb"]); }
-    else toast("바꾸지 못했습니다 · "+why(r),{ bad:1 });
-  });
-}
+/* 룰렛 소진 안내 rlOut = setting.js(급한 단추와 같은 함수) */
 function lkRem(){
   var lk=S.data.lk; if(lk&&lk.ok&&lk.ph==="drawn"){ toast("7등 추첨 뒤라 잠겼습니다"); return; }
   var inv=S.data.inv, left={}; ((inv&&inv.items)||[]).forEach(function(x){ left[x.id]=x.left; });
@@ -110,7 +107,7 @@ function pzFcfsList(){
   if(!PZ.gf) PZ.gf=XG.make({ id:"fcfs", file:"선착순 가습기 수령", key:function(r){ return r.emp; }, sort:{ k:"rk", d:1 },
     chips:[["all","전체",null],["got","받음",function(r){ return !!r.got; }],["no","받기 전",function(r){ return !r.got&&r.st!=="취소"; }],["cx","취소",function(r){ return r.st==="취소"; }]],
     cols:[{ k:"rk", t:"순번", type:"num", w:56 },{ k:"name", t:"이름", w:90 },{ k:"emp", t:"사번", w:80 },{ k:"dept", t:"부서", w:110 },{ k:"at", t:"자격 시각", type:"date", w:90 },{ k:"gotAt", t:"받은 시각", type:"date", w:90 },{ k:"st", t:"상태", w:70 }],
-    src:{ a:"fcfs_list", p:{ page:1 } }, empty:"아직 대상이 없습니다", h:300 });
+    src:{ a:"fcfs_list", p:{ page:1 } }, empty:"아직 대상이 없습니다", h:420, onRow:function(k){ rowDetail(PZ.gf,k); } });
   var gt=dataGate("fxl","선착순 명단"), d=S.data.fxl; PZ.gf.gate=(gt||"")+(d&&d.ok&&num(d.n)>(d.rows||[]).length?'<div class="cap" style="padding:6px 2px">앞 '+n0((d.rows||[]).length)+'명 · 전체 '+n0(d.n)+'명은 서버 갱신 뒤</div>':'');
   XG.set(PZ.gf, gt?null:(d.rows||[]), el("pzFL"));
 }

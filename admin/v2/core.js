@@ -65,7 +65,10 @@ var S={ me:null, tab:"now", sub:{}, data:{}, at:{}, err:{}, busy:{}, sig:{}, srv
 function lgNeed(k, kind, old, ttl){ if(S.lg===false||!kind) return { k:k, a:old.a, p:old.p, rd:old.rd, ttl:ttl||60000 }; return { k:k, a:"list_get", p:{ kind:kind }, ttl:ttl||60000 }; }
 function lgRows(k, g, oldRows){
   var d=S.data[k]; if(!d||d.ok===false) return null;
-  if(d.kind!=null&&Array.isArray(d.rows)){ S.lg=true; XG.useCols(g, d.cols); if(!g.o.chips0){ g.o.chips0=g.o.chips; g.o.chips=[["all","전체",null]]; g.chip="all"; } return d.rows; }
+  if(d.kind!=null&&Array.isArray(d.rows)){ S.lg=true; XG.useCols(g, d.cols);
+    if(g.o.lgChips){ var nc=g.o.lgChips(d.rows); g.o.chips0=g.o.chips0||g.o.chips; g.o.chips=nc; if(!nc.some(function(c){ return c[0]===g.chip; })) g.chip="all"; }
+    else if(!g.o.chips0){ g.o.chips0=g.o.chips; g.o.chips=[["all","전체",null]]; g.chip="all"; }
+    return d.rows; }
   return oldRows(d);
 }
 var COMMON_NEED=[{ k:"nb", a:"now_board", ttl:20000 },{ k:"pwc", a:"pw_req_count", ttl:60000 }];
@@ -239,7 +242,7 @@ function topPaint(){
   var r=el("upd"); r.textContent=t||"갱신"; r.className="chip-s"+(stale?" old":"");
 }
 function render(){
-  var sc=SCREENS[S.tab];
+  var sc=SCREENS[S.tab]; if(DRW.k&&!DRW.keep) drwClose(); DRW.keep=0;
   el("view").innerHTML='<div class="ph"><h1>'+esc(sc.title)+'</h1><span class="cap" id="phCap">'+esc(sc.desc)+'</span></div><div id="vb"></div>';
   sc.mount&&sc.mount(el("vb"));
   paint();
@@ -252,3 +255,35 @@ function paint(){
 function refreshAll(){ load(true); toast("다시 받는 중"); }
 function searchGo(e){ if(e.key!=="Enter") return; var q=el("gq").value.trim(); S.ui.pq=q; go("people","find"); if(typeof peopleQ==="function") peopleQ(q); }
 setInterval(function(){ if(authed()) topPaint(); },15000);
+
+/* ── 9. 오른쪽 서랍(공통 · 261016 2단계) · 명단 줄 상세 · 한 사람 카드 · 커피챗(cchat.js)과 같은 모양 · 명단은 늘 전체 폭, 줄을 누르면 여기 ──
+ * drwOpen(k 열린 것 이름 · html · o{ g 명단 표(닫으면 고른 줄 풀기) · wide 넓게 · label · close() }) · 같은 k 를 다시 그리면 스크롤 그대로 */
+var DRW={ k:"", g:null, close:null, keep:0 };
+function drwOpen(k, html, o){
+  o=o||{}; var b=el("drw"); if(!b) return;
+  var same=DRW.k===k, st=same?b.scrollTop:0;
+  if(DRW.g&&DRW.g!==o.g&&DRW.g.sel!=null){ DRW.g.sel=null; XG.paint(DRW.g); }
+  DRW.k=k; DRW.g=o.g||null; DRW.close=o.close||null;
+  b.className="cc-drawer"+(o.wide?" wide":"")+" on"; b.setAttribute("aria-hidden","false"); b.setAttribute("aria-label",o.label||"상세");
+  b.innerHTML=html; b.scrollTop=st;
+}
+function drwClose(){
+  var b=el("drw"); if(!b) return; var g=DRW.g, c=DRW.close;
+  DRW.k=""; DRW.g=null; DRW.close=null; b.classList.remove("on"); b.setAttribute("aria-hidden","true");
+  if(g&&g.sel!=null){ g.sel=null; XG.paint(g); } if(c) c();
+}
+document.addEventListener("keydown",function(e){ if(e.key==="Escape"&&!DLG.o&&DRW.k) drwClose(); });
+function drwHead(t, sub, tags){ return '<div class="card"><h2>'+esc(t)+(tags||"")+'<span class="r"><button class="btn sm" type="button" onclick="drwClose()" aria-label="상세 닫기">닫기</button></span></h2>'+(sub?'<div class="cap">'+esc(sub)+'</div>':''); }
+/* 명단 줄 상세(공통) · 보이는 열 전부 · 사번이 있으면 「한 사람 카드」 · o.extra(r) 추가 html */
+function rowDetail(g, key, o){
+  o=o||{}; var r=(g.rows||[]).filter(function(x){ return g.o.key&&String(g.o.key(x))===String(key); })[0];
+  if(!r){ drwClose(); return; }
+  var cols=xgCols(g).filter(function(c){ return !c.act&&c.t; }), emp=r.emp?normE(r.emp):"";
+  var kv='<dl class="cc-kv">'+cols.map(function(c){ var v=xgText(c,r); return '<dt>'+esc(c.t)+'</dt><dd>'+(v?esc(v):'<span class="cap">-</span>')+'</dd>'; }).join("")+'</dl>';
+  drwOpen(g.id+":"+key, drwHead(o.title?o.title(r):(r.name||r.emp||g.o.file||"줄"), (g.o.file||"명단")+" · 줄 상세")+kv+(o.extra?o.extra(r):"")+
+    (emp&&/^[0-9A-Z]{3,12}$/.test(emp)&&typeof pcOpen==="function"?'<div class="mt"><button class="btn big" type="button" onclick="pcOpen(\''+jq(emp)+'\')">한 사람 카드 열기</button></div>':'')+'</div>', { g:g, label:(g.o.file||"명단")+" 줄 상세" });
+}
+function copyTx(t, ok){ var done=function(){ toast(ok||"복사했습니다"); };
+  try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(done,function(){ copyOld(t); done(); }); return; } }catch(e){}
+  copyOld(t); done(); }
+function copyOld(t){ var a=document.createElement("textarea"); a.value=t; a.style.position="fixed"; a.style.opacity="0"; document.body.appendChild(a); a.select(); try{ document.execCommand("copy"); }catch(e){} a.remove(); }

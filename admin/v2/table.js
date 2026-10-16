@@ -40,7 +40,7 @@ XG.put=function(g, ph){
     ph.innerHTML='<div class="xg" data-xg="'+g.id+'">'+
       '<div class="xg-bar"><input class="xg-q" type="search" placeholder="'+esc(o.ph||"이름 · 부서 · 사번 찾기")+'" aria-label="'+esc((o.file||"명단")+" 검색")+'" value="'+esc(g.q)+'" oninput="XG.find(\''+g.id+'\',this.value)"><span class="xg-cnt" data-c="cnt"></span>'+
       (o.noDl?'':'<button class="btn sm xg-dl" type="button" onclick="XG.dl(\''+g.id+'\')">엑셀 다운로드</button>')+'</div>'+
-      (o.chips&&o.chips.length>1?'<div class="xg-chips" role="group" aria-label="구분" data-c="chips"></div>':'')+
+      '<div class="xg-chips" role="group" aria-label="구분" data-c="chips"></div>'+
       '<div class="xg-wrap" style="--xg-h:'+(o.h||460)+'px"><table class="xg-t"><colgroup>'+cols.map(function(c){ return '<col'+(c.w?' style="width:'+c.w+'px"':'')+'>'; }).join("")+'</colgroup><thead><tr data-c="head"></tr></thead><tbody data-c="body"></tbody></table></div><div data-c="note"></div></div>';
   }
   XG.paint(g);
@@ -54,7 +54,8 @@ XG.paint=function(g){
     if(c.act||c.sort===false||!c.k) return '<th class="na'+n+'" scope="col">'+esc(c.t||"")+'</th>';
     return '<th class="'+n.trim()+'" scope="col"'+(on?' aria-sort="'+(g.sort.d>0?"ascending":"descending")+'"':'')+'><button type="button" onclick="XG.sortBy(\''+g.id+'\',\''+c.k+'\')">'+esc(c.t)+'<span class="ar" aria-hidden="true">'+(on?(g.sort.d>0?"▲":"▼"):"")+'</span></button></th>'; }).join("");
   var chips=q("chips"), all=g.rows||[];
-  if(chips) chips.innerHTML=o.chips.map(function(c){ var n=c[2]?all.filter(c[2]).length:all.length;
+  if(chips){ chips.hidden=!(o.chips&&o.chips.length>1); if(chips.hidden) chips.innerHTML=""; }
+  if(chips&&!chips.hidden) chips.innerHTML=o.chips.map(function(c){ var n=c[2]?all.filter(c[2]).length:all.length;
     return '<button type="button" class="chip'+(g.chip===c[0]?" on":"")+'" aria-pressed="'+(g.chip===c[0])+'" onclick="XG.chipBy(\''+g.id+'\',\''+c[0]+'\')">'+esc(c[1])+' <span class="c">'+(g.rows?n0(n):"-")+'</span></button>'; }).join("");
   var body=q("body"), note=q("note"), cnt=q("cnt");
   if(g.rows==null){ body.innerHTML=""; cnt.innerHTML=""; note.innerHTML='<div class="xg-note">'+(g.gate||skel())+'</div>'; return; }

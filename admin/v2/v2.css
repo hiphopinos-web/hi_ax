@@ -219,6 +219,7 @@ table.tb{width:100%;border-collapse:collapse;font-size:13px}
 @media (prefers-reduced-motion:reduce){ .cc-drawer,.cc-drawer.on{transition:none} }
 .cc-rt th[scope=row]{background:transparent;border-bottom:1px solid var(--line2);color:var(--tx2)}
 .cc-rt tr:last-child th{border-bottom:0}
+#ccRounds{overflow-x:auto;max-width:100%}
 .cc-rt td.cc-over{background:var(--warn-bg);color:var(--warn)}
 .cc-kv{display:grid;grid-template-columns:72px minmax(0,1fr);gap:4px 8px;margin-top:10px;font-size:13px}
 .cc-kv dt{color:var(--tx3);font-size:12px;padding-top:1px}
@@ -276,3 +277,74 @@ a.btn{text-decoration:none}
 .up-kp{grid-template-columns:repeat(5,minmax(0,1fr));margin-bottom:10px}
 .up-go{display:flex;align-items:center;gap:10px;margin-top:10px}
 @media (max-width:720px){ .up-map{grid-template-columns:repeat(2,minmax(0,1fr))} .up-kp{grid-template-columns:repeat(2,minmax(0,1fr))} .up-bar{justify-content:space-between} }
+
+/* 261016 2단계 · 공통 서랍 · 사람 · 알림 · 무대 · 기록 · 설정 */
+.cc-drawer.wide{width:480px}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.fx-w{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pchip{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 12px;border-radius:99px;border:1px solid var(--line3);background:#fff;font-size:13px}
+.pchip button{width:28px;height:28px;margin-right:-8px;border-radius:50%;font-size:16px;color:var(--tx3)}
+.seg{display:inline-flex;border:1px solid var(--line3);border-radius:8px;overflow:hidden;margin-left:auto;background:#fff}
+.seg button{height:36px;padding:0 12px;font-size:13px;font-weight:600;color:var(--tx2);border-left:1px solid var(--line3)}
+.seg button:first-child{border-left:0}
+.seg button.on{background:var(--navy);color:#fff}
+.pp-find{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pp-q{width:320px;height:44px}
+.pc-s{border-top:1px solid var(--line2);margin-top:12px;padding-top:10px}
+.pc-s h3{font-size:14px;margin-bottom:6px}
+.pc-st{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.pc-c{border:1px solid var(--line);border-radius:8px;padding:6px 8px;display:flex;flex-direction:column;gap:1px;min-width:0;background:var(--soft)}
+.pc-c.got{background:var(--navy05);border-color:var(--navy1)}
+.pc-c .no{font-size:12px;color:var(--tx3);font-variant-numeric:tabular-nums}
+.pc-c b{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc-c .cap{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc-c .btn{margin-top:4px;height:32px;min-width:0;padding:0 8px}
+.pc-l{display:inline-flex;align-items:center;gap:6px;font-size:13px;margin-right:6px}
+.pc-tl{list-style:none;display:grid;gap:4px;font-size:13px}
+.pc-tl li{display:grid;grid-template-columns:84px minmax(0,1fr);gap:8px}
+.pc-rs summary{cursor:pointer;font-weight:700;color:var(--bad);font-size:13px;min-height:36px;display:flex;align-items:center}
+.up-cand{height:auto;min-height:52px;flex-direction:column;align-items:flex-start;justify-content:center;padding:6px 14px;width:100%}
+.up-cand span{font-size:12px;color:var(--tx3);font-weight:400}
+.nt-f{display:block;margin-top:10px}
+.nt-l{font-size:12px;color:var(--tx2);margin-bottom:4px}
+.nt-in{width:100%;margin-top:4px;display:block}
+.nt-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+.nt-row .up-f{min-width:120px}
+.nt-ppl{display:flex;gap:6px;flex-wrap:wrap}
+.nt-q{margin-top:6px}
+.nt-qr{display:grid;gap:4px;margin-top:4px;max-height:260px;overflow:auto}
+.nt-hit{display:flex;align-items:center;gap:8px;min-height:44px;padding:4px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;text-align:left;width:100%}
+.nt-hit .cap{flex:1;min-width:0}
+.nt-hit[aria-disabled="true"]{opacity:.6}
+.nt-lock{background:#1F2430;color:#fff;border-radius:14px;padding:10px 12px}
+.nt-lk-h{display:flex;align-items:center;gap:8px;font-size:13px}
+.nt-lk-h .cap{color:rgba(255,255,255,.62);margin-left:auto}
+.nt-ico{width:22px;height:22px;border-radius:6px;background:var(--navy);color:#fff;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.nt-lk-b{font-size:14px;margin-top:4px;line-height:1.45;overflow-wrap:anywhere}
+.nt-in-app{border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:grid;gap:2px}
+.nt-in-app p{font-size:13px;color:var(--tx2);white-space:pre-wrap}
+.dc-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.dc-steps{margin-bottom:10px}
+.dc-now{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.dc-now b{font-size:16px}
+.dc-gorow{display:flex;gap:10px}
+.dc-go,.dc-abs{flex:1;min-height:96px;border-radius:12px;background:var(--navy);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px;text-align:center}
+.dc-go b{font-size:22px;line-height:1.25}
+.dc-go em,.dc-abs em{font-style:normal;font-size:12px;opacity:.85}
+.dc-abs{flex:0 0 200px;background:#fff;color:var(--bad);border:1px solid #E3B5B1}
+.dc-abs b{font-size:16px}
+.dc-go.arm{background:var(--navy-dk);box-shadow:0 0 0 3px var(--navy1)}
+.dc-abs.arm{background:var(--bad);color:#fff}
+.dc-go:disabled{background:var(--line2);color:var(--tx3)}
+.dc-abs:disabled{opacity:.45}
+.dc-pad{display:flex;gap:6px;flex-wrap:wrap}
+.ik-slots{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.ik-slot{border:1px dashed var(--line3);border-radius:10px;padding:8px 10px;min-width:0}
+.ik-slot.got{border-style:solid;border-color:var(--navy1);background:var(--navy05)}
+details.memo summary{cursor:pointer;font-weight:600;min-height:32px;display:flex;align-items:center}
+.ur-u{word-break:break-all}
+.ur-b{flex-wrap:nowrap;justify-content:flex-end}
+.ur-b .btn{flex:none}
+.sv-kv{grid-template-columns:120px minmax(0,1fr)}
+@media (max-width:900px){ .g3{grid-template-columns:minmax(0,1fr)} .ik-slots{grid-template-columns:repeat(3,minmax(0,1fr))} }
+@media (max-width:600px){ .cc-drawer,.cc-drawer.wide{width:100%} .pc-st{grid-template-columns:repeat(2,minmax(0,1fr))} .pp-q{width:100%} .dc-gorow{flex-direction:column} .dc-abs{flex:1} .ik-slots{grid-template-columns:repeat(2,minmax(0,1fr))} .seg{margin-left:0} .ur-u{display:none} }

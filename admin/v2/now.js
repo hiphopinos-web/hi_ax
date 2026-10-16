@@ -126,7 +126,7 @@ function nwFocus(b, ph){
     h=rowH("추첨 화면",dr2==null?"연결 없음":"마지막 신호 "+n0(dr2)+"초 전",dr2==null||dr2>15?stt("warn","확인"):stt("ok","연결"))+
       rowH("행운권","가진 사람 "+n0(st2.holders)+"명 · 당첨 "+n0(b.draw&&b.draw.wins)+"명",'<span class="big">'+n0(st2.tickets)+'<small> 장</small></span>')+
       rowH("아이디어 한 줄","16:00 마감 · 낸 사람 "+n0(b.idea&&b.idea.people)+"명",'<span class="big">'+n0(b.idea&&b.idea.n)+'<small> 건</small></span>')+
-      '<div class="mt">'+oldLink("추첨 진행 · 아이디어왕 · 7등은 이번 단계에서 옮기지 않음")+'</div>';
+      '<div class="mt fx-w"><button class="btn sm pri" type="button" onclick="go(\'stage\',\'draw\')">추첨 진행판</button><button class="btn sm" type="button" onclick="go(\'stage\',\'ik\')">아이디어왕</button><button class="btn sm" type="button" onclick="go(\'stage\',\'lk7\')">7등 굿즈</button></div>';
   } else { t="행사 후 · 발송 대상";
     var d=(b.st||{}).d||[];
     h=rowH("6개 달성(참여상 대상)","추첨 · 다음 날 발송",'<span class="big">'+n0(d[6])+'<small> 명</small></span>')+
