@@ -100,7 +100,7 @@ var STAMPS_V2 = [
   { id: "p3", title: "프로그램 참여", short: "프로그램", desc: "17F 오후 AWS · MS 강연 2개 · 1F AX 라운지 2개 · 18F 커피챗 1개 · 최대 2개", where: "", site: 1, x2: 1, tap: "progApplyGo()", cta: "참여하기" },
   stampDefV1("sv")
 ];
-/* 단계 4개 · t = 단계 이름 · s = 옆 짧은 말(받는 길 · 시각) · ids = 그 단계 줄(STAMPS_V2 순서 그대로) · 사전등록 체크인(ck 3개) 줄은 1단계 아래(대상자만 · stampCkRowOn) */
+/* 단계 4개 · t = 단계 이름 · s = 옆 짧은 말(받는 길 · 시각) · ids = 그 단계 줄(STAMPS_V2 순서 그대로) · 261016 사전등록 체크인(ck 3개) 줄 걷음 */
 var STAMP_STAGES = [
   { t: "접속", s: "자동", ids: ["lg"] },
   { t: "폰으로 참여", s: "언제든", ids: ["qz", "p4", "p5"] },
@@ -145,29 +145,29 @@ var REWARD_CAP = STAMP_DENOM;   /* 보상 계산 상한 = 개수 상한 */
 /* v5.68 (사용자 확정 261005) 프로그램 참여 = 2개 · 서버 stampCnt_ 와 같은 셈 · p3 = 2개 · p3h(17F 입장이나 끝 한쪽만) = 1개 · 둘 다면 2개
    stampGot = 상한 전 개수(6을 넘긴 적립 판정용) · stampCount = 화면 · 보상 개수(최대 6) · 서버 sync stamps 에 p3h 가 실려 온다(stampSync 가 지우지 않는다) */
 var STAMP_HALF = "p3h";
-/* v5.90 (261006 경품 기획 변경) ck = 사전등록 체크인 3개 · 8장 카드(STAMPS) 밖 · 서버 STAMP_UNITS.ck = 3 · stampUnits_ 와 같은 셈(검사 237) */
-var STAMP_CK = "ck", STAMP_CK_N = 3;
-/* 261013 오후 묶음 「프로그램 참여」 · 261013 밤 (사용자 확정) = min(2, 17F(p3 2 · 아니면 p3h 1) + ln 2 + cc 1) · 묶음 밖 판 줄은 1개씩 · ck 3개 · 서버 stampUnits_ · progUnits_ 와 같은 셈(검사 237 · 420) */
+/* 261016 (사용자) 사전등록 체크인 3개(ck) 폐지 · 서버 STAMP_UNITS.ck = 0 · 옛 ck 기록은 세지 않고 앱이 받지 않는다(stampKnown 밖)
+   10F 실습 = 입장 1 + 끝 1(서버 p10 = 2 · p10h = 1 · 17F p3 · p3h 와 같은 짝) · 묶음 「프로그램 참여」에 들어간다 */
+var STAMP_P10 = "p10", STAMP_P10H = "p10h";
+/* 261013 오후 묶음 「프로그램 참여」 · 261013 밤 (사용자 확정) · 261016 10F = min(2, 17F(p3 2 · 아니면 p3h 1) + 10F(p10 2 · 아니면 p10h 1) + ln 2 + cc 1) · 묶음 밖 판 줄은 1개씩 · 서버 stampUnits_ · progUnits_ 와 같은 셈(검사 237 · 417 · 444) */
 function stampUnitsOf(list) {
   var n = 0, seen = {}, f = {};
   (list || []).forEach(function (id) {
     if (seen[id]) return;
     seen[id] = 1;
-    if (id === "p3" || id === "cc" || id === "ln" || id === STAMP_HALF) { f[id] = 1; return; }   /* 묶음(이 함수만 떼어 검사하므로 글자 그대로) */
-    if (id === "ck") { n += 3; return; }   /* = STAMP_CK · STAMP_CK_N(이 함수만 떼어 검사하므로 글자 그대로) */
+    if (id === "p3" || id === "cc" || id === "ln" || id === STAMP_HALF || id === "p10" || id === "p10h") { f[id] = 1; return; }   /* 묶음(이 함수만 떼어 검사하므로 글자 그대로) */
     var sd = STAMPS.filter(function (s) { return s.id === id; })[0];
-    if (sd) n += 1;
+    if (sd) n += 1;   /* 판 8줄 밖(옛 p1 · p7 · ck)은 세지 않는다 */
   });
-  return n + Math.min(2, (f.p3 ? 2 : f[STAMP_HALF] ? 1 : 0) + (f.ln ? 2 : 0) + (f.cc ? 1 : 0));
+  return n + Math.min(2, (f.p3 ? 2 : f[STAMP_HALF] ? 1 : 0) + (f.p10 ? 2 : f.p10h ? 1 : 0) + (f.ln ? 2 : 0) + (f.cc ? 1 : 0));
 }
 function stampGot() { return stampUnitsOf(S.get("stamps", [])); }
-/* 프로그램 참여 줄 0 · 1 · 2 (묶음 · 261013 밤 17F p3 2 · p3h 1 + 라운지 2 + 커피챗 1 · 최대 2) */
-function progUnitsOf(st) { st = st || []; return Math.min(2, (st.indexOf("p3") >= 0 ? 2 : st.indexOf(STAMP_HALF) >= 0 ? 1 : 0) + (st.indexOf("ln") >= 0 ? 2 : 0) + (st.indexOf("cc") >= 0 ? 1 : 0)); }
+/* 프로그램 참여 줄 0 · 1 · 2 (묶음 · 17F p3 2 · p3h 1 + 10F p10 2 · p10h 1 + 라운지 2 + 커피챗 1 · 최대 2) */
+function progUnitsOf(st) { st = st || []; return Math.min(2, (st.indexOf("p3") >= 0 ? 2 : st.indexOf(STAMP_HALF) >= 0 ? 1 : 0) + (st.indexOf("p10") >= 0 ? 2 : st.indexOf("p10h") >= 0 ? 1 : 0) + (st.indexOf("ln") >= 0 ? 2 : 0) + (st.indexOf("cc") >= 0 ? 1 : 0)); }
 function progUnits() { return progUnitsOf(S.get("stamps", [])); }
 /* 판 줄을 받았는가 · 프로그램 참여(p3) 줄은 묶음이 2개일 때 */
 function stampHas(id, st) { st = st || S.get("stamps", []); return id === "p3" ? progUnitsOf(st) >= 2 : st.indexOf(id) >= 0; }
-/* 정의 8종 + 묶음 cc · ln + p3h + ck(서버가 아는 스탬프 id) */
-function stampKnown(id) { return id === STAMP_HALF || id === STAMP_CK || id === "cc" || id === "ln" || STAMPS.some(function (s) { return s.id === id; }); }
+/* 정의 8종 + 묶음 cc · ln + p3h + p10 · p10h(서버가 아는 스탬프 id · 261016 ck 는 받지 않는다) */
+function stampKnown(id) { return id === STAMP_HALF || id === STAMP_P10 || id === STAMP_P10H || id === "cc" || id === "ln" || STAMPS.some(function (s) { return s.id === id; }); }
 function stampCount() { return Math.min(STAMP_DENOM, stampGot()); }
 /* 3개 = 룰렛(응모권 0) · 4·5·6 = 1·2·3장 · 6개 넘게 받아도 3장 */
 function raffleTickets(n) { return Math.max(0, Math.min(RAFFLE_MAX, Math.min(REWARD_CAP, n) - 3)); }

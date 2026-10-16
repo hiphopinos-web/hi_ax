@@ -587,6 +587,7 @@ function stbArrInfo(res, q) {
     else { pop = true; line = "스탬프 " + n + " / " + STAMP_DENOM; hint = srGoalLine(n); }
   }
   else if (st && st.dup) line = "스탬프는 이미 받았어요";
+  else if (st && st.no === "preday") line = "스탬프 · 행사 당일(10/26) 적립";   /* 261016 행사 전 가드 */
   else if (res && (res.goal || 1) > 1) line = "누적 " + (res.total || 0) + " / " + res.goal + "개 층";
   var sg = stampCount() >= STAMP_DENOM ? null : stbSugs()[0];
   return { pop: pop, line: line, hint: hint, tag: sg ? "다음 참여" : "", say: sg ? sg[1] : "오늘도 힘내세요!" };

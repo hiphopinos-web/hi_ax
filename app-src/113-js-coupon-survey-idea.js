@@ -177,7 +177,7 @@ function stampSync(list) {
   if (testEmp()) return;   /* v3.19 테스트 사번: 서버 stamps 가 로컬 테스트 적립을 덮지 않는다 */
   /* v3.97 (버그 260919) 빈 목록도 정본이다 · 관리자가 취소해 0개가 되면 기기에서도 0개 · 목록 자체가 없는 응답만 건너뛴다 */
   if (!Array.isArray(list)) return;
-  list = list.filter(function (id) { return id === "p3h" || id === "ck" || id === "cc" || id === "ln" || STAMPS.some(function (s) { return s.id === id; }); });   /* 261013 오후 묶음 cc · ln 도(판 줄 밖 · 이 함수만 떼어 검사하므로 글자 그대로) */   /* v5.90 ck(사전등록 체크인 3개)도 지우지 않는다 */   /* v5.68 p3h(STAMP_HALF · 17F 입장이나 끝 한쪽만 · 1개)는 지우지 않는다 */
+  list = list.filter(function (id) { return id === "p3h" || id === "p10" || id === "p10h" || id === "cc" || id === "ln" || STAMPS.some(function (s) { return s.id === id; }); });   /* 261013 오후 묶음 cc · ln 도(판 줄 밖 · 이 함수만 떼어 검사하므로 글자 그대로) */   /* 261016 10F 실습 p10 · p10h(묶음) · 옛 ck(사전등록 체크인 3개 · 폐지)는 버린다 */   /* v5.68 p3h(STAMP_HALF · 17F 입장이나 끝 한쪽만 · 1개)는 지우지 않는다 */
   var pend = stampPend(), now = Date.now(), pchg = false;
   Object.keys(pend).forEach(function (id) {
     var p = pend[id] || {};
@@ -200,13 +200,10 @@ function stampSync(list) {
     var added = list.filter(function (id) { return cur.indexOf(id) < 0; });
     /* v3.99 서버가 설문 스탬프를 뺐다(관리자 취소) → 로컬 「제출 완료」 표시도 내려 평소 흐름대로 다시 제출하게 */
     if (cur.indexOf("sv") >= 0 && list.indexOf("sv") < 0) S.set("survey_done", false);
-    var ckNew = added.indexOf("ck") >= 0 && !S.get("ck_guide", 0) && !S.get("roulette_used", false);   /* v5.94 사전등록 체크인 안내 시트가 「룰렛 1회권」을 말한다 · 「룰렛 1회 열림」 알림은 겹쳐 띄우지 않는다 */
-    if (ckNew) S.set("roulette_open", true);
-    S.set("stamps", list.slice()); checkRewards();
-    if (ckNew) notice({ key: "ck:guide", first: true, run: function () { ckGuideOpen(); } });   /* 스탬프 연출(SPOP)이 끝난 뒤 noticePump 가 연다 · 같은 sync 의 행운권 상자보다 먼저(first) */
+    S.set("stamps", list.slice()); checkRewards();   /* 261016 사전등록 체크인 안내 시트(ck_guide) 걷음 · ck 폐지 */
     /* v3.52 · 운영자가 찍은 입장 스캔·상담 체크인·커피챗 완료로 서버에서 새로 생긴 스탬프 · 앱이 켜진 채 받으면 팝 */
-    /* 261013 오후 프로그램 참여 묶음이 이미 2개였으면(17F · 커피챗 · 라운지 중 다른 것으로) 새 묶음 id 는 개수가 그대로라 팝 없이 본 것으로 · 261013 밤 묶음 = 17F(p3 2 · p3h 1) + 라운지 2 + 커피챗 1 · 최대 2(이 함수만 떼어 검사하므로 글자 그대로) */
-    if ((cur.indexOf("p3") >= 0 ? 2 : cur.indexOf("p3h") >= 0 ? 1 : 0) + (cur.indexOf("ln") >= 0 ? 2 : 0) + (cur.indexOf("cc") >= 0 ? 1 : 0) >= 2) { var pq = added.filter(function (id) { return id === "p3" || id === "cc" || id === "ln" || id === STAMP_HALF; }); if (pq.length) { S.set("pp_seen", S.get("pp_seen", []).concat(pq)); added = added.filter(function (id) { return pq.indexOf(id) < 0; }); } }
+    /* 261013 오후 프로그램 참여 묶음이 이미 2개였으면(17F · 10F · 커피챗 · 라운지 중 다른 것으로) 새 묶음 id 는 개수가 그대로라 팝 없이 본 것으로 · 묶음 = 17F(p3 2 · p3h 1) + 10F(p10 2 · p10h 1 · 261016) + 라운지 2 + 커피챗 1 · 최대 2(이 함수만 떼어 검사하므로 글자 그대로) */
+    if ((cur.indexOf("p3") >= 0 ? 2 : cur.indexOf("p3h") >= 0 ? 1 : 0) + (cur.indexOf("p10") >= 0 ? 2 : cur.indexOf("p10h") >= 0 ? 1 : 0) + (cur.indexOf("ln") >= 0 ? 2 : 0) + (cur.indexOf("cc") >= 0 ? 1 : 0) >= 2) { var pq = added.filter(function (id) { return id === "p3" || id === "cc" || id === "ln" || id === STAMP_HALF || id === "p10" || id === "p10h"; }); if (pq.length) { S.set("pp_seen", S.get("pp_seen", []).concat(pq)); added = added.filter(function (id) { return pq.indexOf(id) < 0; }); } }
     if (STAMP_SYNC.warm && added.length && added.length <= 2) added.forEach(function (id) { if (S.get("pp_seen", []).indexOf(id) < 0) stampOverlay(id); });
     if (STAMP_SYNC.warm && typeof tourRetStamp === "function") added.forEach(function (id) { tourRetStamp(id); });   /* v5.57 AX PLAY = 스태프 인증 스탬프가 내 QR 화면에 들어온 순간이 마침 */
   }
@@ -261,44 +258,11 @@ function kitSeenKey(k) { return k ? k.st + ":" + k.ph + ":" + (k.sz || "") : "";
 /* 받는 곳 한 줄 · 사전 신청 = 체크인존(에코백과 함께) · 스태프 = 따로 안내 */
 function kitGetTxt(k) { return kitStaff(k) ? KIT_GET_ST : KIT_GET; }
 /* 홈 카드 · 고르는 기간에 아직 안 고름 · 자동 배정 뒤 변경 기간(한 번 열어 보면 사라짐) · 라운지 초과 안내(한 번 열어 보면 사라짐) */
-/* ═══ 261007 체크인 번호표 · 홈 맨 위 내 번호 카드(시안 「체크인존 운영/캡처/02_폰_대기_번호.png」 4상태) ═══
-   서버 my.ckq(sync) · 소켓 개인 사건 ckq 가 정본 · 접수 스태프가 내 QR 을 찍는 순간 생긴다 · 번호가 없으면 아무것도 없다.
-   대기 = 「B 창구 · 앞에 n명 · 약 n분」 + 「차례가 되면 진동으로 알려요 · 근처에서 기다려도 돼요」(사용자 261007 줄 서지 않게)
-   곧 차례(앞에 0 ~ 1명) = 「B 창구로 오세요」 · 호출 = 주황 카드 + 진동 + 알림 한 줄 + 「내 QR 열기」 · 놓친 번호(뒤 번호를 이미 부름) = 「아무 때나 B 창구에서」
-   수령 뒤 = 「수령 완료」 + 사전등록 체크인 점 3개 + 다음 룰렛 · 닫으면(ckq_seen) 사라진다 · 서버도 30분 뒤 보내지 않는다 */
+/* 261016 (사용자 스태프 QR 정리) 체크인 번호표 · 홈 맨 위 「내 번호」 카드(ckqIn · ckqCardHtml · 서버 my.ckq · 소켓 ckq)는 걷었다 · 창구 체계 폐기 */
 /* 261015 (사용자 확정) 체크인 번호 · 가나다순 고정(서버 my.ckno · 키트명단에 있고 번호를 매긴 사람만) · 없으면 "" = 화면 그대로
  * 261016 (사용자) 세션별 번호 「A-1」 글자 그대로 · 옛 서버 숫자 번호 = 「n번」 */
 function ckNoVal(v) { v = String(v == null ? "" : v).trim(); if (/^[A-E]-\d{1,4}$/.test(v)) return v; var n = Math.floor(Number(v) || 0); return n > 0 ? String(n) : ""; }
 function ckNoMy() { var v = ckNoVal(S.get("ckno", "")); return /^\d+$/.test(v) ? v + "번" : v; }
-function ckqMy() { var q = S.get("ckq", null); return q && typeof q === "object" && q.no ? q : null; }
-function ckqIn(q) {
-  q = q && typeof q === "object" && q.no ? q : null;
-  var was = ckqMy();
-  if (JSON.stringify(q) === JSON.stringify(was)) return;
-  S.set("ckq", q);
-  if (q && q.st === "call" && !q.miss && (!was || was.no !== q.no || was.st !== "call")) { stampBuzz([220, 120, 220, 120, 320]); toast(q.no + " · " + q.w + " 창구로 오세요"); }
-  if (App.current === "home") App.render();
-}
-function ckqHide() { var q = ckqMy(); if (q) S.set("ckq_seen", q.no); if (App.current === "home") App.render(); }
-function ckqCardHtml() {
-  var q = ckqMy();
-  if (!q) return "";
-  if (q.st === "done") {
-    if (S.get("ckq_seen", "") === q.no) return "";
-    var k = S.get("kit", null), sz = k && k.sz ? " " + kitLbl(k.sz) : "", ck = S.get("stamps", []).indexOf(STAMP_CK) >= 0, ru = typeof ckGuideOn === "function" && ckGuideOn();
-    return '<section class="axs-ckq done" aria-live="polite"><button type="button" class="axs-ckq-x" onclick="ckqHide()" aria-label="닫기">' + X_SVG + "</button>" +
-      '<span class="ok" aria-hidden="true">' + CHECK_SVG + '</span><p class="h">수령 완료</p><p class="s">' + esc(KIT_ITEM + sz + " + 에코백") + "</p>" +
-      (ck ? '<div class="rw"><span>사전등록 체크인</span><i class="dots" aria-label="스탬프 3개"><b></b><b></b><b></b></i></div>' : "") +
-      (ru ? '<div class="rw"><span>다음</span><b>1F EVENT 룰렛 1회</b></div><button type="button" class="ax-button" onclick="ckqHide(); ckGuideOpen(true)">룰렛 보기</button>' : "") + "</section>";
-  }
-  var call = q.st === "call", ah = Number(q.ah) || 0, soon = !call && ah <= 1, nm = (S.get("user", {}) || {}).name || "";
-  var chip = call ? (q.miss ? "놓친 번호" : "호출") : soon ? "곧 차례" : "대기 중";
-  var ln = call ? (q.miss ? "아무 때나 " + q.w + " 창구에서 QR을 보여 주세요" : q.w + " 창구로 오세요") : soon ? q.w + " 창구로 오세요 · 앞에 " + ah + "명" : q.w + " 창구 · 앞에 " + ah + "명" + (q.eta ? " · 약 " + q.eta + "분" : "");
-  var sb = call ? "내 QR을 보여 주시면 바로 드려요" : soon ? "창구 앞에서 기다려 주세요" : "차례가 되면 진동으로 알려요 · 근처에서 기다려도 돼요";
-  return '<section class="axs-ckq' + (call ? " call" : soon ? " soon" : "") + '" aria-live="polite"><p class="tp"><span>내 번호</span><span class="ch">' + chip + "</span></p>" +
-    '<p class="no">' + esc(q.no) + "</p>" + (nm ? '<p class="nm">' + esc(nm) + "</p>" : "") + '<p class="ln">' + esc(ln) + '</p><p class="sb">' + esc(sb) + "</p>" +
-    (call ? '<button type="button" class="ax-button axs-ckq-qr" onclick="qrPanelOpen(\'mine\')">내 QR 열기</button>' : "") + "</section>";
-}
 function kitCardHtml() {
   var k = kitMy();
   if (!k) return "";

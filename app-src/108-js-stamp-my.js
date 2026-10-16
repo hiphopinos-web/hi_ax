@@ -189,35 +189,7 @@ function attSealHtml(s) { var id = attStampId(s); return id ? stampTagHtml(id, 2
 function progStampId(s) {
   return s && P3_PM.indexOf(s.id) >= 0 ? "p3" : "";
 }
-/* ═══ v5.94 (사용자 결정 261006 「사전프로그램 신청자의 경우에는 체크인 시에 3 스탬프를 부여하니, 그걸로 룰렛권을 받고 그대로 룰렛장으로 이동해서 룰렛 한 바퀴 돌리고 바로 강의장으로 가도록 유도하자」) ═══
-   사전등록 체크인 3개(ck) → 1F EVENT 룰렛 → 10F 강의장(내 세션 시각 · 장소) | 라운지 사전등록자(서버 my.ckg = dap) = 1F AX 라운지 상담 시각
-   안내 시트 = 스탬프 연출이 끝난 뒤 한 번(사건 뒤 안내 · 「먼저 묻지 않는다」 안 · 막지 않는다 = 뒷배경 · 끌어 닫기 · 「닫기」) · 본 기록 ck_guide(사람별)
-   보내는 곳 = stampSync 가 ck 를 새로 받은 순간 notice 줄(run) · 「룰렛 1회 열림」 알림은 이 시트가 대신한다(겹쳐 띄우지 않는다)
-   홈 한 줄(나의 일정 맨 위) = 같은 순서 · 대상 = ck 가 있고 룰렛을 아직 안 쓴 사람(소진 · 마감이면 없음) · 룰렛을 쓰면 사라진다 */
-function ckGuideOn() { return S.get("stamps", []).indexOf(STAMP_CK) >= 0 && !S.get("roulette_used", false) && !S.get("roulette_out", false); }
-/* 마지막 줄 · 10F = 내 세션(tenMine · 시각 · 장소) · 라운지 = 상담 시각(내 상담 신청이 있으면) · 갈래를 모르면(옛 서버) 10F 세션이 있으면 10F */
-function ckGuideDest() {
-  var g = S.get("ck_grp", ""), t = g === "dap" ? null : tenMine();
-  if (t) return { k: "10F", nm: "10F " + t.ttl, at: String(t.tm || "").split("~")[0], pl: sessPlace(t) };
-  if (g === "10F") return { k: "10F", nm: "10F 실습형 세션", at: "13:30", pl: "세션별 장소는 프로그램 탭" };
-  var r = myResv(), sl = r && RESV_HOLD.indexOf(r.status) >= 0 && r.slot ? hhmm(r.slot) : "";
-  return { k: "1F", nm: "1F AX 라운지", at: sl, pl: sl ? "내 상담 시간" : "상담 시간에 맞춰" };
-}
-function ckGuideSteps(d) {
-  return '<ol class="axs-ckg"><li><span class="tx"><b>1F EVENT 룰렛에서 한 바퀴</b><span>룰렛 부스에서 내 QR 보여 주기</span></span></li>' +
-    '<li><span class="tx"><b>' + esc(d.nm) + "</b><span>" + esc((d.at ? d.at + " · " : "") + d.pl) + "</span></span></li></ol>";
-}
-function ckGuideOpen(again) {
-  if (!again) { if (S.get("ck_guide", 0) || !ckGuideOn()) return; S.set("ck_guide", 1); }
-  sheetOpen({ id: "ckgo", title: "스탬프 3개 · 룰렛 1회권이 생겼어요", body: ckGuideSteps(ckGuideDest()),
-    go: "sheetClose(true); qrPanelOpen('mine')", goLbl: "내 QR 보여주기", keep: "닫기", keepWeak: true, keepLast: true });
-}
-/* 홈 나의 일정 맨 위 한 줄 · [정렬 분, onclick, 뱃지, 제목, 보조 줄, 뱃지 상태] (myScheduleHtml 의 rows 와 같은 모양) */
-function ckGuideRow() {
-  if (!ckGuideOn()) return null;
-  var d = ckGuideDest();
-  return [-2, "ckGuideOpen(true)", "룰렛", "1F 룰렛 → " + d.nm, (d.at ? d.at + " · " : "") + d.pl, "act"];   /* 375px 한 줄(제목 · 보조 줄 말줄임 없이) · 누르면 같은 시트 */
-}
+/* 261016 (사용자) 사전등록 체크인 3개(ck) 폐지 · 체크인 안내 시트(ckGuideOpen) · 홈 줄(ckGuideRow) · 갈래(ck_grp)를 걷었다 */
 /* 잉크 튐 · 도장 가장자리에서 바깥으로 · O100~O30 사다리 · 보일 때만 만들고 0.9초 뒤 지운다 · scale 0.5 = 카드 인라인(절반 크기) */
 var INK_COLS = ["#FF7E31", "#FF7E31", "#FFA46E", "#FFB284", "#FFCFB0"];
 function inkSplash(mk, count, scale) {
@@ -246,8 +218,7 @@ var SPOP = { q: [], cur: null, ids: {}, opt: {} };
 /* v5.68 프로그램 참여 = 2개 · 팝 제목 p3 = 「프로그램 참여 ×2」 · p3h(17F 한쪽 1개) = 「프로그램 참여 1 / 2」 · 제자리는 같은 p3 줄 */
 function stampPopDef(id) {
   if (id === STAMP_HALF) return { id: STAMP_HALF, title: typeof S === "object" && progUnitsOf(S.get("stamps", [])) >= 2 ? "프로그램 참여 2 / 2" : "프로그램 참여 1 / 2" };   /* 261013 밤 커피챗(1개)이 먼저 있었으면 2 / 2 */
-  if (id === "ck") return { id: "ck", title: "사전등록 체크인 ×3" };   /* v5.90 STAMP_CK(이 함수만 떼어 검사하므로 글자 그대로) */
-  if (id === "cc" || id === "ln") { var pst = S.get("stamps", []), pa = progUnitsOf(pst), pb = progUnitsOf(pst.filter(function (x) { return x !== id; })); return { id: id, title: pa < 2 ? "프로그램 참여 1 / 2" : pb === 1 ? "프로그램 참여 2 / 2" : "프로그램 참여 ×2" }; }   /* 261013 오후 커피챗 · 라운지 참석 = 프로그램 참여 줄(묶음) · 제자리도 그 줄 · 261013 밤 커피챗 1개(묶음 1이면 1 / 2 · 1에서 2가 되면 2 / 2) */
+  if (id === "p10" || id === "p10h" || id === "cc" || id === "ln") { var pst = S.get("stamps", []), pa = progUnitsOf(pst), pb = progUnitsOf(pst.filter(function (x) { return x !== id; })); return { id: id, title: pa < 2 ? "프로그램 참여 1 / 2" : pb === 1 ? "프로그램 참여 2 / 2" : "프로그램 참여 ×2" }; }   /* 261016 10F 실습(p10h 1 · p10 2)도 묶음 줄 · 261013 오후 커피챗 · 라운지 참석 = 프로그램 참여 줄(묶음) · 제자리도 그 줄 · 261013 밤 커피챗 1개(묶음 1이면 1 / 2 · 1에서 2가 되면 2 / 2) */
   var sd = STAMPS.filter(function (s) { return s.id === id; })[0];
   return sd && sd.x2 ? { id: sd.id, title: sd.title + " ×2" } : sd;
 }
@@ -257,7 +228,7 @@ function stampOverlay(id, op) {
   if (id === "lg" && typeof lgfxMark === "function") lgfxMark();   /* v6.07 이 기기 · 이 사번은 최초 로그인 도장을 봤다 */
   var seen = ppSeenGet();
   if (seen.indexOf(id) < 0) { seen.push(id); S.set("pp_seen", seen); }   /* 재생 중복 방지 · 스탬프 탭이 다시 그려져도 또 안 튄다 */
-  if (id === STAMP_HALF && S.get("stamps", []).indexOf("p3") >= 0) return true;   /* v5.68 같은 동기화에 2개가 함께 왔으면 「×2」 팝 하나만 */
+  if ((id === STAMP_HALF && S.get("stamps", []).indexOf("p3") >= 0) || (id === "p10h" && S.get("stamps", []).indexOf("p10") >= 0)) return true;   /* v5.68 같은 동기화에 2개가 함께 왔으면 「×2」 팝 하나만 · 261016 10F 도 */
   if (op) { if (!SPOP.opt) SPOP.opt = {}; SPOP.opt[id] = op; }
   if (SPOP.ids[id] || (SPOP.cur && SPOP.cur.sd.id === id)) return true;
   SPOP.ids[id] = 1; SPOP.q.push(sd);
@@ -268,7 +239,7 @@ function stampOverlay(id, op) {
 function spTarget(id) {
   var v = App.current, t = null, kind = "";
   if (v === "exp") {   /* v4.84 스탬프 탭 = 그 행의 번호 칸 */
-    t = document.querySelector('#view [data-stp="' + (id === STAMP_HALF || id === "cc" || id === "ln" ? "p3" : id) + '"] .axs-stpn'); if (t) kind = "card";   /* v5.68 p3h = 프로그램 참여 줄 · 261013 오후 커피챗 · 라운지도 */
+    t = document.querySelector('#view [data-stp="' + (id === STAMP_HALF || id === "cc" || id === "ln" || id === "p10" || id === "p10h" ? "p3" : id) + '"] .axs-stpn'); if (t) kind = "card";   /* v5.68 p3h = 프로그램 참여 줄 · 261013 오후 커피챗 · 라운지도 */
   } else if (v === "home") {
     var rail = document.querySelector("#view .rail"), n = stampGot();
     if (rail) {

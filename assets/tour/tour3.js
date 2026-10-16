@@ -48,7 +48,7 @@
     { id: 'typing', zone: 'event', spot: 'typing', name: 'AX 타자왕', x: 3.3, z: 2.5, look: [0.55, 2.47], say: '당신의 프롬프팅 속도를 보여\u00A0주세요', go: '' },   /* v5.79 (사용자 261006) 프롬프트(입력한 글) → 프롬프팅(쓰는 행위 · 속도를 재는 대상) · 「보여 주세요」 띄어 씀(앱 「눌러 주세요」와 같게 · 말풍선 232px 두 줄이 「속도를 / 보여 주세요」로 끊기게 붙는 빈칸 u00A0) · v5.64 (사용자 261005 「프롬프트 실력보다는 속도」 · 원문 「보셔주세요」는 「보여주세요」로) 옛 「타자왕 1~3위 경품 · 17:00 마감」 */
     { id: 'event', zone: 'event', name: '포토부스', x: 5.3, z: 7.35, look: [0.55, 7.35], noGuide: true },   /* v5.58 촬영 기계(가운데 칸 앞 · 도면 3.6, 7.35) 뒤에서 벽 쪽 단체 사진을 봄 */
     { id: 'roulette', zone: 'event', spot: 'roulette', name: '룰렛 이벤트', x: 3.4, z: 10.1, look: [0.55, 10.15], say: '스탬프 3개면 룰렛을 돌려요', go: '', hand: true },
-    { id: 'lounge', zone: 'lounge', x: 6.6, z: 9.1, look: [5.6, 12.18] }   /* 261008 수정본 11쪽 · AX 라운지 = 미팅룸 날개 입구 가벽 앞 데스크(5.6, 11.81) · 데스크 앞 오른쪽 2.9m(룰렛 자리 3.0m 밖 · 가까우면 「룰렛 이벤트 앞」으로 읽힌다) · 옛 = 북쪽 벽 앞 판 줄 앞(8.7, 8.3) */
+    { id: 'lounge', zone: 'lounge', x: 6.6, z: 9.1, look: [5.6, 12.18], gAt: [7.41, 9.84] }   /* 261016 v7.41 (사용자 「ax 라운지 담당자 여기 말고 좀 더 부스 앞으로 (화면 앞)」) 스태프 = 멈춤 자리 오른쪽 1.0m · 데스크 쪽 0.45m(옛 = 오른쪽 1.1 · 앞 0.7 = 데스크 옆 대리석 벽 앞 · 0.3m 화면 쪽) · 내 캐릭터 · 데스크 · 판을 가리지 않고 멈춤 자리(몸 0.32 + 스태프 0.72)와 1.1m · 390 폭에서 몸 전체가 보임 */   /* 261008 수정본 11쪽 · AX 라운지 = 미팅룸 날개 입구 가벽 앞 데스크(5.6, 11.81) · 데스크 앞 오른쪽 2.9m(룰렛 자리 3.0m 밖 · 가까우면 「룰렛 이벤트 앞」으로 읽힌다) · 옛 = 북쪽 벽 앞 판 줄 앞(8.7, 8.3) */
   ];
   /* 18F 커피챗 · 체크인 존은 시험판에서 뺀다(사용자 261003) · 코드는 SHOW_CAFE 로 보존 */
   var SHOW_CAFE = false;
@@ -3741,6 +3741,7 @@
     function hit(a, b) { return a.left < b.right + 4 && b.left < a.right + 4 && a.top < b.bottom + 4 && b.top < a.bottom + 4; }
     var lk = $('look'), gb = $('gbub'), sb = $('shot'), et = $('etip');
     if (et && !et.hidden) { var re = rc(et); if (re) keep.push(re); }   /* v5.84 엘리베이터 권유 = 말풍선보다 앞 */
+    var fb = $('bFloor'); if (fb && !fb.hidden) { var rf = rc(fb); if (rf) keep.push(rf); }   /* 261016 v7.41 「다른 층 이동하기」 = 말풍선 · 표지 단추보다 앞 */
     if (sb && !sb.hidden) { var r0 = rc(sb); if (r0) keep.push(r0); }   /* v5.67 사진 찍기 = 맨 앞 */
     var sp = $('spg'); if (sp && !sp.hidden) { var rs = rc(sp); if (rs) keep.push(rs); }   /* v6.91 룰렛 돌리기 묶음 = 사진 찍기와 같은 앞 */
     if (lk && !lk.hidden) { var r1 = rc(lk); if (r1) keep.push(r1); }
@@ -3780,7 +3781,7 @@
   };
   /* 자리 · stop = 그 구역 멈춤 자리에서 판을 보는 사람의 왼쪽 1.2m(스태프는 오른쪽) · at = 도면 자리(p4 = v5.51 타자왕 부스 앞 통로 쪽 · 노트북 탁자 동쪽 1.5m · 판 39 · 배너 48 을 가리지 않음 · st = 서쪽 코어 계단실 대리석 벽 앞)
    * v5.54 p5 = AX LAB 「아이디어 QR」 판(13 · 도면 25.9, 0.55) 바로 앞 1.4m(사용자 261004 「아이디어 한줄 QR 제출하기 판쪽 앞쪽에」) */
-  var BLK_AT = [{ id: 'qz', stop: 'vision' }, { id: 'p5', at: [25.9, 1.95] }, { id: 'p2', stop: 'play' }, { id: 'p3', at: [17.3, 9.0] }, { id: 'p4', at: [3.3, 2.5] }, { id: 'st', at: [12.4, 10.5] }, { id: 'st', at: [27.8, 16.05] }];   /* 261006 영상 = 계단 문이 북쪽 끝 흰 칠 벽(z 15.6 ~ 16.5) · 그 앞 0.6m */   /* v5.65 (사용자 261005 「이 근처 계단 스탬프는 계단실 입구로 이동해줘」) 동쪽 블록 = 로비 빈 칸(29.6, 10.4) → 1m 들어간 벽(x 27.2)의 계단 문(z 14.5 ~ 15.5) 바로 앞 0.6m */   /* v5.64 (사용자 261005 「이쪽 계단실 앞에도 스탬프 띄워줘」) 고객센터 쪽 계단 앞(로비 쪽 · 동쪽 빈 공간 입구) 하나 더 · 같은 스탬프(둘 중 하나만 받아도 둘 다 완료) */
+  var BLK_AT = [{ id: 'qz', stop: 'vision' }, { id: 'p5', at: [25.9, 1.95] }, { id: 'p2', stop: 'play' }, { id: 'p3', at: [17.3, 9.0] }, { id: 'p4', at: [3.3, 2.5] }, { id: 'st', at: [27.8, 16.05] }];   /* 261016 v7.41 (사용자 「여기에 스탬프 없애자」) 서쪽 코어 계단실 대리석 벽 앞 블록(12.4, 10.5)과 그 바닥 점선 원 걷음 · 계단 동전 = 동쪽 계단실 문 앞 하나 */   /* 261006 영상 = 계단 문이 북쪽 끝 흰 칠 벽(z 15.6 ~ 16.5) · 그 앞 0.6m */   /* v5.65 (사용자 261005 「이 근처 계단 스탬프는 계단실 입구로 이동해줘」) 동쪽 블록 = 로비 빈 칸(29.6, 10.4) → 1m 들어간 벽(x 27.2)의 계단 문(z 14.5 ~ 15.5) 바로 앞 0.6m */   /* v5.64 (사용자 261005 「이쪽 계단실 앞에도 스탬프 띄워줘」) 고객센터 쪽 계단 앞(로비 쪽 · 동쪽 빈 공간 입구) 하나 더 · 261016 서쪽을 걷어 지금은 이 하나 */
   /* v5.96 (사용자 261006 밤 「엘베 쪽 옮겨서 사람들이 저게 뭐지 하고 엘베로 오게 하고 자연스럽게 17층 유도한다」) 프로그램 참여(p3) = 엘리베이터 게이트 앞(첫 게이트 줄 17.55 앞 · 게이트 2.3m 앞 · 층 안내 판 42(16.4, 10.6)과 1.7m · 게이트 앞 걷기 자리 18.4, 9.7 과 1.3m · 머리 위 높이라 길을 막지 않음) · 옛 자리 = AX 라운지 앞(stop lounge) */
   var BLOCKS = [], BLK_Y = 1.42, BLK_S = 0.46, BLK_M = null;
   function stampInfo(id) {
@@ -3890,7 +3891,7 @@
       var pop = new T.Sprite(new T.SpriteMaterial({ map: M.pop, transparent: true, depthWrite: false, opacity: 0 })); pop.visible = false; pop.scale.set(0.42, 0.42, 1); pop.renderOrder = 5;
       S.lobby.add(m); S.lobby.add(pop);
       var bo = { id: d.id, m: m, pop: pop, lb: null, at: q, x: m.position.x, z: m.position.z, ph: Math.random() * 6, bumpT: -9, cool: 0, got: false, fl: fl, fl2: fl2, prox: 99, sw: 0, gp: 0, dip: 0, lit: 0, demoT: -9, t1: 0 };
-      BLOCKS.push(bo); m.userData.blk = dk.userData.blk = bo;   /* 261007 누른 그 동전(계단 동전 둘은 같은 스탬프 · 옛 = 이름으로 찾아 늘 서쪽 계단 동전으로 걸어갔다) */
+      BLOCKS.push(bo); m.userData.blk = dk.userData.blk = bo;   /* 261007 누른 그 동전(옛 = 이름으로 찾아 늘 첫 동전으로 걸어갔다 · 261016 계단 동전은 동쪽 하나) */
     });
     refreshBlocks();
   }
@@ -4088,6 +4089,7 @@
     return best;
   }
   function updateUi(force) {
+    var fh = G.scn !== 'lobby' || !G.loaded, fb = $('bFloor'); if (fb && fb.hidden !== fh) fb.hidden = fh;   /* 261016 v7.41 「다른 층 이동하기」 = 1층 로비에서만 */
     /* 입장 → 처음 안내 → 대기까지는 판 보기 · 말풍선을 띄우지 않는다(G.moved) · 움직이거나 「다음 구역」 뒤부터(사용자 261003 버그 「입장하자마자 판 보기」) */
     var z = G.mode === 'auto' || !G.moved ? null : nearZone(), sp = z ? nearSpot() : null; if (sp) z = D.Z(sp.zone); var key = (G.moved ? 1 : 0) + '|' + (z ? z.id : '') + '|' + (sp ? sp.id : '') + '|' + G.mode + '|' + G.stop + '|' + G.scn;
     if (!force && key === G.ctaKey) return; G.ctaKey = key; G.near = z; G.spot = sp;
@@ -4324,7 +4326,7 @@
     return true;
   }
   function elevUi(on) {
-    $('pad').hidden = on; $('ctl').hidden = on; $('mini').hidden = on; $('evp').hidden = !on; $('navRow').hidden = on;   /* v5.65 「1층에서 내리기」 줄 없앰 = 층 단추 1(뒤로 가기도 1층) */
+    $('pad').hidden = on; $('ctl').hidden = on; $('mini').hidden = on; $('evp').hidden = !on; $('navRow').hidden = on; $('bFloor').hidden = on;   /* 261016 v7.41 엘리베이터 안 = 「다른 층 이동하기」 숨김 */   /* v5.65 「1층에서 내리기」 줄 없앰 = 층 단추 1(뒤로 가기도 1층) */
     $('gbub').hidden = true; $('look').hidden = true; lookFrame(null); $('cheer').hidden = true; $('cta').hidden = true;
     $('where').textContent = on ? '엘리베이터 안 · 몇 층으로 갈까요?' : $('where').textContent;
   }
@@ -5306,6 +5308,7 @@
     $('gbub').onclick = function (e) { if (performance.now() - (G.guardT || 0) < 500) return; var cr = $('cv').getBoundingClientRect(), nc = e && e.clientX ? coinNear(e.clientX - cr.left, e.clientY - cr.top, 2) : null; if (nc) { tapGo({ k: 'coin', b: nc }); return; }   /* 261007 말풍선 아래 동전을 누른 것 = 동전 */ var gd = G.talk; if (!gd) return; if (gd.stamp) { openStampCard(gd.stamp); return; } if (gd.spot === 'typing') { openPromo(); return; } if (!gd.go) return; doLook(); };   /* v5.54 말풍선 = 자세히 보기 단추와 같은 일 */
     $('look').onclick = doLook;
     $('etGo').onclick = etipGo; $('etX').onclick = etipHide;   /* v5.84 */
+    $('bFloor').onclick = etipGo;   /* 261016 v7.41 「다른 층 이동하기」 = 가장 가까운 엘리베이터까지 걸어가 층 단추(etipGo · tapGo gate · cs) */
     $('shot').onclick = doShot; $('pola').addEventListener('click', phClose);
     $('spd').innerHTML = spSvg(); $('spin').onclick = doSpin; $('spcX').onclick = function () { spClose(); }; $('spcG').onclick = spPrize; $('spov').addEventListener('click', function (e) { if (SP.ph === 'card' && !$('spc').contains(e.target)) spClose(); });   /* v7.40 목록 밖 톡 = 닫기(판이 아직 돌아도) · 도는 중 = 무시 */   /* v5.67 사진 찍기 · 팝업 톡 = 닫기 */
     var rs = store.get('axfTour3RM'); if (rs === '1' || rs === '0') RM = rs === '1';
@@ -5359,6 +5362,7 @@
     '    <div class="pins" id="t3-pins"></div>\n' +
     '    <div class="mags" id="t3-mags"></div>\n' +
     '    <button type="button" class="mini" id="t3-mini" aria-label="작은 지도 · 누르면 크게 보기"></button>\n' +
+    '    <button type="button" class="flr" id="t3-bFloor" hidden>다른 층 이동하기</button>\n' +   /* 261016 v7.41 (사용자) 왼쪽 위 · 1층에서만 · 엘리베이터 권유 「엘리베이터로 가기」와 같은 걷기(etipGo) */
     '    <div class="cap" id="t3-cap" hidden></div>\n' +
     '    <div class="load" id="t3-load">모형 불러오는 중</div>\n' +
     '    <div class="pad" id="t3-pad" role="application" aria-label="움직이기 패드 · 밀면 그쪽으로 걸어요"><span class="knob" id="t3-knob"></span><kbd class="kh kw" aria-hidden="true">WASD</kbd></div>\n' +
@@ -5549,5 +5553,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v7.40', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v7.41', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();

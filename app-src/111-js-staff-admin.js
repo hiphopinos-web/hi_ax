@@ -56,7 +56,6 @@ function scanTileHtml(sp) {
   return '<button type="button" class="axs-stile" onclick="scanChoose(\'' + sp.id + '\')"><b>' + esc(sp.lb || sp.nm) + "</b>" + (sp.tsub ? "<span>" + esc(sp.tsub) + "</span>" : "") + "</button>";
 }
 function scanChoose(id) {
-  if (id === "sess") { SCAN.sub = "sess"; App.render(); window.scrollTo(0, 0); return; }
   scanPick(id); SCAN.pick = false; SCAN.sub = ""; SCAN.res = null;
   window.scrollTo(0, 0);
   if (qrScanSupported() && BE.on) scanStart();   /* 고르면 곧바로 찍는다(목적을 고른 손짓 = 카메라 허용 손짓) */
@@ -66,12 +65,8 @@ var INV_LNK = "";   /* v5.34 스캔 화면 맨 아래 「재고 · 박스 열기
 function admScanHtml() {
   var sp = scanSpot(SCAN.spot), log = '<section class="ax-stack-tight axs-gap12"><h2 class="ax-meta">최근 스캔</h2><div class="ax-card axs-slog" id="scanLog">' + scanLogHtml() + "</div></section>";
   if (!sp || SCAN.pick) {
-    if (SCAN.sub === "sess") {
-      return '<div class="axs-srow"><h2 class="ax-section-title">10F 세션 입장</h2><button type="button" class="ax-link axs-plain" onclick="SCAN.sub = \'\'; App.render()">목적 목록으로</button></div>' +
-        '<div class="axs-stiles">' + SCAN_SPOTS.filter(function (x) { return x.kind === "sess"; }).map(scanTileHtml).join("") + "</div>";
-    }
     return '<h2 class="ax-section-title">무엇을 찍나요?</h2><div class="axs-stiles">' +
-      scanTileIds().map(function (id) {   /* v5.05 포토부스 대기 폐지 · 정리 #7 타일 목록에서 뺐다 · v6.00 10F 세션 타일은 SCAN_10F_UI 일 때만 */ return id === "sess" ? (!SCAN_10F_UI ? "" : '<button type="button" class="axs-stile" onclick="scanChoose(\'sess\')"><b>10F 세션 입장</b><span>A~E 고르기</span></button>') : scanTileHtml(scanSpot(id)); }).join("") + "</div>" +
+      scanTileIds().map(function (id) { return scanTileHtml(scanSpot(id)); }).join("") + "</div>" +   /* 261016 (사용자 스태프 QR 정리) 6칸 · 10F 세션 · 포토부스 · 창구 칸 걷음 */
       (sp ? '<button type="button" class="ax-button ax-button-weak" onclick="SCAN.pick = false; App.render()">' + esc(sp.lb || sp.nm) + " 그대로 찍기</button>" : "") + log + INV_LNK + sreqLnk();
   }
   var w = scanWhat(sp), out = sp.kind === "roulette" && S.get("roulette_out", false);
@@ -89,7 +84,7 @@ function scanBigHtml() {
   if (!r) return "";
   return '<section class="axs-sres ' + r.tone + '" role="status" aria-live="polite">' +
     '<p class="axs-sres-who">' + esc(r.who || "") + '<span class="n">' + esc(hhmmss(r.t)) + "</span></p>" +
-    '<p class="axs-sres-h">' + esc(r.head) + "</p>" + (r.sub ? '<p class="axs-sres-s">' + esc(r.sub) + "</p>" : "") + (r.go ? '<p class="axs-sres-s"><b>' + esc(r.go) + "</b></p>" : "") + (r.inv ? invResHtml(r) : "") + "</section>";   /* v5.94 go = 스태프가 할 말 한 줄(체크인 → 룰렛 부스) */
+    '<p class="axs-sres-h">' + esc(r.head) + "</p>" + (r.sub ? '<p class="axs-sres-s">' + esc(r.sub) + "</p>" : "") + (r.go ? '<p class="axs-sres-s"><b>' + esc(r.go) + "</b></p>" : "") + (r.rows ? gateRowsHtml(r.rows) : "") + (r.inv ? invResHtml(r) : "") + "</section>";   /* 261016 체크인존 한 칸 = 받을 것 줄 목록(gateDone) */   /* v5.94 go = 스태프가 할 말 한 줄(체크인 → 룰렛 부스) */
 }
 function hhmmss(t) { var d = new Date(t || Date.now()), p = function (n) { return (n < 10 ? "0" : "") + n; }; return p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds()); }
 function scanShow(tone, who, head, sub, go) {
@@ -158,7 +153,7 @@ function sscCodeGo() {
 /* 같은 사람(사번) 3초 · 계속 비치면 시계를 다시 잰다 */
 function scanSeen(emp) { if (emp && emp === SCAN.lastE && Date.now() - SCAN.seenE < 3000) { SCAN.seenE = Date.now(); return true; } return false; }
 function sscSub(id) { var L = SSC_SUB[id || SCAN.spot], v = S.get("scan_sub", ""); return L ? (L.filter(function (x) { return x[0] === v; })[0] || L[0]) : null; }
-function sscSpotLb(sp) { var u = sscSub(sp.id); return u ? sp.nm + " · " + u[1] : sp.kind === "sess" ? sp.nm : sp.lb || sp.nm; }
+function sscSpotLb(sp) { var u = sscSub(sp.id); return u ? sp.nm + " · " + u[1] : sp.lb || sp.nm; }
 function sscDay() { var d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
 function sscCnt() { var c = S.get("ssc_cnt", null); return c && c.d === sscDay() ? Number(c.n) || 0 : 0; }
 function sscCntUp() { S.put("ssc_cnt", { d: sscDay(), n: sscCnt() + 1 }); var b = el("sscN"); if (b) b.textContent = sscCnt(); }
@@ -239,21 +234,20 @@ function sscWake(on) {
   } catch (e) { SSC.wlReq = false; }
 }
 document.addEventListener("visibilitychange", function () { if (!document.hidden && App.current === "sscan") sscMount(); });
-/* 톱니 · 자리 칩 = 자리 고르기 시트 · 1F 자리 → 10F 세션(v6.00 SCAN_10F_UI 일 때만 · 사용자 261006 밤 「10층은 출석 확인 없다」) · 아래에 소리 · 내 QR · 관리자 모드 화면 */
+/* 톱니 · 자리 칩 = 자리 고르기 시트 · 6칸(261016 사용자 스태프 QR 정리 · 10F 세션 자리 걷음) · 아래에 소리 · 내 QR · 관리자 모드 화면 */
 function sscSheetBody() {
   var cur = SCAN.spot, cs = sscSub(), tile = function (sp, sub, lb) {
     var on = sp.id === cur && (!sub || (cs && cs[0] === sub));
     return '<button type="button" class="axs-stile ssc-pick' + (on ? " on" : "") + '" aria-pressed="' + on + '" onclick="sscPick(\'' + sp.id + "', '" + sub + '\')"><b>' + esc(lb) + "</b><span>" + esc(sp.will || sp.nm) + "</span></button>";
   };
-  var one = [], ten = [];
+  var one = [];
   scanTileIds().forEach(function (id) {
-    if (id === "sess") { if (SCAN_10F_UI) SCAN_SPOTS.filter(function (x) { return x.kind === "sess"; }).forEach(function (sp) { ten.push(tile(sp, "", sp.lb || sp.nm)); }); return; }   /* v6.00 10층은 출석 확인 없음(SCAN_10F_UI) */
     var sp = scanSpot(id); if (!sp) return;
     if (SSC_SUB[id]) SSC_SUB[id].forEach(function (u) { one.push(tile(sp, u[0], sp.nm + " · " + u[1])); });
     else one.push(tile(sp, "", sp.lb || sp.nm));
   });
   var snd = sscSndOn();
-  return '<div class="axs-stiles ssc-picks">' + one.join("") + "</div>" + (ten.length ? '<h3 class="ax-meta ssc-h">10F 세션 입장</h3><div class="axs-stiles ssc-picks">' + ten.join("") + "</div>" : "") +
+  return '<div class="axs-stiles ssc-picks">' + one.join("") + "</div>" +
     '<div class="ssc-opts"><button type="button" class="ssc-opt" aria-pressed="' + snd + '" onclick="sscSnd()"><span>스캔 소리</span><b>' + (snd ? "켬" : "끔") + "</b></button>" +
     '<button type="button" class="ssc-opt" onclick="sheetClose(true); sscMine()"><span>내 QR 보여주기</span>' + CHEV_SVG + "</button>" +
     (admRole() === "admin" ? '<button type="button" class="ssc-opt" onclick="sheetClose(true); App.go(\'admin\')"><span>관리자 모드</span>' + CHEV_SVG + "</button>" : "") + "</div>";   /* v6.83 (묶음 18 · QA/스태프 코드 계약_261009.md 5절) 관리자 모드 = 관리코드(role admin)로 연 폰만 · 스태프 코드(role staff)는 연속 스캔까지 */

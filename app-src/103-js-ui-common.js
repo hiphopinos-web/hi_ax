@@ -335,11 +335,11 @@ function noticeBusy() {
     App.current === "admin" || App.current === "sscan" || App.current === "scan_res" || App.current === "stair" || SIGNAGE.indexOf(App.current) >= 0);   /* v4.06 결과·계단 화면이 연출이다 · 보상 안내는 나온 뒤 */
 }
 /* 261007 (사용자 「로그인 직후 자동 안내는 처음 10초에 1개만」 · 기획 `디자인 시안/재로그인 · 다음 할 일/분석.md` P3) 로그인 · 앱 열기 직후 10초 창(NB)
-   창 안에서 저절로 뜨는 안내(NB_AUTO = 사전등록 체크인 시트 · 공지 시트 · 선착순 시트 · 행운권 상자 · 룰렛 열림 · 상태 알림 nu:)는 1개만
+   창 안에서 저절로 뜨는 안내(NB_AUTO = 공지 시트 · 선착순 시트 · 행운권 상자 · 룰렛 열림 · 상태 알림 nu:)는 1개만
    첫 동기화를 최대 3초 기다려 가장 급한 것 하나(NB_RANK 순서)를 고른다 · 하나가 뜬 뒤 = 홈 줄 · 레일 · 종 목록이 같은 것을 말하는 안내(NB_DROP)는 버림 · 상태 알림(라운지 승인 · 커피챗 선정)은 창이 끝난 뒤
    호출(urgent) · 사람이 누른 결과(스캔 · 신청 등 그 밖의 key) · 스탬프 팝(SPOP · lgfx 포함)은 이 규칙 밖 · 시작 = 앱을 연 순간(이 파일을 읽은 때) · 로그인 성공(lgxEnter) · 오프닝이 닫힌 뒤(lgxAfter) */
 var NB = { t: Date.now(), n: 0, sync: 0, base: 0 }, NB_MS = 10000, NB_WAIT = 3000;
-var NB_AUTO = /^(ck:guide|ntc:|fcfs:got|rw:raffle|rw:roulette|nu:)/, NB_DROP = /^(ck:guide|ntc:|fcfs:got|rw:raffle|rw:roulette)/, NB_RANK = ["ck:guide", "ntc:", "fcfs:got", "rw:raffle", "rw:roulette", "nu:"];
+var NB_AUTO = /^(ntc:|fcfs:got|rw:raffle|rw:roulette|nu:)/, NB_DROP = /^(ntc:|fcfs:got|rw:raffle|rw:roulette)/, NB_RANK = ["ntc:", "fcfs:got", "rw:raffle", "rw:roulette", "nu:"];
 function nbStart() { NB.t = Date.now(); NB.n = 0; NB.sync = 0; }
 function nbOn() { return Date.now() - NB.t < NB_MS; }
 function nbAuto(o) { return !o.urgent && NB_AUTO.test(o.k || ""); }
@@ -439,16 +439,15 @@ function checkRewards() {
 }
 /* 261007 (사용자 결정 「재로그인 반복 팝업 고침」 · 분석 P1 · P4) 첫 동기화 기준선 · 이 기기에서 처음 받은 서버 목록 = 이미 알린 것
    새 기기 · 다른 브라우저 · 로그아웃 뒤 다시 들어온 첫 동기화(본 기록 pp_seen 이 없거나 기준선 대기 pp_base)에서 stampSync 가 부른다
-   룰렛 열림(roulette_open) · 행운권 상자(raffle_seen · raffle_opened) · 사전등록 체크인 안내(ck_guide)를 조용히 채운다 · 팝업 · 상자 · 시트를 다시 띄우지 않는다
+   룰렛 열림(roulette_open) · 행운권 상자(raffle_seen · raffle_opened)를 조용히 채운다 · 팝업 · 상자 · 시트를 다시 띄우지 않는다
    fresh = 이번 세션에 새로 생긴 스탬프(스캔 결과가 본 기록에 먼저 적은 것 · 이 기기 목록에 아직 없는 것) · 이것만 빼고 센다 → 그 스탬프로 넘은 문턱은 지금처럼 알린다
-   홈 레일 · 나의 보상 · 사전등록 홈 줄(ckGuideRow)은 그대로 보인다 · 최초 로그인 도장 팝(lgfx_261007)은 이 규칙 밖 */
+   홈 레일 · 나의 보상은 그대로 보인다 · 최초 로그인 도장 팝(lgfx_261007)은 이 규칙 밖 */
 function rwBaseline(list, fresh) {
   var old = list.filter(function (id) { return fresh.indexOf(id) < 0; });
   var n0 = Math.min(STAMP_DENOM, stampUnitsOf(old)), t0 = raffleTickets(n0);
   if (n0 >= 3 && !S.get("roulette_open", false)) S.put("roulette_open", true);
   if (t0 > S.get("raffle_seen", 0)) S.put("raffle_seen", t0);
   if (S.get("raffle_opened", null) === null || S.get("raffle_opened", 0) < t0) S.put("raffle_opened", t0);
-  if (old.indexOf("ck") >= 0 && !S.get("ck_guide", 0)) S.put("ck_guide", 1);
 }
 /* 앱 안 행동으로 붙는 3종(미니게임·아이디어·전시 QR 퀴즈) 전용.
    현장 QR 은 stampByCode 가 서버로 보내므로 여기를 타지 않는다. */
@@ -504,6 +503,11 @@ function stampPendSend(id) {
   var sd = STAMPS.find(function (x) { return x.id === id; });
   bePush("stamp:" + id, sd ? sd.title : id, true, function () {
     var p = stampPend(); if (p[id]) { p[id].ok = Date.now(); S.set("stamp_pend", p); }
+  }, function (res) {
+    if (res.reason !== "preday") return;   /* 261016 (사용자) 행사 전 가드 · 서버가 받지 않은 적립은 이 기기에서도 거두고 한 줄 */
+    var p = stampPend(); if (p[id]) { delete p[id]; S.set("stamp_pend", p); }
+    var st = S.get("stamps", []); if (st.indexOf(id) >= 0) { S.set("stamps", st.filter(function (x) { return x !== id; })); checkRewards(); if (App.current === "exp" || App.current === "home") App.render(); }
+    toast((sd ? sd.title + " 스탬프" : "스탬프") + " · 행사 당일(10/26) 적립");
   });
 }
 /* sync 성공 때 · 서버가 아직 못 받은 적립을 다시 보낸다 */

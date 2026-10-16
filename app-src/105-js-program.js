@@ -370,7 +370,7 @@ function applyCardHtml(o) {
 }
 /* v7.39 (사용자 261016 계획서 0-2-3) 커피챗 카드 · 시간(회차 20분) · 신청(선정 단계를 카드에서 먼저) · 스탬프 두 줄(받는 때 · 스탬프 이름 · 개수 · 판 4번 · 7번 이름과 같게) · 사은품 · 신청 뒤 = 지금 한 줄(네 상태 같은 자리)
    아이디어 한 줄 스탬프를 이미 받았으면 첫 줄 = 「아이디어 한 줄 · 받음」(하나 더로 셈하지 않게) */
-function ccStampRows() { return [S.get("stamps", []).indexOf("p5") >= 0 ? "아이디어 한 줄 · 받음" : "신청하면 아이디어 한 줄 1개", "상담 마치면 프로그램 참여 1개"]; }
+function ccStampRows() { return [S.get("stamps", []).indexOf("p5") >= 0 ? "아이디어 한 줄 · 받음" : "신청하면 아이디어 한 줄 1개", "종료 때 프로그램 참여 1개"]; }   /* 261016 (사용자 스태프 QR 정리) 커피챗 스탬프 = 종료 스캔 */
 function applyCchatHtml() {
   var s = cchatState(); if (!s) return "";
   var z = zoneById("cchat");
@@ -381,7 +381,7 @@ function applyCchatHtml() {
 function applyTenShow() { return !!tenMine() || testMode(); }
 function applyTenHtml() {
   if (!applyTenShow()) return "";
-  return '<div class="axs-rows">' + rcHtml({ cls: "", onclick: "progTenGo()", link: true, left: rcIcon(App.ICONS.guide), title: "10F 실습형 세션", sub: "사전 신청자 참여" }).replace('<div class="rc', '<div data-apply="ten" class="rc') + "</div>";
+  return '<div class="axs-rows">' + rcHtml({ cls: "", onclick: "progTenGo()", link: true, left: rcIcon(App.ICONS.guide), title: "10F 실습형 세션", sub: "사전 신청자 · 입장 1 + 끝 1" }).replace('<div class="rc', '<div data-apply="ten" class="rc') + "</div>";
 }
 /* 261013 오후 (사용자) 참여하기 칸 맨 위 = 17F 오후 파트너 강연 두 장(자유 참석 · 신청 버튼 없음 · 누르면 강연 상세 · 도장 ×2) · 표기 = 시간표(SESSIONS l1 · l2) 그대로
    v7.39 (사용자 261016) 스탬프 줄 = 「· 입장할 때 화면 QR 1개」 「· 끝날 때 화면 QR 1개」(커피챗 카드와 같은 문법) */
@@ -389,10 +389,12 @@ function apply17Html(id) {
   var x = SESSIONS.filter(function (q) { return q.id === id; })[0]; if (!x) return "";
   return applyCardHtml({ k: id, nm: x.sub, fl: 17, kor: x.who, kv: [["시간", x.tm], ["참여", "신청 없이 자유 참석"], ["스탬프", ["입장할 때 화면 QR 1개", "끝날 때 화면 QR 1개"]]], seal: stampTagHtml("p3", 2), tap: "progOpen(\'" + id + "\')", more: "progOpen(\'" + id + "\')" });
 }
-var APPLY_SUM = "프로그램 참여 스탬프는 17F 강연 · 라운지 · 커피챗 합쳐 2개까지";   /* v7.39 (사용자 261016 계획서 0-2-4) 칸 맨 아래 회색 한 줄 · 합계 오해 방지 */
+/* 261016 (사용자) 묶음 출처 글 · 10F 실습은 사전 신청자(applyTenShow)에게만 · 받으려면 상자 · 칸 맨 아래 줄이 같이 쓴다 */
+function progSrcTxt() { return "17F 강연 · " + (applyTenShow() ? "10F 실습 · " : "") + "라운지 · 커피챗"; }
+function applySumTxt() { return "프로그램 참여 스탬프는 " + progSrcTxt() + " 합쳐 2개까지"; }   /* v7.39 (사용자 261016 계획서 0-2-4) 칸 맨 아래 회색 한 줄 · 합계 오해 방지 */
 function progApplyTabHtml() {
   var h = apply17Html("l1") + apply17Html("l2") + applyCchatHtml();   /* 261013 오후 순서 = 17F AWS · 17F MS · 18F 커피챗 · v7.39 (사용자 261016 계획서 3-1 · 0-2-4) 라운지 카드 없음(사전 신청자 = 홈 나의 일정 · 상시 운영 1F 줄 · 내 상담) */
-  return '<div class="axs-apply" aria-label="참여하기">' + (h || '<p class="ax-description axs-apnone">지금 신청할 수 있는 프로그램이 없어요</p>') + '<p class="ax-meta axs-apsum">' + segHtml(esc(APPLY_SUM)) + "</p>" + applyTenHtml() + "</div>";
+  return '<div class="axs-apply" aria-label="참여하기">' + (h || '<p class="ax-description axs-apnone">지금 신청할 수 있는 프로그램이 없어요</p>') + '<p class="ax-meta axs-apsum">' + segHtml(esc(applySumTxt())) + "</p>" + applyTenHtml() + "</div>";
 }
 /* v5.65 「참여 전 확인」 펼침 = 같은 화면 패널(시트 아님 · 설계안 결정 1) · 다시 그리지 않고 패널만 연다 · 닫는다
    v6.83 (사용자 261009 묶음 16 「참여 전 확인을 눌러서 추가 정보가 나올 필요 없음」) 부르는 곳 없음(구역 상세 = 펼친 상자) · 되살릴 때 쓴다 */
@@ -572,7 +574,7 @@ function sessGuideHtml(s, mine) {
   var li = function (it) { return '<li><span class="tx">' + (it.name ? "<b>" + esc(it.name) + "</b>" : "") + "<span>" + segHtml(esc(it.desc), kp) + "</span>" + (it.sub || []).map(function (x, n) { return '<span class="sb"><i>' + (n + 1) + ".</i><span>" + kp(esc(x)) + "</span></span>"; }).join("") + "</span></li>"; };
   var intro = SESS_INTRO_ON && s.intro ? '<p class="intro">' + esc(s.intro) + "</p>" : "";
   var todo = (s.todo || []).length ? '<div class="sgg"><h3>하는 일</h3><ul>' + s.todo.map(li).join("") + "</ul></div>" : "";
-  var pl = (s.prep || []).length, q10 = "";   /* v5.94 (사용자 결정 261006) 10F 끝 QR 스탬프 없음 · 옛 줄 「끝날 때 화면의 QR을 찍으면 스탬프 2개」(v5.71) 삭제 · 끝 QR 출석 자체는 그대로 된다 */
+  var pl = (s.prep || []).length, q10 = "";   /* v5.94 옛 줄 「끝날 때 화면의 QR을 찍으면 스탬프 2개」(v5.71) 삭제 · 261016 10F 스탬프(입장 1 + 끝 1) 안내는 상세의 「스탬프 받으려면」 상자(progDetail) */
   var prep = mine && (pl || q10) ? '<div class="sgg sgp">' + (pl ? "<h3>준비할 것</h3><ul>" + s.prep.map(li).join("") + "</ul>" : "") + q10 + "</div>" : "";
   return intro || todo || prep ? '<section class="axs-sg"><h2 class="ax-section-title">세션 안내</h2>' + intro + todo + prep + "</section>" : "";
 }
@@ -645,6 +647,7 @@ function progDetail(s) {
     if (mi && ATT10_UI) D.kv.push(["끝 QR", ao ? ao + " 출석" : attWinLbl(ax, "out")]);   /* v5.71 10F 끝 QR(신청자만) · 출석하면 시각 */
     if (ao && ATT10_UI) { D.st = "출석 완료"; D.stc = "ok"; }   /* v5.96 10F 끝 QR 표시 끔 */
     D.sg = sessGuideHtml(s, !!mi);   /* v5.60 세션 안내 = (한 줄 소개) → 하는 일 → 준비할 것(신청자만) · 셋 다 없으면 블록 없음 */
+    if (mi) D.sg += '<section class="axs-dsec">' + needBoxHtml("스탬프 받으려면", "스탬프 받으려면", [["qr", "입장 · 끝 QR 한 번씩", ""], ["stamp", "입장 1개 + 끝 1개 = 스탬프 2개", progSrcTxt() + " 합쳐 최대 2개"]]) + "</section>";   /* 261016 (사용자) 10F 실습 = 입장 1 + 끝 1(17F 오후 강연과 같은 방식 · 프로그램 참여 묶음) · 사전 신청자에게만 · 10F 상세는 sg 가 참여 전 확인 칸을 대신한다 */
     D.help = mi ? "사전 신청 내역은 나의 일정에서 확인할 수 있어요" : "17F 강연 · 1F 전시 · 18F 커피챗은 누구나 참여해요";   /* v5.60 T2 */
     D.btn = wo && ATT10_UI ? progBtn("끝 QR 스캔", "qrScanOpen()") : mi ? progBtn("나의 일정 보기", "mySched()", "ax-button-weak") : progBtn("전체 시간표 보기", "homeSched()", "ax-button-weak");   /* v5.60 시안 = 약한 버튼 · v5.71 끝 창이 열렸고 아직이면 스캔 */
     return D;
@@ -660,7 +663,7 @@ function progDetail(s) {
       D.secT = r.status === "done" ? "상담을 마쳤어요" : "사전 신청한 상담이에요";
       D.secB = r.status === "checked" ? "업무 설명 → 병목 → 개선방안 순서로 진행돼요." : r.status === "done" ? "아래 코드를 AX 라운지 데스크에 보여 주고 사은품을 받으세요." : "";
       if (r.status === "done") D.after = '<div class="ax-inset ax-stack-tight axs-gift"><p class="ax-card-title">사은품 교환권 · 1회</p>' + qrHtml() + '<p class="ax-type-t5-strong axs-center-tx">GIFT-' + esc((S.get("user", {}) || {}).empId || "") + '</p></div>';   /* v5.60 W4 「중복 수령 방지 코드예요」 줄 삭제 */
-      if (r.status !== "checked" && r.status !== "done") D.need = needBoxHtml("스탬프 받으려면", "스탬프 받으려면", [["qr", "참석하면 스태프에게 내 QR 보여 주기", "상담 시간에 1F AX 라운지에서"], ["stamp", "확인되면 프로그램 참여 2개", "17F 강연 · 라운지 · 커피챗 합쳐 최대 2개"]]);   /* 261013 참석 확인 스탬프 ln · v7.39 (사용자 「참석하면 스태프가 내 QR 확인 → 2개」) */
+      if (r.status !== "checked" && r.status !== "done") D.need = needBoxHtml("스탬프 받으려면", "스탬프 받으려면", [["qr", "상담 시작 · 끝에 스태프에게 내 QR 보여 주기", "상담 시간에 1F AX 라운지에서"], ["stamp", "종료 때 프로그램 참여 2개", progSrcTxt() + " 합쳐 최대 2개"]]);   /* 261013 참석 확인 스탬프 ln · 261016 (사용자 스태프 QR 정리) 라운지 체크인 = 출석만 · 종료 스캔 = 2개 */
       if (RESV_LIVE.indexOf(r.status) >= 0 && r.status !== "checked") { D.help = "참여가 어려우면 신청을 취소할 수 있어요"; D.btn = progBtn("내 QR", "qrPanelOpen('mine')") + cxBtn; }
       else { D.help = ""; D.btn = progBtn("나의 일정 보기", "mySched()", "ax-button-weak"); }
       return D;
@@ -690,7 +693,7 @@ function progDetail(s) {
     if (cst === "pick") {
       D.st = "선정"; D.stc = "ok";
       D.kv = [["일시", rd || "10월 26일 · " + CCHAT_HOURS], ["장소", tb], ["진행", "시작 5분 전 도착"]];
-      D.need = needBoxHtml("스탬프 받으려면", "스탬프 받으려면", [["qr", "상담 마치면 스태프에게 내 QR 보여 주기", "18F 내 테이블에서"], ["stamp", "확인되면 프로그램 참여 1개", "17F 강연 · 라운지 · 커피챗 합쳐 최대 2개"]]);   /* 서버 ATT_DUR.cc 40 = 상담을 마칠 때 스캔 */
+      D.need = needBoxHtml("스탬프 받으려면", "스탬프 받으려면", [["qr", "상담 마치면 스태프에게 내 QR 보여 주기", "18F 내 테이블에서"], ["stamp", "종료 때 프로그램 참여 1개", progSrcTxt() + " 합쳐 최대 2개"]]);   /* 261016 (사용자 스태프 QR 정리) 커피챗 종료 스캔 = 1개 */
       D.help = "참여가 어려우면 신청을 취소할 수 있어요"; D.btn = progBtn("내 QR", "qrPanelOpen('mine')") + cx;
       return D;
     }

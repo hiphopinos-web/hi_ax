@@ -143,6 +143,7 @@ var SR_WHY = {
   att: ["17F 오후 강연은 입장 · 끝 QR로 적립돼요", "scan", "다시 스캔"],
   staff: ["체험을 마치면 스태프가 내 QR을 찍어 적립해요", "myqr", "내 QR 보여주기"],   /* v5.97 (261006 감사 상2 · 사용자 D1=A) AX PLAY 부스 코드 = 서버 staff · 오류 연출 없이 안내만(scanResHtml) */   /* v5.94 오후 파트너 강연만 */   /* v4.26 옛 17F 좌석 QR(p3 코드) */
   dwin: ["추첨 체크인 시간이 아니에요", "exp", "확인"],   /* v4.79 창 · 날짜 밖(서버 window · day) */
+  preday: ["행사 당일(10/26) 적립", "exp", "확인"],   /* 261016 (사용자) 행사 전 가드(서버 preday) */
   dclosed: ["체크인이 마감됐어요", "exp", "확인"],   /* v4.81 사회자 마감 뒤(서버 closed · 사용자 결정 261001) */
   retired: ["지금은 쓰지 않는 QR이에요", "scan", "다시 스캔"],   /* v4.83 전시 QR 퀴즈 벽 QR */
   other: ["다시 스캔해 주세요", "scan", "다시 스캔"]
@@ -151,7 +152,7 @@ function srShow(o) {
   SR = Object.assign({ st: "", id: "", name: "", why: "", open: "", test: false, stair: false, n: 0, at: "" }, o);
   if (App.current === "scan_res") App.render(); else App.go("scan_res");
 }
-function stampTitle(id) { var s = stampDef(id); return s ? s.title : id; }   /* 261013 오후 묶음 cc · ln 도 */
+function stampTitle(id) { var s = stampDef(id); return s ? s.title : id === "p3h" || id === "p10" || id === "p10h" ? "프로그램 참여" : id; }   /* 261013 오후 묶음 cc · ln 도 · 261016 17F 한쪽(p3h) · 10F(p10 · p10h) = 프로그램 참여 */
 function srDupPopup(id, name, at, test) {
   notice({ key: "claim:dup:" + id, title: "이미 받음", body: (name || stampTitle(id)) + (at ? " · " + at + " 받음" : "") + (test ? " · 테스트 계정" : ""),
     go: "card:" + id, goLbl: "스탬프 보기" });
@@ -388,9 +389,9 @@ function attSpec() {
     var x = attProg(r.id) || { nm: r.id };
     var more = !r.dup && r.pg === 1 && r.k === "in" && P3_PM.indexOf(r.id) >= 0 && !attShut(x) ? '<p class="ax-meta">끝날 때 화면의 QR을 찍으면 1개 더</p>' : "";   /* v5.94 스탬프는 오후 파트너 강연만 */
     if (!r.stamp && (!attUi(r.id) || r.nost || r.remote)) return { id: "att", title: r.dup ? "이미 기록됐어요" : "출석이 기록됐어요", lead: "<b>" + esc(x.nm) + "</b>",   /* v5.96 오전 강연 · 송출 · 서버 범위 밖(nost) = 기록만 · 스탬프 기대를 만들지 않게 담담하게 · 오류로 만들지 않는다 */
-      body: r.test ? '<p class="ax-meta">테스트 계정 · 테스트 기록</p>' : "", go: "sheetClose()", goLbl: "확인" };
+      body: (r.pre ? '<p class="ax-meta">스탬프 · 행사 당일(10/26) 적립</p>' : "") + (r.test ? '<p class="ax-meta">테스트 계정 · 테스트 기록</p>' : ""), go: "sheetClose()", goLbl: "확인" };
     return { id: "att", title: r.dup ? "이미 출석했어요" : "출석했어요", lead: "<b>" + esc(x.nm) + "</b><br>" + (r.k === "out" ? "끝 " : "입장 ") + esc(r.at) + (r.remote ? " · 유튜브 송출 출석" : ""),
-      body: (r.stamp ? '<div class="ax-inset axs-attok"><p class="ax-card-title">스탬프 「프로그램 참여」 ' + (r.add > 1 ? r.add + "개" : "1개") + ' 적립</p><p class="ax-description">현재 스탬프 ' + r.stamp + " / " + STAMP_DENOM + "개</p></div>" : !r.dup && r.pg >= 2 && P3_PM.indexOf(r.id) >= 0 ? '<p class="ax-meta">프로그램 참여 스탬프 2개 받음</p>' : "") + more +   /* 261013 오후 묶음이 이미 2개(커피챗 · 라운지 · 다른 강연) = 출석만 · 받은 상태 한 줄 */
+      body: (r.stamp ? '<div class="ax-inset axs-attok"><p class="ax-card-title">스탬프 「프로그램 참여」 ' + (r.add > 1 ? r.add + "개" : "1개") + ' 적립</p><p class="ax-description">현재 스탬프 ' + r.stamp + " / " + STAMP_DENOM + "개</p></div>" : r.pre ? '<p class="ax-meta">스탬프 · 행사 당일(10/26) 적립</p>' : !r.dup && r.pg >= 2 && P3_PM.indexOf(r.id) >= 0 ? '<p class="ax-meta">프로그램 참여 스탬프 2개 받음</p>' : "") + (r.pre ? "" : more) +   /* 261013 오후 묶음이 이미 2개(커피챗 · 라운지 · 다른 강연) = 출석만 · 받은 상태 한 줄 */
         (r.test ? '<p class="ax-meta">테스트 계정 · 출석은 테스트 기록 · 스탬프는 이 기기에만</p>' : ""),
       go: "sheetClose()", goLbl: "확인" };
   }
@@ -443,7 +444,7 @@ function attDone(res) {
   if (!m[key]) m[key] = res.at;
   S.set("att_mine", m);
   var sn = attStamp(res);
-  ATT.res = { id: res.prog, at: m[key], dup: !!res.dup, k: k0, remote: !!res.remote, stamp: sn, add: res.stamp && !res.stamp.dry ? res.stamp.add || 0 : sn ? 1 : 0, pg: res.pg || 0, nost: !!res.nost, test: !!res.test };
+  ATT.res = { id: res.prog, at: m[key], dup: !!res.dup, k: k0, remote: !!res.remote, stamp: sn, add: res.stamp && !res.stamp.dry ? res.stamp.add || 0 : sn ? 1 : 0, pg: res.pg || 0, nost: !!res.nost, test: !!res.test, pre: res.no === "preday" };   /* 261016 pre = 서버 preday 가드 · 출석만 기록 */
   attRepaint();
   App.render();   /* 뒤의 강연 상세 · 시간표 행이 출석 상태로 바뀐다 */
 }
@@ -452,10 +453,10 @@ function attDone(res) {
 function attStamp(res) {
   var st = res.stamp;
   if (!st) return 0;
-  var id = st.id === "p3" ? "p3" : STAMP_HALF;
+  var id = st.id === "p3" || st.id === "p10" || st.id === "p10h" ? st.id : STAMP_HALF;   /* 261016 10F 실습 p10 · p10h(att10Done)도 같은 길 */
   if (st.dry) {
     var s0 = S.get("stamps", []);
-    if (s0.indexOf(id) >= 0 || (s0.indexOf("p3") >= 0 ? 2 : s0.indexOf("p3h") >= 0 ? 1 : 0) + (s0.indexOf("ln") >= 0 ? 2 : 0) + (s0.indexOf("cc") >= 0 ? 1 : 0) >= 2) return 0;   /* 261013 오후 묶음(커피챗 · 라운지)으로 이미 2개 · 261013 밤 커피챗만(1개)이면 17F 몫을 더 받는다 */
+    if (s0.indexOf(id) >= 0 || progUnitsOf(s0) >= 2) return 0;   /* 261013 오후 묶음(커피챗 · 라운지)으로 이미 2개 · 261013 밤 커피챗만(1개)이면 17F 몫을 더 받는다 */
     s0.push(id); S.set("stamps", s0);
   }
   else if (st.dup || !st.add) { if (st.stamps) stampSync(st.stamps); return 0; }   /* 이미 받음 · 기록만 = 팝 없음 */
@@ -485,10 +486,16 @@ function att10ByCode(code, s, k) {
   var go = function () { PROG.sid = s.id; App.go("sess_d"); sheetOpen(att10Spec()); att10Go(); };   /* 뒤에는 그 세션 상세 · 시트를 닫으면 출석 상태가 보인다 */
   if (typeof qrGated === "function" && qrGated()) qrGateDefer(go); else go();
 }
+/* 261016 10F 결과 시트 스탬프 칸 · 17F 결과(attSpec)와 같은 모양 · 행사 전 = 한 줄 · 묶음이 이미 2개 = 받은 상태 한 줄 · 테스트(dry) = 이 기기에만 */
+function attStampHtml(r) {
+  if (r.stamp) return '<div class="ax-inset axs-attok"><p class="ax-card-title">스탬프 「프로그램 참여」 ' + (r.add > 1 ? r.add + "개" : "1개") + ' 적립</p><p class="ax-description">현재 스탬프 ' + r.stamp + " / " + STAMP_DENOM + "개</p></div>";
+  if (r.pre) return '<p class="ax-meta">스탬프 · 행사 당일(10/26) 적립</p>';
+  return !r.dup && r.pg >= 2 ? '<p class="ax-meta">프로그램 참여 스탬프 2개 받음</p>' : "";
+}
 function att10Spec() {
   var s = sessById(ATT10.sid) || { ttl: ATT10.sid }, r = ATT10.res, f = ATT10.info;
   if (r) return { id: "att10", title: r.dup ? "이미 기록됐어요" : "출석이 기록됐어요", lead: "<b>" + esc(s.ttl) + "</b> " + att10K() + " 확인 · " + esc(r.at),   /* 261016 담백한 한 줄(기록만) */
-    body: r.test ? '<p class="ax-meta">테스트 계정 · 테스트 기록</p>' : "",
+    body: attStampHtml(r) + (r.test ? '<p class="ax-meta">테스트 계정 · 테스트 기록</p>' : ""),
     go: "sheetClose()", goLbl: "확인" };
   if (f) return { id: "att10", title: f.t, lead: f.l, go: "sheetClose()", goLbl: "확인" };
   var tmRow = testMode() ? '<label class="axs-attt">테스트 · 시각<input type="time" value="' + esc(attTm()) + '" onchange="att10TmSet(this.value)"></label>' : "";
@@ -528,7 +535,8 @@ function att10Done(res) {
   (res.mine || []).forEach(function (y) { if (y && y.id) m[y.k === "out" ? y.id + ".out" : y.id] = y.at; });
   if (!m[key]) m[key] = res.at;
   S.set("att_mine", m);
-  ATT10.res = { at: m[key], dup: !!res.dup, test: !!res.test };   /* 261016 10F 출석 = 기록만(서버 stamp null) */
+  var sn = attStamp(res);   /* 261016 (사용자) 10F 실습 = 입장 1 + 끝 1 스탬프(서버 p10h · p10 · 묶음 「프로그램 참여」) · 행사 전 = 기록만(no preday) */
+  ATT10.res = { at: m[key], dup: !!res.dup, test: !!res.test, stamp: sn, add: res.stamp && !res.stamp.dry ? res.stamp.add || 0 : sn ? 1 : 0, pg: res.pg || 0, pre: res.no === "preday" };
   att10Repaint();
   App.render();   /* 뒤의 세션 상세 · 시간표 · 나의 일정이 출석 상태로 바뀐다 */
 }
@@ -719,7 +727,7 @@ function stairHtml() {
       '<p class="ax-meta">' + stairSec(o.sec) + "</p>" +
       '<section class="ax-card axs-gap12">' + stairGauge(o.total, goal) +
       (got ? '<p class="ax-description">스탬프 ' + Math.min(STAMP_DENOM, stampCount()) + " / " + STAMP_DENOM + " · " + esc(srGoalLine(stampCount())) + "</p>" : "") +
-      (got && o.stamp.dry ? '<p class="ax-meta">테스트 계정 · 서버 적립 없음</p>' : "") + "</section>" +
+      (got && o.stamp.dry ? '<p class="ax-meta">테스트 계정 · 서버 적립 없음</p>' : "") + (o.stamp && o.stamp.no === "preday" ? '<p class="ax-meta">계단 스탬프 · 행사 당일(10/26) 적립</p>' : "") + "</section>" +   /* 261016 행사 전 가드 */
       '<button type="button" class="ax-link axs-plain axs-self" onclick="stairReclassOpen()">종료가 아니라 새로 시작이에요</button>',
       btn: ax2Btn(got ? "스탬프 확인하기" : "확인", got ? "expStamp('st')" : "App.tab('exp')") };
   }
@@ -952,7 +960,7 @@ function qrMineCheck() {
   }
   if (!a.ru && b.ru) msg = "룰렛 1회 사용 · 지금 돌리세요";
   var nst = (b.st || []).filter(function (x) { return (a.st || []).indexOf(x) < 0; });   /* v5.98 스태프 적립(AX PLAY · 체크인 3개) */
-  if (nst.length) msg = nst.indexOf("ck") >= 0 ? "사전등록 체크인 · 스탬프 3개" : stampTitle(nst[nst.length - 1]) + " 스탬프 적립";
+  if (nst.length) msg = stampTitle(nst[nst.length - 1]) + " 스탬프 적립";   /* 261016 ck 3개 폐지 */
   if (a.fq !== "done" && b.fq === "done") msg = "선착순 참여상 수령";
   if (!msg) return;
   QRM.snap = b; QRM.msg = msg; QRM.until = Date.now() + 90000;
@@ -1085,51 +1093,30 @@ function qrCamStop() {
 
 
 /* ═══ 운영자 · 현장 스캔 ═══
- * v4.15 (사용자 확정 260922) 스탬프 · 입장 · 포토부스 체크를 한 화면에서 · 담당 위치를 고르면 찍는 순간 그 위치의 처리를 한다(동작 고르기 폐지).
- *   sess     = 10F 세션 입장(sess_in) · 세션 id 는 백엔드 SESS_META 와 같아야 한다(창 검증이 그 표를 본다 · 검사 17절)
- *              v4.26 17F 는 운영자 입장 스캔에서 뺐다 · 참가자가 대강당 입구 QR 로 출석한다(ATT_17F · att_claim)
- *   roster   = DAP 과제상담 · AX 커피챗 신청 명단에서 입장 처리(staff_mark in)
- *   photo    = 포토부스 입장 + 다음 대기 번호 호출(photo_enter) · 건너뛰기(노쇼)는 콘솔
- *   stamp    = 현장 스탬프 적립(stamp_grant · 부스 QR 이 안 될 때)
- *   roulette = 1F 이벤트존 룰렛 차감(roulette_redeem · 스탬프 3개 · 1인 1회)
- * 옛 퇴장 체크아웃(쿠폰 폐기) · 상담 · 커피챗 현장 대기열(q_take · q_call · q_done)은 폰에서 뺐다. 서버 액션은 그대로 둔다. */
-/* v4.71 lb = 타일 이름 · tsub = 타일 아래 한 줄 · will = 「지금 찍으면」 뒤 결과 · cond = 조건 한 줄 · 드롭다운 묶음(입장 · 포토부스 · 스탬프)은 타일(SCAN_TILES)로 바뀌었다 */
+ * v4.15 (사용자 확정 260922) 담당 위치를 고르면 찍는 순간 그 위치의 처리를 한다(동작 고르기 폐지).
+ * 261016 (사용자 스태프 QR 정리) 스태프 폰이 찍는 일 = 6칸
+ *   roulette = 1F EVENT 룰렛 체크인(roulette_redeem · 스탬프 3개 · 1인 1회)
+ *   p2       = AX PLAY 스탬프(stamp_grant · Hi-Helper · HiDI-Q 체험이 끝난 뒤)
+ *   dap      = AX 라운지 체크인(staff_mark prog dap · mark in · 출석만 · 스탬프 없음)
+ *   dapout   = AX 라운지 종료(staff_mark prog dap · mark out · 스탬프 2개)
+ *   ccout    = 18F 커피챗 종료(staff_mark prog cchat · mark out · 스탬프 1개)
+ *   gate     = 1F 주차장 체크인존 한 칸(ck_gate · 키트 + 선착순 참여상을 함께 판정 · 지급 기록)
+ * 걷은 칸 = 체크인 접수 번호표(ck_ticket) · A~E 창구 · 옛 키트(inv_kit) · 참여상 칸(fcfs_give) · 10F 세션 입장(sess_in) · 포토부스(photo_enter) · 커피챗 참석 확인 · 서버 액션은 그대로 둔다 */
+/* v4.71 lb = 타일 이름 · tsub = 타일 아래 한 줄 · will = 「지금 찍으면」 뒤 결과 · cond = 조건 한 줄 · prog · mark = 서버 staff_mark 값 */
 var SCAN_SPOTS = [
-  { id: "fld", nm: "10F 세션 A", kind: "sess", lb: "세션 A", will: "10F 세션 A 입장 처리" },
-  { id: "ta", nm: "10F 세션 B", kind: "sess", lb: "세션 B", will: "10F 세션 B 입장 처리" },
-  { id: "tb", nm: "10F 세션 C", kind: "sess", lb: "세션 C", will: "10F 세션 C 입장 처리" },
-  { id: "aws", nm: "10F 세션 D", kind: "sess", lb: "세션 D", will: "10F 세션 D 입장 처리" },
-  { id: "ms1", nm: "10F 세션 E 1회차", kind: "sess", lb: "세션 E 1회차", will: "10F 세션 E 1회차 입장 처리" },
-  { id: "ms2", nm: "10F 세션 E 2회차", kind: "sess", lb: "세션 E 2회차", will: "10F 세션 E 2회차 입장 처리" },
-  /* 261013 (사용자 「권장대로」) 라운지 · 커피챗 자리 = 참석 확인 + 스탬프(라운지 2개 · 커피챗 1개 · 서버 staff_mark in · attAward_) · 승인 · 선정된 줄 · 그 시간만(서버가 거절 nomatch · noshow · time) */
-  { id: "dap", nm: "1F AX 라운지", kind: "roster", lb: "AX 라운지 참석", tsub: "참석 확인 · 스탬프 2개", will: "AX 라운지 참석 확인", cond: "승인된 상담 · 상담 시간", su: 2 },
-  { id: "cchat", nm: "18F AX 커피챗", kind: "roster", lb: "커피챗 참석", tsub: "참석 확인 · 스탬프 1개", will: "커피챗 참석 확인", cond: "선정된 사람 · 내 회차", su: 1 },   /* 261013 오후 1개 → 2개(프로그램 참여 묶음) · 261013 밤 (사용자 확정) 1개로 되돌림(아이디어 한 줄 1개 › 참석 확인 1개) */
-  { id: "q_photo", nm: "1F AI 포토부스", kind: "photo", lb: "포토부스 입장", tsub: "다음 번호 호출", will: "포토부스 입장 · 다음 번호 호출", cond: "앱에서 받은 대기 번호" },   /* 번호는 참가자가 앱에서 받는다 · 찍으면 입장 + 다음 호출 */
-  /* v4.83 (261001) 1F 전시(p1) 스탬프 폐지 · AX PLAY(p2) = 체험 뒤 스태프가 참가자 내 QR 을 찍어 적립(스탬프 4) */
-  { id: "p2", nm: "AX PLAY", kind: "stamp", lb: "AX PLAY 스탬프", tsub: "체험 확인 · 적립", will: "AX PLAY 스탬프 적립", cond: "HiDI-Q 또는 Hi-Helper 체험을 마친 사람" },
   { id: "roulette", nm: "1F EVENT 룰렛", kind: "roulette", lb: "룰렛 체크인", tsub: "1회 사용", will: "룰렛 1회 사용", cond: "스탬프 3개 이상 · 1인 1회" },   /* 260909 · 스탬프 3개=1회, 판정은 서버 */
-  /* v5.34 (설계안 §10 결정 2) 사옥 밖 체크인 존(몽골텐트) · 찍으면 체크인 + 키트 지급 기록(inv_kit) · 10F 입장(sess_in)과 따로 */
-  { id: "kit", nm: "체크인 존 · 키트", kind: "kit", lb: "체크인 존 · 키트", tsub: "체크인 + 지급", will: "체크인 + 키트 지급", cond: "사전 신청 명단이면 바로 지급" },
-  /* v5.90 (261006 경품 기획 변경) 1F 체크인존 · 선착순 참여상 수령(fcfs_give · QR 서명) · 키트 타일과 같은 모양 */
-  { id: "fcfs", nm: "체크인 존 · 참여상", kind: "fcfs", lb: "체크인 존 · 참여상", tsub: "선착순 수령", will: "선착순 참여상 수령", cond: "스탬프 6개 · 남은 수량 안에서 먼저 온 순서" },   /* v5.98 받기 선착순 */
-  /* 261007 체크인존 번호표 · 창구(사용자 261006 밤 확정 · 기획 「디자인 시안/체크인존 운영」) · 접수 = 번호 발급(ck_ticket) · 창구 A ~ D = 키트 지급(inv_kit win · 다른 창구 사이즈 · 명단 밖이면 안내만)
-     · E = 명단 밖 · 교환(예전 키트 자리와 같은 처리) · 타일 목록에서는 「kit」 자리를 이 여섯 개로 펼친다(SCAN_CK_TILES · 옛 kit 자리가 기억된 폰은 그대로 돈다) */
-  { id: "ckin", nm: "체크인 접수", kind: "ckin", lb: "체크인 접수", tsub: "번호표 발급", will: "번호표 발급 · 창구 안내", cond: "사전등록 명단 · 사이즈로 창구가 정해져요" },
-  { id: "kA", nm: "체크인 A 창구", kind: "kit", win: "A", lb: "A 창구", tsub: "키트 지급", will: "A 창구 키트 지급", cond: "번호와 상관없이 찍으면 지급 · 다른 사이즈는 안내" },
-  { id: "kB", nm: "체크인 B 창구", kind: "kit", win: "B", lb: "B 창구", tsub: "키트 지급", will: "B 창구 키트 지급", cond: "번호와 상관없이 찍으면 지급 · 다른 사이즈는 안내" },
-  { id: "kC", nm: "체크인 C 창구", kind: "kit", win: "C", lb: "C 창구", tsub: "키트 지급", will: "C 창구 키트 지급", cond: "번호와 상관없이 찍으면 지급 · 다른 사이즈는 안내" },
-  { id: "kD", nm: "체크인 D 창구", kind: "kit", win: "D", lb: "D 창구", tsub: "키트 지급", will: "D 창구 키트 지급", cond: "번호와 상관없이 찍으면 지급 · 다른 사이즈는 안내" },
-  { id: "kE", nm: "체크인 E 창구", kind: "kit", win: "E", lb: "E 창구", tsub: "명단 밖 · 교환", will: "E 창구 · 명단 확인 · 지급", cond: "명단 밖 · 라운지 초과 · 사이즈 교환" }
+  /* v4.83 (261001) AX PLAY(p2) = 체험 뒤 스태프가 참가자 내 QR 을 찍어 적립(스탬프 4) */
+  { id: "p2", nm: "AX PLAY", kind: "stamp", lb: "AX PLAY 스탬프", tsub: "체험 확인 · 적립", will: "AX PLAY 스탬프 적립", cond: "HiDI-Q 또는 Hi-Helper 체험을 마친 사람" },
+  { id: "dap", nm: "1F AX 라운지", kind: "roster", prog: "dap", mark: "in", lb: "라운지 체크인", tsub: "출석 확인", will: "AX 라운지 체크인 · 출석", cond: "승인된 상담 · 상담 시간 · 스탬프는 종료 때" },
+  { id: "dapout", nm: "1F AX 라운지", kind: "roster", prog: "dap", mark: "out", lb: "라운지 종료", tsub: "스탬프 2개", will: "라운지 종료 · 스탬프 2개", cond: "승인된 상담 · 상담 끝 시간", su: 2 },
+  { id: "ccout", nm: "18F AX 커피챗", kind: "roster", prog: "cchat", mark: "out", lb: "커피챗 종료", tsub: "스탬프 1개", will: "커피챗 종료 · 스탬프 1개", cond: "선정된 사람 · 내 회차 끝", su: 1 },
+  { id: "gate", nm: "1F 주차장 체크인존", kind: "gate", lb: "체크인존", tsub: "키트 · 선착순 참여상", will: "받을 것 확인 · 지급 기록", cond: "키트와 선착순 참여상을 함께 판정" }
 ];
-/* v6.00 (사용자 261006 밤 「10층은 출석 확인 없다」) 스태프 스캔 자리 · 관리자 모드 QR 스캔에서 10F 세션 A~E 입장 자리를 숨긴다(표시만 · SCAN_SPOTS · sess_in · 서버 SESS_META 는 그대로 · 되살리려면 true)
- *   이 폰에 10F 세션 자리가 기억돼 있으면 비운다(자리 고르기부터) */
-var SCAN_10F_UI = false;
-var SCAN_TILES = ["roulette", "kit", "fcfs", "p2", "dap", "cchat", "sess"];   /* 자주 쓰는 룰렛 · 포토 · 스탬프(AX PLAY)가 위 · 10F 세션은 한 타일에서 A~E · v4.83 1F 전시 타일 삭제 */
-var SCAN_CK_TILES = ["ckin", "kA", "kB", "kC", "kD", "kE"];   /* 261007 「kit」 타일 자리 = 체크인 접수 + 창구 A ~ E */
-function scanTileIds() { var o = []; SCAN_TILES.forEach(function (id) { if (id === "kit") o.push.apply(o, SCAN_CK_TILES); else o.push(id); }); return o; }
+var SCAN_TILES = ["roulette", "p2", "dap", "dapout", "ccout", "gate"];
+function scanTileIds() { return SCAN_TILES.slice(); }
 function scanSpot(id) { return SCAN_SPOTS.filter(function (s) { return s.id === id; })[0] || null; }
-var SCAN = { spot: S.get("scan_spot", "") !== "q_photo" ? S.get("scan_spot", "") : "", log: [], last: "", lastT: 0, on: false, pick: false, sub: "", res: null };
-if (!SCAN_10F_UI && (scanSpot(SCAN.spot) || {}).kind === "sess") SCAN.spot = "";   /* v6.00 옛 기기에 남은 10F 세션 자리 */
+var SCAN = { spot: S.get("scan_spot", ""), log: [], last: "", lastT: 0, on: false, pick: false, sub: "", res: null };
+if (SCAN.spot && !scanSpot(SCAN.spot)) { SCAN.spot = ""; S.put("scan_spot", ""); }   /* 261016 조용히 저장(S.put · 읽는 중이라 다시 그리지 않는다) · 옛 칸(체크인 접수 · 창구 · 키트 · 참여상 · 10F 세션 · 포토부스 · 커피챗 참석)이 기억된 폰 = 비우고 자리 고르기부터 */
 
 function scanPick(id) { scanStop(); SCAN.spot = scanSpot(id) ? id : ""; SCAN.last = ""; SCAN.lastE = ""; S.set("scan_spot", SCAN.spot); App.render(); }   /* v4.65 위치를 바꾸면 3초 중복 가드도 푼다(같은 사람을 다른 위치에서 곧바로) */
 function scanStart() {
@@ -1152,23 +1139,19 @@ function scanHit(raw) {
   if (!BE.on) { scanLog(emp, "서버 미연결 · 기록되지 않음", false); scanShow("bad", emp, "기록되지 않았어요", "서버에 연결되지 않았어요"); return; }
   if (sp.kind === "roulette" && S.get("roulette_out", false)) { scanLog(emp, "룰렛 소진 · 차감하지 않았어요", false); scanShow("bad", emp, "룰렛 소진", "차감하지 않았어요"); beSync(); return; }   /* v4.65 옛 서버는 소진이어도 차감한다 · 운영자가 방금 풀었을 수 있으니 곧바로 한 번 새로 받는다(다음 스캔부터 반영) */
   var params = admA({ emp: emp, qr: String(raw).trim() });   /* v4.67 찍은 글자 그대로 · 서버가 서명 · 시간을 본다(콘솔 · 담당자 적립은 qr 없음) */
-  if (sp.kind === "sess") { params.action = "sess_in"; params.sess = sp.id; }
-  else if (sp.kind === "roster") { params.action = "staff_mark"; params.prog = sp.id; params.mark = "in"; }
-  else if (sp.kind === "photo") params.action = "photo_enter";
+  if (sp.kind === "roster") { params.action = "staff_mark"; params.prog = sp.prog; params.mark = sp.mark; }   /* 261016 라운지 체크인(in · 출석만) · 라운지 종료 · 커피챗 종료(out · 스탬프) */
   else if (sp.kind === "stamp") { params.action = "stamp_grant"; params.id = sp.id; }
-  else if (sp.kind === "kit") params.action = "inv_kit";   /* v5.34 */
-  else if (sp.kind === "fcfs") params.action = "fcfs_give";   /* v5.90 */
-  else if (sp.kind === "ckin") params.action = "ck_ticket";   /* 261007 체크인 접수 · 번호표 */
+  else if (sp.kind === "gate") params.action = "ck_gate";   /* 261016 체크인존 한 칸 */
   else params.action = "roulette_redeem";
-  if (sp.win) params.win = sp.win;   /* 261007 창구 A ~ E · 서버가 사이즈 창구를 본다 */
   scanLog(emp, "처리 중", null);
   scanShow("wait", emp, "확인하는 중", sp.will || sp.nm);
   admCall(params, function (res) { scanDone(emp, sp, res); },
     function () { scanLog(emp, "서버 응답 없음 · 다시 찍어 주세요", false, true); scanShow("bad", emp, "서버 응답 없음", "다시 찍어 주세요"); SCAN.last = ""; SCAN.lastE = ""; });
 }
+/* 261016 (사용자 「행사 당일에 적립 · 지금은 기록 없음」) 행사 전 가드(서버 preday) · 스태프 폰 결과 띠 문구 한 곳 */
+var SCAN_PREDAY = "행사 당일에 적립 · 지금은 기록 없음";
 function scanDone(emp, sp, res) {
-  if (sp.kind === "ckin" && res && res.ok) { ckinDone(emp, res); return; }   /* 261007 */
-  if (sp.kind === "kit" && res && res.reason === "win") { kitWinDone(emp, res); return; }   /* 261007 다른 창구 · 명단 밖 = 안내만(지급 안 함) */
+  if (sp.kind === "gate" && res && res.ok) { gateDone(emp, res); return; }   /* 261016 */
   if (!res || !res.ok) {
     var why = res && res.reason;
     /* 시트 잠금 충돌은 실패가 아니라 「지금 붐빔」이다(실측). 담당자가 다시 찍으면 되므로 「처리 실패」로 말하지 않는다 */
@@ -1181,59 +1164,54 @@ function scanDone(emp, sp, res) {
     }
     if (why === "auth") { var lm = admLostMsg(); scanLog(emp, lm + " · 다시 입력해 주세요", false, true); scanShow("bad", emp, lm, "다시 입력해 주세요"); admAuthLost(); return; }   /* v4.65 */
     var nm = res && res.name && (sp.kind !== "stamp" || /^qr/.test(why || "")) ? res.name + " · " : "";   /* stamp_grant 의 name 은 스탬프 이름 · QR 거절의 name 은 참가자 이름 */
+    var cc = sp.prog === "cchat", out = sp.mark === "out";
     var msg = why === "locked" ? admLockedMsg(res) :
+      why === "preday" ? SCAN_PREDAY :   /* 261016 행사 전 가드 */
       why === "qrexp" ? "지난 QR이에요 · 참가자 폰에서 내 QR을 다시 열어 주세요" :   /* v4.67 캡처 · 시계가 크게 틀린 폰 */
       why === "qr" ? "확인할 수 없는 QR이에요 · 참가자 폰에서 내 QR을 다시 열어 주세요" :
       why === "qrold" ? "옛 QR이에요 · 참가자 앱을 새로 고친 뒤 다시 찍어 주세요" :
       why === "out" ? "룰렛 소진 · 차감하지 않았어요" :
-      why === "window" ? "지금은 입장 시간이 아니에요 (" + (res.open || "") + ")" :
-      why === "notfound" ? (sp.kind === "photo" ? "대기 번호가 없어요 · 앱에서 번호 받기 안내" : sp.id === "cchat" ? "선정 명단에 없어요" : sp.id === "dap" ? "승인된 상담이 없어요" : "신청 명단에 없어요") :
-      why === "nomatch" ? (sp.id === "cchat" ? "아직 선정 전이에요" : "아직 승인 전 상담이에요") :   /* 261013 참석 확인 거절 */
+      why === "notfound" ? (cc ? "선정 명단에 없어요" : sp.prog === "dap" ? "승인된 상담이 없어요" : "신청 명단에 없어요") :
+      why === "nomatch" ? (cc ? "아직 선정 전이에요" : "아직 승인 전 상담이에요") :   /* 261013 참석 확인 거절 */
       why === "noshow" ? "노쇼 상태인 상담이에요 · 콘솔에서 바꿔 주세요" :
-      why === "time" ? (sp.id === "cchat" ? res.at + " 회차예요 · 지금은 참석 확인 시간이 아니에요" : res.at + " 상담이에요 · 지금은 참석 확인 시간이 아니에요") :
-        why === "skipped" ? res.no + "번은 건너뛴 번호예요 · 새 번호 받기 안내" :
-          why === "already" ? res.no + "번은 이미 입장 처리됐어요" :
-            why === "need" ? "스탬프 3개 미만 · 차감 불가 (현재 " + (res.n || 0) + "개)" :
-              why === "used" ? "이미 룰렛을 돌린 참가자예요" :
-                why === "spare0" ? "여유 키트 없음 · 룰렛 굿즈로 대체" :
-                /unknown action/i.test(err) ? "서버 갱신 전 · 기록되지 않음" :
-                why === "auth" ? "관리코드가 맞지 않아요 · 관리자 모드를 다시 열어 주세요" :
-                why === "console" ? "이 처리는 콘솔에서 해요 · 운영 본부에 알려 주세요" :   /* v6.83 (묶음 18) 스태프 코드 허용 목록 밖 · 코드는 지우지 않는다 */
-                  "처리하지 못했어요" + (why || err ? " (" + (why || err.slice(0, 40)) + ")" : "");
-    scanLog(emp, nm + msg, false, true);
+      why === "time" ? (res.at || "") + (cc ? " 회차예요" : " 상담이에요") + " · 지금은 " + (out ? "종료" : "체크인") + " 확인 시간이 아니에요" + (res.open ? " (" + res.open + ")" : "") :
+      why === "dup" ? "이미 처리됐어요" :
+      why === "need" ? "스탬프 3개 미만 · 차감 불가 (현재 " + (res.n || 0) + "개)" :
+      why === "used" ? "이미 룰렛을 돌린 참가자예요" :
+      /unknown action/i.test(err) ? "서버 갱신 전 · 기록되지 않음" :
+      why === "console" ? "이 처리는 콘솔에서 해요 · 운영 본부에 알려 주세요" :   /* v6.83 (묶음 18) 스태프 코드 허용 목록 밖 · 코드는 지우지 않는다 */
+        "처리하지 못했어요" + (why || err ? " (" + (why || err.slice(0, 40)) + ")" : "");
+    scanLog(emp, nm + msg, why === "preday" ? null : false, true);
     var big = scanBig(why, sp, res, err);
+    if (why === "preday") SCAN.bd = { c: "dup", t: SCAN_PREDAY, s: sp.nm };
     scanShow(big[0], nm ? nm.slice(0, -3) : emp, big[1], big[2]);
     return;
   }
-  if (sp.kind === "kit") { kitDone(emp, res); return; }   /* v5.34 */
-  if (sp.kind === "fcfs") { fcfsDone(emp, res); return; }   /* v5.90 */
-  /* 261013 오후 au = 이번에 늘어난 프로그램 참여 개수(서버 att.u · 묶음이 이미 2개면 0 · 옛 서버는 칸 개수) · -1 = 스탬프 정보 없음 */
-  var au = sp.kind === "roster" && res.att && !res.att.dup ? (res.att.u != null ? Number(res.att.u) : sp.su || 1) : -1;
-  var ok = sp.kind === "roster" ? (res.dup ? "이미 참석 확인됨" : "참석 확인" + (au > 0 ? " · 스탬프 " + au + "개" : au === 0 ? " · 프로그램 참여 이미 2개" : "")) :   /* 261013 */
-    sp.kind === "sess" ? (res.dup ? "이미 입장 처리됨" : "입장 확인") :
-    sp.kind === "photo" ? res.no + "번 입장" + (res.early ? "(순서보다 먼저)" : "") + " · " + (res.next ? res.next.no + "번 호출" : "대기 번호 없음") :
-      sp.kind === "stamp" ? (res.dup ? "이미 받은 스탬프" : "스탬프 적립 · " + sp.nm) :
-        "룰렛 1회 차감 · 바로 돌리세요 (스탬프 " + (res.n || "") + "개)";
+  /* 261016 종료 칸 = 서버 att { u(이번에 늘어난 프로그램 참여 개수) · n(지금 개수) · dup · no(preday = 행사 전 · 기록 없음) } · 체크인 칸 = 출석만(att 없음) */
+  var ro = sp.kind === "roster", rout = ro && sp.mark === "out", att = res.att || null, pre = rout && !!att && att.no === "preday";
+  var au = rout && att && !att.dup && !att.no ? (att.u != null ? Number(att.u) : sp.su || 1) : -1;
+  var ok = ro ? (rout ? (res.dup ? "이미 종료 확인" : "종료 확인" + (pre ? " · " + SCAN_PREDAY : au > 0 ? " · 스탬프 " + au + "개" : au === 0 ? " · 프로그램 참여 이미 2개" : "")) : res.dup ? "이미 체크인" : "체크인 · 출석 확인") :
+    sp.kind === "stamp" ? (res.dup ? "이미 받은 스탬프" : "스탬프 적립 · " + sp.nm) :
+      "룰렛 1회 차감 · 바로 돌리세요 (스탬프 " + (res.n || "") + "개)";
   var who = sp.kind === "stamp" ? res.who || "" : res.name || "";   /* v4.65 stamp_grant name = 스탬프 이름 · 참가자 이름은 who(새 서버) */
   scanLog(emp, (who ? who + " · " : "") + ok, true, true);
   var dup = !!res.dup;
   /* v5.98 스태프 스캔 화면 결과 띠(sscBand) 문구 · 스탬프 = 「AX PLAY 적립 · 스탬프 n / 6」 · 룰렛 = 주황 「룰렛 1회 사용 · 남은 0」 */
   if (sp.kind === "stamp") SCAN.bd = dup ? { t: "이미 받음", s: sp.nm } : { t: sp.nm + " 적립", s: res.n ? "스탬프 " + res.n + " / 6" : "" };
   else if (sp.kind === "roulette") SCAN.bd = { c: "roul", t: "룰렛 1회 사용 · 남은 0", s: "스탬프 " + (res.n || "") + "개 · 바로 돌리세요" };
-  else if (sp.kind === "roster") SCAN.bd = dup ? { t: "이미 참석 확인", s: sp.nm } : { t: "참석 확인", s: (au === 0 ? "프로그램 참여 이미 2개" : "스탬프 +" + (au > 0 ? au : sp.su || 1)) + (res.att && res.att.n != null ? " · 지금 " + res.att.n + " / 6" : "") + (res.att && res.att.dup ? " · 이미 받은 스탬프" : "") };   /* 261013 띠 = 짧게(이름이 앞에 붙는다) · 오후 묶음이 이미 2개면 「프로그램 참여 이미 2개」 */
-  scanShow(dup ? "dup" : "ok", who || emp,
-    sp.kind === "roster" ? (dup ? "이미 참석 확인됨" : "참석 확인 완료") :   /* 261013 */
-    sp.kind === "sess" ? (dup ? "이미 입장 처리됨" : "입장 완료") :
-      sp.kind === "photo" ? res.no + "번 입장 완료" :
-        sp.kind === "stamp" ? (dup ? "이미 받은 스탬프" : "스탬프 적립 완료") : "룰렛 체크인 완료",
-    sp.kind === "photo" ? (res.next ? "다음 " + res.next.no + "번 호출" : "대기 번호 없음") + (res.early ? " · 순서보다 먼저" : "") :
-      sp.kind === "roulette" ? "스탬프 " + (res.n || "") + "개 · 바로 돌리세요" : sp.nm);
+  else if (rout) SCAN.bd = dup ? { t: "이미 종료 확인", s: sp.nm } : pre ? { c: "dup", t: "종료 확인", s: SCAN_PREDAY } :
+    { t: "종료 확인", s: (au === 0 ? "프로그램 참여 이미 2개" : "스탬프 +" + (au > 0 ? au : sp.su || 1)) + (att && att.n != null ? " · 지금 " + att.n + " / 6" : "") + (att && att.dup ? " · 이미 받은 스탬프" : "") };   /* 261013 띠 = 짧게(이름이 앞에 붙는다) */
+  else if (ro) SCAN.bd = dup ? { t: "이미 체크인", s: sp.nm } : { t: "체크인", s: "출석 확인 · 스탬프는 종료 때" };
+  scanShow(dup || pre ? "dup" : "ok", who || emp,
+    ro ? (rout ? (dup ? "이미 종료 확인됨" : "종료 확인 완료") : dup ? "이미 체크인됨" : "체크인 완료") :
+      sp.kind === "stamp" ? (dup ? "이미 받은 스탬프" : "스탬프 적립 완료") : "룰렛 체크인 완료",
+    sp.kind === "roulette" ? "스탬프 " + (res.n || "") + "개 · 바로 돌리세요" : pre ? SCAN_PREDAY : sp.nm);
   if (sp.kind === "roulette" && !dup) invRoulStart(emp);   /* v5.34 결과 화면에 5등급 버튼 */
 }
 /* ═══ v5.34 경품 · 재고 · 스태프 폰 (설계 「디자인 시안/경품 재고/앱_명세.md」 · 설계안 §10 · 사용자 261003) ═══
  * 새 탭 · 새 메뉴 없음(260930 「스캔 · 혼잡 제보만 크게」) · 참가자 화면에는 아무것도 없다 · 품목은 「키트」로만 · 가격 없음.
  * ① 룰렛 결과 화면 5등급 버튼(inv_roulette · qr 없이) · 안 눌러도 다음 스캔으로 넘어간다(콘솔 「등급 미입력」) · 누르면 5초 「취소」(undo=1 · 서버 2분)
- * ② 체크인 존 · 키트 타일(inv_kit) · 명단 = 지급 · 이미 = 시각 · 명단 밖 = 「키트 지급」 · 「지급 안 함」 · 여유 0 = spare0
+ * ② (261016 걷음) 옛 체크인 존 · 키트 타일(inv_kit) · 명단 밖 「키트 지급」 단추 = 체크인존 한 칸(ck_gate · gateDone)으로
  * ③ 「재고 · 박스 열기」 작은 링크 → 시트(inv_left box · inv_box · inv_undo) · 박스당 수량이 없으면 흐리게
  * 옛 서버(unknown action)면 버튼을 숨기고 한 줄 · 실패해도 룰렛 차감 · 체크인은 이미 끝난 일이다 */
 var INV_RG_LB = ["1등 텀블러", "2등 커피 + 키링", "3등 컵받침", "4등 판스티커", "5등 볼펜"];
@@ -1289,96 +1267,45 @@ function invLeftHtml(x) {
   var low = x.q ? x.left <= x.q * 0.1 : x.left <= 0;
   return '<small' + (low ? ' class="low"' : "") + ">남은 " + Number(x.left) + "</small>";
 }
-function invKitGive() {
-  if (INVS.busy || !invMine()) return;
-  INVS.busy = true; INVS.msg = ""; invPaint();
-  var id = INVS.id, emp = INVS.emp;
-  admCall(admA({ action: "inv_kit", emp: emp, give: "1" }), function (r) {
-    if (INVS.id !== id) return;
-    INVS.busy = false;
-    if (invAuth(r)) return;
-    var R = SCAN.res;
-    if (r && r.ok && r.kit === "give") {
-      R.tone = "ok"; R.head = "키트 지급"; R.sub = "여유 키트에서" + (r.spare != null ? " · 남은 " + r.spare : ""); R.inv = "kitdone";
-      INVS.rid = String(r.rid || ""); INVS.rt = Date.now(); stampBuzz(60);
-      sscShow("ok", r.name || emp, "키트 지급", R.sub);   /* v5.98 스태프 스캔 화면 띠 · 오늘 처리 수 */
-      scanLog(emp, (r.name ? r.name + " · " : "") + "키트 지급(명단 밖)", true);
-      setTimeout(function () { if (INVS.id === id && invMine()) invPaint(); }, 5100);
-    } else if (r && r.reason === "spare0") { R.tone = "bad"; R.head = "여유 키트 없음"; R.sub = "룰렛 굿즈로 대체해 주세요"; R.inv = ""; stampBuzz([120, 80, 120]); }
-    else if (r && r.ok && r.kit === "dup") { R.tone = "dup"; R.head = "이미 지급됨"; R.sub = (r.at || "") + "에 받았어요"; R.inv = ""; }
-    else INVS.msg = r && r.reason === "locked" ? admLockedMsg(r) : "기록하지 못했어요 · 다시 눌러 주세요";
-    if (invMine() || SCAN.res === R) invPaint();
-  }, function () { if (INVS.id !== id) return; INVS.busy = false; INVS.msg = "서버 응답 없음 · 다시 눌러 주세요"; if (invMine()) invPaint(); });
+/* ═══ 261016 (사용자 스태프 QR 정리) 체크인존 한 칸 · ck_gate 결과 ═══
+ * 서버 { kit: { st give | dup | sub | none, pool kit | staff, sz, no, ckno, at, sub, reason nolist }, fcfs: { st give | dup | none, rk, at, reason, start, cut }, give: [kit | sub | fcfs] }
+ * 찍으면 받을 것을 줄마다 크게 · 키트 사이즈(A~D · 실제 사이즈) · 포장 번호(ckno · 스태프 의류는 신청번호) · 선착순 참여상 N번 · 이미 받음 · 사유
+ * 카메라 위 띠 = 키트 사이즈 글자 아주 크게(없으면 참여상 번호) + 두 줄 · 다음 사람까지 3배 길게 · 아래 결과 판 = 같은 줄 목록 */
+var GATE_FC = { norank: "스탬프 6개 전", full: "선착순 마감", void: "자격 취소 · 운영 본부 문의", off: "지금은 지급하지 않아요", test: "테스트 계정 · 기록 안 함", out: "모두 나감" };
+function gateKitRow(k) {
+  if (!k) return null;
+  var lb = k.sz ? kitLbl(k.sz) : "", sz = lb ? lb + (lb !== k.sz ? "\u00A0(" + k.sz + ")" : "") : "사이즈 미정", no = k.ckno || (k.pool === "staff" ? k.no || "" : ""), nm = k.pool === "staff" ? "스태프 의류 " : "키트 ";
+  if (k.st === "give") return ["ok", nm + sz + (no ? " · " + no : "") + " 지급"];
+  if (k.st === "sub") return ["ok", "가습기로 대체 지급 · 라운지 초과"];
+  if (k.st === "dup") return ["dup", (k.sub ? "가습기 " : nm) + "이미 받음" + (k.at ? " · " + k.at : "")];
+  if (k.reason === "nolist") return ["dup", "키트 · 명단 밖"];   /* 띠 한 줄(이름 · 키트 · 명단 밖) */
+  return ["bad", "키트 확인 못 함" + (k.reason ? " (" + k.reason + ")" : "")];
 }
-function invKitSkip() { if (!invMine()) return; SCAN.res.inv = ""; SCAN.res.sub = "체크인만 기록했어요"; invPaint(); }
-function invKitUndo() {
-  if (INVS.busy || !INVS.rid || !invMine()) return;
-  INVS.busy = true; invPaint();
-  var id = INVS.id;
-  admCall(admA({ action: "inv_undo", rid: INVS.rid }), function (r) {
-    if (INVS.id !== id) return;
-    INVS.busy = false;
-    if (invAuth(r)) return;
-    var R = SCAN.res;
-    if (r && r.ok) { INVS.rid = ""; R.tone = "dup"; R.head = "지급 취소"; R.sub = "체크인만 남았어요"; R.inv = ""; scanLog(INVS.emp, "키트 지급 취소", null); }
-    else INVS.msg = "취소하지 못했어요 · 콘솔에서 되돌려 주세요";
-    invPaint();
-  }, function () { if (INVS.id !== id) return; INVS.busy = false; INVS.msg = "서버 응답 없음 · 콘솔에서 확인해 주세요"; if (invMine()) invPaint(); });
+function gateFcRow(f) {
+  if (!f) return null;
+  if (f.st === "give") return ["ok", "선착순 참여상 " + (f.rk ? f.rk + "번 " : "") + "지급"];
+  if (f.st === "dup") return ["dup", "참여상 이미 받음" + (f.at ? " · " + f.at : "")];
+  var r = f.reason;
+  return ["dup", r === "early" ? "참여상 " + (f.start || "10:30") + "부터 지급" : r === "late" ? "참여상 " + (f.cut || "17:00") + " 지급 마감" : "참여상 · " + (GATE_FC[r] || r || "확인 못 함")];
 }
-/* v5.90 선착순 참여상 수령 결과 · new 수령 처리 · dup 이미 수령 · none(noelig 6개 미달 · full 마감 · closed 17:00 뒤 · void 취소 · off 꺼짐) */
-function fcfsDone(emp, res) {
-  var who = res.name || emp, lf = res.left != null ? " · 남은 " + res.left : "";
-  if (res.give === "new") { scanLog(emp, (res.name ? res.name + " · " : "") + "선착순 참여상 수령 처리" + (res.nth ? " · " + res.nth + "번째" : ""), true, true); SCAN.bd = { t: "선착순 지급" + (res.nth ? " (" + res.nth + "번째)" : ""), s: "무선 무드등 가습기 1개 전달" + lf }; scanShow("ok", who, "선착순 참여상 수령 처리", "무선 무드등 가습기 1개 전달" + lf); return; }   /* v5.98 nth = 지급 순서(수령순) */
-  if (res.give === "dup") { scanLog(emp, (res.name ? res.name + " · " : "") + "이미 수령", true, true); scanShow("dup", who, "이미 수령", (res.at || "") + "에 받았어요"); return; }
-  if (res.reason === "notyet") { var st0 = res.start || "10:30"; scanLog(emp, (res.name ? res.name + " · " : "") + st0 + "부터 지급", null, true); SCAN.bd = { c: "dup", t: st0 + "부터 지급", s: "선착순 참여상 · 체크인 마무리 뒤" }; scanShow("dup", who, st0 + "부터 지급", "선착순 참여상 · 체크인 마무리 뒤"); return; }   /* 261007 (사용자 「10시 30분부터 열자 · 혼선 없도록」) 회색 */
-  var why = res.reason, msg = why === "noelig" ? ["스탬프 " + (res.n != null ? res.n + "개" : "6개 미만") + " · 6개 필요", "6개를 모으면 받을 수 있어요"] : why === "full" ? ["마감", "선착순 수량이 먼저 찼어요 · 6개 달성은 행운권 3장"] : why === "out" ? ["마감", "선착순 참여상이 모두 나갔어요"] : why === "test" ? ["테스트 계정", "기록하지 않았어요"] :   /* v5.98 수령순 out · test · 「자격」 말 없음 */
-    why === "closed" ? ["마감", (res.cut || "17:00") + " 지급 마감"] : why === "void" ? ["지급 불가", "운영 본부에 문의해 주세요"] : why === "off" ? ["지금은 받지 않아요", "선착순 참여상 꺼짐"] : ["처리하지 못했어요", String(why || "")];
-  scanLog(emp, (res.name ? res.name + " · " : "") + msg[0], false, true);
-  scanShow("bad", who, msg[0], msg[1]);
+function gateDone(emp, res) {
+  var who = res.name || emp, k = res.kit || null, f = res.fcfs || null, give = res.give || [];
+  var rows = [gateKitRow(k), gateFcRow(f)].filter(function (x) { return !!x; });
+  var bad = rows.some(function (x) { return x[0] === "bad"; }), dupAny = (k && k.st === "dup") || (f && f.st === "dup");
+  var tone = give.length ? "ok" : bad ? "bad" : "dup";
+  var head = give.length ? "지급 " + give.length + "건" : dupAny ? "이미 받음" : "지금 지급할 것 없음";
+  var big = k && (k.st === "give") && k.sz ? kitLbl(k.sz) : f && f.st === "give" && f.rk ? String(f.rk) : "";
+  SCAN.bd = { c: tone, big: big, t: rows[0] ? rows[0][1] : head, s: rows[1] ? rows[1][1] : "", x: 3 };
+  scanLog(emp, (res.name ? res.name + " · " : "") + rows.map(function (x) { return x[1]; }).join(" · "), tone === "bad" ? false : true, true);
+  scanShow(tone, who, head, "");
+  if (SCAN.res) { SCAN.res.rows = rows; var b = el("scanRes"); if (b) b.innerHTML = scanBigHtml(); }
 }
-/* 체크인 존 스캔 결과 */
-function kitDone(emp, res) {
-  var who = res.name || emp, sp = res.spare == null ? "수량 미정" : String(res.spare);
-  var ck = res.ck === "new" ? " · 스탬프 +3" : "";   /* v5.90 사전등록 체크인 3개(서버 ck) */
-  var go = res.ck === "new" && !res.ru ? "룰렛 부스로 안내해 주세요" : "";   /* v5.94 (사용자 결정 261006) 체크인 3개 → 룰렛 → 강의장 · 룰렛을 이미 쓴 사람은 없음(서버 ru) */
-  var wn = (scanSpot(SCAN.spot) || {}).win || "";   /* 261007 창구 자리 · 결과 띠 = 사이즈 아주 크게 + 가린 이름 + 번호(창구 스태프는 아무것도 누르지 않는다) */
-  if (wn && wn !== "E" && (res.kit === "give" || res.kit === "dup")) SCAN.bd = res.kit === "give" ? { c: "ok", big: res.sz ? kitLbl(res.sz) : "", t: (res.no ? res.no + " · " : "") + "지급", s: res.sz ? "사이즈 " + kitLbl(res.sz) + (kitLbl(res.sz) !== res.sz ? " (" + res.sz + ")" : "") + (res.kno ? " · " + res.kno : "") + ck : "사이즈 미정 · 명단 확인" + ck, x: 4 } : { c: "dup", big: "", t: "이미 받음", s: (res.at || "") + "에 받았어요", x: 3 };
-  if (res.kit === "sub") { scanLog(emp, (res.name ? res.name + " · " : "") + "라운지 초과 · 가습기 대체" + ck, true, true); scanShow("ok", who, "가습기로 대체 지급", "라운지 키트 수량 초과" + ck, go); return; }   /* v5.90 라운지 쿼터를 넘은 사전등록자 */
-  if (res.kit === "give") { scanLog(emp, (res.name ? res.name + " · " : "") + "키트 지급" + ck, true, true); scanShow("ok", who, "키트 지급", (res.grp === "dap" ? "라운지 사전등록" : res.pre ? "세션 " + res.pre + " · 사전 신청자" : "체크인 + 지급") + (res.kno ? " · " + res.kno : "") + ck, go); return; }   /* 261008 옷 신청번호(K-012 · 교환 때 같은 번호) */
-  if (res.kit === "dup") { scanLog(emp, (res.name ? res.name + " · " : "") + (res.sub ? "이미 가습기 대체" : "이미 지급됨") + ck, true, true); scanShow("dup", who, res.sub ? "이미 가습기로 받음" : "이미 지급됨", (res.at || "") + "에 받았어요" + ck, go); return; }
-  scanLog(emp, (res.name ? res.name + " · " : "") + "체크인 · 명단 밖", null, true);
-  scanShow("dup", who, "사전 신청 명단에 없어요", "여유 키트 " + sp + (res.list ? "" : " · 명단 대기 중"));
-  SCAN.res.inv = "kit";
-  INVS.id = SCAN.res.t; INVS.emp = emp; INVS.busy = false; INVS.msg = ""; INVS.rid = ""; INVS.rt = 0;
-  invPaint();
-}
-/* 261007 창구 자리에서 다른 창구 사이즈 · 라운지 초과 · 명단 밖 = 지급하지 않고 안내(빨강 · 창구 글자 크게) */
-function kitWinDone(emp, res) {
-  var who = res.name || emp, w = res.want || "E", t = res.out ? "명단 밖 · E 창구로 안내" : w === "E" ? "E 창구로 안내" : "다른 창구 · " + w + " 창구로 안내", sb = res.out ? "사전등록 명단에 없어요" : w === "E" ? "라운지 초과 · 가습기 대체" : "이 사이즈는 " + w + " 창구에 있어요";
-  SCAN.bd = { c: "bad", big: w, t: t, s: sb, x: 3 };
-  scanLog(emp, (res.name ? res.name + " · " : "") + t, false, true);
-  scanShow("bad", who, t, sb);
-}
-/* 261007 체크인 접수(ck_ticket) 결과 · new · dup = 「B-007 · 홍*동 → B 창구」 크게 · off = 번호 없이 바로 그 창구 · got = 이미 받음(회색) · out(빨강) · hum · nosz(회색) = E 창구로 안내 */
-function ckinDone(emp, res) {
-  var who = res.name || emp, nm = res.nm || sscMask(who), w = res.w || "E", t = res.t, tone = "ok", big = w, hd, sb, full;
-  if (t === "new" || t === "dup") {
-    hd = res.no + " → " + w + " 창구"; full = res.no + " · " + nm + " → " + w + " 창구";
-    sb = res.st === "call" || !res.ah ? "바로 " + w + " 창구로" : "앞에 " + res.ah + "명" + (res.eta ? " · 약 " + res.eta + "분" : "") + " · 차례가 되면 폰이 울려요";
-    if (t === "dup") { tone = "dup"; sb = "이미 받은 번호 · " + sb; }
-  } else if (t === "off") { hd = w + " 창구로 안내"; full = nm + " → " + w + " 창구"; sb = "번호 없이 바로 " + w + " 창구로" + (res.sw && res.open ? " · 번호는 " + res.open + "부터" : ""); }
-  else if (t === "got") { tone = "dup"; big = ""; hd = "이미 받음"; full = nm + " · 이미 받음"; sb = (res.at || "") + "에 받았어요"; }
-  else { tone = t === "out" ? "bad" : "dup"; big = "E"; hd = "E 창구로 안내"; full = nm + " → E 창구"; sb = t === "out" ? "사전등록 명단에 없어요" : t === "hum" ? "라운지 초과 · 가습기 대체" : "사이즈 미정 · E 창구에서 정해요"; }
-  SCAN.bd = { c: tone, big: big, full: 1, t: full, s: sb, x: 3 };
-  scanLog(emp, (res.name ? res.name + " · " : "") + hd, tone === "bad" ? false : true, true);
-  scanShow(tone, who, hd, sb);
+function gateRowsHtml(rows) {
+  return '<ul class="axs-gate">' + rows.map(function (x) { return '<li class="' + x[0] + '">' + esc(x[1]) + "</li>"; }).join("") + "</ul>";
 }
 function invResHtml(r) {
   if (r.t !== INVS.id) return "";
   var msg = INVS.msg ? '<p class="axs-inv-m">' + esc(INVS.msg) + "</p>" : "", dis = INVS.busy ? " disabled" : "";
-  if (r.inv === "kit") return '<div class="axs-inv">' + msg + '<div class="axs-crbtn"><button type="button" class="ax-button" onclick="invKitGive()"' + dis + ">키트 지급</button>" +
-    '<button type="button" class="ax-button ax-button-weak" onclick="invKitSkip()"' + dis + ">지급 안 함</button></div></div>";
-  if (r.inv === "kitdone") return INVS.rid && Date.now() - INVS.rt < 5000 ? '<div class="axs-inv">' + msg + '<p class="axs-inv-q">5초 안에 취소할 수 있어요</p><button type="button" class="ax-button ax-button-weak" onclick="invKitUndo()"' + dis + ">취소</button></div>" : msg;
   if (r.inv !== "roul") return "";
   if (INVS.off) return '<p class="axs-inv-m">등급 기록은 서버 갱신 뒤</p>';
   if (INVS.g) {
@@ -1445,21 +1372,19 @@ function invBoxUndo() {
 }
 /* v4.71 실패 결과 크게 · [색, 제목, 한 줄] · dup = 이미 처리된 것(참가자에게 문제없음) */
 function scanBig(why, sp, res, err) {
-  var q = "참가자 폰에서 내 QR을 다시 열어 주세요";
+  var q = "참가자 폰에서 내 QR을 다시 열어 주세요", cc = sp.prog === "cchat", out = sp.mark === "out";
   return why === "qrexp" ? ["bad", "지난 QR", q] : why === "qr" ? ["bad", "확인할 수 없는 QR", q] :
     why === "qrold" ? ["bad", "옛 QR", "참가자 앱을 새로 고친 뒤 다시 찍어 주세요"] :
+    why === "preday" ? ["dup", "행사 당일에 적립", "지금은 기록 없음"] :   /* 261016 행사 전 가드 */
     why === "out" ? ["bad", "룰렛 소진", "차감하지 않았어요"] :
     why === "need" ? ["bad", "스탬프 3개 미만", "현재 " + (res.n || 0) + "개 · 차감하지 않았어요"] :
     why === "used" ? ["bad", "이미 사용함", "룰렛을 이미 돌린 참가자예요"] :
-    why === "spare0" ? ["bad", "여유 키트 없음", "룰렛 굿즈로 대체해 주세요"] :
     /unknown action/i.test(String(err || "")) ? ["bad", "아직 쓸 수 없어요", "서버 갱신 뒤 다시 찍어 주세요"] :
-    why === "window" ? ["bad", "입장 시간이 아니에요", res.open || ""] :
-    why === "notfound" ? (sp.kind === "photo" ? ["bad", "대기 번호 없음", "앱에서 번호 받기 안내"] : sp.id === "cchat" ? ["bad", "선정 명단에 없음", sp.nm] : sp.id === "dap" ? ["bad", "승인된 상담 없음", sp.nm] : ["bad", "신청 명단에 없음", sp.nm]) :
-    why === "nomatch" ? ["bad", sp.id === "cchat" ? "선정 전" : "승인 전 상담", sp.nm] :   /* 261013 참석 확인 거절 · 담백한 사실 */
+    why === "notfound" ? (cc ? ["bad", "선정 명단에 없음", sp.nm] : sp.prog === "dap" ? ["bad", "승인된 상담 없음", sp.nm] : ["bad", "신청 명단에 없음", sp.nm]) :
+    why === "nomatch" ? ["bad", cc ? "선정 전" : "승인 전 상담", sp.nm] :   /* 261013 참석 확인 거절 · 담백한 사실 */
     why === "noshow" ? ["bad", "노쇼 상태인 상담", "콘솔에서 바꿔 주세요"] :
-    why === "time" ? ["bad", (res.at || "") + (sp.id === "cchat" ? " 회차" : " 상담"), "참석 확인 " + (res.open || "")] :
-    why === "skipped" ? ["bad", res.no + "번 건너뛴 번호", "새 번호 받기 안내"] :
-    why === "already" ? ["dup", res.no + "번 이미 입장", ""] :
+    why === "time" ? ["bad", (res.at || "") + (cc ? " 회차" : " 상담"), (out ? "종료 확인 " : "체크인 ") + (res.open || "")] :   /* 261016 종료 칸 = 끝 창 */
+    why === "dup" ? ["dup", "이미 처리됨", sp.nm] :
     why === "locked" ? ["bad", "관리 연결이 잠겼어요", admLockedMsg(res)] :
     ["bad", "처리하지 못했어요", why || String(err || "").slice(0, 40)];
 }

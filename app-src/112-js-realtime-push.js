@@ -156,7 +156,6 @@ function beSync(after) {
          내 차례가 되면 한 번만 알린다 · 폴링마다 토스트가 뜨지 않게 직전 상태와 비교. */
       if (res.my.checkin) S.set("checkin", res.my.checkin);
       if ("staff" in res.my) staffMeIn(res.my.staff);   /* v6.00 앱 스태프 명단(1 | 0) · 없으면 옛 서버 = 그대로 */
-      if ("ckg" in res.my && String(res.my.ckg || "") !== S.get("ck_grp", "")) S.set("ck_grp", String(res.my.ckg || ""));   /* v5.94 사전등록 갈래(10F | dap) · 체크인 안내 시트 마지막 줄 */
       if (res.my.stamps) { stampSync(res.my.stamps); stampPendRetry(); lgCheck(res.my.stamps); }   /* v4.83 최초 로그인 스탬프 */
       if (res.my.stair) { var st9 = Object.assign({}, res.my.stair, { emp: String(u.empId || "") }); if (JSON.stringify(st9) !== JSON.stringify(S.get("stair", null))) S.set("stair", st9); }   /* v4.06 계단 진행 · 서버가 정본 · v4.54 물어본 사번을 붙여 저장 */   /* 스탬프는 서버가 정본 · v3.97 빈 목록 포함 · 못 보낸 적립은 다시 보낸다 */
       if ("roulette" in res.my && !testEmp()) S.set("roulette_used", !!res.my.roulette);   /* 룰렛 사용 여부도 서버가 정본 (260909) · 테스트 사번은 로컬 */
@@ -173,7 +172,6 @@ function beSync(after) {
       var kt9 = res.my.kit && typeof res.my.kit === "object" ? res.my.kit : null;   /* 261006 키트 사이즈 · 키트명단 사번만(없으면 null = 홈 카드 · 화면 · 설정 줄 없음) · 261008 스태프 의류 명단 사번도(pool staff) · 신청번호 no */
       if (JSON.stringify(kt9) !== JSON.stringify(S.get("kit", null))) S.set("kit", kt9);
       var kn9 = ckNoVal(res.my.ckno); if (kn9 !== ckNoVal(S.get("ckno", ""))) S.set("ckno", kn9);   /* 261015 체크인 번호(가나다순 고정) · 261016 세션별 「A-1」 글자(옛 서버 숫자도) · 없으면 "" */
-      ckqIn(res.my.ckq || null);   /* 261007 체크인 번호표 · 오늘 번호가 있을 때만(없으면 카드 없음) */
       /* v3.21 B 포토부스 번호표 · 서버가 정본(없으면 null) · 바뀐 경우에만 저장해 불필요한 재렌더를 막는다 */
       /* v3.35 · v3.99 서버 스탬프 목록에 설문(sv)이 있을 때만 · 관리자가 08 을 취소하면 답이 남아 있어도 다시 제출할 수 있다(GAS @74) */
       if (res.my.survey === true && !S.get("survey_done", false) && !testEmp() && (res.my.stamps || []).indexOf("sv") >= 0) S.set("survey_done", true);
@@ -366,7 +364,7 @@ WS.h.ops = function (m) {   /* v4.76 스태프 폰 ops 방 · 혼잡 카드 곧�
 WS.h.tv = function (m) { if (WS.role === "tv") tvWsPull(false, m.k); };
 WS.h.scan = function (m) { scanTellIn(m); };
 WS.h.lucky = function () { if (WS.role === "p" && BE.on) { if (POLL.t) { clearTimeout(POLL.t); POLL.t = null; } pollTick(); } };   /* 261008 럭키드로우 당첨 · 취소 · 7등 = 곧바로 sync(시트 · 홈 줄) */
-WS.h.ckq = function (m) { if (WS.role === "p") ckqIn(m.q || null); };   /* 261007 내 번호 · 앞에 몇 명 · 호출(진동) · 수령 */   /* v5.98 개인 사건 scan · 스태프 폰 스캔(서버 scanTell_) */
+/* 261016 체크인 번호표(소켓 ckq) 걷음 */   /* v5.98 개인 사건 scan · 스태프 폰 스캔(서버 scanTell_) */
 /* v5.98 선착순 참여상 소진 순간 · 서버가 참가자 방에 한 번(소켓만 · 푸시 없음) · 6개 · 아직 안 받은(ready) 사람에게만 한 줄 · 화면은 sync 로 */
 WS.h.fcfsout = function () {
   var was = fcfsReady(fcfsMy());
