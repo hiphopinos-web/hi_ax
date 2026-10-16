@@ -2,7 +2,7 @@
  * 모든 명단(옷 · 출석 · 사전 신청 · 스태프 · 라운지 · 커피챗 · 접속 · 아이디어 · 경품 수령 …)이 이 부품 하나를 쓴다.
  * 규칙: 머리 행 고정 · 머리 누르면 오름 → 내림 · 검색 칸 · 구분 칩(건수 붙음) · 건수 · 「엑셀 다운로드」(같은 자리 · 오른쪽 끝)
  *       숫자 오른쪽 정렬 · tabular-nums · 날짜 「MM-DD HH:mm」(오늘이면 「HH:mm」) · 열 너비는 열 정의 w(px)
- * 내려받기 = 위험 동작(L3) · 확인 창에서 PIN 매번 → 서버 원본 액션을 dl=1 + sp 로 다시 받아 → 화면에 보이는 열 · 구분 · 검색 · 정렬 그대로 .xlsx
+ * 내려받기 = 확인 창(261016 PIN 없음) → 서버 원본 액션을 dl=1 로 다시 받아 → 화면에 보이는 열 · 구분 · 검색 · 정렬 그대로 .xlsx
  *       SheetJS(cdnjs 고정 버전)를 그때 불러온다 · 못 불러오면 UTF-8 BOM CSV 로 대신 받는다
  * 열 정의 c = { k 키 · t 머리 글자 · w 너비 · type(num | date | text) · v(row) 값 · f(row) 화면 html · x(row) 엑셀 값 · act(row) 단추 html(엑셀 제외) · sort:false } */
 var XLSX_URL="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
@@ -38,7 +38,7 @@ XG.put=function(g, ph){
     var o=g.o, cols=xgCols(g);
     ph.innerHTML='<div class="xg" data-xg="'+g.id+'">'+
       '<div class="xg-bar"><input class="xg-q" type="search" placeholder="'+esc(o.ph||"이름 · 부서 · 사번 찾기")+'" aria-label="'+esc((o.file||"명단")+" 검색")+'" value="'+esc(g.q)+'" oninput="XG.find(\''+g.id+'\',this.value)"><span class="xg-cnt" data-c="cnt"></span>'+
-      (o.noDl?'':'<button class="btn sm lock xg-dl" type="button" onclick="XG.dl(\''+g.id+'\')">엑셀 다운로드</button>')+'</div>'+
+      (o.noDl?'':'<button class="btn sm xg-dl" type="button" onclick="XG.dl(\''+g.id+'\')">엑셀 다운로드</button>')+'</div>'+
       (o.chips&&o.chips.length>1?'<div class="xg-chips" role="group" aria-label="구분" data-c="chips"></div>':'')+
       '<div class="xg-wrap" style="--xg-h:'+(o.h||460)+'px"><table class="xg-t"><colgroup>'+cols.map(function(c){ return '<col'+(c.w?' style="width:'+c.w+'px"':'')+'>'; }).join("")+'</colgroup><thead><tr data-c="head"></tr></thead><tbody data-c="body"></tbody></table></div><div data-c="note"></div></div>';
   }
@@ -69,20 +69,16 @@ XG.find=function(id, v){ var g=XG.reg[id]; g.q=String(v||""); XG.paint(g); };
 XG.sortBy=function(id, k){ var g=XG.reg[id]; if(g.sort&&g.sort.k===k) g.sort.d=-g.sort.d; else g.sort={ k:k, d:1 }; xgSave(g); XG.paint(g); };
 XG.chipBy=function(id, c){ var g=XG.reg[id]; g.chip=c; xgSave(g); XG.paint(g); if(g.o.onChip) g.o.onChip(c); };
 
-/* ── 엑셀 다운로드 · 확인 창 + PIN(매번) · 서버 dl=1 ── */
+/* ── 엑셀 다운로드 · 확인 창 · 서버 dl=1 ── */
 XG.dl=function(id){
   var g=XG.reg[id], o=g.o; if(!g.rows){ toast("명단을 받은 뒤 내려받습니다"); return; }
   var cols=xgCols(g).filter(function(c){ return !c.act&&c.t; }), v=xgView(g), ch=(o.chips||[]).filter(function(c){ return c[0]===g.chip; })[0];
-  confirmBox({ t:"명단을 엑셀로 내려받을까요?", who:(o.file||"명단")+" · "+n0(v.length)+"줄", sub:"열 "+cols.length+"개 · 구분 「"+(ch?ch[1]:"전체")+"」"+(g.q?" · 검색 「"+g.q+"」":"")+" · 화면 그대로 · 개인정보 파일", ok:"엑셀 다운로드", pin:true,
-    run:function(pp){
+  confirmBox({ t:"명단을 엑셀로 내려받을까요?", who:(o.file||"명단")+" · "+n0(v.length)+"줄", sub:"열 "+cols.length+"개 · 구분 「"+(ch?ch[1]:"전체")+"」"+(g.q?" · 검색 「"+g.q+"」":"")+" · 화면 그대로 · 개인정보 파일", ok:"엑셀 다운로드",
+    run:function(){
       var src=xgSrc(g);
-      var fetchIt=function(extra){
-        if(!src) return xgFile(g, g.rows);
-        var p={}; for(var k in (src.p||{})) p[k]=src.p[k]; p.dl="1"; for(var k2 in extra) p[k2]=extra[k2];
-        return call(src.a, p).then(function(res){ if(!res||res.ok===false) return res||{ ok:false }; var rows=src.a==="list_get"?res.rows:src.pick?src.pick(res):res.rows; return xgFile(g, rows||g.rows); });
-      };
-      if(src&&src.a==="list_get") return fetchIt(pp);   /* 새 서버 · list_get dl=1 이 ph 를 확인한다 */
-      return phToSp(pp.ph).then(function(x){ return x.ok?fetchIt({ sp:x.sp }):(x.r||{ ok:false }); });   /* 옛 액션 · 서버가 ph 를 모르므로 같은 해시로 먼저 본인 확인 */
+      if(!src) return xgFile(g, g.rows);
+      var p={}; for(var k in (src.p||{})) p[k]=src.p[k]; p.dl="1";
+      return call(src.a, p).then(function(res){ if(!res||res.ok===false) return res||{ ok:false }; var rows=src.a==="list_get"?res.rows:src.pick?src.pick(res):res.rows; return xgFile(g, rows||g.rows); });
     },
     done:function(r){ toast("내려받았습니다 · "+r.name+(r.csv?" · 엑셀 도구를 못 불러와 CSV":"")); } });
 };

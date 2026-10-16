@@ -84,7 +84,7 @@ SCREENS.notify={
   paint:function(){ var s=subsOf(NT_SUBS,"push"); if(s==="push") gridPaint("push","phist","푸시 기록",function(d){ return d.rows||[]; }); else gridPaint("notice","nhist","공지 기록",function(d){ return d.rows||[]; }); }
 };
 
-/* ── S7 기록 · 설정 · 급한 단추 3개 중 「앱 범위」(PIN 매번) + 활동 기록 ── */
+/* ── S7 기록 · 설정 · 급한 단추 3개 중 「앱 범위」(확인 창) + 활동 기록 ── */
 var OG_OPT=[["클로즈베타","클로즈 베타","접속 허용 명단 + 스태프"],["사전신청","사전 신청","사전 신청자 + 스태프 + 허용 명단"],["전체","전체","전 임직원"],["자동","자동","날짜대로(10/19 사전 신청 · 10/21 전체)"],["종료","행사 종료","앱 닫힘 안내 · 10/27 클로즈"]];
 var OG_PH={ beta:"클로즈 베타", first:"사전 신청", all:"전체", end:"행사 종료", test:"클로즈 베타" };
 var OG_CNT={ "클로즈베타":"beta", "사전신청":"first", "전체":"all", "자동":"auto", "종료":"end" };
@@ -97,7 +97,7 @@ SCREENS.log={
       cols:[{ k:"t", t:"시각", type:"date", w:96 },{ k:"verb", t:"한 일", w:70 },{ k:"x", t:"내용", w:300 },{ k:"name", t:"대상", w:100, v:function(r){ return r.name||r.emp||""; } },{ k:"byName", t:"처리자", w:100, v:function(r){ return r.byName||r.by||""; } },{ k:"byK", t:"어디서", w:70 },{ k:"res", t:"결과", w:70 }],
       src:{ a:"act_log", p:{ n:200 }, pick:function(r){ return r.rows; } }, empty:"오늘 기록이 없습니다", h:420 });
     vb.innerHTML='<div class="grid g32"><div class="card" id="ogC"></div><div class="col"><div class="card"><h2>급한 단추</h2>'+
-      rowH("앱 접속 범위","왼쪽 칸 · 바꿀 때마다 PIN",'<span class="tag">이 화면</span>')+
+      rowH("앱 접속 범위","왼쪽 칸 · 바꿀 때 확인 창",'<span class="tag">이 화면</span>')+
       rowH("룰렛 소진 안내","경품 · 재고 › 룰렛",'<button class="btn sm" type="button" onclick="go(\'prize\')">열기</button>')+
       rowH("푸시 정지","이번 단계는 옛 콘솔 › 알림",'<a class="btn sm" href="'+OLD_URL+'" target="_blank" rel="noopener">옛 콘솔</a>')+'</div>'+oldLink("서버 상태 · 화면 주소 · QR · 스태프 코드")+'</div></div>'+
       '<div class="card mt"><h2>활동 기록 <span class="cap">오늘 · 최근 200줄</span></h2><div id="mg_alog"></div></div>';
@@ -108,16 +108,14 @@ function ogCur(){ var s=S.data.ogs, b=S.data.nb; return s&&s.ok?{ sc:s.sc, ph:s.
 function ogPaint(){
   var c=ogCur(), box=el("ogC"); if(!box) return;
   if(!c){ box.innerHTML='<h2>앱 접속 범위</h2>'+(dataGate("nb","진행판")||skel()); return; }
-  var spin=S.data.ogs&&S.data.ogs.reason==="spin";
   box.innerHTML='<h2>앱 접속 범위 <span class="cap">지금 들어올 수 있는 사람</span><span class="r">'+tag("지금 "+(OG_OPT.filter(function(o){ return o[0]===c.sc; })[0]||[0,c.sc])[1]+(c.sc==="자동"?" · "+(OG_PH[c.ph]||c.ph):""),c.sc==="종료"?"bad":"")+'</span></h2>'+
     OG_OPT.map(function(o){ var on=o[0]===c.sc, n=c.cnt&&c.cnt[OG_CNT[o[0]]];
-      return '<div class="row"><div class="t"><b>'+esc(o[1])+(on?' '+tag("지금","ok"):'')+'</b><span>'+esc(o[2])+(n!=null&&o[0]!=="종료"?" · 약 "+n0(n)+"명":"")+'</span></div>'+(on?'':'<button class="btn sm lock'+(o[0]==="종료"?" dng":"")+'" type="button" onclick="ogSet(\''+o[0]+'\')">'+esc(o[0]==="종료"?"행사 종료로":"이 범위로")+'</button>')+'</div>'; }).join("")+
-    (spin?'<div class="cap mt">명단별 인원은 PIN 확인 뒤 보입니다 · <button class="btn sm" type="button" onclick="readPinAsk()">PIN 넣고 보기</button></div>':'')+
+      return '<div class="row"><div class="t"><b>'+esc(o[1])+(on?' '+tag("지금","ok"):'')+'</b><span>'+esc(o[2])+(n!=null&&o[0]!=="종료"?" · 약 "+n0(n)+"명":"")+'</span></div>'+(on?'':'<button class="btn sm'+(o[0]==="종료"?" dng":"")+'" type="button" onclick="ogSet(\''+o[0]+'\')">'+esc(o[0]==="종료"?"행사 종료로":"이 범위로")+'</button>')+'</div>'; }).join("")+
     '<p class="cap mt">자동 = '+esc(String(c.t1||"").slice(5,16))+' 사전 신청 · '+esc(String(c.t2||"").slice(5,16))+' 전체 · 행사 종료는 자동으로 바뀌지 않습니다</p>';
 }
 function ogSet(sc){
   var c=ogCur()||{}, o=OG_OPT.filter(function(x){ return x[0]===sc; })[0], from=(OG_OPT.filter(function(x){ return x[0]===c.sc; })[0]||[0,c.sc])[1], n=c.cnt&&c.cnt[OG_CNT[sc]];
-  confirmBox({ t:sc==="종료"?"앱을 행사 종료로 바꿀까요?":"앱 접속 범위를 바꿀까요?", who:from+" → "+o[1], sub:o[2]+(n!=null&&sc!=="종료"?" · 약 "+n0(n)+"명":"")+" · 참가자 앱에 바로 반영", ok:sc==="종료"?"행사 종료로 바꾸기":"범위 바꾸기", danger:sc==="종료"||sc==="클로즈베타", pin:true,
+  confirmBox({ t:sc==="종료"?"앱을 행사 종료로 바꿀까요?":"앱 접속 범위를 바꿀까요?", who:from+" → "+o[1], sub:o[2]+(n!=null&&sc!=="종료"?" · 약 "+n0(n)+"명":"")+" · 참가자 앱에 바로 반영", ok:sc==="종료"?"행사 종료로 바꾸기":"범위 바꾸기", danger:sc==="종료"||sc==="클로즈베타",
     run:function(pp){ return call("og_scope_set",Object.assign({ sc:sc },pp)); },
     done:function(r){ if(S.data.ogs&&S.data.ogs.ok){ S.data.ogs.sc=r.sc; S.data.ogs.ph=r.ph; } if(S.data.nb&&S.data.nb.og){ S.data.nb.og.sc=r.sc; S.data.nb.og.ph=r.ph; } paint(); reload(["ogs","nb","alog"]); toast("앱 접속 범위 · "+o[1]); } });
 }

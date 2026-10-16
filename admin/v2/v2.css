@@ -89,7 +89,6 @@ button.kpi:hover{border-color:var(--line3)}
 .btn.dng.fill{background:var(--bad);border-color:var(--bad);color:#fff}
 .btn.sm{height:36px;padding:0 12px;font-size:13px;min-width:56px}
 .btn.big{height:56px;font-size:16px;width:100%}
-.btn.lock::after{content:"PIN";font-size:12px;font-weight:700;border:1px solid currentColor;border-radius:4px;padding:0 4px;line-height:16px;margin-left:2px}
 .btn:disabled,.btn[aria-disabled="true"]{opacity:.45}
 .btns{display:flex;gap:8px;flex-wrap:wrap}
 .btns>.btn{flex:1}
@@ -154,7 +153,7 @@ table.tb{width:100%;border-collapse:collapse;font-size:13px}
 .win{border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;background:var(--sf);display:grid;gap:6px;align-content:start}
 .win .no{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2}
 
-/* 확인 창 480 · PIN 4칸 + 숫자 패드 */
+/* 확인 창 480 */
 .dlg-bg{position:fixed;inset:0;background:rgba(8,24,74,.35);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px;opacity:0;transition:opacity var(--t-out) ease-out}
 .dlg-bg.on{opacity:1;transition-duration:var(--t-in)}
 .dlg{width:480px;max-width:100%;max-height:calc(100dvh - 32px);overflow:auto;background:#fff;border-radius:16px;padding:20px;box-shadow:0 12px 28px rgba(8,24,74,.2);transform:translateY(8px) scale(.98);transition:transform var(--t-out) var(--ease)}
@@ -169,15 +168,6 @@ table.tb{width:100%;border-collapse:collapse;font-size:13px}
 .dlg .fld{display:block;font-size:12px;color:var(--tx2);margin-top:8px}
 .dlg .in{display:block;width:100%;height:44px;border:1px solid var(--line3);border-radius:8px;padding:0 12px;font-size:14px;margin-top:4px;background:#fff}
 .dlg .chips{margin:6px 0 0}
-.pinw{margin-top:6px;position:relative}
-.pinw .lb{font-size:12px;color:var(--tx2)}
-.pin{display:flex;gap:8px;margin:6px 0 8px}
-.pin i{width:48px;height:52px;border:1px solid var(--line3);border-radius:8px;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:22px;font-weight:700}
-.pin i.cur{border-color:var(--navy);box-shadow:0 0 0 1px var(--navy)}
-.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:300px}
-.pad button{height:48px;border-radius:8px;border:1px solid var(--line);background:var(--soft);font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
-.pad button:active{background:var(--navy05)}
-.pad .fn{font-size:13px}
 @media (prefers-reduced-motion:reduce){.dlg-bg,.dlg,.toast{transition:none!important}}
 
 /* 토스트 · 되돌리기 7초 */
@@ -248,3 +238,27 @@ a.btn{text-decoration:none}
   .cell{padding:0 6px}
   .dlg .acts .btn{min-width:0;flex:1}
 }
+
+/* 261016 명단 올리기(upload.js) */
+.up-bar{display:flex;align-items:center;gap:10px;justify-content:flex-end;margin-bottom:10px}
+.up-steps{list-style:none;display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.up-steps li{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:99px;border:1px solid var(--line);font-size:13px;color:var(--tx3)}
+.up-steps li b{width:20px;height:20px;border-radius:50%;background:var(--line2);color:var(--tx2);display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-variant-numeric:tabular-nums}
+.up-steps li.on{border-color:var(--navy);color:var(--navy);font-weight:700}
+.up-steps li.on b{background:var(--navy);color:#fff}
+.up-steps li.done{color:var(--tx2)}
+.up-steps li.done b{background:var(--navy1);color:var(--navy)}
+.up-file{position:relative;overflow:hidden}
+.up-file input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.up-f{display:block;font-size:12px;color:var(--tx2)}
+.up-f select,.up-f textarea{display:block;width:100%;margin-top:4px;border:1px solid var(--line3);border-radius:8px;background:#fff;font-size:14px}
+.up-f select{height:40px;padding:0 8px}
+.up-f textarea{padding:8px 10px;resize:vertical;font-variant-numeric:tabular-nums}
+.up-map{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.up-ck{display:inline-flex;align-items:center;gap:6px;font-size:13px;margin-top:8px}
+.up-smp{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px;table-layout:fixed}
+.up-smp th,.up-smp td{border-bottom:1px solid var(--line2);padding:4px 6px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.up-smp th{color:var(--tx3);font-weight:600}
+.up-kp{grid-template-columns:repeat(5,minmax(0,1fr));margin-bottom:10px}
+.up-go{display:flex;align-items:center;gap:10px;margin-top:10px}
+@media (max-width:720px){ .up-map{grid-template-columns:repeat(2,minmax(0,1fr))} .up-kp{grid-template-columns:repeat(2,minmax(0,1fr))} .up-bar{justify-content:space-between} }

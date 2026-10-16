@@ -1,7 +1,7 @@
 /* AXF CONTROL v2 · 공통 (261016 콘솔 재구축 화면 1단계)
- * 서버 호출 · 로그인 · 확인 창(PIN 매번) · 토스트 · 화면 틀(상단 띠 · 하단 탭 7) · 숫자 카드 · 행 목록 · 상태(불러오는 중 · 빈 · 오류 · 서버 갱신 뒤)
- * 서버 경로 · 로그인(admin_check) · 토큰 저장 키는 지금 콘솔(admin/index.html)과 같다. 관리코드 · PIN · 해시는 저장하지 않는다.
- * PIN = 위험 동작만 · 확인 창에서 매번 받는다(유지 시간 없음 · 261014 결정). 받은 PIN 은 그 한 번의 요청에만 쓴다.
+ * 서버 호출 · 로그인 · 확인 창 · 토스트 · 화면 틀(상단 띠 · 하단 탭 7) · 숫자 카드 · 행 목록 · 상태(불러오는 중 · 빈 · 오류 · 서버 갱신 뒤)
+ * 서버 경로 · 로그인(admin_check) · 토큰 저장 키는 지금 콘솔(admin/index.html)과 같다. 관리코드는 저장하지 않는다.
+ * 261016 사용자 「로그인하고 나면 쓸데없는 PIN 번호 넣는 일을 없애줘」 · 사번 + 관리코드로 들어온 뒤에는 어떤 동작에도 PIN 을 묻지 않는다. 되돌리기 어려운 동작은 확인 창 · 확인 문구로 막는다.
  * 서버 계약(디자인 시안/콘솔 재구축/3_서버 계약.md)이 아직 없는 기능은 화면에 「서버 갱신 뒤」로 비워 둔다(가짜 숫자 없음). */
 var BE_DEFAULT="https://script.google.com/macros/s/AKfycbwjCaSSUnQ7W1lrM8T426Cn_LgKs_UhI0Qi5XRVk-_eF-oD55-Wwjsot0DkPJCX9JqMBA/exec";
 function beUrlOk(u){ return typeof u==="string"&&/^https:\/\/([a-z0-9-]+\.[a-z0-9-]+\.workers\.dev|script\.google\.com\/macros\/s\/[\w-]{20,})\/exec$/.test(u); }
@@ -35,7 +35,7 @@ function setTok(v){ try{ sessionStorage.setItem("axf_adm_tok",v||""); }catch(e){
 function normE(v){ return String(v==null?"":v).replace(/\s/g,"").toUpperCase().replace(/^0+(?=.)/,""); }
 function envName(){ return /127\.0\.0\.1/.test(BE)?"로컬":/hi-qa/.test(BE)?"QA":/hi-load/.test(BE)?"부하 시험":/script\.google/.test(BE)?"옛 서버":"운영"; }
 
-/* ── 2. 서버 호출 · POST 폼 본문 · 주소에 tok · sp 가 남지 않는다(지금 콘솔과 같은 계약) ── */
+/* ── 2. 서버 호출 · POST 폼 본문 · 주소에 tok 이 남지 않는다(지금 콘솔과 같은 계약) ── */
 var NET=[];
 function call(action, params, ms){
   params=params||{}; var body=new URLSearchParams(), t0=Date.now();
@@ -52,25 +52,12 @@ function call(action, params, ms){
   }).catch(function(){ clearTimeout(timer); NET.push({ t:Date.now(), ms:Date.now()-t0, ok:false }); return { ok:false, reason:to?"timeout":"network" }; });
 }
 function why(r){
-  r=r||{}; var m={ network:"서버에 연결하지 못했습니다", timeout:"응답이 늦습니다", auth:"관리코드가 맞지 않습니다", spin:"PIN 확인이 필요합니다", pin:"PIN 이 맞지 않습니다", pinlock:"여러 번 틀려 잠겼습니다",
-    nopin:"앱에서 이 사번으로 로그인해 PIN 을 정한 뒤 다시 합니다", pinwho:"사번으로 다시 들어온 뒤 합니다", post:"POST 로 보내야 합니다", state:"다른 사람이 먼저 처리했습니다", taken:"그 시간에 이미 다른 신청이 있습니다", dup:"같은 사람의 다른 신청이 있습니다", notfound:"찾지 못했습니다", param:"입력값을 확인합니다", ro:"읽기 전용 상태입니다", busy:"서버가 바쁩니다 · 잠시 뒤", locked:"잠겨 있습니다" };
+  r=r||{}; var m={ network:"서버에 연결하지 못했습니다", timeout:"응답이 늦습니다", auth:"관리코드가 맞지 않습니다", spin:"서버 갱신 전입니다 · 서버가 바뀐 뒤 됩니다",
+    pinwho:"사번으로 다시 들어온 뒤 합니다", post:"POST 로 보내야 합니다", state:"다른 사람이 먼저 처리했습니다", taken:"그 시간에 이미 다른 신청이 있습니다", dup:"같은 사람의 다른 신청이 있습니다", notfound:"찾지 못했습니다", param:"입력값을 확인합니다", ro:"읽기 전용 상태입니다", busy:"서버가 바쁩니다 · 잠시 뒤", locked:"잠겨 있습니다" };
   if(r.err==="unknown action") return "이 서버는 아직 이 기능을 모릅니다";
-  if(r.reason==="pin") return "PIN 이 맞지 않습니다"+(r.left!=null?" · 남은 횟수 "+r.left:"");
-  if(r.reason==="pinlock") return "잠겼습니다"+(r.retry?" · "+Math.max(1,Math.ceil(num(r.retry)/60))+"분 뒤":"");
   return m[r.reason]||r.msg||r.reason||r.err||"처리하지 못했습니다";
 }
 function unknownSrv(r){ return !!(r&&r.ok===false&&(r.err==="unknown action"||r.reason==="unknown")); }
-function pinHash(emp, pin){
-  if(!(window.crypto&&crypto.subtle&&window.TextEncoder)) return Promise.reject(new Error("https"));
-  return crypto.subtle.digest("SHA-256",new TextEncoder().encode("AXF26:"+emp+":"+pin)).then(function(buf){ var b=new Uint8Array(buf),o=""; for(var i=0;i<b.length;i++) o+=("0"+b[i].toString(16)).slice(-2); return o; });
-}
-/* 서버 계약(3_서버 계약.md 0절) · 위험 동작 = 그 요청에 ph(본인 앱 PIN 해시)를 같이 POST · 유지 시간 없음
- * 옛 서버(ph 를 모름 · spin 으로 거절)면 같은 해시로 adm_pin → 그 한 번에만 sp 를 붙여 다시 보낸다 */
-function myPh(pin){ return pinHash((S.me&&S.me.emp)||aemp(), pin); }
-function phToSp(ph){ return call("adm_pin",{ h:ph }).then(function(r){ return r&&r.ok&&r.sp?{ ok:true, sp:r.sp }:{ ok:false, r:r }; }); }
-/* 옛 서버가 읽기에도 PIN(sp)을 요구할 때 · 읽기 전용으로만 서버 수명 동안 쓴다(위험 동작은 이 값을 쓰지 않고 매번 묻는다) · 서버 갱신 뒤 필요 없음 */
-var READ_SP={ sp:"", until:0 };
-function readSp(){ return READ_SP.sp&&Date.now()<READ_SP.until?READ_SP.sp:""; }
 
 /* ── 3. 상태 · 불러오기 ── */
 var S={ me:null, tab:"now", sub:{}, data:{}, at:{}, err:{}, busy:{}, sig:{}, srvT:"", srvAt:0, ui:{}, lg:null };   /* lg = 서버 list_get 을 아는지(null 모름 · true · false) */
@@ -94,7 +81,6 @@ function load(force, only){
     if(S.busy[n.k]) return;
     S.busy[n.k]=1; S.sig[n.k]=sg; topPaint();
     var p={}; for(var k in (n.p||{})) p[k]=n.p[k];
-    if(n.rd&&readSp()) p.sp=readSp();
     call(n.a,p).then(function(r){
       S.busy[n.k]=0; S.at[n.k]=Date.now();
       if(n.a==="list_get"&&unknownSrv(r)){ S.lg=false; S.sig[n.k]=""; S.at[n.k]=0; setTimeout(function(){ load(true,[n.k]); },0); return; }
@@ -141,62 +127,39 @@ function boot(){
 }
 function start(){ el("lock").hidden=true; render(); load(true); }
 
-/* ── 5. 확인 창 · 위험 동작은 같은 창 안에서 PIN 4칸(매번) ──
- * o = { t 제목(동사형 질문) · who 대상 한 줄 · sub 영향 한 줄 · body 추가 html · ok 단추 이름 · danger · pin(true = PIN 받기) · gate() 단추 조건
- *       run(pp) → Promise(res) · pp = 요청에 더할 값({} | { ph } | 옛 서버 { ph, sp }) · done(res) · fail(res) → 창에 이유 }
- * 서버가 PIN 을 요구하면(reason spin) 같은 창을 PIN 칸으로 바꿔 한 번 더 받는다(옛 서버 · 갱신 전 L2 동작). */
-var DLG={ o:null, pin:"", busy:false, ret:null };
+/* ── 5. 확인 창 · 261016 PIN 없음 ──
+ * o = { t 제목(동사형 질문) · who 대상 한 줄 · sub 영향 한 줄 · body 추가 html · ok 단추 이름 · danger · gate() 단추 조건(확인 문구 등)
+ *       run() → Promise(res) · done(res) · fail(res) → 창에 이유 } */
+var DLG={ o:null, busy:false, ret:null };
 function confirmBox(o){
-  DLG.o=o; DLG.pin=""; DLG.busy=false; DLG.ret=document.activeElement;
+  DLG.o=o; DLG.busy=false; DLG.ret=document.activeElement;
   var bg=el("dlg");
   el("dlgCard").innerHTML='<h3 id="dlgT">'+esc(o.t)+'</h3>'+
     (o.who?'<div class="who"><b>'+esc(o.who)+'</b>'+(o.sub?'<span>'+esc(o.sub)+'</span>':'')+'</div>':'')+
-    (o.body||"")+'<div id="dlgPin"></div><div class="err" id="dlgErr" role="alert"></div>'+
-    '<div class="acts"><button class="btn" type="button" id="dlgNo">닫기</button><button class="btn '+(o.danger?"dng fill":"pri")+(o.pin?" lock":"")+'" type="button" id="dlgOk">'+esc(o.ok)+'</button></div>';
-  if(o.pin) pinUi();
+    (o.body||"")+'<div class="err" id="dlgErr" role="alert"></div>'+
+    '<div class="acts"><button class="btn" type="button" id="dlgNo">닫기</button><button class="btn '+(o.danger?"dng fill":"pri")+'" type="button" id="dlgOk">'+esc(o.ok)+'</button></div>';
   el("dlgNo").onclick=dlgClose; el("dlgOk").onclick=dlgGo;
   bg.hidden=false; requestAnimationFrame(function(){ bg.classList.add("on"); });
   el("app").inert=true;
   gateUpd();
-  setTimeout(function(){ var f=o.focus&&el(o.focus); (f||el(o.pin?"dlgOk":"dlgNo")).focus(); },40);
+  setTimeout(function(){ var f=o.focus&&el(o.focus); (f||el(o.danger?"dlgNo":"dlgOk")).focus(); },40);
 }
-function pinUi(note){
-  var h='<div class="pinw"><div class="lb">'+esc(note||"앱 로그인 PIN 4자리")+'</div><div class="pin" id="pinC" aria-label="PIN 4자리 · 입력한 자리 수 0">'+[0,1,2,3].map(function(i){ return '<i'+(i===0?' class="cur"':'')+'></i>'; }).join("")+'</div>'+
-    '<div class="pad">'+[1,2,3,4,5,6,7,8,9].map(function(d){ return '<button type="button" data-d="'+d+'">'+d+'</button>'; }).join("")+'<button type="button" class="fn" data-d="c">모두 지움</button><button type="button" data-d="0">0</button><button type="button" class="fn" data-d="b">한 칸 지움</button></div></div>';
-  el("dlgPin").innerHTML=h; DLG.needPin=true;
-  [].forEach.call(el("dlgPin").querySelectorAll(".pad button"),function(b){ b.onclick=function(){ pinKey(b.getAttribute("data-d")); }; });
-  if(el("dlgOk")) el("dlgOk").classList.add("lock");
-}
-function pinKey(d){
-  if(DLG.busy) return;
-  if(d==="c") DLG.pin=""; else if(d==="b") DLG.pin=DLG.pin.slice(0,-1); else if(/^\d$/.test(d)&&DLG.pin.length<4) DLG.pin+=d;
-  var c=el("pinC"); if(!c) return;
-  [].forEach.call(c.children,function(x,i){ x.textContent=i<DLG.pin.length?"●":""; x.className=i===DLG.pin.length?"cur":""; });
-  c.setAttribute("aria-label","PIN 4자리 · 입력한 자리 수 "+DLG.pin.length);
-  el("dlgErr").textContent=""; gateUpd();
-}
-function gateUpd(){ var ok=el("dlgOk"); if(!ok||!DLG.o) return; var g=(!DLG.needPin||DLG.pin.length===4)&&(!DLG.o.gate||DLG.o.gate()); ok.setAttribute("aria-disabled",g?"false":"true"); return g; }
+function gateUpd(){ var ok=el("dlgOk"); if(!ok||!DLG.o) return; var g=!DLG.o.gate||DLG.o.gate(); ok.setAttribute("aria-disabled",g?"false":"true"); return g; }
 function dlgGo(){
   var o=DLG.o; if(!o||DLG.busy) return;
-  if(!gateUpd()){ if(DLG.needPin&&DLG.pin.length<4) el("dlgErr").textContent="PIN 4자리를 넣습니다"; return; }
+  if(!gateUpd()) return;
   DLG.busy=true; var ok=el("dlgOk"), lab=ok.textContent; ok.textContent="처리 중"; ok.setAttribute("aria-disabled","true");
-  var ph="", spTried=false;
   var fin=function(res){
-    if(res&&res.reason==="spin"&&ph&&!spTried){ spTried=true;   /* 옛 서버 · 같은 해시로 본인 확인 → 이 한 번만 sp */
-      phToSp(ph).then(function(x){ if(x.ok) go({ ph:ph, sp:x.sp }); else { spTried=true; fin(x.r||{ ok:false }); } }); return; }
     DLG.busy=false;
     if(res&&res.ok){ var d=o.done; dlgClose(true); d&&d(res); return; }
-    if(res&&res.reason==="spin"&&!DLG.needPin){ ok.textContent=lab; pinUi("이 동작은 PIN 을 받습니다 · 앱 PIN 4자리"); el("dlgErr").textContent=res.big?"전체급 발송 · 약 "+n0(res.reach)+"명":""; gateUpd(); return; }
-    ok.textContent=lab; if(DLG.needPin) pinKey("c");
+    ok.textContent=lab;
     el("dlgErr").textContent=(o.fail?o.fail(res):"")||("처리하지 못했습니다 · "+why(res)); gateUpd();
   };
-  var go=function(pp){ Promise.resolve(o.run(pp||{})).then(fin,function(){ fin({ ok:false, reason:"network" }); }); };
-  if(DLG.needPin){ var pin=DLG.pin; DLG.pin=""; myPh(pin).then(function(h){ ph=h; go({ ph:h }); },function(){ fin({ ok:false, msg:"https 주소에서 엽니다", reason:"https" }); }); }
-  else go({});
+  Promise.resolve(o.run({})).then(fin,function(){ fin({ ok:false, reason:"network" }); });
 }
 function dlgClose(force){
   if(DLG.busy&&force!==true) return;
-  var bg=el("dlg"); bg.classList.remove("on"); DLG.o=null; DLG.pin=""; DLG.needPin=false; el("app").inert=false;
+  var bg=el("dlg"); bg.classList.remove("on"); DLG.o=null; el("app").inert=false;
   setTimeout(function(){ if(!bg.classList.contains("on")){ bg.hidden=true; el("dlgCard").innerHTML=""; } },180);
   var r=DLG.ret; DLG.ret=null; if(r&&r.focus&&document.body.contains(r)) r.focus();
 }
@@ -204,7 +167,6 @@ document.addEventListener("keydown",function(e){
   if(!DLG.o) { if(e.key==="/"&&!/INPUT|TEXTAREA|SELECT/.test((e.target||{}).tagName||"")&&authed()){ e.preventDefault(); el("gq").focus(); } return; }
   if(e.key==="Escape"){ e.preventDefault(); dlgClose(); return; }
   var tg=(e.target||{}).tagName;
-  if(DLG.needPin&&tg!=="INPUT"&&tg!=="TEXTAREA"){ if(/^\d$/.test(e.key)){ e.preventDefault(); pinKey(e.key); return; } if(e.key==="Backspace"){ e.preventDefault(); pinKey("b"); return; } }
   if(e.key==="Enter"&&tg!=="TEXTAREA"&&tg!=="BUTTON"){ e.preventDefault(); dlgGo(); }
 });
 document.addEventListener("click",function(e){ if(e.target===el("dlg")) dlgClose(); });
@@ -239,16 +201,10 @@ function dataGate(k, label){
   if(!d&&!e) return skel();
   if(!d&&e) return band("warn","받지 못했습니다 · "+esc(why(e)),'<button class="btn sm" type="button" onclick="reload([\''+k+'\'])">다시 시도</button>');
   if(unknownSrv(d)) return band("info","이 서버는 아직 "+esc(label||"이 기능")+"을 모릅니다 · 서버 갱신 뒤");
-  if(d&&d.ok===false&&d.reason==="spin") return band("info","이 서버는 아직 명단 보기에 PIN 을 받습니다 · 서버 갱신 뒤 PIN 없이 열림",'<button class="btn sm pri" type="button" onclick="readPinAsk()">PIN 넣고 보기</button>');
   if(d&&d.ok===false) return band("warn","받지 못했습니다 · "+esc(why(d)),'<button class="btn sm" type="button" onclick="reload([\''+k+'\'])">다시 시도</button>');
   return null;
 }
 function errTop(k){ return S.err[k]&&S.data[k]?band("warn","받지 못했습니다 · "+esc(why(S.err[k]))+" · 마지막 값을 회색으로 둡니다",'<button class="btn sm" type="button" onclick="reload([\''+k+'\'])">다시 시도</button>'):""; }
-function readPinAsk(){
-  confirmBox({ t:"명단을 PIN 확인 뒤 볼까요?", who:"옛 서버 · 명단 읽기", sub:"서버 갱신 뒤에는 묻지 않습니다", ok:"PIN 확인", pin:true,
-    run:function(pp){ return phToSp(pp.ph).then(function(x){ if(!x.ok) return x.r||{ ok:false }; READ_SP.sp=x.sp; READ_SP.until=Date.now()+25*60000; return { ok:true }; }); },
-    done:function(){ var ks=needs().filter(function(n){ return n.rd; }).map(function(n){ return n.k; }); reload(ks); } });
-}
 
 /* ── 8. 틀 · 상단 띠 · 하단 탭 7(고정) · 화면 ── */
 var IC=(function(){ var s=function(d){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>'; };

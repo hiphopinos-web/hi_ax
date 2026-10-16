@@ -1,6 +1,6 @@
 /* AXF CONTROL v2 · S4 경품 · 재고 (261016)
  * 왼쪽 = 옷 한 화면(숫자 카드 4 → 구분 칩 → 사이즈 표 → 사람 명단 표) · 오른쪽 = 룰렛 5등급 · 선착순 가습기 · 지급품(커피 박스)
- * 데이터 = kit_size_state · roll_list(kit · lounge) · ck_state(창구) · inv_state · fcfs_list · lk7_state · 읽기는 PIN 없음(옛 서버는 명단만 PIN)
+ * 데이터 = kit_size_state · roll_list(kit · lounge) · ck_state(창구) · inv_state · fcfs_list · lk7_state · 읽기 · 쓰기 PIN 없음(261016)
  * 룰렛 소진 안내 = L1(바로 · 되돌리기 토스트) · 17:00 잔여 입력 = L2(확인 창) */
 var PZ={ chip:"all", g:null, gf:null };
 var PZ_CH=[["all","전체"],["pre","사전 신청자"],["staff","스태프"],["lng","라운지 사전"]];
