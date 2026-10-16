@@ -392,7 +392,7 @@ function whoSrvCols(sc){
   var mk=function(k,n,w){ var c={}, b=by[k]||{}; for(var x in b) c[x]=b[x]; c.k=k; c.n=n; c.w=Math.max(c.w||0,w); return c; };
   var out=sc.filter(function(c){ return !(c&&P[c.k]); }); out.splice(ix,0,mk("emp","사번",84),mk("dept","소속",120),mk("name","이름",80)); return out;
 }
-/* 표 부품(table.js)은 고치지 않고 감싼다 · boot 에서 한 번 · 열 정의 · 서버 열 · 줄 · 선택 삭제 이름 · 못 한 줄 표 */
+/* 표 부품(table.js)은 고치지 않고 감싼다 · boot 에서 한 번 · 열 정의 · 서버 열 · 줄 · 선택 삭제 이름 */
 function whoHook(){
   if(typeof XG==="undefined"||XG._who) return; XG._who=1;
   var mk=XG.make, uc=XG.useCols, st=XG.set;
@@ -400,17 +400,4 @@ function whoHook(){
   XG.useCols=function(g, sc){ var r=uc.call(this, g, whoSrvCols(sc)); if(!g.o.noWho) g.o.cols=whoCols(g.o.cols, g.o); return r; };
   XG.set=function(g, rows){ if(rows&&g&&g.o&&(g.o.whoPool||g.o.whoCheck)) rows.forEach(function(r){ if(r&&typeof r==="object"){ if(g.o.whoPool) r._wp=g.o.whoPool; if(g.o.whoCheck) r._wck=1; } }); return st.apply(this, arguments); };
   if(typeof xgWho==="function") xgWho=function(r){ return personLine(r); };
-  if(typeof xgCxDone==="function") xgCxDone=whoCxDone;
-}
-/* 선택 삭제 결과 · 못 한 줄 표(사번 · 소속 · 이름 · 이유) · table.js 의 xgCxDone 을 대신한다(표 열만 다름) */
-function whoCxDone(g, r){
-  var c=g.o.cancel, bad=(r.rows||[]).filter(function(x){ return !x.ok; }), dn=num(r.done), u=g.o.unit||"명";
-  var byK={}; (r._rows||[]).forEach(function(x){ byK[x.emp]=x; byK[xgKey(g,x)]=x; if(x.id!=null) byK[x.id]=x; });
-  if(c.after) c.after(r); else XG.paint(g);
-  toast(dn?"삭제했습니다 · "+n0(dn)+u+(bad.length?" · 못 함 "+n0(bad.length):""):"삭제하지 못했습니다", dn&&r.batch?{ undo:function(){ XG.undo(g.id, r.batch); } }:{ bad:!dn });
-  if(!bad.length) return;
-  setTimeout(function(){ confirmBox({ t:n0(dn)+u+" 삭제 · "+n0(bad.length)+u+" 못 함", who:c.what||g.o.file||"명단", sub:"못 한 줄은 그대로 남았습니다", ok:"확인",
-    body:'<div class="xg-wrap" style="--xg-h:280px"><table class="tb xg-fail"><thead><tr><th scope="col">사번</th><th scope="col">소속</th><th scope="col">이름</th><th scope="col">이유</th></tr></thead><tbody>'+
-      bad.map(function(x){ var w0=byK[x.k]||byK[x.emp]||{}, w=whoOf({ emp:x.emp||w0.emp||x.k, name:w0.name, dept:w0.dept }); return '<tr><td>'+esc(w.e||x.k||"-")+'</td><td>'+esc(w.d||"-")+'</td><td>'+esc(w.n||"-")+'</td><td>'+esc(xgCxWhy(x))+'</td></tr>'; }).join("")+'</tbody></table></div>',
-    run:function(){ return Promise.resolve({ ok:true }); } }); },220);
 }

@@ -43,7 +43,7 @@ XG.put=function(g, ph){
   if(!ph.querySelector('[data-xg="'+g.id+'"]')){
     var o=g.o, cols=xgCols(g);
     ph.innerHTML='<div class="xg" data-xg="'+g.id+'">'+
-      '<div class="xg-bar"><input class="xg-q" type="search" placeholder="'+esc(o.ph||"이름 · 부서 · 사번 찾기")+'" aria-label="'+esc((o.file||"명단")+" 검색")+'" value="'+esc(g.q)+'" oninput="XG.find(\''+g.id+'\',this.value)"><span class="xg-cnt" data-c="cnt"></span><span class="xg-acts" data-c="acts"></span></div>'+
+      '<div class="xg-bar"><input class="xg-q" type="search" placeholder="'+esc(o.ph||"사번 · 소속 · 이름 찾기")+'" aria-label="'+esc((o.file||"명단")+" 검색")+'" value="'+esc(g.q)+'" oninput="XG.find(\''+g.id+'\',this.value)"><span class="xg-cnt" data-c="cnt"></span><span class="xg-acts" data-c="acts"></span></div>'+
       '<div class="xg-chips" role="group" aria-label="구분" data-c="chips"></div>'+
       '<div class="xg-wrap" style="--xg-h:'+(o.h||460)+'px"><table class="xg-t"><colgroup>'+(o.select?'<col style="width:44px">':'')+cols.map(function(c){ return '<col'+(c.w?' style="width:'+c.w+'px"':'')+'>'; }).join("")+'</colgroup><thead><tr data-c="head"></tr></thead><tbody data-c="body"></tbody></table></div><div data-c="note"></div></div>';
   }
@@ -127,8 +127,8 @@ function xgCxDone(g, r){
   toast(dn?"삭제했습니다 · "+n0(dn)+u+(bad.length?" · 못 함 "+n0(bad.length):""):"삭제하지 못했습니다", dn&&r.batch?{ undo:function(){ XG.undo(g.id, r.batch); } }:{ bad:!dn });
   if(!bad.length) return;
   setTimeout(function(){ confirmBox({ t:n0(dn)+u+" 삭제 · "+n0(bad.length)+u+" 못 함", who:c.what||g.o.file||"명단", sub:"못 한 줄은 그대로 남았습니다", ok:"확인",
-    body:'<div class="xg-wrap" style="--xg-h:280px"><table class="tb xg-fail"><thead><tr><th scope="col">이름</th><th scope="col">사번</th><th scope="col">이유</th></tr></thead><tbody>'+
-      bad.map(function(x){ var w=byK[x.k]||byK[x.emp]||{}; return '<tr><td>'+esc(w.name||"-")+'</td><td>'+esc(x.emp||w.emp||x.k)+'</td><td>'+esc(xgCxWhy(x))+'</td></tr>'; }).join("")+'</tbody></table></div>',
+    body:'<div class="xg-wrap" style="--xg-h:280px"><table class="tb xg-fail"><thead><tr><th scope="col">사번</th><th scope="col">소속</th><th scope="col">이름</th><th scope="col">이유</th></tr></thead><tbody>'+
+      bad.map(function(x){ var w0=byK[x.k]||byK[x.emp]||{}, w=whoOf({ emp:x.emp||w0.emp||x.k, name:w0.name, dept:w0.dept }); return '<tr><td>'+esc(w.e||x.k||"-")+'</td><td>'+esc(w.d||"-")+'</td><td>'+esc(w.n||"-")+'</td><td>'+esc(xgCxWhy(x))+'</td></tr>'; }).join("")+'</tbody></table></div>',
     run:function(){ return Promise.resolve({ ok:true }); } }); },220);   /* 앞 확인 창이 닫히는 시간(dlgClose 180ms) 뒤에 연다 */
 }
 XG.undo=function(id, batch){
