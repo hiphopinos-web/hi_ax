@@ -40,18 +40,18 @@ function paPaint(){
   if(R.err) return fin(band("warn","찾지 못했습니다 · "+esc(R.err)));
   if(!R.length) return fin('<p class="cap mt4">명부에 없는 이름 · 사번입니다</p>');
   var h='<div class="chips mt4" role="radiogroup" aria-label="찾은 사람">'+R.slice(0,20).map(function(x,i){ var on=PA.pick&&PA.pick.emp===x.emp, hv=sp.have&&sp.have(normE(x.emp));
-    return '<button type="button" role="radio" aria-checked="'+on+'" class="chip'+(on?" on":"")+'" onclick="paPick('+i+')">'+esc(x.name||"-")+' · '+esc(x.emp)+(x.dept?' · '+esc(x.dept):'')+(hv?' · 명단에 있음':'')+'</button>'; }).join("")+'</div>';
+    return '<button type="button" role="radio" aria-checked="'+on+'" class="chip'+(on?" on":"")+'" onclick="paPick('+i+')">'+esc(personLine(x))+(hv?' · 명단에 있음':'')+'</button>'; }).join("")+'</div>';
   var p=PA.pick;
   if(p){ var hv=sp.have&&sp.have(normE(p.emp));
     if(sp.opts) h+=sp.opts(p);
-    if(hv) h+=band("info",esc((p.name||p.emp)+" 님은 "+hv));
+    if(hv) h+=band("info",esc(personLine(p)+" · "+hv));
     if(sp.note) h+=sp.note(p)||"";
   }
   fin(h);
 }
 function paPick(i){ PA.pick=(PA.rows||[])[i]||null; paPaint(); }
 function paAfter(){ ppStale(); load(false); }
-function paWho(p){ return (p.name||"")+" · 사번 "+normE(p.emp)+(p.dept?" · "+p.dept:""); }
+function paWho(p){ return personLine(p); }
 /* 10F 사전 신청 · 세션 · 운영진 · 정원을 넘으면 경고만 */
 PA_SP.pre10=function(){ return { k:"pre10", t:"10F 사전 신청 추가", cap:"명부에서 찾기 → 세션 고르기 → 넣기 · 참가자 앱 「내 세션」 · 키트 · 끝 QR 자격이 같이 생김",
   have:function(e){ var hv=paHave(e); return hv?"이미 "+(hv.sn||p10Nm(hv.sid))+"에 있습니다 · 세션 바꾸기는 줄을 눌러 카드에서":""; },

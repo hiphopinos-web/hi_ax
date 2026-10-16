@@ -45,7 +45,7 @@ function ivOpen(id){
   else if(!L.ok) h+='<p class="cap">받지 못했습니다 · '+esc(ivWhy(L))+'</p>';
   else if(!rows.length) h+='<p class="cap">아직 없습니다</p>';
   else h+='<ul class="iv-ls">'+rows.slice(0,60).map(function(r){ var can=!r.v&&r.rid&&["give","box","chk","swap"].indexOf(r.k)>=0;
-    return '<li'+(r.v?' class="dim"':'')+'><div><b>'+esc(r.name||r.emp||"-")+'</b> <span class="cap n">'+esc(r.emp||"")+' · '+esc(fmtD(r.t))+'</span><div class="cap">'+esc((IV_KIND[r.k]||r.k)+(r.place?" · "+(IV_PLACE[r.place]||r.place):"")+(r.why?" · "+r.why:"")+(r.q&&r.q!==1?" · "+r.q+"개":""))+(r.v?" · 되돌림":"")+'</div></div>'+
+    return '<li'+(r.v?' class="dim"':'')+'><div><b>'+esc(r.emp?whoOf(r).n||"-":r.name||"-")+'</b>'+(r.emp?whoFlags(whoOf(r)):"")+' <span class="cap n">'+esc((r.emp?whoSub(r)+' · ':'')+fmtD(r.t))+'</span><div class="cap">'+esc((IV_KIND[r.k]||r.k)+(r.place?" · "+(IV_PLACE[r.place]||r.place):"")+(r.why?" · "+r.why:"")+(r.q&&r.q!==1?" · "+r.q+"개":""))+(r.v?" · 되돌림":"")+'</div></div>'+
       (can?'<button class="btn sm" type="button" onclick="ivUndoAsk(\''+jq(r.rid)+'\',\''+J+'\')">되돌리기</button>':'')+'</li>'; }).join("")+'</ul>'+(rows.length>60?'<p class="cap">앞 60줄 · 전체 '+n0(rows.length)+'줄</p>':'');
   drwOpen("inv:"+id, h+'</div>', { g:IV.g, label:it.n+" 재고 상세" });
 }
@@ -141,7 +141,7 @@ function cnPaint(){
   if(!IV.gno) IV.gno=XG.make({ id:"ckno", file:"체크인 번호 명단", key:function(r){ return r.no; }, sort:{ k:"no", d:1 },
     chips:[["all","전체",null]].concat(["A","B","C","D","E"].map(function(g){ return [g,g,function(r){ return r.seg===g; }]; })),
     cols:[{ k:"seg", t:"세션", w:60 },{ k:"no", t:"번호", w:80, v:function(r){ return r.no; }, f:function(r){ return '<b>'+esc(r.no)+'</b>'; } },{ k:"name", t:"이름", w:100 },{ k:"dept", t:"부서", w:140 },{ k:"sz", t:"사이즈", w:100, v:function(r){ return r.hum?"가습기 대체":r.sz||""; } }],
-    src:{ a:"ck_no_list" }, empty:"번호를 매긴 사람이 없습니다", h:420, onRow:function(k){ rowDetail(IV.gno,k,{ title:function(r){ return r.no+" · "+(r.name||""); } }); } });
+    src:{ a:"ck_no_list" }, whoPool:"kit", empty:"번호를 매긴 사람이 없습니다", h:420, onRow:function(k){ rowDetail(IV.gno,k,{ title:function(r){ return r.no+" · "+(whoOf(r).n||""); } }); } });
   var L=S.data.cnl, g2=dataGate("cnl","체크인 번호 명단"); IV.gno.gate=g2||"";
   XG.set(IV.gno, g2?null:cnSort(L.rows||[]), el("cnL"));
 }

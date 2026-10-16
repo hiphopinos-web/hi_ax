@@ -79,13 +79,13 @@ function ntTgt(t){ NT.tgt=t; NT.pv=null; ntSave(); ntForm(); ntPvGo(); if(t==="p
 function ntGrp(g){ NT.grp=g; NT.pv=null; ntSave(); ntForm(); ntPvGo(); }
 function ntIn(k, v){ NT[k]=k==="push"?!!v:v; NT.pv=null; ntSave(); if(k==="t"||k==="b"||k==="from") ntCnt(); clearTimeout(NT._q); NT._q=setTimeout(ntPvGo,450); ntPvPaint(); }
 function ntCnt(){ var c=function(id,n,mx){ var e=el(id); if(e) e.textContent=n+" / "+mx; }; c("ntCT",NT.t.length,NT_MAX.t); c("ntCB",NT.b.length,NT_MAX.b); }
-function ntPplPaint(){ var b=el("ntPpl"); if(!b) return; b.innerHTML=NT.ppl.length?NT.ppl.map(function(p){ return '<span class="pchip">'+esc(p.name||p.emp)+' <span class="cap">'+esc(p.emp)+'</span><button type="button" aria-label="'+esc((p.name||p.emp)+" 빼기")+'" onclick="ntDel(\''+jq(p.emp)+'\')">×</button></span>'; }).join("")+(NT.ppl.length>50?'<span class="cap" style="color:var(--bad)">50명을 넘습니다 · 나눠 보냅니다</span>':''):'<span class="cap">아직 고른 사람이 없습니다</span>'; }
+function ntPplPaint(){ var b=el("ntPpl"); if(!b) return; b.innerHTML=NT.ppl.length?NT.ppl.map(function(p){ return '<span class="pchip">'+esc(personLine(p))+'<button type="button" aria-label="'+esc(personLine(p)+" 빼기")+'" onclick="ntDel(\''+jq(p.emp)+'\')">×</button></span>'; }).join("")+(NT.ppl.length>50?'<span class="cap" style="color:var(--bad)">50명을 넘습니다 · 나눠 보냅니다</span>':''):'<span class="cap">아직 고른 사람이 없습니다</span>'; }
 function ntDel(e){ NT.ppl=NT.ppl.filter(function(p){ return p.emp!==e; }); NT.pv=null; ntSave(); ntPplPaint(); ntTxN(); ntPvGo(); }
 function ntQ(v){ NT.q=v; clearTimeout(NT._qq); var q=String(v||"").trim(); if(q.length<2){ NT.qr=null; ntQrPaint(); return; } NT._qq=setTimeout(function(){ var s=++NT.qseq; call("acct_page",{ q:q, n:8, sort:"last" }).then(function(r){ if(s!==NT.qseq) return; NT.qr=r; ntQrPaint(); }); },300); }
 function ntQrPaint(){ var b=el("ntQr"); if(!b) return; var r=NT.qr; if(!r){ b.innerHTML=""; return; }
   if(!r.ok){ b.innerHTML='<div class="cap">찾지 못했습니다 · '+esc(why(r))+'</div>'; return; }
   var rows=(r.rows||[]); b.innerHTML=rows.length?rows.map(function(x){ var on=NT.ppl.some(function(p){ return p.emp===x.emp; });
-    return '<button type="button" class="nt-hit"'+(on?' aria-disabled="true"':'')+' onclick="ntPick(\''+jq(x.emp)+'\',\''+jq(x.name)+'\',\''+jq(x.dept)+'\')"><b>'+esc(x.name||x.emp)+'</b><span class="cap">'+esc([x.dept,x.emp].filter(Boolean).join(" · "))+'</span>'+(on?tag("고름","ok"):x.acct?"":tag("가입 전","off"))+'</button>'; }).join(""):'<div class="cap">찾는 사람이 없습니다</div>'; }
+    return '<button type="button" class="nt-hit"'+(on?' aria-disabled="true"':'')+' onclick="ntPick(\''+jq(x.emp)+'\',\''+jq(x.name)+'\',\''+jq(x.dept)+'\')"><b>'+esc(whoOf(x).n||"-")+'</b><span class="cap">'+esc(whoSub(x))+'</span>'+(on?tag("고름","ok"):x.acct?"":tag("가입 전","off"))+'</button>'; }).join(""):'<div class="cap">찾는 사람이 없습니다</div>'; }
 function ntPick(e, n, d){ ntAddPerson({ emp:e, name:n, dept:d }); ntPplPaint(); ntQrPaint(); ntTxN(); ntPvGo(); }
 function ntTxN(){}
 /* 미리보기 · 잠금 화면 모양 + 인원 */

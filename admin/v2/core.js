@@ -46,6 +46,7 @@ function call(action, params, ms){
   return fetch(BE,{ method:"POST", body:body, cache:"no-store", redirect:"follow", signal:ctl?ctl.signal:undefined }).then(function(r){ return r.text(); }).then(function(t){
     clearTimeout(timer); var res; try{ res=JSON.parse(t); }catch(e){ res={ ok:false, reason:"network" }; }
     NET.push({ t:Date.now(), ms:Date.now()-t0, ok:!(res&&res.ok===false&&(res.reason==="busy"||res.err)) }); if(NET.length>60) NET.shift();
+    try{ whoLearn(res, action); }catch(e){}
     if(res&&res.ok===false&&res.reason==="auth"&&action!=="admin_check"){ lock("관리코드가 바뀌었거나 명단에서 빠졌습니다. 다시 입력합니다."); }
     return res||{ ok:false, reason:"network" };
   }).catch(function(){ clearTimeout(timer); NET.push({ t:Date.now(), ms:Date.now()-t0, ok:false }); return { ok:false, reason:to?"timeout":"network" }; });
@@ -114,6 +115,7 @@ function unlock(){
   });
 }
 function boot(){
+  whoHook();
   el("aemp").addEventListener("keydown",function(e){ if(e.key==="Enter"){ if(el("key").value) unlock(); else el("key").focus(); } });
   el("key").addEventListener("keydown",function(e){ if(e.key==="Enter") unlock(); });
   el("lockGo").onclick=unlock;
@@ -280,12 +282,135 @@ function drwHead(t, sub, tags){ return '<div class="card"><h2>'+esc(t)+(tags||""
 function rowDetail(g, key, o){
   o=o||{}; var r=(g.rows||[]).filter(function(x){ return g.o.key&&String(g.o.key(x))===String(key); })[0];
   if(!r){ drwClose(); return; }
-  var cols=xgCols(g).filter(function(c){ return !c.act&&c.t; }), emp=r.emp?normE(r.emp):"";
-  var kv='<dl class="cc-kv">'+cols.map(function(c){ var v=xgText(c,r); return '<dt>'+esc(c.t)+'</dt><dd>'+(v?esc(v):'<span class="cap">-</span>')+'</dd>'; }).join("")+'</dl>';
-  drwOpen(g.id+":"+key, drwHead(o.title?o.title(r):(r.name||r.emp||g.o.file||"줄"), (g.o.file||"명단")+" · 줄 상세")+kv+(o.extra?o.extra(r):"")+
+  var cols=xgCols(g).filter(function(c){ return !c.act&&c.t; }), w=whoOf(r), emp=w.e, isP=!!(w.e||w.n);
+  var kv='<dl class="cc-kv">'+cols.map(function(c){ var v=xgText(c,r); return '<dt>'+esc(c.t)+'</dt><dd>'+(v?esc(v):'<span class="cap">-</span>')+'</dd>'+(c.k==="dept"&&w.t?'<dt>팀 · 지점</dt><dd>'+esc(w.t)+'</dd>':''); }).join("")+'</dl>';
+  drwOpen(g.id+":"+key, drwHead(o.title?o.title(r):(isP?w.n||"-":g.o.file||"줄"), (isP?whoSub(r)+" · ":"")+(g.o.file||"명단")+" · 줄 상세", isP?whoFlags(w):"")+kv+(o.extra?o.extra(r):"")+
     (emp&&/^[0-9A-Z]{3,12}$/.test(emp)&&typeof pcOpen==="function"?'<div class="mt"><button class="btn big" type="button" onclick="pcOpen(\''+jq(emp)+'\')">한 사람 카드 열기</button></div>':'')+'</div>', { g:g, label:(g.o.file||"명단")+" 줄 상세" });
 }
 function copyTx(t, ok){ var done=function(){ toast(ok||"복사했습니다"); };
   try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(done,function(){ copyOld(t); done(); }); return; } }catch(e){}
   copyOld(t); done(); }
 function copyOld(t){ var a=document.createElement("textarea"); a.value=t; a.style.position="fixed"; a.style.opacity="0"; document.body.appendChild(a); a.select(); try{ document.execCommand("copy"); }catch(e){} a.remove(); }
+
+/* ── 10. 사람 표시 · 사번 · 소속 · 이름(261016 밤 사용자 「사람이 나오는 모든 곳에 세 가지」 · 소속 = 부서 단위) ──
+ * 표 열 = 사번 · 소속 · 이름(첫 사람 열 자리에) · 좁은 카드 = 두 줄(이름 굵게 + 「사번 · 소속」) · 한 줄 글 = 「사번 · 소속 · 이름」
+ * 소속 = 서버 dept(명부 부서 「부서 · 팀」, 없으면 명부 부문)의 앞 칸 = 부서 · 뒤 칸(팀 · 지점)은 줄 상세에만
+ * 빈 값 = 콘솔이 받은 다른 명단과 사번으로 맞추고 · 그래도 없으면 서버 명부 찾기(og_gate_find · 읽기)로 채운다 · 없으면 「-」
+ * 이름만 있는 줄 = 이름으로 찾고 · 동명이인이면 채우지 않고 「동명이인 n」 · 사번 · 이름이 다 있는데 명부 이름과 다르면 「명부와 다름」
+ * 직원 명부 파일은 콘솔에 두지 않는다(공개 저장소) · 늘 서버에서 읽는다 */
+var WHO={ e:{}, n:{}, ask:{}, q:[], run:0, used:0, cap:400, pool:{}, pt:0 };
+var WHO_PRI={ og_gate_find:3, list_get:2, acct_page:2, roll_list:2, person_card:2 };
+function wNm(s){ return String(s==null?"":s).replace(/\s+/g,""); }
+function dptU(d){ return String(d==null?"":d).split(" · ")[0].trim(); }
+function dptT(d){ var a=String(d==null?"":d).split(" · "); return a.length>1?a.slice(1).join(" · ").trim():""; }
+function whoOkE(e){ return /^[0-9A-Z]{3,12}$/.test(e); }
+function whoPut(e, n, d, p){
+  e=normE(e); if(!whoOkE(e)) return; var o=WHO.e[e]||(WHO.e[e]={ n:"", d:"", p:0, pn:0, r:"" });
+  n=String(n==null?"":n).trim(); d=String(d==null?"":d).trim();
+  if(n&&(!o.n||p>=o.pn)){ o.n=n; o.pn=p; } if(d&&(!o.d||p>=o.p)){ o.d=d; o.p=p; } if(p>=3&&n) o.r=n;
+}
+/* 서버 응답에서 사람 줄(emp + name | dept)을 배운다 · 3단계까지 */
+function whoLearn(res, a){
+  if(!res||res.ok===false) return; var p=WHO_PRI[a]||1;
+  var walk=function(o, dep){ if(!o||typeof o!=="object"||dep>3) return;
+    if(Array.isArray(o)){ for(var i=0;i<o.length&&i<8000;i++){ var x=o[i]; if(x&&typeof x==="object"){ if(x.emp&&(x.name||x.dept)) whoPut(x.emp, x.name, x.dept, p); if(dep<3) for(var k in x) if(x[k]&&typeof x[k]==="object") walk(x[k], dep+1); } } return; }
+    for(var k2 in o) if(o[k2]&&typeof o[k2]==="object") walk(o[k2], dep+1); };
+  walk(res, 0);
+}
+/* 서버 명부 찾기 줄 세우기 · 한 번에 하나 · 같은 것은 한 번만 · 한 화면 열기에 최대 cap 번 */
+function whoAsk(kind, v){
+  var key=kind+":"+v; if(WHO.ask[key]||WHO.used>=WHO.cap||!authed()) return; WHO.ask[key]=1; WHO.q.push([kind, v]); whoPump();
+}
+function whoPump(){
+  if(WHO.run||!WHO.q.length) return; var j=WHO.q.shift(); WHO.run=1; WHO.used++;
+  call("og_gate_find",{ by:"name", q:String(j[1]).slice(0,30) }).then(function(r){
+    WHO.run=0; var rs=r&&r.ok&&Array.isArray(r.rows)?r.rows:null;
+    if(rs&&j[0]==="n"){ var k=wNm(j[1]); WHO.n[k]=rs.filter(function(x){ return wNm(x.name)===k; }).map(function(x){ return normE(x.emp); }); }
+    if(rs&&j[0]==="e"){ var e=normE(j[1]); (WHO.e[e]=WHO.e[e]||{ n:"", d:"", p:0, pn:0, r:"" }).asked=1; }   /* 명부에 없어도 다시 묻지 않는다 */
+    if(!rs) setTimeout(function(){ delete WHO.ask[j[0]+":"+j[1]]; },60000);   /* 실패는 1분 뒤 다시 */
+    whoRepaint(); whoPump(); });
+}
+function whoRepaint(){ if(WHO.pt) return; WHO.pt=setTimeout(function(){ WHO.pt=0; if(authed()&&!DLG.o) paint(); },300); }
+/* 같은 명단 안에서 이름 맞추기(o.whoPool = list_get 종류 · 그 명단의 부분 집합인 줄만 · 예 체크인 번호 = 옷 명단) */
+function whoPoolGet(kind){
+  var P=WHO.pool[kind]; if(P&&(P.busy||Date.now()-P.at<300000)) return P.busy?P:P.ok?P:{ busy:0, m:{} };
+  WHO.pool[kind]={ busy:1, at:Date.now(), ok:P&&P.ok, m:P&&P.m };
+  call("list_get",{ kind:kind }).then(function(r){ var m={};
+    if(r&&r.ok&&Array.isArray(r.rows)) r.rows.forEach(function(x){ var k=wNm(x.name), e=normE(x.emp); if(!k||!e) return; m[k]=m[k]||[]; if(m[k].indexOf(e)<0) m[k].push(e); });
+    WHO.pool[kind]={ busy:0, at:Date.now(), ok:!!(r&&r.ok), m:m }; whoRepaint(); });
+  return P&&P.ok?P:null;
+}
+function whoByName(n, pool){
+  var k=wNm(n); if(!k) return null;
+  if(pool){ var P=whoPoolGet(pool); return P&&!P.busy?(P.m[k]||[]):null; }
+  if(WHO.n[k]) return WHO.n[k];
+  whoAsk("n", n); return null;
+}
+/* 한 사람 = { e 사번 · n 이름 · d 소속(부서) · t 팀 · 지점 · dup 동명이인 수 · diff 명부와 다름 } */
+function whoOf(r){
+  r=r||{}; var e=normE(r.emp||""), n=String(r.name||r.nm||"").trim(), d=String(r.dept||"").trim(), dup=0;
+  if(!whoOkE(e)) e="";
+  if(!e&&n){ var hit=whoByName(n, r._wp); if(hit&&hit.length===1) e=hit[0]; else if(hit&&hit.length>1) dup=hit.length; }
+  var o=e?WHO.e[e]:null;
+  /* 소속은 명부 부서를 쓰는 명단(list_get · 찾기)의 값이 먼저 · 줄에 딸린 부서(부문일 수 있음)는 그다음
+   * 없으면 먼저 접속 명단(가입한 사람 전부 · 5분에 한 번) · 거기도 없으면 명부 찾기(한 사람 한 번) · 이름을 사람이 넣는 명단(PIN 분실)은 바로 명부 찾기 */
+  if(e&&r._wck&&!(o&&o.asked)) whoAsk("e", e);
+  else if(e&&!(o&&o.asked)&&!(o&&o.p>=2)){ var V=whoPoolGet("visit"); if(V&&!V.busy&&!((o=WHO.e[e])&&o.p>=2)) whoAsk("e", e); }
+  o=e?WHO.e[e]:null;
+  var nn=n||(o&&o.n)||"", dd=(o&&o.p>=2&&o.d)||d||(o&&o.d)||"";
+  return { e:e, n:nn, d:dptU(dd), t:dptT(dd), dup:dup, diff:!!(e&&n&&o&&o.r&&wNm(o.r)!==wNm(n)) };
+}
+function whoFlags(w){ return (w.dup?" "+tag("동명이인 "+w.dup,"warn"):"")+(w.diff?" "+tag("명부와 다름","warn"):""); }
+/* 한 줄 글 「사번 · 소속 · 이름」(확인 창 · 서랍) */
+function personLine(r){ var w=whoOf(r); return [w.e||"-", w.d||"-", (w.n||"-")+(w.dup?" (동명이인 "+w.dup+")":"")+(w.diff?" (명부와 다름)":"")].join(" · "); }
+/* 둘째 줄 「사번 · 소속」 */
+function whoSub(r){ var w=whoOf(r); return (w.e||"-")+" · "+(w.d||"-"); }
+/* 「사번 · 소속」 html · 줄을 넘기면 「 · 」 자리에서(값은 가르지 않음) */
+function whoSubH(r){ var w=whoOf(r); return '<span class="nw">'+esc(w.e||"-")+'</span> <span class="nw">· '+esc(w.d||"-")+'</span>'; }
+/* 좁은 카드 두 줄 html · 이름 굵게 + 「사번 · 소속」 작게 */
+function personTwo(r, extra){ var w=whoOf(r); return '<span class="who2"><span class="wl"><b class="wn">'+esc(w.n||"-")+'</b>'+whoFlags(w)+(extra||"")+'</span><span class="ws">'+whoSubH(r)+'</span></span>'; }
+/* 표 열 · 사번 · 소속 · 이름을 첫 사람 열 자리에 · 이름 열 tags(r) = 이름 뒤 꼬리표 · whoV(r) = 이름 칸 값 바꾸기(여러 명 기록 「n명」) */
+function whoCols(cols, o){
+  o=o||{}; if(!Array.isArray(cols)||o.noWho) return cols;
+  var P={ emp:1, name:1, dept:1 }, by={}, ix=-1;
+  cols.forEach(function(c,i){ if(c&&P[c.k]){ by[c.k]=c; if(ix<0) ix=i; } });
+  if(ix<0||(by.emp&&by.emp._who)) return cols;
+  var N=by.name||{}, E=by.emp||{}, D=by.dept||{}, full=!!o.whoFull;
+  var dash=function(s){ return s?esc(s):'<span class="cap">-</span>'; };
+  var dv=function(r){ var w=whoOf(r); return full&&w.t?w.d+" · "+w.t:w.d; };
+  var ce={ k:"emp", t:"사번", w:E.w||84, _who:1, v:function(r){ return whoOf(r).e; }, f:function(r){ return dash(whoOf(r).e); } };
+  var cd={ k:"dept", t:"소속", w:Math.max(D.w||0,full?160:120), _who:1, v:dv, f:function(r){ return dash(dv(r)); } };
+  var cn={ k:"name", t:"이름", w:N.w||90, _who:1, v:function(r){ return N.whoV?N.whoV(r):whoOf(r).n; },
+    f:function(r){ var w=whoOf(r), t=N.whoV?N.whoV(r):w.n; return (t?esc(t):'<span class="cap">-</span>')+(N.whoV&&N.whoV(r)!==w.n?"":whoFlags(w))+(N.tags?N.tags(r):""); } };
+  var out=cols.filter(function(c){ return !(c&&P[c.k]); });
+  out.splice(ix,0,ce,cd,cn); return out;
+}
+/* 서버 열(list_get cols) · 사번 · 소속 · 이름 순서 · 「부서」 → 「소속」 */
+function whoSrvCols(sc){
+  if(!Array.isArray(sc)) return sc; var P={ emp:1, name:1, dept:1 }, ix=-1, by={};
+  sc.forEach(function(c,i){ if(c&&P[c.k]){ by[c.k]=c; if(ix<0) ix=i; } }); if(ix<0) return sc;
+  var mk=function(k,n,w){ var c={}, b=by[k]||{}; for(var x in b) c[x]=b[x]; c.k=k; c.n=n; c.w=Math.max(c.w||0,w); return c; };
+  var out=sc.filter(function(c){ return !(c&&P[c.k]); }); out.splice(ix,0,mk("emp","사번",84),mk("dept","소속",120),mk("name","이름",80)); return out;
+}
+/* 표 부품(table.js)은 고치지 않고 감싼다 · boot 에서 한 번 · 열 정의 · 서버 열 · 줄 · 선택 삭제 이름 · 못 한 줄 표 */
+function whoHook(){
+  if(typeof XG==="undefined"||XG._who) return; XG._who=1;
+  var mk=XG.make, uc=XG.useCols, st=XG.set;
+  XG.make=function(o){ if(o&&o.cols) o.cols=whoCols(o.cols, o); return mk.apply(this, arguments); };
+  XG.useCols=function(g, sc){ var r=uc.call(this, g, whoSrvCols(sc)); if(!g.o.noWho) g.o.cols=whoCols(g.o.cols, g.o); return r; };
+  XG.set=function(g, rows){ if(rows&&g&&g.o&&(g.o.whoPool||g.o.whoCheck)) rows.forEach(function(r){ if(r&&typeof r==="object"){ if(g.o.whoPool) r._wp=g.o.whoPool; if(g.o.whoCheck) r._wck=1; } }); return st.apply(this, arguments); };
+  if(typeof xgWho==="function") xgWho=function(r){ return personLine(r); };
+  if(typeof xgCxDone==="function") xgCxDone=whoCxDone;
+}
+/* 선택 삭제 결과 · 못 한 줄 표(사번 · 소속 · 이름 · 이유) · table.js 의 xgCxDone 을 대신한다(표 열만 다름) */
+function whoCxDone(g, r){
+  var c=g.o.cancel, bad=(r.rows||[]).filter(function(x){ return !x.ok; }), dn=num(r.done), u=g.o.unit||"명";
+  var byK={}; (r._rows||[]).forEach(function(x){ byK[x.emp]=x; byK[xgKey(g,x)]=x; if(x.id!=null) byK[x.id]=x; });
+  if(c.after) c.after(r); else XG.paint(g);
+  toast(dn?"삭제했습니다 · "+n0(dn)+u+(bad.length?" · 못 함 "+n0(bad.length):""):"삭제하지 못했습니다", dn&&r.batch?{ undo:function(){ XG.undo(g.id, r.batch); } }:{ bad:!dn });
+  if(!bad.length) return;
+  setTimeout(function(){ confirmBox({ t:n0(dn)+u+" 삭제 · "+n0(bad.length)+u+" 못 함", who:c.what||g.o.file||"명단", sub:"못 한 줄은 그대로 남았습니다", ok:"확인",
+    body:'<div class="xg-wrap" style="--xg-h:280px"><table class="tb xg-fail"><thead><tr><th scope="col">사번</th><th scope="col">소속</th><th scope="col">이름</th><th scope="col">이유</th></tr></thead><tbody>'+
+      bad.map(function(x){ var w0=byK[x.k]||byK[x.emp]||{}, w=whoOf({ emp:x.emp||w0.emp||x.k, name:w0.name, dept:w0.dept }); return '<tr><td>'+esc(w.e||x.k||"-")+'</td><td>'+esc(w.d||"-")+'</td><td>'+esc(w.n||"-")+'</td><td>'+esc(xgCxWhy(x))+'</td></tr>'; }).join("")+'</tbody></table></div>',
+    run:function(){ return Promise.resolve({ ok:true }); } }); },220);
+}

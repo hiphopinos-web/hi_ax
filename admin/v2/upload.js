@@ -107,7 +107,7 @@ function upRowOpen(k){
   var o=(UP.rows||[]).filter(function(x){ return String(x.no)===String(k); })[0]; if(!o) return;
   if(o.cand&&o.cand.length){
     drwOpen("up:"+k, drwHead(o.name0||"동명이인","파일 "+o.no+"번째 줄 · 같은 이름 "+o.cand.length+"명")+'<p class="cap mt4">명부에서 고릅니다 · 고르면 미리 세기를 다시 합니다</p><div class="col mt">'+
-      o.cand.map(function(c){ return '<button class="btn up-cand" type="button" onclick="upPick('+Number(o.no)+',\''+jq(c.emp)+'\')"><b>'+esc(c.name)+'</b><span>'+esc([c.dept,c.emp].filter(Boolean).join(" · "))+'</span></button>'; }).join("")+'</div></div>', { g:UP.g, label:"동명이인 고르기" });
+      o.cand.map(function(c){ return '<button class="btn up-cand" type="button" onclick="upPick('+Number(o.no)+',\''+jq(c.emp)+'\')"><b>'+esc(c.name)+'</b><span>'+esc(whoSub(c))+'</span></button>'; }).join("")+'</div></div>', { g:UP.g, label:"동명이인 고르기" });
     return; }
   rowDetail(UP.g, k);
 }
@@ -176,7 +176,7 @@ function upPaint(){
   var s3=el("upS3");
   if(!UP.rows){ s3.innerHTML='<h2>3 · 미리 세기 결과</h2>'+emptyH(UP.aoa?"「미리 세기」를 누르면 줄마다 결과가 보입니다":"파일을 먼저 고릅니다"); return; }
   var bad=upBad(), pv=UP.pv;
-  if(!UP.g) UP.g=XG.make({ id:sp.id, file:sp.file, key:function(r){ return String(r.no); }, sort:{ k:"no", d:1 }, chips:sp.chips, cols:sp.cols, h:420, empty:"줄이 없습니다", ph:"사번 · 이름 찾기", onRow:upRowOpen });
+  if(!UP.g) UP.g=XG.make({ id:sp.id, file:sp.file, noWho:1, key:function(r){ return String(r.no); }, sort:{ k:"no", d:1 }, chips:sp.chips, cols:sp.cols, h:420, empty:"줄이 없습니다", ph:"사번 · 이름 찾기", onRow:upRowOpen });
   if(!el("upKp")) s3.innerHTML='<h2>3 · 미리 세기 결과</h2><div id="upKp"></div><div id="upBand"></div><div id="upTbl"></div><div class="up-go" id="upGo"></div>';
   el("upKp").innerHTML=sp.kpis(pv, UP.rows, UP.mode);
   el("upBand").innerHTML=bad?band("bad","문제 "+n0(bad)+"줄 · 파일을 고친 뒤 다시 올립니다 · 문제가 있으면 적용하지 않습니다"):UP.rows.length?band("info","문제 없음 · 적용할 수 있습니다"):band("warn","올릴 줄이 없습니다");

@@ -171,9 +171,9 @@ function dcBody(d){
   var more='<details class="memo mt"'+(DC.more?" open":"")+' ontoggle="DC.more=this.open"><summary>세부 명령 · 화면이 지금 받는 명령만 켜짐 · 빨간 단추는 두 번</summary><div class="dc-pad mt">'+DC_BTN.filter(function(b){ return b.c!=="fin"||finOn(); }).map(btn).join("")+'</div>'+(s&&s.ver?'<p class="cap mt4">화면 '+esc(s.ver)+'</p>':'')+'</details>';
   var last=s&&s.last&&s.last.no?s.last:null, rec=null;
   if(last&&last.id) rec=((d.recs||[]).filter(function(r){ return r.id===last.id; })[0])||null;
-  var won=last?'<div class="win"><span class="cap">'+esc((last.round||"")+(last.slot?" · "+last.slot:""))+'</span><div class="no">'+esc(last.no)+'</div><b>'+esc(rec?rec.name||last.nm||"":last.nm||"")+'</b><span class="cap">'+esc(rec?rec.dept||"":"")+'</span><div>'+(last.st&&last.st!=="win"?tag(last.st==="absent"?"부재":"취소","off"):tag("당첨","ok"))+' '+esc(last.prize||(rec&&rec.prize)||"")+'</div>'+(rec&&rec.st==="win"?'<div class="cap">폰 확인 '+(rec.ack?rec.ack:"아직")+'</div>':'')+'</div>':'<p class="cap">아직 당첨 공개가 없습니다</p>';
+  var won=last?'<div class="win"><span class="cap">'+esc((last.round||"")+(last.slot?" · "+last.slot:""))+'</span><div class="no">'+esc(last.no)+'</div><b>'+esc(whoOf(rec||{ nm:last.nm }).n||"-")+'</b><span class="cap">'+esc(whoSub(rec||{ nm:last.nm }))+'</span>'+whoFlags(whoOf(rec||{ nm:last.nm }))+'<div>'+(last.st&&last.st!=="win"?tag(last.st==="absent"?"부재":"취소","off"):tag("당첨","ok"))+' '+esc(last.prize||(rec&&rec.prize)||"")+'</div>'+(rec&&rec.st==="win"?'<div class="cap">폰 확인 '+(rec.ack?rec.ack:"아직")+'</div>':'')+'</div>':'<p class="cap">아직 당첨 공개가 없습니다</p>';
   var w=((d.recs)||[]).filter(function(r){ return r.st==="win"&&r.live; }).slice(0,12), ackN=w.filter(function(r){ return !!r.ack; }).length;
-  var ack=w.length?'<div class="card mt"><h2>당첨자 폰 확인 <span class="cap">'+ackN+' / '+w.length+'</span></h2><table class="tb"><tbody>'+w.map(function(r){ return '<tr><td class="n"><b>'+esc(r.no||"-")+'</b></td><td>'+esc(r.name||r.nm||"")+'</td><td>'+esc(r.prize||"")+'</td><td>'+(r.ack?tag("확인 "+r.ack,"ok"):tag("미확인","warn"))+'</td></tr>'; }).join("")+'</tbody></table></div>':"";
+  var ack=w.length?'<div class="card mt"><h2>당첨자 폰 확인 <span class="cap">'+ackN+' / '+w.length+'</span></h2><table class="tb"><tbody>'+w.map(function(r){ return '<tr><td class="n"><b>'+esc(r.no||"-")+'</b></td><td class="n">'+esc(whoOf(r).e||"-")+'</td><td>'+esc(whoOf(r).d||"-")+'</td><td>'+esc(whoOf(r).n||"-")+whoFlags(whoOf(r))+'</td><td>'+esc(r.prize||"")+'</td><td>'+(r.ack?tag("확인 "+r.ack,"ok"):tag("미확인","warn"))+'</td></tr>'; }).join("")+'</tbody></table></div>':"";
   return head+rej+(!aOff?band("warn","행운권 참석조건 ON · 추첨 화면 조작 창(P)에서 「체크인 화면 쓰기」를 함께 켭니다"):"")+kp+'<div class="grid g32"><div>'+main+more+'</div><div><div class="card"><h2>방금 당첨 <span class="cap">실명 · 부서는 상품 전달용</span></h2>'+won+'</div>'+ack+'</div></div>';
 }
 
@@ -190,7 +190,7 @@ function ikPaint(){
   if(gt){ top.innerHTML=gt; } else {
     var P=IK_PH[d.ph]||["-",""], prz=ikPrz(d), picks=d.picks||[], mx=d.max||5;
     top.innerHTML='<div class="card"><h2>선정 '+tag(P[0],P[1])+' <span class="cap">마감 '+esc(d.cut||"없음")+' · 접수 '+(d.open?"열림":"닫힘")+' · 선정 '+picks.length+' / '+mx+'</span></h2><div class="ik-slots">'+prz.map(function(z){ var got=picks.filter(function(p){ return Number(p.rk)===Number(z.rk); }), out="";
-      for(var i=0;i<(Number(z.n)||0);i++){ var p=got[i]; out+='<div class="ik-slot'+(p?" got":"")+'"><div><b>'+z.rk+'등</b> <span class="cap">AI 구독권 '+z.mo+'개월</span></div>'+(p?'<div class="mt4"><b>'+esc(p.name||"-")+'</b> <span class="cap">'+esc(p.emp)+'</span></div><div class="cap">'+esc(IK_CH[p.ch]||p.ch||"")+(p.why?" · "+esc(p.why):"")+'</div><button class="btn sm mt4" type="button" onclick="ikUnpickAsk(\''+jq(p.emp)+'\')">선정 취소</button>':'<div class="cap mt4">비어 있음</div>')+'</div>'; }
+      for(var i=0;i<(Number(z.n)||0);i++){ var p=got[i]; out+='<div class="ik-slot'+(p?" got":"")+'"><div><b>'+z.rk+'등</b> <span class="cap">AI 구독권 '+z.mo+'개월</span></div>'+(p?'<div class="mt4">'+personTwo(p)+'</div><div class="cap">'+esc(IK_CH[p.ch]||p.ch||"")+(p.why?" · "+esc(p.why):"")+'</div><button class="btn sm mt4" type="button" onclick="ikUnpickAsk(\''+jq(p.emp)+'\')">선정 취소</button>':'<div class="cap mt4">비어 있음</div>')+'</div>'; }
       return out; }).join("")+'</div></div>'; }
   var C=d&&d.ok?d.cand||{}:{};
   el("ikCh").innerHTML=["lounge_pre","lounge_day","chat"].map(function(k){ return '<button type="button" class="chip'+(IK.ch===k?" on":"")+'" aria-pressed="'+(IK.ch===k)+'" onclick="ikCh(\''+k+'\')">'+esc(IK_CH[k])+' <span class="c">'+n0(C[k])+'</span></button>'; }).join("");
@@ -204,7 +204,7 @@ function ikCh(k){ IK.ch=k; S.at.ikl=0; S.data.ikl=null; paint(); load(false); }
 function ikLate(v){ IK.late=v?1:0; S.at.ikl=0; S.data.ikl=null; paint(); load(false); }
 function ikOpen(emp){
   var r=ikRow(emp); if(!r) return; var pk=ikPickOf(emp);
-  drwOpen("ik:"+emp, drwHead(r.name||emp, [IK_CH[r.ch]||IK_CH[IK.ch], "사번 "+emp, fmtD(r.at)].filter(Boolean).join(" · "), r.late?" "+tag("마감 뒤","warn"):"")+
+  drwOpen("ik:"+emp, drwHead(whoOf(r).n||emp, [whoSub(r), IK_CH[r.ch]||IK_CH[IK.ch], fmtD(r.at)].filter(Boolean).join(" · "), whoFlags(whoOf(r))+(r.late?" "+tag("마감 뒤","warn"):""))+
     '<div class="cc-fld">아이디어</div><div class="memo cc-memo">'+(r.text?esc(r.text):'<span class="cap">본문 없음</span>')+'</div>'+
     '<div class="mt">'+(pk?tag(pk.rk+"등 선정","ok")+'<div class="btns mt"><button class="btn" type="button" onclick="ikUnpickAsk(\''+jq(emp)+'\')">선정 취소</button></div>':'<button class="btn pri big" type="button" onclick="ikPickAsk(\''+jq(emp)+'\')">아이디어왕으로 선정</button>')+'</div>'+
     '<div class="mt"><button class="btn big" type="button" onclick="pcOpen(\''+jq(emp)+'\')">한 사람 카드 열기</button></div></div>', { g:MG.ikl, label:"아이디어 후보 상세" });
@@ -212,7 +212,7 @@ function ikOpen(emp){
 function ikPickAsk(emp){
   var d=S.data.ik||{}, r=ikRow(emp)||{ emp:emp }, prz=ikPrz(d), picks=d.picks||[];
   var opts=prz.map(function(z){ var left=Math.max(0,(Number(z.n)||0)-picks.filter(function(p){ return Number(p.rk)===Number(z.rk); }).length); return '<option value="'+z.rk+'"'+(left?"":" disabled")+'>'+z.rk+'등 · AI 구독권 '+z.mo+'개월 · 남은 자리 '+left+'</option>'; }).join("");
-  confirmBox({ t:"아이디어왕으로 선정할까요?", who:(r.name||emp)+" · 사번 "+emp, sub:(IK_CH[r.ch]||IK_CH[IK.ch])+" · Outro 에서 사회자가 이름을 읽음 · 7초 안 되돌리기",
+  confirmBox({ t:"아이디어왕으로 선정할까요?", who:personLine({ emp:emp, name:r.name, dept:r.dept }), sub:(IK_CH[r.ch]||IK_CH[IK.ch])+" · Outro 에서 사회자가 이름을 읽음 · 7초 안 되돌리기",
     body:'<label class="fld">등수<select class="in" id="ikRk" onchange="gateUpd()"><option value="">고릅니다</option>'+opts+'</select></label><label class="fld">선정 사유(필수)<input class="in" id="ikWhy" maxlength="80" autocomplete="off" oninput="gateUpd()" placeholder="예: 보상 서류 자동 분류 · 바로 적용 가능"></label>'+
       (r.late?'<label class="up-ck mt"><input type="checkbox" id="ikAck" onchange="gateUpd()"> 마감 뒤 접수 · 그래도 선정합니다</label>':''),
     focus:"ikRk", ok:"선정", gate:function(){ var k=el("ikRk"), w=el("ikWhy"), a=el("ikAck"); return !!(k&&k.value)&&String((w||{}).value||"").trim().length>=2&&(!r.late||!!(a&&a.checked)); },
@@ -221,7 +221,7 @@ function ikPickAsk(emp){
     done:function(x){ if(x.picks&&S.data.ik) S.data.ik.picks=x.picks; reload(["ik","ikl"]); paint(); if(DRW.k==="ik:"+emp) ikOpen(emp); toast("선정했습니다 · "+(r.name||emp),{ undo:function(){ ikUnpickGo(emp); } }); } });
 }
 var PZ_WHY2={ nocand:"후보가 아닌 사번입니다", max:"그 등수는 이미 다 찼습니다", rk:"등수를 고릅니다", why:"사유를 적습니다", early:"마감 시각 전에는 확정할 수 없습니다", nolock:"먼저 대상을 확정합니다", stale:"확정 뒤 바뀌었습니다 · 대상을 다시 확정합니다", drawn:"이미 추첨했습니다", done:"이미 추첨했습니다", rem:"룰렛 잔여를 먼저 저장합니다", notwin:"지금 당첨자가 아닙니다", eventday:"행사일에는 할 수 없습니다" };
-function ikUnpickAsk(emp){ var p=ikPickOf(emp)||{ emp:emp }; confirmBox({ t:"선정을 취소할까요?", who:(p.name||emp)+" · 사번 "+emp+(p.rk?" · "+p.rk+"등":""), sub:"후보로 돌아감 · 활동 기록에 남음", ok:"선정 취소", danger:true, run:function(){ return call("ideaking_unpick",{ emp:normE(emp) }); }, done:function(){ ikAfterUnpick(emp); toast("선정을 취소했습니다 · "+emp); } }); }
+function ikUnpickAsk(emp){ var p=ikPickOf(emp)||{ emp:emp }; confirmBox({ t:"선정을 취소할까요?", who:personLine({ emp:emp, name:p.name, dept:p.dept })+(p.rk?" · "+p.rk+"등":""), sub:"후보로 돌아감 · 활동 기록에 남음", ok:"선정 취소", danger:true, run:function(){ return call("ideaking_unpick",{ emp:normE(emp) }); }, done:function(){ ikAfterUnpick(emp); toast("선정을 취소했습니다 · "+emp); } }); }
 function ikUnpickGo(emp){ call("ideaking_unpick",{ emp:normE(emp) }).then(function(x){ if(x&&x.ok){ ikAfterUnpick(emp); toast("되돌렸습니다 · "+emp); } else toast("되돌리지 못했습니다 · "+why(x),{ bad:1 }); }); }
 function ikAfterUnpick(emp){ var d=S.data.ik; if(d&&d.picks) d.picks=d.picks.filter(function(p){ return normE(p.emp)!==normE(emp); }); reload(["ik","ikl"]); paint(); if(DRW.k==="ik:"+emp) ikOpen(emp); }
 
@@ -278,7 +278,7 @@ function lkVoidAsk(){
   if(w.length<2){ toast("사유를 적습니다"); return; }
   call("lk7_void",{ emp:e, dry:"1" }).then(function(r){
     if(!r||!r.ok){ toast("교체할 수 없습니다 · "+(r&&PZ_WHY2[r.reason]||why(r)),{ bad:1 }); return; }
-    confirmBox({ t:"이 당첨을 취소할까요?", who:(r.name||"-")+" · "+e+" · 7등 랜덤 굿즈", sub:"사유 "+w+" · "+(r.sub?"승계 "+(r.sub.name||"-")+" "+(r.sub.emp||"")+(r.sub.rk?" (예비 "+r.sub.rk+"순위)":""):"예비 없음 · 경품 보관")+" · 되돌릴 수 없음", ok:"당첨 취소", danger:true,
+    confirmBox({ t:"이 당첨을 취소할까요?", who:personLine({ emp:e, name:r.name, dept:r.dept })+" · 7등 랜덤 굿즈", sub:"사유 "+w+" · "+(r.sub?"승계 "+personLine(r.sub)+(r.sub.rk?" (예비 "+r.sub.rk+"순위)":""):"예비 없음 · 경품 보관")+" · 되돌릴 수 없음", ok:"당첨 취소", danger:true,
       run:function(){ return call("lk7_void",{ emp:e, why:w }); }, fail:function(x){ return x&&PZ_WHY2[x.reason]||""; },
       done:function(x){ LK.vo={ emp:"", why:"" }; reload(["lk"]); toast("취소했습니다"+(x.sub?" · 예비 승계":" · 경품 보관"),{ ms:5000 }); } });
   });
@@ -287,7 +287,7 @@ function lkVoidAsk(){
 function lkXls(){
   confirmBox({ t:"7등 당첨 명단을 엑셀로 내려받을까요?", who:"7등 랜덤 굿즈 사내 우편", sub:"순번 · 사번 · 이름 · 부문 · 당첨 번호 · 당첨 시각 · 개인정보 파일", ok:"엑셀 다운로드",
     run:function(){ return call("lk7_export",{}).then(function(r){ if(!r||!r.ok) return r||{ ok:false };
-      var g=MG.lk7x||gridOf("lk7x",{ file:"7등 사내 우편", key:function(x){ return x.emp; }, cols:[{ k:"no", t:"순번", type:"num", w:60 },{ k:"emp", t:"사번", w:90 },{ k:"name", t:"이름", w:100 },{ k:"dept", t:"부문", w:140 },{ k:"set", t:"당첨 번호", w:90 },{ k:"at", t:"당첨 시각", type:"date", w:120 }] });
+      var g=MG.lk7x||gridOf("lk7x",{ file:"7등 사내 우편", whoFull:1, key:function(x){ return x.emp; }, cols:[{ k:"no", t:"순번", type:"num", w:60 },{ k:"emp", t:"사번", w:90 },{ k:"name", t:"이름", w:100 },{ k:"dept", t:"소속", w:160 },{ k:"set", t:"당첨 번호", w:90 },{ k:"at", t:"당첨 시각", type:"date", w:120 }] });
       g.rows=r.rows||[]; return xgFile(g, g.rows); }); },
     done:function(x){ toast("내려받았습니다 · "+x.name); } });
 }

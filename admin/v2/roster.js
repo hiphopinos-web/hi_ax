@@ -25,8 +25,8 @@ function dnyTop(){
 }
 function dnyAdd(emps){
   var all=!emps; if(all) emps=dnyShut().slice(0,500).map(function(x){ return x.emp; }); if(!emps.length) return;
-  var rows=(S.data.dny&&S.data.dny.rows)||[], nm=function(e){ var r=rows.filter(function(x){ return x.emp===e; })[0]; return r&&r.name?r.name:e; };
-  confirmBox({ t:"접속 허용 명단에 "+emps.length+"명을 넣을까요?", who:emps.slice(0,5).map(nm).join(", ")+(emps.length>5?" 외 "+(emps.length-5)+"명":""), sub:"클로즈 베타 · 사전 신청자까지 범위에서 바로 로그인 · 명부에 없는 사번은 서버가 뺌", ok:emps.length+"명 넣기",
+  var rows=(S.data.dny&&S.data.dny.rows)||[], nm=function(e){ return personLine(rows.filter(function(x){ return x.emp===e; })[0]||{ emp:e }); };
+  confirmBox({ t:"접속 허용 명단에 "+emps.length+"명을 넣을까요?", who:emps.slice(0,3).map(nm).join(", ")+(emps.length>3?" 외 "+(emps.length-3)+"명":""), sub:"클로즈 베타 · 사전 신청자까지 범위에서 바로 로그인 · 명부에 없는 사번은 서버가 뺌", ok:emps.length+"명 넣기",
     run:function(){ return call("roll_apply",{ list:"gate", op:"add", emps:emps.join(","), rid:rid() }); },
     done:function(r){ var n=(r.done||[]).length; reload(["dny"]); ppStale();
       toast(n+"명을 접속 허용 명단에 넣었습니다"+((r.noros||[]).length?" · 명부 밖 "+r.noros.length+"명 뺌":""), r.batch?{ undo:function(){ rollBack(r.batch, function(){ reload(["dny"]); }); } }:{}); } });
@@ -58,7 +58,7 @@ function adrGrid(sc){
   return gridOf("adr_"+sc,{ file:ADR_SC[sc][0], key:function(r){ return r.emp; }, sort:{ k:"name", d:1 }, src:{ a:"adm_roster", p:{}, pick:function(res){ return (res[sc]||{}).rows||[]; } }, h:360, empty:"명단이 비어 있습니다", onRow:function(k){ pcOpen(k, MG["adr_"+sc]); },
     select:1, onAdd:function(){ paOpen(adrSp(sc)); },
     cancel:{ kind:sc==="c"?"admin":"staff", part:sc==="c"?null:function(){ return "app"; }, what:ADR_SC[sc][0], sub:"빼는 즉시 이 사람의 "+(sc==="c"?"콘솔":"앱 스태프 화면")+" 로그인이 끊김 · 맨 앞 사번 · 본인은 서버가 막음", after:function(){ reload(["admr"]); } },
-    cols:[{ k:"name", t:"이름", w:120, f:function(r){ return '<b>'+esc(r.name||"(이름 없음)")+'</b>'+(r.sup?" "+tag("고정"):""); } },{ k:"emp", t:"사번", w:80 },{ k:"dept", t:"부서", w:120 },{ k:"acct", t:"앱 가입", w:64, v:function(r){ return r.acct?"가입":"명부만"; } }] });
+    cols:[{ k:"name", t:"이름", w:120, tags:function(r){ return r.sup?" "+tag("고정"):""; } },{ k:"emp", t:"사번", w:80 },{ k:"dept", t:"부서", w:120 },{ k:"acct", t:"앱 가입", w:64, v:function(r){ return r.acct?"가입":"명부만"; } }] });
 }
 function adrCard(sc){
   var d=S.data.admr, L=d&&d.ok?d[sc]||{}:null;
@@ -66,7 +66,7 @@ function adrCard(sc){
     '<div id="mg_adr_'+sc+'" class="mt"></div></div>';
 }
 function adrRows(sc){ var d=S.data.admr; return d&&d.ok?((d[sc]||{}).rows||[]):[]; }
-function adrNm(sc, e){ var r=adrRows(sc).filter(function(x){ return x.emp===e; })[0]; return r&&r.name?r.name+" · "+e:e; }
+function adrNm(sc, e){ return personLine(adrRows(sc).filter(function(x){ return x.emp===e; })[0]||{ emp:e }); }
 function adrSet(sc, op, emps){ return call("adm_roster_set",{ sc:sc, op:op, emps:emps }).then(function(r){ if(r&&r.ok&&r.list&&S.data.admr&&S.data.admr.ok){ S.data.admr[sc]=r.list; paint(); } return r; }); }
 /* 「추가」 창(edit.js paOpen) · 명부 찾기 → 넣기 · 처음 저장이면 경고 한 줄 · 되돌리기 = 반대 동작 */
 function adrSp(sc){

@@ -20,7 +20,7 @@ SCREENS.log={
     var h=chipsH(LG_SUBS,s);
     if(s==="log"){
       gridOf("alog",{ file:"활동 기록", key:function(r){ return r.ref; }, sort:{ k:"t", d:-1 }, chips:LOG_CAT, onRow:function(k){ lgOpen(k); },
-        cols:[{ k:"t", t:"시각", type:"date", w:90 },{ k:"verb", t:"한 일", w:70 },{ k:"x", t:"내용", w:320, v:function(r){ return lgWhat(r); } },{ k:"name", t:"대상", w:110, v:function(r){ return r.cnt?r.cnt+"명":r.name||r.emp||""; } },
+        cols:[{ k:"t", t:"시각", type:"date", w:90 },{ k:"verb", t:"한 일", w:70 },{ k:"x", t:"내용", w:320, v:function(r){ return lgWhat(r); } },{ k:"name", t:"이름", w:110, whoV:function(r){ return r.cnt?r.cnt+"명":whoOf(r).n; } },
           { k:"byName", t:"처리자", w:110, v:function(r){ return r.byName||r.by||""; } },{ k:"byK", t:"어디서", w:84, v:function(r){ return BYK_N[r.byK]||r.byK||""; } },{ k:"res", t:"결과", w:70, v:function(r){ return /^x:/.test(r.res||"")?"실패":r.res==="dup"?"이미 받음":""; } },
           { k:"undo", t:"되돌리기", w:96, v:function(r){ return lgUndoTx(r); }, f:function(r){ var t=lgUndoTx(r); return t==="가능"?tag("가능",""):t?'<span class="cap">'+esc(t)+'</span>':""; } }],
         empty:"오늘 기록이 없습니다", h:540 });
@@ -51,16 +51,16 @@ function lgOpen(ref){
   var r=lgRow(ref); if(!r){ drwClose(); return; }
   var u=r.undo, ok=u&&u.ok&&!u.done&&GEN_UNDO[u.a];
   var body='<dl class="cc-kv"><dt>시각</dt><dd>'+esc(r.t)+'</dd><dt>누가</dt><dd>'+esc((r.byName||r.by||"기록 없음")+" · "+(BYK_N[r.byK]||""))+'</dd><dt>어디서</dt><dd>'+esc((r.src==="scan"?"스태프 폰 스캔":r.src==="stamp"?"참여 기록":"운영로그")+" · "+(r.k||""))+'</dd><dt>무엇</dt><dd>'+esc(lgWhat(r))+'</dd>'+
-    (r.emp&&!r.cnt?'<dt>누구에게</dt><dd>'+esc((r.name||"")+" "+r.emp)+'</dd>':'')+'<dt>결과</dt><dd>'+(/^x:/.test(r.res||"")?tag("실패 · "+r.res.slice(2),"bad"):r.res==="dup"?tag("이미 받음","warn"):tag("성공","ok"))+'</dd></dl>'+
-    (r.cnt&&(r.names||[]).length?'<div class="cc-fld">대상 '+r.cnt+'명'+(r.cnt>40?" 중 40명":"")+'</div><div class="fx-w mt4">'+r.names.map(function(n){ return '<span class="pchip">'+esc(n)+'</span>'; }).join("")+'</div>':'')+
+    (r.emp&&!r.cnt?'<dt>누구에게</dt><dd>'+esc(personLine(r))+'</dd>':'')+'<dt>결과</dt><dd>'+(/^x:/.test(r.res||"")?tag("실패 · "+r.res.slice(2),"bad"):r.res==="dup"?tag("이미 받음","warn"):tag("성공","ok"))+'</dd></dl>'+
+    (r.cnt&&(r.names||[]).length?'<div class="cc-fld">대상 '+r.cnt+'명'+(r.cnt>40?" 중 40명":"")+'</div><div class="fx-w mt4">'+r.names.map(function(n,i){ var e=(r.emps||[])[i]; return '<span class="pchip">'+esc(e?personLine({ emp:e, name:n }):n)+'</span>'; }).join("")+'</div>':'')+
     (ok?'<div class="mt"><button class="btn pri big" type="button" onclick="lgUndoAsk(\''+jq(r.ref)+'\')">되돌리기 · '+esc(u.lbl||GEN_UNDO[u.a])+'</button><p class="cap mt4">'+esc(GEN_NOTE[u.a]||"")+' · 되돌린 일도 기록에 새 줄로 남음</p></div>':u&&u.done?'<p class="cap mt">'+esc(u.done)+' 되돌림</p>':u&&u.a==="roulette_undo"?'<div class="mt"><button class="btn dng big" type="button" onclick="rlUndoAsk(\''+jq(u.emp)+'\')">룰렛 사용 취소</button><p class="cap mt4">룰렛 타일로 잘못 찍었을 때 · 사유가 기록에 남음</p></div>':'')+
     (r.emp&&!r.cnt?'<div class="mt"><button class="btn big" type="button" onclick="pcOpen(\''+jq(r.emp)+'\')">한 사람 카드 열기</button></div>':'');
-  drwOpen("alog:"+ref, drwHead((r.verb||"기록")+" · "+(r.cnt?r.cnt+"명":r.name||r.emp||r.k||""), fmtD(r.t))+body+'</div>', { g:MG.alog, label:"활동 기록 상세" });
+  drwOpen("alog:"+ref, drwHead((r.verb||"기록")+" · "+(r.cnt?r.cnt+"명":r.emp||r.name?personLine(r):r.k||""), fmtD(r.t))+body+'</div>', { g:MG.alog, label:"활동 기록 상세" });
 }
 function lgUndoAsk(ref){
   var r=lgRow(ref); if(!r||!r.undo) return; var u=r.undo;
   var a=u.a, p={}; if(a==="roll_undo") p={ batch:u.b }; else { for(var k in (u.p||{})) p[k]=u.p[k]; p.uref=r.ref; }
-  confirmBox({ t:(u.lbl||GEN_UNDO[a])+"를 할까요?", who:(r.name||r.emp||(r.cnt?r.cnt+"명":""))+" · "+lgWhat(r), sub:"처음 처리 "+fmtD(r.t)+" · "+(r.byName||r.by||"-")+" · "+(GEN_NOTE[a]||""), ok:"되돌리기", danger:a==="stamp_revoke",
+  confirmBox({ t:(u.lbl||GEN_UNDO[a])+"를 할까요?", who:(r.cnt?r.cnt+"명":r.emp||r.name?personLine(r):"")+" · "+lgWhat(r), sub:"처음 처리 "+fmtD(r.t)+" · "+(r.byName||r.by||"-")+" · "+(GEN_NOTE[a]||""), ok:"되돌리기", danger:a==="stamp_revoke",
     run:function(){ return call(a,p); },
     fail:function(x){ return x&&({ state:"그 사이 상태가 바뀌었습니다", roulette:"룰렛을 이미 돌렸습니다", tickets:"행운권이 이미 나갔습니다", fcfs:"선착순 가습기를 받았습니다", notlast:"그 뒤에 10F 명단이 또 바뀌었습니다" })[x.reason]||""; },
     done:function(x){ reload(["alog","nb"]); ppStale(); toast("되돌렸습니다 · "+(u.lbl||GEN_UNDO[a])+(x&&x.done!=null&&a==="roll_undo"?" · "+n0(x.done)+"명"+((x.skip||[]).length?" · 건너뜀 "+x.skip.length:""):"")); } });
@@ -146,7 +146,7 @@ function scClearAsk(){
 function rlUndoAsk(emp){
   call("roulette_undo",{ emp:emp, dry:1 }).then(function(d){
     d=d||{}; if(!d.ok){ toast(d.reason==="notused"?"서버 기록에 룰렛 사용이 없습니다":"확인하지 못했습니다 · "+why(d),{ bad:1 }); return; }
-    confirmBox({ t:"룰렛 사용을 취소할까요?", who:(d.name||emp)+" · 사번 "+emp, sub:"룰렛을 다시 돌릴 수 있게 됨"+(d.g?" · 등급 기록 "+d.g+" 함께 되돌림":"")+" · 실물 경품을 이미 받았으면 먼저 회수",
+    confirmBox({ t:"룰렛 사용을 취소할까요?", who:personLine({ emp:emp, name:d.name, dept:d.dept }), sub:"룰렛을 다시 돌릴 수 있게 됨"+(d.g?" · 등급 기록 "+d.g+" 함께 되돌림":"")+" · 실물 경품을 이미 받았으면 먼저 회수",
       body:'<div class="chips">'+["스캔 오류(잘못 찍음)","같은 사람 두 번","기타"].map(function(c){ return '<button type="button" class="chip" onclick="el(\'rluWhy\').value=\''+c+'\';gateUpd()">'+esc(c)+'</button>'; }).join("")+'</div><label class="fld">사유(2~60자)<input class="in" id="rluWhy" maxlength="60" autocomplete="off" oninput="gateUpd()"></label>',
       focus:"rluWhy", ok:"사용 취소", danger:true, gate:function(){ return String((el("rluWhy")||{}).value||"").trim().length>=2; },
       run:function(){ return call("roulette_undo",{ emp:emp, why:String(el("rluWhy").value).trim() }); },

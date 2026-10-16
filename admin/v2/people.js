@@ -31,7 +31,7 @@ SCREENS.people={
     if(s==="up"){ vb.innerHTML=h+'<div id="ppUp"></div>'; if(S.ui.pup&&UP&&UP.sp.people) upMount(el("ppUp")); else ppUpPick(); return; }
     if(s==="find"){
       gridOf("pfind",{ file:"찾기 결과", key:function(r){ return r.emp; }, sort:{ k:"last", d:-1 }, noDl:1, onRow:function(k){ pcOpen(k, MG.pfind); },
-        cols:[{ k:"name", t:"이름", w:110, f:function(r){ return '<b>'+esc(r.name||"(이름 없음)")+'</b>'+(r.test?" "+tag("시험","off"):""); } },{ k:"emp", t:"사번", w:90 },{ k:"dept", t:"부서", w:150 },
+        cols:[{ k:"name", t:"이름", w:110, tags:function(r){ return r.test?" "+tag("시험","off"):""; } },{ k:"emp", t:"사번", w:90 },{ k:"dept", t:"부서", w:150 },
           { k:"acct", t:"가입", w:80, v:function(r){ return r.acct?"가입":"명부만"; }, f:function(r){ return r.acct?tag("가입","ok"):tag("명부만","off"); } },{ k:"n", t:"스탬프", type:"num", w:70, v:function(r){ return r.acct?r.n:""; } },
           { k:"last", t:"최근 접속", type:"date", w:110 },{ k:"pw", t:"PIN", w:80, v:function(r){ return !r.acct?"":r.pw?"있음":"초기화 대기"; } }], h:420, empty:"찾는 사람이 없습니다 · 명부에도 없는 사번 · 이름입니다" });
       vb.innerHTML=h+'<div class="card"><div class="pp-find"><input class="xg-q pp-q" id="ppQ" type="search" autocomplete="off" placeholder="사번 · 이름 · 부서" aria-label="사람 찾기" value="'+esc(S.ui.pq||"")+'" onkeydown="if(event.key===\'Enter\'&&!event.isComposing){ event.preventDefault(); peopleQ(this.value); }"><button class="btn pri" type="button" onclick="peopleQ(el(\'ppQ\').value)">찾기</button><span class="cap">명부에만 있는 사람(가입 전)도 나옵니다 · 어느 화면에서든 / 를 누르면 위 찾기 칸</span></div><div id="mg_pfind" class="mt"></div></div>';
@@ -80,7 +80,7 @@ function ppWearCol(g){
   var col={ k:"wear10", t:"옷", w:110, v:function(r){ return ppWearT(ppWear(r)); },
     f:function(r){ var w=ppWear(r); return w.st==="sz"?'<span class="cap">'+esc(KIT_GN[w.g]||w.g)+'</span> <b>'+esc(w.sz)+'</b>'+(w.how==="자동"?' <span class="cap">자동</span>':''):w.st==="none"?tag("미선택","warn"):tag("옷 명단 밖","off"); } };
   var i=-1; g.o.cols.forEach(function(c,j){ if(c.k==="size") i=j; });
-  if(i>=0) g.o.cols.splice(i,1,col); else { g.o.cols.forEach(function(c,j){ if(c.k==="role"||(i<0&&c.k==="dept")) i=j; }); g.o.cols.splice(i+1,0,col); }
+  if(i>=0) g.o.cols.splice(i,1,col); else { g.o.cols.forEach(function(c,j){ if(c.k==="role"||(i<0&&c.k==="name")) i=j; }); g.o.cols.splice(i+1,0,col); }
   var root=XG.root(g); if(root) root.remove();
 }
 /* 옷 수량 시트 · 행 = 종류 · 사이즈(+ 미선택 · 옷 명단 밖 · 합계) · 열 = 세션(pre10) 또는 없음(staff) + 합계 · 합계 = 시트 1 줄 수 */
@@ -141,7 +141,7 @@ function pcHtml(d){
   st.forEach(function(x){ by[x.id]=x; });
   var pg=Math.min(2,(by.p3?2:by.p3h?1:0)+(by.p10?2:by.p10h?1:0)+(by.ln?2:0)+(by.cc?1:0));   /* 서버 progUnits_ 와 같은 셈 · ck = 0개 */
   var tags=(d.test||L.test?" "+tag("시험","off"):"")+(d.acct?"":" "+tag("가입 전","off"))+(L.staffApp?" "+tag("스태프"):"")+(d.ckno?" "+tag("체크인 "+d.ckno+"번"):"");
-  var h=drwHead(d.name||e, [d.dept,"사번 "+e].filter(Boolean).join(" · "), tags);
+  var w=whoOf(d), h=drwHead(w.n||e, whoSub(d), whoFlags(w)+tags);
   h+='<div class="btns mt">'+(d.acct?'<button class="btn" type="button" onclick="pcPush(\''+J+'\')">이 사람에게 푸시</button>':'')+(d.acct&&d.pw?'<button class="btn" type="button" onclick="pcPinAsk(\''+J+'\')">PIN 초기화</button>':'')+'<button class="btn" type="button" onclick="pcLoad()">새로 받기</button></div>';
   /* 접속 */
   h+=pcSec("접속", d.acct?'가입 <b class="n">'+esc(fmtD(d.joined))+'</b> · 최근 <b class="n">'+esc(fmtD(d.last)||"-")+'</b> · 오늘 <b class="n">'+n0(v.today||0)+'</b>회 · PIN '+(d.pw?"있음":"초기화 대기")+' · 알림 기기 '+n0(d.push&&d.push.subs||0)+'대':'아직 가입 안 함(명부만)');
@@ -194,9 +194,10 @@ function pcAtt(e){
   return '<table class="tb"><thead><tr><th>층</th><th>세션 · 강연</th><th>입장</th><th>종료</th></tr></thead><tbody>'+rows.map(function(x){ return '<tr><td>'+x.fl+'</td><td>'+esc(x.pn||"")+'</td><td class="n">'+esc(fmtD(x["in"])||"-")+'</td><td class="n">'+esc(fmtD(x.out)||"-")+'</td></tr>'; }).join("")+'</tbody></table>';
 }
 function pcAfter(){ ppStale(); S.at.nb=0; pcLoad(); load(false); }
+function pcWho(emp){ return personLine(PC.d&&PC.d.ok&&normE(PC.d.emp)===normE(emp)?PC.d:{ emp:emp }); }
 function pcNm(){ var d=PC.d; return d&&d.ok?(d.name||d.emp):PC.emp; }
 function stGrantAsk(emp, id){
-  confirmBox({ t:"스탬프를 부여할까요?", who:pcNm()+" · 사번 "+emp, sub:stName(id)+(id==="p3"?" · 2개로 셈":"")+" · 참여 기록에 「담당자 부여」로 남습니다", ok:"부여",
+  confirmBox({ t:"스탬프를 부여할까요?", who:pcWho(emp), sub:stName(id)+(id==="p3"?" · 2개로 셈":"")+" · 참여 기록에 「담당자 부여」로 남습니다", ok:"부여",
     run:function(){ return call("stamp_grant",{ emp:emp, id:id }); },
     fail:function(r){ return r&&r.reason==="noid"?"부여할 수 없는 항목입니다":""; },
     done:function(r){ pcAfter(); if(r.dup){ toast("이미 있는 스탬프입니다 · "+stName(id)); return; } toast("부여했습니다 · "+(r.who||emp)+" · "+stName(id),{ undo:function(){ stRevokeGo(emp, id, 1); } }); } });
@@ -206,7 +207,7 @@ function stRevokeAsk(emp, id){
   call("stamp_revoke",{ emp:emp, id:id, dry:1 }).then(function(x){
     x=x||{};
     if(!x.ok){ toast("취소할 수 없습니다 · "+(ST_NO[x.reason]||why(x)),{ bad:1, ms:5000 }); if(x.reason==="nostamp") pcLoad(); return; }
-    confirmBox({ t:"스탬프를 취소할까요?", who:pcNm()+" · 사번 "+emp, sub:stName(id)+" · 개수 "+num(x.n)+" → "+num(x.nAfter)+" · 행운권 "+n0(x.tickets||0)+"장 그대로 · 룰렛 "+(x.roulette?"사용함":"안 씀"),
+    confirmBox({ t:"스탬프를 취소할까요?", who:pcWho(emp), sub:stName(id)+" · 개수 "+num(x.n)+" → "+num(x.nAfter)+" · 행운권 "+n0(x.tickets||0)+"장 그대로 · 룰렛 "+(x.roulette?"사용함":"안 씀"),
       body:'<p class="cap">기록을 지우지 않고 「담당자 취소」 줄을 남깁니다. 같은 행동으로 다시 받을 수 있습니다.</p>', ok:"취소 처리", danger:true,
       run:function(){ return call("stamp_revoke",{ emp:emp, id:id }); },
       fail:function(r){ return r&&ST_NO[r.reason]||""; },
@@ -216,7 +217,7 @@ function stRevokeAsk(emp, id){
 function stRevokeGo(emp, id){ call("stamp_revoke",{ emp:emp, id:id }).then(function(r){ pcAfter(); toast(r&&r.ok?"되돌렸습니다 · "+stName(id):"되돌리지 못했습니다 · "+(r&&ST_NO[r.reason]||why(r)),{ bad:!(r&&r.ok) }); }); }
 function stGrantGo(emp, id){ call("stamp_grant",{ emp:emp, id:id }).then(function(r){ pcAfter(); toast(r&&r.ok?"되돌렸습니다 · "+stName(id):"되돌리지 못했습니다 · "+why(r),{ bad:!(r&&r.ok) }); }); }
 function pcPinAsk(emp){
-  confirmBox({ t:"PIN 을 초기화할까요?", who:pcNm()+" · 사번 "+emp, sub:"본인 확인(사원증 · 얼굴) 뒤 · 다음 로그인에서 넣는 4자리가 새 PIN · 로그인해 둔 다른 폰은 끊김", body:'<p class="cap">되돌릴 수 없습니다.</p>', ok:"PIN 초기화", danger:true,
+  confirmBox({ t:"PIN 을 초기화할까요?", who:pcWho(emp), sub:"본인 확인(사원증 · 얼굴) 뒤 · 다음 로그인에서 넣는 4자리가 새 PIN · 로그인해 둔 다른 폰은 끊김", body:'<p class="cap">되돌릴 수 없습니다.</p>', ok:"PIN 초기화", danger:true,
     run:function(){ return call("acct_pwreset",{ emp:emp }); },
     done:function(r){ pcAfter(); toast("PIN 을 초기화했습니다 · "+(r.name||emp)+(r.already?" · 이미 초기화 상태":"")); } });
 }
@@ -225,7 +226,7 @@ function pcResetAsk(emp){
   call("test_reset",{ emp:emp, dry:"1" }).then(function(r){
     if(!(r&&r.ok)){ toast(r&&r.reason==="eventday"?"행사일에는 실제 사번을 초기화할 수 없습니다":"확인하지 못했습니다 · "+why(r),{ bad:1, ms:5000 }); return; }
     var pl=r.plan||{}, ks=Object.keys(RS_LBL).filter(function(k){ return pl[k]; }), w=r.word||"처음상태";
-    confirmBox({ t:"이 사람을 처음 상태로 돌릴까요?", who:(r.name||pcNm())+" · 사번 "+emp, sub:(r.test?"시험 사번":"실제 사번")+" · 로그인해 둔 폰은 끊김 · 되돌릴 수 없음",
+    confirmBox({ t:"이 사람을 처음 상태로 돌릴까요?", who:personLine(PC.d&&PC.d.ok?PC.d:{ emp:emp, name:r.name }), sub:(r.test?"시험 사번":"실제 사번")+" · 로그인해 둔 폰은 끊김 · 되돌릴 수 없음",
       body:(ks.length?'<table class="tb"><tbody>'+ks.map(function(k){ return '<tr><td>'+esc(RS_LBL[k])+'</td><td class="n">'+(k==="pin"?"있음 · 비움":n0(pl[k])+"줄")+'</td></tr>'; }).join("")+'</tbody></table>':'<p class="cap">지울 기록이 없습니다</p>')+
         '<label class="fld">확인 문구 「'+esc(w)+'」를 그대로 넣습니다<input class="in" id="rsQ" autocomplete="off" oninput="gateUpd()"></label>',
       focus:"rsQ", ok:"처음 상태로", danger:true, gate:function(){ var i=el("rsQ"); return !!i&&i.value.trim()===w; },

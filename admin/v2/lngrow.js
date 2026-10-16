@@ -7,7 +7,7 @@
 var LA={ time:"", seat:0, memo:"", pre:0 };
 var LA_WHY={ param:"사번을 확인하세요", noros:"명부에 없는 사번입니다", dup:"이미 라운지 명단에 있습니다", time:"그 시간은 칸 밖입니다", seat:"미팅룸이 범위 밖이거나, 시간 없이 미팅룸만 골랐습니다", cap:"그 칸은 정원이 찼습니다" };
 var LA_DWHY={ param:"사번을 확인하세요", notfound:"라운지 명단에 없습니다 · 목록을 다시 받습니다" };
-function laWhoAt(emp){ var e=normE(emp), r=((S.data.resv&&S.data.resv.rows)||[]).filter(function(x){ return normE(x.emp)===e; })[0]; return r?(r.name||"")+" · 사번 "+r.emp:"사번 "+emp; }
+function laWhoAt(emp){ var e=normE(emp), r=((S.data.resv&&S.data.resv.rows)||[]).filter(function(x){ return normE(x.emp)===e; })[0]; return personLine(r||{ emp:emp }); }
 function laFail(r){
   if(!r) return "";
   if(r.reason==="clash") return "같은 칸 같은 미팅룸에 "+laWhoAt(r.with)+" 님이 있습니다";
@@ -31,7 +31,7 @@ function laSp(){
       h+='<div class="nt-f"><div class="nt-l">시간</div><div class="chips" role="radiogroup" aria-label="시간 칸">'+tm+'</div></div>';
       if(LA.time&&P){ var ti=Math.floor((mins(LA.time)-P.s0)/cf.step), sh='<button type="button" role="radio" aria-checked="'+(!LA.seat)+'" class="chip'+(!LA.seat?" on":"")+'" onclick="laSeat(0)">자동 · 빈 자리</button>';
         for(var s=1;s<=cf.seats;s++){ var o=(P.grid[ti]||[])[s-1], busy=o&&RV_ON.indexOf(o.status)>=0, on2=LA.seat===s;
-          sh+='<button type="button" role="radio" aria-checked="'+on2+'" class="chip'+(on2?" on":"")+'"'+(busy?' disabled aria-disabled="true"':'')+' onclick="laSeat('+s+')">미팅룸 '+s+(busy?' <span class="c">'+esc(o.name||o.emp)+'</span>':'')+'</button>'; }
+          sh+='<button type="button" role="radio" aria-checked="'+on2+'" class="chip'+(on2?" on":"")+'"'+(busy?' disabled aria-disabled="true"':'')+' onclick="laSeat('+s+')">미팅룸 '+s+(busy?' <span class="c">'+esc(personLine(o))+'</span>':'')+'</button>'; }
         h+='<div class="nt-f"><div class="nt-l">미팅룸</div><div class="chips" role="radiogroup" aria-label="미팅룸">'+sh+'</div></div>'; }
       return h+'<label class="nt-f"><span class="nt-l">메모(선택)</span><input class="xg-q" id="laMemo" maxlength="60" autocomplete="off" placeholder="60자까지" aria-label="메모" value="'+esc(LA.memo)+'" oninput="LA.memo=this.value" style="width:100%;max-width:360px"></label>'; },
     run:function(p){ var e=normE(p.emp), t=LA.time, s=t&&LA.seat?LA.seat:0, memo=String(LA.memo||"").trim().slice(0,60); return call("lng_pre_row_add",{ emp:e, time:t||null, seat:s?String(s):null, memo:memo||null }); },
@@ -50,7 +50,7 @@ function laCx(){
 /* 빼기 · 배치판 오른쪽 카드 단추 · 확인 창 뒤 lng_pre_row_del */
 function laDelAsk(id){
   var r=rvRow(id); if(!r) return; var e=normE(r.emp);
-  confirmBox({ t:"라운지 사전 명단에서 뺄까요?", who:(r.name||r.emp)+" · 사번 "+e+" · "+(hm(r.slot)||"칸 미정")+(num(r.seat)?" · 미팅룸 "+r.seat:"")+" · "+r.status,
+  confirmBox({ t:"라운지 사전 명단에서 뺄까요?", who:personLine(r)+" · "+(hm(r.slot)||"칸 미정")+(num(r.seat)?" · 미팅룸 "+r.seat:"")+" · "+r.status,
     sub:"상담 신청 줄과 키트명단 라운지 줄이 같이 빠짐 · 체크인 · 완료한 줄이 있으면 빼지 못함 · 되돌리기 7초 · 활동 기록에서도 가능", ok:"빼기", danger:true,
     run:function(){ return call("lng_pre_row_del",{ emp:e }); },
     fail:function(x){ return x&&x.reason==="done"?"이미 "+(x.cur||"체크인 · 완료")+" 줄이 있어 뺄 수 없습니다":LA_DWHY[x&&x.reason]||""; },

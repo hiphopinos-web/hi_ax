@@ -21,6 +21,8 @@
 .mtg-now .cur h3 em{font-style:normal;color:var(--or)}
 .mtg-now .rw{display:flex;gap:16px;flex-wrap:wrap}
 .mtg-now .rw span{font-size:20px;font-weight:700;white-space:nowrap}
+.mtg-now .rw .who2 .ws{font-size:12px;font-weight:400;color:var(--tx3);white-space:normal}
+.mtg-now .rw .who2 .tag{font-size:12px}
 .mtg-now .rw small{font-size:12px;color:var(--tx3);font-weight:600;margin-right:4px}
 
 .mtg-wrap{display:grid;grid-template-columns:300px minmax(0,1fr);gap:12px;align-items:start}
@@ -59,7 +61,8 @@
 .mtg-pc .l1{display:flex;align-items:center;gap:6px;min-width:0}
 .mtg-pc .no{font-size:12px;font-weight:700;color:var(--tx3);min-width:18px;font-variant-numeric:tabular-nums}
 .mtg-pc .nm{font-weight:700;white-space:nowrap}
-.mtg-pc .dp{font-size:12px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mtg-pc .dp{font-size:12px;color:var(--tx3);font-variant-numeric:tabular-nums;min-width:0}
+.mtg-pc .dp .nw{white-space:nowrap}   /* 261016 밤 둘째 줄 「사번 · 소속」 · 자르지 않음 */
 .mtg-pc .l1 .sp{flex:1}
 .mtg-pc .md{width:7px;height:7px;border-radius:50%;background:var(--navy);flex:none}
 .mtg-pc .l2{display:flex;gap:4px;flex-wrap:wrap}
@@ -86,7 +89,7 @@
   .mtg-ql .mtg-pc{flex:0 0 190px}
   .mtg-tm b{font-size:14px}
   .mtg-tm{padding:0 2px}
-  .mtg-pc .dp,.mtg-pc .tx{display:none}
+  .mtg-pc .tx{display:none}   /* 261016 밤 「사번 · 소속」(.dp)은 좁은 폭에서도 보인다 */
   .mtg-pc{padding:6px 8px}
   .mtg-now{grid-template-columns:1fr}
   .mtg-now .rw span{font-size:18px}

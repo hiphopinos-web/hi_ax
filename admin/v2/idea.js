@@ -14,11 +14,11 @@ function id2Chips(rows){
 function id2Grid(){
   return gridOf("idea",{ file:"아이디어 한 줄", key:function(r){ return String(r.id||(r.emp+"|"+r.ts)); }, sort:{ k:"ts", d:-1 }, chips:[["all","전체",null]], ph:"사번 · 이름 · 부서 · 태그 · 글", find:["tag","text"],
     src:{ a:"idea_list", p:{} }, onRow:function(k){ id2Open(k); }, h:540, empty:"아직 남긴 아이디어가 없습니다",
-    cols:[{ k:"ts", t:"시각", type:"date", w:96 },{ k:"name", t:"이름", w:100, f:function(r){ return '<b>'+esc(r.name||"-")+'</b>'+(r.test?" "+tag("시험","off"):"")+(r.hidden?" "+tag("숨김","off"):""); } },{ k:"dept", t:"부서", w:140 },{ k:"emp", t:"사번", w:84 },
+    cols:[{ k:"ts", t:"시각", type:"date", w:96 },{ k:"name", t:"이름", w:100, tags:function(r){ return (r.test?" "+tag("시험","off"):"")+(r.hidden?" "+tag("숨김","off"):""); } },{ k:"dept", t:"부서", w:140 },{ k:"emp", t:"사번", w:84 },
       { k:"tag", t:"분야", w:90 },{ k:"text", t:"한 줄", w:360 },{ k:"ch", t:"경로", w:90, v:function(r){ return (ID2_CH[r.ch]||r.ch||"앱")+(r.late?" · 마감 뒤":""); } },{ k:"anon", t:"공개", w:72, v:function(r){ return r.anon?"익명":"실명"; } }] });
 }
 function id2Open(k){
-  var g=MG.idea; rowDetail(g, k, { title:function(r){ return (r.name||r.emp||"아이디어")+" · 아이디어 한 줄"; },
+  var g=MG.idea; rowDetail(g, k, { title:function(r){ return whoOf(r).n||"아이디어"; },
     extra:function(r){ return '<div class="memo mt" style="white-space:pre-wrap">'+(r.tag?tag(r.tag)+" ":"")+esc(r.text||"")+'</div><p class="cap mt4">'+esc((ID2_CH[r.ch]||r.ch||"앱")+(r.late?" · 마감 뒤":"")+(r.anon?" · 게시판 익명":"")+(r.hidden?" · 게시판에 안 보임":""))+'</p>'; } });
 }
 function id2Kpi(){

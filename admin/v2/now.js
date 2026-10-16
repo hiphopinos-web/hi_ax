@@ -98,7 +98,7 @@ function nwPrize(b){
 }
 function nwReq(){
   var d=S.data.sreqo, rows=d&&d.ok?(d.rows||[]).filter(function(r){ return r.st==="open"; }):null, n=S.data.nb&&S.data.nb.sreq?num(S.data.nb.sreq.open):0;
-  var body=rows==null?(dataGate("sreqo","스태프 요청")||skel()):rows.length?rows.slice(0,5).map(function(r){ return rowH(SREQ_K[r.kind]||r.kind, [r.spot,r.byName||r.by,ago(r.t)].filter(Boolean).join(" · "),'<button class="btn sm pri" type="button" onclick="reqDone(\''+jq(r.id)+'\',\'처리\')">처리</button>'); }).join("")+(rows.length>5?'<div class="cap mt">외 '+(rows.length-5)+'건 · 처리함에서</div>':''):emptyH("열린 요청이 없습니다");
+  var body=rows==null?(dataGate("sreqo","스태프 요청")||skel()):rows.length?rows.slice(0,5).map(function(r){ return rowH(SREQ_K[r.kind]||r.kind, [r.emp||r.name?personLine(r):"",r.spot,r.byName||r.by,ago(r.t)].filter(Boolean).join(" · "),'<button class="btn sm pri" type="button" onclick="reqDone(\''+jq(r.id)+'\',\'처리\')">처리</button>'); }).join("")+(rows.length>5?'<div class="cap mt">외 '+(rows.length-5)+'건 · 처리함에서</div>':''):emptyH("열린 요청이 없습니다");
   return '<div class="card"><h2>스태프 요청 '+(n?tag(n+"건 열림","warn"):tag("0건","off"))+'<span class="r"><button class="btn sm" type="button" onclick="go(\'inbox\',\'req\')">처리함</button></span></h2>'+body+'</div>';
 }
 function nwFocus(b, ph){

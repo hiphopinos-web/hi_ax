@@ -406,3 +406,10 @@ details.memo summary{cursor:pointer;font-weight:600;min-height:32px;display:flex
 .svy-b .bar i{border-radius:0}
 .svy-r{min-width:140px}
 .svy-r .bar{display:inline-block;width:calc(100% - 52px);vertical-align:middle;margin-right:6px}
+/* 261016 밤 사람 표시 두 줄(core.js personTwo) · 이름 굵게 + 「사번 · 소속」 작게 · 숫자 tabular */
+.who2{display:flex;flex-direction:column;min-width:0;gap:1px}
+.who2 .wl{display:flex;align-items:center;gap:4px;min-width:0;flex-wrap:wrap}
+.who2 .wn{font-weight:700;white-space:nowrap}
+.who2 .ws{font-size:12px;color:var(--tx3);font-variant-numeric:tabular-nums}
+.who2 .ws .nw{white-space:nowrap}
+.who2 .tag{height:20px;padding:0 7px}

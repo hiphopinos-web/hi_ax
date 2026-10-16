@@ -135,8 +135,8 @@ function mtCard(M, x, no){
   var memo=mtNote(M.p, x.emp), md=memo&&memo.memo?'<i class="md" title="메모 있음" aria-label="메모 있음"></i>':"";
   var pick=MT.pick&&MT.pick.p===M.p&&MT.pick.k===key;
   var tx=cc&&!MT.day&&(x.text||x.tag)?'<div class="tx">'+esc(x.text||x.tag)+'</div>':"";
-  return '<div class="mtg-pc'+(chg?" chg":"")+(lock?" lock":"")+(pick?" pick":"")+sc+'" data-p="'+M.p+'" data-k="'+esc(key)+'" tabindex="0" role="button" aria-label="'+esc((x.name||x.emp)+(lock?" · 상세":" · 상세 · Space 로 옮길 사람 고르기"))+'">'+
-    '<div class="l1">'+(no?'<span class="no">'+no+'</span>':'')+'<span class="nm">'+esc(x.name||x.emp)+'</span><span class="dp">'+esc(x.dept||"")+'</span><span class="sp"></span>'+md+'</div>'+
+  return '<div class="mtg-pc'+(chg?" chg":"")+(lock?" lock":"")+(pick?" pick":"")+sc+'" data-p="'+M.p+'" data-k="'+esc(key)+'" tabindex="0" role="button" aria-label="'+esc(personLine(x)+(lock?" · 상세":" · 상세 · Space 로 옮길 사람 고르기"))+'">'+
+    '<div class="l1">'+(no?'<span class="no">'+no+'</span>':'')+'<span class="nm">'+esc(whoOf(x).n||"-")+'</span>'+whoFlags(whoOf(x))+'<span class="sp"></span>'+md+'</div><div class="dp">'+whoSubH(x)+'</div>'+
     (tags.length?'<div class="l2">'+tags.join("")+'</div>':'')+tx+acts+'</div>';
 }
 function mtBoardH(p){
@@ -147,7 +147,7 @@ function mtBoardH(p){
   var nxt=MT.day?live.filter(function(r){ return mins(r.t)>(curR?mins(curR.t):nm); })[0]:null;
   var lab=function(t){ return (cc?"테이블 ":"미팅룸 ")+t; };
   if(MT.day){
-    var who=function(r,t){ if(!r) return "-"; var x=M.at[r.t+":"+t]; return x?esc(x.name||x.emp):"빈 칸"; };
+    var who=function(r,t){ if(!r) return "-"; var x=M.at[r.t+":"+t]; return x?personTwo(x):"빈 칸"; };
     h+='<div class="mtg-now"><div class="cur"><h3>'+(curR?'지금 <em class="n">'+curR.t+'</em> 회차':'지금 진행 중인 회차 없음')+'</h3><div class="rw">'+(curR?M.tables.map(function(t){ return '<div><small>'+lab(t)+'</small><span>'+who(curR,t)+'</span></div>'; }).join(""):'')+'</div></div>'+
       '<div><h3>'+(nxt?'다음 <span class="n">'+nxt.t+'</span> 회차':'다음 회차 없음')+'</h3><div class="rw">'+(nxt?M.tables.map(function(t){ return '<div><small>'+lab(t)+'</small><span>'+who(nxt,t)+'</span></div>'; }).join(""):'')+'</div></div></div>';
   } else if(cc){
@@ -275,7 +275,7 @@ function mtCcDayDrop(e, to){
   var o=M.at[to], ks=mtKp(to);
   if(o&&o.status!=="매칭"){ toast("그 칸 사람은 이미 왔음 · 끝입니다",{ bad:1 }); return; }
   var items=[{ e:e, to:to }]; if(o) items.push({ e:jq(o.emp), to:from||"" });
-  confirmBox({ t:"바로 반영할까요?", who:(r.name||r.emp)+" → "+ks[0]+" · 테이블 "+ks[1], sub:"참가자 앱에 선정 알림"+(o?" · "+(o.name||o.emp)+" → "+(from?mtKp(from).join(" · 테이블 "):"대기 줄"):""), ok:"반영 · 알림 보내기",
+  confirmBox({ t:"바로 반영할까요?", who:personLine(r)+" → "+ks[0]+" · 테이블 "+ks[1], sub:"참가자 앱에 선정 알림"+(o?" · "+personLine(o)+" → "+(from?mtKp(from).join(" · 테이블 "):"대기 줄"):""), ok:"반영 · 알림 보내기",
     run:function(){ return mtCcRun(items).then(function(res){ return res.fail.length?{ ok:false, msg:res.fail.map(function(f){ return f.nm+" "+f.why; }).join(" · ") }:res; }); },
     done:function(){ paint(); reload(["cc","nb"]); toast("반영했습니다 · "+(r.name||r.emp)+" "+ks[0]+" "+ks[1]); } });
 }
@@ -287,7 +287,7 @@ function mtLnDrop(id, to){
   if(x._k===to) return;
   if(L.at[to]){ toast("빈 자리에 놓습니다 · 그 자리에는 "+(L.at[to].name||L.at[to].emp)+" 님",{ bad:1 }); return; }
   var ks=mtKp(to), was=x._k;
-  confirmBox({ t:"이 칸으로 옮길까요?", who:(x.name||x.emp)+" · "+(was?mtKp(was).join(" · 미팅룸 "):"칸 미정")+" → "+ks[0]+" · 미팅룸 "+ks[1], sub:"바로 반영 · 참가자에게 알림 없음", ok:"옮기기",
+  confirmBox({ t:"이 칸으로 옮길까요?", who:personLine(x)+" · "+(was?mtKp(was).join(" · 미팅룸 "):"칸 미정")+" → "+ks[0]+" · 미팅룸 "+ks[1], sub:"바로 반영 · 참가자에게 알림 없음", ok:"옮기기",
     run:function(){ return call("resv_move",{ id:x.id, slot:ks[0], seat:ks[1], from:x.st }); },
     fail:function(r){ return r&&r.reason==="state"?"이미 "+(r.cur||"다른 상태")+" · 다시 받습니다":MT_MVWHY[r&&r.reason]||""; },
     done:function(){ mtLgbPut(x, to); paint(); reload(["lgb","resv","nb"]);
@@ -297,7 +297,7 @@ function mtLgbPut(x, to){ var d=S.data.lgb; if(!d||!d.cells) return; var ks=mtKp
   d.cells.forEach(function(c){ c.seats=(c.seats||[]).map(function(y){ return y&&String(y.id)===id?null:y; }); });
   d.none=(d.none||[]).filter(function(y){ return String(y.id)!==id; }); d.over=(d.over||[]).filter(function(y){ return String(y.id)!==id; });
   var c=d.cells.filter(function(c){ return hm(c.from)===ks[0]; })[0]; if(c) c.seats[num(ks[1])-1]=x; }
-function mtPickName(){ var pk=MT.pick; if(!pk) return ""; var x=pk.p==="cc"?ccRow(pk.k):(mtLnM()||{ by:{} }).by[pk.k]; return x?(x.name||x.emp):""; }
+function mtPickName(){ var pk=MT.pick; if(!pk) return ""; var x=pk.p==="cc"?ccRow(pk.k):(mtLnM()||{ by:{} }).by[pk.k]; return x?personLine(x):""; }
 function mtPickOn(p, k){ MT.pick={ p:p, k:String(k) }; paint(); var b=el("mtgB"), f=b&&b.querySelector('.mtg-sl:not(.fill)'); if(f) f.focus(); }
 function mtPickOff(){ MT.pick=null; paint(); }
 /* 사람 상세 「옮기기」 = 고르기 · 서랍 닫고 시간표로 */
@@ -315,7 +315,7 @@ function mtAct(p, k, a){
     else if(a==="dn"){ if(s!=="매칭"&&s!=="참석") return;
       mtQuick(set("완료", s), function(){ return (r.name||r.emp)+" · 끝 · 프로그램 참여 1개"; }, back(s, "완료"), function(){ r.status="완료"; reload(["cc"]); }); }
     else if(a==="ns"){ if(s!=="매칭") return;
-      confirmBox({ t:"노쇼로 처리할까요?", who:(r.name||r.emp)+" · "+hm(r.round)+" · 테이블 "+(r.table||""), sub:"칸이 빕니다 · 대기 줄에서 다음 사람을 끌어 놓습니다 · 스탬프 없음", ok:"노쇼", danger:1,
+      confirmBox({ t:"노쇼로 처리할까요?", who:personLine(r)+" · "+hm(r.round)+" · 테이블 "+(r.table||""), sub:"칸이 빕니다 · 대기 줄에서 다음 사람을 끌어 놓습니다 · 스탬프 없음", ok:"노쇼", danger:1,
         run:function(){ return call("staff_mark",{ prog:"cchat", emp:r.emp, mark:"noshow" }).then(function(){ return call("cchat_status",{ emp:r.emp, status:"취소", from:"매칭", why:"노쇼" }); }); },
         done:function(){ MT.ns[e]=1; r.status="취소"; paint(); mtDetRe(); reload(["cc","nb"]);
           toast((r.name||r.emp)+" · 노쇼 · 칸 비움",{ undo:function(){ set("매칭","취소").then(function(x){ if(x&&x.ok){ delete MT.ns[e]; r.status="매칭"; call("staff_mark",{ prog:"cchat", emp:r.emp, mark:"clear" }); paint(); } toast(x&&x.ok?"되돌렸습니다 · 다시 배정":"되돌리지 못했습니다 · "+why(x),{ bad:!(x&&x.ok) }); reload(["cc"]); }); } }); } });
@@ -330,7 +330,7 @@ function mtAct(p, k, a){
   else if(a==="dn"){ if(RV_ON.indexOf(s2)<0) return;
     mtQuick(rs("완료", s2), function(){ return (x.name||x.emp)+" · 끝 · 프로그램 참여 2개"; }, bk(s2, "완료"), function(){ x.st="완료"; reload(["lgb","resv","nb"]); }); }
   else if(a==="ns"){ if(RV_ON.indexOf(s2)<0) return;
-    confirmBox({ t:"노쇼로 처리할까요?", who:(x.name||x.emp)+" · "+(x._k?mtKp(x._k).join(" · 미팅룸 "):""), sub:"자리는 그대로 · 스탬프 없음", ok:"노쇼", danger:1,
+    confirmBox({ t:"노쇼로 처리할까요?", who:personLine(x)+" · "+(x._k?mtKp(x._k).join(" · 미팅룸 "):""), sub:"자리는 그대로 · 스탬프 없음", ok:"노쇼", danger:1,
       run:function(){ return rs("노쇼", s2); }, done:function(){ x.st="노쇼"; paint(); mtDetRe(); reload(["lgb","resv","nb"]); toast((x.name||x.emp)+" · 노쇼",{ undo:bk(s2,"노쇼") }); } }); }
 }
 
@@ -349,7 +349,7 @@ function mtDetRe(first){
   if(cc){ k=mtSrvK(x); st=x.status; }
   else { k=x.k; st=x.st; }
   var stTag=cc?ccTagH(x):tag(lnView({ status:st }), RV_TAG[st]);
-  h=drwHead(x.name||x.emp, [x.dept,"사번 "+x.emp,x.ts?"신청 "+fmtD(x.ts):""].filter(Boolean).join(" · "), ' '+stTag+(k?' '+tag(mtKp(k)[0]+" · "+(cc?"테이블 ":"미팅룸 ")+mtKp(k)[1],"off"):''));
+  h=drwHead(whoOf(x).n||x.emp, [whoSub(x),x.ts?"신청 "+fmtD(x.ts):""].filter(Boolean).join(" · "), whoFlags(whoOf(x))+ ' '+stTag+(k?' '+tag(mtKp(k)[0]+" · "+(cc?"테이블 ":"미팅룸 ")+mtKp(k)[1],"off"):''));
   if(cc){
     h+='<div class="fld cc-fld">상담 내용 · 원문</div><div class="mtg-orig">'+(x.text?esc(x.text):'<span class="cap">'+esc(x.tag?"관심 "+x.tag+" · 글 없음":"글 없음")+'</span>')+'</div>';
     h+='<dl class="cc-kv"><dt>희망 시간</dt><dd>'+esc(ccPrefTx(x))+'</dd><dt>배정</dt><dd>'+(k?esc(mtKp(k).join(" · 테이블 ")):"대기 줄"+(mtQno(x)?" "+mtQno(x)+"번":""))+'</dd><dt>스탬프</dt><dd>아이디어 한 줄 · 신청 때 · 프로그램 참여 1개 · '+(st==="완료"?"받음":"상담 끝나면")+'</dd></dl>';
