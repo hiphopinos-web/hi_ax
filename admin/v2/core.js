@@ -8,7 +8,6 @@ function beUrlOk(u){ return typeof u==="string"&&/^https:\/\/([a-z0-9-]+\.[a-z0-
 var BE=beUrlOk(typeof AXF_SERVER==="string"?AXF_SERVER:"")?AXF_SERVER:BE_DEFAULT;
 if(typeof AXF_SERVER==="string"&&/^http:\/\/127\.0\.0\.1:\d+\/exec$/.test(AXF_SERVER)) BE=AXF_SERVER;   /* 로컬 QA 서버(QA/local.mjs · 127.0.0.1 만) */
 else if(/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) BE="http://127.0.0.1:9/exec";   /* 로컬에서 서버 주소를 못 받으면 원격 기본값(옛 서버)으로 가지 않고 실패로 둔다 */
-var OLD_URL="../";   /* 지금 콘솔 · 이번 단계에서 옮기지 않은 일은 여기서 */
 var LOUNGE_DEF={ start:"09:30", n:7, seats:2 };   /* 배치판 기본값 · 서버가 칸 설정을 주면 그 값(now_board lounge · 서버 갱신 뒤) */
 
 /* ── 1. 작은 도구 ── */
@@ -197,7 +196,6 @@ function skel(){ return '<div class="skel" aria-label="불러오는 중"><i></i>
 function emptyH(msg, btn){ return '<div class="empty"><b>'+esc(msg)+'</b>'+(btn||"")+'</div>'; }
 function band(c, msg, btn){ return '<div class="band '+c+'">'+msg+(btn||"")+'</div>'; }
 function laterH(what){ return '<div class="later"><b>서버 갱신 뒤</b> · '+esc(what)+'</div>'; }
-function oldLink(where){ return '<div class="legacy">'+esc(where)+' · <a href="'+OLD_URL+'" target="_blank" rel="noopener">옛 콘솔에서</a></div>'; }
 /* 데이터 상태 한 번에 · 반환 null = 그릴 수 있음 · 아니면 대신 그릴 html */
 function dataGate(k, label){
   var d=S.data[k], e=S.err[k];
@@ -266,10 +264,11 @@ function drwOpen(k, html, o){
   DRW.k=k; DRW.g=o.g||null; DRW.close=o.close||null;
   b.className="cc-drawer"+(o.wide?" wide":"")+" on"; b.setAttribute("aria-hidden","false"); b.setAttribute("aria-label",o.label||"상세");
   b.innerHTML=html; b.scrollTop=st;
+  document.body.classList.add("drw-on"); document.body.classList.toggle("drw-wide",!!o.wide);   /* 넓은 화면 = 본문을 서랍 폭만큼 줄여 나란히(v2.css) */
 }
 function drwClose(){
   var b=el("drw"); if(!b) return; var g=DRW.g, c=DRW.close;
-  DRW.k=""; DRW.g=null; DRW.close=null; b.classList.remove("on"); b.setAttribute("aria-hidden","true");
+  DRW.k=""; DRW.g=null; DRW.close=null; b.classList.remove("on"); b.setAttribute("aria-hidden","true"); document.body.classList.remove("drw-on","drw-wide");
   if(g&&g.sel!=null){ g.sel=null; XG.paint(g); } if(c) c();
 }
 document.addEventListener("keydown",function(e){ if(e.key==="Escape"&&!DLG.o&&DRW.k) drwClose(); });

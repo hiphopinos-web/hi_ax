@@ -130,8 +130,6 @@ table.tb{width:100%;border-collapse:collapse;font-size:13px}
 .skel i:nth-child(2){width:80%}.skel i:nth-child(3){width:60%}
 @keyframes sk{to{background-position:-200% 0}}
 .stale .v,.stale .big,.stale td{color:var(--tx3)!important}
-.legacy{font-size:13px;color:var(--tx2);padding:12px 2px}
-.legacy a{color:var(--navy);font-weight:600}
 
 /* 배치판 · 칸 */
 .board{display:grid;grid-template-columns:56px minmax(0,1fr) minmax(0,1fr);gap:6px}
@@ -348,3 +346,37 @@ details.memo summary{cursor:pointer;font-weight:600;min-height:32px;display:flex
 .sv-kv{grid-template-columns:120px minmax(0,1fr)}
 @media (max-width:900px){ .g3{grid-template-columns:minmax(0,1fr)} .ik-slots{grid-template-columns:repeat(3,minmax(0,1fr))} }
 @media (max-width:600px){ .cc-drawer,.cc-drawer.wide{width:100%} .pc-st{grid-template-columns:repeat(2,minmax(0,1fr))} .pp-q{width:100%} .dc-gorow{flex-direction:column} .dc-abs{flex:1} .ik-slots{grid-template-columns:repeat(2,minmax(0,1fr))} .seg{margin-left:0} .ur-u{display:none} }
+/* 261016 3단계 · 넓은 PC = 본문 · 하단 탭 최대 1440 가운데(상단 띠는 전체 폭) · 1024 이하 모양 그대로 */
+#view{max-width:1440px;margin:0 auto}
+.tabs{padding:0 max(0px,calc((100% - 1440px) / 2))}
+/* 서랍 · 가로 넘침 0 · 넓은 화면(1280 이상)은 본문을 서랍 폭만큼 줄여 나란히 · 좁은 화면은 위에 덮음 */
+.cc-drawer{overflow-x:hidden}
+.cc-drawer .card,.cc-drawer dl,.cc-drawer .btns,.cc-drawer .row{min-width:0;max-width:100%}
+@media (min-width:1280px){ body.drw-on .main{margin-right:360px} body.drw-on.drw-wide .main{margin-right:480px} }
+/* 한 사람 카드 · 07 프로그램 참여 한 칸 */
+.pc-pg{grid-column:1/-1;gap:4px}
+.pc-pgh{display:flex;align-items:baseline;gap:8px}
+.pc-pgn{margin-left:auto;font-size:14px;font-weight:700}
+.pc-pr{display:flex;align-items:center;gap:8px;border-top:1px solid var(--line2);padding-top:6px;margin-top:2px;min-width:0}
+.pc-pr .t{display:flex;flex-direction:column;min-width:0;flex:1}
+.pc-pr .t b{font-size:13px}
+.pc-pr .btn{margin-top:0;flex:none}
+/* 재고 장부 서랍 */
+.iv-big{display:flex;align-items:baseline;gap:10px;margin-top:10px}
+.iv-big b{font-size:28px;font-variant-numeric:tabular-nums}
+.iv-h{font-size:14px;margin:14px 0 6px}
+.iv-ls{list-style:none;display:grid;gap:6px}
+.iv-ls li{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:#fff;min-width:0}
+.iv-ls li>div{flex:1;min-width:0}
+.iv-ls li.dim{opacity:.55}
+.dlg select.in{appearance:auto}
+/* 현장 QR(qr.js) */
+.qvg{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.qv{border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:4px;min-width:0;background:#fff}
+.qvi{background:#fff;display:flex;justify-content:center}
+.qvi img{display:block;max-width:100%;image-rendering:pixelated}
+.qv b{font-size:14px}
+.qv-u{font-size:12px;color:var(--tx2);word-break:break-all;background:var(--soft);border-radius:6px;padding:4px 6px;font-family:ui-monospace,Consolas,monospace}
+.qv-c{font-size:12px;color:var(--tx2);font-variant-numeric:tabular-nums}
+.qv-c.w{color:var(--warn);font-weight:600}
+.qv .btns{margin-top:4px}

@@ -4,7 +4,7 @@
  * 급한 단추 3개 = 룰렛 소진 안내(roulette_out · 되돌리기 토스트) · 푸시 정지(push_cfg · 알림 탭과 같은 함수) · 앱 접속 범위(og_scope_set · 확인 창)
  * 서버 상태 = now_board · 이 콘솔의 최근 호출(NET) · 화면 주소 = 추첨 · 창구 · 대기판 · 타자왕 TV · 스탬프 월(열기 · 복사)
  * 스태프 코드 = adm_roster.staffCode(설정됨 · 비어 있음만 · 값은 받지도 그리지도 않음) · 바꾸기 · 비우기 = adm_code_set(POST · 확인 창) · 운영 설정 76개 「바꾸기」는 넣지 않는다(결정 · 대화로 처리) */
-var LG_SUBS=[["log","활동 기록"],["urgent","급한 단추"],["srv","서버 상태"],["urls","화면 주소"],["code","스태프 코드"]];
+var LG_SUBS=[["log","활동 기록"],["urgent","급한 단추"],["srv","서버 상태"],["urls","화면 주소"],["qr","현장 QR"],["code","스태프 코드"]];
 var LOG_CAT=[["all","전체",null],["p","사람",function(r){ return r.cat==="p"; }],["r","명단",function(r){ return r.cat==="r"; }],["s","스탬프 · 경품",function(r){ return r.cat==="s"; }],["n","알림",function(r){ return r.cat==="n"; }],["c","설정",function(r){ return r.cat==="c"; }],["x","스캔",function(r){ return r.cat==="x"; }],["u","되돌릴 수 있음",function(r){ return !!(r.undo&&r.undo.ok&&!r.undo.done); }],["f","실패",function(r){ return /^x:/.test(r.res||""); }]];
 var BYK_N={ "콘솔":"콘솔", "스태프":"스태프 폰", "기기":"코드 기기", "서버":"서버 자동" };
 var GEN_UNDO={ roll_undo:"명단 넣기 · 빼기 되돌리기", resv_set:"라운지 상담 상태 되돌리기", cchat_status:"커피챗 상태 되돌리기", stamp_revoke:"담당자 스탬프 취소", inv_undo:"교환 기록 되돌리기", pre10_undo:"10F 묶음 넣기 되돌리기" };
@@ -13,10 +13,10 @@ var SCR_URLS=[["추첨 화면","17F 대형 스크린 · 원격 모드","../../dr
 function lgSub(){ return subsOf(LG_SUBS,"log"); }
 SCREENS.log={
   title:"기록 · 설정", desc:"",
-  need:function(){ var s=lgSub(); return s==="log"?[{ k:"alog", a:"act_log", p:{ n:200 }, ttl:30000 }]:s==="urgent"?[{ k:"ogs", a:"og_scope_state", ttl:30000 },{ k:"pst", a:"push_stats", ttl:30000 }]:s==="code"?[{ k:"admr", a:"adm_roster", ttl:30000 }]:s==="srv"?[{ k:"pst", a:"push_stats", ttl:60000 }]:[]; },
+  need:function(){ var s=lgSub(); return s==="log"?[{ k:"alog", a:"act_log", p:{ n:200 }, ttl:30000 }]:s==="urgent"?[{ k:"ogs", a:"og_scope_state", ttl:30000 },{ k:"pst", a:"push_stats", ttl:30000 }]:s==="code"?[{ k:"admr", a:"adm_roster", ttl:30000 }]:s==="srv"?[{ k:"pst", a:"push_stats", ttl:60000 }]:s==="qr"?[{ k:"qal", a:"att_list", ttl:300000 },{ k:"qst", a:"stair_list", ttl:300000 },{ k:"qss", a:"stair_stats", ttl:60000 },{ k:"qqs", a:"qr_stats", ttl:60000 },{ k:"qa10", a:"att_stats", p:{ who:"1" }, ttl:60000 }]:[]; },
   mount:function(vb){
     var s=lgSub();
-    el("phCap").textContent={ log:"오늘 누가 무엇을 했는지 · 줄을 누르면 상세 · 되돌리기", urgent:"룰렛 소진 안내 · 푸시 정지 · 앱 접속 범위 · 모두 확인 창 또는 되돌리기", srv:"서버 · 이 콘솔의 연결", urls:"현장 화면 주소 · 열기 · 복사", code:"스태프 폰을 여는 공용 코드 · 값은 보이지 않음" }[s];
+    el("phCap").textContent={ qr:"현장에 붙는 QR · 묶음별 그림 · 담긴 주소 · PNG · 찍힌 수", log:"오늘 누가 무엇을 했는지 · 줄을 누르면 상세 · 되돌리기", urgent:"룰렛 소진 안내 · 푸시 정지 · 앱 접속 범위 · 모두 확인 창 또는 되돌리기", srv:"서버 · 이 콘솔의 연결", urls:"현장 화면 주소 · 열기 · 복사", code:"스태프 폰을 여는 공용 코드 · 값은 보이지 않음" }[s];
     var h=chipsH(LG_SUBS,s);
     if(s==="log"){
       gridOf("alog",{ file:"활동 기록", key:function(r){ return r.ref; }, sort:{ k:"t", d:-1 }, chips:LOG_CAT, onRow:function(k){ lgOpen(k); },
@@ -26,6 +26,7 @@ SCREENS.log={
         empty:"오늘 기록이 없습니다", h:540 });
       vb.innerHTML=h+'<div id="lgK" class="grid g4 mb"></div><div class="card"><div id="mg_alog"></div></div>';
       return; }
+    if(s==="qr"){ qrMount(vb,h); return; }
     if(s==="urgent"){ vb.innerHTML=h+'<div class="grid g2"><div class="col"><div class="card" id="urR"></div><div class="card" id="urP"></div></div><div class="card" id="ogC"></div></div>'; return; }
     if(s==="srv"){ vb.innerHTML=h+'<div class="grid g2"><div class="card" id="svA"></div><div class="card" id="svB"></div></div>'; return; }
     if(s==="urls"){ vb.innerHTML=h+'<div class="card"><table class="tb"><thead><tr><th>화면</th><th>어디</th><th>주소</th><th></th></tr></thead><tbody>'+SCR_URLS.map(function(x,i){ var u=scrUrl(x[2]); return '<tr><td><b>'+esc(x[0])+'</b></td><td class="cap">'+esc(x[1])+'</td><td class="cap ur-u">'+esc(u)+'</td><td class="n"><span class="btns ur-b"><a class="btn sm" href="'+esc(u)+'" target="_blank" rel="noopener">열기</a><button class="btn sm" type="button" onclick="copyTx(scrUrl(SCR_URLS['+i+'][2]),\'주소를 복사했습니다\')">복사</button></span></td></tr>'; }).join("")+'</tbody></table><p class="cap mt">추첨 화면 · 창구 화면은 화면에서 관리코드를 한 번 넣습니다 · 추첨 진행은 무대 › 행운권 추첨</p></div>'; return; }
@@ -35,6 +36,7 @@ SCREENS.log={
     if(s==="log"){ lgKpi(); gridPaint("alog","alog","활동 기록",function(d){ return d.rows||[]; }); if(DRW.k&&DRW.k.indexOf("alog:")===0) lgOpen(DRW.k.slice(5)); return; }
     if(s==="urgent"){ urPaint(); ogPaint(); return; }
     if(s==="srv") return svPaint();
+    if(s==="qr") return qrPaint();
     if(s==="code") return scPaint();
   }
 };

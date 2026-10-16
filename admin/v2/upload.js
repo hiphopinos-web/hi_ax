@@ -227,7 +227,7 @@ var LNG_UP={
   sum:function(pv, mode){
     var R=pv.resv||{}, d=pv.diff||{};
     return { who:n0(pv.n)+"명 · 새 승인 "+n0(R.add)+" · 시간 바꿈 "+n0(R.move)+" · 그대로 "+n0(R.keep)+(R.none?" · 칸 미정 "+n0(R.none):""),
-      sub:(mode==="replace"?"명단에서 빠지는 사람 "+n0(d.del)+"명 · ":"")+(R.left?"빠져도 상담 줄이 남는 사람 "+n0(R.left)+"명(배치판에서 취소) · ":"")+"승인 알림은 보내지 않음 · 되돌리기는 옛 콘솔(legacy) B6",
+      sub:(mode==="replace"?"명단에서 빠지는 사람 "+n0(d.del)+"명 · ":"")+(R.left?"빠져도 상담 줄이 남는 사람 "+n0(R.left)+"명(배치판에서 취소) · ":"")+"승인 알림은 보내지 않음 · 되돌리기 = 처리함 › AX 라운지 「마지막 올리기 되돌리기」",
       danger:mode==="replace"&&num(d.del)>0 };
   },
   kpis:function(pv, rows, mode){
@@ -326,3 +326,20 @@ var KSTAFF_UP={
   kpis:function(pv, rows, mode){ return upKp(pv, rows, mode, "", ""); },
   back:function(){ ppUpBack(); }, done:upDone("스태프 옷")
 };
+
+/* ── 261016 3단계 · 라운지 명단 마지막 적용 되돌리기(lng_pre_state → lng_pre_undo · POST · 확인 문구 「명단되돌리기」 · PIN 없음) ──
+ * 키트명단 라운지 줄 = 마지막 적용 전으로 · 만든 상담 줄 중 신청 · 승인은 취소(명단 되돌림) · 체크인 · 완료로 넘어간 줄은 그대로 · 시간표 = 이전 표 */
+function lngUndoAsk(){
+  call("lng_pre_state",{}).then(function(d){
+    if(!d||!d.ok){ toast(unknownSrv(d)?"이 서버는 아직 라운지 명단 되돌리기를 모릅니다":"상태를 받지 못했습니다 · "+why(d),{ bad:1 }); return; }
+    var L=d.last||null;
+    if(!d.undo||!L){ toast(L?"마지막 적용이 이미 되돌려졌습니다":"콘솔에서 적용한 라운지 명단이 없습니다"); return; }
+    confirmBox({ t:"마지막 라운지 명단 적용을 되돌릴까요?", who:"마지막 적용 "+fmtD(L.at)+(L.by?" · "+L.by:"")+(L.mode?" · "+(L.mode==="add"?"추가":"교체"):"")+" · "+n0(L.n)+"명",
+      sub:"지금 라운지 명단 "+n0(d.n)+"명 → 적용 전 명단 · 새로 만든 신청 · 승인 줄은 취소 · 체크인 · 완료 줄과 키트 지급은 그대로 · 그 사이 시트를 손으로 고쳤으면 서버가 알려 줍니다",
+      body:'<label class="fld">확인 문구 · 「명단되돌리기」를 입력합니다<input class="in" id="lgUw" autocomplete="off" oninput="gateUpd()"></label>', focus:"lgUw", ok:"되돌리기", danger:true,
+      gate:function(){ return String((el("lgUw")||{}).value||"").trim()==="명단되돌리기"; },
+      run:function(){ return call("lng_pre_undo",{ confirm:"명단되돌리기" }); },
+      fail:function(r){ return "되돌리지 못했습니다 · "+(r&&r.reason==="notfound"?"되돌릴 적용이 없습니다":r&&r.reason==="state"?"기록이 맞지 않습니다(시트를 손으로 고쳤는지 확인)":why(r)); },
+      done:function(r){ var R=r.resv||{}; toast("되돌렸습니다 · 라운지 명단 "+n0(r.n)+"명"+(R.cx?" · 상담 취소 "+n0(R.cx):"")+(R.back?" · 시간 되돌림 "+n0(R.back):"")+(R.kept?" · 그대로 "+n0(R.kept):""),{ ms:5000 }); reload(["resv","nb"]); } });
+  });
+}

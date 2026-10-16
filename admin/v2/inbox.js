@@ -10,16 +10,16 @@ function ibSub(){ var s=S.sub.inbox; return IB_SUBS.some(function(x){ return x[0
 SCREENS.inbox={
   title:"처리함", desc:"",
   need:function(){ var s=ibSub();
-    return s==="lounge"?[{ k:"resv", a:"resv_list", ttl:20000 }]:s==="cchat"?[{ k:"cc", a:"cchat_list", ttl:20000 },{ k:"ccf", a:"cfg_list", ttl:60000 }]:s==="ck"?[{ k:"ck", a:"ck_state", ttl:15000 }]:s==="req"?[{ k:"sreq", a:"sreq_list", p:{ st:"all", n:100 }, ttl:15000 }]:[{ k:"pwl", a:"pw_req_list", ttl:30000 }]; },
+    return s==="lounge"?[{ k:"resv", a:"resv_list", ttl:20000 }]:s==="cchat"?[{ k:"cc", a:"cchat_list", ttl:20000 },{ k:"ccf", a:"cfg_list", ttl:60000 }]:s==="ck"?[{ k:"ck", a:"ck_state", ttl:15000 },{ k:"inv", a:"inv_state", ttl:30000 },{ k:"cno", a:"ck_no_state", ttl:30000 },{ k:"cnl", a:"ck_no_list", ttl:60000 }]:s==="req"?[{ k:"sreq", a:"sreq_list", p:{ st:"all", n:100 }, ttl:15000 }]:[{ k:"pwl", a:"pw_req_list", ttl:30000 }]; },
   mount:function(vb){
     var s=ibSub();
     el("phCap").textContent={ lounge:"1F AX 라운지 · 사전 신청 · 상담석 x 1시간 칸 배치판", cchat:"18F AX 커피챗 · 희망(회차 · 관심 영역 · 메모) → 선정(회차 · 테이블) → 참석 · 완료", ck:"1F 체크인존 · 창구 A~D 번호표", req:"스태프 폰 「운영자에게 요청」", pw:"앱 로그인 「PIN 을 잊었어요」 요청" }[s];
     vb.innerHTML='<div class="chips" id="ibChips" role="tablist" aria-label="처리함"></div><div id="ibB"></div>';
     var b=el("ibB");
     if(s==="lounge"&&S.ui.lup&&UP){ upMount(b); return; }
-    if(s==="lounge") b.innerHTML='<div class="up-bar"><span class="cap">사전 명단 = 「사번 · 시간 · 상담석」 엑셀</span><button class="btn sm pri" type="button" onclick="lgUpOpen()">명단 올리기</button></div><div id="lgErr"></div><div class="grid gside"><div class="card" style="padding:8px 12px" id="lgBoard"></div><div class="col" id="lgSide"></div></div><div class="card mt"><h2>AX 라운지 신청 명단</h2><div id="lgList"></div></div>';
+    if(s==="lounge") b.innerHTML='<div class="up-bar"><span class="cap">사전 명단 = 「사번 · 시간 · 상담석」 엑셀</span><button class="btn sm pri" type="button" onclick="lgUpOpen()">명단 올리기</button><button class="btn sm" type="button" onclick="lngUndoAsk()">마지막 올리기 되돌리기</button></div><div id="lgErr"></div><div class="grid gside"><div class="card" style="padding:8px 12px" id="lgBoard"></div><div class="col" id="lgSide"></div></div><div class="card mt"><h2>AX 라운지 신청 명단</h2><div id="lgList"></div></div>';
     else if(s==="cchat") ccMount(b);
-    else if(s==="ck") b.innerHTML='<div id="ckTop"></div><div class="grid g4" id="ckWin"></div><div class="mt">'+oldLink("E 창구(교환 · 명단 밖) 기록과 번호표 명단")+'</div>';
+    else if(s==="ck") b.innerHTML='<div id="ckTop"></div><div class="grid g4" id="ckWin"></div>'+ckExtraHtml();
     else if(s==="req") b.innerHTML='<div class="card"><h2>스태프 요청</h2><div id="rqList"></div></div>';
     else b.innerHTML='<div class="card"><h2>PIN 분실 요청 <span class="cap">본인 확인(사원증) 뒤 초기화</span></h2><div id="pwList"></div></div>';
   },
@@ -27,7 +27,7 @@ SCREENS.inbox={
     var b=S.data.nb, s=ibSub(), c=b&&b.ok?{ lounge:num(b.resv&&b.resv.wait), cchat:num(b.cchat&&b.cchat.wait), ck:num(b.ck&&b.ck.wait), req:num(b.sreq&&b.sreq.open), pw:num(b.pw) }:{};
     el("ibChips").innerHTML=IB_SUBS.map(function(x){ return '<button type="button" role="tab" aria-selected="'+(x[0]===s)+'" class="chip'+(x[0]===s?" on":"")+'" onclick="goSub(\''+x[0]+'\')">'+esc(x[1])+' <span class="c">'+(x[2]?x[2]+" ":"")+(c[x[0]]!=null?n0(c[x[0]]):"-")+'</span></button>'; }).join("");
     if(s==="lounge"&&S.ui.lup&&UP) return;   /* 명단 올리기 화면은 자기 동작 때만 다시 그린다(5초 갱신이 입력을 지우지 않게) */
-    ({ lounge:lgPaint, cchat:ccPaint, ck:ckPaint, req:rqPaint, pw:pwPaint })[s]();
+    ({ lounge:lgPaint, cchat:ccPaint, ck:function(){ ckPaint(); ckExtraPaint(); }, req:rqPaint, pw:pwPaint })[s]();
   }
 };
 

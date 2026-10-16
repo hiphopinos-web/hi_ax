@@ -99,10 +99,17 @@ function pcHtml(d){
     else if(!sm&&GRANT_IDS.indexOf(id)>=0&&d.acct) act='<button class="btn sm" type="button" aria-label="'+esc(no+" "+nm)+' 스탬프 부여" onclick="stGrantAsk(\''+J+'\',\''+id+'\')">부여</button>';
     var sub=sm?(pg?pg+"개":"-"):x?((x.at?fmtD(x.at):"받음")+(x.src&&x.src!=="본인"?" · "+(x.byName||x.src):"")+(rid==="p3h"?" · 한쪽":"")):"-";
     return '<div class="pc-c'+(got?" got":"")+'"><span class="no">'+esc(no)+'</span><b>'+esc(nm)+'</b><span class="cap">'+esc(sub)+'</span>'+act+'</div>'; };
+  var pgRow=function(id, nm){ var x=by[id]||(id==="p3"&&by.p3h&&!by.p3?by.p3h:null), rid=id==="p3"&&!by.p3&&by.p3h?"p3h":id, act="";
+    if(x) act='<button class="btn sm dng" type="button" aria-label="07 '+esc(nm)+' 스탬프 취소" onclick="stRevokeAsk(\''+J+'\',\''+rid+'\')">취소</button>';
+    else if(id==="p3"&&d.acct) act='<button class="btn sm" type="button" aria-label="07 '+esc(nm)+' 스탬프 부여" onclick="stGrantAsk(\''+J+'\',\'p3\')">부여</button>';
+    var sub=x?((x.at?fmtD(x.at):"받음")+(x.src&&x.src!=="본인"?" · "+(x.byName||x.src):"")+(rid==="p3h"?" · 한쪽":"")):"";
+    return '<div class="pc-pr'+(x?" got":"")+'"><span class="t"><b>'+esc(nm)+'</b>'+(sub?'<span class="cap">'+esc(sub)+'</span>':'')+'</span>'+(act||'<span class="cap">'+(x?"":"없음")+'</span>')+'</div>'; };
   var rl=d.roulette||{};
   h+=pcSec('스탬프 <b class="n">'+Math.min(6,num(d.n))+' / 6</b> · 행운권 <b class="n">'+n0(d.tickets||0)+'</b>장',
-    '<div class="pc-st">'+STAMP8.map(function(s){ return cell(s[0],s[1],s[2],s[0]==="p3"); }).join("")+'</div>'+
-    '<div class="cap mt">07 프로그램 참여 = 17F 강연 2 · 라운지 2 · 커피챗 1 · 최대 2개</div><div class="pc-st mt4">'+PROG.map(function(p){ return cell(p[0],"07",p[1]); }).join("")+(by.ck?cell("ck","+3","사전등록 체크인"):"")+'</div>', 1);
+    '<div class="pc-st">'+STAMP8.filter(function(s){ return s[0]!=="p3"; }).map(function(s){ return cell(s[0],s[1],s[2]); }).join("")+
+    /* 261016 3단계 · 07 프로그램 참여 한 칸(세부 세 줄 · 상태 · 부여 · 취소 · 규칙 한 줄) */
+    '<div class="pc-c pc-pg'+(pg?" got":"")+'"><div class="pc-pgh"><span class="no">07</span><b>프로그램 참여</b><span class="n pc-pgn">'+pg+' / 2</span></div><div class="cap">17F 강연 2 · 라운지 2 · 커피챗 1 · 최대 2개</div>'+
+      PROG.map(function(p){ return pgRow(p[0],p[1]); }).join("")+'</div>'+(by.ck?cell("ck","+3","사전등록 체크인"):"")+'</div>', 1);
   /* 경품 · 옷 */
   var fx=d.fcfs, kit=d.kit, lg=d.lounge, gr=[];
   gr.push(rowH("룰렛", rl.used?"사용 "+fmtD(rl.at)+(rl.gn?" · "+rl.gn:""):"안 씀", rl.used?'<button class="btn sm" type="button" onclick="rlUndoAsk(\''+J+'\')">사용 취소</button>':tag("안 씀","off")));

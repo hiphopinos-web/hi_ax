@@ -1,6 +1,7 @@
 /* AXF CONTROL v2 · S4 경품 · 재고 (261016)
  * 왼쪽 = 옷 한 화면(숫자 카드 4 → 구분 칩 → 사이즈 표) · 오른쪽 = 룰렛 5등급 · 선착순 가습기 · 지급품(커피 박스)
  * 명단(옷 · 선착순 가습기 수령)은 카드 아래 전체 폭 한 칸 · 줄을 누르면 오른쪽 서랍(261016 2단계 · 모든 명단 같은 규칙)
+ * 재고 장부(inv_state 품목 표 · 맞추기 · 총수량 · 입고 · 되돌리기) = stock.js(261016 3단계)
  * 데이터 = kit_size_state · roll_list(kit · lounge) · ck_state(창구) · inv_state · fcfs_list · lk7_state · 읽기 · 쓰기 PIN 없음(261016)
  * 룰렛 소진 안내 = L1(바로 · 되돌리기 토스트) · 17:00 잔여 입력 = L2(확인 창) */
 var PZ={ chip:"all", g:null, gf:null };
@@ -13,9 +14,10 @@ SCREENS.prize={
     vb.innerHTML='<div class="grid g32"><div class="col"><div class="grid g4" id="pzK"></div><div class="chips" id="pzC" role="group" aria-label="구분" style="margin:0"></div><div class="card" id="pzT"></div></div>'+
       '<div class="col"><div class="card" id="pzR"></div><div class="card" id="pzF"></div><div class="card" id="pzB"></div></div></div>'+
       '<div class="card mt"><h2>옷 명단 <span class="cap">구분 · 사이즈 · 받음 · 줄을 누르면 상세</span></h2><div id="pzP"></div></div>'+
-      '<div class="card mt"><h2>선착순 가습기 수령 명단 <span class="cap">줄을 누르면 상세</span></h2><div id="pzFL"></div></div>'+oldLink("재고 조정 · 입고 · E 창구 교환 기록");
+      '<div class="card mt"><h2>선착순 가습기 수령 명단 <span class="cap">줄을 누르면 상세</span></h2><div id="pzFL"></div></div>'+
+      '<div class="card mt"><h2>재고 장부 <span class="cap">룰렛 · 지급품 · 키트 · 줄을 누르면 남은 수 맞추기 · 총수량 · 입고</span><span class="r"><button class="btn sm" type="button" onclick="go(\'inbox\',\'ck\')">E 창구 교환 기록</button></span></h2><div id="pzIV"></div></div>';
   },
-  paint:function(){ pzKpi(); pzTable(); pzPeople(); pzRoul(); pzFcfs(); pzBox(); pzFcfsList(); }
+  paint:function(){ pzKpi(); pzTable(); pzPeople(); pzRoul(); pzFcfs(); pzBox(); pzFcfsList(); ivTable(el("pzIV")); }
 };
 function pzPool(r){ return pzLng()[r.emp]?"lng":r.pool==="staff"?"staff":"pre"; }
 function pzLng(){ var d=S.data.lng, m={}; if(d&&d.ok) (d.rows||[]).forEach(function(r){ m[r.emp]=1; }); return m; }
