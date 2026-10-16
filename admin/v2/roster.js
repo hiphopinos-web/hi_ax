@@ -1,0 +1,97 @@
+/* AXF CONTROL v2 · 접속 거부 · 관리자 명단 (261016 4단계 · 지금 콘솔 「접속 현황 › 들어오지 못한 사람」 · 예전 「관리자 명단」 화면을 옮김)
+ * 사람 › 접속 거부 = og_deny_list(명단 밖이라 로그인 · 쓰기가 거절된 사번 · 마지막 시도 순 500줄 · open 1 = 지금은 들어올 수 있음)
+ *   넣기 = roll_apply(list gate · op add · 되돌리기 roll_undo 묶음) · 기록 비우기 = og_deny_clear(확인 문구 「접속거부기록」 · 되돌릴 수 없음)
+ * 기록 · 설정 › 관리자 명단 = adm_roster(c 콘솔 입장 · a 앱 스태프 폰 권한 · 이름 · 부서) · 넣기 · 빼기 = adm_roster_set(sc · op · emps) · 되돌리기 = 반대 동작
+ *   맨 앞 사번(sup)은 서버가 빼지 못하게 막는다 · 처음 저장하는 순간부터 그 명단대로 들어온다 · 261016 PIN 없음(확인 창) */
+var DNY_W="접속거부기록";
+PP_SUBS.splice(PP_SUBS.map(function(x){ return x[0]; }).indexOf("gate")+1,0,["deny","접속 거부"]);
+LG_SUBS.splice(LG_SUBS.map(function(x){ return x[0]; }).indexOf("code"),0,["adm","관리자 명단"]);
+/* ── 접속 거부 ── */
+function dnyGrid(){
+  return gridOf("deny",{ file:"접속 거부", key:function(r){ return r.emp; }, sort:{ k:"last", d:-1 }, src:{ a:"og_deny_list", p:{} }, h:480, empty:"거부 기록이 없습니다", onRow:function(k){ pcOpen(k, MG.deny); },
+    chips:[["all","전체",null],["shut","지금도 막힘",function(r){ return !r.open; }],["open","이제 들어올 수 있음",function(r){ return !!r.open; }]],
+    cols:[{ k:"name", t:"이름", w:100 },{ k:"emp", t:"사번", w:90 },{ k:"dept", t:"부서", w:160 },{ k:"last", t:"마지막 시도", type:"date", w:110 },{ k:"first", t:"처음", type:"date", w:110 },{ k:"n", t:"횟수", type:"num", w:64 },
+      { k:"open", t:"지금", w:120, v:function(r){ return r.open?"들어올 수 있음":"막힘"; }, f:function(r){ return r.open?tag("들어올 수 있음","ok"):tag("막힘","warn"); } },
+      { k:"_a", t:"", w:96, act:function(r){ return r.open?"":'<button class="btn sm" type="button" onclick="dnyAdd([\''+jq(r.emp)+'\'])">넣기</button>'; } }] });
+}
+function dnyShut(){ var d=S.data.dny; return d&&d.ok?(d.rows||[]).filter(function(x){ return !x.open; }):[]; }
+function dnyTop(){
+  var b=el("dnyT"), d=S.data.dny; if(!b) return;
+  if(!d||!d.ok){ b.innerHTML=""; return; }
+  var sh=dnyShut();
+  b.innerHTML=kpi({ l:"지금도 막힌 사람", v:n0(d.wait!=null?d.wait:sh.length), u:"명", st:sh.length?"warn":"", s:"명단 밖 · 지금 범위 기준" })+kpi({ l:"거부 기록", v:n0(d.n), u:"명", s:d.more?"앞 "+n0((d.rows||[]).length)+"줄만 표에":"마지막 시도 순" })+
+    '<div class="card"><div class="btns">'+(sh.length?'<button class="btn pri" type="button" onclick="dnyAdd(null)">막힌 '+n0(Math.min(500,sh.length))+'명 모두 넣기</button>':'')+'<button class="btn dng" type="button" onclick="dnyClearAsk()"'+(num(d.n)?"":" disabled")+'>기록 비우기</button></div><p class="cap mt4">넣기 = 접속 허용 명단에 넣음 · 되돌리기 7초 · 활동 기록에서 그날 안</p></div>';
+}
+function dnyAdd(emps){
+  var all=!emps; if(all) emps=dnyShut().slice(0,500).map(function(x){ return x.emp; }); if(!emps.length) return;
+  var rows=(S.data.dny&&S.data.dny.rows)||[], nm=function(e){ var r=rows.filter(function(x){ return x.emp===e; })[0]; return r&&r.name?r.name:e; };
+  confirmBox({ t:"접속 허용 명단에 "+emps.length+"명을 넣을까요?", who:emps.slice(0,5).map(nm).join(", ")+(emps.length>5?" 외 "+(emps.length-5)+"명":""), sub:"클로즈 베타 · 사전 신청자까지 범위에서 바로 로그인 · 명부에 없는 사번은 서버가 뺌", ok:emps.length+"명 넣기",
+    run:function(){ return call("roll_apply",{ list:"gate", op:"add", emps:emps.join(","), rid:rid() }); },
+    done:function(r){ var n=(r.done||[]).length; reload(["dny"]); ppStale();
+      toast(n+"명을 접속 허용 명단에 넣었습니다"+((r.noros||[]).length?" · 명부 밖 "+r.noros.length+"명 뺌":""), r.batch?{ undo:function(){ rollBack(r.batch, function(){ reload(["dny"]); }); } }:{}); } });
+}
+function dnyClearAsk(){
+  var d=S.data.dny||{};
+  confirmBox({ t:"접속 거부 기록을 모두 비울까요?", who:"거부 기록 "+n0(d.n)+"명", sub:"기록만 지웁니다 · 명단 · 앱 범위는 그대로 · 되돌릴 수 없음",
+    body:'<label class="fld">확인 문구 「'+DNY_W+'」를 그대로 넣습니다<input class="in" id="dnyQ" autocomplete="off" oninput="gateUpd()"></label>', focus:"dnyQ", ok:"기록 비우기", danger:true,
+    gate:function(){ var i=el("dnyQ"); return !!i&&i.value.trim()===DNY_W; },
+    run:function(){ return call("og_deny_clear",{ confirm:DNY_W }); },
+    done:function(r){ reload(["dny"]); toast("접속 거부 기록을 비웠습니다 · "+n0(r.del)+"명"); } });
+}
+(function(){
+  var sc=SCREENS.people, n0_=sc.need, m0=sc.mount, p0=sc.paint;
+  sc.need=function(){ return ppSub()==="deny"?[{ k:"dny", a:"og_deny_list", ttl:30000 }]:n0_(); };
+  sc.mount=function(vb){
+    if(ppSub()!=="deny") return m0(vb);
+    el("phCap").textContent="명단 밖이라 로그인 · 쓰기가 거절된 사번 · 넣기 · 기록 비우기 · 줄을 누르면 한 사람 카드";
+    dnyGrid();
+    vb.innerHTML=chipsH(PP_SUBS,"deny")+'<div class="grid g3 mb" id="dnyT"></div><div class="card"><div id="mg_deny"></div></div>';
+  };
+  sc.paint=function(vb){ if(ppSub()!=="deny") return p0(vb); dnyTop(); gridPaint("deny","dny","접속 거부 기록",function(d){ return d.rows||[]; }); };
+})();
+
+/* ── 관리자 명단 ── */
+var ADR_SC={ c:["콘솔 입장 명단","이 콘솔에 사번 + 관리코드로 들어오는 사람"], a:["앱 스태프 폰 권한","앱에서 스태프 화면(스캔 · 현장 부여)을 여는 사람"] };
+var ADR_WHY={ emp:"사번 모양이 아닙니다", self:"맨 앞 사번(슈퍼관리자)은 뺄 수 없습니다", max:"명단은 200명까지입니다", param:"입력값을 확인합니다" };
+function adrGrid(sc){
+  return gridOf("adr_"+sc,{ file:ADR_SC[sc][0], key:function(r){ return r.emp; }, sort:{ k:"name", d:1 }, src:{ a:"adm_roster", p:{}, pick:function(res){ return (res[sc]||{}).rows||[]; } }, h:360, empty:"명단이 비어 있습니다", onRow:function(k){ pcOpen(k, MG["adr_"+sc]); },
+    cols:[{ k:"name", t:"이름", w:120, f:function(r){ return '<b>'+esc(r.name||"(이름 없음)")+'</b>'+(r.sup?" "+tag("고정"):""); } },{ k:"emp", t:"사번", w:80 },{ k:"dept", t:"부서", w:120 },{ k:"acct", t:"앱 가입", w:64, v:function(r){ return r.acct?"가입":"명부만"; } },
+      { k:"_a", t:"", w:64, act:function(r){ return r.sup?"":'<button class="btn sm dng" type="button" aria-label="'+esc((r.name||r.emp)+" 빼기")+'" onclick="adrDelAsk(\''+sc+'\',\''+jq(r.emp)+'\')">빼기</button>'; } }] });
+}
+function adrCard(sc){
+  var d=S.data.admr, L=d&&d.ok?d[sc]||{}:null;
+  return '<div class="card"><h2>'+esc(ADR_SC[sc][0])+(L?' <span class="cap">'+(L.set?n0((L.rows||[]).length)+"명 · 적용 중":sc==="c"?"저장 전 · 맨 앞 사번만 들어옴":"저장 전 · 코드만 맞으면 열림")+'</span>':'')+'</h2><p class="cap">'+esc(ADR_SC[sc][1])+'</p>'+
+    '<div class="pp-find mt"><input class="xg-q pp-q" id="adrIn_'+sc+'" autocomplete="off" inputmode="text" placeholder="사번 · 여러 명은 쉼표" aria-label="'+esc(ADR_SC[sc][0])+'에 넣을 사번" onkeydown="if(event.key===\'Enter\'&&!event.isComposing){ event.preventDefault(); adrAddAsk(\''+sc+'\'); }"><button class="btn pri" type="button" onclick="adrAddAsk(\''+sc+'\')">넣기</button></div>'+
+    '<div id="mg_adr_'+sc+'" class="mt"></div></div>';
+}
+function adrRows(sc){ var d=S.data.admr; return d&&d.ok?((d[sc]||{}).rows||[]):[]; }
+function adrNm(sc, e){ var r=adrRows(sc).filter(function(x){ return x.emp===e; })[0]; return r&&r.name?r.name+" · "+e:e; }
+function adrSet(sc, op, emps){ return call("adm_roster_set",{ sc:sc, op:op, emps:emps }).then(function(r){ if(r&&r.ok&&r.list&&S.data.admr&&S.data.admr.ok){ S.data.admr[sc]=r.list; paint(); } return r; }); }
+function adrAddAsk(sc){
+  var i=el("adrIn_"+sc), v=String(i&&i.value||"").split(/[\s,;]+/).map(normE).filter(Boolean); if(!v.length){ toast("사번을 넣습니다",{ bad:1 }); if(i) i.focus(); return; }
+  var L=(S.data.admr&&S.data.admr[sc])||{};
+  confirmBox({ t:ADR_SC[sc][0]+"에 넣을까요?", who:v.join(", "), sub:(sc==="c"?"관리코드와 함께 이 콘솔에 들어옴":"로그인하면 스태프 화면이 열림")+(L.set?"":" · 처음 저장 · 이때부터 명단대로 들어옴"), ok:"넣기",
+    run:function(){ return adrSet(sc,"add",v.join(",")); }, fail:function(r){ return r&&ADR_WHY[r.reason]||""; },
+    done:function(r){ if(i) i.value=""; var dn=r.done||[]; toast(dn.length?"넣었습니다 · "+dn.join(", ")+(r.started?" · 이 명단 적용 시작":""):"이미 명단에 있습니다", dn.length?{ undo:function(){ adrSet(sc,"del",dn.join(",")).then(function(x){ toast(x&&x.ok?"되돌렸습니다 · "+dn.join(", "):"되돌리지 못했습니다 · "+(ADR_WHY[(x||{}).reason]||why(x)),{ bad:!(x&&x.ok) }); }); } }:{}); } });
+}
+function adrDelAsk(sc, e){
+  var me=S.me&&normE(S.me.emp)===e;
+  confirmBox({ t:ADR_SC[sc][0]+"에서 뺄까요?", who:adrNm(sc,e), sub:"빼는 즉시 이 사람의 "+(sc==="c"?"콘솔":"앱 스태프 화면")+" 로그인이 끊김"+(me?" · 지금 이 콘솔을 쓰는 사번":""), ok:"빼기", danger:true,
+    run:function(){ return adrSet(sc,"del",e); }, fail:function(r){ return r&&ADR_WHY[r.reason]||""; },
+    done:function(){ toast("뺐습니다 · "+adrNm(sc,e),{ undo:function(){ adrSet(sc,"add",e).then(function(x){ toast(x&&x.ok?"되돌렸습니다 · "+e:"되돌리지 못했습니다 · "+(ADR_WHY[(x||{}).reason]||why(x)),{ bad:!(x&&x.ok) }); }); } }); } });
+}
+(function(){
+  var sc=SCREENS.log, n0_=sc.need, m0=sc.mount, p0=sc.paint;
+  sc.need=function(){ return lgSub()==="adm"?[{ k:"admr", a:"adm_roster", ttl:30000 }]:n0_(); };
+  sc.mount=function(vb){
+    if(lgSub()!=="adm") return m0(vb);
+    el("phCap").textContent="콘솔에 들어오는 사람 · 앱 스태프 화면을 여는 사람 · 넣기 · 빼기 · 되돌리기";
+    adrGrid("c"); adrGrid("a");
+    vb.innerHTML=chipsH(LG_SUBS,"adm")+'<div class="grid g2" id="adrB">'+adrCard("c")+adrCard("a")+'</div><p class="cap mt">스태프 옷 명단은 사람 › 명단 올리기 · 스태프 폰 코드는 기록 · 설정 › 스태프 코드 · 관리코드 · 등급코드 바꾸기는 대화로</p>';
+  };
+  sc.paint=function(vb){
+    if(lgSub()!=="adm") return p0(vb);
+    ["c","a"].forEach(function(k){ var h=el("adrB"); if(!h) return; var cap=h.children[k==="c"?0:1].querySelector("h2"); if(cap&&S.data.admr&&S.data.admr.ok){ var L=S.data.admr[k]||{}; cap.innerHTML=esc(ADR_SC[k][0])+' <span class="cap">'+(L.set?n0((L.rows||[]).length)+"명 · 적용 중":k==="c"?"저장 전 · 맨 앞 사번만 들어옴":"저장 전 · 코드만 맞으면 열림")+'</span>'; }
+      gridPaint("adr_"+k,"admr","관리자 명단",function(d){ return (d[k]||{}).rows||[]; }); });
+  };
+})();

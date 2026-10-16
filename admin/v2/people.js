@@ -8,9 +8,9 @@
 var PP_SUBS=[["find","찾기"],["visit","가입자"],["gate","접속 허용"],["staff","스태프"],["pre10","10F 사전 신청"],["att10","10F 출석"],["att17","17F 출석"],["up","명단 올리기"]];
 var PP_LG={
   visit:{ kind:"visit", file:"가입자", cap:"앱에 가입한 사람 · 시험 사번은 「시험」 칸", sort:{ k:"last", d:-1 }, chips:lgChipsOf("",[["today","오늘 접속"],["pin","PIN 대기"],["test","시험"]]) },
-  gate:{ kind:"gate", file:"접속 허용", cap:"클로즈 베타 · 사전 신청 기간에 앱에 들어올 사람 · 바꾸기는 명단 올리기", sort:{ k:"at", d:-1 }, chips:lgChipsOf("",[["acct","가입"],["today","오늘 접속"]]) },
-  staff:{ kind:"staff", file:"스태프", cap:"폰 권한(앱 스태프 화면) + 스태프 옷 명단 · 옷 명단 바꾸기는 명단 올리기", sort:{ k:"name", d:1 }, chips:lgChipsOf("",[["app","폰 권한"],["wear","옷"],["today","오늘 접속"]]) },
-  pre10:{ kind:"pre10", file:"10F 사전 신청", cap:"10F 실습 세션 A~E 사전 신청자 · 바꾸기는 명단 올리기", sort:{ k:"sn", d:1 }, chips:lgChipsOf("sn",[["kit","키트 받음"],["att","출석"]]) },
+  gate:{ kind:"gate", file:"접속 허용", cap:"클로즈 베타 · 사전 신청 기간에 앱에 들어올 사람 · 한 사람 넣기 · 줄을 누르면 빼기 · 통째 바꾸기는 명단 올리기", sort:{ k:"at", d:-1 }, chips:lgChipsOf("",[["acct","가입"],["today","오늘 접속"]]) },
+  staff:{ kind:"staff", file:"스태프", cap:"폰 권한(앱 스태프 화면) + 스태프 옷 명단 · 한 사람 넣기 · 줄을 누르면 빼기 · 통째 바꾸기는 명단 올리기", sort:{ k:"name", d:1 }, chips:lgChipsOf("",[["app","폰 권한"],["wear","옷"],["today","오늘 접속"]]) },
+  pre10:{ kind:"pre10", file:"10F 사전 신청", cap:"10F 실습 세션 A~E 사전 신청자 · 한 사람 넣기 · 줄을 누르면 세션 바꾸기 · 빼기", sort:{ k:"sn", d:1 }, chips:lgChipsOf("sn",[["kit","키트 받음"],["att","출석"]]) },
   att10:{ kind:"att10", file:"10F 출석", cap:"10F 세션 입장 · 종료 QR", sort:{ k:"pn", d:1 }, chips:lgChipsOf("pn",[["out","종료"]]) },
   att17:{ kind:"att17", file:"17F 출석", cap:"17F 강연 입장 · 종료", sort:{ k:"pn", d:1 }, chips:lgChipsOf("pn",[["out","종료"]]) }
 };
@@ -113,7 +113,7 @@ function pcHtml(d){
   /* 경품 · 옷 */
   var fx=d.fcfs, kit=d.kit, lg=d.lounge, gr=[];
   gr.push(rowH("룰렛", rl.used?"사용 "+fmtD(rl.at)+(rl.gn?" · "+rl.gn:""):"안 씀", rl.used?'<button class="btn sm" type="button" onclick="rlUndoAsk(\''+J+'\')">사용 취소</button>':tag("안 씀","off")));
-  gr.push(rowH("선착순 가습기", !fx?"기록 없음":fx.st==="done"?"수령 "+fmtD(fx.gotAt)+(fx.gotBy?" · "+fx.gotBy:""):fx.st==="void"?"자격 취소됨":fx.st==="full"?"대기 마감":"수령 전"+(fx.rk?" · "+fx.rk+"번":""), fx&&fx.st==="done"?tag("받음","ok"):fx?tag("받기 전","off"):""));
+  gr.push(rowH("선착순 가습기", !fx?"기록 없음":fx.st==="done"?"수령 "+fmtD(fx.gotAt)+(fx.gotBy?" · "+fx.gotBy:""):fx.st==="void"?"자격 취소됨":fx.st==="full"?"대기 마감":"수령 전"+(fx.rk?" · "+fx.rk+"번":""), (fx&&fx.st==="done"?tag("받음","ok"):fx?tag("받기 전","off"):"")+(typeof pcFxBtns==="function"?pcFxBtns(d):"")));
   if(kit) gr.push(rowH(kit.pool==="staff"?"스태프 옷":"사전 신청 키트 · 옷", "사이즈 "+(kit.sz||"아직")+(kit.how==="auto"?"(자동)":"")+(kit.no?" · "+kit.no:""), kit.got?tag("받음 "+fmtD(kit.got),"ok"):kit.pool==="staff"?tag("따로 전달","off"):tag("받기 전","off")));
   if(lg) gr.push(rowH("라운지 사전 신청 "+n0(lg.rk)+"번째", lg.kit?"키트":"가습기", lg.got?tag("받음 "+fmtD(lg.got),"ok"):tag("받기 전","off")));
   h+=pcSec("경품 · 옷 수령", gr.join(""));
@@ -125,7 +125,7 @@ function pcHtml(d){
   /* 출석 */
   h+=pcSec("출석", pcAtt(e)+(d.p10?'<div class="cap mt">10F 사전 신청 · '+esc(TEN_N[d.p10.sid]||d.p10.sid)+(d.p10.role?" · 운영진":"")+' · 키트 '+(d.p10.kit?"받음":"아직")+'</div>':''));
   /* 명단 */
-  h+=pcSec("명단", '<div class="fx-w">'+[["gate","접속 허용"],["staffApp","스태프 폰 권한"],["staffWear","스태프 옷"],["test","시험 사번"]].map(function(x){ return '<span class="pc-l">'+esc(x[1])+' '+(L[x[0]]?tag("있음","ok"):tag("없음","off"))+'</span>'; }).join("")+'</div><div class="cap mt4">넣기 · 빼기 = 사람 › 명단 올리기</div>');
+  h+=pcSec("명단", typeof pcListsHtml==="function"?pcListsHtml(d):'<div class="fx-w">'+[["gate","접속 허용"],["staffApp","스태프 폰 권한"],["staffWear","스태프 옷"],["test","시험 사번"]].map(function(x){ return '<span class="pc-l">'+esc(x[1])+' '+(L[x[0]]?tag("있음","ok"):tag("없음","off"))+'</span>'; }).join("")+'</div>');
   /* 최근 기록 */
   var tl=(d.tl||[]).slice(0,10);
   h+=pcSec("최근 기록", tl.length?'<ul class="pc-tl">'+tl.map(function(r){ return '<li><span class="n cap">'+esc(fmtD(r.t))+'</span><span>'+esc((r.verb?r.verb+" · ":"")+r.x)+(r.byName||r.by?' <span class="cap">· '+esc(r.byName||r.by)+'</span>':'')+'</span></li>'; }).join("")+'</ul><div class="cap mt4">전체 기록 = 기록 · 설정 › 활동 기록</div>':'<p class="cap">기록이 없습니다</p>');

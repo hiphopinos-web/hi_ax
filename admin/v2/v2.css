@@ -380,3 +380,13 @@ details.memo summary{cursor:pointer;font-weight:600;min-height:32px;display:flex
 .qv-c{font-size:12px;color:var(--tx2);font-variant-numeric:tabular-nums}
 .qv-c.w{color:var(--warn);font-weight:600}
 .qv .btns{margin-top:4px}
+
+/* 261016 4단계 · 설문 집계(survey.js) */
+.svy-g{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));margin-top:8px}
+.svy-q{border:1px solid var(--line2);border-radius:var(--r-s);padding:10px 12px;min-width:0}
+.svy-h{display:flex;align-items:baseline;gap:8px}
+.svy-av{margin-left:auto;font-size:22px;font-weight:700}
+.svy-d td{height:30px;font-size:12px}
+.svy-b{width:38%}
+.svy-r{min-width:140px}
+.svy-r .bar{display:inline-block;width:calc(100% - 52px);vertical-align:middle;margin-right:6px}
