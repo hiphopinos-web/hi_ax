@@ -48,7 +48,7 @@
     { id: 'typing', zone: 'event', spot: 'typing', name: 'AX 타자왕', x: 3.3, z: 2.5, look: [0.55, 2.47], say: '당신의 프롬프팅 속도를 보여\u00A0주세요', go: '' },   /* v5.79 (사용자 261006) 프롬프트(입력한 글) → 프롬프팅(쓰는 행위 · 속도를 재는 대상) · 「보여 주세요」 띄어 씀(앱 「눌러 주세요」와 같게 · 말풍선 232px 두 줄이 「속도를 / 보여 주세요」로 끊기게 붙는 빈칸 u00A0) · v5.64 (사용자 261005 「프롬프트 실력보다는 속도」 · 원문 「보셔주세요」는 「보여주세요」로) 옛 「타자왕 1~3위 경품 · 17:00 마감」 */
     { id: 'event', zone: 'event', name: '포토부스', x: 5.3, z: 7.35, look: [0.55, 7.35], noGuide: true },   /* v5.58 촬영 기계(가운데 칸 앞 · 도면 3.6, 7.35) 뒤에서 벽 쪽 단체 사진을 봄 */
     { id: 'roulette', zone: 'event', spot: 'roulette', name: '룰렛 이벤트', x: 3.4, z: 10.1, look: [0.55, 10.15], say: '스탬프 3개면 룰렛을 돌려요', go: '', hand: true },
-    { id: 'lounge', zone: 'lounge', x: 6.6, z: 9.1, look: [5.6, 12.18], gAt: [7.41, 9.84] }   /* 261016 v7.41 (사용자 「ax 라운지 담당자 여기 말고 좀 더 부스 앞으로 (화면 앞)」) 스태프 = 멈춤 자리 오른쪽 1.0m · 데스크 쪽 0.45m(옛 = 오른쪽 1.1 · 앞 0.7 = 데스크 옆 대리석 벽 앞 · 0.3m 화면 쪽) · 내 캐릭터 · 데스크 · 판을 가리지 않고 멈춤 자리(몸 0.32 + 스태프 0.72)와 1.1m · 390 폭에서 몸 전체가 보임 */   /* 261008 수정본 11쪽 · AX 라운지 = 미팅룸 날개 입구 가벽 앞 데스크(5.6, 11.81) · 데스크 앞 오른쪽 2.9m(룰렛 자리 3.0m 밖 · 가까우면 「룰렛 이벤트 앞」으로 읽힌다) · 옛 = 북쪽 벽 앞 판 줄 앞(8.7, 8.3) */
+    { id: 'lounge', zone: 'lounge', x: 6.6, z: 9.1, look: [5.6, 12.18], gAt: [6.54, 11.09] }   /* 261016 v7.42 (사용자 캡처 「흰 탁자 오른쪽 · 내 캐릭터 바로 앞」) 스태프 = 멈춤 자리 앞(바라보는 쪽) 1.9m · 오른쪽 0.56m · 북쪽 벽 앞 걸을 수 있는 끝(z 약 11.1 · 이보다 앞은 막힘이라 nearestFree 가 같은 자리로 옮긴다) · 내 캐릭터 뒤 화면 위쪽에 겹치지 않고 보임(옛 v7.41 gAt 7.41, 9.84 = 오른쪽 1.0m · 앞 0.45m · 내 캐릭터 옆) · 자세히 보기 · 점프 단추는 화면 위에 그려져 가려지지 않는다   /* (v7.41 설명) (사용자 「ax 라운지 담당자 여기 말고 좀 더 부스 앞으로 (화면 앞)」) 스태프 = 멈춤 자리 오른쪽 1.0m · 데스크 쪽 0.45m(옛 = 오른쪽 1.1 · 앞 0.7 = 데스크 옆 대리석 벽 앞 · 0.3m 화면 쪽) · 내 캐릭터 · 데스크 · 판을 가리지 않고 멈춤 자리(몸 0.32 + 스태프 0.72)와 1.1m · 390 폭에서 몸 전체가 보임 */   /* 261008 수정본 11쪽 · AX 라운지 = 미팅룸 날개 입구 가벽 앞 데스크(5.6, 11.81) · 데스크 앞 오른쪽 2.9m(룰렛 자리 3.0m 밖 · 가까우면 「룰렛 이벤트 앞」으로 읽힌다) · 옛 = 북쪽 벽 앞 판 줄 앞(8.7, 8.3) */
   ];
   /* 18F 커피챗 · 체크인 존은 시험판에서 뺀다(사용자 261003) · 코드는 SHOW_CAFE 로 보존 */
   var SHOW_CAFE = false;
@@ -2347,6 +2347,7 @@
     if (G.goal != null) { var s = STOPS[G.goal]; G.stop = G.goal; G.mode = 'stop'; if (s.look) { var za = faceAz(s); G.azTo = G.az + Math.atan2(Math.sin(za - G.az), Math.cos(za - G.az)); } }   /* 구역 앞에 닿으면 그 판 줄이 정면이 되는 방위로 돌아선다(90도 단위) */
     else { G.mode = 'free'; nearestStop(); }
     G.goal = null; updateUi(true);
+    if (ta && ta.chase && ta.k === 'gate') G.azTo = G.az + Math.atan2(Math.sin(Math.PI - G.az), Math.cos(Math.PI - G.az));   /* v7.42 뒤에서 따라온 끝 = 게이트가 화면 위로(옛 tapGo 와 같다) */
     if (ta) tapRun(ta);   /* v5.91 도착 = 그 일을 연다 */
   }
   function nearestStop() { var p = planOf(G.pos), best = 0, bd = 1e9; STOPS.forEach(function (s, i) { var d = Math.hypot(s.x - p[0], s.z - p[1]); if (d < bd) { bd = d; best = i; } }); G.stop = best; }
@@ -2371,6 +2372,7 @@
     else if (G.mode === 'auto' && G.path) {
       var p = planOf(G.pos), q = G.path[G.pathI], dx = q[0] - p[0], dz = q[1] - p[1], d = Math.hypot(dx, dz), step = G.speed * dt;
       if (d > 1e-4) G.face = Math.atan2(dx, -dz);   /* v5.51 걷는 쪽을 본다(도면 z 북쪽 = three -z) */
+      if (d > 1e-4 && G.tapAct && G.tapAct.chase) G.azTo = G.az + Math.atan2(Math.sin(G.face - G.az), Math.cos(G.face - G.az));   /* 261016 v7.42 (사용자) 「다른 층 이동하기」 · 「엘리베이터로 가기」 자동 걷기 = 카메라가 내 캐릭터 뒤에서 걷는 방향을 보고 따라간다(방위 = 걷는 방향 · stepCam 이 천천히 따라 돈다 · 움직임 줄이기 = 걷지 않고 옮기므로 해당 없음) */
       if (d <= step) { G.pos.copy(toThree(q[0], q[1])); G.pathI++; if (G.pathI >= G.path.length) arrive(); }
       else { var nx = p[0] + dx / d * step, nz = p[1] + dz / d * step; G.pos.copy(toThree(nx, nz)); }
       moving = Math.min(1, G.speed / 3); G.fwdT = 0; G.run = 0; G.realV = 0; G.push = 0;
@@ -2492,7 +2494,7 @@
   var EYE_PITCH = 14 * Math.PI / 180;   /* 거리 G.dist = 3.8~8m(기본 5.6 · v5.86) · 확대 · 축소 버튼(누르는 동안) · 두 손가락이 연속으로 바꾼다 */
   /* v5.65 (사용자 261005 「설정의 내려다보기 시점은 없애고」) 시점 = 눈높이 하나 · 옛 내려다보기(PITCH 40도 · 바라보는 높이 0.9)는 쓰지 않는다 · 기기에 남은 axfTour3View 값은 읽지 않는다
    * v5.65 (사용자 261005 「권장대로」) 위아래 시선 · G.tilt = 정면 눈높이에서 위(+) · 아래(-)로 기운 각 · 위 TILT_UP · 아래 TILT_DN 까지 · 카메라 자리는 그대로 바라보는 점만 오르내린다 */
-  var TILT_UP = 20 * Math.PI / 180, TILT_DN = 10 * Math.PI / 180;
+  var TILT_UP = 20 * Math.PI / 180, TILT_DN = 10 * Math.PI / 180, CHASE_K = 3.4;   /* v7.42 뒤에서 따라가기 방위 따라가는 빠르기(1초에 e^-3.4 만 남는다) */
   function camWant(dt) {
     /* 바라보는 점 = 캐릭터보다 남쪽(화면 위쪽)으로 조금 · 캐릭터는 화면 가운데 아래에 서고 앞의 판 줄이 더 넓게 보인다 */
     /* 방위 G.az · 0 = 북쪽 위에서 남쪽(정문)을 봄 · 「시점 돌리기」로 90도씩 · 화면 위 = (sin az, cos az) */
@@ -2542,7 +2544,7 @@
   /* 손을 떼고 1초 뒤 · 걷기 시작 · 판 보기 · 장면 바꿈 = 정면(0)으로 약 0.4초 · 움직임 줄이기 = 바로 */
   function tiltHome(now) { G.tiltTo = 0; if (now || RM) G.tilt = 0; G.need = true; }
   function stepCam(dt) {
-    var a0 = G.az; G.az = angLerp(G.az, G.azTo, dt && !RM ? 1 - Math.exp(-dt * (HOLD && HOLD.kind === 'rot' ? 14 : 7)) : 1); if (Math.abs(Math.atan2(Math.sin(G.azTo - G.az), Math.cos(G.azTo - G.az))) < 0.002) G.az = G.azTo;
+    var a0 = G.az; G.az = angLerp(G.az, G.azTo, dt && !RM ? 1 - Math.exp(-dt * (HOLD && HOLD.kind === 'rot' ? 14 : G.mode === 'auto' && G.tapAct && G.tapAct.chase ? CHASE_K : 7)) : 1);   /* v7.42 뒤에서 따라가기 = 방향이 바뀌어도 튀지 않게 천천히(약 0.3초) */ if (Math.abs(Math.atan2(Math.sin(G.azTo - G.az), Math.cos(G.azTo - G.az))) < 0.002) G.az = G.azTo;
     if (G.tiltTo && !G.tiltDrag && ((G.stick && (G.stick.x || G.stick.y)) || G.path)) G.tiltTo = 0;   /* v5.65 걷기 시작 = 정면으로 */
     var t0 = G.tilt || 0; G.tilt = t0 + ((G.tiltTo || 0) - t0) * (dt && !RM && !G.tiltDrag ? 1 - Math.exp(-dt * 8) : 1); if (Math.abs(G.tilt - (G.tiltTo || 0)) < 0.0015) G.tilt = G.tiltTo || 0;
     var w = camWant(dt), k = dt && !RM ? (G.az !== a0 || G.tilt !== t0 ? 1 : 1 - Math.exp(-dt * (5 + 3 * (G.run || 0)))) : 1;
@@ -2695,7 +2697,6 @@
     return any;
   }
   /* v5.49 (사용자 261004 「회사의 방향이에요(자세히 보기) 이런 식」) 말풍선 = 무엇이 있는지 한마디 + 오른쪽 「자세히 보기」 한 줄 · 옛 「~을 보는 곳이에요」보다 짧게 */
-  var STAIR = { id: 'stairs', at: [13.4, 10.3], r: 3.0, m: { position: new T.Vector3(13.4 - 16, 0.6, 6 - 11.2) }, text: '오늘은 계단 어떠세요?', go: '스탬프 받기', stamp: 'st', zone: null, spot: '' };
   var ZT = { vision: '회사의 방향이에요', lab: 'DAP 과제들이에요', action: 'AI 업무 사례예요', play: 'AI 직접 써 보기예요', event: '사진 · 룰렛 · 타자왕이에요', lounge: '업무 고민 상담이에요' };
   function stepGuides(dt) {
     var p = planOf(G.pos), busy = false, talk = null, bestD = 1e9, nearestG = guides.reduce(function (m, g) { return Math.min(m, Math.hypot(p[0] - g.at[0], p[1] - g.at[1])); }, 1e9);
@@ -2782,7 +2783,7 @@
   function etipGo() {
     etipHide(); if (!G.loaded || G.scn !== 'lobby' || PH.on) return;
     var p = planOf(G.pos), q = (CS_SHUT ? ETIP_TO.slice(0, 1) : ETIP_TO).reduce(function (a, b) { return Math.hypot(b[0] - p[0], b[1] - p[1]) < Math.hypot(a[0] - p[0], a[1] - p[1]) ? b : a; });
-    G.etipGo = q; tapGo({ k: q === ETIP_TO[0] ? 'gate' : 'cs' });   /* v5.91 가장 가까운 엘리베이터까지 걸어가 탄다(눌러서 가기와 같다) */
+    G.etipGo = q; tapGo({ k: q === ETIP_TO[0] ? 'gate' : 'cs', chase: true });   /* v5.91 가장 가까운 엘리베이터까지 걸어가 탄다(눌러서 가기와 같다) */
   }
   function placeDir(gd) {   /* 가장자리 방향 점 · 스태프 쪽 */
     var d = $('gdir'); if (!d) return;
@@ -5553,5 +5554,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v7.41', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v7.42', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();
