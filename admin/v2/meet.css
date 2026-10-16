@@ -1,0 +1,111 @@
+/* AXF CONTROL v2 · 미팅 탭(18F 커피챗 · 1F AX 라운지 · 261016 밤 · 디자인 시안/커피챗 콘솔/목업.html)
+ * 색 = 콘솔 네이비 + 상태 3색 · 오렌지는 당일 모드 「지금 회차」 한 곳(.mtg 안에서만 정의) · 움직임 = transform · opacity 만 · 동작 줄이기면 즉시 */
+.mtg{--or:#FF7E31;--or-bg:#FFF3EA}
+.mtg-hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.mtg-hd .chips{margin-bottom:0}
+.mtg-seg{display:inline-flex;background:var(--sf);border:1px solid var(--line3);border-radius:10px;padding:3px;gap:2px}
+.mtg-seg button{height:34px;padding:0 14px;border-radius:7px;font-weight:600;font-size:13px;color:var(--tx2);white-space:nowrap}
+.mtg-seg button.on{background:var(--navy05);color:var(--navy)}
+.mtg-sw{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:14px;white-space:nowrap;cursor:pointer;margin-left:auto;height:40px;padding:0 4px}
+.mtg-sw i{width:40px;height:24px;border-radius:12px;background:var(--line3);position:relative}
+.mtg-sw i::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s var(--ease)}
+.mtg-sw[aria-checked="true"] i{background:var(--navy)}.mtg-sw[aria-checked="true"] i::after{transform:translateX(16px)}
+
+.mtg-bar{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r);margin-bottom:10px;flex-wrap:wrap;border:1px solid var(--line);background:var(--sf);font-size:13px}
+.mtg-bar.draft{background:var(--warn-bg);border-color:var(--warn-ln)}
+.mtg-bar.draft b{color:var(--warn)}
+.mtg-bar .sp{flex:1}
+.mtg-now{background:var(--sf);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin-bottom:10px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mtg-now h3{font-size:13px;color:var(--tx3);font-weight:600;margin-bottom:4px}
+.mtg-now .cur h3{color:var(--tx)}
+.mtg-now .cur h3 em{font-style:normal;color:var(--or)}
+.mtg-now .rw{display:flex;gap:16px;flex-wrap:wrap}
+.mtg-now .rw span{font-size:20px;font-weight:700;white-space:nowrap}
+.mtg-now .rw small{font-size:12px;color:var(--tx3);font-weight:600;margin-right:4px}
+
+.mtg-wrap{display:grid;grid-template-columns:300px minmax(0,1fr);gap:12px;align-items:start}
+.mtg-q{padding:12px;position:sticky;top:0}
+.mtg-q h2,.mtg-bd h2{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.mtg-q h2 .sp{flex:1}
+.mtg-ql{display:flex;flex-direction:column;gap:6px;min-height:80px;padding:4px;border-radius:var(--r-s);max-height:calc(100vh - 330px);overflow:auto}
+.mtg-ql.over{background:var(--navy05)}
+.mtg-bd{padding:12px;min-width:0}
+.mtg-grid{display:grid;gap:6px}
+.mtg-grid .th{font-size:12px;color:var(--tx3);font-weight:600;padding:2px 4px}
+.mtg-grid .th b{color:var(--tx);font-size:13px}
+.mtg-tm{display:flex;flex-direction:column;justify-content:center;padding:0 6px;border-radius:var(--r-s)}
+.mtg-tm b{font-size:16px;font-variant-numeric:tabular-nums}
+.mtg-tm span{font-size:12px;color:var(--tx3);font-variant-numeric:tabular-nums}
+.mtg-sl{min-height:66px;border:1.5px dashed var(--line3);border-radius:var(--r-s);display:flex;align-items:stretch}
+.mtg-sl.over,.mtg-sl:focus-visible{background:var(--navy05);border-color:var(--navy)}
+.mtg-sl .em{flex:1;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--tx3)}
+.mtg-sl.fill{border-style:solid;border-color:transparent}
+.mtg.picking .mtg-sl:not(.fill){border-color:var(--navy);background:var(--soft)}
+.mtg-tm.cur{background:var(--or-bg)}
+.mtg-tm.cur b{color:var(--or)}
+.mtg-sl.cur{border:2px solid var(--or)}
+.mtg-sl.cur.fill{border-color:var(--or)}
+.mtg-tm.past,.mtg-sl.past{opacity:.55}
+.mtg-gap{grid-column:1/-1;height:30px;border-radius:var(--r-s);background:repeating-linear-gradient(135deg,var(--line2) 0 8px,var(--soft) 8px 16px);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--tx3);font-weight:600}
+.mtg-fold{grid-column:1/-1;height:32px;border-radius:var(--r-s);border:1px solid var(--line);background:var(--soft);font-size:12px;font-weight:600;color:var(--tx2)}
+
+.mtg-pc{flex:1;min-width:0;background:var(--sf);border:1px solid var(--line);border-radius:var(--r-s);padding:8px 10px;cursor:grab;user-select:none;-webkit-user-select:none;display:flex;flex-direction:column;gap:3px;position:relative;touch-action:manipulation;-webkit-touch-callout:none}
+.mtg-pc:hover{border-color:var(--line3)}
+.mtg-pc.lock{cursor:pointer}
+.mtg-pc.chg{border-color:var(--warn);box-shadow:inset 3px 0 0 var(--warn)}
+.mtg-pc.pick{outline:2px solid var(--navy);outline-offset:1px}
+.mtg-pc.ghost{position:fixed;z-index:50;pointer-events:none;box-shadow:0 10px 24px rgba(0,0,0,.18);opacity:.96;transform:rotate(-1deg);left:0;top:0}
+.mtg-pc.lift{opacity:.35}
+.mtg-pc .l1{display:flex;align-items:center;gap:6px;min-width:0}
+.mtg-pc .no{font-size:12px;font-weight:700;color:var(--tx3);min-width:18px;font-variant-numeric:tabular-nums}
+.mtg-pc .nm{font-weight:700;white-space:nowrap}
+.mtg-pc .dp{font-size:12px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mtg-pc .l1 .sp{flex:1}
+.mtg-pc .md{width:7px;height:7px;border-radius:50%;background:var(--navy);flex:none}
+.mtg-pc .l2{display:flex;gap:4px;flex-wrap:wrap}
+.mtg-pc .l2 .tag{height:20px;padding:0 7px;font-weight:600}
+.mtg-pc .tx{font-size:12px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mtg-pc .acts{display:flex;gap:4px;margin-top:2px;flex-wrap:wrap}
+.mtg-pc .acts button{height:30px;padding:0 10px;border-radius:6px;border:1px solid var(--line3);font-size:12px;font-weight:600;background:var(--sf)}
+.mtg-pc .acts button.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.mtg-pc.st-no{background:var(--bad-bg);border-color:var(--bad-ln)}
+.mtg-pc.st-dn{background:var(--ok-bg);border-color:var(--ok-ln)}
+
+/* 아이디어(수동 분류) */
+.mtg-ibar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px;margin-bottom:10px}
+.mtg-ibar .xg-q{width:260px;max-width:100%}
+.mtg-icols{columns:3 300px;column-gap:12px}
+.mtg-ig{break-inside:avoid;margin-bottom:12px;padding:12px}
+.mtg-ig h3{font-size:16px;font-weight:700;display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.mtg-ig h3 .cap{font-weight:600}
+.mtg-ic{border-top:1px solid var(--line2);padding:10px 0}
+.mtg-ig.wide{margin-bottom:12px}
+.mtg-iw{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));column-gap:20px}
+.mtg-iw .mtg-ic:first-of-type{border-top:1px solid var(--line2)}
+.mtg-ic:first-of-type{border-top:0}
+.mtg-ic .o{font-size:14px;color:var(--tx);cursor:pointer;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.mtg-ic .f{display:flex;gap:6px;align-items:center;margin-top:4px;font-size:12px;color:var(--tx3);flex-wrap:wrap}
+.mtg-cats{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.mtg-cats button{height:28px;padding:0 9px;border-radius:99px;border:1px solid var(--line3);background:var(--sf);font-size:12px;font-weight:600;color:var(--tx2);white-space:nowrap}
+.mtg-cats button[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.mtg-orig{background:var(--soft);border:1px solid var(--line2);border-radius:var(--r-s);padding:10px 12px;white-space:pre-wrap;line-height:1.6;font-size:14px;margin-top:4px}
+.mtg-log{display:flex;flex-direction:column;gap:6px;font-size:13px;margin-top:4px}
+.mtg-log div{display:flex;gap:10px}.mtg-log span{color:var(--tx3);font-variant-numeric:tabular-nums;min-width:86px;flex:none}
+.mtg-memo{width:100%;min-height:96px;resize:vertical;line-height:1.5;border:1px solid var(--line3);border-radius:var(--r-s);background:var(--sf);padding:8px 10px;font-size:14px;margin-top:4px}
+
+@media (max-width:1180px){ .mtg-wrap{grid-template-columns:240px minmax(0,1fr)} }
+@media (max-width:760px){
+  .mtg-wrap{grid-template-columns:minmax(0,1fr)}
+  .mtg-q{position:static}
+  .mtg-ql{max-height:none;flex-direction:row;overflow-x:auto;padding-bottom:6px;min-height:0}
+  .mtg-ql .mtg-pc{flex:0 0 190px}
+  .mtg-tm b{font-size:14px}
+  .mtg-tm{padding:0 2px}
+  .mtg-pc .dp,.mtg-pc .tx{display:none}
+  .mtg-pc{padding:6px 8px}
+  .mtg-now{grid-template-columns:1fr}
+  .mtg-now .rw span{font-size:18px}
+  .mtg-sw{margin-left:0}
+  .mtg-pc .acts button{padding:0 8px}
+}
+@media (prefers-reduced-motion:reduce){ .mtg-sw i::after{transition:none} }

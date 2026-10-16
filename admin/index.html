@@ -11,10 +11,10 @@
 <script>
 (function(){
   var M={ p_who:"people/find", p_list:"people/gate", p_acc:"people/deny", p_pw:"inbox/pw", today:"now", t_req:"inbox/req", t_inc:"now",
-    f_idea:"people/idea", f_cchat:"inbox/cchat", f_apply:"inbox/lounge", f_ck:"inbox/ck", f_att10:"people/att10", f_crowd:"now", f_fcfs:"prize",
+    f_idea:"people/idea", f_cchat:"meet/cc", f_apply:"meet/ln", f_ck:"inbox/ck", f_att10:"people/att10", f_crowd:"now", f_fcfs:"prize",
     f_draw:"stage/draw", f_award:"stage/ik", f_sign:"log/urls", n_send:"notify/send", n_sched:"notify/sched", r_log:"log/log", r_num:"now",
     s_open:"log/urgent", s_qr:"log/qr", s_srv:"log/srv", s_adv:"log/code" };
-  var S={ p_list:{ gate:"people/gate", staff:"people/staff", pre10:"people/pre10", test:"people/visit", lounge:"inbox/lounge", kit:"prize" },
+  var S={ p_list:{ gate:"people/gate", staff:"people/staff", pre10:"people/pre10", test:"people/visit", lounge:"meet/ln", kit:"prize" },
     f_award:{ lk7:"stage/lk7", ik:"stage/ik", type:"stage/type" }, r_num:{ sv:"log/sv" }, s_adv:{ code:"log/code", inv:"prize", cfg:"log/srv" } };
   var h=String(location.hash||"").replace(/^#/,"").split("/"), k=h[0]||"", sb=decodeURIComponent(h[1]||""), t=(S[k]&&S[k][sb])||M[k]||"";
   location.replace("v2/"+(t?"#"+t:""));

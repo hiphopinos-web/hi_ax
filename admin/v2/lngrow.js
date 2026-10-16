@@ -2,7 +2,7 @@
  * 넣기 = lng_pre_row_add(POST · PIN 없음 · emp · time · seat · memo) · 시간 없으면 칸 미정 · 상담석은 시간과 함께
  *   거절 = param · noros · dup · time · seat · cap · clash(with = 그 자리 사번) → 쉬운 한국어로 확인 창에 표시
  * 빼기 = lng_pre_row_del(POST · emp) · 거절 = param · notfound · done(체크인 · 완료 줄 있음 · cur = 그 상태)
- * 시간 · 상담석 바꾸기는 resv_move(inbox.js lgMoveAsk) 그대로 · 줄 되돌리기는 활동 기록(서버가 lng_pre 종류를 되돌림)
+ * 시간 · 상담석 바꾸기는 resv_move(미팅 탭 시간표 · meet.js) 그대로 · 줄 되돌리기는 활동 기록(서버가 lng_pre 종류를 되돌림)
  * 넣은 뒤 · 뺀 뒤 표와 배치판을 다시 읽는다(reload resv) · 입력은 처리함 갱신(5초)이 지우지 않게 한 번만 그린다 */
 var LA={ time:"", seat:0, memo:"", pre:0 };
 var LA_WHY={ param:"사번을 확인하세요", noros:"명부에 없는 사번입니다", dup:"이미 라운지 명단에 있습니다", time:"그 시간은 칸 밖입니다", seat:"상담석이 범위 밖이거나, 시간 없이 상담석만 골랐습니다", cap:"그 칸은 정원이 찼습니다" };
@@ -36,7 +36,7 @@ function laSp(){
       return h+'<label class="nt-f"><span class="nt-l">메모(선택)</span><input class="xg-q" id="laMemo" maxlength="60" autocomplete="off" placeholder="60자까지" aria-label="메모" value="'+esc(LA.memo)+'" oninput="LA.memo=this.value" style="width:100%;max-width:360px"></label>'; },
     run:function(p){ var e=normE(p.emp), t=LA.time, s=t&&LA.seat?LA.seat:0, memo=String(LA.memo||"").trim().slice(0,60); return call("lng_pre_row_add",{ emp:e, time:t||null, seat:s?String(s):null, memo:memo||null }); },
     fail:laFail,
-    done:function(r, p){ var e=normE(p.emp); LA.time=""; LA.seat=0; LA.memo=""; reload(["resv"]);
+    done:function(r, p){ var e=normE(p.emp); LA.time=""; LA.seat=0; LA.memo=""; reload(["resv","lgb"]);
       toast("넣었습니다 · "+(r.name||p.name||e)+" · "+(r.slot?r.slot+(r.seat?" · 상담석 "+r.seat:""):"칸 미정")+(r.over?" · 정원 넘음":""), { undo:function(){ laDel(e, 1); } }); } };
 }
 /* 선택 삭제 · 상담 줄 취소(kind lounge · 줄 id) · 「사전 명단에서도 뺌」을 고르면 kind lounge_pre(사번 · 명단 · 라운지시간에서 빠지고 신청 · 승인 줄 취소) */
@@ -45,7 +45,7 @@ function laCx(){
     opts:function(){ LA.pre=0; return '<label class="nt-f" style="display:flex;gap:8px;align-items:center"><input type="checkbox" onchange="LA.pre=this.checked?1:0">사전 명단에서도 뺌(키트 · 가습기 대상에서 빠짐 · 체크인 · 완료한 사람은 못 함)</label>'; },
     kind:function(){ return LA.pre?"lounge_pre":"lounge"; },
     keys:function(rows, kind){ var seen={}; return rows.map(function(r){ return kind==="lounge_pre"?normE(r.emp):String(r.id); }).filter(function(k){ if(seen[k]) return false; seen[k]=1; return true; }); },
-    after:function(){ LG.sel=null; LG.mv=null; reload(["resv"]); } };
+    after:function(){ LG.sel=null; LG.mv=null; reload(["resv","lgb"]); } };
 }
 /* 빼기 · 배치판 오른쪽 카드 단추 · 확인 창 뒤 lng_pre_row_del */
 function laDelAsk(id){
@@ -54,12 +54,12 @@ function laDelAsk(id){
     sub:"상담 신청 줄과 키트명단 라운지 줄이 같이 빠짐 · 체크인 · 완료한 줄이 있으면 빼지 못함 · 되돌리기 7초 · 활동 기록에서도 가능", ok:"빼기", danger:true,
     run:function(){ return call("lng_pre_row_del",{ emp:e }); },
     fail:function(x){ return x&&x.reason==="done"?"이미 "+(x.cur||"체크인 · 완료")+" 줄이 있어 뺄 수 없습니다":LA_DWHY[x&&x.reason]||""; },
-    done:function(x){ LG.sel=null; LG.mv=null; reload(["resv"]); lgPaint();
+    done:function(x){ LG.sel=null; LG.mv=null; reload(["resv","lgb"]); lgPaint();
       toast("뺐습니다 · "+(r.name||r.emp)+(x&&x.cx?" · 상담 줄 취소 "+x.cx:""), { undo:function(){ laBack(e, r); } }); } });
 }
 /* 넣은 직후 되돌리기 = 빼기(확인 창 없이) */
-function laDel(e){ call("lng_pre_row_del",{ emp:e }).then(function(x){ LG.sel=null; reload(["resv"]); toast(x&&x.ok?"되돌렸습니다 · 명단에서 뺌":"되돌리지 못했습니다 · "+(x&&x.reason==="done"?"이미 "+(x.cur||"체크인 · 완료")+" 줄이 있습니다":why(x)),{ bad:!(x&&x.ok) }); }); }
+function laDel(e){ call("lng_pre_row_del",{ emp:e }).then(function(x){ LG.sel=null; reload(["resv","lgb"]); toast(x&&x.ok?"되돌렸습니다 · 명단에서 뺌":"되돌리지 못했습니다 · "+(x&&x.reason==="done"?"이미 "+(x.cur||"체크인 · 완료")+" 줄이 있습니다":why(x)),{ bad:!(x&&x.ok) }); }); }
 /* 뺀 직후 되돌리기 = 같은 시간 · 상담석 · 메모로 다시 넣기 */
 function laBack(e, r){
-  call("lng_pre_row_add",{ emp:e, time:hm(r.slot)||null, seat:hm(r.slot)&&num(r.seat)?String(r.seat):null, memo:r.memo||null }).then(function(x){ reload(["resv"]); toast(x&&x.ok?"되돌렸습니다 · 다시 넣음":"되돌리지 못했습니다 · "+(laFail(x)||why(x)),{ bad:!(x&&x.ok) }); });
+  call("lng_pre_row_add",{ emp:e, time:hm(r.slot)||null, seat:hm(r.slot)&&num(r.seat)?String(r.seat):null, memo:r.memo||null }).then(function(x){ reload(["resv","lgb"]); toast(x&&x.ok?"되돌렸습니다 · 다시 넣음":"되돌리지 못했습니다 · "+(laFail(x)||why(x)),{ bad:!(x&&x.ok) }); });
 }

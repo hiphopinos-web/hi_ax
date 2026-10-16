@@ -1,5 +1,5 @@
 /* AXF CONTROL v2 · 공통 (261016 콘솔 재구축 화면 1단계)
- * 서버 호출 · 로그인 · 확인 창 · 토스트 · 화면 틀(상단 띠 · 하단 탭 7) · 숫자 카드 · 행 목록 · 상태(불러오는 중 · 빈 · 오류 · 서버 갱신 뒤)
+ * 서버 호출 · 로그인 · 확인 창 · 토스트 · 화면 틀(상단 띠 · 하단 탭 8 · 261016 밤 미팅 탭) · 숫자 카드 · 행 목록 · 상태(불러오는 중 · 빈 · 오류 · 서버 갱신 뒤)
  * 서버 경로 · 로그인(admin_check) · 토큰 저장 키는 지금 콘솔(admin/index.html)과 같다. 관리코드는 저장하지 않는다.
  * 261016 사용자 「로그인하고 나면 쓸데없는 PIN 번호 넣는 일을 없애줘」 · 사번 + 관리코드로 들어온 뒤에는 어떤 동작에도 PIN 을 묻지 않는다. 되돌리기 어려운 동작은 확인 창 · 확인 문구로 막는다.
  * 서버 계약(디자인 시안/콘솔 재구축/3_서버 계약.md)이 아직 없는 기능은 화면에 「서버 갱신 뒤」로 비워 둔다(가짜 숫자 없음). */
@@ -207,27 +207,30 @@ function dataGate(k, label){
 }
 function errTop(k){ return S.err[k]&&S.data[k]?band("warn","받지 못했습니다 · "+esc(why(S.err[k]))+" · 마지막 값을 회색으로 둡니다",'<button class="btn sm" type="button" onclick="reload([\''+k+'\'])">다시 시도</button>'):""; }
 
-/* ── 8. 틀 · 상단 띠 · 하단 탭 7(고정) · 화면 ── */
+/* ── 8. 틀 · 상단 띠 · 하단 탭 8(고정 · 261016 밤 미팅) · 화면 ── */
 var IC=(function(){ var s=function(d){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>'; };
   return { now:s('<path d="M3 12h4l3-8 4 16 3-8h4"/>'), inbox:s('<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>'), people:s('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8"/><path d="M18 14.6A6.5 6.5 0 0 1 21.5 20"/>'),
     prize:s('<path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/>'), stage:s('<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>'),
+    meet:s('<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2.5v3M16 2.5v3M8 14h3M13 14h3M8 17.5h3"/>'),
     notify:s('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>'), log:s('<circle cx="12" cy="12" r="3"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/>') }; })();
-var TABS=[["now","지금","지금"],["inbox","처리함","처리함"],["people","사람","사람"],["prize","경품 · 재고","경품"],["stage","무대","무대"],["notify","알림","알림"],["log","기록 · 설정","설정"]];
+var TABS=[["now","지금","지금"],["inbox","처리함","처리함"],["meet","미팅","미팅"],["people","사람","사람"],["prize","경품 · 재고","경품"],["stage","무대","무대"],["notify","알림","알림"],["log","기록 · 설정","설정"]];
 var SCREENS={};
 function go(tab, sub){ if(!SCREENS[tab]) tab="now"; if(sub!=null) S.sub[tab]=sub; var ch=S.tab!==tab; S.tab=tab; hashSet(); render(); load(false); if(ch) el("main").scrollTop=0; }
 function goSub(sub){ go(S.tab, sub); }
 function hashSet(){ var h="#"+S.tab+(S.sub[S.tab]?"/"+S.sub[S.tab]:""); if(location.hash!==h) try{ history.replaceState(null,"",h); }catch(e){} }
-function routeFromHash(){ var m=String(location.hash||"").replace(/^#/,"").split("/"); if(SCREENS[m[0]]){ S.tab=m[0]; if(m[1]) S.sub[m[0]]=decodeURIComponent(m[1]); } }
+function routeFromHash(){ var m=String(location.hash||"").replace(/^#/,"").split("/");
+  if(m[0]==="inbox"&&(m[1]==="cchat"||m[1]==="lounge")){ m=["meet",m[1]==="cchat"?"cc":"ln"]; try{ history.replaceState(null,"","#meet/"+m[1]); }catch(e){} }   /* 261016 밤 옛 처리함 커피챗 · 라운지 주소 = 미팅 탭 */
+  if(SCREENS[m[0]]){ S.tab=m[0]; if(m[1]) S.sub[m[0]]=decodeURIComponent(m[1]); } }
 window.addEventListener("hashchange",function(){ routeFromHash(); render(); load(false); });
 function stageDim(){ var t=srvNow(); return !(S.data.nb&&S.data.nb.day===S.data.nb.ev&&t.getHours()>=16); }
 function tabsPaint(){
-  var bd=inboxCount();
-  var h=TABS.map(function(t){ var on=S.tab===t[0], dim=t[0]==="stage"&&stageDim();
-    return '<button type="button" class="'+(on?"on ":"")+(dim&&!on?"dim":"")+'"'+(on?' aria-current="page"':'')+' onclick="go(\''+t[0]+'\')">'+IC[t[0]]+'<span class="l">'+esc(t[1])+'</span><span class="s">'+esc(t[2])+'</span>'+(t[0]==="inbox"&&bd?'<span class="bd" aria-label="처리할 일 '+bd+'건">'+bd+'</span>':'')+'</button>'; }).join("");
+  var bdOf={ inbox:inboxCount(), meet:typeof meetCount==="function"?meetCount():0 };
+  var h=TABS.map(function(t){ var on=S.tab===t[0], dim=t[0]==="stage"&&stageDim(), bd=bdOf[t[0]]||0;
+    return '<button type="button" class="'+(on?"on ":"")+(dim&&!on?"dim":"")+'"'+(on?' aria-current="page"':'')+' onclick="go(\''+t[0]+'\')">'+IC[t[0]]+'<span class="l">'+esc(t[1])+'</span><span class="s">'+esc(t[2])+'</span>'+(bd?'<span class="bd" aria-label="'+(t[0]==="meet"?"칸에 안 놓은 신청 ":"처리할 일 ")+bd+'건">'+bd+'</span>':'')+'</button>'; }).join("");
   if(el("tabs")._h!==h){ el("tabs")._h=h; el("tabs").innerHTML=h; }
 }
-/* 처리함 배지 = 라운지 신청 + 커피챗 희망 + 스태프 요청 + PIN 분실(체크인존 대기는 줄이라 빼다) */
-function inboxCount(){ var b=S.data.nb; if(!b||!b.ok) return 0; return num(b.resv&&b.resv.wait)+num(b.cchat&&b.cchat.wait)+num(b.sreq&&b.sreq.open)+num(b.pw); }
+/* 처리함 배지 = 스태프 요청 + PIN 분실(체크인존 대기는 줄이라 빼다 · 261016 밤 라운지 · 커피챗은 미팅 탭 배지) */
+function inboxCount(){ var b=S.data.nb; if(!b||!b.ok) return 0; return num(b.sreq&&b.sreq.open)+num(b.pw); }
 function sigCount(){ return typeof nowSignals==="function"?nowSignals().filter(function(x){ return x.st==="warn"||x.st==="bad"; }).length:0; }
 function topPaint(){
   var b=S.data.nb, ok=b&&b.ok, er=S.err.nb, busy=Object.keys(S.busy).some(function(k){ return S.busy[k]; });

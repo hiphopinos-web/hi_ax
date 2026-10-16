@@ -30,7 +30,7 @@ function nowSignals(){
   var lv=function(v,w,x){ return v>=x?"bad":v>=w?"warn":"ok"; };
   return [
     { l:"스캔 실패", v:String(rate), u:"%", st:m10<5?"ok":lv(rate,10,25), s:"최근 10분 "+n0(m10)+"건", go:"go('log')" },
-    { l:"대기 줄", v:n0(q), u:"명", st:lv(q,10,30), s:"라운지 신청 "+n0(b.resv&&b.resv.wait)+" · 커피챗 희망 "+n0(b.cchat&&b.cchat.wait), go:"go('inbox')" },
+    { l:"대기 줄", v:n0(q), u:"명", st:lv(q,10,30), s:"라운지 신청 "+n0(b.resv&&b.resv.wait)+" · 커피챗 희망 "+n0(b.cchat&&b.cchat.wait), go:"go('meet')" },
     { l:"서버 지연", v:(ms/1000).toFixed(2), u:"초", st:fails>=3?"bad":lv(ms,1500,3000), s:"콘솔 왕복 중앙값"+(fails?" · 실패 "+fails:""), go:"" },
     { l:"푸시 실패", v:n0(pf), u:"건", st:pe?"bad":pf?"warn":"ok", s:pe?"오류 · "+String(pe).slice(0,20):"오늘 발송 "+n0(b.push&&b.push.today&&b.push.today.jobs)+"건", go:"go('notify')" }
   ];
@@ -119,12 +119,12 @@ function nwFocus(b, ph){
       rowH("사이즈 남음",sz||"-","")+'<div class="mt"><button class="btn sm" type="button" onclick="go(\'inbox\',\'ck\')">체크인존 지급 현황</button></div>';
   } else if(id==="am"){ t="오전 · 라운지 · 룰렛";
     var rv=b.resv||{}, st=b.st||{};
-    h=rowH("AX 라운지","신청 "+n0(rv.wait)+" · 승인 "+n0(rv.ok)+" · 체크인 "+n0(rv["in"])+" · 완료 "+n0(rv.done),'<button class="btn sm pri" type="button" onclick="go(\'inbox\',\'lounge\')">배치판</button>')+
+    h=rowH("AX 라운지","신청 "+n0(rv.wait)+" · 승인 "+n0(rv.ok)+" · 체크인 "+n0(rv["in"])+" · 완료 "+n0(rv.done),'<button class="btn sm pri" type="button" onclick="go(\'meet\',\'ln\')">시간표</button>')+
       rowH("룰렛","자격 "+n0(st.elig)+"명 중 사용",'<span class="big">'+n0(st.used)+'<small> 명</small></span>')+
       rowH("선착순 가습기","10:30부터 · 달성순 · 17:00 마감",'<span class="big">'+n0(b.fcfs&&b.fcfs.got)+'<small> 지급</small></span>');
   } else if(id==="pm"){ t="오후 · 커피챗 · 출석 · 설문";
     var cc=b.cchat||{}, at=b.att||{};
-    h=rowH("18F 커피챗","희망 "+n0(cc.wait)+" · 선정 "+n0(cc.match)+" · 참석 "+n0(cc["in"]),'<button class="btn sm pri" type="button" onclick="go(\'inbox\',\'cchat\')">선정</button>')+
+    h=rowH("18F 커피챗","희망 "+n0(cc.wait)+" · 선정 "+n0(cc.match)+" · 참석 "+n0(cc["in"]),'<button class="btn sm pri" type="button" onclick="go(\'meet\',\'cc\')">시간표</button>')+
       rowH("17F 출석","AWS 입장 "+n0(at.l1&&at.l1.in)+" · 끝 "+n0(at.l1&&at.l1.out)+" · MS 입장 "+n0(at.l2&&at.l2.in)+" · 끝 "+n0(at.l2&&at.l2.out),"")+
       rowH("참가자 설문","14:30 열림",'<span class="big">'+n0(b.survey)+'<small> 건</small></span>');
   } else if(id==="close"){ t="Closing · 추첨";
