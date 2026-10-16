@@ -369,6 +369,10 @@
   .rt .tsf-adp figure { margin: 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; }
   .rt .tsf-adp .ph { box-sizing: border-box; width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--rt-white); box-shadow: 0 0 0 3px var(--rt-ink), 0 0 0 7px var(--rt-o100), 0 0 0 10px var(--rt-ink); }
   .rt .tsf-adp img { display: block; width: 100%; height: 100%; object-fit: contain; }
+  .rt .tsf-admat { width: 100%; display: flex; align-items: center; justify-content: center; gap: 18px; }   /* 261016 4~10위 데스크 매트 = 사용 모습 한 장(작게) + 한 줄 글 · 1~3위 사진과 같은 테 */
+  .rt .tsf-admat .ph { flex: none; box-sizing: border-box; width: 96px; height: 96px; display: block; overflow: hidden; background: var(--rt-white); box-shadow: 0 0 0 3px var(--rt-ink), 0 0 0 7px var(--rt-o100), 0 0 0 10px var(--rt-ink); }
+  .rt .tsf-admat img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .rt .tsf-admat .tsf-ads { text-align: left; }
   .rt .tsf-adp figcaption { display: flex; flex-direction: column; gap: 2px; color: var(--rt-cream); word-break: keep-all; }
   .rt .tsf-adp figcaption b { font-weight: 400; font-size: var(--rt-f32); line-height: var(--rt-l32); color: var(--rt-o100); text-shadow: var(--rt-out2); }
   .rt .tsf-adp figcaption small { font-size: var(--rt-f16); line-height: var(--rt-l16); color: var(--rt-tan2); }

@@ -930,7 +930,7 @@ function tsfAdCard(k) {
     var li = ((typeof PRIZES !== "undefined" && PRIZES.type && PRIZES.type.list) || []).slice(0, 3);   /* 261016 4~10등 데스크 매트는 아래 한 줄 */
     return '<p class="tsf-adk">1~3위 경품</p><div class="tsf-adp">' + li.map(function (x) {
       return '<figure><span class="ph"><img src="' + PRIZE_DIR + x.img + '.webp" alt="" loading="eager" decoding="async"></span><figcaption><b>' + esc(x.rk) + "</b>" + esc(x.nm) + "<small>" + esc(x.sub || "") + "</small></figcaption></figure>";
-    }).join("") + '</div><p class="tsf-ads">4~10위 · 엑셀 단축키 데스크 매트</p><p class="tsf-ads">17:00 마감 · 1~3위 Closing Speech 시상</p>';
+    }).join("") + '</div><p class="tsf-admat"><span class="ph"><img src="' + PRIZE_DIR + 'ty4_deskmat.webp" alt="" loading="eager" decoding="async"></span><span class="tsf-ads">4~10위 · 엑셀 단축키 데스크 매트</span></p><p class="tsf-ads">17:00 마감 · 1~3위 Closing Speech 시상</p>';
   }
   if (k === "top") {
     var t = (TSF.top && TSF.top.top) || [], a = t[0];
