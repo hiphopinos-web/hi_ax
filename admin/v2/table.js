@@ -3,7 +3,7 @@
  * 규칙: 머리 행 고정 · 머리 누르면 오름 → 내림 · 검색 칸 · 구분 칩(건수 붙음) · 건수 · 「엑셀 다운로드」(같은 자리 · 오른쪽 끝)
  *       숫자 오른쪽 정렬 · tabular-nums · 날짜 「MM-DD HH:mm」(오늘이면 「HH:mm」) · 열 너비는 열 정의 w(px)
  * 내려받기 = 확인 창(261016 PIN 없음) → 서버 원본 액션을 dl=1 로 다시 받아 → 화면에 보이는 열 · 구분 · 검색 · 정렬 그대로 .xlsx
- *       SheetJS(cdnjs 고정 버전)를 그때 불러온다 · 못 불러오면 UTF-8 BOM CSV 로 대신 받는다
+ *       ExcelJS 4.4.0(cdnjs 고정 버전 · 서식)을 그때 불러온다 · 못 불러오면 SheetJS 0.18.5 서식 없는 xlsx · 그것도 못 하면 UTF-8 BOM CSV
  * 줄 누르기 = o.onRow(key) · 고른 줄 g.sel 강조 · 키보드 Enter
  * 추가 시트 = o.sheets(지금 보이는 줄) → [{ name, aoa, wch }] · 첫 시트(명단) 뒤에 붙인다 · CSV 대신 받기면 첫 시트만
  * 261016 저녁 선택 · 추가 · 선택 삭제(사용자 확정 「사람을 관리하는 명단 전부 같은 모양」 · 3_서버 계약 3-6)
@@ -11,7 +11,7 @@
  *   o.cancel = { kind | kind() · keys(rows) 서버 열쇠(기본 사번) · what 명단 이름 · sub 영향 한 줄 · opts() 확인 창 추가 html · part() · after(res) 다시 읽기 }
  *   「선택 n명 삭제」 = 확인 창 → list_rows_cancel(취소 처리 · 기록 남음) → 못 한 줄은 이유 표 · 토스트 「되돌리기」 = roll_undo(batch)
  * 열 정의 c = { k 키 · t 머리 글자 · w 너비 · type(num | date | text) · v(row) 값 · f(row) 화면 html · x(row) 엑셀 값 · act(row) 단추 html(엑셀 제외) · sort:false } */
-var XLSX_URL="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+var XLSX_URL="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js", EXJS_URL="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js";
 var XG={ reg:{}, MAXROWS:500, CXMAX:200 };
 XG.make=function(o){
   var g={ o:o, id:o.id, rows:null, err:null, q:"", chip:(o.chips&&o.chips[0]&&o.chips[0][0])||"", sort:o.sort?{ k:o.sort.k, d:o.sort.d||1 }:null, sel:null, pick:{}, busy:0 };
@@ -161,38 +161,92 @@ XG.useCols=function(g, sc){
     return { k:c.k, t:c.n||m.t||c.k, w:c.w||m.w||100, type:m.type&&m.type!=="text"?m.type:t, v:m.v, f:m.f, x:m.x }; }).concat(acts);
   var root=XG.root(g); if(root) root.remove();
 };
-function xgLoadLib(){
-  if(window.XLSX&&window.XLSX.utils) return Promise.resolve(window.XLSX);
-  if(XG._lib) return XG._lib;
-  XG._lib=new Promise(function(ok, no){ var s=document.createElement("script"), t=setTimeout(function(){ no(new Error("timeout")); },10000);
-    s.src=XLSX_URL; s.crossOrigin="anonymous"; s.referrerPolicy="no-referrer"; s.onload=function(){ clearTimeout(t); window.XLSX?ok(window.XLSX):no(new Error("nolib")); }; s.onerror=function(){ clearTimeout(t); no(new Error("load")); }; document.head.appendChild(s); });
-  XG._lib.catch(function(){ XG._lib=null; });
-  return XG._lib;
+/* 바깥 도구 불러오기(cdnjs 고정 버전 · 누를 때 한 번) · 실패하면 다음에 다시 시도 */
+function xgLoadJs(url, name){
+  if(window[name]) return Promise.resolve(window[name]);
+  XG._js=XG._js||{}; if(XG._js[url]) return XG._js[url];
+  var pr=XG._js[url]=new Promise(function(ok, no){ var s=document.createElement("script"), t=setTimeout(function(){ no(new Error("timeout")); },15000);
+    s.src=url; s.crossOrigin="anonymous"; s.referrerPolicy="no-referrer"; s.onload=function(){ clearTimeout(t); window[name]?ok(window[name]):no(new Error("nolib")); }; s.onerror=function(){ clearTimeout(t); no(new Error("load")); }; document.head.appendChild(s); });
+  pr.catch(function(){ XG._js[url]=null; });
+  return pr;
 }
+function xgLoadLib(){ return window.XLSX&&window.XLSX.utils?Promise.resolve(window.XLSX):xgLoadJs(XLSX_URL,"XLSX"); }
+function xgLoadEx(){ return xgLoadJs(EXJS_URL,"ExcelJS"); }
 function xgStamp(){ var d=srvNow(), p=function(n){ return ("0"+n).slice(-2); }; return String(d.getFullYear()).slice(2)+p(d.getMonth()+1)+p(d.getDate())+"_"+p(d.getHours())+p(d.getMinutes()); }
 /* 추가 시트(o.sheets) · 실패해도 첫 시트는 받는다 */
-function xgSheets(X, wb, g, v){
-  if(!g.o.sheets) return; var a=[]; try{ a=g.o.sheets(v)||[]; }catch(e){ a=[]; }
-  a.forEach(function(sh){ var w=X.utils.aoa_to_sheet(sh.aoa); if(sh.wch) w["!cols"]=sh.wch.map(function(n){ return { wch:n }; }); X.utils.book_append_sheet(wb, w, String(sh.name||"시트").slice(0,31)); });
+function xgMore(g, v){ if(!g.o.sheets) return []; try{ return (g.o.sheets(v)||[]).filter(function(sh){ return sh&&sh.aoa&&sh.aoa.length; }); }catch(e){ return []; } }
+/* ── 서식 있는 엑셀(ExcelJS · 261016 사용자 「테두리와 디자인」) ──
+ * 1행 제목(명단 · 받은 시각 · n명) · 2행 머리(네이비 채움 · 흰 굵은 글씨 · 가운데) · 틀 고정 · 자동 필터
+ * 칸마다 얇은 회색 테두리 · 짝수 줄 옅은 따뜻한 회색 · 세로 가운데 · 맑은 고딕 10 · 열 너비 = 내용 길이(6~50)
+ * 사번 = 글자 칸(@ · 앞 0) · 날짜 가운데 · 숫자 오른쪽 · 상태 값(미선택 · 취소 · 노쇼 …)만 오렌지 글자
+ * 추가 시트 = 같은 모양 · 맨 아래 「합계」 줄 굵게 + 옅은 채움 · 인쇄 = 가로 · 한 페이지 너비 · 머리 행 반복 */
+var XS={ navy:"FF00205B", line:"FFD5D8DE", zebra:"FFF7F6F4", tot:"FFEEF0F7", acc:"FFE65800", tx:"FF1F2329", font:"맑은 고딕" };
+var XS_ACC=["미선택","취소","노쇼","미출석","불참","옷 명단 밖"];
+function xsW(v){ var s=String(v==null?"":v), n=0; for(var i=0;i<s.length;i++) n+=s.charCodeAt(i)>0x2e80?2:1; return n; }
+function xsName(t, used){ var n=String(t||"시트").replace(/[\\\/?*\[\]:]/g," ").trim().slice(0,31)||"시트", k=n, i=2; while(used[k]) k=n.slice(0,28)+" "+(i++); used[k]=1; return k; }
+/* kinds[i] = emp | date | num | text */
+function xsSheet(wb, name, title, head, rows, kinds, total){
+  var bd={ style:"thin", color:{ argb:XS.line } }, box={ top:bd, left:bd, bottom:bd, right:bd }, F=function(o){ var f={ name:XS.font, size:10, color:{ argb:XS.tx } }; for(var k in o||{}) f[k]=o[k]; return f; };
+  var nc=Math.max(1,head.length), last=rows.length+2;
+  var ws=wb.addWorksheet(name,{ views:[{ state:"frozen", xSplit:0, ySplit:2, topLeftCell:"A3", activeCell:"A3", showGridLines:false }],
+    pageSetup:{ paperSize:9, orientation:"landscape", fitToPage:true, fitToWidth:1, fitToHeight:0, horizontalCentered:true, printTitlesRow:"2:2", margins:{ left:0.4, right:0.4, top:0.5, bottom:0.5, header:0.3, footer:0.3 } } });
+  var t=ws.getCell(1,1); t.value=title; t.font=F({ size:13, bold:true, color:{ argb:XS.navy } }); t.alignment={ vertical:"middle" }; ws.getRow(1).height=26;
+  var hr=ws.getRow(2); hr.height=22;
+  head.forEach(function(h,i){ var c=hr.getCell(i+1); c.value=String(h==null?"":h); c.font=F({ bold:true, color:{ argb:"FFFFFFFF" } }); c.fill={ type:"pattern", pattern:"solid", fgColor:{ argb:XS.navy } }; c.alignment={ horizontal:"center", vertical:"middle", wrapText:true }; c.border=box; });
+  rows.forEach(function(r,ri){ var row=ws.getRow(ri+3), tot=total&&ri===rows.length-1, zb=!tot&&ri%2===1; row.height=18;
+    for(var i=0;i<nc;i++){ var c=row.getCell(i+1), x=r[i], k=kinds[i];
+      if(k==="emp"){ c.value=x==null?"":String(x); c.numFmt="@"; }
+      else if(k==="num"&&typeof x==="number"){ c.value=x; c.numFmt="#,##0"; }
+      else c.value=x==null?"":(typeof x==="number"?x:String(x));
+      var acc=typeof x==="string"&&XS_ACC.indexOf(x.trim())>=0;
+      c.font=F(tot?{ bold:true }:acc?{ bold:true, color:{ argb:XS.acc } }:null);
+      c.alignment={ vertical:"middle", horizontal:k==="num"?"right":k==="emp"||k==="date"?"center":"left" };
+      c.border=box;
+      if(tot) c.fill={ type:"pattern", pattern:"solid", fgColor:{ argb:XS.tot } }; else if(zb) c.fill={ type:"pattern", pattern:"solid", fgColor:{ argb:XS.zebra } }; } });
+  /* 열 너비 = 머리 · 값 중 가장 긴 것(6~50) */
+  for(var i=0;i<nc;i++){ var w=xsW(head[i])+3; rows.forEach(function(r){ var x=r[i]; w=Math.max(w, xsW(typeof x==="number"?x.toLocaleString("en-US"):x)+2); }); ws.getColumn(i+1).width=Math.max(6,Math.min(50,w)); }
+  ws.autoFilter={ from:{ row:2, column:1 }, to:{ row:Math.max(2,total?last-1:last), column:nc } };
+  return ws;
+}
+function xsKinds(head, rows, cols){
+  return head.map(function(h,i){ var c=cols&&cols[i];
+    if(c){ if(c.k==="emp"||/사번/.test(c.t)) return "emp"; if(c.type==="date") return "date"; if(c.type==="num") return "num"; return "text"; }
+    if(/사번/.test(h)) return "emp";
+    var any=0, all=rows.every(function(r){ var x=r[i]; if(x==null||x==="") return true; any=1; return typeof x==="number"; }); return any&&all?"num":"text"; });
+}
+function xgSaveAs(blob, file){ var a=document.createElement("a"), u=URL.createObjectURL(blob); a.href=u; a.download=file; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(u); a.remove(); },1000); }
+function xgFileEx(E, g, cols, aoa, v, base){
+  var o=g.o, d=srvNow(), p=function(n){ return ("0"+n).slice(-2); }, when=d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes());
+  var wb=new E.Workbook(); wb.creator="AXF CONTROL"; wb.created=d;
+  var used={}, nm=xsName(o.file||"명단", used), head=aoa[0], body=aoa.slice(1);
+  xsSheet(wb, nm, (o.file||"명단")+" · "+when+" · "+n0(v.length)+(o.unit||"명"), head, body, xsKinds(head, body, cols), false);
+  xgMore(g, v).forEach(function(sh){ var h=sh.aoa[0]||[], b=sh.aoa.slice(1), tot=b.length>0&&String(b[b.length-1][0]).trim()==="합계";
+    xsSheet(wb, xsName(sh.name, used), String(sh.name||"시트")+" · "+when, h, b, xsKinds(h, b, null), tot); });
+  XG.last.sheets=wb.worksheets.map(function(w){ return w.name; });
+  return wb.xlsx.writeBuffer().then(function(buf){
+    xgSaveAs(new Blob([buf],{ type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), base+".xlsx");
+    XG.last.kind="xlsx"; XG.last.styled=1; return { ok:true, name:base+".xlsx" }; });
+}
+/* 서식 없는 xlsx(SheetJS) · ExcelJS 를 못 불러올 때 */
+function xgFileX(X, g, cols, aoa, v, base){
+  var ws=X.utils.aoa_to_sheet(aoa);
+  ws["!cols"]=cols.map(function(c){ return { wch:c.type==="date"?17:Math.max(6,Math.min(40,Math.round((c.w||100)/7))) }; });
+  if(aoa.length>1) ws["!autofilter"]={ ref:X.utils.encode_range({ s:{ r:0, c:0 }, e:{ r:aoa.length-1, c:cols.length-1 } }) };
+  var wb=X.utils.book_new(); X.utils.book_append_sheet(wb, ws, String(g.o.file||"명단").slice(0,31).replace(/[\\/?*\[\]:]/g," "));
+  xgMore(g, v).forEach(function(sh){ var w=X.utils.aoa_to_sheet(sh.aoa); if(sh.wch) w["!cols"]=sh.wch.map(function(n){ return { wch:n }; }); X.utils.book_append_sheet(wb, w, String(sh.name||"시트").slice(0,31)); });
   XG.last.sheets=wb.SheetNames.slice();
+  X.writeFile(wb, base+".xlsx", { compression:true });
+  XG.last.kind="xlsx"; return { ok:true, name:base+".xlsx" };
 }
 function xgFile(g, rows){
   var cols=xgCols(g).filter(function(c){ return !c.act&&c.t; }), v=xgView(g, rows);
   var aoa=[cols.map(function(c){ return c.t; })].concat(v.map(function(r){ return cols.map(function(c){ return xgX(c,r); }); }));
   var base="AXF_"+String(g.o.file||g.id).replace(/[\\/:*?"<>|\s]+/g,"_")+"_"+xgStamp();
   XG.last={ name:base, head:aoa[0], n:v.length };
-  return xgLoadLib().then(function(X){
-    var ws=X.utils.aoa_to_sheet(aoa);
-    ws["!cols"]=cols.map(function(c){ return { wch:c.type==="date"?17:Math.max(6,Math.min(40,Math.round((c.w||100)/7))) }; });
-    if(aoa.length>1) ws["!autofilter"]={ ref:X.utils.encode_range({ s:{ r:0, c:0 }, e:{ r:aoa.length-1, c:cols.length-1 } }) };
-    var wb=X.utils.book_new(); X.utils.book_append_sheet(wb, ws, String(g.o.file||"명단").slice(0,31).replace(/[\\/?*\[\]:]/g," "));
-    xgSheets(X, wb, g, v);
-    X.writeFile(wb, base+".xlsx", { compression:true });
-    XG.last.kind="xlsx"; return { ok:true, name:base+".xlsx" };
-  },function(){
-    var csv="﻿"+aoa.map(function(r){ return r.map(function(x){ var s=String(x==null?"":x); return /[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }).join(","); }).join("\r\n");
-    var a=document.createElement("a"), u=URL.createObjectURL(new Blob([csv],{ type:"text/csv;charset=utf-8" }));
-    a.href=u; a.download=base+".csv"; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(u); a.remove(); },1000);
-    XG.last.kind="csv"; return { ok:true, name:base+".csv", csv:1 };
-  });
+  var csv=function(){
+    var t="\ufeff"+aoa.map(function(r){ return r.map(function(x){ var s=String(x==null?"":x); return /[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }).join(","); }).join("\r\n");
+    xgSaveAs(new Blob([t],{ type:"text/csv;charset=utf-8" }), base+".csv");
+    XG.last.kind="csv"; return { ok:true, name:base+".csv", csv:1 }; };
+  var plain=function(){ return xgLoadLib().then(function(X){ return xgFileX(X, g, cols, aoa, v, base); }, csv); };
+  return xgLoadEx().then(function(E){ return xgFileEx(E, g, cols, aoa, v, base); }).catch(plain);
 }
