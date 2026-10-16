@@ -163,7 +163,18 @@ function segHtml(h, fn) {
   return p.length < 2 ? p[0] : p.map(function (s) { return "<ax-seg>" + s + "</ax-seg>"; }).join(" ");
 }
 var SEG_GRP = ".axs-sec, section, .axs-rows, .axs-stps, .axs-pz, ul, ol, .ax-stack";   /* 묶음 칸 · 이 안에서 같은 클래스의 보조 줄끼리 형식을 맞춘다 */
-function segAttr(p) { var cs = getComputedStyle(p); return p.tagName === "DD" || p.classList.contains("ax-meta") || !!p.closest(".axs-kv, .axs-stpm, .axs-pzgo") || cs.whiteSpace === "nowrap" || cs.textAlign === "center"; }   /* 가운데 맞춤 글(토스트 · 팝업 제목)도 목록 대신 「 · 」 자리에서 꺾기(머리 점이 왼쪽 끝에 떨어져 보이지 않게) */   /* 짧은 속성 나열 = 사실 표 값 · 메타 줄 · 스탬프 줄 받는 법 옆 짧은 말 · 경품 이름 나열 */
+/* v7.54 (사용자 261016 「점 통일은 권장대로」 D4) 메타 줄(.ax-meta)은 속성 나열에서 뺀다 = 두 줄이면 목록(줄마다 주황 점 · 첫 줄 포함) · 남은 속성 나열은 꺾인 줄 머리의 구분 점을 지운다(segBol) */
+function segBol(p, on) {
+  var sg = p.querySelectorAll(":scope > ax-seg");
+  for (var i = 0; i < sg.length; i++) if (sg[i].classList.contains("segbol")) sg[i].classList.remove("segbol");
+  if (!on) return;
+  for (var j = 1; j < sg.length; j++) {
+    var a = sg[j - 1].getClientRects(), b = sg[j].getClientRects(); if (!a.length || !b.length) continue;
+    var y = a[a.length - 1].top;
+    if (b[0].top > y + 4) { sg[j].classList.add("segbol"); var c = sg[j].getClientRects(); if (c.length && c[0].top <= y + 4) sg[j].classList.remove("segbol"); }   /* 점을 지워 앞 줄로 올라가면 점을 되돌린다 */
+  }
+}
+function segAttr(p) { var cs = getComputedStyle(p); return p.tagName === "DD" || !!p.closest(".axs-kv, .axs-stpm, .axs-pzgo") || cs.whiteSpace === "nowrap" || cs.textAlign === "center"; }   /* 가운데 맞춤 글(토스트 · 팝업 제목)도 목록 대신 「 · 」 자리에서 꺾기(머리 점이 왼쪽 끝에 떨어져 보이지 않게) */   /* 짧은 속성 나열 = 사실 표 값 · 메타 줄 · 스탬프 줄 받는 법 옆 짧은 말 · 경품 이름 나열 */
 function segSig(p) { return p.tagName + "." + [].filter.call(p.classList, function (c) { return c !== "seglist" && c !== "segflow"; }).sort().join("."); }
 function segFit() {
   var ps = [];
@@ -178,9 +189,10 @@ function segFit() {
     if (segAttr(p)) {   /* 속성 나열 = v6.69 그대로 */
       if (p.classList.contains("seglist")) p.classList.remove("seglist");   /* 없는 클래스를 지워도 class 변경으로 잡혀(MutationObserver) 매 프레임 다시 재던 것 막음 */
       var k0 = "a" + w + ":" + p.textContent.length; if (p._segK === k0) return; p._segK = k0;
-      p.classList.remove("segflow"); var h1 = p.getBoundingClientRect().height;
+      segBol(p, false); p.classList.remove("segflow"); var h1 = p.getBoundingClientRect().height;
       p.classList.add("segflow"); var h0 = p.getBoundingClientRect().height;
       if (h1 <= h0 + 1) p.classList.remove("segflow");
+      segBol(p, true);
       return;
     }
     var g = gOf(p); g.ps.push(p); g.k += w + ":" + p.textContent.length + "|";
@@ -197,9 +209,23 @@ function segFit() {
     g.ps.forEach(function (p) { p.classList.toggle("seglist", wrap); p._segK = g.k; });
   });
 }
+/* v7.54 (사용자 261016 「C 회색 가는 선 … 이대로 가자」) 사실 표 이름 칸 = 글자 양끝 맞춤(첫 · 끝 글자 맞춤) · 표마다 가장 긴 이름 글자 수(최소 3) em 폭 · 한글 2~4글자(띄어쓰기 빼고)인 이름만 맞춤 · 그 밖 이름(「출석 QR」 「선착순 14:00」 · 5글자 이상)은 그 줄만 왼쪽 맞춤 그대로
+   보이는 글자 = 글자마다 span(aria-hidden) · 읽는 글 = 이름 그대로(.axs-kjsr) · 같은 이름 줄이면 다시 만들지 않는다 */
+var KV_SEL = ".axs-kv, .axs-svkv, .axs-kitkv";
+function kvFit() {
+  document.querySelectorAll(KV_SEL).forEach(function (dl) {
+    var dts = [].slice.call(dl.querySelectorAll("dt"));
+    if (!dts.length || dts.some(function (d) { return d._kjT == null && d.children.length; })) return;
+    var T = dts.map(function (d) { if (d._kjT == null) d._kjT = d.textContent; return d._kjT.replace(/\s+/g, ""); }), sig = T.join("|");
+    if (dl._kj === sig) return; dl._kj = sig;
+    var J = T.map(function (t) { return /^[가-힣]{2,4}$/.test(t); }); if (J.indexOf(true) < 0) return;
+    var n = Math.max(3, Math.max.apply(null, T.map(function (t, i) { return J[i] ? t.length : 0; })));
+    dts.forEach(function (d, i) { if (J[i]) d.innerHTML = '<span class="axs-kj" style="width:' + n + 'em" aria-hidden="true">' + T[i].split("").map(function (c) { return "<span>" + c + "</span>"; }).join("") + '</span><span class="axs-kjsr">' + esc(d._kjT) + "</span>"; });
+  });
+}
 (function () {
   if (typeof MutationObserver !== "function" || typeof document === "undefined" || !document.documentElement) return;
-  var q = 0, go = function () { if (q) return; q = 1; requestAnimationFrame(function () { q = 0; segFit(); }); };
+  var q = 0, go = function () { if (q) return; q = 1; requestAnimationFrame(function () { q = 0; kvFit(); segFit(); }); };
   new MutationObserver(go).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["hidden", "class"] });
   window.addEventListener("resize", go);
 })();

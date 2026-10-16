@@ -19,7 +19,7 @@
     --dim: var(--ax-color-inset); --dimln: var(--ax-color-divider);   /* 지나감·잠김 */
     --axs-divider-strong: #CBD0D6;      /* 앱 전용 토큰(가이드에 없음, 260922 사용자 요청) · divider #E5E8EB 와 disabled #B0B8C1 의 중간값 · 헤더 하단선처럼 흰 면 위에서 더 또렷해야 할 때만 쓴다 */
     --ax-color-muted: #66707D;          /* v6.83 (사용자 261009 접근성 결정) 보조 회색 #6B7684 → #66707D · 회색 canvas 위 4.56 · inset 위 4.81 · 연주황 위 4.55(4.5 통과) · tokens.css(잠긴 원본)는 두고 여기서 덮는다 */
-    --axs-dot: 0.5333em; --axs-dot-gap: 0.6667em; --axs-dot-top: 0.55em;   /* v6.83 목록 점 한 부품(「하는 일」 주황 점 · 보조 줄 목록 무채색 점) · 글자 크기 비례(15px 글자 = 점 8 · 간격 10) */
+    --axs-dot: 0.5333em; --axs-dot-gap: 0.6667em; --axs-dot-top: 0.55em;   /* v6.83 목록 점 한 부품 · v7.54 (사용자 261016 「점 통일은 권장대로」) 색 = 주황 한 색(옛 「보조 줄 목록 무채색」 폐기 · 주황 바탕 로그인 화면만 그 줄 글자색) · 글자 크기 비례(15px 글자 = 점 8 · 간격 10) */
     --axs-field-line: #808A96;          /* v6.83 (사용자 261009) 입력칸 테두리 · divider #E5E8EB 는 회색 바탕 위 1.12 라 경계가 안 보였다 · 3.18:1 */
     --hi: var(--ax-color-ink);          /* 제목·주요 텍스트 */
     --tx: var(--ax-color-body); --muted: var(--ax-color-muted); --faint: var(--ax-color-muted);
@@ -77,7 +77,8 @@
   .axs-lf .axs-pend { display: block; width: fit-content; max-width: 100%; margin: 0 auto; padding: var(--ax-space-4) var(--ax-space-12); border-radius: var(--ax-radius-8); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t7); text-align: center; }   /* QR 목적지 한 줄(scanLinkNote) */
   #err, #qErr { display: none; }
   .axs-lf #err, .axs-lf #qErr { box-sizing: border-box; width: 100%; margin: 0; padding: var(--ax-space-8) var(--ax-space-16); border-radius: var(--ax-radius-12); background: var(--ax-color-surface); color: var(--ax-color-error); font: 600 0.8125rem/1.3 var(--ax-font); }   /* 주황 위에 빨강 글자를 직접 놓지 않는다 · 흰 면 · 261016 v7.33 폭 = 입력칸과 같게(전체) · 모서리 12 · 좌우 16 = 입력 글자 시작선 */
-  .axs-lf #err.seglist > ax-seg::before, .axs-lf #qErr.seglist > ax-seg::before { background: var(--ax-color-muted); }   /* 261016 잠김 안내 목록의 점 = 무채색(본문 보조 회색) · 글자는 오류색 그대로 · v7.33 목록(.seglist)일 때만 · 한 줄 「A · B」의 가운데 점 글자에 회색 네모가 깔리던 것 고침 */
+  .axs-lf .lf-note.seglist > ax-seg::before, .axs-lf .lf-note.segfix > ax-seg::before { background: currentColor; }   /* v7.54 주황 바탕 위 안내 줄 목록 점 = 그 줄 글자색(onBrand · 점 주황 한 색의 유일한 예외) · 잠김 안내(#err · 흰 면) 점 = 주황(261016 무채색 번복) */
+  .axs-lf .lf-note.segfix > ax-seg, .axs-lf .lf-note.seglist > ax-seg { display: block; }   /* v7.54 PIN 안내 두 줄 목록(처음 입장 · 다시 입장) · 두 줄이 된 안내도 목록 모양 */
   .axs-lf .lf-form.lf-errs [data-r="note"] { display: none; }   /* 오류는 안내 한 줄 자리에 · 둘을 같이 쓰지 않아 높이가 늘지 않는다 · 입력을 고치면 안내가 돌아온다 */
   .axs-lf .lf-links { display: flex; flex-direction: column; align-items: center; }
   .axs-lf .lf-links .ax-link { border: 0; background: transparent; padding: 0 var(--ax-space-16); cursor: pointer; color: var(--ax-color-onBrand); font: 600 0.9375rem/1.4 var(--ax-font); text-decoration: underline; text-underline-offset: 3px; }
@@ -160,9 +161,8 @@
   #a2hs .a-note { margin-top: 10px; font-size: calc(13.5px * var(--fs)); line-height: 1.6; color: var(--muted); }
   #a2hs .a-later { width: 100%; margin-top: 10px; border: 0; background: none; cursor: pointer; font-family: inherit; font-size: calc(14.5px * var(--fs)); font-weight: 700; color: var(--faint); padding: 8px; }
   #a2hs .a-safe { margin: 0 0 16px; padding: 12px 14px; list-style: none; background: var(--card); border-radius: 12px; }   /* 261016 안심 3줄 · 주황 점 + 회색 글자 · 둘째 줄 내어쓰기 */
-  #a2hs .a-safe li { position: relative; padding-left: 14px; font-size: calc(13.5px * var(--fs)); line-height: 1.55; color: var(--muted); }
+  #a2hs .a-safe li { font-size: calc(13.5px * var(--fs)); line-height: 1.55; color: var(--muted); }   /* v7.54 점 · 내어쓰기 = 공용 목록 점 부품(.axs-li 와 같은 줄) */
   #a2hs .a-safe li + li { margin-top: 4px; }
-  #a2hs .a-safe li::before { content: ""; position: absolute; left: 2px; top: calc(0.775em - 2.5px); width: 5px; height: 5px; border-radius: 50%; background: var(--ax-color-brand); }
   /* 261016 홈 카드 「QR 없이 바로 열기」 · 흰 카드 · 약한 버튼 + 「나중에」 글자 단추 · 닫힘 = 흐려짐 0.18초 */
   .axs-a2c { display: flex; flex-direction: column; gap: var(--ax-space-4); padding: var(--ax-space-20); border-radius: var(--ax-radius-20); background: var(--ax-color-surface); box-shadow: var(--ax-card-shadow); color: var(--ax-color-ink); }
   .axs-a2c .h { margin: 0 0 var(--ax-space-4); font: var(--ax-type-t5-strong); }
@@ -927,10 +927,14 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .segflow > ax-seg { display: inline; }   /* 조각으로 꺾으면 줄이 늘어나는 글 = 보통 흐름(segFit) */
   /* v6.83 (사용자 261009 묶음 13 · 보충 2) 두 줄 이상 = 목록 모양 · 점 = 「하는 일」 목록과 같은 둥근 점 부품(값 = :root --axs-dot · --axs-dot-gap · --axs-dot-top 한 곳 · 글자 크기 비례) · 색 = 그 줄 글자색(무채색) · 꺾이면 점 뒤 글자 시작에 맞춰 들여쓰기 · 줄 간격 그대로 */
   .seglist > ax-seg { position: relative; display: block; padding-left: calc(var(--axs-dot) + var(--axs-dot-gap)); }
-  .seglist > ax-seg::before, .seglist > ax-seg + ax-seg::before { content: ""; position: absolute; left: 0; top: var(--axs-dot-top); width: var(--axs-dot); height: var(--axs-dot); border-radius: 50%; background: currentColor; }
+  .seglist > ax-seg::before, .seglist > ax-seg + ax-seg::before { content: ""; position: absolute; left: 0; top: var(--axs-dot-top); width: var(--axs-dot); height: var(--axs-dot); border-radius: 50%; background: var(--ax-color-brand); }   /* v7.54 점 = 주황 한 색(옛 그 줄 글자색) */
   /* 261011 (사용자 「두 줄로」) 늘 목록 모양 = .segfix · 한 줄에 들어가도 조각마다 줄 머리 점(.seglist 와 같은 부품) */
   .segfix > ax-seg { position: relative; display: block; padding-left: calc(var(--axs-dot) + var(--axs-dot-gap)); }
-  .segfix > ax-seg::before, .segfix > ax-seg + ax-seg::before { content: ""; position: absolute; left: 0; top: var(--axs-dot-top); width: var(--axs-dot); height: var(--axs-dot); border-radius: 50%; background: currentColor; }
+  .segfix > ax-seg::before, .segfix > ax-seg + ax-seg::before { content: ""; position: absolute; left: 0; top: var(--axs-dot-top); width: var(--axs-dot); height: var(--axs-dot); border-radius: 50%; background: var(--ax-color-brand); }
+  /* v7.54 (사용자 261016 「점 통일은 권장대로」 · 기획 문서/목록 점 표기 감사_261016.md 안 A) 항목 목록 점 = 위 조각 점과 같은 부품 하나(둥근 · 글자 비례 · 주황 · 둘째 줄 = 점 뒤 글자 시작) · 「·」 글자 점 · 브라우저 기본 점 · px 고정 점 없음 */
+  .axs-li > li, .axs-ccdl > li, .axs-stpl > li, .axs-kitul > li, .gs-list > li, #a2hs .a-safe > li { position: relative; list-style: none; padding-left: calc(var(--axs-dot) + var(--axs-dot-gap)); text-indent: 0; }
+  .axs-li > li::before, .axs-ccdl > li::before, .axs-stpl > li::before, .axs-kitul > li::before, .gs-list > li::before, #a2hs .a-safe > li::before { content: ""; position: absolute; left: 0; top: var(--axs-dot-top); width: var(--axs-dot); height: var(--axs-dot); border-radius: 50%; background: var(--ax-color-brand); }
+  ax-seg.segbol::before { content: none; }   /* v7.54 속성 나열(사실 표 값 · 경품 이름 나열 등)이 「 · 」 자리에서 꺾이면 꺾인 줄 머리의 구분 점을 지운다(segFit) */
   /* 섹션 제목 (카드 바깥) */
   .sect { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 9px 2px 6px; }
   .sect b { font-size: calc(15.5px * var(--fs)); font-weight: 800; color: var(--hi); }
@@ -1418,9 +1422,18 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-av.spk.logo { background: var(--ax-color-surface); color: transparent; box-shadow: inset 0 0 0 1px var(--ax-color-divider); }   /* v6.60 AWS · MS 로고 = 흰 바탕 + 얇은 테두리 · 글자는 숨김(로고가 안 뜨면 .logo 를 떼서 글자로) */
   .axs-av.spk.logo img { object-fit: contain; }
   .axs-av { flex: none; width: 56px; height: 56px; border-radius: var(--ax-radius-16); background: var(--ax-color-ink); color: var(--ax-color-inverse); display: grid; place-items: center; font: var(--ax-type-t7); }
-  .axs-kv { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: var(--ax-space-16); margin: 0; }
+  .axs-kv { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 0; margin: 0; }
   .axs-kv dt { font: var(--ax-type-t6); color: var(--ax-color-muted); }
   .axs-kv dd { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  /* v7.54 (사용자 261016 「C 회색 가는 선 … 이대로 가자」 · 시안 디자인 시안/사실표_라벨_261016/시안.html C안) 사실 표 한 형식 · 줄 사이 = 회색 가는 선(divider-strong 1px · 위아래 10px) · 맨 위 · 맨 아래 줄 바깥 여백 없음
+     이름 칸 = 보조 회색 글자 · 글자 양끝 맞춤(kvFit · 표마다 가장 긴 이름 글자 수 · 최소 3글자 폭 · 한글 2~4글자만, 그 밖이 섞인 표는 왼쪽 맞춤) · 값 = 먹 굵게 · 이름 칸 폭 · 값 시작선은 화면마다 그대로 · 열 사이 16 = 값 왼쪽 여백(선이 끊기지 않게) */
+  .axs-kv dt, .axs-kv dd { padding: 10px 0; }
+  .axs-kv dd { padding-left: var(--ax-space-16); }
+  .axs-kv dt ~ dt, .axs-kv dt ~ dt + dd { border-top: 1px solid var(--axs-divider-strong); }
+  .axs-kv dt:first-of-type, .axs-kv dt:first-of-type + dd { padding-top: 0; }
+  .axs-kv dt:last-of-type, .axs-kv dt:last-of-type + dd { padding-bottom: 0; }
+  .axs-kj { display: flex; justify-content: space-between; }   /* 이름 글자 양끝 맞춤(글자마다 span · 폭 = 글자 수 em) */
+  .axs-kjsr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }   /* 화면 읽기용 이름(띄어쓰기 그대로) */
   /* v4.13 취소(위험) 버튼 한 가지 · 신청 취소 · 번호표 취소 · 취소 확인 시트의 확정 버튼 · 회색 면(canvas 위 canvas)은 경계가 안 보여 폐지(사용자 260922) */
   .axs-btn-danger { background: var(--ax-color-errorSoft); color: var(--ax-color-error); box-shadow: inset 0 0 0 1px var(--ax-color-error); }
   .axs-btn-danger:disabled { box-shadow: none; }
@@ -1436,7 +1449,6 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-okwrap { align-items: stretch; padding-top: var(--ax-space-48); }
   .axs-okmark { align-self: center; width: 80px; height: 80px; border-radius: var(--ax-radius-24); background: var(--ax-color-successSoft); color: var(--ax-color-success); display: grid; place-items: center; font: var(--ax-type-t4); }
   #view[data-v="sess_cf"] .ax-card { gap: var(--ax-space-20); }
-  #view[data-v="sess_cf"] .axs-kv { row-gap: var(--ax-space-20); }
   /* 시간표 · v4.15 (사용자 결정 260922) 목록과 다른 모양 · v3.5 일정 탭 계열 = 왼쪽 시간 칸 + 제목 한 줄 닫힌 행 · 누르면 설명 펼침 · 토큰만
      행 = 흰 면(반경 20 · 높이 64) · 시간 칸 = canvas 면 두 줄(시작 T6 굵게 · ~끝 caption) · 내 항목 = brandSoft 틴트 · 진행 중 = 주황 테두리 2 · 지난 행 = inset 면 */
   .axs-tt { display: flex; flex-direction: column; gap: var(--ax-space-24); }
@@ -1688,7 +1700,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #axsSheet { position: fixed; inset: 0; z-index: 70; display: flex; align-items: flex-end; justify-content: center; }   /* 261009 뒷배경 = ::before 층(동작 모션 통일 절) */
   #axsSheet .ax-sheet { width: 100%; max-width: var(--ax-app-max); max-height: calc(100% - var(--ax-sheet-top)); overflow-y: auto; padding-bottom: max(var(--ax-space-32), env(safe-area-inset-bottom)); color: var(--ax-color-ink); }
   /* 아래에서 올라오는 시트임을 알리는 손잡이 · 뒷배경을 눌러 닫는다 */
-  #axsSheet .axs-kv { grid-template-columns: 72px minmax(0, 1fr); row-gap: var(--ax-space-12); }
+  #axsSheet .axs-kv { grid-template-columns: 76px minmax(0, 1fr); }   /* v7.54 이름 칸 76 = 사실 표 C안(4글자 이름이 큰글씨에서도 한 칸) */
   .axs-grab { flex: none; align-self: center; width: 40px; height: 4px; margin: calc(var(--ax-space-8) * -1) 0 calc(var(--ax-space-8) * -1); border-radius: 999px; background: var(--ax-color-divider); }
   #axsSheet .ax-type-t2 { color: var(--ax-color-ink); }
   #axsSheet .axs-mhead .ax-type-t2 { flex: 1; min-width: 0; }   /* v4.26 머리 한 줄 = 제목 | X · X 를 오른쪽 끝에(제목 바로 옆에 붙지 않게) */
@@ -1779,7 +1791,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-apc .hd h3 { margin: 0; }
   .axs-apc[data-apply="l1"] .hd h3, .axs-apc[data-apply="l2"] .hd h3 { flex: 1 1 0; min-width: 0; word-break: keep-all; text-wrap: balance; }   /* 261013 오후 참여하기 칸 17F 강연 카드 · 긴 강연 제목은 층 글자 옆에서 고르게 두 줄(마지막 줄 한두 글자 없게) */
   .axs-apc .k { margin: 0; font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; text-wrap: balance; }   /* 261008 큰글씨에서 한 줄 소개 마지막 줄 한 낱말(「곳」) 막기 */
-  .axs-apc .axs-kv { grid-template-columns: 76px minmax(0, 1fr); row-gap: var(--ax-space-8); }
+  .axs-apc .axs-kv { grid-template-columns: 76px minmax(0, 1fr); }
   .axs-apc .axs-kv dd { word-break: keep-all; }
   .axs-apc .bt { display: flex; flex-direction: column; align-items: stretch; gap: var(--ax-space-4); }
   .axs-apc .bt .ax-link { align-self: center; padding: 0 var(--ax-space-12); }
@@ -1789,14 +1801,13 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
     .axs-seg3 button { font-size: 0.875rem; letter-spacing: -0.02em; }
     .axs-apc { padding: var(--ax-space-16); }
     .ax-card.axs-apc.axs-sthost > .axs-stag { top: 10px; right: var(--ax-space-16); }
-    .axs-apc .axs-kv { grid-template-columns: minmax(0, 1fr); row-gap: 0; }
-    .axs-apc .axs-kv dd { margin-bottom: var(--ax-space-8); }
+    .axs-apc .axs-kv { grid-template-columns: minmax(0, 1fr); }
+    .axs-apc .axs-kv dt { padding-bottom: 2px; }
+    .axs-apc .axs-kv dd { border-top: 0; padding-top: 0; padding-left: 0; }   /* v7.54 한 줄씩 = 선은 이름 위에만 */
   }
   .axs-apnone { margin: 0; padding: var(--ax-space-24) var(--ax-space-16); border-radius: var(--ax-radius-24); background: var(--ax-color-surface); text-align: center; }
   /* v7.39 (사용자 261016 계획서 0-2-4) 참여하기 카드 「스탬프」 줄 = 「· 」 목록(무채색 점 · 둘째 줄 내어쓰기) · 칸 맨 아래 회색 한 줄(묶음 2개까지) */
-  .axs-kvl { list-style: none; margin: 0; padding: 0; }
-  .axs-kvl li { padding-left: 0.8em; text-indent: -0.8em; }
-  .axs-kvl li::before { content: "\00B7\00A0"; color: var(--ax-color-muted); }
+  .axs-kvl { list-style: none; margin: 0; padding: 0; }   /* v7.54 (사용자 261016 「점 통일은 권장대로」 D3) 사실 표 값이 여러 항목 = 점 없이 줄만 쌓기(옛 v7.39 「· 」 목록 번복) */
   .axs-apsum { margin: 0; padding: 0 var(--ax-space-4); word-break: keep-all; }
   /* v7.39 커피챗 신청 두 화면(cc_apply) · 머리 오른쪽 「1/2」 · 회차 3칸 × 2줄 · 지난 회차 「마감」 · 안내 「· 」 목록 · 글자 수 오른쪽 · 고른 시간 한 줄 */
   #topbar .axs-hstep { flex: none; font: var(--ax-type-t7); font-weight: 700; color: var(--ax-color-muted); margin-right: var(--ax-space-4); }
@@ -1804,8 +1815,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-cslots .axs-slot small { font: var(--ax-type-t7); text-decoration: none; }
   #view[data-v="cc_apply"] .axs-slot:not(:disabled):not([aria-pressed="true"]) { background: var(--ax-color-surface); }
   .axs-ccdl { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ax-space-4); font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; }
-  .axs-ccdl li { padding-left: 0.8em; text-indent: -0.8em; }
-  .axs-ccdl li::before { content: "\00B7\00A0"; color: var(--ax-color-muted); }
+  /* v7.54 .axs-ccdl 점 = 공용 목록 점 부품(주황 둥근 점 · 옛 「·」 회색 글자) */
   .axs-cccnt { margin: 0; text-align: right; }
   .axs-ccpick { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ax-space-4) var(--ax-space-12); padding: var(--ax-space-12) var(--ax-space-16); border-radius: var(--ax-radius-16); background: var(--ax-color-surface); font: var(--ax-type-t6); }
   .axs-ccpick .k { color: var(--ax-color-muted); }
@@ -1823,7 +1833,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-my { background: var(--ax-color-surface); }
   .axs-pd .ax-inset { padding: var(--ax-space-16); }
   #view[data-v="sess_d"] .axs-slot:not(:disabled):not([aria-pressed="true"]) { background: var(--ax-color-surface); }   /* canvas 페이지 위 상담 시간 칩 */
-  .axs-pd .axs-kv { grid-template-columns: 72px minmax(0, 1fr); }
+  .axs-pd .axs-kv { grid-template-columns: 76px minmax(0, 1fr); }
   /* 옛 공용 카드 반경만 새 규격(24)으로 · 안쪽 여백·타이포는 2~4단계에서 */
   .card, .menu { border-radius: var(--ax-radius-24); }
   /* ═══ v4.08 AX-TDS 4단계 · 게임 화면 틀(시작 · 결과 · 일시정지 · 순위판 · 허브) + 안내 말풍선(챗봇) · 게임판 내부(캔버스·도트)는 기존 디자인 ═══ */
@@ -1862,7 +1872,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
     .gs-how { gap: var(--ax-space-4); }
     #view[data-v^="game_"][data-v] { padding-top: var(--ax-space-16); padding-bottom: calc(var(--ax-space-16) + env(safe-area-inset-bottom)); }
   }
-  .gs-list { margin: 0; padding-left: var(--ax-space-20); font: var(--ax-type-t6); color: var(--ax-color-body); }
+  .gs-list { margin: 0; padding-left: 0; font: var(--ax-type-t6); color: var(--ax-color-body); }   /* v7.54 점 = 공용 목록 점 부품(옛 브라우저 기본 점) */
   /* 전체화면 틀 · 위 줄 · 일시정지 · 아래 안내 줄 (게임판 캔버스 테두리·색은 그대로) */
   #rgPlay, #rgPlay.flat { background: var(--ax-color-surface); }
   #rgPlay .rgp-top { min-height: 56px; padding: var(--ax-space-4) var(--ax-space-8) var(--ax-space-4) var(--ax-space-16); border-bottom: 1px solid var(--ax-color-divider); background: var(--ax-color-surface); }
@@ -2015,9 +2025,12 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-svin .row { display: flex; gap: var(--ax-space-8); }
   /* v7.15 (사용자 확정 261013 밤) 사후 설문 · 첫 화면 정보 줄(회색 라벨 | 굵은 값) · Q2-x 층 · 프로그램 줄 · Q2-0 체크 행(층 열 · 이름 + 보조 · 미리 체크 = 같은 모양) · Q4 글자 수 */
   .axs-svlead { margin: 0; color: var(--ax-color-body); word-break: keep-all; }
-  .axs-svkv { display: flex; flex-direction: column; gap: var(--ax-space-8); margin: 0; padding: var(--ax-space-16); border-radius: var(--ax-radius-16); background: var(--ax-color-surface); }
-  .axs-svkv > div { display: flex; align-items: baseline; gap: var(--ax-space-12); }
-  .axs-svkv dt { flex: none; width: 5.5em; font: var(--ax-type-t7); color: var(--ax-color-body); }
+  .axs-svkv { display: flex; flex-direction: column; gap: 0; margin: 0; padding: var(--ax-space-16); border-radius: var(--ax-radius-16); background: var(--ax-color-surface); }
+  .axs-svkv > div { display: grid; grid-template-columns: 76px minmax(0, 1fr); column-gap: var(--ax-space-16); padding: 10px 0; }   /* v7.54 사실 표 C안(.axs-kv 와 같은 형식) */
+  .axs-svkv > div + div { border-top: 1px solid var(--axs-divider-strong); }
+  .axs-svkv > div:first-child { padding-top: 0; }
+  .axs-svkv > div:last-child { padding-bottom: 0; }
+  .axs-svkv dt { font: var(--ax-type-t6); color: var(--ax-color-muted); }
   .axs-svkv dd { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
   .axs-sthost > .axs-svsec { margin: 0; padding-right: 64px; font: var(--ax-type-t7); font-weight: 700; color: var(--ax-color-body); word-break: keep-all; }
   .axs-svcl { display: flex; flex-direction: column; gap: var(--ax-space-8); }
@@ -2090,8 +2103,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-stgh { align-items: center; }
   .axs-stgh span { font: var(--ax-type-t7); color: var(--ax-color-muted); }
   .axs-stpl { list-style: none; margin: 0; padding: 0; font: var(--ax-type-t7); color: var(--ax-color-muted); }
-  .axs-stpl li { padding-left: 0.8em; text-indent: -0.8em; }
-  .axs-stpl li::before { content: "\00B7\00A0"; }
+  /* v7.54 .axs-stpl 점 = 공용 목록 점 부품(주황 둥근 점 · 글자 보조 회색 13px 그대로 · 옛 「·」 글자) */
   .axs-nwr { white-space: nowrap; }
   /* v5.68 프로그램 참여 = 스탬프 2개 · 제목 옆 「×2」 알약 · 17F 한쪽만(p3h) = 번호 칸 아래 절반 주황 「1/2」 */
   /* v6.83 (사용자 261009 묶음 12 「스탬프 픽토그램 × 2」) 주황 알약(점 둘 + 「스탬프 2개」 · v6.56) → 하단 탭 스탬프 그림(#nav-stamp 그대로) + 「×2」 · 면 없음 · 무채색(받은 줄 = muted) · 한 덩어리(좁으면 통째로 다음 줄) */

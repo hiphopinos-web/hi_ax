@@ -273,8 +273,8 @@
   .axs-kittb tbody th { color: var(--ax-color-ink); font-weight: 700; }
   .axs-kittb td.tbd { color: var(--ax-color-muted); }   /* 261008 실측 확인 중 줄 */
   .axs-kittbl + .axs-kittbl { border-top: 0; }   /* 261008 접힘 칸 넷이 이어질 때 선 하나 */
-  .axs-kitul { margin: 0; padding: 0 0 0 var(--ax-space-16); display: flex; flex-direction: column; gap: var(--ax-space-8); font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
-  .axs-kitul li::marker { color: var(--ax-color-muted); }
+  .axs-kitul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--ax-space-8); font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
+  /* v7.54 .axs-kitul 점 = 공용 목록 점 부품(010 · 주황 둥근 점 · 옛 브라우저 기본 점 회색) */
   .axs-kittest { padding: var(--ax-space-8) var(--ax-space-12); border-radius: var(--ax-radius-12); background: var(--ax-color-inset); }   /* 261008 테스트 사번 미리 보기 한 줄 */
   .axs-kitno { margin: 0; font: var(--ax-type-t6); color: var(--ax-color-body); }
   .axs-kitno b { font: var(--ax-type-t4); font-weight: 700; color: var(--ax-color-ink); }
@@ -291,10 +291,10 @@
   .axs-pz-need.axs-kitget { margin: var(--ax-space-12) 0 0; text-align: left; }   /* 261008 받는 방법 상자 = 받으려면 상자(.axs-pz-need) 그대로 · 자리 간격만 · 옛 전용 글자 크기(13 · 16 · 14px 고정) 삭제 */
   .axs-kitok h2, .axs-kitok h3, .axs-kitok p { margin: 0; word-break: keep-all; }
   .axs-kitkv { margin: 0; display: flex; flex-direction: column; }
-  .axs-kitkv div { display: flex; justify-content: space-between; align-items: baseline; gap: var(--ax-space-12); padding: var(--ax-space-12) 0; border-top: 1px solid var(--ax-color-divider); }
+  .axs-kitkv div { display: grid; grid-template-columns: 76px minmax(0, 1fr); column-gap: var(--ax-space-16); padding: 10px 0; border-top: 1px solid var(--axs-divider-strong); }   /* v7.54 사실 표 C안(.axs-kv 와 같은 형식 · 옛 값 오른쪽 맞춤 · 옅은 선) */
   .axs-kitkv div:first-child { border-top: 0; padding-top: 0; }
   .axs-kitkv div:last-child { padding-bottom: 0; }
-  .axs-kitkv dt { flex: none; font: var(--ax-type-t7); color: var(--ax-color-body); }
-  .axs-kitkv dd { margin: 0; min-width: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); text-align: right; word-break: keep-all; }
+  .axs-kitkv dt { font: var(--ax-type-t6); color: var(--ax-color-muted); }
+  .axs-kitkv dd { margin: 0; min-width: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); word-break: keep-all; }
   .axs-kitnote { margin: 0 var(--ax-space-4); word-break: keep-all; }
   .axs-kitmsg { margin: 0; padding: var(--ax-space-12) var(--ax-space-16); border-radius: var(--ax-radius-12); background: var(--ax-color-errorSoft); color: var(--ax-color-ink); font: var(--ax-type-t6-strong); word-break: keep-all; }

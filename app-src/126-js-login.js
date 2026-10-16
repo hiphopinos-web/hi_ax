@@ -1115,7 +1115,8 @@ function lpStep(n, mode) {
   el("lgPinL").textContent = set ? "비밀번호 4자리 정하기" : "비밀번호 4자리";
   pin.value = ""; pin.type = set ? "text" : "password";
   if (eye) { eye.textContent = set ? "숨기기" : "보기"; eye.setAttribute("aria-pressed", set ? "true" : "false"); }
-  el("pinNote").innerHTML = set ? segHtml("다음 입장부터 이 4자리 · 사내 비밀번호와 다르게") : mode === "pin" ? esc(lpHint(LP.reg)) : "· 처음 입장 : 새로 정할 4자리<br>· 다시 입장 : 정했던 4자리";
+  el("pinNote").innerHTML = set ? segHtml("다음 입장부터 이 4자리 · 사내 비밀번호와 다르게") : mode === "pin" ? esc(lpHint(LP.reg)) : "<ax-seg>처음 입장 : 새로 정할 4자리</ax-seg><ax-seg>다시 입장 : 정했던 4자리</ax-seg>";
+  el("pinNote").classList.toggle("segfix", !set && mode !== "pin");   /* v7.54 두 줄 목록 = 공용 점 부품(주황 바탕 = 점 그 줄 글자색) · 옛 글자 「· 」 + <br> */
   btn.textContent = set ? "이 번호로 입장" : "입장";
   if (el("lgLost")) el("lgLost").hidden = set;   /* 정하기 화면 링크 = 「다른 사번으로」 하나 */
   lpReqShow("lgReqW", "lgReq", set ? "" : el("empId").value.trim());

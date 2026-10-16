@@ -367,7 +367,7 @@ function resvPlace(r) { return String(r && r.place || "1F AX 라운지").replace
 function applyOpenN() { var c = cchatState(); return c && !c.mine && !c.wait ? 1 : 0; }   /* v7.52 신청 시작 전 = 점 없음 */
 /* ═══ v5.85 프로그램 › 참여하기 칸 = 17F AWS · 17F MS · 18F 커피챗(v7.39 라운지 카드 없음) + 맨 아래 묶음 한 줄 + 10F 줄(사전 신청자 · 테스트 사번만) ═══
    카드 = 층 점 글자 + 이름 + (상태 칩) → 한 줄 → 사실 표 → 주 버튼 + 약한 「자세히 보기」(구역 상세 시트)
-   v7.39 (사용자 261016 계획서 0-2-4) 사실 표 「스탬프」 줄 = 같은 문법 목록(「· 무엇을 하면 몇 개」 · 무채색 점 · 둘째 줄 내어쓰기) · 값이 배열이면 목록 */
+   v7.39 (사용자 261016 계획서 0-2-4) 사실 표 「스탬프」 줄 = 값이 배열이면 줄마다 한 항목 · v7.54 (사용자 261016 「점 통일은 권장대로」 D3) 점 없이 줄만 쌓기(같은 표 시간 · 참여 줄과 같은 모양) */
 function applyKvVal(v) {
   if (Array.isArray(v)) return '<ul class="axs-kvl">' + v.map(function (s) { return "<li>" + segHtml(esc(s)) + "</li>"; }).join("") + "</ul>";
   return String(v).indexOf(" › ") > 0 ? esc(v).split(" › ").map(function (s, i) { return '<span class="axs-nwr">' + (i ? "› " : "") + s + "</span>"; }).join(" ") : segHtml(esc(v));   /* 「A › B」 값은 「›」 자리에서만 꺾는다(둘째 줄 「› 」 시작) */
@@ -393,7 +393,7 @@ function applyCchatHtml() {
 function applyTenShow() { return !!tenMine() || testMode(); }
 function applyTenHtml() {
   if (!applyTenShow()) return "";
-  return '<div class="axs-rows">' + rcHtml({ cls: "", onclick: "progTenGo()", link: true, left: rcIcon(App.ICONS.guide), title: "10F 실습형 세션", sub: '<span class="axs-nwr">· 사전 신청자</span><br><span class="axs-nwr">· 시작 · 종료 출석체크 시 각 1개</span>' }).replace('<div class="rc', '<div data-apply="ten" class="rc') + "</div>";
+  return '<div class="axs-rows">' + rcHtml({ cls: "", onclick: "progTenGo()", link: true, left: rcIcon(App.ICONS.guide), title: "10F 실습형 세션", sub: "<ax-seg>사전 신청자</ax-seg><ax-seg>시작 · 종료 출석체크 시 각 1개</ax-seg>" }).replace('<div class="rc', '<div data-apply="ten" class="rc').replace('<span class="sb">', '<span class="sb segfix">') + "</div>";   /* v7.54 두 줄 목록(공용 점 부품 · 옛 글자 「· 」 + <br>) */
 }
 /* 261013 오후 (사용자) 참여하기 칸 맨 위 = 17F 오후 파트너 강연 두 장(자유 참석 · 신청 버튼 없음 · 누르면 강연 상세 · 도장 ×2) · 표기 = 시간표(SESSIONS l1 · l2) 그대로
    v7.39 (사용자 261016) 스탬프 줄 = 두 줄 목록(커피챗 카드와 같은 문법) · v7.44 (사용자 261016) 「· 시작 출석체크 시 1개 부여」 「· 종료 출석체크 시 1개 부여」(옛 「입장할 때 화면 QR 1개」 「끝날 때 화면 QR 1개」 대체) */
@@ -403,10 +403,10 @@ function apply17Html(id) {
 }
 /* 261016 (사용자) 묶음 출처 글 · 10F 실습은 사전 신청자(applyTenShow)에게만 · 받으려면 상자 · 칸 맨 아래 줄이 같이 쓴다 */
 function progSrcTxt() { return "17F 강연 · " + (applyTenShow() ? "10F 실습 · " : "") + "라운지 · 커피챗"; }
-function applySumTxt() { return "프로그램 참여 스탬프는 " + progSrcTxt() + " 합쳐 2개까지"; }   /* v7.39 (사용자 261016 계획서 0-2-4) 칸 맨 아래 회색 한 줄 · 합계 오해 방지 */
+function applySumRows() { return ["프로그램 참여 스탬프는 합쳐 2개까지", progSrcTxt().replace(/ · /g, ", ")]; }   /* v7.54 (사용자 261016 「점 통일은 권장대로」 D7) 늘 두 줄 목록(.segfix) · 옛 한 문장 「프로그램 참여 스탬프는 17F 강연 · … 합쳐 2개까지」 */   /* v7.39 (사용자 261016 계획서 0-2-4) 칸 맨 아래 회색 한 줄 · 합계 오해 방지 */
 function progApplyTabHtml() {
   var h = apply17Html("l1") + apply17Html("l2") + applyCchatHtml();   /* 261013 오후 순서 = 17F AWS · 17F MS · 18F 커피챗 · v7.39 (사용자 261016 계획서 3-1 · 0-2-4) 라운지 카드 없음(사전 신청자 = 홈 나의 일정 · 상시 운영 1F 줄 · 내 상담) */
-  return '<div class="axs-apply" aria-label="참여하기">' + (h || '<p class="ax-description axs-apnone">지금 신청할 수 있는 프로그램이 없어요</p>') + '<p class="ax-meta axs-apsum">' + segHtml(esc(applySumTxt())) + "</p>" + applyTenHtml() + "</div>";
+  return '<div class="axs-apply" aria-label="참여하기">' + (h || '<p class="ax-description axs-apnone">지금 신청할 수 있는 프로그램이 없어요</p>') + '<p class="ax-meta axs-apsum segfix">' + applySumRows().map(function (t) { return "<ax-seg>" + esc(t) + "</ax-seg>"; }).join("") + "</p>" + applyTenHtml() + "</div>";
 }
 /* v5.65 「참여 전 확인」 펼침 = 같은 화면 패널(시트 아님 · 설계안 결정 1) · 다시 그리지 않고 패널만 연다 · 닫는다
    v6.83 (사용자 261009 묶음 16 「참여 전 확인을 눌러서 추가 정보가 나올 필요 없음」) 부르는 곳 없음(구역 상세 = 펼친 상자) · 되살릴 때 쓴다 */
@@ -464,7 +464,8 @@ function zoneLive(z) {
     var cw = !st && !ov && !cl ? ccWaitTxt() : "";   /* v7.52 신청 시작 전 */
     o.btn = st ? ["내 커피챗", "progOpen('cchat')"] : ov ? ["오늘 커피챗은 끝났어요", "", "", true] : cl ? ["신청 마감", "", "", true] : cw ? [cw, "", "ccApplyBtn", true] : ["커피챗 신청하기", "ccApplyGo()", "ccApplyBtn"];
   } else if (z.id === "event") {
-    o.kv = [["운영 시간", "08:30~17:00"], ["선착순 오전", "커피 50잔"], ["선착순 14:00", "쿠키 세트 50세트 · 커피 50잔"], ["받는 조건", "포토부스 사진 촬영"], ["받는 곳", "1F EVENT 포토부스 앞"], ["마감", "소진 시까지"]];   /* v7.48 (사용자 261016) 선착순 두 줄 · 오전은 시작 시각 없이 */   /* v5.05 포토부스 대기 없음 · 운영 시간만 */
+    o.kv = [["운영 시간", "08:30~17:00"]];
+    o.need = [["cam", "포토부스 사진 촬영 후 받기", "1F EVENT 포토부스 앞 · 소진 시까지"], ["coffee", "오전 · 커피 50잔", ""], ["time", "14:00 · 쿠키 세트 50세트 · 커피 50잔", ""]];   /* v7.54 (사용자 261016) 선착순 다섯 줄 = 「선착순 받으려면」 상자(needBoxHtml · 17F 강연 「스탬프 받으려면」과 같은 부품) · 오전 시작 시각 · 오전 오후 중복 언급 없음(사용자 확정) */   /* v7.48 (사용자 261016) 선착순 두 줄 · 오전은 시작 시각 없이 */   /* v5.05 포토부스 대기 없음 · 운영 시간만 */
   }
   return o;
 }
@@ -521,7 +522,7 @@ function zoneDetailHtml() {
   return '<div class="ax-stack axs-pan"><div class="axs-zdt' + (seal ? " axs-sthost" : "") + '">' + (seal ? pill : "") + zoneSign(z.sign, "lg") +
     '<p class="axs-bar stm">' + esc(z.stm) + "</p>" + (cr ? '<div class="cr">' + cr + "</div>" : "") +
     '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + z.todo.map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" + zoneCaseHtml(z) + zoneExHtml(z) +
-    (L.kv ? '<hr class="axs-rule"><dl class="axs-kv' + (ev ? " ev" : "") + '">' + L.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + segHtml(esc(r[1])) + "</dd>"; }).join("") + "</dl>" : "") +
+    (L.kv ? '<hr class="axs-rule"><dl class="axs-kv' + (ev ? " ev" : "") + '">' + L.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + segHtml(esc(r[1])) + "</dd>"; }).join("") + "</dl>" : "") + (L.need ? needBoxHtml("선착순 받으려면", "선착순 받으려면", L.need) : "") +
     "</div>" + (ev && EV_TYP_PROMO ? typPromoHtml("go") : "") + zonePicHtml(z) + (L.btn ? '<button type="button" class="ax-button" onclick="' + L.btn[1] + '">' + esc(L.btn[0]) + "</button>" : "") + "</div>";   /* v5.60 E (사용자 261004 「모형에서 보기 굳이 없어도 될 버튼 · 여기서 길 잃는 수석님 많을 듯」) 구역 상세의 「모형에서 보기」 삭제 · 둘러보기 입구 = 상시 운영 맨 위 카드 · 홈 줄 */
 }
 /* ═══ v5.69 구역 상세 시트(detPaint · 라우트 zone_d) · 1F 6구역 + 18F AX 커피챗 · v5.65 통일 구역 상세(zonePairHtml)의 순서 그대로 · 판 문법 경계 = 시트(pan)
@@ -536,7 +537,7 @@ function zoneSheet() {
   var body = z.gd ? zoneGdBody(z, L) :   /* v6.83 (묶음 16) 라운지 · 커피챗 = 공용 본문(사실 표 → 사진 → 하는 일 → 참여 전 확인 상자 · 접힘 없음) */
     (meta ? '<div class="cr">' + meta + "</div>" : "") +
     '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + (z.lead ? [z.lead] : []).concat(z.todo).map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" + zoneCaseHtml(z) + zoneExHtml(z) +
-    (kv ? '<hr class="axs-rule">' + kv : "") +
+    (kv ? '<hr class="axs-rule">' + kv : "") + (L.need ? needBoxHtml("선착순 받으려면", "선착순 받으려면", L.need) : "") +   /* v7.54 EVENT 선착순 상자 */
     (ev && EV_TYP_PROMO ? typPromoHtml("go") : "") + zonePicHtml(z);   /* v5.96 (사용자 261006 밤 「여기에 타자왕 광고는 없애줘」) EVENT 구역 상세 = 홍보 칸 없음 · 스위치 EV_TYP_PROMO */
   return { cls: "axs-pan", name: zoneSign(z.sign, "lg"), chips: zoneChip(L.chip), title: esc(z.kor), seal: seal ? pill : "", body: body,   /* v5.79 머리 이름 = 구역 간판 하나(현장 부스 사인과 같은 글자 · 한국어 이름을 따로 두지 않는다) · 상태 칩 · 한국어 한 줄 · 도장 = 본문 첫 줄 */
     foot: b ? progBtn(esc(b[0]), b[1], "", b[2] || "", !!b[3]) : "" };

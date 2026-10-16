@@ -882,7 +882,7 @@
    * 2D 「룰렛 돌리기」 판(SP_COL · spSvg)은 그대로 */
   var WH3 = { r: 0.6, y: 1.6, n: [1, 0], colW: 0.8, colD: 0.5, colH: 2.3, hdW: 0.98, hdH: 0.3, hdD: 0.6, hdOut: 0.08, pegs: 20,
     seg: [['3등', 38, 1], ['1등', 18, 0], ['3등', 30, 1], ['5등', 54, 2], ['2등', 18, 1], ['4등', 42, 0], ['2등', 32, 1], ['1등', 22, 0], ['5등', 62, 2], ['4등', 44, 0]],
-    col: ['#FFFFFF', '#F2E7B2', '#C99E66'], ink: '#8E5F3A', hub: '#8A684D', gold: '#C49B5F', iron: 0x2A2724, body: 0xF2F2F0, bodyC: '#F2F2F0', glow: 0.45, logo: 'maeum-logo.webp', logoV: 'v753' };
+    col: ['#FFFFFF', '#F2E7B2', '#C99E66'], ink: '#8E5F3A', hub: '#8A684D', gold: '#C49B5F', iron: 0x2A2724, body: 0xF2F2F0, bodyC: '#F2F2F0', glow: 0.45, logo: 'maeum-logo.webp', logoV: 'v753', ci: 'hyundai-ci.webp', ciV: 'v754' };   /* v7.54 간판 = 공식 CI 국문 가로형(디자인 시안/현장 안내물_261016/_생성기/_자산/hyundai_ci_kor_h.svg → 640 x 221 webp · 원본 색 · 비율 그대로) */
   var WH3_F = '"Pretendard Variable", Pretendard, sans-serif';
   function wh3Heart(g, x, y, s) { g.beginPath(); g.moveTo(x, y + s * 0.85); g.bezierCurveTo(x - s * 1.25, y + s * 0.05, x - s * 0.85, y - s * 0.95, x, y - s * 0.38); g.bezierCurveTo(x + s * 0.85, y - s * 0.95, x + s * 1.25, y + s * 0.05, x, y + s * 0.85); g.closePath(); g.fill(); }
   function wh3Face(cv) {   /* 휠 면 · 12시부터 시계 방향(캔버스 각 = 시계 방향) */
@@ -894,11 +894,6 @@
     g.fillStyle = WH3.hub; g.beginPath(); g.arc(c, c, 48, 0, Math.PI * 2); g.fill();
     g.fillStyle = '#FFFFFF'; wh3Heart(g, c, c + 2, 25);
     g.strokeStyle = '#2A2724'; g.lineWidth = 5; g.beginPath(); g.arc(c, c, r - 2, 0, Math.PI * 2); g.stroke();
-  }
-  function wh3Sign(cv) {   /* 간판 앞면 · 금빛 H + 「현대해상」 */
-    var g = cv.getContext('2d'); g.fillStyle = WH3.bodyC; g.fillRect(0, 0, 512, 144);
-    g.fillStyle = WH3.gold; g.font = '900 92px ' + WH3_F; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('H', 128, 78);
-    g.fillStyle = '#26232A'; g.font = '700 84px ' + WH3_F; g.textAlign = 'left'; g.fillText('현대해상', 178, 78);
   }
   function wh3Tex(w, h, draw) {
     var cv = document.createElement('canvas'); cv.width = w; cv.height = h; draw(cv);
@@ -914,6 +909,20 @@
     });
     var o = new T.BufferGeometry(); o.setAttribute('position', new T.Float32BufferAttribute(P, 3)); o.setAttribute('normal', new T.Float32BufferAttribute(N, 3)); o.setAttribute('uv', new T.Float32BufferAttribute(U, 2));
     o.computeBoundingSphere(); o.computeBoundingBox(); return o;
+  }
+  /* v7.54 (사용자 261016 「엘리베이터 문이 중간에 선이 그어진 갈라짐 없이 되어 있어서 어색해」) 엘리베이터 문 = 양쪽으로 열리는 두 짝 · 모형(lobby.glb)은 다시 굽지 않고 코드로 얹는다
+   *   문 = 게이트 안 엘리베이터 홀 넷(모형 side_n_wall_2 · front1 의 은색 면 실측 · 폭 1.1 · 높이 2.4) + 고객센터 쪽 작은 홀 하나(폭 1.0 · 높이 2.2 · 짝 사이 틈은 있었지만 뒤가 흰 벽이라 안 보였다)
+   *   가운데 = 짙은 가는 세로 선(20mm) · 한 짝만 아주 옅게 어둡게(8%) · 과한 테두리 없음 · 누름 · 가림 판정에 걸리지 않음(raycast 없음) · 엘리베이터 안 문(buildElev)은 원래 가운데 줄이 있다 · 문 열림 움직임은 없다(모양만) */
+  function liftDoors() { return [[17.01, 13.6, 1, 1.1, 2.4], [17.01, 16.0, 1, 1.1, 2.4], [19.79, 14.9, -1, 1.1, 2.4], [19.79, 16.8, -1, 1.1, 2.4], [VB.x0 + 0.03, (VB.z0 + VB.z1) / 2, 1, 1.0, 2.2]]; }   /* [문 면 x, 문 가운데 z, 복도 쪽(+1 = 동 · -1 = 서), 폭, 높이] */
+  function buildLiftSeams() {
+    var g = new T.Group(); g.name = 'liftSeams';
+    var seamM = new T.MeshBasicMaterial({ color: 0x1E2125, toneMapped: false }), shadeM = new T.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.08, depthWrite: false, toneMapped: false });
+    liftDoors().forEach(function (d) {
+      var ry = d[2] > 0 ? Math.PI / 2 : -Math.PI / 2, add = function (w, h, m, off, dz) { var q = new T.Mesh(new T.PlaneGeometry(w, h), m), c = toThree(d[0] + d[2] * off, d[1] + dz); q.position.set(c.x, h / 2, c.z); q.rotation.y = ry; q.raycast = function () {}; g.add(q); };
+      add(d[3] / 2, d[4], shadeM, 0.003, d[3] / 4);   /* 북쪽 짝 = 8% 어둡게 */
+      add(0.02, d[4], seamM, 0.005, 0);   /* 가운데 틈 */
+    });
+    S.lobby.add(g);
   }
   function buildWheel() {
     var Q = WH3, W0 = D.PROPS.wheel, R = { face: 0, cut: 0, relit: 0, tris: 0 }, kill = [];
@@ -939,7 +948,7 @@
     var ptr = new T.ShapeGeometry(sh); ptr.translate(0, Q.colH + 0.06, Q.hdOut + 0.006); iron.push(ptr);
     iron.push(bx(0.05, 0.05, Q.hdOut + 0.004, 0, Q.colH - 0.02, Q.hdOut / 2));
     var face = new T.CircleGeometry(Q.r - 0.004, 72); face.translate(0, Q.y, 0.0605);
-    var sign = new T.PlaneGeometry(Q.hdW * 0.9, Q.hdW * 0.9 * 144 / 512); sign.translate(0, Q.colH + Q.hdH / 2, Q.hdOut + 0.002);
+    var sign = new T.PlaneGeometry(0.78, 0.78 * 221 / 640); sign.translate(0, Q.colH + Q.hdH / 2, Q.hdOut + 0.002);   /* v7.54 공식 CI 그림 비율 그대로(640 x 221) · 옛 코드 그림 「H 현대해상」(wh3Sign) 걷음 */
     var slog = new T.PlaneGeometry(0.72, 0.72 * 298 / 1006); slog.translate(0, 0.66, 0.002);   /* v7.53 사용자 로고 그림 비율 그대로(1006 x 298) */
     var g = new T.Group(); g.name = 'wheel3';
     var c = toThree(W0[0], W0[1]); g.position.set(c.x, 0, c.z); g.rotation.y = Math.atan2(Q.n[0], -Q.n[1]);   /* 앞(+z) = 도면 n 방향 */
@@ -948,7 +957,8 @@
     add(body, lit({ color: Q.body }), 'wheel3_body');
     add(wh3Merge(iron), new T.MeshLambertMaterial({ color: Q.iron, side: T.DoubleSide }), 'wheel3_iron');
     add(face, lit({ map: wh3Tex(512, 512, wh3Face) }), 'wheel3_face');
-    add(sign, lit({ map: wh3Tex(512, 144, wh3Sign) }), 'wheel3_sign');
+    var cm = add(sign, new T.MeshBasicMaterial({ transparent: true, depthWrite: false, toneMapped: false, color: 0xFFFFFF }), 'wheel3_sign'); cm.visible = false;   /* v7.54 CI = 받은 뒤에만 · 원본 색 그대로(빛 · 톤 매핑 없음 · 흐려지지 않게) */
+    new T.TextureLoader().load(BASE + WH3.ci + '?v=' + WH3.ciV, function (t) { t.colorSpace = T.SRGBColorSpace; t.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy()); cm.material.map = t; cm.material.needsUpdate = true; cm.visible = true; G.need = true; });
     var sm = add(slog, new T.MeshBasicMaterial({ transparent: true, depthWrite: false, toneMapped: false, color: 0xF2F2F0 }), 'wheel3_slogan'); sm.visible = false;   /* 그림을 받은 뒤에만 보인다 · 로고 색 그대로(판 참 색과 같다 · 기둥 흰 몸 밝기에 맞춰 살짝 낮춤) */
     new T.TextureLoader().load(BASE + WH3.logo + '?v=' + WH3.logoV, function (t) { t.colorSpace = T.SRGBColorSpace; t.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy()); sm.material.map = t; sm.material.needsUpdate = true; sm.visible = true; G.need = true; });
     S.lobby.add(g); g.updateMatrixWorld(true);
@@ -1263,12 +1273,12 @@
    *     감속 후반 2.0초(SP_DR) = 판이 돌면서 작아지며(약 40%) 위로 · 목록 머리가 된다(spRise) · 멈춤 = 다 올라간 순간 · 곡선 cubic-bezier(.4, 0, .2, 1) 하나(판 이동 · 목록 · 문구)
    *     「행운을 빌어요.」 · 「체험용 룰렛」 = 이동 시작에 0.45초 흐려짐 · 목록 「이런 경품이 걸려 있어요」 1~5등 = 0.3초 뒤 아래 45%에서 투명 → 불투명으로 함께 올라와 판과 같이 선다(아래에 붙은 시트 · 위 모서리 32px)
    *     판 이동 2.0초 = 시트 규격 250ms 예외(사용자 연출) · 닫기 = 그대로([닫기] · 목록 밖 톡 · Esc · 뒤로 = 180ms 흐려짐) · 움직임 줄이기 = 누르자마자 마지막 화면(판 = 칸 경계 · 목록 펼침) */
-  var SP = { aim: '', u: 0, near: false, on: false, ph: '', popped: false, t0: 0, st: 0, dur: 0, a0: 0, A: 0, ang: 0, raf: 0, tm: [], seg: 0, tickT: 0, ticks: 0, snd: 0, n: 0, tab: null, out: null, stopMs: 0, cardMs: 0, log: [] };
+  var SP = { u: 0, near: false, on: false, ph: '', popped: false, t0: 0, st: 0, dur: 0, a0: 0, A: 0, ang: 0, raf: 0, tm: [], seg: 0, tickT: 0, ticks: 0, snd: 0, n: 0, tab: null, out: null, stopMs: 0, cardMs: 0, log: [] };
   var SP_R = 3.0, SP_R2 = 3.3, SP_SEG = 10, SP_OUT = 180, SP_GAP = 45, SP_DT = 4200, SP_DR = 2000, SP_ACC = 350;   /* v7.40 SP_DT = 누름 → 멈춤 · SP_DR = 작아지며 위로(멈춤과 같이 끝남) · SP_ACC = 처음 부드럽게 빨라지는 시간 */
   /* v7.53 (사용자 261016 「2D 판도 실물처럼」) 판 = 3D 룰렛(WH3)과 같은 실물 룰렛판 · 크기가 다른 10칸 · 12시부터 시계 방향 3 · 1 · 3 · 5 · 2 · 4 · 2 · 1 · 5 · 4등
    *   색 = 5등 황토 · 2 · 3등 연노랑 · 1 · 4등 흰 · 등수 글자 갈색(위가 바깥) · 가운데 갈색 원 + 흰 하트 · 짙은 쇠 테 + 핀 20개 · 바늘 = 위 검정 세모(그대로)
-   *   멈춤 = 칸 안(spAim · 칸 경계에서 min(6도, 칸의 30%) 안쪽 · 다른 등수로 보이지 않게) · 멈출 칸 = 판 넓이대로 무작위(SP.aim 이 있으면 그 등수 칸 · 시험용) · 서버 호출 없음 그대로
-   *   째깍 = 핀(SP_PEG 20개 · 18도마다) · 옛 v7.40 「칸 경계에서 멈춤 · 경계선」은 걷음 */
+   *   v7.54 (사용자 확정 261016 D안 「바늘은 칸 경계 · 등수 없음」으로 되돌림 · v7.53 「고른 등수 칸 안에 멈춤」 걷음) 멈춤 = 칸 경계(spAim · 경계 열 곳 중 하나 · 어느 칸도 고르지 않음) · 서버 호출 없음 그대로
+   *   째깍 = 핀(SP_PEG 20개 · 18도마다) · 판 그림 · 로고 · 결과 화면 · 움직임은 v7.53 그대로 */
   var SP_COL = WH3.col, SP_RK = WH3.seg.map(function (s) { return s[0]; }), SP_W = WH3.seg.map(function (s) { return s[1]; }), SP_CUM = [0], SP_PEG = 20;
   SP_W.forEach(function (w, i) { SP_CUM.push(SP_CUM[i] + w); });   /* 칸 시작 각(12시부터 시계 방향) · 끝 = 360 */
   var SP_MSG = ['행운을 빌어요.', '1층에서 룰렛을 체험하세요.'];   /* 사용자 문구 그대로(띄어쓰기만 「체험하세요」) */
@@ -1284,13 +1294,7 @@
     return o + '<circle cx="256" cy="256" r="' + (r + 2) + '" fill="none" stroke="#2A2724" stroke-width="9"/><circle cx="256" cy="256" r="52" fill="' + WH3.hub + '"/><path d="' + hp + '" fill="#FFFFFF"/></svg>';
   }
   function spRankAt(a) { var u = ((-a % 360) + 360) % 360; for (var j = 0; j < SP_SEG; j++) if (u < SP_CUM[j + 1]) return SP_RK[j]; return SP_RK[SP_SEG - 1]; }   /* 바늘 아래 칸 등수(확인용) */
-  function spAim(rk) {   /* 멈출 판 자리 u(12시부터 시계 방향 각) · rk 가 있으면 그 등수 칸 중 하나 · 없으면 넓이대로 무작위 · 칸 경계에서 여유 안쪽 */
-    var js = [], j0 = 0, x = Math.random() * 360;
-    for (var j = 0; j < SP_SEG; j++) if (SP_RK[j] === rk) js.push(j);
-    if (js.length) j0 = js[Math.floor(Math.random() * js.length)]; else while (j0 < SP_SEG - 1 && x >= SP_CUM[j0 + 1]) j0++;
-    var w = SP_W[j0], m = Math.min(6, w * 0.3);
-    return SP_CUM[j0] + m + Math.random() * (w - 2 * m);
-  }
+  function spAim() { return SP_CUM[Math.floor(Math.random() * SP_SEG)]; }   /* v7.54 멈출 판 자리 u(12시부터 시계 방향 각) = 칸 경계 열 곳 중 하나(바늘이 두 칸 사이 · 어느 칸도 고르지 않음 · 등수 없음) */
   function spBound(a, u) { return a + (((-u - a) % 360) + 360) % 360; }   /* a 이상 가장 가까운 회전각 · 바늘(12시) 아래 = 판 자리 u */
   function spTab(T) {   /* v7.40 속도 v(u) = 부드러운 출발(SP_ACC · smoothstep) × (1 - u)^2 · 누적해 0 ~ 1(600칸) · 속도가 끊기는 점 없음 · 끝 속도 0 */
     var N = 600, r = SP_ACC / T, tb = [0], acc = 0, prev = 0;
@@ -1339,7 +1343,7 @@
     ov.hidden = false; ov.classList.remove('out', 'in', 'rise', 'card'); ov.style.removeProperty('--spdT'); void ov.offsetWidth; if (!RM) ov.classList.add('in');
     try { ov.focus({ preventScroll: true }); } catch (e) {}
     if (RM) { spRise(true); return; }   /* v7.40 움직임 줄이기 = 누르자마자 마지막 화면(판 = 칸 경계 · 목록 펼침) */
-    var tg = spAim(SP.aim); SP.u = tg;   /* v7.53 멈출 판 자리 = 칸 안(spAim) */
+    var tg = spAim(); SP.u = tg;   /* v7.54 멈출 판 자리 = 칸 경계(spAim) */
     SP.A = 360 * (4 + Math.floor(Math.random() * 2)) + (spBound(SP.a0, tg) - SP.a0); SP.dur = SP_DT; SP.tab = spTab(SP_DT);
     SP.ph = 'spin'; SP.st = performance.now(); spLog('spin'); SP.raf = requestAnimationFrame(spFrame);   /* 누른 순간부터 돈다 */
     spLater(spRise, SP_DT - SP_DR);
@@ -1351,14 +1355,14 @@
     spSet(a);
     var sg = Math.floor(a / (360 / SP_PEG));   /* v7.53 째깍 = 핀 */
     if (sg !== SP.seg) { SP.seg = sg; if (now - SP.tickT >= SP_GAP) { SP.tickT = now; SP.ticks++; if (spTick(k)) SP.snd++; } }   /* 째깍 = 칸 경계 · 너무 빠를 때는 45ms 간격으로 묶음 */
-    if (k >= 1) { SP.stopMs = Math.round(now - SP.t0); spLog('stop'); return; }
+    if (k >= 1) { SP.stopMs = Math.round(now - SP.t0); spLog('stop'); spLater(spGone, SP_GW); return; }   /* v7.54 멈춘 뒤 잠깐 → 판이 「뽀잉 · 쭈왑」 사라짐(spGone) */
     SP.raf = requestAnimationFrame(spFrame);
   }
   function spRise(rm) {   /* v7.40 판이 돌면서 작아지며 위로(목록 머리 · 약 40% · 목록 바로 위 16px) · 아래에서 목록 · 회전은 spFrame 이 그대로 잇는다 */
     if (!SP.on || (SP.ph !== 'spin' && SP.ph !== 'in')) return;
     var ov = $('spov'), c = $('spc'), wh = $('spwh'), T = rm ? 0 : SP_DR;
     SP.rows = spCardHtml(); c.hidden = false;
-    if (rm) spSet(spBound(SP.a0, spAim(SP.aim)));
+    if (rm) { spSet(spBound(SP.a0, spAim())); ov.classList.add('gone'); }   /* v7.54 움직임 줄이기 = 판 바로 없음 */
     ov.style.setProperty('--spdT', T + 'ms');
     ov.classList.remove('in'); ov.classList.add('rise', 'card'); void wh.offsetWidth;
     var oh = ov.clientHeight, ch = c.offsetHeight, wr = wh.getBoundingClientRect(), orr = ov.getBoundingClientRect();   /* 목록 높이 = 큰 글씨 · 낮은 화면이면 판이 작아진다(최소 80px) */
@@ -1379,7 +1383,21 @@
     $('spcn').textContent = (d && d.next) || SP_MSG[1];
     return L.length;
   }
-  function spCardReset() { $('spc').hidden = true; $('spst').hidden = false; $('spwh').style.transform = ''; }
+  function spCardReset() { $('spc').hidden = true; $('spst').hidden = false; $('spwh').style.transform = ''; $('spov').classList.remove('gone'); }
+  /* v7.54 (사용자 261016 「작아지다가 어느 순간 뽀잉 · 쭈왑 하고 사라짐」) 판 = 살짝 부풀었다(1.08) 한 점으로 빨려 들어가듯 0(끝이 빠르게 · tour3.css spGone 0.42초 · scale · opacity 만) · 작아지며 위로 가는 앞부분(2.0초)은 그대로 · 경품 목록은 그대로 남음
+   *   소리 = 짧은 「뽀잉 · 쭈왑」(사인파 높아졌다 빠르게 낮아짐 · 음악 스위치 · 소리 켬일 때만 · spCtx) · 움직임 줄이기 = 바로 없음(소리 없음) */
+  var SP_GW = 220;
+  function spGone() { if (!SP.on || SP.ph !== 'card') return; $('spov').classList.add('gone'); spLog('gone'); if (!RM) spZwoop(); }
+  function spZwoop() {
+    var c = spCtx(); if (!c) return false;
+    try {
+      var t = c.currentTime + 0.005, o = c.createOscillator(), g = c.createGain();
+      o.type = 'sine'; o.frequency.setValueAtTime(420, t); o.frequency.exponentialRampToValueAtTime(820, t + 0.12); o.frequency.exponentialRampToValueAtTime(140, t + 0.4);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.3, t + 0.012); g.gain.exponentialRampToValueAtTime(0.2, t + 0.13); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.42);
+      o.connect(g); g.connect(spOutOf(c)); o.start(t); o.stop(t + 0.45);
+      return true;
+    } catch (e) { return false; }
+  }
   function spPrize() { if (!SP.on || SP.ph !== 'card') return; spKill(false); spLog('prize'); spEnd(); openPrize(); }   /* 「상품 탭에서 보기」 = 카드를 바로 닫고 앱 상품 탭 룰렛 구역 */
   function spCtx() { var c = MUS.ctx; return musOn() && MUS.want && c && c.state === 'running' && !document.hidden ? c : null; }   /* 포토부스 셔터와 같은 조건 */
   function spOutOf(c) { if (!SP.out || SP.out.context !== c) { SP.out = c.createGain(); SP.out.gain.value = 0.5; SP.out.connect(c.destination); } return SP.out; }
@@ -1407,7 +1425,7 @@
   }
   function spEnd() {
     spKill(false);
-    var ov = $('spov'); ov.hidden = true; ov.classList.remove('in', 'out', 'card', 'rise'); ov.style.removeProperty('--spdT'); $('spm').textContent = ''; spCardReset();
+    var ov = $('spov'); ov.hidden = true; ov.classList.remove('in', 'out', 'card', 'rise', 'gone'); ov.style.removeProperty('--spdT'); $('spm').textContent = ''; spCardReset();
     SP.on = false; SP.ph = ''; G.sheetOpen = false; G.guardT = performance.now(); G.need = true; G.last = 0; spLog('end');
   }
   function spAbort() {   /* 둘러보기를 닫을 때 · 연출 중이면 바로 정리 */
@@ -1830,7 +1848,7 @@
     G.tvStand = { boxes: nb, tris: i0.length / 3 };
   }
   function remodel() {
-    trueColors(S.lobby); cutKiosk(); buildWheel();   /* v7.51 룰렛 = 실물 룰렛판(buildWheel) · v5.58 판 · 포스터 참 색 · 포토부스 옛 기계(판 36 앞) 지움 */
+    trueColors(S.lobby); cutKiosk(); buildWheel(); buildLiftSeams();   /* v7.54 엘리베이터 문 가운데 틈 */   /* v7.51 룰렛 = 실물 룰렛판(buildWheel) · v5.58 판 · 포스터 참 색 · 포토부스 옛 기계(판 36 앞) 지움 */
     boothColors(S.lobby); tvStands(S.lobby);   /* v7.38 부스 바닥 매트 · 판 틀 색 · 받침대 TV 받침 */
     var t0 = performance.now(), R = { eh: 0, floor: 0, wing: 0 }, sideN = S.lobby.getObjectByName('side_n'), sideE = S.lobby.getObjectByName('side_e') || S.lobby;
     S.lobby.updateMatrixWorld(true);
@@ -2789,11 +2807,12 @@
     return any;
   }
   /* v5.49 (사용자 261004 「회사의 방향이에요(자세히 보기) 이런 식」) 말풍선 = 무엇이 있는지 한마디 + 오른쪽 「자세히 보기」 한 줄 · 옛 「~을 보는 곳이에요」보다 짧게 */
-  var ZT = { vision: '회사의 방향이에요', lab: 'DAP 과제들이에요', action: 'AI 업무 사례예요', play: 'AI 직접 써 보기예요', event: '사진 · 룰렛 · 타자왕이에요', lounge: '업무 고민 상담이에요' };
+  var ZT = { vision: '회사의 방향이에요', lab: 'DAP 과제들이에요', action: 'AI 업무 사례예요', play: 'AI 직접 써 보기예요', event: '사진 · 룰렛 · 타자왕이에요', lounge: 'DAP 과제 1:1 상담이에요' };   /* v7.54 라운지 = 정본(DAP 과제 1:1 상담 · 사전 신청자) · 옛 「업무 고민 상담이에요」 */
   function stepGuides(dt) {
     var p = planOf(G.pos), busy = false, talk = null, bestD = 1e9, nearestG = guides.reduce(function (m, g) { return Math.min(m, Math.hypot(p[0] - g.at[0], p[1] - g.at[1])); }, 1e9);
     guides.forEach(function (gd) {
       var d = Math.hypot(p[0] - gd.at[0], p[1] - gd.at[1]), near = G.moved && G.mode !== 'auto' && d < 3.0 && d <= nearestG + 0.01;   /* 가장 가까운 챗봇 하나만 · 3m 안 */
+      if (d > BUB_AGAIN && VIS.bub[gd.id] && G.talk !== gd) delete VIS.bub[gd.id];   /* v7.54 (사용자 261016 「라운지 근처에 가도 대화가 안 뜬다」) 말풍선 = 이번 방문 1번 → 4.5m 밖으로 멀어졌다 다시 오면 또 한 번(3.5초 뒤 흐려짐 그대로) */
       var f = clamp((6 - d) / 3.0, 0, 1);   /* 신호 세기 · 6m 밖 0 → 말풍선 거리(3m) 안 1 · 내 캐릭터 전파와 같은 곡선 */
       if (d < bestD) bestD = d;
       var hT = near ? Math.atan2(p[0] - gd.at[0], -(p[1] - gd.at[1])) : gd.h0;
@@ -2849,7 +2868,7 @@
   /* v5.84 (최초 진입 가볍게 · 개편안 2-8) 첫 5분 안내를 덜 · 말풍선 = 구역(스태프)당 이번 방문 1번 · 3.5초 뒤 흐려짐 · 「자세히 보기」 단추는 그대로
    *   방향점 = 둘러보기를 연 뒤 90초 숨김 · 그 뒤 한 번 나타나면 최대 5초 · 「더 힘내세요!」 = 이번 방문 3번까지
    *   방문 = 둘러보기를 새로 열 때(앱 화면에서 뒤로 돌아온 restore 는 같은 방문) */
-  var VIS = { t0: 0, bub: {}, dirGd: null, dirAt: 0, cheerN: 0 }, BUB_MS = 3500, BUB_FADE = 400, DIR_WAIT = 90000, DIR_MS = 5000, CHEER_MAX = 3;
+  var VIS = { t0: 0, bub: {}, dirGd: null, dirAt: 0, cheerN: 0 }, BUB_AGAIN = 4.5, BUB_MS = 3500, BUB_FADE = 400, DIR_WAIT = 90000, DIR_MS = 5000, CHEER_MAX = 3;
   function visitReset() { VIS.t0 = performance.now(); VIS.bub = {}; VIS.dirGd = null; VIS.dirAt = 0; VIS.cheerN = 0; VIS.seen = {}; VIS.hintN = 0; }   /* v5.99 손가락 안내 횟수(방문당 3번) */
   /* v5.84 (사용자 261006 「1층을 다 둘러보셨으면 엘리베이터를 타고 다른 층으로 이동해 보세요라는 권고」 · 메인 권장안) 엘리베이터 권유 한 번 · 막지 않음
    *   조건 = 이번 방문에 1층 구역 멈춤 자리 70% 이상(3m 안) 들르고 3분 지남 · 또는 5분 지남 · 이 기기에서 처음(axfTour3ElevTip) · 엘리베이터를 탄 적 없음(axfTour3Elev)
@@ -2900,9 +2919,10 @@
     if (!gd.stamp) { if (!b0) VIS.bub[gd.id] = b0 = now; b.classList.toggle('out', now - b0 > BUB_MS - BUB_FADE); }
     _p.copy(gd.m.position); _p.y = 1.72; _p.project(camera);   /* 전파(머리 위 1.0~1.5m)가 보이게 그 위에 */
     if (_p.z > 1) { b.hidden = true; return; }
+    var hy0 = _ia.copy(gd.m.position); hy0.y = 1.2; hy0.project(camera); var yHead = (1 - hy0.y) / 2 * $('stage').clientHeight;   /* v7.54 가까이 서면 1.72m 점이 머리에서 멀리 떠 뒤쪽 다른 스태프 말풍선처럼 보였다(라운지 · 룰렛 스태프가 한 줄) · 말풍선 꼬리 = 머리(1.2m) 위 64px 안 */
     if (b.getAttribute('data-z') !== gd.id) { b.setAttribute('data-z', gd.id); $('gbubT').textContent = gd.text; var go = b.querySelector('.go'); go.textContent = gd.go; go.hidden = !gd.go || !gd.stamp; }   /* v5.54 구역 스태프 = 한마디만(「자세히 보기」는 아래 단추 하나) · 계단 「스탬프 받기」만 알약 */
     b.hidden = false;
-    var W = $('stage').clientWidth, H = $('stage').clientHeight, bw = b.offsetWidth || 220, x = clamp((_p.x + 1) / 2 * W, bw / 2 + 8, W - bw / 2 - 8), y = Math.max((1 - _p.y) / 2 * H, b.offsetHeight + 8);
+    var W = $('stage').clientWidth, H = $('stage').clientHeight, bw = b.offsetWidth || 220, x = clamp((_p.x + 1) / 2 * W, bw / 2 + 8, W - bw / 2 - 8), y = Math.max((1 - _p.y) / 2 * H, yHead - 64, b.offsetHeight + 8);
     var lk = $('look'); if (lk && !lk.hidden) { var lt = lk.offsetTop, ll = lk.offsetLeft, lw = lk.offsetWidth; if (y + 7 > lt - 6 && y - b.offsetHeight < lt + lk.offsetHeight && x + bw / 2 > ll - 4 && x - bw / 2 < ll + lw + 4) y = Math.max(b.offsetHeight + 8, lt - 13); }   /* v5.54 자세히 보기 단추와 겹치면 단추 위로 · v5.58 단추가 어디든 */
     y = bubOffCoins(x, y, bw, b.offsetHeight);
     b.style.transform = 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px) translate(-50%,-100%)';
@@ -5435,7 +5455,6 @@
     var r = $('cv').getBoundingClientRect(); ray.setFromCamera(new T.Vector2((x - r.left) / r.width * 2 - 1, -((y - r.top) / r.height) * 2 + 1), camera);
     return ray.intersectObject(S.lobby, true).slice(0, 8).map(function (h) { var o = h.object, n = [], q = o; while (q && q !== S.lobby && n.length < 4) { n.push(q.name || q.type); q = q.parent; } var u = o.userData || {}; return { n: n.join('<'), d: +h.distance.toFixed(2), y: +h.point.y.toFixed(2), shown: isShown(o), st: u.stamp || null, pg: u.pg || null, z: u.zone || null }; });
   };
-  G.api.spAim = function (rk) { SP.aim = rk || ''; return SP.aim; };   /* v7.53 시험용 · 멈출 등수 칸 */
   G.api.sp = function () { var ov = $('spov'); return { card: !$('spc').hidden, rows: $('spcl').children.length, next: $('spcn').textContent, cardMs: SP.cardMs, on: SP.on, ph: SP.ph, near: SP.near, n: SP.n, ang: +SP.ang.toFixed(1), dur: SP.dur, A: Math.round(SP.A), stopMs: SP.stopMs, ticks: SP.ticks, snd: SP.snd, rise: ov.classList.contains('rise'), whT: $('spwh').style.transform, wheel: !$('spst').hidden, raf: !!SP.raf, tm: SP.tm.length, out: !!SP.out, ov: !ov.hidden, cls: ov.className, msg: $('spm').innerText, rank: spRankAt(SP.ang), u: SP.u, spg: !$('spg').hidden, sheet: !!G.sheetOpen, rm: !!RM, log: SP.log.slice() }; };   /* v6.91 확인용 */
   G.api.spNear = function () { return spNear(); };
   G.api.taps = function () { return { act: G.tapAct ? G.tapAct.k : null, pend: G.tapPend || null, done: G.tapDone || [], log: G.tapLog || [], frames: G.tapFrames || 0, rings: TAPS.rings.length, op: TAPS.mat ? +TAPS.mat.opacity.toFixed(3) : null, vis: TAPS.fr ? TAPS.fr.visible : null, hint: !$('hint').hidden, hint2: !$('hint2').hidden, hfg: !$('hfg').hidden, hintAt: G.hintAt || null, hintN: G.hintN || 0, hintV: VIS.hintN || 0, idle: Math.round(performance.now() - (G.idleAt || 0)), learned: store.get('axfTour3TapUsed') === '1', sq: !!G.squeeze, scn: G.scn, sheet: !!G.sheetOpen, scard: !!SCARD, ph: !!PH.on, talk: G.talk ? G.talk.id : null, bub: !$('gbub').hidden }; };   /* v5.91 확인용 */
@@ -5649,5 +5668,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v7.53', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v7.54', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();
