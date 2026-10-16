@@ -165,10 +165,14 @@ function beSync(after) {
       var fc9 = res.my.fcfs && typeof res.my.fcfs === "object" ? res.my.fcfs : null, lk9 = res.my.lk7 && typeof res.my.lk7 === "object" ? res.my.lk7 : null;
       if (JSON.stringify(fc9) !== JSON.stringify(S.get("fcfs", null))) S.set("fcfs", fc9);
       if (JSON.stringify(lk9) !== JSON.stringify(S.get("lk7", null))) S.set("lk7", lk9);
+      if ("luckyx" in res.my) {   /* 261016 E4 현장 부재로 다시 추첨 { id, rk } | null · 취소는 null · 옛 서버는 필드가 없어 그대로 */
+        var lx9 = res.my.luckyx && typeof res.my.luckyx === "object" && res.my.luckyx.id ? { id: String(res.my.luckyx.id), rk: String(res.my.luckyx.rk || "") } : null;
+        if (JSON.stringify(lx9) !== JSON.stringify(S.get("luckyx", null))) S.set("luckyx", lx9);
+      }
       if ("lucky" in res.my) {   /* 261008 럭키드로우 당첨 · 서버가 정본(null = 당첨 없음 · 취소 · 부재) · 옛 서버는 필드가 없어 그대로 */
         var lw9 = res.my.lucky && typeof res.my.lucky === "object" && res.my.lucky.id ? res.my.lucky : null;
         if (JSON.stringify(lw9) !== JSON.stringify(S.get("lucky", null))) S.set("lucky", lw9);
-        if (!lw9 && SHEET.spec && SHEET.spec.id === "lucky") sheetClose(true);
+        if (!lw9 && SHEET.spec && SHEET.spec.id === "lucky") { if (luckyxMy()) { SHEET.tall = false; luckyOpen(); } else sheetClose(true); }   /* 261016 E4 떠 있던 당첨 시트 = 부재면 그 자리에서 「N등 · 현장 부재로 다시 추첨」 · 취소면 닫는다 */
       }
       var kt9 = res.my.kit && typeof res.my.kit === "object" ? res.my.kit : null;   /* 261006 키트 사이즈 · 키트명단 사번만(없으면 null = 홈 카드 · 화면 · 설정 줄 없음) · 261008 스태프 의류 명단 사번도(pool staff) · 신청번호 no */
       if (JSON.stringify(kt9) !== JSON.stringify(S.get("kit", null))) S.set("kit", kt9);

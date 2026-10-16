@@ -429,12 +429,18 @@ function luckyBody(x) {
   return '<div class="axs-fcg axs-lkw">' + (p && p.img ? '<img src="' + PRIZE_DIR + p.img + '.webp" alt="" width="240" height="240" decoding="async" onerror="this.remove()">' : "") +
     (x.rk ? '<p class="rk">' + esc(x.rk) + "</p>" : "") + (nm ? '<p class="t">' + esc(nm) + "</p>" : "") + (x.no ? '<p class="s">행운권 번호 ' + esc(x.no) + "</p>" : "") + "</div>";
 }
+/* 261016 E4 (사용자 확정) 3 · 2 · 1등 당첨 뒤 현장 부재로 다시 추첨 = 서버 sync my.luckyx { id, rk } | null(S "luckyx") · 취소(undo)는 null · 살아 있는 당첨(my.lucky)이 있으면 그쪽이 먼저
+   당첨이 보이던 자리(홈 맨 위 한 줄 · 당첨 시트)에 「3등 · 현장 부재로 다시 추첨」 한 줄 · 확인 단추 없음 · 옛 서버는 필드가 없어 그리지 않는다 */
+var LUCKY_ABS = "현장 부재로 다시 추첨";
+function luckyxMy() { if (luckyMy()) return null; var x = S.get("luckyx", null); return x && typeof x === "object" && x.id ? x : null; }
+function luckyxLine(x) { return (x.rk ? x.rk + " · " : "") + LUCKY_ABS; }
+function luckyxSpec(x) { return { id: "luckyx", title: "럭키드로우", body: '<div class="axs-fcg axs-lkw"><p class="t">' + esc(luckyxLine(x)) + "</p></div>", go: "sheetClose()", goLbl: "닫기" }; }
 function luckySpec() {
-  var x = luckyMy(); if (!x) return null;
+  var x = luckyMy(); if (!x) { var ax = luckyxMy(); return ax ? luckyxSpec(ax) : null; }
   if (x.ack) return { id: "lucky", title: "확인 완료", lead: esc(LUCKY_GET), body: luckyBody(x), go: "sheetClose()", goLbl: "닫기" };
   return { id: "lucky", title: "럭키드로우 당첨", lead: esc(LUCKY_GET), body: luckyBody(x), go: "luckyAck()", goLbl: "확인", goBusy: "확인하는 중" };
 }
-function luckyOpen(k) { var sp = k === "lk7" ? lk7WinSpec() : luckySpec(); if (!sp) return; if (k !== "lk7") LUCKY.shown[luckyMy().id] = 1; sheetOpen(sp); }   /* 당첨 시트 · 7등 안내가 여는 곳 하나 */
+function luckyOpen(k) { var sp = k === "lk7" ? lk7WinSpec() : luckySpec(); if (!sp) return; if (k !== "lk7" && luckyMy()) LUCKY.shown[luckyMy().id] = 1; sheetOpen(sp); }   /* 당첨 시트 · 7등 안내가 여는 곳 하나 */
 function luckyAck() {
   if (SHEET.busy) return;
   var x = luckyMy(), u = S.get("user", {}) || {};
@@ -451,7 +457,8 @@ function luckyAck() {
 }
 /* 홈 나의 일정 맨 위 한 줄 · [정렬 분, onclick, 뱃지, 제목, 보조 줄, 뱃지 상태, 장소, 끝, 점] */
 function luckyRow() {
-  var x = luckyMy(); if (!x) return null;
+  var x = luckyMy();
+  if (!x) { var ax = luckyxMy(); return ax ? [-4, "luckyOpen()", "추첨", "럭키드로우", luckyxLine(ax), "mine"] : null; }   /* 261016 E4 현장 부재로 다시 추첨 · 점 없음 */
   return [-4, "luckyOpen()", "당첨", "럭키드로우" + (x.rk ? " " + x.rk : ""), x.ack ? "확인 완료 · " + LUCKY_GET.replace("해요", "") : "눌러서 확인해 주세요", "act", undefined, undefined, x.ack ? 0 : 1];
 }
 /* 7등 랜덤 굿즈 당첨 안내(확인 단추 없음 · 한 번) */
