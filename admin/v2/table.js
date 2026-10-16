@@ -4,6 +4,7 @@
  *       숫자 오른쪽 정렬 · tabular-nums · 날짜 「MM-DD HH:mm」(오늘이면 「HH:mm」) · 열 너비는 열 정의 w(px)
  * 내려받기 = 확인 창(261016 PIN 없음) → 서버 원본 액션을 dl=1 로 다시 받아 → 화면에 보이는 열 · 구분 · 검색 · 정렬 그대로 .xlsx
  *       SheetJS(cdnjs 고정 버전)를 그때 불러온다 · 못 불러오면 UTF-8 BOM CSV 로 대신 받는다
+ * 줄 누르기 = o.onRow(key) · 고른 줄 g.sel 강조 · 키보드 Enter
  * 열 정의 c = { k 키 · t 머리 글자 · w 너비 · type(num | date | text) · v(row) 값 · f(row) 화면 html · x(row) 엑셀 값 · act(row) 단추 html(엑셀 제외) · sort:false } */
 var XLSX_URL="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
 var XG={ reg:{}, MAXROWS:500 };
@@ -60,11 +61,14 @@ XG.paint=function(g){
   var v=xgView(g), shown=v.slice(0,XG.MAXROWS);
   cnt.innerHTML='<b>'+n0(v.length)+'</b>건'+(v.length!==all.length?' / 전체 '+n0(all.length):'');
   body.innerHTML=shown.length?shown.map(function(r){ var k=o.key?o.key(r):"";
-    return '<tr'+(g.sel!=null&&k===g.sel?' class="sel"':'')+'>'+cols.map(function(c){ var cls=c.act?"a":c.type==="num"?"n":c.type==="date"?"d":"";
+    return '<tr'+(g.sel!=null&&k===g.sel?' class="sel"':'')+(o.onRow?' data-k="'+esc(k)+'" tabindex="0" onclick="XG.rowBy(this,event)" onkeydown="XG.rowKey(this,event)"':'')+'>'+cols.map(function(c){ var cls=c.act?"a":c.type==="num"?"n":c.type==="date"?"d":"";
       var h=c.act?c.act(r):c.f?c.f(r):esc(xgText(c,r)); return '<td class="'+cls+'" title="'+esc(c.act?"":xgText(c,r))+'">'+h+'</td>'; }).join("")+'</tr>'; }).join("")
     :"";
   note.innerHTML=(shown.length?"":emptyH(g.q?"찾는 줄이 없습니다":(o.empty||"아직 줄이 없습니다")))+(g.gate?'<div class="xg-note">'+g.gate+'</div>':"")+(v.length>shown.length?'<div class="cap" style="padding:6px 2px">앞 '+n0(XG.MAXROWS)+'줄만 보입니다 · 검색으로 좁힙니다 · 엑셀은 전체 '+n0(v.length)+'줄</div>':'');
 };
+/* 줄 누르기(o.onRow(key)) · 줄 안 단추를 누른 것은 빼다 */
+XG.rowBy=function(tr, ev){ var x=tr.closest("[data-xg]"), g=x&&XG.reg[x.getAttribute("data-xg")]; if(!g||!g.o.onRow) return; if(ev&&ev.target&&ev.target.closest&&ev.target.closest("button,a,input")) return; g.sel=tr.getAttribute("data-k"); XG.paint(g); g.o.onRow(g.sel); };
+XG.rowKey=function(tr, ev){ if(ev.target!==tr) return; if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); XG.rowBy(tr, ev); } };
 XG.find=function(id, v){ var g=XG.reg[id]; g.q=String(v||""); XG.paint(g); };
 XG.sortBy=function(id, k){ var g=XG.reg[id]; if(g.sort&&g.sort.k===k) g.sort.d=-g.sort.d; else g.sort={ k:k, d:1 }; xgSave(g); XG.paint(g); };
 XG.chipBy=function(id, c){ var g=XG.reg[id]; g.chip=c; xgSave(g); XG.paint(g); if(g.o.onChip) g.o.onChip(c); };

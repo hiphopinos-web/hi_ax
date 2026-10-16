@@ -1,25 +1,24 @@
 /* AXF CONTROL v2 · S2 처리함 (261016)
- * 칩 = AX 라운지(배치판) · 커피챗 · 체크인존 · 스태프 요청 · PIN 분실. 한 건씩 처리하고 처리한 줄만 고친다.
+ * 칩 = AX 라운지(배치판) · 커피챗(cchat.js) · 체크인존 · 스태프 요청 · PIN 분실. 한 건씩 처리하고 처리한 줄만 고친다.
  * 승인 · 체크인 · 선정 · 다음 번호 · 번호표 무효 = L2(확인 창, PIN 없음) · 요청 닫기 · 잘못된 PIN 요청 닫기 = L1(바로 · 토스트)
  * 261016 콘솔 동작에는 PIN 을 묻지 않는다(「PIN 분실」은 참가자 앱 PIN 요청 처리) */
 var IB_SUBS=[["lounge","AX 라운지","신청"],["cchat","커피챗","희망"],["ck","체크인존","대기"],["req","스태프 요청",""],["pw","PIN 분실",""]];
 var RV_ON=["신청","승인","체크인"];
 var RV_CLS={ "신청":"req", "승인":"okc", "체크인":"in", "완료":"done", "노쇼":"no" };
 var RV_TAG={ "신청":"warn", "승인":"", "체크인":"", "완료":"ok", "노쇼":"bad", "취소":"off" };
-var CC_ROUNDS=["13:00","13:30","14:00","14:30","15:00","15:30"], CC_TABLES=["A","B","C","D","E","F"];
 function ibSub(){ var s=S.sub.inbox; return IB_SUBS.some(function(x){ return x[0]===s; })?s:"lounge"; }
 SCREENS.inbox={
   title:"처리함", desc:"",
   need:function(){ var s=ibSub();
-    return s==="lounge"?[{ k:"resv", a:"resv_list", ttl:20000 }]:s==="cchat"?[{ k:"cc", a:"cchat_list", ttl:20000 }]:s==="ck"?[{ k:"ck", a:"ck_state", ttl:15000 }]:s==="req"?[{ k:"sreq", a:"sreq_list", p:{ st:"all", n:100 }, ttl:15000 }]:[{ k:"pwl", a:"pw_req_list", ttl:30000 }]; },
+    return s==="lounge"?[{ k:"resv", a:"resv_list", ttl:20000 }]:s==="cchat"?[{ k:"cc", a:"cchat_list", ttl:20000 },{ k:"ccf", a:"cfg_list", ttl:60000 }]:s==="ck"?[{ k:"ck", a:"ck_state", ttl:15000 }]:s==="req"?[{ k:"sreq", a:"sreq_list", p:{ st:"all", n:100 }, ttl:15000 }]:[{ k:"pwl", a:"pw_req_list", ttl:30000 }]; },
   mount:function(vb){
     var s=ibSub();
-    el("phCap").textContent={ lounge:"1F AX 라운지 · 사전 신청 · 상담석 x 1시간 칸 배치판", cchat:"18F AX 커피챗 · 희망 → 선정(회차 · 테이블) → 참석", ck:"1F 체크인존 · 창구 A~D 번호표", req:"스태프 폰 「운영자에게 요청」", pw:"앱 로그인 「PIN 을 잊었어요」 요청" }[s];
+    el("phCap").textContent={ lounge:"1F AX 라운지 · 사전 신청 · 상담석 x 1시간 칸 배치판", cchat:"18F AX 커피챗 · 희망(회차 · 관심 영역 · 메모) → 선정(회차 · 테이블) → 참석 · 완료", ck:"1F 체크인존 · 창구 A~D 번호표", req:"스태프 폰 「운영자에게 요청」", pw:"앱 로그인 「PIN 을 잊었어요」 요청" }[s];
     vb.innerHTML='<div class="chips" id="ibChips" role="tablist" aria-label="처리함"></div><div id="ibB"></div>';
     var b=el("ibB");
     if(s==="lounge"&&S.ui.lup&&UP){ upMount(b); return; }
     if(s==="lounge") b.innerHTML='<div class="up-bar"><span class="cap">사전 명단 = 「사번 · 시간 · 상담석」 엑셀</span><button class="btn sm pri" type="button" onclick="lgUpOpen()">명단 올리기</button></div><div id="lgErr"></div><div class="grid gside"><div class="card" style="padding:8px 12px" id="lgBoard"></div><div class="col" id="lgSide"></div></div><div class="card mt"><h2>AX 라운지 신청 명단</h2><div id="lgList"></div></div>';
-    else if(s==="cchat") b.innerHTML='<div class="card"><h2>커피챗 명단 <span class="cap">희망 → 선정 → 참석 · 회차 '+CC_ROUNDS.join(" · ")+'</span></h2><div id="ccList"></div>'+laterH("희망 접수 마감 · 재개 단추")+'</div>';
+    else if(s==="cchat") ccMount(b);
     else if(s==="ck") b.innerHTML='<div id="ckTop"></div><div class="grid g4" id="ckWin"></div><div class="mt">'+oldLink("E 창구(교환 · 명단 밖) 기록과 번호표 명단")+'</div>';
     else if(s==="req") b.innerHTML='<div class="card"><h2>스태프 요청</h2><div id="rqList"></div></div>';
     else b.innerHTML='<div class="card"><h2>PIN 분실 요청 <span class="cap">본인 확인(사원증) 뒤 초기화</span></h2><div id="pwList"></div></div>';
@@ -131,41 +130,7 @@ function rvUndo(id, cur, back){
   call("resv_set",{ id:id, status:back, from:cur }).then(function(x){ var r=rvRow(id); if(x&&x.ok){ if(r) r.status=back; lgPaint(); toast("되돌렸습니다 · "+back); } else toast("되돌리지 못했습니다 · "+why(x),{ bad:1 }); reload(["resv"]); });
 }
 
-/* ── 커피챗 · 명단 표 + 줄 단추 ── */
-var CC={ g:null };
-function ccPaint(){
-  if(!CC.g) CC.g=XG.make({ id:"cchat", file:"18F 커피챗", key:function(r){ return r.emp; }, sort:{ k:"ts", d:1 },
-    chips:[["all","전체",null],["w","희망",function(r){ return r.status==="대기"; }],["m","선정",function(r){ return r.status==="매칭"; }],["in","참석",function(r){ return r.status==="참석"||r.status==="완료"; }],["cx","취소",function(r){ return r.status==="취소"; }]],
-    cols:[{ k:"ts", t:"신청 시각", type:"date", w:100 },{ k:"name", t:"이름", w:100 },{ k:"emp", t:"사번", w:84 },{ k:"dept", t:"부서", w:120 },{ k:"tag", t:"관심", w:110 },{ k:"status", t:"상태", w:72, v:function(r){ return ccSt(r.status); }, f:function(r){ var s=ccSt(r.status); return tag(s, s==="희망"?"warn":s==="참석"||s==="완료"?"ok":s==="취소"?"off":""); } },{ k:"round", t:"회차", w:64 },{ k:"table", t:"테이블", w:64 },
-      { t:"", w:190, act:function(r){ var e=jq(r.emp);
-        if(r.status==="대기") return '<button class="btn sm pri" type="button" onclick="ccPick(\''+e+'\')">선정</button>';
-        if(r.status==="매칭") return '<button class="btn sm pri" type="button" onclick="ccSet(\''+e+'\',\'참석\')">참석</button> <button class="btn sm" type="button" onclick="ccSet(\''+e+'\',\'대기\')">선정 취소</button>';
-        if(r.status==="참석") return '<button class="btn sm" type="button" onclick="ccSet(\''+e+'\',\'완료\')">완료</button> <button class="btn sm dng" type="button" onclick="ccSet(\''+e+'\',\'매칭\')">참석 취소</button>';
-        return ""; } }],
-    src:{ a:"cchat_list", p:{} }, h:480 });
-  var gt=dataGate("cc","커피챗 명단"); CC.g.gate=gt||""; XG.set(CC.g, gt?null:(S.data.cc.rows||[]), el("ccList"));
-}
-function ccSt(s){ return s==="대기"?"희망":s==="매칭"?"선정":s; }
-function ccRow(e){ var d=S.data.cc; return d&&d.rows?d.rows.filter(function(x){ return jq(x.emp)===e; })[0]:null; }
-var CCP={ round:"", table:"" };
-function ccPick(e){
-  var r=ccRow(e); if(!r) return; CCP.round=""; CCP.table="";
-  var chip=function(k,v){ return '<button type="button" class="chip" data-'+k+'="'+v+'" onclick="ccChoose(\''+k+'\',\''+v+'\')">'+v+'</button>'; };
-  confirmBox({ t:"커피챗 자리를 정할까요?", who:(r.name||r.emp)+" · "+(r.dept||""), sub:"관심 "+(r.tag||"-")+" · 선정하면 참가자 앱에 알림이 갑니다",
-    body:'<div class="fld">회차</div><div class="chips">'+CC_ROUNDS.map(function(v){ return chip("round",v); }).join("")+'</div><div class="fld">테이블</div><div class="chips">'+CC_TABLES.map(function(v){ return chip("table",v); }).join("")+'</div>',
-    ok:"선정 · 알림 보내기", gate:function(){ return !!(CCP.round&&CCP.table); },
-    run:function(){ return call("cchat_set",{ emp:r.emp, round:CCP.round, table:CCP.table, from:r.status }); },
-    done:function(){ var prev=r.status; r.status="매칭"; r.round=CCP.round; r.table=CCP.table; ccPaint(); reload(["cc"]); toast((r.name||r.emp)+" · "+CCP.round+" "+CCP.table+" 선정",{ undo:function(){ ccSet(e, prev, 1); } }); } });
-}
-function ccChoose(k, v){ CCP[k]=v; [].forEach.call(document.querySelectorAll("#dlgCard [data-"+k+"]"),function(b){ b.classList.toggle("on", b.getAttribute("data-"+k)===v); }); gateUpd(); }
-function ccSet(e, to, quiet){
-  var r=ccRow(e); if(!r) return; var from=r.status;
-  var run=function(){ return call("cchat_status",{ emp:r.emp, status:to, from:from }); };
-  var after=function(){ r.status=to; if(to==="대기"){ r.round=""; r.table=""; } ccPaint(); reload(["cc"]); };
-  if(quiet){ run().then(function(x){ if(x&&x.ok){ after(); toast("되돌렸습니다"); } else toast("되돌리지 못했습니다 · "+why(x),{ bad:1 }); }); return; }
-  confirmBox({ t:{ "참석":"참석으로 바꿀까요?", "완료":"완료로 바꿀까요?", "대기":"선정을 취소할까요?", "매칭":"참석을 취소할까요?" }[to]||"바꿀까요?", who:(r.name||r.emp)+" · "+ccSt(from)+" → "+ccSt(to), sub:to==="참석"?"스탬프 07 프로그램 참여가 붙습니다":to==="매칭"?"참석 스탬프는 서버 규칙대로":"참가자 앱에 바로 반영됩니다", ok:{ "참석":"참석", "완료":"완료", "대기":"선정 취소", "매칭":"참석 취소" }[to], danger:to==="대기"||to==="매칭",
-    run:run, done:function(){ after(); toast((r.name||r.emp)+" · "+ccSt(to),{ undo:function(){ ccSet(e, from, 1); } }); } });
-}
+/* ── 커피챗 · cchat.js(261016 U4 서버 계약 · 회차 표 · 명단 · 상세 · 마감) ── */
 
 /* ── 체크인존 · 창구 A~D ── */
 function ckPaint(){

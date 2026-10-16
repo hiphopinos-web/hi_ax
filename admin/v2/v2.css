@@ -211,6 +211,20 @@ table.tb{width:100%;border-collapse:collapse;font-size:13px}
 .xg-t td.a{text-align:right;overflow:visible}
 .xg-t tbody tr:hover td{background:#FAFBFC}
 .xg-t tr.sel td{background:var(--navy05)}
+.xg-t tr[data-k]{cursor:pointer}
+.xg-t tr[data-k]:focus-visible td{box-shadow:inset 0 0 0 2px var(--navy)}
+/* 처리함 › 커피챗(cchat.js) · 명단 전체 폭 + 오른쪽 상세 서랍 360 */
+.cc-drawer{position:fixed;top:var(--top);right:0;bottom:var(--tabs);width:360px;max-width:100%;background:var(--bg);border-left:1px solid var(--line);box-shadow:-8px 0 24px rgba(8,24,74,.12);overflow:auto;padding:10px;z-index:20;transform:translateX(100%);visibility:hidden;transition:transform var(--t-out) var(--ease),visibility 0s linear var(--t-out)}
+.cc-drawer.on{transform:none;visibility:visible;transition:transform var(--t-in) var(--ease),visibility 0s}
+@media (prefers-reduced-motion:reduce){ .cc-drawer,.cc-drawer.on{transition:none} }
+.cc-rt th[scope=row]{background:transparent;border-bottom:1px solid var(--line2);color:var(--tx2)}
+.cc-rt tr:last-child th{border-bottom:0}
+.cc-rt td.cc-over{background:var(--warn-bg);color:var(--warn)}
+.cc-kv{display:grid;grid-template-columns:72px minmax(0,1fr);gap:4px 8px;margin-top:10px;font-size:13px}
+.cc-kv dt{color:var(--tx3);font-size:12px;padding-top:1px}
+.cc-kv dd{margin:0;font-variant-numeric:tabular-nums}
+.cc-fld{font-size:12px;color:var(--tx3);margin-top:10px}
+.cc-memo{white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere;max-height:220px;overflow:auto;line-height:1.5}
 .xg-note{padding-top:8px}.xg-note .band{margin:0}
 a.btn{text-decoration:none}
 
