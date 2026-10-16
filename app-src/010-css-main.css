@@ -1804,6 +1804,26 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
     .axs-apc .axs-kv dd { margin-bottom: var(--ax-space-8); }
   }
   .axs-apnone { margin: 0; padding: var(--ax-space-24) var(--ax-space-16); border-radius: var(--ax-radius-24); background: var(--ax-color-surface); text-align: center; }
+  /* v7.39 (사용자 261016 계획서 0-2-4) 참여하기 카드 「스탬프」 줄 = 「· 」 목록(무채색 점 · 둘째 줄 내어쓰기) · 칸 맨 아래 회색 한 줄(묶음 2개까지) */
+  .axs-kvl { list-style: none; margin: 0; padding: 0; }
+  .axs-kvl li { padding-left: 0.8em; text-indent: -0.8em; }
+  .axs-kvl li::before { content: "\00B7\00A0"; color: var(--ax-color-muted); }
+  .axs-apsum { margin: 0; padding: 0 var(--ax-space-4); word-break: keep-all; }
+  /* v7.39 커피챗 신청 두 화면(cc_apply) · 머리 오른쪽 「1/2」 · 회차 3칸 × 2줄 · 지난 회차 「마감」 · 안내 「· 」 목록 · 글자 수 오른쪽 · 고른 시간 한 줄 */
+  #topbar .axs-hstep { flex: none; font: var(--ax-type-t7); font-weight: 700; color: var(--ax-color-muted); margin-right: var(--ax-space-4); }
+  .axs-cslots { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .axs-cslots .axs-slot small { font: var(--ax-type-t7); text-decoration: none; }
+  #view[data-v="cc_apply"] .axs-slot:not(:disabled):not([aria-pressed="true"]) { background: var(--ax-color-surface); }
+  .axs-ccdl { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ax-space-4); font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; }
+  .axs-ccdl li { padding-left: 0.8em; text-indent: -0.8em; }
+  .axs-ccdl li::before { content: "\00B7\00A0"; color: var(--ax-color-muted); }
+  .axs-cccnt { margin: 0; text-align: right; }
+  .axs-ccpick { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ax-space-4) var(--ax-space-12); padding: var(--ax-space-12) var(--ax-space-16); border-radius: var(--ax-radius-16); background: var(--ax-color-surface); font: var(--ax-type-t6); }
+  .axs-ccpick .k { color: var(--ax-color-muted); }
+  .axs-ccpick b { flex: 1 1 auto; min-width: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .axs-ccpick .ax-link { flex: none; min-height: var(--ax-touch-size); padding: 0 var(--ax-space-4); }
+  .axs-ccchip { margin: 0; }
+  .axs-kv dd.axs-cl2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   /* v4.13 ⓚ 분류 칩 4개 + 켜고 끄는 「신청 가능」 칩 · 좁으면 「신청 가능」이 다음 줄로 */
   #app .axs-filter5 { display: flex; flex-wrap: wrap; gap: var(--ax-space-8); }
   #app .axs-filter5 .axs-opf { flex: 0 0 auto; padding: var(--ax-space-12); box-shadow: inset 0 0 0 1px var(--ax-color-divider); }

@@ -514,8 +514,8 @@ function stpMeta(s, got) {
   if (s.id === "qz") return QZ_NEED <= 1 ? qzLenTxt() : QZ_NEED + "종 완주 · " + Math.min(QZ_NEED, qzDone()) + " / " + QZ_NEED;
   if (s.id === "p4") return (stampV2() ? "3종 완주 · " : "서로 다른 3종목 · ") + Math.min(MG_NEED, mgDone()) + " / " + MG_NEED;
   if (s.id === "p2") return "1F · 체험 2종";   /* 이름(HiDI-Q · Hi-Helper)은 구역 줄 · 체험 안내 화면에 */
-  if (s.id === "p5") return "1분 · AX LAB QR로도";
-  if (s.id === "p3") return progUnits() === 1 ? "2개 중 1개 · 하나 더" : "최대 2개";   /* v5.68 17F 입장이나 끝 한쪽만 받은 상태 · 261013 오후 묶음(아래 세 줄 목록 stpProgListHtml) · 261013 밤 (사용자 확정) 활동마다 개수는 목록에 · 묶음 최대 2 한 줄 */
+  if (s.id === "p5") return got ? (ideaP5cc() ? "커피챗 신청으로 받음" : "1분 · AX LAB QR로도") : "아이디어 한 줄 쓰기 또는 커피챗 신청";   /* v7.39 (사용자 261016 계획서 0-2-3) 출처를 판에서 · 앱 · 부스로 받았으면 지금 그대로 */
+  if (s.id === "p3") return progUnits() === 1 ? "2개 중 1개 · 하나 더" : "";   /* v7.39 「최대 2개」 = 아래 목록 끝 줄 「합쳐 2개까지」 */   /* v5.68 17F 입장이나 끝 한쪽만 받은 상태 · 261013 오후 묶음(아래 세 줄 목록 stpProgListHtml) · 261013 밤 (사용자 확정) 활동마다 개수는 목록에 · 묶음 최대 2 한 줄 */
   if (s.id === "st") { var sst = stairState(); return sst.leg ? "진행 중 · " + sst.leg.fl + "F 시작" : stairLine(sst); }
   if (s.id === "sv") return stampV2() ? "1~2분" : SURVEY.open + "부터 · 1~2분";   /* 261013 오후 14:30 은 4단계 제목에 */
   if (s.id === STAMP_CK) return "1F 주차장 체크인존 · 08:00부터";
@@ -538,10 +538,11 @@ function stpAct(s, got) {
 }
 /* 261013 오후 (사용자 확정) 프로그램 참여 줄 아래 세 활동 · 「· 」 목록(무채색 점 · 둘째 줄 내어쓰기) · 선정 · 승인된 내 시각이 있으면 괄호로(통째로 넘김) */
 function stpProgListHtml() {
-  var c = S.get("cchat", null), r = typeof myResv === "function" ? myResv() : null, tm = function (t) { return ' <span class="axs-nwr">(' + esc(t) + ")</span>"; };
-  var rows = ["17F 오후 AWS · MS 강연 2개" + tm("입장 1 + 끝 1"),   /* 261013 밤 (사용자 확정) 활동마다 개수(17F 2 · 라운지 2 · 커피챗 1) */
-    "1F AX 라운지 참석 2개" + (r && r.status === "approved" && r.slot ? tm(hhmm(r.slot) + " 승인") : ""),
-    "18F 커피챗 참석 1개" + (c && c.status === "matched" && c.round ? tm(c.round + " 선정") : "")];
+  /* v7.39 (사용자 261016 계획서 0-2-3) 목록으로 나누고 끝 줄 「합쳐 2개까지」(합계 오해 방지) · 라운지 줄 = 사전 신청자에게만(D7 · 내 상담 줄 · 받은 ln) · 선정 · 내 시각이 있으면 괄호로(통째로 넘김) */
+  var c = S.get("cchat", null), r = typeof loungeMine === "function" ? loungeMine() : null, tm = function (t) { return ' <span class="axs-nwr">(' + esc(t) + ")</span>"; };
+  var rows = ["17F 오후 강연 입장 1 + 끝 1"]
+    .concat(r || S.get("stamps", []).indexOf("ln") >= 0 ? ["1F AX 라운지 참석 2" + (r && r.status === "approved" && r.slot ? tm(resvRng(r)) : "")] : [])
+    .concat(["18F 커피챗 상담 1" + (c && c.status === "matched" && c.round && !S.get("cchat_att", false) ? tm(c.round + " 선정") : ""), "합쳐 2개까지"]);
   return '<ul class="axs-stpl">' + rows.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
 }
 function stpRowHtml(s, i, st, full) {

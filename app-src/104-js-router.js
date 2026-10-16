@@ -58,7 +58,7 @@ var App = {
     games: "exp", quiz: "exp", ideas: "exp", survey: "exp", ideas_mine: "ideas",
     game_tetris: "games", game_pang: "games", game_jump: "games", quiz_play: "quiz", oly_rank: "games", type_rank: "guide", floor1: "guide",   /* v4.83 퀴즈 두 종목의 뒤로가기 = AX 퀴즈 */
     /* 프로그램 · 신청 (2단계에서 재디자인) */
-    dap: "guide", ev_cchat: "guide", sess_d: "guide", sess_cf: "sess_d", sess_ok: "guide", zone_d: "guide", floor_d: "guide",   /* v4.93 구역 상세 · 뒤로 = 프로그램(상시 운영) */
+    dap: "guide", ev_cchat: "guide", cc_apply: "guide", sess_d: "guide", sess_cf: "sess_d", sess_ok: "guide", zone_d: "guide", floor_d: "guide",   /* v4.93 구역 상세 · 뒤로 = 프로그램(상시 운영) */
     admin: "my", type_site: "admin", wall_type: "admin", type_award: "admin",
     sscan: "home"   /* v5.98 스태프 스캔 · 뒤로 = 들어온 곳 */
   },
@@ -69,7 +69,7 @@ var App = {
     booth: "AX PLAY",
     ideas: "아이디어 한 줄", ideas_mine: "내가 낸 아이디어", survey: "참가자 설문",
     sess_d: "프로그램", sess_cf: "신청 확인", sess_ok: "신청 완료",
-    ev_cchat: "내 커피챗",
+    ev_cchat: "내 커피챗", cc_apply: "AX 커피챗 신청",   /* v7.39 커피챗 신청 두 화면(머리 오른쪽 「1/2」) */
     floor1: "1F 부스", zone_d: "1F 구역",
     admin: "관리자 모드", game_tetris: "테트리스", type_site: "1F 현장 셀프 모드", wall_type: "", type_award: "", type_rank: "1F 타자왕 순위",
     game_pang: "AX 팡", game_jump: "ME to WE 점프", quiz_play: "퀴즈 풀기", oly_rank: "미니 게임 순위", sscan: "스태프 스캔"
@@ -133,6 +133,7 @@ var App = {
   back: function () {
     if (TOUR_RET && !TOUR_RET.away && this.current === TOUR_RET.v && tourRetBack()) return;   /* v5.53 둘러보기 바로 가기로 온 화면 = 뒤로 가면 둘러보기 */
     if (TOUR_RET && !TOUR_RET.away && TOUR_RET.done && this.isAnc(TOUR_RET.v, this.current) && tourRetBack()) return;   /* v5.57 둘러보기에서 출발한 활동을 마쳤으면 그 활동의 어느 화면(결과 · 게임 · 완료)에서 뒤로 가도 둘러보기 */
+    if (this.current === "cc_apply" && CCA.step === 2 && !CCA.busy) { ccStep(1); return; }   /* v7.39 커피챗 신청 화면 2 → 화면 1(고른 시간 · 쓴 글 그대로) */
     if (QRS.hold) { QRS.gate = 0; QRS.gateQ = []; }   /* v4.13 인식 중 뒤로 = 미뤄 둔 전환을 버리고 바로 나간다 */
     var v = this.current, p = this.parentOf(v) || "home";
     delete this.from[v];
@@ -144,6 +145,7 @@ var App = {
     /* v4.05 옛 과제상담 · 커피챗 화면 = 프로그램 상세(P02 · M03) 하나로 (알림 · 딥링크 · 옛 onclick 호환) */
     if (v === "dap" || v === "ev_cchat") { PROG.sid = v === "dap" ? "dap" : "cchat"; v = "sess_d"; }
     /* v5.65 커피챗 신청 전 = 구역 상세(zone_d cchat · AX LOUNGE 와 같은 틀) · 신청 · 참석이 있으면 프로그램 상세(매칭 · 취소) */
+    if (v === "sess_d" && PROG.sid === "dap" && !loungeMine()) { if (this.current !== "zone_d" || PROG.zone !== "lounge") PROG.zchk = false; PROG.zone = "lounge"; v = "zone_d"; }   /* v7.39 (사용자 261016) 라운지 = 사전 신청 · 내 상담이 없으면 구역 상세(사실만) · 옛 시간 고르기 화면 없음 */
     if (v === "sess_d" && PROG.sid === "cchat" && !S.get("cchat", null) && !S.get("cchat_att", false)) { if (this.current !== "zone_d" || PROG.zone !== "cchat") PROG.zchk = false; PROG.zone = "cchat"; v = "zone_d"; }
     if (v === "rewards") { MY.seg = "rw"; v = "my"; }   /* v5.65 옛 내 보상 화면 = 나의 참여 › 나의 보상 갈래(알림 · 옛 링크 · 튕길 자리 그대로) */
     /* v4.84 (261001 앱 개편 2묶음) 옛 스탬프 화면 = 스탬프 탭 · 전시 QR 퀴즈(DAP Wall)는 새 8종에서 숨김(옛 서버 stv 없음일 때만 연다) */
@@ -241,7 +243,7 @@ var App = {
           : '<h1 class="axs-hroot">' + esc(this.title(v)) + "</h1>");   /* v6.83 (접근성 B-5) 화면 이름 = 제목 태그(모양은 그대로) */
     } else {
       tb.innerHTML = '<div class="axs-hrow"><button type="button" class="axs-back" onclick="App.back()" aria-label="뒤로">' + BACK_SVG + "</button>" +
-        '<h1 class="axs-htitle">' + esc(this.title(v)) + "</h1>" +
+        '<h1 class="axs-htitle">' + esc(this.title(v)) + "</h1>" + (v === "cc_apply" && CCA.step !== "done" ? '<span class="axs-hstep" aria-label="2단계 중 ' + CCA.step + '단계">' + CCA.step + "/2</span>" : "") +   /* v7.39 커피챗 신청 단계 */
         gear + "</div>" +   /* v4.15 관리자 잠금은 관리자 화면 맨 아래 「관리자 모드 끝내기」 */
         this.crumbHtml(v);   /* v4.09 경로 줄 · 헤더 구분선 바로 아래 */
     }
@@ -289,7 +291,6 @@ var App = {
     if (v === "stair" && typeof stbMount === "function") stbMount();   /* 261009 계단 동행 · 진행 중이면 이어 돌리기 · 아니면 멈춤 */
     if (v === "sscan") setTimeout(sscMount, 0);   /* v5.98 새 video 에 카메라를 다시 붙이거나 켠다 */
     detPaint(dv, v);
-    if (v !== "ideas" && typeof IDEA !== "undefined") IDEA.cc = false;   /* v5.83 커피챗에서 온 아이디어 쓰기 표시는 그 화면 안에서만 */
     if (typeof SPOP !== "undefined" && SPOP.cur && !SPOP.cur.done) { var spT = spTgt(SPOP.cur); if (spT.el) spT.el.classList.add("sp-wait"); }   /* v3.49 재렌더돼도 안착 전 자리는 비어 보이게 */
     kvMountAll();
     typPromoMount();   /* v5.31 타자왕 홍보 칸 · 화면에 보일 때 src */
@@ -423,7 +424,7 @@ var DET_V = ["sess_d", "zone_d", "booth", "exp_g", "prizes", "kit"];   /* 261008
 /* 시트로 그리는가 · 상담 시간 고르기(신청 전 AX LOUNGE 상담)는 조작 화면이라 전체 화면 그대로 */
 function detIs(v) {
   if (DET_V.indexOf(v) < 0) return false;
-  if (v === "sess_d") { var s = progById(PROG.sid); if (!s) return false; if (s.id === "dap") { var r = myResv(); return !!(r && RESV_HOLD.indexOf(r.status) >= 0); } }
+  if (v === "sess_d") { var s = progById(PROG.sid); if (!s) return false; }   /* v7.39 라운지 시간 고르기(전체 화면) 없음 · 내 상담 = 시트 */
   return true;
 }
 function detShown() { return !!(DET.shown.dv && DET.shown.dv === App.current && el("axsDet")); }

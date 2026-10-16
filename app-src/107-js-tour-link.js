@@ -108,9 +108,9 @@ var TOUR_HOST = {
     if (id === "vision" || id === "action") return [{ lbl: "AX 퀴즈 풀기", run: go("quiz") }];
     if (id === "lab") return ideaGateOff() ? [] : [{ lbl: "아이디어 한 줄 쓰기", run: go("ideas") }];   /* v5.90 사전 오픈 OFF · 행사 전 = 숨김 */
     if (id === "play") return [{ lbl: "체험 안내 보기", run: go("booth") }];
-    if (id === "lounge") { var L = zoneLive(zoneById("lounge")); return [{ lbl: L.btn ? L.btn[0] : "상담 신청", run: function () { progOpen("dap"); } }]; }
+    if (id === "lounge") { var L = zoneLive(zoneById("lounge")); return [{ lbl: L.btn ? L.btn[0] : "AX 라운지 안내", run: function () { if (L.btn) progOpen("dap"); else zoneOpen("lounge"); } }]; }   /* v7.39 (사용자 261016 계획서 3-3) 사전 신청자 = 「내 상담」 · 그 밖 = 「AX 라운지 안내」 */
     if (id === "event") return [{ lbl: "1F 타자왕 순위", run: typeSiteRankGo }];   /* v7.04 (사용자 261012 「경품 보기가 아직 살아 있어 헷갈린다」) 룰렛 = 둘러보기 「룰렛 돌리기」 하나 · 옛 「룰렛 경품 보기」 삭제 */
-    if (id === "cafe") return [{ lbl: S.get("cchat", null) ? "내 커피챗 보기" : ideaMineN() ? "커피챗 희망" : "아이디어 쓰고 희망", run: cchatOpen }].concat(ideaGateOff() ? [] : [{ lbl: "아이디어 한 줄 쓰기", run: go("ideas") }]);   /* v5.65 신청 전 = 구역 상세(zone_d cchat) */
+    if (id === "cafe") return [{ lbl: S.get("cchat", null) || S.get("cchat_att", false) ? "내 커피챗 보기" : "AX 커피챗 안내", run: cchatOpen }].concat(ideaGateOff() ? [] : [{ lbl: "아이디어 한 줄 쓰기", run: go("ideas") }]);   /* v5.65 신청 전 = 구역 상세(zone_d cchat) */
     return [];
   },
   crowd: function () { return null; },   /* 261008 로비 · 엘리베이터 칸 삭제 · 둘러보기 구역 시트에 혼잡 줄 없음(crowdCell 은 남김) */
@@ -207,7 +207,7 @@ function tourRetDone(got) {
   TOUR_RET.done = true;
   if (got) { TOUR_RET.got = true; trdWait(); }
 }
-function tourRetStamp(id) { if (TOUR_RET && TOUR_RET.id === id && id !== "p5") tourRetDone(true); }   /* 아이디어는 커피챗 질문에 답한 뒤(ideaCchat) */
+function tourRetStamp(id) { if (TOUR_RET && TOUR_RET.id === id && id !== "p5") tourRetDone(true); }   /* 아이디어는 제출 때(ideaPush · v7.39 커피챗 질문 없음) */
 function tourRetGo() { trdHide(); if (!tourRetBack()) App.render(); }   /* 띠 누름 */
 function trdBusy() {
   return !!(SPOP.cur || SPOP.q.length || el("spop") || el("lgx") || el("modal") || el("axsSheet") || NOTICE.cur || NOTICE.q.length || el("app").hidden || TOUR.busy || (window.AXTour && AXTour.isOpen()) || document.hidden);

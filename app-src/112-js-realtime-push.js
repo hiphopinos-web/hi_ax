@@ -23,7 +23,7 @@ function checkMyState(base) {
   var my = myResv();
   if (my && my.status === "approved" && seen.resv !== my.id + ":approved") {
     seen.resv = my.id + ":approved"; changed = true;
-    if (!base) notifyUser("AX 라운지 승인 완료", "1F AX 라운지", "dap");
+    if (!base) notifyUser("AX 라운지 시간 안내", (resvRng(my) ? resvRng(my) + " · " : "") + resvPlace(my), "dap");   /* v7.39 (사용자 261016) 사전 신청 상담 줄 = 승인 상태 · 「승인 완료」 대신 시간 · 장소 */
   }
   if (my && my.status === "canceled" && seen.resvX !== my.id + ":canceled") {
     seen.resvX = my.id + ":canceled"; changed = true;
@@ -110,11 +110,13 @@ function beSync(after) {
         var map = { "신청": "requested", "승인": "approved", "체크인": "checked", "완료": "done", "노쇼": "noshow", "취소": "canceled" };
         var stt = map[res.my.resv.status];
         var mine = all.find(function (r) { return r.mine && (r.beId === res.my.resv.id); });
-        if (!mine && stt && RESV_LIVE.indexOf(stt) >= 0) {
-          all.push({ id: uid(), beId: res.my.resv.id, room: 2, slot: hhmm(res.my.resv.slot), name: u.name || "", dept: S.get("dept", null) || "미지정", status: stt, mine: true, ts: Date.now() });
+        /* v7.39 (사용자 261016 · 서버 계약 3-5) 사전 신청 상담 · 칸 시작 slot · 끝 to · 범위 rng · 상담석 seat · 장소 place(옛 서버 = slot 만 · 나머지 빈칸) · 배치판 시간 옮기기(resv_move)도 따라간다 */
+        var rv = res.my.resv, rx = { slot: rv.slot ? hhmm(rv.slot) : "", to: rv.to ? hhmm(rv.to) : "", rng: String(rv.rng || ""), seat: +rv.seat || 0, place: String(rv.place || "") };
+        if (!mine && stt && RESV_HOLD.indexOf(stt) >= 0) {
+          all.push(Object.assign({ id: uid(), beId: rv.id, room: 2, name: u.name || "", dept: S.get("dept", null) || "미지정", status: stt, mine: true, ts: Date.now() }, rx));
           S.set("resv", all);
-        } else if (mine && stt && mine.status !== stt) {
-          mine.status = stt; S.set("resv", all);
+        } else if (mine && stt && (mine.status !== stt || ["slot", "to", "rng", "seat", "place"].some(function (k) { return (mine[k] || "") !== (rx[k] || ""); }))) {
+          mine.status = stt; Object.assign(mine, rx); S.set("resv", all);
         }
       } else {
         /* 서버에 내 신청이 없다(=시트에서 취소·삭제됨) · 진행 중이던 로컬 신청을 취소로 */
@@ -127,6 +129,10 @@ function beSync(after) {
         var c0 = S.get("cchat", null);
         if (c0 && Date.now() - (c0.ts || 0) > 30000) S.set("cchat", null);
       }
+      /* v7.39 (사용자 261016 · 서버 U4 my.cchat) 상태 st(wait · pick · over · done) · 고른 시간 pref · 내 글 앞부분 text(more) · 아이디어 한 줄 스탬프를 커피챗 신청 글로 받았나 p5cc · 옛 서버 = st 없음(옛 필드로 판정 cchatSt) */
+      var mc = res.my.cchat, ccSrv = mc && mc.st ? { st: String(mc.st), pref: String(mc.pref || ""), text: String(mc.text || ""), more: mc.more ? 1 : 0, p5cc: mc.p5cc ? 1 : 0 } : null;
+      if (JSON.stringify(ccSrv) !== JSON.stringify(S.get("cchat_srv", null)) && !(mc && !mc.st && S.get("cchat_srv", null))) S.set("cchat_srv", ccSrv);
+      if (ccSrv && ccSrv.p5cc && !S.get("p5cc", 0)) S.put("p5cc", 1);
       var ccAtt = !!(res.my.cchat && (res.my.cchat.status === "참석" || res.my.cchat.status === "완료"));   /* v4.47 커피챗 참석 표시 · 18F 입장 스캔 또는 콘솔 참석 · 완료 */
       if (ccAtt !== !!S.get("cchat_att", false)) S.set("cchat_att", ccAtt);
       if (res.my.cchat && res.my.cchat.status === "매칭") {
@@ -569,7 +575,7 @@ var PUSH_T = { photo: "차례가 되면 알려 드려요", cchat: "선정되면 
 function pushExHtml(ctx, opt) {
   var t = "포토부스 입장하세요", b = "1F · " + (opt.no || 14) + "번 · 10분 안에 입장";   /* v4.78 A10 실제 푸시 문구와 같게(제목에 주제어) */
   if (ctx === "cchat" || ctx === "first") { t = "커피챗에 선정됐어요"; b = "18F · 15:00 · TABLE 3"; }   /* v5.05 포토부스 대기 폐지면 처음 안내 예시도 커피챗 */
-  if (ctx === "dap") { t = "AX 라운지 승인 완료"; b = "1F AX 라운지 · 14:20"; }   /* v5.83 실제 승인 알림(notifyUser)과 같은 말 · 개편안 초안 「과제상담」은 v5.64 이름 규칙(AX LOUNGE 상담)으로 */
+  if (ctx === "dap") { t = "AX 라운지 시간 안내"; b = "14:20~14:40 · 1F AX 라운지"; }   /* v5.83 실제 알림(notifyUser)과 같은 말 · v7.39 사전 신청 시간 안내(시간 · 상담석) */
   if (ctx === "kit") { t = "기념품 옷 수령 안내"; b = kitStaff(kitMy()) ? "수령 방법 안내" : "10/26(월) 08:00부터 · 1F 주차장 체크인존"; }   /* 261006 키트 사이즈 정한 직후 · 261008 스태프 = 수령 방법 안내 */
   if (ctx === "crowd") { t = opt.tgt === "lobby" ? "1F 로비 혼잡이 풀렸어요" : "엘리베이터 혼잡이 풀렸어요"; b = (opt.tgt === "lobby" ? "1F 로비" : "1F 승강기 홀") + " · 15:07"; }
   return '<div class="axs-pex" aria-hidden="true"><img src="icons/icon-192.png" alt=""><div><b>' + esc(t) + "</b><span>" + esc(b) + "</span></div></div>";

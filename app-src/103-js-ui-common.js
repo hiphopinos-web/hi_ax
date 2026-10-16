@@ -514,36 +514,104 @@ function stampPendRetry() {
   });
   if (chg) S.set("stamp_pend", p);
 }
-/* v4.07 (사용자 요청 260922) 아이디어 제출 = 커피챗 자동 요청 폐기 · 제출 뒤 「참석하시겠어요?」에서 예를 고른 사람만,
-   또는 커피챗 상세의 「커피챗 신청하기」로 나중에 신청한다. 아이디어·스탬프(p5)는 답과 무관하게 유지.
-   서버에 닿지 않으면 로컬 신청을 되돌리고 알린다(조용히 대기로 남겨 두면 매칭 담당자 목록에 없다). */
-function scheduleCoffeechat() {
-  if (S.get("cchat", null) || !ideaMineN() || cchatClosed()) return;   /* v4.47 마감 · v4.45 아이디어 한 줄이 사전 조건 · 가장 아래에서 한 번 더 막는다 · v6.07 시간대는 선택(안 고르면 「언제든 좋아요」) */
-  S.set("cchat", { status: "pending", pref: cchatPrefTxt(), ts: Date.now() });
-  var u = S.get("user", {});
-  if (BE.on && u.empId) {
-    var ideas = S.get("ideas", []);
-    var last = ideas.length ? ideas[ideas.length - 1] : {};
-    var fail = function () { S.set("cchat", null); notice({ key: "cchatR:fail", title: "커피챗 희망이 전달되지 않았어요", body: "잠시 뒤 AX 커피챗 안내에서 다시 남겨 주세요" }); App.render(); };
-    var req = { action: "cchat_req", emp: u.empId, name: u.name || "", dept: S.get("dept", null) || "", tag: (last.tag || "") + CCHAT_TAG_SEP + cchatPrefTxt(), pref: cchatPrefTxt() };   /* v4.45 pref = 선호 시간대(서버 GAS 가 「희망시간」 칸에 저장해야 콘솔에 보인다) */
-    /* v5.82 (사용자 261006 「커피챗 앞으로」 결정 1) 서버도 아이디어 행이 없으면 noidea 로 거절한다 · 방금 낸 아이디어가 아직 서버에 닿지 않았을 수 있어
-       아이디어를 한 번 다시 보내고(ideaFlush) 2초 뒤 한 번만 다시 신청한다(retried · 그 사이 S cchat 이 pending 이라 다른 입구는 이 함수 첫 줄에서 막힌다) · 그래도 noidea 면 지금의 실패 안내 */
-    var retried = false;
-    var send = function () {
-      beCall(req, function (res) {
-        if (res && res.ok) { pushAsk("cchat", {}); return; }   /* v4.76 가치 순간 ② 「매칭되면 알려 드려요」 */
-        if (res && res.reason === "noidea" && !retried) { retried = true; ideaFlush(); setTimeout(send, CCHAT_RETRY_MS); return; }
-        if (res && res.reason === "noidea") { S.set("cchat", null); NOTICE.q = NOTICE.q.filter(function (x) { return x.k !== "cchat:ok"; }); if (NOTICE.cur && NOTICE.cur.k === "cchat:ok") modalClose(); ideaCcGo(); return; }   /* v5.83 (사용자 261006 「권장대로」) 다시 보내도 서버에 아이디어가 없다(콘솔로 받은 p5 등) = 실패 안내 대신 아이디어 쓰기(커피챗 흐름 · 제출하면 신청 질문으로) */
-        fail();
-      }, fail);
-    };
-    send();
-    return;   /* 매칭은 운영자가 콘솔에서 · 완료되면 sync 폴링이 팝업을 띄운다 */
+/* ═══ v7.39 (사용자 확정 261016 「커피챗 최종」 · 계획서 0-2) AX 커피챗 신청 = 두 화면(라우트 cc_apply) ═══
+   화면 1 「가능한 시간」(회차 여러 개 · 지난 회차 꺼짐) → 화면 2 「어떤 상담을 하고 싶으세요?」(상담하고 싶은 내용 · 아이디어 한 줄과 같은 길이 IDEA_MIN ~ IDEA_MAX) → cchat_req(round · text · cid) → 완료 「신청을 접수했어요」(선정 전)
+   신청 글 = 서버가 아이디어 한 줄(경로 cchat)로 함께 등록 · 신청을 마치면 아이디어 한 줄 스탬프(p5 · 이미 있으면 그대로) · 운영진 선정 → 상담 마치면 스태프가 내 QR 확인(cc)
+   옛 조건 「아이디어 한 줄을 먼저 내야 커피챗」(v4.45 · v5.82 noidea · 제출 직후 질문 ideaCchat · 희망 시트 cchatSheetSpec · 시간대 칩 cchatPrefHtml)은 걷었다(되살릴 때 = git 이력 v7.38) */
+var CC_ROUNDS = ["13:00", "13:30", "14:00", "14:30", "15:00", "15:30"], CC_DUR = 20, CC_CAP = 4;   /* 서버 커피챗_회차 기본값 · 회차 20분 · 커피챗_회차정원 기본값(화면 안내 글) */
+var CCA = { step: 1, busy: false, err: "", res: null, open: null };   /* step 1 시간 · 2 상담 내용 · "done" 완료 · open = 서버가 past 로 돌려준 지금 받는 회차 */
+function ccDraft() { var d = S.get("cc_draft", null); return d && typeof d === "object" && Array.isArray(d.r) ? d : { r: [], t: "", cid: "" }; }
+function ccDraftPut(d) { S.put("cc_draft", d); }   /* 조용한 저장 · 쓰는 중 다시 그리지 않는다(한글 조합 보호) */
+/* 지난 회차 = 꺼짐 「마감」 · 행사일 서버 시각(cchatOver 와 같은 시계) · 클로즈 베타 = 늘 열림 · 서버가 past 로 알려 준 목록(CCA.open) 밖도 꺼짐 */
+function ccRoundOff(r) {
+  if (typeof betaFree === "function" && betaFree()) return false;
+  if (evPhase() === "after") return true;
+  if (CCA.open && CCA.open.indexOf(r) < 0) return true;
+  var d = appNow(1);
+  return d.getFullYear() === 2026 && d.getMonth() === 9 && d.getDate() === 26 && t2m(r) <= d.getHours() * 60 + d.getMinutes();
+}
+function ccAllOff() { return CC_ROUNDS.every(ccRoundOff); }
+/* 고른 시간 글 · 「13:00,14:30」 → 「13:00 · 14:30」 · 빈칸 = 언제든 · 옛 앱 신청 글(「13~14시 · 14~15시」)은 그대로 */
+function ccPrefTxt(p) { p = String(p || ""); if (!p) return "언제든"; return /^\d{1,2}:\d\d(,\d{1,2}:\d\d)*$/.test(p) ? p.split(",").join(" · ") : p; }
+/* 상태 넷 · "" = 신청 전 · wait 선정 전 · pick 선정 · over 마감(미선정 · 고른 시간이 모두 지남 · 운영진 마감) · done 상담 완료
+   새 서버 = my.cchat.st(S cchat_srv) · 옛 서버(st 없음) = 옛 필드로 판정(매칭 → pick · 참석 · 완료 cchat_att → done · 행사일 16:00 뒤 cchatOver → over) */
+function cchatSt() {
+  var c = S.get("cchat", null), sv = S.get("cchat_srv", null) || {};
+  if (S.get("cchat_att", false) || sv.st === "done") return "done";
+  if (!c) return "";
+  if (c.status === "matched") return "pick";
+  return sv.st === "over" || cchatOver() ? "over" : "wait";
+}
+/* 화면 2 셋째 줄 · 받은 뒤 · 행사 전 미룸(설정 아이디어_사전스탬프 OFF) · 받기 전 */
+function ccP5Line() {
+  if (S.get("stamps", []).indexOf("p5") >= 0) return "아이디어 한 줄 스탬프는 받은 상태예요";
+  if (ideaStampLater()) return "아이디어 한 줄 스탬프는 10/26 행사 당일 적립";
+  return "신청하면 아이디어 한 줄 스탬프 1개";
+}
+/* 입구 하나 · 참여하기 카드 · 18F 구역 상세 · 둘러보기 카페 · 홈 줄 · 신청이 있으면 내 커피챗 */
+function ccApplyGo() {
+  if (S.get("cchat", null) || S.get("cchat_att", false)) { progOpen("cchat"); return; }
+  CCA.step = 1; CCA.busy = false; CCA.err = ""; CCA.res = null;
+  var d = ccDraft(); d.r = d.r.filter(function (r) { return CC_ROUNDS.indexOf(r) >= 0 && !ccRoundOff(r); }); ccDraftPut(d);
+  App.go("cc_apply");
+}
+function ccPick(r) {
+  if (ccRoundOff(r) || CCA.busy) return;
+  var d = ccDraft(), i = d.r.indexOf(r);
+  if (i >= 0) d.r.splice(i, 1); else d.r.push(r);
+  d.r.sort(); ccDraftPut(d); CCA.err = ""; App.render();
+}
+function ccStep(n) { if (n === 2 && !ccDraft().r.length) return; CCA.step = n; CCA.err = ""; App.render(); window.scrollTo(0, 0); }
+function ccCntTxt(n) { return n < IDEA_MIN ? n + " / " + IDEA_MIN + "자" : n.toLocaleString() + " / " + IDEA_MAX.toLocaleString() + "자"; }   /* 30자 전 = 몇 자 남았는지 · 넘으면 최대 */
+function ccInput(v) {
+  var d = ccDraft(); d.t = v; ccDraftPut(d);
+  var n = ideaLen(v), c = el("ccCnt"), b = el("ccGo"), t = el("ccText");
+  if (c) c.textContent = ccCntTxt(n);
+  if (t) { t.style.height = "auto"; t.style.height = (t.scrollHeight + 2) + "px"; }
+  if (b) b.disabled = !ideaOk(v) || CCA.busy;
+}
+/* 서버 거절 사유마다 담백한 한 줄(서버 cchatReq_ · short · long · round · past · closed · noidea) · 쓴 글은 지우지 않는다 */
+function ccErrTxt(r) {
+  return r === "short" ? "상담 내용을 " + IDEA_MIN + "자 이상 써 주세요" : r === "long" ? IDEA_MAX.toLocaleString() + "자까지 쓸 수 있어요" : r === "round" ? "고른 시간을 다시 골라 주세요" :
+    r === "past" ? "고른 시간이 모두 시작됐어요" : r === "closed" ? "커피챗 신청이 마감됐어요" : r === "net" ? "연결이 불안정해 신청하지 못했어요" : "신청하지 못했어요";
+}
+function ccSubmit() {
+  var d = ccDraft(), text = String(d.t || "").trim(), u = S.get("user", {}) || {};
+  if (CCA.busy || !d.r.length || !ideaOk(text)) return;
+  if (!d.cid) { d.cid = "C" + uid(); ccDraftPut(d); }   /* 같은 신청을 다시 보내도 서버는 한 줄(cid · again) */
+  var fin = function (res) {
+    CCA.busy = false; botWait(false);
+    var pref = res.pref != null ? String(res.pref) : d.r.join(",");
+    S.set("cchat_srv", { st: "wait", pref: pref, text: Array.from(text).slice(0, 60).join(""), more: Array.from(text).length > 60 ? 1 : 0, p5cc: res.p5cc ? 1 : 0 });
+    S.set("cchat", { status: "pending", pref: pref, text: text, ts: Date.now() });
+    if (res.p5cc || res.p5 === "new") S.put("p5cc", 1);
+    var ideas = S.get("ideas", []);   /* 내가 낸 아이디어 · 「커피챗 신청」 칩(서버 행은 이미 있다 · srv = 다시 보내지 않음) */
+    if (!ideas.some(function (i) { return i.id === d.cid; })) { ideas.push({ id: d.cid, empId: u.empId, name: u.name, anon: false, tag: "", text: text, ch: "cchat", ts: Date.now(), srv: Date.now() }); S.set("ideas", ideas); }
+    if (Array.isArray(res.stamps)) stampSync(res.stamps);
+    CCA.res = { p5: res.p5 || "", pref: pref }; CCA.step = "done"; CCA.err = ""; CCA.open = null;
+    S.put("cc_draft", null);
+    checkRewards();
+    App.render(); window.scrollTo(0, 0);
+    pushAsk("cchat", {});   /* 가치 순간 ② 「선정되면 알려 드려요」 */
+  };
+  var bad = function (r, open) {
+    CCA.busy = false; botWait(false);
+    if (r === "past" && Array.isArray(open)) { CCA.open = open; d.r = d.r.filter(function (x) { return open.indexOf(x) >= 0; }); ccDraftPut(d); CCA.step = 1; }
+    if (r === "round") CCA.step = 1;
+    CCA.err = ccErrTxt(r); App.render();
+  };
+  if (!BE.on || !u.empId) {   /* 데모 · 서버 없이 같은 화면 */
+    var had = S.get("stamps", []).indexOf("p5") >= 0, later = !had && ideaStampLater();
+    if (!had && !later) awardStamp("p5");
+    fin({ ok: true, p5: had ? "dup" : later ? "later" : "new", pref: d.r.join(",") });
+    setTimeout(function () { var c = S.get("cchat", null); if (c && c.status === "pending") matchCoffeechat(); }, 8000);
+    return;
   }
-  setTimeout(function () {
-    var c = S.get("cchat", null);
-    if (c && c.status === "pending") matchCoffeechat();
-  }, 8000);
+  CCA.busy = true; CCA.err = ""; App.render(); botWait(true, "보내는 중");
+  beCall({ action: "cchat_req", emp: u.empId, name: u.name || "", dept: S.get("dept", null) || "", round: d.r.join(","), text: text, cid: d.cid }, function (res) {
+    if (res && res.ok) fin(res);
+    else bad(res && res.reason || "etc", res && res.open);
+  }, function () { bad("net"); });
 }
 function matchCoffeechat() {
   var rounds = ["13:30", "14:00", "14:30", "15:00", "15:30"];
@@ -646,21 +714,16 @@ function ideaPush(text, tag, anon, ch) {
   ideas.push(it);
   S.set("ideas", ideas);
   var had = S.get("stamps", []).indexOf("p5") >= 0;   /* v5.57 이번 제출로 처음 받는가 */
-  if (IDEA.cc) it.cc = 1;   /* v5.90 커피챗 신청 화면에서 온 아이디어(서버 early 예외) */
   ideaSend(it);   /* v4.15 서버 저장(idea_submit · 커피챗 매칭 재료 · 콘솔 열람) · 서버가 참여 로그 idea 한 줄도 쓴다(옛 bePush idea 대신) · 실패하면 sync 때 다시 */
   if (!ideaStampLater()) awardStamp("p5");   /* v5.90 행사 전 아이디어 스탬프는 10/26 첫 접속 때 서버가 준다(아이디어_사전스탬프 OFF) */
-  IDEA.step = S.get("cchat", null) ? "done" : "ask";   /* v4.07 커피챗 요청은 참석 의사를 물은 뒤 (ideaCchat) */
+  IDEA.step = "done";   /* v7.39 (사용자 261016) 아이디어 한 줄 = 쓰는 것으로 끝 · 제출 직후 커피챗 질문(ask) 없음 */
   checkRewards();
   waveBump();
-  if (TOUR_RET) TOUR_RET.p5 = !had;   /* v5.57 둘러보기에서 출발 · 마침 = 커피챗 질문에 답한 뒤(ideaCchat) · 묻지 않으면(이미 신청 · 마감) 지금 */
-  if (IDEA.step === "done" || cchatClosed()) tourRetDone(!had);
+  tourRetDone(!had);   /* v5.57 둘러보기에서 출발 · 마침 = 제출(v7.39 커피챗 질문 없음) */
 }
 /* v4.07 아이디어 제출 뒤 단계 · null = 입력 폼 · "ask" = 커피챗 참석 질문 · "done" = 제출 완료 (다른 화면에서 들어오면 폼으로) */
 var IDEA = { step: null, yes: false, draft: null, tag: "", anon: false, err: "", cc: false };   /* v5.83 cc = 커피챗에서 왔다(ideaCcGo) */
 var CCHAT_TXT = "커피와 간식을 드려요 · 멘토와 내 고민을 가볍게 나눠요";   /* v5.04 (261002 회의) 간식 = 휘낭시에 · 스콘(쿠키 아님) · 종류는 상세의 사진 줄(treatHtml)에 */
-/* v4.45 (사용자 260925 「커피챗은 아이디어 한 줄이 필수 · 선호 시간대를 받아 그 시간에 매칭 · 매칭되면 하이웍스 안내 · 앱 나의 참여에서도 확인」)
-   선호 시간대 = 여러 개 고를 수 있다 · 「언제든 좋아요」는 혼자 · 하나 이상 골라야 신청 · 서버에는 사람이 읽는 글(pref)로 보낸다(콘솔 커피챗 표 「희망 시간」) */
-var CCHAT_PREF = [["13", "13~14시"], ["14", "14~15시"], ["15", "15~16시"], ["any", "언제든 좋아요"]];   /* v6.07 (사용자 261007 「커피챗은 오후 13시부터 16시까지」) 16~17시 칸 삭제 */
 var CCHAT_HOURS = "13:00~16:00", CCHAT_END_M = 16 * 60;   /* v6.07 커피챗 운영 시간(사용자 261007) · 끝나면 아직 선정 전인 희망 줄을 조용히 걷는다(cchatOver) */
 var CCHAT_NOTE = "선정되면 하이웍스 · 앱 알림으로 알려 드려요";   /* v6.07 (사용자 261007 「아이디어 한 줄 제출 > 커피챗 희망 여부 > 신청자 중 선정」) 옛 「매칭되면 하이웍스로 알려 드려요 · 앱 나의 참여에서도」 */
 /* v6.07 커피챗 하루가 끝났다(행사일 16:00 뒤 · 서버 시각 · 또는 행사 뒤) · 선정 안 된 희망은 알리지 않고 줄만 걷는다(소외 없음 톤) */
@@ -671,27 +734,8 @@ var CCHAT_TAG_SEP = " / 희망 ";
    정원은 서버가 세지 않는다 · 운영자가 콘솔 커피챗 표에서 「신청 마감」을 켠다(수동 스위치)
    마감 신호 = 서버 수정 없이 콘솔 공지(notice_set)를 빌린다 · 제목이 CCHAT_CLOSE_T 인 공지는 참가자 화면에 띄우지 않고 마감 표시로만 쓴다 · 공지 중지(notice_clear)가 다시 열기
    나중에 GAS 가 sync 에 cchatOut 을 주면 그쪽을 따른다(rouletteOut 과 같은 모양) */
-var CCHAT_CAP = 30;
-var CCHAT_RETRY_MS = 2000;   /* v5.82 서버 noidea 뒤 한 번 다시 신청하기까지 */
 var CCHAT_CLOSE_T = "[운영] 커피챗 신청 마감";
 function cchatClosed() { return !!S.get("cchat_out", false) || !!S.get("cchat_close_id", ""); }
-function cchatPref() { var a = S.get("cchat_pref", []); return Array.isArray(a) ? a : []; }
-function cchatPrefTxt(a) { a = a || cchatPref(); return CCHAT_PREF.filter(function (x) { return a.indexOf(x[0]) >= 0; }).map(function (x) { return x[1]; }).join(" · ") || "언제든 좋아요"; }   /* v6.07 시간대는 선택 · 안 고르면 언제든 */
-function cchatPrefToggle(v, where) {
-  var a = cchatPref().slice();
-  if (v === "any") a = a.indexOf("any") >= 0 ? [] : ["any"];
-  else { a = a.filter(function (x) { return x !== "any"; }); a = a.indexOf(v) >= 0 ? a.filter(function (x) { return x !== v; }) : a.concat([v]); }
-  S.set("cchat_pref", a);
-  if (where === "sheet") { if (el("axsSheet") && SHEET.spec && SHEET.spec.id === "cchat") { SHEET.spec = cchatSheetSpec(); sheetPaint(); } }
-  else App.render();
-}
-function cchatPrefHtml(where) {
-  var a = cchatPref();
-  /* v4.88 (사용자 261001 「선호 시간대 버튼이 너무 작다」) AX LOUNGE 상담 시간 칸(axs-slots · axs-slot · 높이 48 · 반경 12 · 고르면 주황)을 그대로 쓴다 · 4칸 한 줄 + 「언제든 좋아요」 한 줄
-     여러 개 고를 수 있으니 고른 칸 앞에 체크 표시(axs-multi) · 질문 화면(회색 바탕)에서는 칸을 흰 면으로(axs-cpref-pg) */
-  return '<div class="ax-stack-tight"><p class="ax-type-t6-strong">가능한 시간대 <span class="ax-meta">선택 · 여러 개 고를 수 있어요</span></p><div class="axs-slots axs-multi axs-cpref' + (where === "sheet" ? "" : " axs-cpref-pg") + '" role="group" aria-label="가능한 시간대 · 선택 · 여러 개">' +
-    CCHAT_PREF.map(function (x) { return '<button type="button" class="axs-slot' + (x[0] === "any" ? " axs-none" : "") + '" aria-pressed="' + (a.indexOf(x[0]) >= 0) + '" onclick="cchatPrefToggle(\'' + x[0] + "','" + where + "')\">" + x[1] + "</button>"; }).join("") + "</div></div>";
-}
 var IDEA_AWARD_TXT = "심사 결과는 Closing Speech에서 발표해요";   /* v6.07 제출 완료 화면 한 줄 · 입력 화면은 시상 묶음(ideaPrizeHtml)이 말한다 */
 var IDEA_HOOK_TXT = "우수 아이디어는 심사 후 Closing Speech에서 시상해요";
 /* v5.00 (사용자 261002 「아이디어 한 줄을 내면 '사이니지 점 하나가 켜졌다'는 메시지 · 이런 요소를 걷어 달라 · 넣을지 아직 고민」)
@@ -699,29 +743,22 @@ var IDEA_HOOK_TXT = "우수 아이디어는 심사 후 Closing Speech에서 시�
    끄는 곳 = 아이디어 제출 직후 토스트 「오늘 n번째 아이디어! ME to WE 월에 점 하나가 켜졌어요.」(submitIdea) · 제출 완료 화면은 「아이디어를 제출했어요」 + 커피챗 + 다음 행동만
    그대로 = 서버 집계(stats.wall · 유효 참여 = 점) · 운영자 송출 화면(SIGNAGE: wall_metowe · wall_tv · wall_live · screen 등 · 관리자 진입) · 관리 콘솔 */
 var WALL_ON = false;
-function ideaCchat(yes) {
-  IDEA.yes = !!yes;
-  if (yes) scheduleCoffeechat();
-  IDEA.step = "done";
-  tourRetDone(!!(TOUR_RET && TOUR_RET.p5));   /* v5.57 아이디어 한 줄 마침(둘러보기에서 출발했으면) */
-  if (TOUR_RET) TOUR_RET.p5 = false;   /* v5.82 완료 화면 「커피챗 신청하기」로 질문에 다시 답해도 인사는 한 번 */
-  App.render();
+/* v7.39 옛 「커피챗에서 온 아이디어 쓰기」 입구(옛 알림 · onclick) = 커피챗 신청 화면 */
+function ideaCcGo() { ccApplyGo(); }
+/* v7.39 (사용자 261016 계획서 0-2-3) 아이디어 한 줄 스탬프를 커피챗 신청 글로 받았나(서버 cchat_req p5cc · sync my.cchat.p5cc · 이 기기 신청 응답 p5 new) · 받은 스탬프가 있을 때만 */
+function ideaP5cc() { return S.get("stamps", []).indexOf("p5") >= 0 && (!!S.get("p5cc", 0) || !!(S.get("cchat_srv", null) || {}).p5cc); }
+/* v7.39 내가 낸 아이디어 서버 목록(idea_mine · 출처 src · 경로 ch cchat = 커피챗 신청) · 화면을 열 때 30초에 한 번 · 옛 서버(액션 없음) = 이 기기 기록만 */
+var IDEA_MINE = { e: "", at: 0, rows: [] };
+function ideaMineFetch() {
+  var u = S.get("user", {}) || {};
+  if (!BE.on || !u.empId || Date.now() - IDEA_MINE.at < 30000) return;
+  IDEA_MINE.at = Date.now();
+  beCall({ action: "idea_mine", emp: u.empId }, function (res) {
+    if (!res || !res.ok || !Array.isArray(res.rows)) return;
+    IDEA_MINE.e = u.empId; IDEA_MINE.rows = res.rows.filter(function (r) { return r && r.text; });
+    if (App.current === "ideas_mine") App.render();
+  }, function () {});
 }
-/* 나중에 마음이 바뀐 사람 · 커피챗 상세(P02)의 주 버튼 · 아이디어가 1건 이상일 때만 */
-function cchatApply() {
-  if (S.get("cchat", null) || !ideaMineN()) return;   /* v6.07 시간대는 선택 */
-  if (cchatClosed()) { sheetClose(true); toast("커피챗 희망 접수가 끝났어요"); App.render(); return; }   /* v4.47 시트를 여는 사이 마감 */
-  sheetClose(true);   /* v4.18 확인 시트에서 온다 · 요청은 낙관 저장이라 기다릴 것이 없다 */
-  scheduleCoffeechat();
-  if (S.get("cchat", null)) notice({ key: "cchat:ok", title: "커피챗 희망 접수", body: "가능한 시간 " + cchatPrefTxt() + " · " + CCHAT_NOTE });   /* v5.83 key = noidea 로 되돌릴 때 이 안내를 거둔다 */
-  App.render();
-}
-function ideaMineN() {   /* 커피챗 신청 가능 = 이 기기의 내 아이디어 1건 이상 */
-  var e = (S.get("user", {}) || {}).empId;
-  return S.get("ideas", []).filter(function (i) { return i.empId === e; }).length;   /* v5.83 (사용자 261006 「권장대로」) 옛 v4.64 「p5 스탬프 = 1건」 걷음 · 서버는 v5.82 부터 아이디어 행 없는 신청을 noidea 로 거절한다(콘솔로 받은 p5 · 다른 기기에서 낸 사람) · 0건 = 「아이디어 쓰고 신청하기」 · 서버 아이디어 수는 sync 에 없어 새 호출은 만들지 않는다 */
-}
-/* v5.83 커피챗에서 온 아이디어 쓰기 · 화면 위 한 줄 「커피챗은 아이디어 한 줄과 함께 신청해요」 · 제출하면 「이 아이디어로 커피챗을 신청할까요?」(IDEA.step ask) · 다른 화면을 그리면 표시를 접는다(라우터) */
-function ideaCcGo() { IDEA.cc = true; IDEA.step = null; App.go("ideas"); }
 /* v5.90 (261006) 아이디어 입구 · 서버 pub.idea { open, cut, late, prz, ps } · 행사 전 + 사전 오픈 OFF = 입구 숨김(테스트 사번 · 커피챗에서 온 경우 제외) · 옛 서버(없음) = 예전처럼 */
 function evPreDay() { var o = ttGet() ? null : S.get("ev_phase", null); if (o) return o === "before"; return appNow(true) < new Date(2026, 9, 26); }
 function ideaGateOff() { var ip = S.get("idea_pub", null); return !!ip && !ip.open && evPreDay() && !testEmp(); }
@@ -730,11 +767,6 @@ function ideaStampLater() { var ip = S.get("idea_pub", null); return !!ip && !ip
 function ideaPrizeHtml() {
   var ip = S.get("idea_pub", null) || {}, cut = ip.late ? "아이디어왕 접수 마감 · 제출은 받아요" : (ip.cut || "16:00") + " 마감";
   return '<section class="axs-ideaprz" aria-label="아이디어왕 시상"><p class="h" id="ideaAward">' + IDEA_HOOK_TXT + "</p>" + pzR3Html("idea") + '<p class="c">' + esc(cut) + "</p></section>";
-}
-/* v6.07 커피챗 한 줄 · 제출하면 희망을 물어본다(희망 전 · 접수 중 · 하루가 끝나기 전만) */
-function ideaCcLineHtml() {
-  if (S.get("cchat", null) || S.get("cchat_att", false) || cchatClosed() || cchatOver()) return "";
-  return '<p class="ax-meta axs-ideacc">제출하면 18F AX 커피챗을 희망할 수 있어요<br>참여하면 커피 · 기념품을 드려요</p>';
 }
 /* 아이디어 입력 화면 머리 한 줄 · 마감 전 「아이디어왕 접수 16:00 마감」 · 뒤 「접수 마감 · 제출은 받아요」 */
 function ideaCutHtml() {
