@@ -40,11 +40,7 @@ function checkMyState(base) {
     seen.fcfs = "got"; changed = true;
     if (!base) notice({ key: "fcfs:got", first: true, run: function () { fcfsGotOpen(); } });   /* v5.97 (사용자 261006 밤) 팝업 대신 수령 안내 시트 · 스탬프 연출 뒤 · 쌓인 행운권 상자보다 먼저(first) */
   }
-  /* 261008 럭키드로우 당첨 · 확인 전이면 이 앱을 연 동안 한 번(첫 동기화여도) · 7등 = 기기당 한 번 안내 */
-  var lw = luckyMy();
-  if (lw && !lw.ack && !LUCKY.shown[lw.id]) { LUCKY.shown[lw.id] = 1; notice({ key: "lucky:" + lw.id, title: luckyTitle(lw), urgent: true, run: function () { luckyOpen(); } }); }
-  var l7w = S.get("lk7", null);
-  if (l7w && l7w.ph === "done" && l7w.w && seen.lk7w !== 1) { seen.lk7w = 1; changed = true; notice({ key: "lucky:lk7", run: function () { luckyOpen("lk7"); } }); }
+  /* 261017 (사용자 확정 「럭키드로우 푸시 · 당첨자 안내 모두 걷어 내」) 럭키드로우 당첨 · 7등 당첨 안내 팝업 걷음 */
   if (changed) S.set("noti_seen", seen);
 }
 /* 폴링 1회 = 월 + 내 상담·커피챗 상태 + 공지 (v3.50 Outro 문항 기능 폐지 · 서버 응답의 옛 문항 필드는 읽지 않는다) */
@@ -165,15 +161,7 @@ function beSync(after) {
       var fc9 = res.my.fcfs && typeof res.my.fcfs === "object" ? res.my.fcfs : null, lk9 = res.my.lk7 && typeof res.my.lk7 === "object" ? res.my.lk7 : null;
       if (JSON.stringify(fc9) !== JSON.stringify(S.get("fcfs", null))) S.set("fcfs", fc9);
       if (JSON.stringify(lk9) !== JSON.stringify(S.get("lk7", null))) S.set("lk7", lk9);
-      if ("luckyx" in res.my) {   /* 261016 E4 현장 부재로 다시 추첨 { id, rk } | null · 취소는 null · 옛 서버는 필드가 없어 그대로 */
-        var lx9 = res.my.luckyx && typeof res.my.luckyx === "object" && res.my.luckyx.id ? { id: String(res.my.luckyx.id), rk: String(res.my.luckyx.rk || "") } : null;
-        if (JSON.stringify(lx9) !== JSON.stringify(S.get("luckyx", null))) S.set("luckyx", lx9);
-      }
-      if ("lucky" in res.my) {   /* 261008 럭키드로우 당첨 · 서버가 정본(null = 당첨 없음 · 취소 · 부재) · 옛 서버는 필드가 없어 그대로 */
-        var lw9 = res.my.lucky && typeof res.my.lucky === "object" && res.my.lucky.id ? res.my.lucky : null;
-        if (JSON.stringify(lw9) !== JSON.stringify(S.get("lucky", null))) S.set("lucky", lw9);
-        if (!lw9 && SHEET.spec && SHEET.spec.id === "lucky") { if (luckyxMy()) { SHEET.tall = false; luckyOpen(); } else sheetClose(true); }   /* 261016 E4 떠 있던 당첨 시트 = 부재면 그 자리에서 「N등 · 현장 부재로 다시 추첨」 · 취소면 닫는다 */
-      }
+      /* 261017 (사용자 확정) 럭키드로우 당첨 · 현장 부재(my.lucky · my.luckyx)는 읽지 않는다 · 서버도 늘 null */
       var kt9 = res.my.kit && typeof res.my.kit === "object" ? res.my.kit : null;   /* 261006 키트 사이즈 · 키트명단 사번만(없으면 null = 홈 카드 · 화면 · 설정 줄 없음) · 261008 스태프 의류 명단 사번도(pool staff) · 신청번호 no */
       if (JSON.stringify(kt9) !== JSON.stringify(S.get("kit", null))) S.set("kit", kt9);
       var kn9 = ckNoVal(res.my.ckno); if (kn9 !== ckNoVal(S.get("ckno", ""))) S.set("ckno", kn9);   /* 261015 체크인 번호(가나다순 고정) · 261016 세션별 「A-1」 글자(옛 서버 숫자도) · 없으면 "" */
@@ -368,7 +356,7 @@ WS.h.ops = function (m) {   /* v4.76 스태프 폰 ops 방 · 혼잡 카드 곧�
 };
 WS.h.tv = function (m) { if (WS.role === "tv") tvWsPull(false, m.k); };
 WS.h.scan = function (m) { scanTellIn(m); };
-WS.h.lucky = function () { if (WS.role === "p" && BE.on) { if (POLL.t) { clearTimeout(POLL.t); POLL.t = null; } pollTick(); } };   /* 261008 럭키드로우 당첨 · 취소 · 7등 = 곧바로 sync(시트 · 홈 줄) */
+/* 261017 (사용자 확정) 소켓 lucky(럭키드로우 당첨 · 취소 · 7등) 처리 걷음 · 옛 서버가 보내도 처리 함수가 없어 무시 */
 /* 261016 체크인 번호표(소켓 ckq) 걷음 */   /* v5.98 개인 사건 scan · 스태프 폰 스캔(서버 scanTell_) */
 /* v5.98 선착순 참여상 소진 순간 · 서버가 참가자 방에 한 번(소켓만 · 푸시 없음) · 6개 · 아직 안 받은(ready) 사람에게만 한 줄 · 화면은 sync 로 */
 WS.h.fcfsout = function () {
@@ -734,7 +722,7 @@ function pushGoRun() { if (!PUSHGO) return; var g = PUSHGO; PUSHGO = null; pushG
 function pushIn(d) {
   if (!d || document.visibilityState !== "visible") return;
   var tag = String(d.tag || "");
-  if (/^(photo|cchat|dap|lucky7?):/.test(tag) || /^N\d+$/.test(tag)) { if (typeof wsSyncSoon === "function") wsSyncSoon(800); return; }
+  if (/^(photo|cchat|dap):/.test(tag) || /^N\d+$/.test(tag)) { if (typeof wsSyncSoon === "function") wsSyncSoon(800); return; }
   if (/^scan:/.test(tag)) { scanTellIn({ sk: tag.slice(5), s: tag.slice(5).split(".")[0], tt: d.t, b: d.b }); return; }   /* v5.98 소켓으로 먼저 받았으면 건너뛴다 */   /* v4.78 dap: 승인은 앱 안 「과제상담 승인 완료」 한 곳 */
   if (!d.t) return;
   notice({ key: "push:" + (tag || d.j || d.t), title: String(d.t), body: String(d.b || ""), go: d.go && d.go !== "home" ? d.go : "", urgent: !!d.u });

@@ -86,7 +86,6 @@ function myScheduleHtml() {
   var hm0 = hmNow();
   if (!surveyLock() && !surveyDone() && evPhase() === "live" && hm0 >= t2m("16:40") && hm0 < t2m("17:10"))
     rows.push([-1, "App.go('survey')", "설문", "참가자 설문", "1~2분 · 스탬프 1개", "mine"]);
-  var lkr = luckyRow(); if (lkr) rows.push(lkr);   /* 261008 럭키드로우 당첨 = 맨 위 한 줄(확인 전 주황 점) */
   var fgr = fcfsGotRow(); if (fgr) rows.push(fgr);   /* v5.97 선착순 참여상 수령 전 = 맨 위 한 줄(받으면 사라진다) */
   /* v3.43 · 내 항목은 myItems 하나에서 (종류별 1건 · 테스트 오버레이 겹침 제거) */
   myItems(true).forEach(function (x) {
