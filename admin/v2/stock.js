@@ -38,7 +38,7 @@ function ivOpen(id){
   var h=drwHead(it.n, (it.how||"")+(it.q==null?" · 수량 미정":" · 처음 "+n0(it.q)+" · 나감 "+n0(it.out)), " "+tag(s[0],s[1]));
   h+='<div class="iv-big"><span class="cap">남은 수</span><b>'+(it.q==null?"-":n0(it.left))+'</b></div>';
   h+='<div class="btns mt">'+(it.q!=null?'<button class="btn pri" type="button" onclick="ivAdjAsk(\''+J+'\')">남은 수 맞추기</button>':'')+'<button class="btn" type="button" onclick="ivCfgAsk(\''+J+'\')">총수량 · 입고</button></div>';
-  h+='<dl class="cc-kv mt"><dt>최근 30분</dt><dd>'+n0(it.r30)+'</dd><dt>자동으로 나감</dt><dd>'+(it.auto?n0(it.auto):"-")+'</dd><dt>박스당</dt><dd>'+(it.box?n0(it.box)+"개":"-")+'</dd><dt>경고율</dt><dd>'+n0(it.w||15)+'%</dd>'+(it.note?'<dt>메모</dt><dd>'+esc(it.note)+'</dd>':'')+'</dl>';
+  h+='<dl class="cc-kv mt"><dt>최근 30분</dt><dd>'+n0(it.r30)+'</dd><dt>자동 나감</dt><dd>'+(it.auto?n0(it.auto):"-")+'</dd><dt>박스당</dt><dd>'+(it.box?n0(it.box)+"개":"-")+'</dd><dt>경고율</dt><dd>'+n0(it.w||15)+'%</dd>'+(it.note?'<dt>메모</dt><dd>'+esc(it.note)+'</dd>':'')+'</dl>';
   var rows=L&&L.ok?(L.rows||[]):[];
   h+='<h3 class="iv-h">누가 받았나'+(L&&L.ok?' · '+n0(rows.length)+'줄':'')+'</h3>';
   if(!L||L==="busy") h+=skel();
