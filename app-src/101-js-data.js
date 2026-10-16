@@ -181,6 +181,7 @@ var TIMELINE = [
      10F 오후 세션(내내 참석)·점심(시간대 구분 역할)은 시간표 유지 */
   { time: "", end: "", title: "AX 커피챗", short: "13:00~16:00 · 선정되면 앱에서 안내", place: "18F", desc: "13:00~16:00 · 선정되면 앱에서 안내", tag: "신청자 중 선정", always: 1 },   /* v6.07 (사용자 261007) 희망 → 선정 · 운영 13:00~16:00 */
   { time: "13:30", end: "14:50", title: "Agentic AI 시대 일하는 방식의 변화", pid: "l1", short: "AWS 구태훈", place: "17F 대강당", desc: "시작 · 종료 출석체크로 출석", tag: "자유 참석", par: 1 },
+  { time: "14:00", end: "14:30", title: "포토부스 선착순", short: "쿠키 세트 · 커피", place: "1F EVENT", desc: "", tag: "", ev: 1 },   /* v7.48 (사용자 261016) 시간표 흐름의 포토부스 선착순 줄(progFlowEv) · 14:00~14:30 = 「지금 · 소진 시까지」 표시 구간 · 진행 중 강연 판정 · 홈 「지금 · 다음」(nowIdx · schedNowRow)에서는 뺀다 · 오전 커피 50잔은 시작 시각을 앱에 쓰지 않아 흐름에 줄이 없다(EVENT 시트 사실 표만) */
   { time: "14:50", end: "15:10", title: "휴식", short: "", place: "17F 대강당", desc: "", tag: "휴식", brk: 1 },   /* 261007 (사용자 확정 「AWS 13:30~14:50 · 휴식 14:50~15:10 · MS 15:10~16:40」) 시간표 17F 작은 줄(progFlowBrk) · 스탬프 · 출석 없음 · 홈 「지금」 = 휴식 · 다음 MS */
   { off: 1, time: "13:30", end: "16:30", title: "10F 실습형 세션 A~E", short: "사전 신청자 참여 · 5개 세션 중 1개", place: "10F", desc: "사전 신청자 참여 · 세션별 장소는 프로그램 탭", tag: "사전 신청자 참여", par: 1 },
   { time: "15:10", end: "16:40", title: "AI와 친해지기", pid: "l2", short: "Microsoft 김한결, 이나경", place: "17F 대강당", desc: "시작 · 종료 출석체크로 출석", tag: "자유 참석", par: 1 },
@@ -218,7 +219,7 @@ function nowIdx() {
   var hm = hmNow(), nx = -1, last = -1;
   for (var i = 0; i < TIMELINE.length; i++) {
     var t = TIMELINE[i];
-    if (t.always || t.off || !t.time) continue;
+    if (t.always || t.off || !t.time || t.ev) continue;   /* v7.48 포토부스 선착순 줄은 진행 중 판정에 없다 */
     last = i;
     if (hm >= t2m(t.time) && hm < t2m(t.end)) return i;
     if (nx < 0 && t2m(t.time) > hm) nx = i;

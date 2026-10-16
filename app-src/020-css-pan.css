@@ -74,6 +74,11 @@
   .axs-pan .axs-zpic img { display: block; width: 100%; height: auto; border-radius: var(--ax-radius-16); background: #fff; }
   .axs-pan .axs-zpic figcaption { display: flex; flex-wrap: wrap; gap: 2px var(--ax-space-8); align-items: baseline; padding: 0 var(--ax-space-4); }
   .axs-pan .axs-zpic figcaption b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  #axsDet .axs-pan .axs-kv.ev, .axs-pan .axs-zdt .axs-kv.ev { grid-template-columns: 88px minmax(0, 1fr); }   /* v7.48 EVENT 사실 표 이름 칸 = 「선착순 14:00」이 한 줄에 */
+  .axs-pan .axs-evpic { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: var(--ax-space-12); align-items: center; margin-top: var(--ax-space-12); padding: var(--ax-space-8); border-radius: var(--ax-radius-12); background: var(--ax-color-inset); }   /* v7.48 EVENT 시트 쿠키 세트 사진 칸 */
+  .axs-pan .axs-evpic img { display: block; width: 96px; height: 96px; border-radius: var(--ax-radius-8); object-fit: cover; background: #fff; }
+  .axs-pan .axs-evpic b { display: block; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .axs-pan .axs-evpic span { font: var(--ax-type-t7); color: var(--ax-color-muted); word-break: keep-all; }
   .axs-pan .axs-zpic figcaption span { font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
   .axs-pan .axs-zex { display: flex; flex-direction: column; gap: 10px; }
   /* v5.60 AX in Action 사례 글 목록(zoneCaseHtml · 판 한 컷 대신) · 앱 이름 굵게 + 사례 · 소속 이름 직급 한 줄 */

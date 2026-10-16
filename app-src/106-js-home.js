@@ -36,7 +36,7 @@ function schedNowRow() {
   var ni = nowIdx(), now = TIMELINE[ni];
   /* 다음 일정에서 상시 항목(always)은 건너뛴다 (v3.18) */
   var nx = null;
-  for (var xi = ni + 1; xi < TIMELINE.length; xi++) if (!TIMELINE[xi].always && !TIMELINE[xi].off) { nx = TIMELINE[xi]; break; }
+  for (var xi = ni + 1; xi < TIMELINE.length; xi++) if (!TIMELINE[xi].always && !TIMELINE[xi].off && !TIMELINE[xi].ev) { nx = TIMELINE[xi]; break; }
   /* v3.25 · 검정을 못 받으면 기본 옅은 주황 뱃지로 한 단계 낮춘다 */
   return rcHtml({ cls: "", onclick: go, link: true, left: tokBadge("지금", isBlack("now") ? "act" : "", now.time),
     title: esc(now.title), sub: nx ? "다음 " + nx.time + " " + esc(nx.title) : "" });

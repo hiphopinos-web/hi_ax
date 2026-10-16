@@ -199,6 +199,7 @@ function progFlowItems(onlyFl) {
     if (t.always || t.off || !t.time) return;
     var pid = t.pid || TL_PROG[t.title] || "", pm = /^(\d+)F\s*(.*)$/.exec(t.place || "") || ["", "", t.place || ""];
     if (t.brk) { var bm = /^(\d+)F/.exec(t.place || ""); pub.push({ k: "brk", brk: 1, pid: "", a: t2m(t.time), b: t2m(t.end), t0: t.time, t1: t.end, ttl: t.title, sub: "", fl: bm ? +bm[1] : 0, pl: "" }); return; }   /* 261007 휴식 줄(progFlowBrk) */
+    if (t.ev) { pub.push({ k: "ev", ev: 1, pid: "", a: t2m(t.time), b: t2m(t.end), t0: t.time, t1: t.end, ttl: t.title, sub: t.short || "", fl: 1, pl: "EVENT", go: "zoneOpen('event')" }); return; }   /* v7.48 포토부스 선착순 줄(progFlowEv) */
     pub.push({ k: pid || t.title, pid: pid, a: t2m(t.time), b: t2m(t.end), t0: t.time, t1: t.end, ttl: t.title, sub: FL_SUB[pid] || "", fl: +pm[1] || 0, pl: pm[2],
       go: pid === "#1F" ? "progAlwaysGo()" : pid && pid.charAt(0) !== "#" ? "progOpen('" + pid + "')" : "", chip: attUi(pid) && attMineAt(pid) ? "출석" : "", lec: !!attUi(pid) });
   });
@@ -217,7 +218,7 @@ function progFlowItems(onlyFl) {
 function progFlowHtml(onlyFl, myIts) {
   var ph = evPhase(), hmN = ph === "before" ? -1 : ph === "after" ? 99999 : hmNow(), its = myIts || progFlowItems(onlyFl), g = [], by = {};
   its.forEach(function (o) { if (!by[o.t0]) { by[o.t0] = { t0: o.t0, a: o.a, its: [] }; g.push(by[o.t0]); } by[o.t0].its.push(o); });
-  var act = its.filter(function (o) { return hmN >= o.a && hmN < o.b; });
+  var act = its.filter(function (o) { return !o.ev && hmN >= o.a && hmN < o.b; });   /* v7.48 포토부스 선착순 줄은 진행 중 카드(focus)가 되지 않는다 */
   act.sort(function (x, y) { return (y.mine ? 1 : 0) - (x.mine ? 1 : 0) || x.a - y.a; });
   var focus = act[0] || null;
   if (!onlyFl && !myIts) PROG.flKey = ph + hmN;
@@ -241,8 +242,15 @@ function progTenRowHtml() {
 }
 /* 261007 (사용자 확정 「AWS 13:30~14:50 · 휴식 14:50~15:10 · MS 15:10~16:40」) 17F 휴식 줄 = 카드보다 낮은 위계(면 없음 · 작은 글 · 누름 없음) · 「휴식」 한 단어 + 끝 시각 · 스탬프 · 출석 없음 */
 function progFlowBrk(o, hmN) { return '<div class="fbk' + (hmN >= o.b ? " past" : "") + '" data-fl="brk"><b>' + esc(o.ttl) + '</b><span class="e">~' + o.t1 + "</span></div>"; }
+/* v7.48 (사용자 261016) 1F EVENT 포토부스 선착순 줄 = 10F 입구 줄(fx10)과 같은 낮은 위계(회색 면) · 시작~끝(30분) = 같은 회색 면 + 주황 「지금 · 소진 시까지」 · 끝난 뒤 = 면 없음 · 흐림 · 누르면 EVENT 시트 · 진행 중 강연 판정 · 홈 지금 · 다음에는 들지 않는다 */
+function progFlowEv(o, hmN) {
+  var on = hmN >= o.a && hmN < o.b, past = hmN >= o.b;
+  return '<button type="button" class="fev' + (past ? " past" : on ? " on" : "") + '" onclick="' + o.go + '" data-fl="ev"><span class="x"><span class="mt"><span class="dg-w">' + flFloor(1) + "</span>EVENT</span><b>" + esc(o.ttl) + "</b>" +
+    '<span class="s">' + segHtml(esc(o.sub || "")) + "</span>" + (on ? '<span class="ac">지금 · 소진 시까지</span>' : "") + '</span><span class="chv">' + CHEV_SVG + "</span></button>";
+}
 function progFlowCard(o, hmN, isF) {
   if (o.brk) return progFlowBrk(o, hmN);
+  if (o.ev) return progFlowEv(o, hmN);
   var past = hmN >= o.b, ac = isF && o.lec && !o.chip ? '<span class="ac">시작 · 종료 출석체크로 출석</span>' : "";   /* v5.68 */
   return '<button type="button" class="fc' + (past ? " past" : "") + (isF ? " focus" : "") + '"' + (o.go ? ' onclick="' + o.go + '"' : " disabled") + ' data-fl="' + esc(o.k) + '">' +
     '<span class="mt">' + (o.fl ? flFloor(o.fl) : "") + '<span class="pl">' + esc(o.pl) + '</span><span class="e">~' + o.t1 + "</span></span>" +
@@ -304,8 +312,11 @@ function zonePicHtml(z) {
       '<img src="' + ZONE_DIR + p[0] + '.webp" alt="' + esc(p[1] + (p[2] ? " · " + p[2] : "") + " · 1층 판") + '" width="860" height="' + p[3] + '" loading="lazy" decoding="async" onerror="this.parentNode.remove()"></figure>';
   }).join("") + "</div>" : "";
   if (z.treat) o += treatHtml();
+  if (z.id === "event") o += evPicHtml();   /* v7.48 14:00 쿠키 세트 사진 한 장 */
   return o;
 }
+/* v7.48 EVENT 시트 쿠키 세트 사진 칸(작은 사진 + 이름 · 수량 · 가격 없음) */
+function evPicHtml() { return '<div class="axs-evpic"><img src="' + ZONE_DIR + 'event_cookie.webp" alt="쿠키 세트" width="96" height="96" loading="lazy" decoding="async" onerror="this.parentNode.remove()"><span><b>쿠키 세트</b>50세트 · 선착순 14:00</span></div>'; }
 function zoneCaseHtml(z) {
   return z.cases ? '<hr class="axs-rule"><div class="axs-zcase"><h3>사례 ' + z.cases.length + "개</h3>" + z.cases.map(function (c) { return "<p><b>" + esc(c[0]) + "</b><span>" + esc(c[1]) + "</span></p>"; }).join("") + "</div>" : "";
 }
@@ -451,7 +462,7 @@ function zoneLive(z) {
     o.kv = [["지금", cnow], ["장소", "18F"]];
     o.btn = st ? ["내 커피챗", "progOpen('cchat')"] : ov ? ["오늘 커피챗은 끝났어요", "", "", true] : cl ? ["신청 마감", "", "", true] : ["커피챗 신청하기", "ccApplyGo()", "ccApplyBtn"];
   } else if (z.id === "event") {
-    o.kv = [["포토부스", "10:00~17:00"], ["장소", "1F EVENT"]];   /* v5.05 포토부스 대기 없음 · 운영 시간만 */
+    o.kv = [["포토부스", "10:00~17:00"], ["선착순 오전", "커피 50잔"], ["선착순 14:00", "쿠키 세트 50세트 · 커피 50잔"], ["받는 조건", "포토부스 사진 촬영"], ["받는 곳", "1F EVENT 포토부스 앞"], ["마감", "소진 시까지"]];   /* v7.48 (사용자 261016) 선착순 두 줄 · 오전은 시작 시각 없이 */   /* v5.05 포토부스 대기 없음 · 운영 시간만 */
   }
   return o;
 }
@@ -508,7 +519,7 @@ function zoneDetailHtml() {
   return '<div class="ax-stack axs-pan"><div class="axs-zdt' + (seal ? " axs-sthost" : "") + '">' + (seal ? pill : "") + zoneSign(z.sign, "lg") +
     '<p class="axs-bar stm">' + esc(z.stm) + "</p>" + (cr ? '<div class="cr">' + cr + "</div>" : "") +
     '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + z.todo.map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" + zoneCaseHtml(z) + zoneExHtml(z) +
-    (L.kv ? '<hr class="axs-rule"><dl class="axs-kv">' + L.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + segHtml(esc(r[1])) + "</dd>"; }).join("") + "</dl>" : "") +
+    (L.kv ? '<hr class="axs-rule"><dl class="axs-kv' + (ev ? " ev" : "") + '">' + L.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + segHtml(esc(r[1])) + "</dd>"; }).join("") + "</dl>" : "") +
     "</div>" + (ev && EV_TYP_PROMO ? typPromoHtml("go") : "") + zonePicHtml(z) + (L.btn ? '<button type="button" class="ax-button" onclick="' + L.btn[1] + '">' + esc(L.btn[0]) + "</button>" : "") + "</div>";   /* v5.60 E (사용자 261004 「모형에서 보기 굳이 없어도 될 버튼 · 여기서 길 잃는 수석님 많을 듯」) 구역 상세의 「모형에서 보기」 삭제 · 둘러보기 입구 = 상시 운영 맨 위 카드 · 홈 줄 */
 }
 /* ═══ v5.69 구역 상세 시트(detPaint · 라우트 zone_d) · 1F 6구역 + 18F AX 커피챗 · v5.65 통일 구역 상세(zonePairHtml)의 순서 그대로 · 판 문법 경계 = 시트(pan)
@@ -518,7 +529,7 @@ function zoneDetailHtml() {
 function zoneSheet() {
   var z = zoneById(PROG.zone) || FLOOR1[0], L = zoneLive(z), pill = zoneStampHtml(z), ev = z.id === "event", seal = pill && !ev;
   var meta = ev ? pill : L.tm ? '<span class="axs-pt">' + esc(L.tm) + "</span>" : seal ? "" : '<span class="axs-pt">자유 관람 · 스탬프 없음</span>';
-  var kv = L.kv ? '<dl class="axs-kv">' + L.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + segHtml(esc(r[1])) + "</dd>"; }).join("") + "</dl>" : "";
+  var kv = L.kv ? '<dl class="axs-kv' + (ev ? " ev" : "") + '">' + L.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + segHtml(esc(r[1])) + "</dd>"; }).join("") + "</dl>" : "";
   var b = L.btn;
   var body = z.gd ? zoneGdBody(z, L) :   /* v6.83 (묶음 16) 라운지 · 커피챗 = 공용 본문(사실 표 → 사진 → 하는 일 → 참여 전 확인 상자 · 접힘 없음) */
     (meta ? '<div class="cr">' + meta + "</div>" : "") +
@@ -946,7 +957,7 @@ var MYFL_LEC = ["l1", "l2"];
 function myFlowOn() { return !!tenMine(); }
 function myFlowItems() {
   var tm = tenMine(), tp = tm ? tm.tm.split("~").map(function (t) { return t2m(t); }) : null;
-  var pub = progFlowItems().filter(function (o) { return !o.mine && ((MYFL_LEC.indexOf(o.k) < 0 && !o.brk) || (!!tp && (o.b <= tp[0] || o.a >= tp[1]))); }), mine = [];   /* 261007 휴식 줄도 강연과 같이 내 10F 세션과 겹치면 뺀다 */
+  var pub = progFlowItems().filter(function (o) { return !o.mine && ((MYFL_LEC.indexOf(o.k) < 0 && !o.brk && !o.ev) || (!!tp && (o.b <= tp[0] || o.a >= tp[1]))); }), mine = [];   /* 261007 휴식 줄도 강연과 같이 내 10F 세션과 겹치면 뺀다 */
   myAgendaItems().forEach(function (x) {
     if (!x.iv || myAgendaNow(x)) return;
     var k = x.kind, o = { k: k, my: k, a: x.iv[0], b: x.iv[1], t0: hm2(x.iv[0]), t1: hm2(x.iv[1]), mine: true };
@@ -965,6 +976,7 @@ function myFlowItems() {
 /* v6.11 h = 홈 카드(시각 칸 없음 · 머리 줄 「13:30 ~ 16:40」) · 나의 참여 하루 흐름은 그대로 「~16:40」 */
 function myFlowCard(o, hmN, isF, h) {
   if (o.brk) return progFlowBrk(o, hmN);
+  if (o.ev) return progFlowEv(o, hmN);
   var past = hmN >= o.b, chip = o.mine ? '<span class="axs-chip mc">' + (isF ? "진행 중" : "신청") + "</span>" : '<span class="axs-chip off mc">자유 참석</span>';
   return '<button type="button" class="fc' + (o.mine ? " mine" : "") + (past ? " past" : "") + (isF ? " focus" : "") + '"' + (o.go ? ' onclick="' + o.go + '"' : " disabled") + ' data-fl="' + esc(o.k) + '"' + (o.my ? ' data-my="' + esc(o.my) + '"' : "") + ">" +
     '<span class="mt">' + (o.fl ? flFloor(o.fl) : "") + '<span class="pl">' + esc(o.pl) + '</span><span class="e">' + (h ? o.t0 + "~" : "~") + o.t1 + "</span>" + chip + "</span>" +
