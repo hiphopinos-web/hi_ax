@@ -64,7 +64,7 @@ function stbSugs() {
   var ph = evPhase(), hm = hmNow(), out = [];
   if (!has("sv") && surveyOpen()) out.push(["sv", "설문은 1~2분이면 끝나요"]);   /* 14:30부터(서버 survey_submit 와 같은 surveyOpen) */
   if (ph === "live" && progUnits() < 2 && hm >= 780 && hm < 1000) out.push(["p3", "17F 오후 강연, 스탬프 2개예요"]);   /* 13:00~16:40 · AWS 13:30 · MS 15:10 */
-  if (ph === "live" && !has("p2") && hm >= 570 && hm < 990) out.push(["p2", "1F AX PLAY도 체험해 봐요"]);   /* 09:30~16:30 */
+  if (ph === "live" && !has("p2") && hm >= 510 && hm < 1020) out.push(["p2", "1F AX PLAY도 체험해 봐요"]);   /* 08:30~17:00(v7.50 사용자 261016) */
   if (!has("qz")) out.push(["qz", "AX 퀴즈 5문제도 있어요"]);
   if (!has("p4")) out.push(["p4", "미니 게임 " + Math.max(1, MG_NEED - mgDone()) + "종목도 있어요"]);   /* 4차 · 한 줄에 */
   if (!has("p5")) out.push(["p5", "아이디어 한 줄도 남겨 봐요"]);
