@@ -2,14 +2,13 @@
  * 칩 2개 = 18F 커피챗(시간표 · 명단 · 아이디어) · 1F AX 라운지(시간표 · 명단) · 오른쪽 「당일 모드」
  * 커피챗 시간표 = 행사 전에는 이 기기의 초안(localStorage) → 「반영」 때 cchat_set · cchat_status 대기 · meet_order_set(순번) · 당일 모드 = 놓는 즉시(확인 창 · D2)
  * 라운지 시간표 = lng_board · 놓는 즉시 resv_move(확인 창 · 참가자 알림 없음) · 쉬는 칸(설정 라운지_쉬는칸 · 없으면 12:00 · 12:30)은 그리지 않는다
- * 메모 · 분류 · 순번 = meet_note_list · meet_note_set · meet_order_set · 서버가 모르는 액션이면 메모 · 분류 칸을 숨기고 순번은 이 기기에만 둔다
+ * 메모 · 순번 = meet_note_list · meet_note_set · meet_order_set · 서버가 모르는 액션이면 메모 칸을 숨기고 순번은 이 기기에만 둔다
  * 회차 · 테이블 = cfg_list 커피챗_회차 · 커피챗_회차정원(cchat.js ccCfg) · 라운지 칸 = lng_board(start · step · seats) · 없으면 설계값
  * 끌어다 놓기 = 마우스(6px 움직이면) · 터치(길게 누르기 · 보조) · 키보드(카드에서 Space = 고르기 → 칸에서 Enter) · 사람 상세 「옮기기」도 같은 고르기
  * 노쇼(커피챗) = staff_mark noshow + cchat_status 취소(why 노쇼) · 칸이 빈다 · 되돌리기 7초 */
-var MT_CATS=[[1,"보상 · 손해사정"],[2,"영업 · 채널"],[3,"상품 · 언더라이팅"],[4,"고객 상담 · 민원"],[5,"문서 · 보고 작성"],[6,"데이터 집계 · 분석"],[7,"경영지원"],[8,"IT · 개발 · 자동화"],[9,"기타"]];
 var MT_REST_DEF=["12:00","12:30"];
 var MT={ ov:lsGet("axf_v2_meet_ov",{})||{}, ord:lsGet("axf_v2_meet_ord",[])||[], ordD:lsGet("axf_v2_meet_ordd",0)?1:0, day:lsGet("axf_v2_meet_day",0)?1:0,
-  pick:null, past:0, ns:{}, log:{}, iq:"", iff:"all", fail:null, det:null, qno:{}, nowT:null, memo:null, jd:0 };
+  pick:null, past:0, ns:{}, log:{}, fail:null, det:null, qno:{}, nowT:null, memo:null, jd:0 };
 var MTD=null;
 function mtSave(){ lsSet("axf_v2_meet_ov",MT.ov); lsSet("axf_v2_meet_ord",MT.ord); lsSet("axf_v2_meet_ordd",MT.ordD); }
 function mtSub(){ var a=String(S.sub.meet||"cc").split("-"), p=a[0]==="ln"?"ln":"cc", v=a[1]||"board";
@@ -18,16 +17,12 @@ function mtGo(p, v){ MT.pick=null; goSub(p+(v&&v!=="board"?"-"+v:"")); }
 function mtKp(k){ var i=String(k).lastIndexOf(":"); return [k.slice(0,i), k.slice(i+1)]; }
 function mtNowMin(){ if(MT.nowT!=null) return MT.nowT; var d=srvNow(); return d.getHours()*60+d.getMinutes(); }
 
-/* ── 1. 메모 · 분류 · 순번(meet_note_list) ── */
+/* ── 1. 메모 · 순번(meet_note_list) · 261016 밤 분류 걷음(사용자 「너무 정신이 없다」) ── */
 function mtNoteD(p){ return S.data[p==="cc"?"mnc":"mnl"]; }
 function mtNoteOk(p){ var d=mtNoteD(p); return !!(d&&d.ok&&Array.isArray(d.rows)); }
 function mtNote(p, emp){ var d=mtNoteD(p); if(!d||!d.ok||!Array.isArray(d.rows)) return null; var e=normE(emp);
   for(var i=0;i<d.rows.length;i++){ var r=d.rows[i]; if(normE(r.emp)===e&&(!r.prog||r.prog===p)) return r; } return null; }
 function mtNotePatch(p, emp, o){ var d=mtNoteD(p); if(!d||!d.ok||!Array.isArray(d.rows)) return; var n=mtNote(p, emp); if(!n){ n={ prog:p, emp:normE(emp) }; d.rows.push(n); } for(var k in o) n[k]=o[k]; }
-function mtCats(){ var d=S.data.mnc; return d&&d.ok&&Array.isArray(d.cats)&&d.cats.length?d.cats:MT_CATS; }
-function mtCatOf(emp){ var n=mtNote("cc", emp); return n?num(n.cat):0; }
-function mtCatNm(c){ var x=mtCats().filter(function(a){ return num(a[0])===num(c); })[0]; return x?String(x[1]):""; }
-function mtCatTx(emp){ return mtCatNm(mtCatOf(emp)); }
 
 /* ── 2. 커피챗 모양 · 서버 칸 + 이 기기 초안(MT.ov = 사번 → { to 칸 | "" 대기 줄, base 초안 만들 때 서버 칸 }) ── */
 function mtSrvK(r){ return CC_ON.indexOf(r.status)>=0&&hm(r.round)&&r.table?hm(r.round)+":"+r.table:""; }
@@ -84,7 +79,7 @@ SCREENS.meet={
     vb.innerHTML='<div class="mtg'+(MT.pick?" picking":"")+'" id="mtgR"><div class="mtg-hd" id="mtgHd"></div><div id="mtgB"></div></div>';
     var b=el("mtgB");
     if(s.v==="list"){ if(s.p==="cc") b.innerHTML='<div class="card"><div id="mtgL"></div></div>'; else lgShell(b); }
-    else if(s.v==="idea") b.innerHTML='<div class="card mtg-ibar"><input class="xg-q" id="mtIq" type="search" autocomplete="off" placeholder="상담 내용 · 이름 · 사번 찾기" aria-label="아이디어 찾기" value="'+esc(MT.iq)+'" oninput="MT.iq=this.value;mtIdeaPaint()"><span id="mtIf"></span><span class="cap" id="mtIcap"></span></div><div id="mtIb"></div>';
+    else if(s.v==="idea") b.innerHTML='<div class="card"><h2>신청 글 <span class="cap">신청 순서 · 줄을 누르면 사람 상세 · 메모</span></h2><div id="mtIb"></div></div>';
   },
   paint:function(){
     var s=mtSub(); mtHead(s);
@@ -127,7 +122,6 @@ function mtCard(M, x, no){
   if(cc&&!(MT.day&&k)){
     var pl=x.pref?String(x.pref).split(",").map(hm).filter(Boolean):[], rr=k?mtKp(k)[0]:"";
     tags.push(pl.length?(rr&&pl.indexOf(rr)<0?tag("희망 밖","warn"):tag(pl.join(" · "),"off")):tag("언제든","off"));
-    var c=mtCatOf(x.emp); if(c) tags.push(tag(mtCatNm(c)));
     if(st==="대기"&&x.overAt) tags.push(tag("미선정 알림","off"));
   }
   var stt0=mtTagSt(M.p, x); if(stt0) tags.unshift(stt0);
@@ -151,7 +145,7 @@ function mtBoardH(p){
   var on=function(r){ return !r.rest; }, live=rows.filter(on);
   var curR=MT.day?live.filter(function(r){ return nm>=mins(r.t)&&nm<mins(r.t)+len; })[0]:null;
   var nxt=MT.day?live.filter(function(r){ return mins(r.t)>(curR?mins(curR.t):nm); })[0]:null;
-  var lab=function(t){ return (cc?"테이블 ":"상담석 ")+t; };
+  var lab=function(t){ return (cc?"테이블 ":"미팅룸 ")+t; };
   if(MT.day){
     var who=function(r,t){ if(!r) return "-"; var x=M.at[r.t+":"+t]; return x?esc(x.name||x.emp):"빈 칸"; };
     h+='<div class="mtg-now"><div class="cur"><h3>'+(curR?'지금 <em class="n">'+curR.t+'</em> 회차':'지금 진행 중인 회차 없음')+'</h3><div class="rw">'+(curR?M.tables.map(function(t){ return '<div><small>'+lab(t)+'</small><span>'+who(curR,t)+'</span></div>'; }).join(""):'')+'</div></div>'+
@@ -173,7 +167,7 @@ function mtBoardH(p){
     (M.out.length?'<h2 class="mt">칸 밖 <span class="cap n">'+M.out.length+'명</span></h2><p class="cap" style="margin-bottom:6px">'+(cc?"지금 회차 · 테이블 설정에 없는 칸":"운영 시간 밖 칸")+' · 칸으로 끌어 놓기</p><div class="mtg-ql">'+M.out.map(function(x){ return mtCard(M, x, 0); }).join("")+'</div>':'')+
     (cc?'<div class="mt"><button class="btn sm dng" type="button" onclick="ccClose()"'+(ccWaitN()?'':' aria-disabled="true"')+'>희망 접수 마감 · 미선정 알림</button></div>':'')+'</section>';
   /* 오른쪽 · 격자 */
-  h+='<section class="card mtg-bd"><h2>'+(cc?"18F 커피챗 · 1:1 "+len+"분 · 테이블 "+M.tables.join(" · "):"1F AX 라운지 · 1:1 "+len+"분 · 상담석 "+M.tables.join(" · "))+'</h2>'+
+  h+='<section class="card mtg-bd"><h2>'+(cc?"18F 커피챗 · 1:1 "+len+"분 · 테이블 "+M.tables.join(" · "):"1F AX 라운지 · 1:1 "+len+"분 · 미팅룸 "+M.tables.join(" · "))+'</h2>'+
     (cc&&!ccCfg().srv?'<p class="cap" style="margin-bottom:6px">회차 · 테이블 = 설계값(서버 설정 커피챗_회차 · 커피챗_회차정원을 받으면 그 값)</p>':'')+
     '<div class="mtg-grid" style="grid-template-columns:'+(window.innerWidth<=760?"52px":"76px")+' repeat('+M.tables.length+',minmax(0,1fr))"><div class="th">회차</div>'+M.tables.map(function(t){ return '<div class="th"><b>'+lab(t)+'</b></div>'; }).join("");
   var pastN=MT.day?live.filter(function(r){ return nm>=mins(r.t)+len; }).length:0, foldDone=false, gap=null;
@@ -285,7 +279,7 @@ function mtCcDayDrop(e, to){
     run:function(){ return mtCcRun(items).then(function(res){ return res.fail.length?{ ok:false, msg:res.fail.map(function(f){ return f.nm+" "+f.why; }).join(" · ") }:res; }); },
     done:function(){ paint(); reload(["cc","nb"]); toast("반영했습니다 · "+(r.name||r.emp)+" "+ks[0]+" "+ks[1]); } });
 }
-var MT_MVWHY={ taken:"그 칸은 다 찼습니다", seat:"그 상담석은 다른 사람 자리입니다", same:"지금과 같은 자리입니다", closed:"운영 시간 밖입니다", slot:"칸 시각이 맞지 않습니다" };
+var MT_MVWHY={ taken:"그 칸은 다 찼습니다", seat:"그 미팅룸은 다른 사람 자리입니다", same:"지금과 같은 자리입니다", closed:"운영 시간 밖입니다", slot:"칸 시각이 맞지 않습니다" };
 function mtLnDrop(id, to){
   var L=mtLnM(); if(!L) return; var x=L.by[id]; if(!x) return;
   if(to==="q"){ toast("라운지는 칸 미정으로 되돌리지 않습니다 · 다른 칸으로 옮깁니다"); return; }
@@ -293,11 +287,11 @@ function mtLnDrop(id, to){
   if(x._k===to) return;
   if(L.at[to]){ toast("빈 자리에 놓습니다 · 그 자리에는 "+(L.at[to].name||L.at[to].emp)+" 님",{ bad:1 }); return; }
   var ks=mtKp(to), was=x._k;
-  confirmBox({ t:"이 칸으로 옮길까요?", who:(x.name||x.emp)+" · "+(was?mtKp(was).join(" · 상담석 "):"칸 미정")+" → "+ks[0]+" · 상담석 "+ks[1], sub:"바로 반영 · 참가자에게 알림 없음", ok:"옮기기",
+  confirmBox({ t:"이 칸으로 옮길까요?", who:(x.name||x.emp)+" · "+(was?mtKp(was).join(" · 미팅룸 "):"칸 미정")+" → "+ks[0]+" · 미팅룸 "+ks[1], sub:"바로 반영 · 참가자에게 알림 없음", ok:"옮기기",
     run:function(){ return call("resv_move",{ id:x.id, slot:ks[0], seat:ks[1], from:x.st }); },
     fail:function(r){ return r&&r.reason==="state"?"이미 "+(r.cur||"다른 상태")+" · 다시 받습니다":MT_MVWHY[r&&r.reason]||""; },
     done:function(){ mtLgbPut(x, to); paint(); reload(["lgb","resv","nb"]);
-      toast((x.name||x.emp)+" · "+ks[0]+" 상담석 "+ks[1], was?{ undo:function(){ var w=mtKp(was); call("resv_move",{ id:x.id, slot:w[0], seat:w[1], from:x.st }).then(function(r){ reload(["lgb","resv"]); toast(r&&r.ok?"되돌렸습니다 · "+w[0]+" 상담석 "+w[1]:"되돌리지 못했습니다 · "+(MT_MVWHY[r&&r.reason]||why(r)),{ bad:!(r&&r.ok) }); }); } }:{}); } });
+      toast((x.name||x.emp)+" · "+ks[0]+" 미팅룸 "+ks[1], was?{ undo:function(){ var w=mtKp(was); call("resv_move",{ id:x.id, slot:w[0], seat:w[1], from:x.st }).then(function(r){ reload(["lgb","resv"]); toast(r&&r.ok?"되돌렸습니다 · "+w[0]+" 미팅룸 "+w[1]:"되돌리지 못했습니다 · "+(MT_MVWHY[r&&r.reason]||why(r)),{ bad:!(r&&r.ok) }); }); } }:{}); } });
 }
 function mtLgbPut(x, to){ var d=S.data.lgb; if(!d||!d.cells) return; var ks=mtKp(to), id=String(x.id);
   d.cells.forEach(function(c){ c.seats=(c.seats||[]).map(function(y){ return y&&String(y.id)===id?null:y; }); });
@@ -336,11 +330,11 @@ function mtAct(p, k, a){
   else if(a==="dn"){ if(RV_ON.indexOf(s2)<0) return;
     mtQuick(rs("완료", s2), function(){ return (x.name||x.emp)+" · 끝 · 프로그램 참여 2개"; }, bk(s2, "완료"), function(){ x.st="완료"; reload(["lgb","resv","nb"]); }); }
   else if(a==="ns"){ if(RV_ON.indexOf(s2)<0) return;
-    confirmBox({ t:"노쇼로 처리할까요?", who:(x.name||x.emp)+" · "+(x._k?mtKp(x._k).join(" · 상담석 "):""), sub:"자리는 그대로 · 스탬프 없음", ok:"노쇼", danger:1,
+    confirmBox({ t:"노쇼로 처리할까요?", who:(x.name||x.emp)+" · "+(x._k?mtKp(x._k).join(" · 미팅룸 "):""), sub:"자리는 그대로 · 스탬프 없음", ok:"노쇼", danger:1,
       run:function(){ return rs("노쇼", s2); }, done:function(){ x.st="노쇼"; paint(); mtDetRe(); reload(["lgb","resv","nb"]); toast((x.name||x.emp)+" · 노쇼",{ undo:bk(s2,"노쇼") }); } }); }
 }
 
-/* ── 9. 사람 상세(공통 서랍 drwOpen) · 원문 · 분류 · 운영자 메모 · 기록 ── */
+/* ── 9. 사람 상세(공통 서랍 drwOpen) · 원문 · 운영자 메모 · 기록 ── */
 function mtDetRow(){ var D=MT.det; if(!D) return null;
   if(D.p==="cc") return ccRow(D.k);
   var L=mtLnM(), x=L&&L.by[D.k], r=typeof rvRow==="function"?rvRow(D.k):null;
@@ -355,13 +349,12 @@ function mtDetRe(first){
   if(cc){ k=mtSrvK(x); st=x.status; }
   else { k=x.k; st=x.st; }
   var stTag=cc?ccTagH(x):tag(lnView({ status:st }), RV_TAG[st]);
-  h=drwHead(x.name||x.emp, [x.dept,"사번 "+x.emp,x.ts?"신청 "+fmtD(x.ts):""].filter(Boolean).join(" · "), ' '+stTag+(k?' '+tag(mtKp(k)[0]+" · "+(cc?"테이블 ":"상담석 ")+mtKp(k)[1],"off"):''));
+  h=drwHead(x.name||x.emp, [x.dept,"사번 "+x.emp,x.ts?"신청 "+fmtD(x.ts):""].filter(Boolean).join(" · "), ' '+stTag+(k?' '+tag(mtKp(k)[0]+" · "+(cc?"테이블 ":"미팅룸 ")+mtKp(k)[1],"off"):''));
   if(cc){
     h+='<div class="fld cc-fld">상담 내용 · 원문</div><div class="mtg-orig">'+(x.text?esc(x.text):'<span class="cap">'+esc(x.tag?"관심 "+x.tag+" · 글 없음":"글 없음")+'</span>')+'</div>';
-    if(nOk){ var c=n?num(n.cat):0; h+='<div class="fld">분류 <span class="cap">담당자가 고름 · 한 번 더 누르면 비움</span></div><div class="mtg-cats" role="group" aria-label="분류">'+mtCats().map(function(a){ return '<button type="button" aria-pressed="'+(c===num(a[0]))+'" onclick="mtCatSet(\''+jq(emp)+'\','+num(a[0])+')">'+esc(a[1])+'</button>'; }).join("")+'</div>'; }
     h+='<dl class="cc-kv"><dt>희망 시간</dt><dd>'+esc(ccPrefTx(x))+'</dd><dt>배정</dt><dd>'+(k?esc(mtKp(k).join(" · 테이블 ")):"대기 줄"+(mtQno(x)?" "+mtQno(x)+"번":""))+'</dd><dt>스탬프</dt><dd>아이디어 한 줄 · 신청 때 · 프로그램 참여 1개 · '+(st==="완료"?"받음":"상담 끝나면")+'</dd></dl>';
   } else {
-    h+='<dl class="cc-kv"><dt>시간</dt><dd>'+(k?esc(mtKp(k)[0]):"칸 미정")+'</dd><dt>상담석</dt><dd>'+(k?esc(mtKp(k)[1]):"-")+'</dd><dt>명단</dt><dd>'+(/^사전 명단/.test(x.memo||"")?"사전 명단":esc(x.memo||"사전 명단"))+'</dd><dt>스탬프</dt><dd>프로그램 참여 2개 · '+(st==="완료"?"받음":"상담 끝나면")+'</dd></dl>';
+    h+='<dl class="cc-kv"><dt>시간</dt><dd>'+(k?esc(mtKp(k)[0]):"칸 미정")+'</dd><dt>미팅룸</dt><dd>'+(k?esc(mtKp(k)[1]):"-")+'</dd><dt>명단</dt><dd>'+(/^사전 명단/.test(x.memo||"")?"사전 명단":esc(x.memo||"사전 명단"))+'</dd><dt>스탬프</dt><dd>프로그램 참여 2개 · '+(st==="완료"?"받음":"상담 끝나면")+'</dd></dl>';
   }
   if(nOk) h+='<div class="fld">운영자 메모 <span class="cap">참가자에게 보이지 않음 · 500자</span></div><textarea class="mtg-memo" id="mtMemo" maxlength="500" aria-label="운영자 메모">'+esc(MT.memo!=null?MT.memo:(n&&n.memo||""))+'</textarea>'+
     '<div class="btns mt"><span class="cap" style="flex:1;align-self:center">'+(n&&n.at?esc((n.by||"")+" · "+fmtD(n.at)+" 저장"):"")+'</span><button class="btn sm pri" type="button" id="mtMemoGo" onclick="mtMemoSave()">메모 저장</button></div>';
@@ -391,7 +384,7 @@ function mtLogLoad(){ var x=mtDetRow(); if(!x) return; var e=normE(x.emp);
 function mtLogH(e){ var x=MT.log[e]; if(!x) return '<span class="cap">불러오는 중</span>'; if(unknownSrv(x)) return '<span class="cap">서버 갱신 뒤</span>';
   if(!x.ok) return '<span class="cap">받지 못했습니다 · '+esc(why(x))+'</span>';
   var rows=(x.rows||[]).slice(0,20); if(!rows.length) return '<span class="cap">기록 없음</span>';
-  return rows.map(function(r){ return '<div><span>'+esc(fmtD(r.t))+'</span>'+esc((r.x||r.verb||"")+(r.byName?" · "+r.byName:""))+'</div>'; }).join(""); }
+  return rows.map(function(r){ return '<div><span>'+esc(fmtD(r.t))+'</span>'+esc(String(r.x||r.verb||"").replace(/상담석/g,"미팅룸")+(r.byName?" · "+r.byName:""))+'</div>'; }).join(""); }
 function mtMemoSave(){
   var D=MT.det, x=mtDetRow(), t=el("mtMemo"), go=el("mtMemoGo"); if(!D||!x||!t) return; var e=normE(x.emp), n=mtNote(D.p, e), v=t.value.slice(0,500);
   if(go){ go.setAttribute("aria-disabled","true"); go.textContent="저장 중"; }
@@ -401,37 +394,26 @@ function mtMemoSave(){
     if(r&&r.reason==="changed"){ toast("다른 곳에서 먼저 고쳤습니다 · 다시 받은 뒤 저장합니다",{ bad:1 }); reload([D.p==="cc"?"mnc":"mnl"]); }
     else toast("저장하지 못했습니다 · "+(r&&r.reason==="long"?"500자까지":why(r)),{ bad:1 }); });
 }
-function mtCatSet(emp, c){
-  var n=mtNote("cc", emp), was=n?num(n.cat):0; if(was===c) c=0;
-  mtNotePatch("cc", emp, { cat:c }); paint(); mtDetRe();
-  call("meet_note_set",{ prog:"cc", emp:normE(emp), cat:String(c), at:n&&n.at||"" }).then(function(x){
-    if(x&&x.ok){ mtNotePatch("cc", emp, { at:x.at||"", by:x.by||"" }); }
-    else { mtNotePatch("cc", emp, { cat:was }); paint(); mtDetRe(); toast("분류를 저장하지 못했습니다 · "+(x&&x.reason==="changed"?"다른 곳에서 먼저 고침":why(x)),{ bad:1 }); if(x&&x.reason==="changed") reload(["mnc"]); } });
-}
-
-/* ── 10. 아이디어(커피챗 신청 글 · 수동 분류 · 분류별 묶음 · 찾기 · 원문) ── */
+/* ── 10. 아이디어 = 신청 글 명단(공통 표 XG · 사용자 261016 밤 「무슨 아이디어를 냈는지 쫙 보여야」) · 분류 없음 ──
+ * 본문 = cchat_list text(아이디어 시트 경로 cchat 전문 · 없으면 커피챗 시트 글 칸) · 줄바꿈해 전문 · 엑셀도 전문 */
+var MT_IST={ "대기":"대기", "매칭":"선정", "참석":"참석", "완료":"완료", "취소":"취소" };
+var MTI={ g:null };
 function mtIdeaPaint(){
   var box=el("mtIb"); if(!box) return;
-  var gt=dataGate("cc","커피챗 명단"); if(gt){ if(box._h!==gt){ box._h=gt; box.innerHTML=gt; } return; }
-  var ok=mtNoteOk("cc"), rows=ccRows().filter(function(r){ return r.status!=="취소"&&(r.text||r.tag); }).sort(function(a,b){ return String(a.ts).localeCompare(String(b.ts)); });
-  var q=MT.iq.replace(/\s+/g,"").toUpperCase(), none=rows.filter(function(r){ return !mtCatOf(r.emp); }).length;
-  if(!ok) MT.iff="all";
-  var vis=rows.filter(function(r){ if(MT.iff==="none"&&mtCatOf(r.emp)) return false; return !q||[r.name,r.emp,r.dept,r.text||r.tag].join("|").replace(/\s+/g,"").toUpperCase().indexOf(q)>=0; });
-  var fh=ok?'<span class="mtg-seg" role="group" aria-label="거르기">'+[["all","전체",rows.length],["none","분류 전",none]].map(function(f){ return '<button type="button" aria-pressed="'+(MT.iff===f[0])+'" class="'+(MT.iff===f[0]?"on":"")+'" onclick="MT.iff=\''+f[0]+'\';mtIdeaPaint()">'+f[1]+' <span class="n">'+n0(f[2])+'</span></button>'; }).join("")+'</span>':"";
-  var fb=el("mtIf"); if(fb&&fb._h!==fh){ fb._h=fh; fb.innerHTML=fh; }
-  var cp=el("mtIcap"), ct=ok?"보이는 글 "+vis.length+"건 · 분류를 고르면 바로 저장":"분류 저장 = 서버 갱신 뒤 · 지금은 원문만";
-  if(cp&&cp.textContent!==ct) cp.textContent=ct;
-  var groups=ok?mtCats().map(function(c){ return [num(c[0]), String(c[1])]; }).concat([[0,"분류 전"]]):[[0,"신청 글"]];
-  var card=function(r){ var e=jq(r.emp), k=mtSrvK(r), c=mtCatOf(r.emp);
-    return '<div class="mtg-ic"><div class="o" role="button" tabindex="0" onclick="mtOpen(\'cc\',\''+e+'\')" onkeydown="if(event.key===\'Enter\'){ event.preventDefault(); mtOpen(\'cc\',\''+e+'\'); }">'+esc(r.text||("관심 "+r.tag))+'</div>'+
-      '<div class="f"><b style="color:var(--tx2)">'+esc(r.name||r.emp)+'</b><span>'+esc(r.dept||"")+'</span><span class="n">'+(k?esc(mtKp(k).join(" ")):"대기 줄")+'</span></div>'+
-      (ok&&!c?'<div class="mtg-cats" role="group" aria-label="'+esc((r.name||r.emp)+" 분류")+'">'+mtCats().map(function(a){ return '<button type="button" aria-pressed="false" onclick="mtCatSet(\''+e+'\','+num(a[0])+')">'+esc(a[1])+'</button>'; }).join("")+'</div>':'')+'</div>'; };
-  var grp=function(g, wide){ var L=vis.filter(function(r){ return ok?mtCatOf(r.emp)===g[0]:true; }); if(!L.length) return "";
-    return '<section class="card mtg-ig'+(wide?" wide":"")+'"><h3>'+esc(g[1])+' <span class="cap n">'+L.length+'건</span></h3>'+(wide?'<div class="mtg-iw">'+L.map(card).join("")+'</div>':L.map(card).join(""))+'</section>'; };
-  /* 분류 전 = 위에 넓게(고르는 곳) · 분류된 묶음 = 아래 단 */
-  var h=vis.length?grp(groups[groups.length-1], true)+'<div class="mtg-icols">'+groups.slice(0,-1).map(function(g){ return grp(g); }).join("")+'</div>'
-    :'<div class="card">'+emptyH(rows.length?"찾는 글이 없습니다":"아직 신청 글이 없습니다")+'</div>';
-  if(box._h!==h){ box._h=h; box.innerHTML=h; }
+  var gt=dataGate("cc","커피챗 명단"), rows=gt?[]:ccRows(), seq={};
+  rows.slice().sort(function(a,b){ return String(a.ts).localeCompare(String(b.ts)); }).forEach(function(r,i){ seq[jq(r.emp)]=i+1; });
+  var st=function(r){ return MT_IST[r.status]||r.status||""; };
+  if(!MTI.g) MTI.g=XG.make({ id:"mtidea", file:"18F 커피챗 아이디어", key:function(r){ return jq(r.emp); }, sort:{ k:"no", d:1 }, find:["emp"],
+    onRow:function(k){ mtOpen("cc", k, MTI.g); },
+    chips:[["all","전체",null]].concat(["대기","선정","참석","완료","취소"].map(function(t){ return [t,t,function(r){ return st(r)===t; }]; })),
+    cols:[{ k:"no", t:"순번", type:"num", w:56, v:function(r){ return seq[jq(r.emp)]||""; } },{ k:"ts", t:"신청 시각", type:"date", w:96 },{ k:"name", t:"이름", w:80 },{ k:"dept", t:"부서", w:120 },
+      { k:"text", t:"아이디어 한 줄", w:460, v:function(r){ return r.text||r.tag||""; }, f:function(r){ var t=r.text||r.tag||""; return t?'<div class="mtg-full">'+esc(t)+'</div>':'<span class="cap">글 없음</span>'; } },
+      { k:"pref", t:"희망 시간", w:130, v:ccPrefTx, f:function(r){ return '<div class="mtg-full">'+esc(ccPrefTx(r))+'</div>'; } },
+      { k:"st", t:"상태", w:64, v:st, f:function(r){ var t=st(r); return tag(t, t==="대기"?"warn":t==="참석"||t==="완료"?"ok":t==="취소"?"off":""); } },
+      { k:"seat", t:"배정", w:84, v:function(r){ return CC_ON.indexOf(r.status)>=0&&r.round?hm(r.round)+" · "+(r.table||""):""; } },
+      { k:"memo", t:"메모", w:180, v:function(r){ var n=mtNote("cc", r.emp); return n&&n.memo||""; }, f:function(r){ var n=mtNote("cc", r.emp); return n&&n.memo?'<div class="mtg-full">'+esc(n.memo)+'</div>':""; } }],
+    src:{ a:"cchat_list", p:{} }, empty:"아직 신청 글이 없습니다", h:640 });
+  MTI.g.gate=gt||""; XG.set(MTI.g, gt?null:rows, box);
 }
 
 /* ── 11. 끌어다 놓기(포인터 · 마우스 6px · 터치 길게 누르기) · 클릭 · 키보드 ── */

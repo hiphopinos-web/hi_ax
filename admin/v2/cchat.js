@@ -34,7 +34,6 @@ function ccListPaint(box){
       { k:"pref", t:"희망 시간", w:110, v:ccPrefTx },
       { k:"round", t:"배정", w:84, v:function(r){ return CC_ON.indexOf(r.status)>=0&&r.round?hm(r.round)+" · "+(r.table||""):""; } },
       { k:"st", t:"상태", w:72, v:ccView, f:ccTagH },
-      { k:"cat", t:"분류", w:110, v:function(r){ return typeof mtCatTx==="function"?mtCatTx(r.emp):""; } },
       { k:"text", t:"상담 내용", w:260, v:function(r){ return r.text||r.tag||""; } },
       { k:"memo", t:"메모", w:150, v:function(r){ var n=typeof mtNote==="function"?mtNote("cc",r.emp):null; return n&&n.memo?String(n.memo).slice(0,20):""; } }],
     src:{ a:"cchat_list", p:{} }, h:520 });

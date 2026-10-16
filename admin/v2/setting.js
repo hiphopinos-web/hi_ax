@@ -42,7 +42,7 @@ SCREENS.log={
 };
 function scrUrl(p){ try{ return new URL(p, location.href).href; }catch(e){ return p; } }
 /* ── 활동 기록 ── */
-function lgWhat(r){ if(r.cnt) return (r.list==="gate"?"접속 허용 명단":r.list==="staff_app"?"앱 스태프 명단":r.list==="staff_wear"?"스태프 의류 명단":"명단")+(r.op==="add"?"에 넣음":"에서 뺌")+" · "+r.cnt+"명"; return r.x||""; }
+function lgWhat(r){ if(r.cnt) return (r.list==="gate"?"접속 허용 명단":r.list==="staff_app"?"앱 스태프 명단":r.list==="staff_wear"?"스태프 의류 명단":"명단")+(r.op==="add"?"에 넣음":"에서 뺌")+" · "+r.cnt+"명"; return String(r.x||"").replace(/상담석/g,"미팅룸"); }   /* 261016 밤 라운지 상담석 = 미팅룸(서버 운영로그 글자는 그대로 · 화면만) */
 function lgUndoTx(r){ var u=r.undo; if(!u) return ""; if(u.done) return u.done+" 되돌림"; if(u.a==="roulette_undo") return ""; if(u.ok) return GEN_UNDO[u.a]?"가능":""; return u.cur?"지금 "+u.cur:"오늘만 · 지남"; }
 function lgKpi(){ var d=S.data.alog, b=el("lgK"); if(!b) return; if(!d||!d.ok){ b.innerHTML=""; return; } var c=d.cnt||{};
   b.innerHTML=kpi({ l:"오늘 기록", v:n0(c.all), u:"건", s:"스캔 "+n0(c.x)+"건 포함" })+kpi({ l:"되돌릴 수 있는 묶음", v:n0(d.undo), u:"묶음", s:"명단 넣기 · 빼기" })+kpi({ l:"실패", v:n0(d.fail), u:"건", st:num(d.fail)?"warn":"", s:"스캔 거절 등" })+kpi({ l:"실패한 콘솔 쓰기", v:n0(d.wfailN||0), u:"건", st:num(d.wfailN)?"warn":"", s:"서버가 거절한 처리" }); }

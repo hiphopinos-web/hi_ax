@@ -71,23 +71,8 @@
 .mtg-pc.st-no{background:var(--bad-bg);border-color:var(--bad-ln)}
 .mtg-pc.st-dn{background:var(--ok-bg);border-color:var(--ok-ln)}
 
-/* 아이디어(수동 분류) */
-.mtg-ibar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px;margin-bottom:10px}
-.mtg-ibar .xg-q{width:260px;max-width:100%}
-.mtg-icols{columns:3 300px;column-gap:12px}
-.mtg-ig{break-inside:avoid;margin-bottom:12px;padding:12px}
-.mtg-ig h3{font-size:16px;font-weight:700;display:flex;gap:8px;align-items:center;margin-bottom:6px}
-.mtg-ig h3 .cap{font-weight:600}
-.mtg-ic{border-top:1px solid var(--line2);padding:10px 0}
-.mtg-ig.wide{margin-bottom:12px}
-.mtg-iw{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));column-gap:20px}
-.mtg-iw .mtg-ic:first-of-type{border-top:1px solid var(--line2)}
-.mtg-ic:first-of-type{border-top:0}
-.mtg-ic .o{font-size:14px;color:var(--tx);cursor:pointer;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.mtg-ic .f{display:flex;gap:6px;align-items:center;margin-top:4px;font-size:12px;color:var(--tx3);flex-wrap:wrap}
-.mtg-cats{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
-.mtg-cats button{height:28px;padding:0 9px;border-radius:99px;border:1px solid var(--line3);background:var(--sf);font-size:12px;font-weight:600;color:var(--tx2);white-space:nowrap}
-.mtg-cats button[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+/* 아이디어(신청 글 명단 · 본문 전문 줄바꿈) */
+.mtg-full{white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere;line-height:1.5;padding:8px 0;color:var(--tx)}
 .mtg-orig{background:var(--soft);border:1px solid var(--line2);border-radius:var(--r-s);padding:10px 12px;white-space:pre-wrap;line-height:1.6;font-size:14px;margin-top:4px}
 .mtg-log{display:flex;flex-direction:column;gap:6px;font-size:13px;margin-top:4px}
 .mtg-log div{display:flex;gap:10px}.mtg-log span{color:var(--tx3);font-variant-numeric:tabular-nums;min-width:86px;flex:none}

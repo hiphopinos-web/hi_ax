@@ -53,7 +53,7 @@ function lgUpOpen(){ upOpen(LNG_UP); S.ui.lup=1; render(); el("main").scrollTop=
 /* 미팅 탭 라운지 명단 틀 · 올리기 단추 · 명단 표 */
 function lgShell(b){
   if(S.ui.lup&&UP){ upMount(b); return; }
-  b.innerHTML='<div class="up-bar"><span class="cap">사전 명단 = 「사번 · 시간 · 상담석」 엑셀</span><button class="btn sm pri" type="button" onclick="lgUpOpen()">명단 올리기</button><button class="btn sm" type="button" onclick="lngUndoAsk()">마지막 올리기 되돌리기</button></div><div id="lgErr"></div><div class="card"><h2>AX 라운지 사전 명단 <span class="cap">줄을 누르면 사람 상세</span></h2><div id="lgList"></div></div>';
+  b.innerHTML='<div class="up-bar"><span class="cap">사전 명단 = 「사번 · 시간 · 미팅룸」 엑셀</span><button class="btn sm pri" type="button" onclick="lgUpOpen()">명단 올리기</button><button class="btn sm" type="button" onclick="lngUndoAsk()">마지막 올리기 되돌리기</button></div><div id="lgErr"></div><div class="card"><h2>AX 라운지 사전 명단 <span class="cap">줄을 누르면 사람 상세</span></h2><div id="lgList"></div></div>';
 }
 function lgPaint(){
   if(S.ui.lup&&UP) return;   /* 명단 올리기 화면은 자기 동작 때만 다시 그린다(5초 갱신이 입력을 지우지 않게) */
@@ -65,7 +65,7 @@ function lgPaint(){
   if(!LG.g) LG.g=XG.make({ id:"lounge", file:"AX 라운지 신청", key:function(r){ return r.id; }, sort:{ k:"slot", d:1 },
     onRow:function(k){ var r=rvRow(k); if(r&&typeof mtOpen==="function") mtOpen("ln", k, LG.g); },
     chips:[["all","전체",null],["none","칸 미정",function(r){ return r.status!=="취소"&&!hm(r.slot); }],["in","왔음",function(r){ return r.status==="체크인"; }],["dn","끝",function(r){ return r.status==="완료"; }],["no","노쇼",function(r){ return r.status==="노쇼"; }],["cx","취소",function(r){ return r.status==="취소"; }]],
-    cols:[{ k:"slot", t:"시간", w:70, v:function(r){ return hm(r.slot)||"칸 미정"; } },{ k:"seat", t:"상담석", w:60 },{ k:"name", t:"이름", w:110 },{ k:"emp", t:"사번", w:90 },{ k:"dept", t:"부서", w:130 },{ k:"status", t:"상태", w:80, v:lnView, f:function(r){ return tag(lnView(r), RV_TAG[r.status]); } },
+    cols:[{ k:"slot", t:"시간", w:70, v:function(r){ return hm(r.slot)||"칸 미정"; } },{ k:"seat", t:"미팅룸", w:60 },{ k:"name", t:"이름", w:110 },{ k:"emp", t:"사번", w:90 },{ k:"dept", t:"부서", w:130 },{ k:"status", t:"상태", w:80, v:lnView, f:function(r){ return tag(lnView(r), RV_TAG[r.status]); } },
       { k:"mm", t:"운영 메모", w:160, v:function(r){ var n=typeof mtNote==="function"?mtNote("ln",r.emp):null; return n&&n.memo?String(n.memo).slice(0,20):""; } },{ k:"memo", t:"명단 표지", w:150 },{ k:"ts", t:"신청 시각", type:"date", w:110 },{ k:"cxAt", t:"취소 시각", type:"date", w:110 }],
     src:{ a:"resv_list", p:{} }, h:520, select:1, onAdd:function(){ paOpen(laSp()); }, cancel:laCx() });
   XG.set(LG.g, rows, box);

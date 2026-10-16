@@ -22,7 +22,7 @@ function upTime(v){
   return ("0"+h).slice(-2)+":"+("0"+mi).slice(-2);
 }
 /* 상담석 = 1 ~ 9 한 자리(「2」 「2번」 「상담석 2」) · 빈칸 = 자리 고정 없음 · 못 읽으면 null */
-function upSeat(v){ var s=upCell(v); if(!s) return ""; var m=s.match(/^(?:상담석\s*)?(\d+)\s*(?:번|석)?$/); return m&&Number(m[1])>=1&&Number(m[1])<=9?String(Number(m[1])):null; }
+function upSeat(v){ var s=upCell(v); if(!s) return ""; var m=s.match(/^(?:(?:상담석|미팅룸)\s*)?(\d+)\s*(?:번|석)?$/); return m&&Number(m[1])>=1&&Number(m[1])<=9?String(Number(m[1])):null; }
 function upEmp(v){ var e=normE(upCell(v)); return /^[0-9A-Z]{3,12}$/.test(e)&&/\d/.test(e)?e:null; }
 /* 이름 비교 · 띄어쓰기 · 괄호 안(직급 등) 빼기 */
 function upNm(v){ return upCell(v).replace(/\([^)]*\)/g,"").replace(/\s+/g,""); }
@@ -155,7 +155,7 @@ function upPaint(){
   el("upS1").innerHTML='<h2>1 · 파일 고르기 <span class="cap">.xlsx · .xls · .csv · 첫 시트부터</span></h2>'+
     '<label class="btn pri up-file">파일 고르기<input type="file" accept=".xlsx,.xls,.csv" onchange="upFile(this)"></label>'+
     (UP.src?'<div class="cap mt4">'+esc(UP.src)+(UP.aoa?' · '+n0(UP.aoa.length)+'줄':'')+'</div>':'')+wbs+
-    '<label class="up-f mt">또는 붙여넣기 <span class="cap">엑셀에서 복사한 줄 · 「'+esc(sp.pasteT||"사번 시간 상담석")+'」</span><textarea id="upTx" rows="4" placeholder="'+(sp.pasteEx||"990001	10:30	2&#10;990002	11:30	1")+'">'+esc(UP.tx||"")+'</textarea></label>'+
+    '<label class="up-f mt">또는 붙여넣기 <span class="cap">엑셀에서 복사한 줄 · 「'+esc(sp.pasteT||"사번 시간 미팅룸")+'」</span><textarea id="upTx" rows="4" placeholder="'+(sp.pasteEx||"990001	10:30	2&#10;990002	11:30	1")+'">'+esc(UP.tx||"")+'</textarea></label>'+
     '<button class="btn sm mt4" type="button" onclick="upPaste()">붙여넣은 줄 읽기</button>'+(UP.busy&&!UP.aoa?'<div class="cap mt4">읽는 중</div>':'');
   /* 2 */
   var s2=el("upS2");
@@ -188,11 +188,11 @@ function upPaint(){
 /* ── 명세 · AX 라운지 사전 명단(lng_pre_preview · lng_pre_apply · 서버 계약 3-5) ── */
 var LNG_RES={ new:"새 승인", move:"시간 바꿈", keep:"그대로" };
 var LNG_UP={
-  id:"lngup", file:"라운지 명단 미리 세기", title:"명단 올리기", desc:"AX 라운지 사전 명단 · 사번 · 시간 · 상담석", askT:"라운지 사전 명단을 적용할까요?", word:"라운지명단",
+  id:"lngup", file:"라운지 명단 미리 세기", title:"명단 올리기", desc:"AX 라운지 사전 명단 · 사번 · 시간 · 미팅룸", askT:"라운지 사전 명단을 적용할까요?", word:"라운지명단",
   preview:"lng_pre_preview", apply:"lng_pre_apply",
   fields:[{ k:"emp", t:"사번", need:1, re:/사번|사원\s*번호|직원\s*번호|emp/i, shape:function(v){ return !!upEmp(v)&&!upTime(v); } },
     { k:"t", t:"시간", re:/시간|시각|칸|time/i, shape:function(v){ return /\d{1,2}\s*[:시]/.test(v); } },
-    { k:"s", t:"상담석", re:/상담석|좌석|자리|seat/i, shape:function(v){ return /^\d$/.test(v); } },
+    { k:"s", t:"미팅룸", re:/미팅룸|상담석|좌석|자리|seat/i, shape:function(v){ return /^\d$/.test(v); } },
     { k:"name", t:"이름(확인용)", re:/이름|성명|name/i }],
   modes:[["replace","명단 통째 교체","올린 사람이 명단 전부 · 명단에서 빠지는 사람은 사은품 명단에서 빠짐 · 상담 줄은 그대로"],["add","추가만","지금 명단에 더함 · 빠지는 사람 없음"]],
   /* 서버 줄 = 「사번 [시간] [상담석]」 · 상담석은 시간 뒤에만 읽는다 */
@@ -200,8 +200,8 @@ var LNG_UP={
     var e=upEmp(o.emp0), t=upTime(o.t0), s=upSeat(o.s0);
     if(!e) return { bad:"사번 모양", emp:o.emp0 };
     if(t===null) return { bad:"시간 모양", emp:e };
-    if(s===null) return { bad:"상담석 모양", emp:e, t:t };
-    if(s&&!t) return { bad:"시간 없이 상담석", emp:e, s:s };
+    if(s===null) return { bad:"미팅룸 모양", emp:e, t:t };
+    if(s&&!t) return { bad:"시간 없이 미팅룸", emp:e, s:s };
     return { emp:e, t:t, s:s, txt:e+(t?" "+t+(s?" "+s:""):"") };
   },
   judge:function(o, pr, pv){
@@ -210,18 +210,18 @@ var LNG_UP={
     if(pr.st==="noros") return { k:"noros", msg:"명부에 없는 사번" };
     if(pr.st==="dup") return { k:"dup", msg:"같은 사번 두 번" };
     if(pr.err==="time") return { k:"time", msg:"칸 밖 시간" };
-    if(pr.err==="seat") return { k:"seat", msg:"상담석 범위 밖 · 1 ~ "+num(pv.resv&&pv.resv.seats) };
+    if(pr.err==="seat") return { k:"seat", msg:"미팅룸 범위 밖 · 1 ~ "+num(pv.resv&&pv.resv.seats) };
     var R=pv.resv||{}, cp=(R.cap||[]).filter(function(c){ return pr.t&&c.t===pr.t; })[0];
     if(cp) return { k:"cap", msg:"칸 정원 초과 · "+cp.t+" 칸 "+cp.n+"명 / "+cp.seats+"석" };
     var ds=(R.dupSeat||[]).filter(function(d){ return pr.t&&d.t===pr.t&&Number(d.seat)===Number(pr.seat); })[0];
-    if(ds) return { k:"dup", msg:"같은 칸 같은 상담석 "+ds.n+"명" };
+    if(ds) return { k:"dup", msg:"같은 칸 같은 미팅룸 "+ds.n+"명" };
     return { k:"ok", res:LNG_RES[pr.rv]||"", msg:pr.t?"":"칸 미정" };
   },
   chips:[["all","전체",null],["ok","정상",function(r){ return r.k==="ok"; }],["bad","문제 전체",function(r){ return r.k!=="ok"; }],["cap","칸 정원 초과",function(r){ return r.k==="cap"; }],["time","칸 밖 시간",function(r){ return r.k==="time"; }],
-    ["seat","상담석 범위 밖",function(r){ return r.k==="seat"; }],["noros","명부에 없음",function(r){ return r.k==="noros"; }],["dup","겹침",function(r){ return r.k==="dup"; }],["fmt","모양 오류",function(r){ return r.k==="fmt"; }]],
+    ["seat","미팅룸 범위 밖",function(r){ return r.k==="seat"; }],["noros","명부에 없음",function(r){ return r.k==="noros"; }],["dup","겹침",function(r){ return r.k==="dup"; }],["fmt","모양 오류",function(r){ return r.k==="fmt"; }]],
   cols:[{ k:"no", t:"파일 줄", type:"num", w:70 },{ k:"emp", t:"사번", w:90 },{ k:"name0", t:"이름(파일)", w:100 },{ k:"nm", t:"이름(명부)", w:100 },
     { k:"tt", t:"시간", w:110, v:function(r){ var c=r.cell!=null?r.cell:r.t; if(!c) return r.t0||""; var e=mins(c)+num(UP.pv&&UP.pv.resv&&UP.pv.resv.step||60); return c+"~"+m2hm(e)+(r.t0&&hm(r.t0)!==c?" ("+r.t0+")":""); } },
-    { k:"s", t:"상담석", w:70, v:function(r){ return r.s||r.s0||""; } },
+    { k:"s", t:"미팅룸", w:70, v:function(r){ return r.s||r.s0||""; } },
     { k:"k", t:"결과", w:110, v:function(r){ return r.k==="ok"?(r.res||"정상"):"문제"; }, f:function(r){ return r.k==="ok"?tag(r.res||"정상","ok"):tag("문제","bad"); } },
     { k:"msg", t:"내용", w:220 }],
   sum:function(pv, mode){
