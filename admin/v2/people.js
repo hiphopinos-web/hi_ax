@@ -9,8 +9,8 @@ var PP_SUBS=[["find","찾기"],["visit","가입자"],["gate","접속 허용"],["
 var PP_LG={
   visit:{ kind:"visit", file:"가입자", cap:"앱에 가입한 사람 · 시험 사번은 「시험」 칸", sort:{ k:"last", d:-1 }, chips:lgChipsOf("",[["today","오늘 접속"],["pin","PIN 대기"],["test","시험"]]) },
   gate:{ kind:"gate", file:"접속 허용", cap:"클로즈 베타 · 사전 신청 기간에 앱에 들어올 사람 · 한 사람 넣기 · 줄을 누르면 빼기 · 통째 바꾸기는 명단 올리기", sort:{ k:"at", d:-1 }, chips:lgChipsOf("",[["acct","가입"],["today","오늘 접속"]]) },
-  staff:{ kind:"staff", file:"스태프", cap:"폰 권한(앱 스태프 화면) + 스태프 옷 명단 · 한 사람 넣기 · 줄을 누르면 빼기 · 통째 바꾸기는 명단 올리기", sort:{ k:"name", d:1 }, chips:lgChipsOf("",[["app","폰 권한"],["wear","옷"],["today","오늘 접속"]]) },
-  pre10:{ kind:"pre10", file:"10F 사전 신청", cap:"10F 실습 세션 A~E 사전 신청자 · 한 사람 넣기 · 줄을 누르면 세션 바꾸기 · 빼기", sort:{ k:"sn", d:1 }, chips:lgChipsOf("sn",[["kit","키트 받음"],["att","출석"]]) },
+  staff:{ kind:"staff", file:"스태프", cap:"폰 권한(앱 스태프 화면) + 스태프 옷 명단 · 한 사람 넣기 · 줄을 누르면 빼기 · 통째 바꾸기는 명단 올리기", sort:{ k:"name", d:1 }, chips:ppNoWear(lgChipsOf("",[["app","폰 권한"],["wear","옷"],["today","오늘 접속"]]),"staff"), sheets:function(v){ return [ppPivot(v,"staff")]; } },
+  pre10:{ kind:"pre10", file:"10F 사전 신청", cap:"10F 실습 세션 A~E 사전 신청자 · 한 사람 넣기 · 줄을 누르면 세션 바꾸기 · 빼기", sort:{ k:"sn", d:1 }, chips:ppNoWear(lgChipsOf("sn",[["kit","키트 받음"],["att","출석"]]),"pre10"), sheets:function(v){ return [ppPivot(v,"pre10")]; } },
   att10:{ kind:"att10", file:"10F 출석", cap:"10F 세션 입장 · 종료 QR", sort:{ k:"pn", d:1 }, chips:lgChipsOf("pn",[["out","종료"]]) },
   att17:{ kind:"att17", file:"17F 출석", cap:"17F 강연 입장 · 종료", sort:{ k:"pn", d:1 }, chips:lgChipsOf("pn",[["out","종료"]]) }
 };
@@ -20,7 +20,9 @@ SCREENS.people={
   need:function(){ var s=ppSub();
     if(s==="find") return S.ui.pq?[{ k:"pfind", a:"acct_page", p:{ q:S.ui.pq, n:50, sort:"last" }, ttl:30000 }]:[];
     if(s==="up") return [];
-    return [{ k:"pl_"+s, a:"list_get", p:{ kind:PP_LG[s].kind }, ttl:60000 }]; },
+    var nd=[{ k:"pl_"+s, a:"list_get", p:{ kind:PP_LG[s].kind }, ttl:60000 }];
+    if(s==="pre10") nd.push({ k:"pl_kit", a:"list_get", p:{ kind:"kit" }, ttl:60000 });   /* 옷 열 = 옷 신청 명단(kit)을 사번으로 붙인다 */
+    return nd; },
   mount:function(vb){
     var s=ppSub();
     el("phCap").textContent=s==="find"?"사번 · 이름으로 찾기 · 줄을 누르면 한 사람 카드":s==="up"?"엑셀로 명단 바꾸기 · 미리 세기 → 적용":PP_LG[s].cap;
@@ -36,7 +38,7 @@ SCREENS.people={
       return;
     }
     var x=PP_LG[s];
-    gridOf("pp_"+s,{ file:x.file, key:function(r){ return r.emp; }, sort:x.sort, chips:[["all","전체",null]], lgChips:x.chips, cols:[{ k:"emp", t:"사번", w:90 }], lg:x.kind, h:520, onRow:function(k){ pcOpen(k, MG["pp_"+s]); } });
+    gridOf("pp_"+s,{ file:x.file, key:function(r){ return r.emp; }, sort:x.sort, chips:[["all","전체",null]], lgChips:x.chips, sheets:x.sheets, cols:[{ k:"emp", t:"사번", w:90 }], lg:x.kind, h:520, onRow:function(k){ pcOpen(k, MG["pp_"+s]); } });
     vb.innerHTML=h+'<div class="card"><div id="mg_pp_'+s+'"></div></div>';
   },
   paint:function(){
@@ -47,11 +49,58 @@ SCREENS.people={
       var gt=dataGate("pfind","사람 찾기"); g.gate=gt||""; XG.set(g, gt?null:(d.rows||[]), el("mg_pfind"));
       if(!gt&&S.ui.pqOpen&&!S.busy.pfind){ S.ui.pqOpen=0; if((d.rows||[]).length===1) pcOpen(d.rows[0].emp, g); }
       return; }
-    var x=PP_LG[s], g2=MG["pp_"+s]; gridPaint("pp_"+s, "pl_"+s, x.file, function(){ return lgRows("pl_"+s, g2, function(dd){ return dd.rows||[]; }); });
+    var x=PP_LG[s], g2=MG["pp_"+s]; gridPaint("pp_"+s, "pl_"+s, x.file, function(){ var rr=lgRows("pl_"+s, g2, function(dd){ return dd.rows||[]; }); if(s==="pre10") ppWearCol(g2); return rr; });
   }
 };
 function peopleQ(q){ q=String(q||"").trim(); S.ui.pq=q; S.ui.pqOpen=1; S.at.pfind=0; S.data.pfind=null; if(S.tab==="people"&&ppSub()==="find"){ var i=el("ppQ"); if(i) i.value=q; paint(); load(true,["pfind"]); } else go("people","find"); }
 function ppStale(){ Object.keys(S.at).forEach(function(k){ if(/^pl_|^pfind$/.test(k)) S.at[k]=0; }); }
+
+/* ── 261016 옷 · 10F 사전 신청 명단의 「옷」 열 · 「미선택」 칩 · 엑셀 둘째 시트 「옷 수량」(종류 · 사이즈 × 세션) ──
+ * 옷 값 = list_get kit(옷 신청 · 사전 신청 키트 · 스태프 옷 · 라운지 사전)을 사번으로 붙인다 · 못 받았으면 pre10 줄의 size
+ * 스태프 명단은 그 줄의 의류 · 사이즈로 같은 모양 시트(열 = 합계) */
+var KIT_SZ=["SS","L","2XL","3XL"], KIT_GS=["pre10","staff","lounge"];
+var KIT_GN={ pre10:"키트", staff:"스태프 옷", lounge:"라운지 키트" }, KIT_GL={ pre10:"사전 신청 키트", staff:"스태프 옷", lounge:"라운지 사전 키트" };
+var KIT_SES=[["fld","세션 A"],["ta","세션 B"],["tb","세션 C"],["aws","세션 D"],["ms1","세션 E 1회차"],["ms2","세션 E 2회차"]];
+function ppKitMap(){ var d=S.data.pl_kit; if(!d||d.ok===false||!Array.isArray(d.rows)) return null; if(d._m) return d._m; var m={}; d.rows.forEach(function(r){ if(r.emp&&!m[r.emp]) m[r.emp]=r; }); d._m=m; return m; }
+/* 한 사람 옷 = { st:"sz"(고름) | "none"(미선택) | "out"(옷 명단 밖), g, sz, how } */
+function ppWear(r, kind){
+  if(kind==="staff") return !r.wear?{ st:"out" }:r.sz?{ st:"sz", g:"staff", sz:r.sz }:{ st:"none", g:"staff" };
+  var m=ppKitMap();
+  if(!m) return r.size?{ st:"sz", g:"pre10", sz:r.size }:r.role?{ st:"out" }:{ st:"none", g:"pre10" };
+  var k=m[r.emp]; if(!k) return { st:"out" };
+  return k.sz?{ st:"sz", g:k.g||"pre10", sz:k.sz, how:k.how }:{ st:"none", g:k.g||"pre10" };
+}
+function ppWearT(w){ return w.st==="sz"?(KIT_GN[w.g]||w.g)+" "+w.sz:w.st==="none"?"미선택":"옷 명단 밖"; }
+function ppNoWear(base, kind){ return function(rows){ return base(rows).concat([["f:nowear","미선택",function(r){ return ppWear(r,kind).st==="none"; }]]); }; }
+/* 서버 열(useCols) 뒤에 「옷」 열 · 서버 「사이즈」 자리에 넣는다 */
+function ppWearCol(g){
+  if(g.o.cols.some(function(c){ return c.k==="wear10"; })) return;
+  var col={ k:"wear10", t:"옷", w:110, v:function(r){ return ppWearT(ppWear(r)); },
+    f:function(r){ var w=ppWear(r); return w.st==="sz"?'<span class="cap">'+esc(KIT_GN[w.g]||w.g)+'</span> <b>'+esc(w.sz)+'</b>'+(w.how==="자동"?' <span class="cap">자동</span>':''):w.st==="none"?tag("미선택","warn"):tag("옷 명단 밖","off"); } };
+  var i=-1; g.o.cols.forEach(function(c,j){ if(c.k==="size") i=j; });
+  if(i>=0) g.o.cols.splice(i,1,col); else { g.o.cols.forEach(function(c,j){ if(c.k==="role"||(i<0&&c.k==="dept")) i=j; }); g.o.cols.splice(i+1,0,col); }
+  var root=XG.root(g); if(root) root.remove();
+}
+/* 옷 수량 시트 · 행 = 종류 · 사이즈(+ 미선택 · 옷 명단 밖 · 합계) · 열 = 세션(pre10) 또는 없음(staff) + 합계 · 합계 = 시트 1 줄 수 */
+function ppPivot(rows, kind){
+  var ses=kind==="pre10"?KIT_SES.slice():[], known={};
+  ses.forEach(function(x){ known[x[0]]=1; });
+  if(kind==="pre10") rows.forEach(function(r){ var id=String(r.sid||""); if(!known[id]){ known[id]=1; ses.push([id, r.sn||id||"세션 없음"]); } });
+  var cnt={}, line=function(key){ if(!cnt[key]){ cnt[key]={ t:0 }; ses.forEach(function(x){ cnt[key][x[0]]=0; }); } return cnt[key]; };
+  var keys=[]; KIT_GS.forEach(function(g){ KIT_SZ.forEach(function(z){ keys.push(g+"|"+z); }); });
+  var extra=[];
+  rows.forEach(function(r){ var w=ppWear(r,kind), key=w.st==="sz"?w.g+"|"+w.sz:w.st, c=line(key);
+    if(w.st==="sz"&&keys.indexOf(key)<0&&extra.indexOf(key)<0) extra.push(key);
+    c.t++; if(kind==="pre10") c[String(r.sid||"")]++; });
+  var main=kind==="staff"?"staff":"pre10";
+  var order=keys.filter(function(k){ return k.indexOf(main+"|")===0||cnt[k]; }).concat(extra).concat(["none","out"].filter(function(k){ return k==="none"||cnt[k]; }));
+  var nums=function(c){ return ses.map(function(x){ return c?c[x[0]]:0; }).concat([c?c.t:0]); };
+  var aoa=[["종류","사이즈"].concat(ses.map(function(x){ return x[1]; })).concat(["합계"])];
+  order.forEach(function(k){ var p=k.split("|"), lab=p.length>1?[KIT_GL[p[0]]||p[0], p[1]]:[k==="none"?"미선택":"옷 명단 밖",""]; aoa.push(lab.concat(nums(cnt[k]))); });
+  var tot=["합계",""].concat(ses.map(function(x){ return rows.filter(function(r){ return String(r.sid||"")===x[0]; }).length; })).concat([rows.length]);
+  aoa.push(tot);
+  return { name:"옷 수량", aoa:aoa, wch:[16,8].concat(ses.map(function(){ return 12; })).concat([8]) };
+}
 
 /* ── 명단 올리기 고르기 ── */
 function ppUpPick(){

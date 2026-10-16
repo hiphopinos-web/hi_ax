@@ -5,6 +5,7 @@
  * 내려받기 = 확인 창(261016 PIN 없음) → 서버 원본 액션을 dl=1 로 다시 받아 → 화면에 보이는 열 · 구분 · 검색 · 정렬 그대로 .xlsx
  *       SheetJS(cdnjs 고정 버전)를 그때 불러온다 · 못 불러오면 UTF-8 BOM CSV 로 대신 받는다
  * 줄 누르기 = o.onRow(key) · 고른 줄 g.sel 강조 · 키보드 Enter
+ * 추가 시트 = o.sheets(지금 보이는 줄) → [{ name, aoa, wch }] · 첫 시트(명단) 뒤에 붙인다 · CSV 대신 받기면 첫 시트만
  * 열 정의 c = { k 키 · t 머리 글자 · w 너비 · type(num | date | text) · v(row) 값 · f(row) 화면 html · x(row) 엑셀 값 · act(row) 단추 html(엑셀 제외) · sort:false } */
 var XLSX_URL="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
 var XG={ reg:{}, MAXROWS:500 };
@@ -78,7 +79,7 @@ XG.chipBy=function(id, c){ var g=XG.reg[id]; g.chip=c; xgSave(g); XG.paint(g); i
 XG.dl=function(id){
   var g=XG.reg[id], o=g.o; if(!g.rows){ toast("명단을 받은 뒤 내려받습니다"); return; }
   var cols=xgCols(g).filter(function(c){ return !c.act&&c.t; }), v=xgView(g), ch=(o.chips||[]).filter(function(c){ return c[0]===g.chip; })[0];
-  confirmBox({ t:"명단을 엑셀로 내려받을까요?", who:(o.file||"명단")+" · "+n0(v.length)+"줄", sub:"열 "+cols.length+"개 · 구분 「"+(ch?ch[1]:"전체")+"」"+(g.q?" · 검색 「"+g.q+"」":"")+" · 화면 그대로 · 개인정보 파일", ok:"엑셀 다운로드",
+  confirmBox({ t:"명단을 엑셀로 내려받을까요?", who:(o.file||"명단")+" · "+n0(v.length)+"줄", sub:"열 "+cols.length+"개 · 구분 「"+(ch?ch[1]:"전체")+"」"+(g.q?" · 검색 「"+g.q+"」":"")+(o.sheets?" · 시트 "+(1+o.sheets([]).length)+"개":"")+" · 화면 그대로 · 개인정보 파일", ok:"엑셀 다운로드",
     run:function(){
       var src=xgSrc(g);
       if(!src) return xgFile(g, g.rows);
@@ -106,6 +107,12 @@ function xgLoadLib(){
   return XG._lib;
 }
 function xgStamp(){ var d=srvNow(), p=function(n){ return ("0"+n).slice(-2); }; return String(d.getFullYear()).slice(2)+p(d.getMonth()+1)+p(d.getDate())+"_"+p(d.getHours())+p(d.getMinutes()); }
+/* 추가 시트(o.sheets) · 실패해도 첫 시트는 받는다 */
+function xgSheets(X, wb, g, v){
+  if(!g.o.sheets) return; var a=[]; try{ a=g.o.sheets(v)||[]; }catch(e){ a=[]; }
+  a.forEach(function(sh){ var w=X.utils.aoa_to_sheet(sh.aoa); if(sh.wch) w["!cols"]=sh.wch.map(function(n){ return { wch:n }; }); X.utils.book_append_sheet(wb, w, String(sh.name||"시트").slice(0,31)); });
+  XG.last.sheets=wb.SheetNames.slice();
+}
 function xgFile(g, rows){
   var cols=xgCols(g).filter(function(c){ return !c.act&&c.t; }), v=xgView(g, rows);
   var aoa=[cols.map(function(c){ return c.t; })].concat(v.map(function(r){ return cols.map(function(c){ return xgX(c,r); }); }));
@@ -116,6 +123,7 @@ function xgFile(g, rows){
     ws["!cols"]=cols.map(function(c){ return { wch:c.type==="date"?17:Math.max(6,Math.min(40,Math.round((c.w||100)/7))) }; });
     if(aoa.length>1) ws["!autofilter"]={ ref:X.utils.encode_range({ s:{ r:0, c:0 }, e:{ r:aoa.length-1, c:cols.length-1 } }) };
     var wb=X.utils.book_new(); X.utils.book_append_sheet(wb, ws, String(g.o.file||"명단").slice(0,31).replace(/[\\/?*\[\]:]/g," "));
+    xgSheets(X, wb, g, v);
     X.writeFile(wb, base+".xlsx", { compression:true });
     XG.last.kind="xlsx"; return { ok:true, name:base+".xlsx" };
   },function(){
