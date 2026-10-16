@@ -3,6 +3,7 @@
  * 승인 · 체크인 · 선정 · 다음 번호 · 번호표 무효 = L2(확인 창, PIN 없음) · 요청 닫기 · 잘못된 PIN 요청 닫기 = L1(바로 · 토스트)
  * 서버가 아직 PIN 을 요구하는 동작(PIN 초기화)은 같은 확인 창이 PIN 칸으로 바뀐다(옛 서버 · 갱신 뒤 없어짐) */
 var IB_SUBS=[["lounge","AX 라운지","신청"],["cchat","커피챗","희망"],["ck","체크인존","대기"],["req","스태프 요청",""],["pw","PIN 분실",""]];
+var RV_ON=["신청","승인","체크인"];
 var RV_CLS={ "신청":"req", "승인":"okc", "체크인":"in", "완료":"done", "노쇼":"no" };
 var RV_TAG={ "신청":"warn", "승인":"", "체크인":"", "완료":"ok", "노쇼":"bad", "취소":"off" };
 var CC_ROUNDS=["13:00","13:30","14:00","14:30","15:00","15:30"], CC_TABLES=["A","B","C","D","E","F"];
@@ -13,7 +14,7 @@ SCREENS.inbox={
     return s==="lounge"?[{ k:"resv", a:"resv_list", ttl:20000 }]:s==="cchat"?[{ k:"cc", a:"cchat_list", ttl:20000 }]:s==="ck"?[{ k:"ck", a:"ck_state", ttl:15000 }]:s==="req"?[{ k:"sreq", a:"sreq_list", p:{ st:"all", n:100 }, ttl:15000 }]:[{ k:"pwl", a:"pw_req_list", ttl:30000 }]; },
   mount:function(vb){
     var s=ibSub();
-    el("phCap").textContent={ lounge:"1F AX 라운지 · 상담석 2 x 1시간 칸 배치판", cchat:"18F AX 커피챗 · 희망 → 선정(회차 · 테이블) → 참석", ck:"1F 체크인존 · 창구 A~D 번호표", req:"스태프 폰 「운영자에게 요청」", pw:"앱 로그인 「PIN 을 잊었어요」 요청" }[s];
+    el("phCap").textContent={ lounge:"1F AX 라운지 · 사전 신청 · 상담석 x 1시간 칸 배치판", cchat:"18F AX 커피챗 · 희망 → 선정(회차 · 테이블) → 참석", ck:"1F 체크인존 · 창구 A~D 번호표", req:"스태프 폰 「운영자에게 요청」", pw:"앱 로그인 「PIN 을 잊었어요」 요청" }[s];
     vb.innerHTML='<div class="chips" id="ibChips" role="tablist" aria-label="처리함"></div><div id="ibB"></div>';
     var b=el("ibB");
     if(s==="lounge") b.innerHTML='<div id="lgErr"></div><div class="grid gside"><div class="card" style="padding:8px 12px" id="lgBoard"></div><div class="col" id="lgSide"></div></div><div class="card mt"><h2>AX 라운지 신청 명단</h2><div id="lgList"></div></div>';
@@ -30,22 +31,24 @@ SCREENS.inbox={
 };
 
 /* ── AX 라운지 배치판 · 세로 1시간 칸(칸 수 = 설정 값) × 가로 상담석 ── */
-function lgCfg(){ var b=S.data.nb, L=b&&b.lounge; return { start:(L&&L.start)||LOUNGE_DEF.start, n:num(L&&L.n)||LOUNGE_DEF.n, seats:num(L&&L.seats)||LOUNGE_DEF.seats, srv:!!L }; }
+function lgCfg(){ var b=S.data.nb, L=b&&b.lounge; return { start:(L&&L.start)||LOUNGE_DEF.start, n:num(L&&L.n)||LOUNGE_DEF.n, seats:num(L&&L.seats)||LOUNGE_DEF.seats, step:num(L&&L.step)||60, srv:!!L }; }
+/* 261016 놓기 = 서버 lngPlace_ 와 같은 규칙 · 시간 빈칸 = 칸 미정(none) · 정한 상담석(seat) 먼저 · 나머지 신청 시각 순 · 못 놓으면 칸 밖(out) */
 function lgPlace(rows){
-  var cf=lgCfg(), s0=mins(cf.start), grid=[], out=[], cx=[];
+  var cf=lgCfg(), s0=mins(cf.start), grid=[], out=[], cx=[], none=[], left=[];
   for(var i=0;i<cf.n;i++){ grid.push([]); for(var j=0;j<cf.seats;j++) grid[i].push(null); }
   rows.slice().sort(function(a,b){ return String(a.ts).localeCompare(String(b.ts)); }).forEach(function(r){
     if(r.status==="취소"){ cx.push(r); return; }
-    var m=mins(r.slot), i=Math.floor((m-s0)/60);
+    if(!hm(r.slot)){ none.push(r); return; }
+    var m=mins(r.slot), i=Math.floor((m-s0)/cf.step);
     if(m<0||i<0||i>=cf.n){ out.push(r); return; }
-    var j=r.seat?num(r.seat)-1:grid[i].indexOf(null);
-    if(j<0||j>=cf.seats||grid[i][j]){ j=grid[i].indexOf(null); }
-    if(j<0){ out.push(r); return; }
-    grid[i][j]=r;
+    var j=num(r.seat)-1;
+    if(j>=0&&j<cf.seats&&!grid[i][j]){ grid[i][j]=r; return; }
+    left.push([r,i]);
   });
-  return { cf:cf, grid:grid, out:out, cx:cx, s0:s0 };
+  left.forEach(function(x){ var j=grid[x[1]].indexOf(null); if(j<0){ out.push(x[0]); return; } grid[x[1]][j]=x[0]; });
+  return { cf:cf, grid:grid, out:out, cx:cx, none:none, s0:s0 };
 }
-var LG={ sel:null, g:null };
+var LG={ sel:null, g:null, mv:null };
 function lgPaint(){
   var gt=dataGate("resv","AX 라운지 신청");
   if(gt){ el("lgBoard").innerHTML=gt; el("lgSide").innerHTML=""; return; }
@@ -54,7 +57,7 @@ function lgPaint(){
   var hd='<div class="h"></div>'; for(var j=0;j<cf.seats;j++) hd+='<div class="h">상담석 '+(j+1)+'</div>';
   var cells="";
   P.grid.forEach(function(rw,i){
-    var t=m2hm(P.s0+i*60); cells+='<div class="tm">'+t+'</div>';
+    var t=m2hm(P.s0+i*cf.step); cells+='<div class="tm">'+t+'</div>';
     rw.forEach(function(r,j){ var key=i+":"+j, sel=LG.sel===key?" sel":"";
       cells+=r?'<button type="button" class="cell '+(RV_CLS[r.status]||"")+sel+'" onclick="lgPick(\''+key+'\')" aria-label="'+esc(t+" 상담석 "+(j+1)+" "+r.name+" "+r.status)+'"><span class="nm">'+esc(r.name||r.emp)+'</span><span class="s">'+esc(r.status)+'</span></button>'
         :'<button type="button" class="cell empty'+sel+'" onclick="lgPick(\''+key+'\')">빈 자리</button>'; });
@@ -62,33 +65,53 @@ function lgPaint(){
   var cols='56px'+new Array(cf.seats+1).join(' minmax(0,1fr)');
   el("lgBoard").innerHTML='<div class="legend"><span class="cap">칸 '+cf.n+'개 · '+(cf.srv?"운영 시간 설정":"기본값 "+cf.start+" 부터")+'</span><span><i style="background:var(--warn-bg)"></i>신청</span><span><i style="background:var(--navy05)"></i>승인</span><span><i style="background:var(--navy)"></i>체크인</span><span><i style="background:var(--ok-bg)"></i>완료</span><span><i style="background:var(--bad-bg)"></i>노쇼</span><span><i style="background:#fff;border-style:dashed"></i>빈 자리</span></div>'+
     '<div class="board" style="grid-template-columns:'+cols+'">'+hd+cells+'</div>'+
+    (P.none.length?'<div class="band mt" id="lgNone"><span><b>칸 미정 '+P.none.length+'명</b> · 이름을 눌러 칸에 넣습니다</span><span>'+P.none.map(function(r){ return '<button type="button" class="btn sm'+(LG.sel==="n:"+r.id?" pri":"")+'" onclick="lgPick(\'n:'+jq(r.id)+'\')">'+esc(r.name||r.emp)+'</button>'; }).join(" ")+'</span></div>':'')+
     (P.out.length?'<div class="band warn mt">칸 밖 신청 '+P.out.length+'건 · '+esc(P.out.map(function(r){ return hm(r.slot)+" "+(r.name||r.emp); }).join(", "))+'</div>':'')+
-    '<div class="cap mt">취소 '+P.cx.length+'건은 아래 명단에 · '+(cf.srv?"":"상담석 번호는 서버 갱신 뒤 서버 값")+'</div>';
+    '<div class="cap mt">취소 '+P.cx.length+'건은 아래 명단에'+(cf.srv?"":" · 칸 설정은 서버 갱신 뒤 서버 값")+'</div>';
   LG.P=P; lgSide();
   if(!LG.g) LG.g=XG.make({ id:"lounge", file:"AX 라운지 신청", key:function(r){ return r.id; }, sort:{ k:"slot", d:1 },
     chips:[["all","전체",null],["w","신청",function(r){ return r.status==="신청"; }],["ok","승인",function(r){ return r.status==="승인"; }],["in","체크인",function(r){ return r.status==="체크인"; }],["dn","완료",function(r){ return r.status==="완료"; }],["no","노쇼",function(r){ return r.status==="노쇼"; }],["cx","취소",function(r){ return r.status==="취소"; }]],
-    cols:[{ k:"slot", t:"시간", w:70, v:function(r){ return hm(r.slot); } },{ k:"name", t:"이름", w:110 },{ k:"emp", t:"사번", w:90 },{ k:"dept", t:"부서", w:130 },{ k:"status", t:"상태", w:80, f:function(r){ return tag(r.status, RV_TAG[r.status]); } },{ k:"memo", t:"메모", w:160 },{ k:"ts", t:"신청 시각", type:"date", w:110 },{ k:"cxAt", t:"취소 시각", type:"date", w:110 }],
+    cols:[{ k:"slot", t:"시간", w:70, v:function(r){ return hm(r.slot)||"칸 미정"; } },{ k:"seat", t:"상담석", w:60 },{ k:"name", t:"이름", w:110 },{ k:"emp", t:"사번", w:90 },{ k:"dept", t:"부서", w:130 },{ k:"status", t:"상태", w:80, f:function(r){ return tag(r.status, RV_TAG[r.status]); } },{ k:"memo", t:"메모", w:160 },{ k:"ts", t:"신청 시각", type:"date", w:110 },{ k:"cxAt", t:"취소 시각", type:"date", w:110 }],
     src:{ a:"resv_list", p:{} }, h:360 });
   XG.set(LG.g, rows, el("lgList"));
 }
-function lgPick(key){ LG.sel=key; lgPaint(); }
+function lgPick(key){ LG.sel=key; LG.mv=null; lgPaint(); }
+/* 261016 칸에 넣기 · 다른 시간으로(resv_move · L2) · 칸마다 남은 자리 · 상담석(자동 = 빈 자리 · 1 · 2 = 그 자리에 고정) */
+function lgMoveH(r){
+  var P=LG.P, cf=P.cf, rows='';
+  for(var i=0;i<cf.n;i++){ var t=m2hm(P.s0+i*cf.step), used=P.grid[i].filter(function(x){ return x&&x.id!==r.id&&RV_ON.indexOf(x.status)>=0; }).length, left=cf.seats-used, me=hm(r.slot)===t;   /* 정원 = 신청 · 승인 · 체크인(서버와 같다 · 완료 · 노쇼는 자리를 차지해도 세지 않는다) */
+    rows+='<div class="row"><div class="t"><b>'+t+'~'+m2hm(P.s0+i*cf.step+cf.step)+'</b><span>'+(me?"지금 칸":left>0?cf.seats+"자리 중 "+left+"자리 남음":"마감")+'</span></div>'+
+      (left>0||me?[0].concat(Array.apply(null,{length:cf.seats}).map(function(_,k){ return k+1; })).map(function(s){ var busy=s&&P.grid[i][s-1]&&P.grid[i][s-1].id!==r.id;   /* 다른 사람이 놓인 자리는 고르지 않는다(서버는 고정 자리만 막지만 놓인 사람이 밀려나지 않게) */ return busy?'':'<button class="btn sm" type="button" onclick="lgMoveAsk(\''+jq(r.id)+'\',\''+t+'\','+s+')">'+(s?"상담석 "+s:"빈 자리")+'</button>'; }).join(" "):'')+'</div>'; }
+  return '<div class="card"><h2>'+(hm(r.slot)?"다른 시간으로":"칸에 넣기")+' · '+esc(r.name||r.emp)+'</h2>'+rows+'<div class="btns mt"><button class="btn" type="button" onclick="LG.mv=null;lgPaint()">닫기</button></div></div>';
+}
+function lgMoveAsk(id, t, seat){
+  var r=rvRow(id); if(!r) return;
+  var was=hm(r.slot)||"칸 미정";
+  confirmBox({ t:hm(r.slot)?"시간을 바꿀까요?":"이 칸에 넣을까요?", who:(r.name||r.emp)+" · "+was+" → "+t+(seat?" · 상담석 "+seat:""), sub:r.status==="승인"?"10분 전 알림이 새 시각으로 바뀝니다":"", ok:hm(r.slot)?"시간 바꾸기":"칸에 넣기",
+    run:function(){ return call("resv_move",{ id:id, slot:t, seat:seat?String(seat):null, from:r.status }); },
+    fail:function(x){ return x&&x.reason==="taken"?"그 칸은 다 찼습니다":x&&x.reason==="seat"?"그 상담석은 다른 사람 자리입니다":x&&x.reason==="same"?"지금과 같은 자리입니다":x&&x.reason==="state"?"이미 "+(x.cur||"다른 상태")+"입니다 · 목록을 다시 받습니다":""; },
+    done:function(x){ r.slot=x&&x.slot||t; r.seat=x&&x.seat?String(x.seat):""; LG.mv=null; LG.sel=null; lgPaint(); reload(["resv"]); toast((r.name||r.emp)+" · "+(x&&x.slot||t)+(seat?" · 상담석 "+seat:"")); } });
+}
 function lgSide(){
   var P=LG.P, box=el("lgSide"); if(!P) return;
   if(!LG.sel){ var w=null; P.grid.some(function(rw,i){ return rw.some(function(r,j){ if(r&&r.status==="신청"){ w=i+":"+j; return true; } }); }); if(w){ LG.sel=w; return lgPaint(); } }
   if(!LG.sel){ box.innerHTML='<div class="card">'+emptyH("대기 중인 신청이 없습니다")+'<p class="cap">칸을 누르면 여기에 나옵니다</p></div>'+lgNext(); return; }
-  var ij=LG.sel.split(":"), i=num(ij[0]), j=num(ij[1]), r=(P.grid[i]||[])[j], t=m2hm(P.s0+i*60)+"~"+m2hm(P.s0+i*60+60);
-  if(!r){ box.innerHTML='<div class="card"><h2>'+t+' · 상담석 '+(j+1)+' '+tag("빈 자리","off")+'</h2>'+laterH("다른 신청을 이 칸으로 옮기기(시간 · 상담석 바꾸기)")+'</div>'+lgNext(); return; }
+  if(LG.mv){ var rm=rvRow(LG.mv); if(rm){ box.innerHTML=lgMoveH(rm)+lgNext(); return; } LG.mv=null; }
+  if(LG.sel.indexOf("n:")===0){ var rn=rvRow(LG.sel.slice(2)); if(!rn||hm(rn.slot)){ LG.sel=null; return lgPaint(); }
+    box.innerHTML='<div class="card"><h2>칸 미정 '+tag(rn.status,RV_TAG[rn.status])+'</h2>'+rowH(rn.name||rn.emp,[rn.dept,"사번 "+rn.emp,rn.memo].filter(Boolean).join(" · "))+'<div class="mt"><button class="btn pri big" type="button" onclick="LG.mv=\''+jq(rn.id)+'\';lgPaint()">칸에 넣기</button></div></div>'+lgNext(); return; }
+  var ij=LG.sel.split(":"), i=num(ij[0]), j=num(ij[1]), r=(P.grid[i]||[])[j], t=m2hm(P.s0+i*P.cf.step)+"~"+m2hm(P.s0+i*P.cf.step+P.cf.step);
+  if(!r){ box.innerHTML='<div class="card"><h2>'+t+' · 상담석 '+(j+1)+' '+tag("빈 자리","off")+'</h2><p class="cap">칸 미정인 사람은 위 「칸 미정」에서 고르고, 다른 칸 사람은 그 칸을 눌러 「다른 시간으로」로 옮깁니다</p></div>'+lgNext(); return; }
   var st=r.status, A="";
   var b=function(to,lab,cls){ return '<button class="btn '+(cls||"")+'" type="button" onclick="rvAsk(\''+jq(r.id)+'\',\''+to+'\')">'+esc(lab)+'</button>'; };
-  if(st==="신청") A='<button class="btn pri big" type="button" onclick="rvAsk(\''+jq(r.id)+'\',\'승인\')">승인 · 알림 보내기</button><div class="btns mt"><button class="btn" type="button" aria-disabled="true" title="서버 갱신 뒤" onclick="toast(\'다른 시간으로 옮기기는 서버 갱신 뒤에 씁니다\')">다른 시간으로</button>'+b("취소","취소","dng")+'</div>';
-  else if(st==="승인") A='<button class="btn pri big" type="button" onclick="rvAsk(\''+jq(r.id)+'\',\'체크인\')">체크인</button><div class="btns mt">'+b("노쇼","노쇼","dng")+b("취소","취소","dng")+'</div>';
+  if(st==="신청") A='<button class="btn pri big" type="button" onclick="rvAsk(\''+jq(r.id)+'\',\'승인\')">승인 · 알림 보내기</button><div class="btns mt"><button class="btn" type="button" onclick="LG.mv=\''+jq(r.id)+'\';lgPaint()">다른 시간으로</button>'+b("취소","취소","dng")+'</div>';
+  else if(st==="승인") A='<button class="btn pri big" type="button" onclick="rvAsk(\''+jq(r.id)+'\',\'체크인\')">체크인</button><div class="btns mt"><button class="btn" type="button" onclick="LG.mv=\''+jq(r.id)+'\';lgPaint()">다른 시간으로</button>'+b("노쇼","노쇼","dng")+b("취소","취소","dng")+'</div>';
   else if(st==="체크인") A='<button class="btn pri big" type="button" onclick="rvAsk(\''+jq(r.id)+'\',\'완료\')">상담 완료</button><div class="btns mt">'+b("승인","체크인 되돌리기")+b("노쇼","노쇼","dng")+'</div>';
   else if(st==="완료") A='<div class="btns">'+b("체크인","완료 되돌리기")+'</div>';
   else if(st==="노쇼") A='<div class="btns">'+b("승인","노쇼 되돌리기")+'</div>';
-  box.innerHTML='<div class="card"><h2>'+t+' · 상담석 '+(j+1)+' '+tag(st,RV_TAG[st])+'</h2>'+rowH(r.name||r.emp,[r.dept,"사번 "+r.emp,"신청 "+hm(r.slot),"앱 신청 "+fmtD(r.ts)].filter(Boolean).join(" · "))+
+  box.innerHTML='<div class="card"><h2>'+t+' · 상담석 '+(j+1)+' '+tag(st,RV_TAG[st])+'</h2>'+rowH(r.name||r.emp,[r.dept,"사번 "+r.emp,/^사전 명단/.test(r.memo||"")?"사전 명단":"앱 신청 "+fmtD(r.ts),num(r.seat)?"상담석 고정 "+r.seat:""].filter(Boolean).join(" · "))+
     '<div class="cap mt">메모</div><div class="memo">'+(r.memo?esc(r.memo):'<span class="cap">없음</span>')+'</div><div class="mt">'+A+'</div></div>'+lgNext();
 }
-function lgNext(){ return '<div class="card"><h2>이어지는 일</h2><p class="cap">승인 → 체크인(스태프 스캔 또는 여기) → 완료. 체크인 · 완료하면 스탬프 07 프로그램 참여(라운지 참석 확인)가 붙고, 노쇼 · 취소로 바꾸면 거둡니다.</p></div>'; }
+function lgNext(){ return '<div class="card"><h2>이어지는 일</h2><p class="cap">사전 명단 = 승인으로 들어옵니다. 체크인(스태프 폰 스캔 또는 여기) → 완료. 체크인하면 라운지 참석 확인 스탬프 2개가 붙고(완료는 다시 주지 않음), 노쇼 · 취소로 바꾸면 거둡니다.</p></div>'; }
 var RV_FX={ "승인":"참가자 앱에 승인 알림이 갑니다", "체크인":"스탬프 07 프로그램 참여 · 라운지 참석 확인", "완료":"상담 완료 · 사은품 대상", "노쇼":"참석 확인 스탬프를 거둡니다 · 자리는 그대로", "취소":"자리가 비고 참가자 앱에 바로 반영됩니다" };
 function rvRow(id){ var d=S.data.resv; return d&&d.rows?d.rows.filter(function(x){ return x.id===id; })[0]:null; }
 function rvAsk(id, to){
