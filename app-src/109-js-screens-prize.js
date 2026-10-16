@@ -362,7 +362,8 @@ function fcfsLate() {
   var x = fxGet(), cut = String((x && x.cut) || "").split(":");
   if (cut.length < 2) return false;
   var d = appNow(true);
-  return d.getFullYear() === 2026 && d.getMonth() === 9 && d.getDate() === 26 && d.getHours() * 60 + d.getMinutes() >= (+cut[0]) * 60 + (+cut[1]);
+  var ymd = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();   /* v7.47 10/26 마감 시각 뒤 + 그 다음 날부터(옛: 26일 당일만 → 10/27 에 다시 「10:30부터 1F」) */
+  return ymd > 20261026 || (ymd === 20261026 && d.getHours() * 60 + d.getMinutes() >= (+cut[0]) * 60 + (+cut[1]));
 }
 /* v5.97 (사용자 261006 밤) 경품 시트 선착순 상품 제목 오른쪽 = 남은 수량 · 숫자공개 규칙(ALL · LOW · OFF → left -1 = 숨김)을 따른다 · 0 · 마감 시각 뒤 = 「마감」 · 숨김 = 총수량 */
 function fcfsQtyTxt() { var x = fxGet(); if (!x) return ""; if (x.left === 0 || fcfsLate()) return "마감"; return x.left > 0 ? "남은 " + x.left + " / " + x.cap : ""; }
@@ -377,10 +378,11 @@ function fcfsLeftHtml(n) {
    상태 = 수령 자격(got) · 수령 완료(done) · 마감(full · closed · 남은 0 · 마감 시각 뒤) · 남은 n / cap · 숫자를 숨기면(left -1 · 숫자공개 LOW 임박 전 · OFF) 「선착순」만 · 취소(void)는 지금 줄처럼 그리지 않는다 · 꺼짐(fx 없음) 없음 */
 function fcfsRailTxt() {
   var x = fxGet(); if (!x) return null;
+  if (typeof evPreDay === "function" && evPreDay()) return null;   /* v7.47 (261016 레드팀 B2) 행사 전 = 선착순 줄 없음(서버 fx.on 은 설정 ON/OFF 라 행사 전에도 온다) */
   var f = fcfsMy(), st = f ? f.st : "";
   if (st === "void") return null;
   if (st === "done") return "받음";
-  if (f && f.st === "got" && f.rk > 0) return f.rk + "번";   /* 261016 (사용자) 달성순 · 행운권 자리 옆 「선착순 N번」 · 남은 수 · 마감 시각보다 먼저(번호가 있으면 받을 사람) */
+  if (f && f.st === "got" && f.rk > 0) return f.rk + "번" + (fcfsLate() ? " · 발송" : "");   /* v7.47 (레드팀 B3) 17:00 지급 마감 뒤 미수령 = 「N번 · 발송」 */   /* 261016 (사용자) 달성순 · 행운권 자리 옆 「선착순 N번」 · 남은 수 · 마감 시각보다 먼저(번호가 있으면 받을 사람) */
   if (st === "full" || st === "out" || st === "closed" || x.left === 0 || fcfsLate()) return "마감";   /* 261016 201번째부터(full) = 「선착순 마감」만 */   /* v5.98 ready = 「남은 N」 주황(fcfsRailHtml) · 「수령 자격」 없음 */
   return x.left > 0 ? "남은 " + x.left : "";   /* v5.97 (사용자 261006 밤 「210 / 210 헷갈림」) 남은 수만 */
 }
@@ -393,7 +395,7 @@ function fcfsStartHm() { var f = fcfsMy(), x = fxGet(); return String((f && f.st
 function fcfsPre() { var f = fcfsMy(); return !!(f && f.pre); }
 function fcfsAt(t) { var st = fcfsStartHm(); return st ? String(t).replace("1F 주차장 체크인존", st + "부터 1F 주차장 체크인존") : t; }
 function fcfsAtL(L) { return L.map(function (r) { return [r[0], fcfsAt(r[1]), r[2]]; }); }
-function fcfsCapWhere() { var f = fcfsMy(); return !fcfsReady(f) ? "" : f.st === "got" && f.rk > 0 ? " · 선착순 " + f.rk + "번" + fcfsAt(" · 1F 주차장 체크인존") : fcfsAt(" · 1F 주차장 체크인존에서 수령"); }   /* 261016 「6개 모두 모았어요 · 선착순 N번」 + 줄 바꿈 「· 10:30부터 1F 주차장 체크인존」(segHtml) */
+function fcfsCapWhere() { var f = fcfsMy(); return !fcfsReady(f) ? "" : f.st === "got" && f.rk > 0 ? " · 선착순 " + f.rk + "번" + (fcfsLate() ? " · 행사 뒤 발송" : fcfsAt(" · 1F 주차장 체크인존")) : fcfsAt(" · 1F 주차장 체크인존에서 수령"); }   /* 261016 「6개 모두 모았어요 · 선착순 N번」 + 줄 바꿈 「· 10:30부터 1F 주차장 체크인존」(segHtml) */
 /* 6번째 스탬프 상자 팝업 한 줄 */
 function fcfsPopLine() {
   if (raffleTickets(Math.min(REWARD_CAP, stampCount())) < RAFFLE_MAX) return "";
@@ -530,6 +532,7 @@ function stpAct(s, got) {
   if (got) return s.id === "p5" ? ["더 쓰기", "App.go('ideas')"] : s.id === "sv" ? ["결과", "App.go('survey')"] :
     s.id === "qz" ? ["다시 하기", "App.go('quiz')"] : s.id === "p4" ? ["다시 하기", "App.go('games')"] : ["완료", ""];   /* v5.16 (사용자 261003 「스탬프가 완료되면 더 안 된다」) 스탬프는 한 번 · 게임은 몇 번이든 · 받은 줄도 목록으로 */
   if (s.id === "lg") return ["자동", ""];
+  if ((s.id === "p2" || s.id === "st" || s.id === "p3") && typeof evPreDay === "function" && evPreDay() && !(typeof testEmp === "function" && testEmp())) return ["10/26부터", ""];   /* v7.47 (261016 레드팀 B1) 행사 전 가드 = 현장 줄(AX PLAY · 계단 · 프로그램 참여)은 눌러도 서버가 거절 · 아이디어 한 줄(p5)과 같은 「10/26부터」 · 테스트 사번은 서버도 예외 */
   if (s.id === "qz" && QZ_NEED <= 1) return ["시작", "App.go('quiz')"];   /* v4.95 (사용자 261002 「AX 퀴즈 박스 표시는 이제 없어도 된다」) 한 판뿐 · 타일 없이 줄을 누르면 시작 화면 */
   if (s.id === "qz" || s.id === "p4") return ["", ""];   /* 종목 타일이 행동이다 */
   if (s.id === "p2") return ["내 QR", "qrPanelOpen('mine')"];
@@ -559,7 +562,7 @@ function stpRowHtml(s, i, st, full) {
   var half = s.id === "p3" && !got && progUnitsOf(st) === 1;
   /* v6.83 (디자인 D-5) 오른쪽 = 누르는 행동 말만 · 행동이 아닌 글은 오른쪽에 두지 않는다 · 열리는 시각(10/26부터) = 둘째 줄 칩(보조 줄에 이미 있으면 생략) · 261013 오후 설문 14:30 은 단계 제목에 */
   var stat = s.id !== "sv" && a[0] && !a[1] && a[0] !== "완료" && a[0] !== "자동" && String(meta).indexOf(a[0]) < 0 ? a[0] : "";
-  return '<div class="axs-stp' + (got ? " done" : full && !half ? " off" : "") + (tap ? " tap" : "") + '" data-stp="' + s.id + '"' + tap + ">" +
+  return '<div class="axs-stp' + (got ? " done" : full && !half && s.id !== "sv" ? " off" : "") + (tap ? " tap" : "") + '" data-stp="' + s.id + '"' + tap + ">" +
     stpCellHtml(s, i, got, half) +   /* v6.88 (사용자 261009 「권장대로」 시안 A1) 번호 칸 = 도장(받기 전 번호가 든 옅은 자리 · 받으면 찍힌 씰 · 체크 원 대체) */
     '<div class="axs-stpb"><p class="ax-card-title">' + esc(s.title) + "</p>" +
     stpLineHtml("", esc(meta)) + (stat ? '<p class="axs-stpm"><span class="axs-stpc">' + esc(stat) + "</span></p>" : "") + (s.id === "p3" && !got ? stpProgListHtml() : "") +
@@ -587,7 +590,7 @@ function stpBoardHtml(st, full) {
   if (!stampV2()) return '<div class="axs-stps">' + STAMPS.map(function (s, i) { return stpRowHtml(s, i, st, full); }).join("") + "</div>";
   return STAMP_STAGES.map(function (g, n) {
     var rows = g.ids.map(function (id) { var s = stampDef(id), i = STAMPS.indexOf(s); return s && i >= 0 ? stpRowHtml(s, i, st, full) : ""; }).join("");
-    return '<div class="axs-stg"><p class="axs-stgh"><b class="axs-stgp">' + esc(g.t) + "</b><span>" + esc(g.ids.indexOf("sv") >= 0 && (typeof betaFree === "function" && betaFree()) ? "언제든" : g.s) + "</span></p>" +
+    return '<div class="axs-stg"><p class="axs-stgh"><b class="axs-stgp">' + esc(g.t) + "</b><span>" + esc(g.ids.indexOf("sv") >= 0 ? ((typeof betaFree === "function" && betaFree()) ? "언제든" : (typeof surveyOpen === "function" && surveyOpen()) ? "10/27까지" : g.s) : g.s) + "</span></p>" +
       '<div class="axs-stps">' + rows + "</div></div>";
   }).join("");
 }
