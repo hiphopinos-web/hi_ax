@@ -393,11 +393,16 @@ details.memo summary{cursor:pointer;font-weight:600;min-height:32px;display:flex
 .qv .btns{margin-top:4px}
 
 /* 261016 4단계 · 설문 집계(survey.js) */
-.svy-g{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));margin-top:8px}
+.svy-g{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin-top:8px}
 .svy-q{border:1px solid var(--line2);border-radius:var(--r-s);padding:10px 12px;min-width:0}
 .svy-h{display:flex;align-items:baseline;gap:8px}
 .svy-av{margin-left:auto;font-size:22px;font-weight:700}
 .svy-d td{height:30px;font-size:12px}
-.svy-b{width:38%}
+.svy-d{width:100%}
+.svy-d td:first-child{word-break:keep-all;text-wrap:balance;line-height:1.35;padding-top:4px;padding-bottom:4px}
+.svy-d td.n{white-space:nowrap;text-align:right;width:1%}
+.svy-b{width:26%}
+.svy-b .bar{min-width:0}
+.svy-b .bar i{border-radius:0}
 .svy-r{min-width:140px}
 .svy-r .bar{display:inline-block;width:calc(100% - 52px);vertical-align:middle;margin-right:6px}
