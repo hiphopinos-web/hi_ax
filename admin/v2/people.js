@@ -119,13 +119,14 @@ var STAMP8=[["lg","01","최초 로그인"],["qz","02","AX 퀴즈"],["p4","03","�
 var PROG=[["p3","17F 강연"],["p10","10F 실습"],["ln","1F AX 라운지"],["cc","18F 커피챗"]];
 var PG_HALF={ p3:"p3h", p10:"p10h" };   /* 입장이나 끝 한쪽만 = 1개(서버 progUnits_ 와 같은 짝) */
 var GRANT_IDS=["p2","p3","st"];   /* 서버 REVOKE_FIELD_IDS(담당자 부여 = 현장 셋) · 앱 자동 · 설문은 앱에서만 */
-var PC={ emp:"", d:null, att:null, g:null, seq:0 };
+var PC={ emp:"", d:null, att:null, u:null, g:null, seq:0 };
 var RESV_TAG={ "신청":"warn", "승인":"", "체크인":"", "완료":"ok", "노쇼":"bad", "취소":"off" };
-function pcOpen(emp, g){ emp=normE(emp); if(!emp) return; PC.emp=emp; PC.g=g||null; PC.d=null; PC.att=null; pcDraw(); pcLoad(); }
+function pcOpen(emp, g){ emp=normE(emp); if(!emp) return; PC.emp=emp; PC.g=g||null; PC.d=null; PC.att=null; PC.u=null; pcDraw(); pcLoad(); }
 function pcLoad(){
   var e=PC.emp, s=++PC.seq; if(!e) return;
   call("person_card",{ emp:e, vn:10, tn:30 }).then(function(r){ if(s!==PC.seq) return; PC.d=r||{ ok:false }; pcDraw(); });
   Promise.all([call("list_get",{ kind:"att10", q:e }), call("list_get",{ kind:"att17", q:e })]).then(function(a){ if(s!==PC.seq) return; PC.att=a; pcDraw(); });
+  if(typeof pcUsrLoad==="function") pcUsrLoad(e, s);   /* 261017 게임 · 닉네임(pcgame.js) */
 }
 function pcClosed(){ PC.emp=""; PC.seq++; }
 function pcDraw(){
@@ -162,6 +163,8 @@ function pcHtml(d){
     /* 261016 3단계 · 07 프로그램 참여 한 칸(세부 세 줄 · 상태 · 부여 · 취소 · 규칙 한 줄) */
     '<div class="pc-c pc-pg'+(pg?" got":"")+'"><div class="pc-pgh"><span class="no">07</span><b>프로그램 참여</b><span class="n pc-pgn">'+pg+' / 2</span></div><div class="cap">17F 강연 · 10F 실습 · 라운지 · 커피챗, 합쳐 최대 2개</div>'+
       PROG.map(function(p){ return pgRow(p[0],p[1]); }).join("")+'</div>'+(by.ck?cell("ck","0","옛 체크인(0개)"):"")+'</div>', 1);
+  /* 261017 게임 · 닉네임(pcgame.js) */
+  if(typeof pcGameHtml==="function") h+=pcGameHtml(d);
   /* 경품 · 옷 */
   var fx=d.fcfs, kit=d.kit, lg=d.lounge, gr=[];
   gr.push(rowH("룰렛", rl.used?"사용 "+fmtD(rl.at)+(rl.gn?" · "+rl.gn:""):"안 씀", rl.used?'<button class="btn sm" type="button" onclick="rlUndoAsk(\''+J+'\')">사용 취소</button>':tag("안 씀","off")));
@@ -181,8 +184,8 @@ function pcHtml(d){
   /* 최근 기록 */
   var tl=(d.tl||[]).slice(0,10);
   h+=pcSec("최근 기록", tl.length?'<ul class="pc-tl">'+tl.map(function(r){ return '<li><span class="n cap">'+esc(fmtD(r.t))+'</span><span>'+esc((r.verb?r.verb+" · ":"")+r.x)+(r.byName||r.by?' <span class="cap">· '+esc(r.byName||r.by)+'</span>':'')+'</span></li>'; }).join("")+'</ul><div class="cap mt4">전체 기록 = 기록 · 설정 › 활동 기록</div>':'<p class="cap">기록이 없습니다</p>');
-  /* 한 사람 초기화(접힘) */
-  h+='<details class="pc-rs mt"><summary>한 사람 초기화</summary><p class="cap mt4">이 사람의 스탬프 · 룰렛 · 행운권 · 게임 · 출석 · 신청 기록과 PIN 을 지워 처음 상태로 돌립니다. 되돌릴 수 없습니다. 행사일에는 실제 사번을 서버가 받지 않습니다.</p><button class="btn dng mt" type="button" onclick="pcResetAsk(\''+J+'\')">한 사람 초기화</button></details>';
+  /* 한 사람 초기화(pcgame.js · 261017 접힘을 풀어 칸으로) */
+  if(typeof pcResetHtml==="function") h+=pcResetHtml(d);
   return h+'</div>';
 }
 function pcSec(t, body, raw){ return '<div class="pc-s"><h3>'+(raw?t:esc(t))+'</h3>'+body+'</div>'; }
@@ -221,17 +224,21 @@ function pcPinAsk(emp){
     run:function(){ return call("acct_pwreset",{ emp:emp }); },
     done:function(r){ pcAfter(); toast("PIN 을 초기화했습니다 · "+(r.name||emp)+(r.already?" · 이미 초기화 상태":"")); } });
 }
-var RS_LBL={ log:"스탬프 · 룰렛", raffle:"행운권", game:"게임", type:"타자", race:"대전", nick:"닉네임", att:"출석", visit:"접속", drawin:"추첨 체크인", ideas:"아이디어", stairlog:"계단", stairleg:"계단 구간", resv:"라운지 상담", cchat:"커피챗", pwreq:"PIN 분실 요청", mark:"담당 표시", pin:"PIN" };
+/* 261017 한 사람 초기화 · 칸은 pcgame.js pcResetHtml · 지우는 것 = 서버 dry plan · 남는 것 = 서버 TEST_RESET_TABS 밖 */
+var RS_LBL={ game:"게임", type:"타자왕 현장", race:"타자 대전", nick:"닉네임", log:"스탬프 · 룰렛", raffle:"행운권", att:"출석", visit:"접속", drawin:"추첨 체크인", ideas:"아이디어", stairlog:"계단", stairleg:"계단 구간", resv:"라운지 상담", cchat:"커피챗", pwreq:"PIN 분실 요청", mark:"담당 표시", pin:"PIN" };
+var RS_KEEP=[["계정","설문 응답","선착순","참여상","럭키드로우","재고 장부"],["옷 사이즈","번호표","체크인 번호","명단","알림 기기","운영로그"]];
+var RS_DAY="행사일(10/26)에는 실제 사번을 초기화할 수 없습니다 · 테스트 사번은 됩니다";
 function pcResetAsk(emp){
   call("test_reset",{ emp:emp, dry:"1" }).then(function(r){
-    if(!(r&&r.ok)){ toast(r&&r.reason==="eventday"?"행사일에는 실제 사번을 초기화할 수 없습니다":"확인하지 못했습니다 · "+why(r),{ bad:1, ms:5000 }); return; }
+    if(!(r&&r.ok)){ toast(r&&r.reason==="eventday"?RS_DAY:"확인하지 못했습니다 · "+why(r),{ bad:1, ms:5000 }); return; }
     var pl=r.plan||{}, ks=Object.keys(RS_LBL).filter(function(k){ return pl[k]; }), w=r.word||"처음상태";
-    confirmBox({ t:"이 사람을 처음 상태로 돌릴까요?", who:personLine(PC.d&&PC.d.ok?PC.d:{ emp:emp, name:r.name }), sub:(r.test?"시험 사번":"실제 사번")+" · 로그인해 둔 폰은 끊김 · 되돌릴 수 없음",
-      body:(ks.length?'<table class="tb"><tbody>'+ks.map(function(k){ return '<tr><td>'+esc(RS_LBL[k])+'</td><td class="n">'+(k==="pin"?"있음 · 비움":n0(pl[k])+"줄")+'</td></tr>'; }).join("")+'</tbody></table>':'<p class="cap">지울 기록이 없습니다</p>')+
+    confirmBox({ t:"이 사람을 처음 상태로 돌릴까요?", who:personLine(PC.d&&PC.d.ok?PC.d:{ emp:emp, name:r.name }), sub:(r.test?"테스트 사번":"실제 사번")+(pl.pin?" · 로그인해 둔 폰은 끊김":"")+" · 되돌릴 수 없음",
+      body:'<div class="cap">지우는 것</div>'+(ks.length?'<table class="tb"><tbody>'+ks.map(function(k){ return '<tr><td>'+esc(RS_LBL[k])+'</td><td class="n">'+(k==="pin"?"있음 · 비움":n0(pl[k])+"줄")+'</td></tr>'; }).join("")+'</tbody></table>':'<p class="cap">지울 기록이 없습니다</p>')+
+        '<div class="cap mt4">남는 것</div>'+RS_KEEP.map(function(l){ return '<div class="cap">'+l.map(function(x){ return '<span style="white-space:nowrap">'+esc(x)+'</span>'; }).join(" · ")+'</div>'; }).join("")+
         '<label class="fld">확인 문구 「'+esc(w)+'」를 그대로 넣습니다<input class="in" id="rsQ" autocomplete="off" oninput="gateUpd()"></label>',
       focus:"rsQ", ok:"처음 상태로", danger:true, gate:function(){ var i=el("rsQ"); return !!i&&i.value.trim()===w; },
       run:function(){ return call("test_reset",{ emp:emp, confirm:w }); },
-      fail:function(x){ return x&&x.reason==="eventday"?"행사일에는 실제 사번을 초기화할 수 없습니다":""; },
+      fail:function(x){ return x&&x.reason==="eventday"?RS_DAY:x&&x.reason==="confirm"?"확인 문구가 맞지 않습니다":""; },
       done:function(x){ var n=0; Object.keys(x.done||{}).forEach(function(k){ n+=num(x.done[k]); }); pcAfter(); toast("처음 상태로 돌렸습니다 · "+(r.name||emp)+" · "+n0(n)+"건"); } });
   });
 }
