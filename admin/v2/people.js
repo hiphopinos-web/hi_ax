@@ -8,13 +8,14 @@
 var PP_SUBS=[["find","찾기"],["visit","가입자"],["gate","접속 허용"],["staff","스태프"],["pre10","10F 사전 신청"],["test","시험 사번"],["att10","10F 출석"],["att17","17F 출석"],["rank","게임 순위"],["up","명단 올리기"]];
 var PP_LG={
   visit:{ kind:"visit", file:"가입자", cap:"앱에 가입한 사람 · 시험 사번은 「시험」 칸", sort:{ k:"last", d:-1 }, chips:lgChipsOf("",[["today","오늘 접속"],["pin","PIN 대기"],["test","시험"]]) },
-  gate:{ kind:"gate", file:"접속 허용", cap:"클로즈 베타 · 사전 신청 기간에 앱에 들어올 사람 · 추가 · 선택 삭제 · 통째 바꾸기는 명단 올리기", cx:1, sort:{ k:"at", d:-1 }, chips:lgChipsOf("",[["acct","가입"],["today","오늘 접속"]]) },
-  staff:{ kind:"staff", file:"스태프", cap:"폰 권한(앱 스태프 화면) + 스태프 옷 명단 · 추가 · 선택 삭제 · 통째 바꾸기는 명단 올리기", cx:1, sort:{ k:"name", d:1 }, chips:ppNoWear(lgChipsOf("",[["app","폰 권한"],["wear","옷"],["today","오늘 접속"]]),"staff"), sheets:function(v){ return [ppPivot(v,"staff")]; } },
-  pre10:{ kind:"pre10", file:"10F 사전 신청", cap:"10F 실습 세션 A~E 사전 신청자 · 추가 · 선택 삭제 · 줄을 누르면 세션 바꾸기", cx:1, sort:{ k:"sn", d:1 }, chips:ppNoWear(lgChipsOf("sn",[["kit","키트 받음"],["att","출석"]]),"pre10"), sheets:function(v){ return [ppPivot(v,"pre10")]; } },
+  gate:{ kind:"gate", file:"접속 허용", cap:"클로즈 베타 · 사전 신청 기간에 앱에 들어올 사람 · 추가 · 선택 삭제 · 통째 바꾸기는 명단 올리기", cx:1, sort:{ k:"at", d:-1 }, chips:ppApmChip(lgChipsOf("",[["acct","가입"],["today","오늘 접속"]])) },
+  staff:{ kind:"staff", file:"스태프", cap:"폰 권한(앱 스태프 화면) + 스태프 옷 명단 · 추가 · 선택 삭제 · 통째 바꾸기는 명단 올리기", cx:1, sort:{ k:"name", d:1 }, chips:ppApmChip(ppNoWear(lgChipsOf("",[["app","폰 권한"],["wear","옷"],["today","오늘 접속"]]),"staff")), sheets:function(v){ return [ppPivot(v,"staff")]; } },
+  pre10:{ kind:"pre10", file:"10F 사전 신청", cap:"10F 실습 세션 A~E 사전 신청자 · 추가 · 선택 삭제 · 줄을 누르면 세션 바꾸기", cx:1, sort:{ k:"sn", d:1 }, chips:ppApmChip(ppNoWear(lgChipsOf("sn",[["kit","키트 받음"],["att","출석"]]),"pre10")), sheets:function(v){ return [ppPivot(v,"pre10")]; } },
   test:{ kind:"test", file:"시험 사번", cap:"스탬프 · 순위 숫자에서 빠지는 사번 · 추가 · 선택 삭제", cx:1, sort:{ k:"emp", d:1 }, chips:lgChipsOf("",[["acct","가입"],["today","오늘 접속"]]) },
   att10:{ kind:"att10", file:"10F 출석", cap:"10F 세션 입장 · 종료 QR", sort:{ k:"pn", d:1 }, chips:lgChipsOf("pn",[["out","종료"]]) },
   att17:{ kind:"att17", file:"17F 출석", cap:"17F 강연 입장 · 종료", sort:{ k:"pn", d:1 }, chips:lgChipsOf("pn",[["out","종료"]]) }
 };
+var PP_APM={ visit:1, gate:1, staff:1, pre10:1, test:1 };   /* 261017 「앱」 열을 붙이는 명단 */
 function ppSub(){ return subsOf(PP_SUBS,"find"); }
 SCREENS.people={
   title:"사람", desc:"",
@@ -24,6 +25,7 @@ SCREENS.people={
     if(s==="rank") return grNeed();
     var nd=[{ k:"pl_"+s, a:"list_get", p:{ kind:PP_LG[s].kind }, ttl:60000 }];
     if(s==="pre10") nd.push({ k:"pl_kit", a:"list_get", p:{ kind:"kit" }, ttl:60000 });   /* 옷 열 = 옷 신청 명단(kit)을 사번으로 붙인다 */
+    if(PP_APM[s]&&typeof APM_NEED!=="undefined") nd.push(APM_NEED);   /* 261017 「앱」 열(appmark.js) */
     return nd; },
   mount:function(vb){
     var s=ppSub();
@@ -54,7 +56,7 @@ SCREENS.people={
       var gt=dataGate("pfind","사람 찾기"); g.gate=gt||""; XG.set(g, gt?null:(d.rows||[]), el("mg_pfind"));
       if(!gt&&S.ui.pqOpen&&!S.busy.pfind){ S.ui.pqOpen=0; if((d.rows||[]).length===1) pcOpen(d.rows[0].emp, g); }
       return; }
-    var x=PP_LG[s], g2=MG["pp_"+s]; gridPaint("pp_"+s, "pl_"+s, x.file, function(){ var rr=lgRows("pl_"+s, g2, function(dd){ return dd.rows||[]; }); if(s==="pre10") ppWearCol(g2); return rr; });
+    var x=PP_LG[s], g2=MG["pp_"+s]; gridPaint("pp_"+s, "pl_"+s, x.file, function(){ var rr=lgRows("pl_"+s, g2, function(dd){ return dd.rows||[]; }); if(s==="pre10") ppWearCol(g2); if(PP_APM[s]&&typeof apmColAdd==="function") apmColAdd(g2, s==="pre10"?"wear10":"name"); return rr; });
   }
 };
 function peopleQ(q){ q=String(q||"").trim(); S.ui.pq=q; S.ui.pqOpen=1; S.at.pfind=0; S.data.pfind=null; if(S.tab==="people"&&ppSub()==="find"){ var i=el("ppQ"); if(i) i.value=q; paint(); load(true,["pfind"]); } else go("people","find"); }
@@ -75,6 +77,7 @@ function ppWear(r, kind){
   var k=m[r.emp]; if(!k) return { st:"out" };
   return k.sz?{ st:"sz", g:k.g||"pre10", sz:k.sz, how:k.how }:{ st:"none", g:k.g||"pre10" };
 }
+function ppApmChip(base){ return function(rows){ return typeof apmChip==="function"?apmChip(base)(rows):base(rows); }; }   /* 261017 「앱 미가입」 칩(appmark.js) */
 function ppWearT(w){ return w.st==="sz"?(KIT_GN[w.g]||w.g)+" "+w.sz:w.st==="none"?"미선택":"옷 명단 밖"; }
 function ppNoWear(base, kind){ return function(rows){ return base(rows).concat([["f:nowear","미선택",function(r){ return ppWear(r,kind).st==="none"; }]]); }; }
 /* 서버 열(useCols) 뒤에 「옷」 열 · 서버 「사이즈」 자리에 넣는다 */
@@ -129,6 +132,7 @@ function pcOpen(emp, g){ emp=normE(emp); if(!emp) return; PC.emp=emp; PC.g=g||nu
 function pcLoad(){
   var e=PC.emp, s=++PC.seq; if(!e) return;
   call("person_card",{ emp:e, vn:10, tn:30 }).then(function(r){ if(s!==PC.seq) return; PC.d=r||{ ok:false }; pcDraw(); });
+  if(typeof plLoad==="function"){ var kc=PL.emp===e?PL.c:""; plReset(e); PL.c=kc; plLoad(""); if(kc) plLoad(kc); }   /* 261017 최근 기록 = person_log(appmark.js) */
   Promise.all([call("list_get",{ kind:"att10", q:e }), call("list_get",{ kind:"att17", q:e })]).then(function(a){ if(s!==PC.seq) return; PC.att=a; pcDraw(); });
   if(typeof pcUsrLoad==="function") pcUsrLoad(e, s);   /* 261017 게임 · 닉네임(pcgame.js) */
 }
@@ -149,7 +153,8 @@ function pcHtml(d){
   var w=whoOf(d), h=drwHead(w.n||e, whoSub(d), whoFlags(w)+tags);
   h+='<div class="btns mt">'+(d.acct?'<button class="btn" type="button" onclick="pcPush(\''+J+'\')">이 사람에게 푸시</button>':'')+(d.acct&&d.pw?'<button class="btn" type="button" onclick="pcPinAsk(\''+J+'\')">PIN 초기화</button>':'')+'<button class="btn" type="button" onclick="pcLoad()">새로 받기</button></div>';
   /* 접속 */
-  h+=pcSec("접속", d.acct?'가입 <b class="n">'+esc(fmtD(d.joined))+'</b> · 최근 <b class="n">'+esc(fmtD(d.last)||"-")+'</b> · 오늘 <b class="n">'+n0(v.today||0)+'</b>회 · PIN '+(d.pw?"있음":"초기화 대기")+' · 알림 기기 '+n0(d.push&&d.push.subs||0)+'대':'아직 가입 안 함(명부만)');
+  var am=typeof apmOf==="function"?apmOf(e):null, amT=am==null?"":' · 앱 <b>'+esc(apmTxt(am))+'</b>';   /* 261017 앱 = 가입 · 홈 화면(app_marks) */
+  h+=pcSec("접속", d.acct?'가입 <b class="n">'+esc(fmtD(d.joined))+'</b>'+amT+' · 최근 <b class="n">'+esc(fmtD(d.last)||"-")+'</b> · 오늘 <b class="n">'+n0(v.today||0)+'</b>회 · PIN '+(d.pw?"있음":"초기화 대기")+' · 알림 기기 '+n0(d.push&&d.push.subs||0)+'대':'아직 가입 안 함(명부만)');
   /* 스탬프 */
   var cell=function(id, no, nm, sm){ var x=sm?null:by[id]||(id==="p3"&&by.p3h&&!by.p3?by.p3h:null), got=sm?pg>0:!!x, rid=id==="p3"&&!by.p3&&by.p3h?"p3h":id, act="";
     if(!sm&&x) act='<button class="btn sm dng" type="button" aria-label="'+esc(no+" "+nm)+' 스탬프 취소" onclick="stRevokeAsk(\''+J+'\',\''+rid+'\')">취소</button>';
@@ -187,11 +192,11 @@ function pcHtml(d){
   h+=pcSec("명단", typeof pcListsHtml==="function"?pcListsHtml(d):'<div class="fx-w">'+[["gate","접속 허용"],["staffApp","스태프 폰 권한"],["staffWear","스태프 옷"],["test","시험 사번"]].map(function(x){ return '<span class="pc-l">'+esc(x[1])+' '+(L[x[0]]?tag("있음","ok"):tag("없음","off"))+'</span>'; }).join("")+'</div>');
   /* 최근 기록 */
   var tl=(d.tl||[]).slice(0,10);
-  h+=pcSec("최근 기록", tl.length?'<ul class="pc-tl">'+tl.map(function(r){ return '<li><span class="n cap">'+esc(fmtD(r.t))+'</span><span>'+esc((r.verb?r.verb+" · ":"")+r.x)+(r.byName||r.by?' <span class="cap">· '+esc(r.byName||r.by)+'</span>':'')+'</span></li>'; }).join("")+'</ul><div class="cap mt4">전체 기록 = 기록 · 설정 › 활동 기록</div>':'<p class="cap">기록이 없습니다</p>');
-  /* 한 사람 초기화(pcgame.js · 261017 접힘을 풀어 칸으로) */
+  h+=pcSec("최근 기록", typeof plSecHtml==="function"?plSecHtml(d, pcTlOld(tl)):pcTlOld(tl));
   if(typeof pcResetHtml==="function") h+=pcResetHtml(d);
   return h+'</div>';
 }
+function pcTlOld(tl){ return tl.length?'<ul class="pc-tl">'+tl.map(function(r){ return '<li><span class="n cap">'+esc(fmtD(r.t))+'</span><span>'+esc((r.verb?r.verb+" · ":"")+r.x)+(r.byName||r.by?' <span class="cap">· '+esc(r.byName||r.by)+'</span>':'')+'</span></li>'; }).join("")+'</ul><div class="cap mt4">전체 기록 = 기록 · 설정 › 활동 기록</div>':'<p class="cap">기록이 없습니다</p>'; }
 function pcSec(t, body, raw){ return '<div class="pc-s"><h3>'+(raw?t:esc(t))+'</h3>'+body+'</div>'; }
 function pcAtt(e){
   var a=PC.att; if(!a) return skel();

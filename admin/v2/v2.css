@@ -422,3 +422,8 @@ details.memo summary{cursor:pointer;font-weight:600;min-height:32px;display:flex
 .who2 .ws{font-size:12px;color:var(--tx3);font-variant-numeric:tabular-nums}
 .who2 .ws .nw{white-space:nowrap}
 .who2 .tag{height:20px;padding:0 7px}
+/* 261017 앱 설치 표시 · 한 사람 카드 최근 기록(appmark.js) · 미가입만 주황 글자 */
+.apm-no{color:var(--warn);font-weight:600}
+.pl-ch{margin:0 0 8px;gap:6px}
+.pl-ch .chip{height:32px;padding:0 10px;font-size:12px}
+.pl-ft{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:8px}

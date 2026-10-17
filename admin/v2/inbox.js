@@ -13,7 +13,7 @@ SCREENS.inbox={
   title:"처리함", desc:"",
   need:function(){ var s=ibSub();
     if(s==="fx") return [{ k:"fx1", a:"fcfs_list", p:{ page:1 }, ttl:15000 },{ k:"fx2", a:"fcfs_list", p:{ page:2 }, ttl:15000 }];
-    return s==="ck"?[{ k:"ckz", a:"ck_zone", ttl:15000 },{ k:"inv", a:"inv_state", ttl:30000 },{ k:"cno", a:"ck_no_state", ttl:30000 },{ k:"cnl", a:"ck_no_list", ttl:60000 }]:s==="req"?[{ k:"sreq", a:"sreq_list", p:{ st:"all", n:100 }, ttl:15000 }]:[{ k:"pwl", a:"pw_req_list", ttl:30000 }]; },
+    return s==="ck"?[{ k:"ckz", a:"ck_zone", ttl:15000 },{ k:"inv", a:"inv_state", ttl:30000 },{ k:"cno", a:"ck_no_state", ttl:30000 },{ k:"cnl", a:"ck_no_list", ttl:60000 },APM_NEED]:s==="req"?[{ k:"sreq", a:"sreq_list", p:{ st:"all", n:100 }, ttl:15000 }]:[{ k:"pwl", a:"pw_req_list", ttl:30000 }]; },
   mount:function(vb){
     var s=ibSub();
     el("phCap").textContent={ ck:"1F 체크인존 · 사전 신청자 · 스태프 · 누가 왔고 누가 안 왔나", fx:"6개 선착순 참여상 · 달성 순번 1~200", req:"스태프 폰 「운영자에게 요청」", pw:"앱 로그인 「PIN 을 잊었어요」 요청" }[s];
