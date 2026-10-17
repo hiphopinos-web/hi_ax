@@ -318,12 +318,12 @@ function zonePicHtml(z) {
   if (z.id === "event") o += evPicHtml();   /* v7.48 · v7.69 선착순 사진 두 줄(08:30 커피 · 14:00 쿠키 세트) */
   return o;
 }
-/* v7.48 EVENT 시트 선착순 사진 칸(작은 사진 + 이름 · 가격 없음) · v7.69 (사용자 261017) 두 줄 = 08:30 커피(AX 라운지 · 커피챗 지급품과 같은 사진 TREATS[0] · assets/prize) · 14:00 쿠키 세트(event_cookie)
+/* v7.48 EVENT 시트 선착순 사진 칸(작은 사진 + 이름 · 가격 없음) · v7.69 (사용자 261017) 두 줄(시각 표기 「08:30 ~ : 」 · 사용자 261017) = 08:30 커피(AX 라운지 · 커피챗 지급품과 같은 사진 TREATS[0] · assets/prize) · 14:00 쿠키 세트(event_cookie)
    시간 · 수량 글 = PB_FCFS(101) 한 곳 · 옛 한 줄 「쿠키 세트 · 14:00 · 커피와 무작위」 */
 function evPicHtml() {
   var row = function (src, alt, b, sub) { return '<div class="axs-evpic"><img src="' + src + '" alt="' + esc(alt) + '" width="96" height="96" loading="lazy" decoding="async" onerror="this.parentNode.remove()"><span><b>' + esc(b) + "</b>" + (sub ? esc(sub) : "") + "</span></div>"; };
-  return '<div class="axs-evps">' + row(PRIZE_DIR + TREATS[0].img + ".webp", "커피", PB_FCFS[0][0] + " ~ · " + PB_FCFS[0][1], "") +
-    row(ZONE_DIR + "event_cookie.webp", "쿠키 세트", PB_FCFS[1][0] + " ~ · 쿠키 세트", "베이크샵 달곰(쿠키, 휘낭시에)") + "</div>";
+  return '<div class="axs-evps">' + row(PRIZE_DIR + TREATS[0].img + ".webp", "커피", PB_FCFS[0][0] + " ~ : " + PB_FCFS[0][1], "") +
+    row(ZONE_DIR + "event_cookie.webp", "쿠키 세트", PB_FCFS[1][0] + " ~ : 쿠키 세트", "베이크샵 달곰(쿠키, 휘낭시에)") + "</div>";
 }
 function zoneCaseHtml(z) {
   return z.cases ? '<hr class="axs-rule"><div class="axs-zcase"><h3>사례 ' + z.cases.length + "개</h3>" + z.cases.map(function (c) { return "<p><b>" + esc(c[0]) + "</b><span>" + esc(c[1]) + "</span></p>"; }).join("") + "</div>" : "";
