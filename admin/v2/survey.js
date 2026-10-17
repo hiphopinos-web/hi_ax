@@ -30,7 +30,7 @@ function svyPaint(){
   if(gt){ kb.innerHTML=""; bx.innerHTML=gt; g.gate=""; XG.set(g, null, el("mg_svq4")); return; }
   var by={}; (d.qs||[]).forEach(function(q){ by[q.id]=q; });
   var q4=by.q4||{ n:0, lines:[] }, q11=by.q1_1||{}, n=d.n||0;
-  kb.innerHTML=kpi({ l:"응답", v:n0(n), u:"명", s:SVY.test?"시험 사번 포함":"시험 사번 "+n0(d.nt)+"명 뺌" })+kpi({ l:"전반 만족 평균", v:svyAvg(q11.avg), u:"/ 5", s:"Q1-1 · 답 "+n0(q11.n)+"명" })+
+  kb.innerHTML=drKpiGo({ l:"응답", v:n0(n), u:"명", s:SVY.test?"시험 사번 포함":"시험 사번 "+n0(d.nt)+"명 뺌" }, "st:id:sv")+kpi({ l:"전반 만족 평균", v:svyAvg(q11.avg), u:"/ 5", s:"Q1-1 · 답 "+n0(q11.n)+"명" })+
     kpi({ l:"참여한 프로그램 없음", v:n0(d.none), u:"명", s:"응답의 "+svyPc(d.none,n)+"%" })+kpi({ l:"자유 의견", v:n0(q4.n), u:"건", s:"Q4 · 선택 문항" });
   var grp=function(ids){ return '<div class="svy-g">'+ids.filter(function(id){ return by[id]; }).map(function(id){ return svyBlock(by[id], SVY_T[id]||id); }).join("")+'</div>'; };
   var pq=(d.progs||[]).filter(function(p){ return by[p.id]; }).map(function(p){ return svyBlock(by[p.id], p.fl+" "+p.nm); }).join("");

@@ -1,0 +1,11 @@
+/* AXF CONTROL v2 · 숫자 눌러 명단(drill.js · 261017) · 누를 수 있는 숫자 = 네이비 + 밑줄 */
+.dn{color:var(--navy);font-weight:inherit;font-size:inherit;line-height:inherit;padding:0;border-radius:4px;text-decoration:underline;text-decoration-color:rgba(0,32,91,.38);text-decoration-thickness:1px;text-underline-offset:3px;font-variant-numeric:tabular-nums;cursor:pointer}
+.dn:hover{text-decoration-color:var(--navy);text-decoration-thickness:2px}
+.dn .big,.dn .big small{color:inherit}
+.kpi.dk .v .dn{text-underline-offset:5px;text-decoration-thickness:2px}
+.kpi.dkb .v{color:var(--navy);text-decoration:underline;text-decoration-color:rgba(0,32,91,.38);text-decoration-thickness:2px;text-underline-offset:5px}
+.kpi.dkb .l::after{content:" ›";color:var(--tx3)}
+.kpi.dkb:hover .v{text-decoration-color:var(--navy)}
+.dr-sub{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:space-between}
+.dr-sub .cap{flex:1 1 200px;min-width:0}
+@media (min-width:1280px){ .cc-drawer.wide.dr-xw{width:640px} body.drw-on:has(.cc-drawer.dr-xw) .main{margin-right:640px} }

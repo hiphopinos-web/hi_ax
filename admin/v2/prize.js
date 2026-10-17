@@ -28,8 +28,8 @@ function kbOk(){ var k=S.data.kb; return k&&k.ok&&k.tot?k:null; }
 function pzKpi(){
   var kb=kbOk();
   if(kb){ var T=kb.tot, gs={}; (kb.groups||[]).forEach(function(x){ gs[x.g]=x; });
-    el("pzK").innerHTML=kpi({ l:"옷 총 수량", v:n0(T.qty), s:(kb.sizes||[]).length+"개 사이즈" })+kpi({ l:"신청", v:n0(T.req), u:"명", s:"사전 "+n0(gs.pre10&&gs.pre10.req)+" · 스태프 "+n0(gs.staff&&gs.staff.req) })+
-      kpi({ l:"받음", v:n0(T.got), u:"명", s:pzStaffGot() })+kpi({ l:"미신청", v:n0(T.none), u:"명", st:T.none?"warn":"ok", stt:T.none?"주의":"정상", s:"자동 배정 대상" });
+    el("pzK").innerHTML=kpi({ l:"옷 총 수량", v:n0(T.qty), s:(kb.sizes||[]).length+"개 사이즈" })+drKpiGo({ l:"신청", v:n0(T.req), u:"명", s:"사전 "+n0(gs.pre10&&gs.pre10.req)+" · 스태프 "+n0(gs.staff&&gs.staff.req) }, "kit:req")+
+      drKpiGo({ l:"받음", v:n0(T.got), u:"명", s:pzStaffGot() }, "kit:got")+drKpiGo({ l:"미신청", v:n0(T.none), u:"명", st:T.none?"warn":"ok", stt:T.none?"주의":"정상", s:"자동 배정 대상" }, "kit:none");
     var all=(kb.groups||[]).reduce(function(a,x){ return a+num(x.people); },0);
     el("pzC").innerHTML=PZ_CH.map(function(c){ var n=c[0]==="all"?all:gs[KB_G[c[0]]]&&gs[KB_G[c[0]]].people; return '<button type="button" class="chip'+(PZ.chip===c[0]?" on":"")+'" aria-pressed="'+(PZ.chip===c[0])+'" onclick="pzChip(\''+c[0]+'\')">'+esc(c[1])+' <span class="c">'+(n==null?"-":n0(n))+'</span></button>'; }).join("");
     return; }
@@ -37,9 +37,9 @@ function pzKpi(){
   if(g){ el("pzK").innerHTML='<div style="grid-column:1/-1">'+g+'</div>'; return; }
   var A=d.all||{}, pre=sum(A.kit||d.taken), st=sum(A.st||(d.st||{}).taken), got=sum(d.got), none=num(d.none);
   el("pzK").innerHTML=kpi({ l:"옷 총 수량", v:n0(A.tot||d.tot), s:(d.sizes||[]).length+"개 사이즈" })+
-    kpi({ l:"신청", v:n0(pre+st), u:"명", s:"사전 "+n0(pre)+" · 스태프 "+n0(st) })+
-    kpi({ l:"받음", v:n0(got), u:"명", s:pzStaffGot() })+
-    kpi({ l:"미신청", v:n0(none), u:"명", st:none?"warn":"ok", stt:none?"주의":"정상", s:"자동 배정 대상" });
+    drKpiGo({ l:"신청", v:n0(pre+st), u:"명", s:"사전 "+n0(pre)+" · 스태프 "+n0(st) }, "kit:req")+
+    drKpiGo({ l:"받음", v:n0(got), u:"명", s:pzStaffGot() }, "kit:got")+
+    drKpiGo({ l:"미신청", v:n0(none), u:"명", st:none?"warn":"ok", stt:none?"주의":"정상", s:"자동 배정 대상" }, "kit:none");
   var rows=pzRows(), lg=pzLng(), cnt={ all:null, pre:null, staff:null, lng:null };
   if(rows){ cnt.all=rows.length; cnt.pre=rows.filter(function(r){ return pzPool(r)==="pre"; }).length; cnt.staff=rows.filter(function(r){ return r.pool==="staff"; }).length; cnt.lng=Object.keys(lg).length; }
   el("pzC").innerHTML=PZ_CH.map(function(c){ return '<button type="button" class="chip'+(PZ.chip===c[0]?" on":"")+'" aria-pressed="'+(PZ.chip===c[0])+'" onclick="pzChip(\''+c[0]+'\')">'+esc(c[1])+' <span class="c">'+(cnt[c[0]]==null?"-":n0(cnt[c[0]]))+'</span></button>'; }).join("");

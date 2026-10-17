@@ -26,7 +26,7 @@ function id2Kpi(){
   var ok=d&&d.ok, real=ok?(d.rows||[]).filter(function(r){ return !r.test; }):[], td=real.filter(function(r){ return String(r.ts||"").slice(0,10)===id2Day(); }), who={};
   td.forEach(function(r){ who[r.emp]=1; });
   var app=real.filter(function(r){ return (r.ch||"app")==="app"; }).length;
-  b.innerHTML=kpi({ l:"전체", v:ok?n0(d.n):"-", u:"건", s:ok?"참여한 사람 "+n0(d.people)+"명":"" })+kpi({ l:"오늘", v:ok?n0(td.length):"-", u:"건", s:ok?"오늘 남긴 사람 "+n0(Object.keys(who).length)+"명":"" })+
+  b.innerHTML=drKpi({ l:"전체", v:ok?n0(d.n):"-", u:"건", s:ok?"참여한 사람 "+drN("idea", n0(d.people), d.people)+"명":"" })+drKpi({ l:"오늘", v:ok?n0(td.length):"-", u:"건", s:ok?"오늘 남긴 사람 "+drN("idea:today", n0(Object.keys(who).length), Object.keys(who).length)+"명":"" })+
     kpi({ l:"앱에서", v:ok?n0(app):"-", u:"건", s:ok?"현장에서 대신 "+n0(real.length-app)+"건":"" })+kpi({ l:"숨김", v:ok?n0(real.filter(function(r){ return r.hidden; }).length):"-", u:"건", s:"게시판에 안 보임" });
 }
 (function(){

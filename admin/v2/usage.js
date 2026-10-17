@@ -35,7 +35,7 @@ function nwUsage(b){
   var k4=per==="day"?{ l:"지금 보는 사람", v:k.now==null?"-":usN(k.now), u:k.now!=null&&k.now>=0?"명":"", s:k.now==null?"행사 당일에만 셉니다":"최근 3분 · 비로그인 기기 제외" }
     :{ l:"가장 붐빈 때", v:k.peak?usN(k.peak.n):"-", u:k.peak&&k.peak.n>=0?"명":"", s:k.peak?usMd(k.peak.t)+" "+String(k.peak.t).slice(11,16)+"~"+usHm(String(k.peak.t).slice(11,16),10):"기록 없음" };
   h+='<div class="grid g4 mb'+stale+'">'+
-    kpi({ l:"접속한 사람", v:n0(k.people), u:"명", s:"명부 "+n0(k.roster)+"명 중 "+(k.roster?(Math.round(num(k.people)*1000/num(k.roster))/10):0)+"%" })+
+    drKpiGo({ l:"접속한 사람", v:n0(k.people), u:"명", s:"명부 "+n0(k.roster)+"명 중 "+(k.roster?(Math.round(num(k.people)*1000/num(k.roster))/10):0)+"%" }, "usage")+
     kpi({ l:"1인 체류 중앙값", v:n0(k.med), u:"분", s:"합계 "+n0(k.sumH)+"시간" })+
     kpi({ l:"앱 연 횟수", v:n0(k.opens), u:"회", s:"1인 "+(k.opp||0)+"회" })+
     kpi(k4)+'</div>';
