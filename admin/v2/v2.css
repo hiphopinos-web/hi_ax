@@ -232,7 +232,7 @@ table.tb{width:100%;border-collapse:collapse;font-size:13px}
 .cc-kv dd{margin:0;font-variant-numeric:tabular-nums}
 .cc-fld{font-size:12px;color:var(--tx3);margin-top:10px}
 .cc-memo{white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere;max-height:220px;overflow:auto;line-height:1.5}
-.xg-note{padding-top:8px}.xg-note .band{margin:0}
+.xg-note{padding-top:8px}.xg-note .band{margin:0}.xg-more{display:flex;align-items:center;gap:10px;padding:10px 2px 2px}.gr-cap .nw{white-space:nowrap}
 a.btn{text-decoration:none}
 
 /* 세로 태블릿 768 · 2열 → 1열, 배치판 좌우 → 위아래 */

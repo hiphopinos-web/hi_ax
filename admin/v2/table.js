@@ -63,7 +63,7 @@ XG.paint=function(g){
     return '<button type="button" class="chip'+(g.chip===c[0]?" on":"")+'" aria-pressed="'+(g.chip===c[0])+'" onclick="XG.chipBy(\''+g.id+'\',\''+c[0]+'\')">'+esc(c[1])+' <span class="c">'+(g.rows?n0(n):"-")+'</span></button>'; }).join("");
   var body=q("body"), note=q("note"), cnt=q("cnt");
   if(g.rows==null){ body.innerHTML=""; cnt.innerHTML=""; note.innerHTML='<div class="xg-note">'+(g.gate||skel())+'</div>'; g.pick={}; xgActs(g); return; }
-  var v=xgView(g), shown=v.slice(0,XG.MAXROWS);
+  var v=xgView(g), lim=o.max?Math.min(o.max(),XG.MAXROWS):XG.MAXROWS, shown=v.slice(0,lim);   /* 261017 o.max() = 처음 보이는 줄 수 · o.more() = 「더 보기」(게임 순위) */
   if(o.select){ var vk={}; shown.forEach(function(r){ vk[xgKey(g,r)]=1; }); Object.keys(g.pick).forEach(function(k){ if(!vk[k]) delete g.pick[k]; }); }   /* 선택 = 보이는 줄 안에서만(구분 · 검색을 바꾸면 안 보이는 줄은 풀림) */
   cnt.innerHTML='<b>'+n0(v.length)+'</b>건'+(v.length!==all.length?' / 전체 '+n0(all.length):'');
   body.innerHTML=shown.length?shown.map(function(r){ var k=o.key?o.key(r):"", on=g.sel!=null&&k===g.sel, pk=o.select&&g.pick[xgKey(g,r)];
@@ -71,11 +71,12 @@ XG.paint=function(g){
       var h=c.act?c.act(r):c.f?c.f(r):esc(xgText(c,r)); return '<td class="'+cls+'" title="'+esc(c.act?"":xgText(c,r))+'">'+h+'</td>'; }).join("")+'</tr>'; }).join("")
     :"";
   xgActs(g);
-  note.innerHTML=(shown.length?"":emptyH(g.q?"찾는 줄이 없습니다":(o.empty||"아직 줄이 없습니다")))+(g.gate?'<div class="xg-note">'+g.gate+'</div>':"")+(v.length>shown.length?'<div class="cap" style="padding:6px 2px">앞 '+n0(XG.MAXROWS)+'줄만 보입니다 · 검색으로 좁힙니다 · 엑셀은 전체 '+n0(v.length)+'줄</div>':'');
+  note.innerHTML=(shown.length?"":emptyH(g.q?"찾는 줄이 없습니다":(o.empty||"아직 줄이 없습니다")))+(g.gate?'<div class="xg-note">'+g.gate+'</div>':"")+(v.length>shown.length&&o.more&&shown.length<XG.MAXROWS?'<div class="xg-more"><button class="btn sm" type="button" onclick="XG.moreBy(\''+g.id+'\')">더 보기</button> <span class="cap">'+n0(shown.length)+' / '+n0(v.length)+'줄 · 엑셀은 전체</span></div>':v.length>shown.length?'<div class="cap" style="padding:6px 2px">앞 '+n0(XG.MAXROWS)+'줄만 보입니다 · 검색으로 좁힙니다 · 엑셀은 전체 '+n0(v.length)+'줄</div>':'');
 };
 /* 줄 누르기(o.onRow(key)) · 줄 안 단추를 누른 것은 빼다 */
 XG.rowBy=function(tr, ev){ var x=tr.closest("[data-xg]"), g=x&&XG.reg[x.getAttribute("data-xg")]; if(!g||!g.o.onRow) return; if(ev&&ev.target&&ev.target.closest&&ev.target.closest("button,a,input,label")) return; g.sel=tr.getAttribute("data-k"); XG.paint(g); g.o.onRow(g.sel); };
 XG.rowKey=function(tr, ev){ if(ev.target!==tr) return; if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); XG.rowBy(tr, ev); } };
+XG.moreBy=function(id){ var g=XG.reg[id]; if(g&&g.o.more) g.o.more(g); };
 XG.find=function(id, v){ var g=XG.reg[id]; g.q=String(v||""); XG.paint(g); };
 XG.sortBy=function(id, k){ var g=XG.reg[id]; if(g.sort&&g.sort.k===k) g.sort.d=-g.sort.d; else g.sort={ k:k, d:1 }; xgSave(g); XG.paint(g); };
 XG.chipBy=function(id, c){ var g=XG.reg[id]; g.chip=c; xgSave(g); XG.paint(g); if(g.o.onChip) g.o.onChip(c); };

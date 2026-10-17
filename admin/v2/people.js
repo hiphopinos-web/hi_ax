@@ -1,11 +1,11 @@
 /* AXF CONTROL v2 · S3 사람 (261016 2단계)
- * 칩 = 찾기 · 가입자 · 접속 허용 · 스태프 · 10F 사전 신청 · 10F 출석 · 17F 출석 · 명단 올리기
+ * 칩 = 찾기 · 가입자 · 접속 허용 · 스태프 · 10F 사전 신청 · 10F 출석 · 17F 출석 · 게임 순위(rank.js) · 명단 올리기
  * 찾기 = acct_page(q · 명부에만 있는 사람 포함) · 어느 명단이든 줄을 누르면 오른쪽 서랍에 한 사람 카드
  * 한 사람 카드 = person_card + list_get(att10 · att17, q = 사번)
  *   처리 = 스탬프 부여(stamp_grant · 확인 창 · 되돌리기 토스트) · 취소(stamp_revoke dry → 확인 창) · PIN 초기화(acct_pwreset)
  *          이 사람에게 푸시(알림 탭 받는 사람 칩) · 한 사람 초기화(test_reset dry → 확인 문구 「처음상태」 · 행사일 실사번은 서버가 거절 eventday)
  * 명단 = list_get(visit · gate · staff · pre10 · test · att10 · att17) · 261016 저녁 접속 허용 · 스태프 · 10F 사전 신청 · 시험 사번 = 선택 칸 · 추가 · 선택 삭제(edit.js · table.js) · 명단 올리기 = upload.js(10F 사전 신청 · 접속 허용 · 스태프 옷) · 261016 PIN 없음 */
-var PP_SUBS=[["find","찾기"],["visit","가입자"],["gate","접속 허용"],["staff","스태프"],["pre10","10F 사전 신청"],["test","시험 사번"],["att10","10F 출석"],["att17","17F 출석"],["up","명단 올리기"]];
+var PP_SUBS=[["find","찾기"],["visit","가입자"],["gate","접속 허용"],["staff","스태프"],["pre10","10F 사전 신청"],["test","시험 사번"],["att10","10F 출석"],["att17","17F 출석"],["rank","게임 순위"],["up","명단 올리기"]];
 var PP_LG={
   visit:{ kind:"visit", file:"가입자", cap:"앱에 가입한 사람 · 시험 사번은 「시험」 칸", sort:{ k:"last", d:-1 }, chips:lgChipsOf("",[["today","오늘 접속"],["pin","PIN 대기"],["test","시험"]]) },
   gate:{ kind:"gate", file:"접속 허용", cap:"클로즈 베타 · 사전 신청 기간에 앱에 들어올 사람 · 추가 · 선택 삭제 · 통째 바꾸기는 명단 올리기", cx:1, sort:{ k:"at", d:-1 }, chips:lgChipsOf("",[["acct","가입"],["today","오늘 접속"]]) },
@@ -21,13 +21,15 @@ SCREENS.people={
   need:function(){ var s=ppSub();
     if(s==="find") return S.ui.pq?[{ k:"pfind", a:"acct_page", p:{ q:S.ui.pq, n:50, sort:"last" }, ttl:30000 }]:[];
     if(s==="up") return [];
+    if(s==="rank") return grNeed();
     var nd=[{ k:"pl_"+s, a:"list_get", p:{ kind:PP_LG[s].kind }, ttl:60000 }];
     if(s==="pre10") nd.push({ k:"pl_kit", a:"list_get", p:{ kind:"kit" }, ttl:60000 });   /* 옷 열 = 옷 신청 명단(kit)을 사번으로 붙인다 */
     return nd; },
   mount:function(vb){
     var s=ppSub();
-    el("phCap").textContent=s==="find"?"사번 · 이름으로 찾기 · 줄을 누르면 한 사람 카드":s==="up"?"엑셀로 명단 바꾸기 · 미리 세기 → 적용":PP_LG[s].cap;
+    el("phCap").textContent=s==="find"?"사번 · 이름으로 찾기 · 줄을 누르면 한 사람 카드":s==="up"?"엑셀로 명단 바꾸기 · 미리 세기 → 적용":s==="rank"?"미니 게임 순위 · 줄을 누르면 한 사람 카드":PP_LG[s].cap;
     var h=chipsH(PP_SUBS,s);
+    if(s==="rank"){ grMount(vb,h); return; }
     if(s==="up"){ vb.innerHTML=h+'<div id="ppUp"></div>'; if(S.ui.pup&&UP&&UP.sp.people) upMount(el("ppUp")); else ppUpPick(); return; }
     if(s==="find"){
       gridOf("pfind",{ file:"찾기 결과", key:function(r){ return r.emp; }, sort:{ k:"last", d:-1 }, noDl:1, onRow:function(k){ pcOpen(k, MG.pfind); },
@@ -46,6 +48,7 @@ SCREENS.people={
   paint:function(){
     var s=ppSub();
     if(s==="up") return;
+    if(s==="rank"){ grPaint(); return; }
     if(s==="find"){ var g=MG.pfind, d=S.data.pfind;
       if(!S.ui.pq){ g.gate=""; XG.set(g, null, el("mg_pfind")); var n=XG.root(g); if(n) n.querySelector('[data-c="note"]').innerHTML=emptyH("사번이나 이름을 넣고 Enter"); return; }
       var gt=dataGate("pfind","사람 찾기"); g.gate=gt||""; XG.set(g, gt?null:(d.rows||[]), el("mg_pfind"));
