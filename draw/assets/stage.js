@@ -9,13 +9,13 @@
  *   사용자 결정 261008: ① 드럼 데모(drum.html · drum.js) 연출을 운영 무대에 그대로 ② 무대 표기 = 행운권 번호 + 실명 + 부서 크게(같은 날 「이름 가림」 대체 · 사번 없음)
  *     ③ 통 안의 공 = 대표 120개 · 당첨은 행운권 전체에서 · 화면 숫자는 「행운권 N장」 ④ 한 번 뽑으면 그 등수 남은 인원 K 명을 한꺼번에 · 3명까지 한 줄 · 4명부터 두 줄
  *   흐름 · 서버 계약은 옛 화면(assets/draw.js · index.html?classic=1)과 같다(이 파일은 그 코드를 옮겨 오고 연출만 바꿨다)
- *     서버 = draw_pool(가린 이름 · pk) · draw_log(당첨 · 부재 · 취소) · draw_state(예비 노트북 복원 · ack) · draw_cfg · draw_stats · fin_state · draw_scr(상태 보고) · draw_acks(확인 · 소켓이 끊겼을 때)
+ *     서버 = draw_pool(가린 이름 · pk) · draw_log(당첨 · 부재 · 취소) · draw_state(예비 노트북 복원) · draw_cfg · draw_stats · fin_state · draw_scr(상태 보고)
  *       · draw_who(261008 · 이번에 뽑힌 사람만 실명 · 부서 · 문이 열릴 때 부르고 공개 순간 그린다 · 실패하면 가린 이름 · 행운권 전체 실명 목록은 받지 않는다)
- *     원격 = 소켓 wss …/ws?r=draw(명령 draw · 확인 drawack) · 콘솔 「추첨 › 진행」 큰 버튼 = 이 화면 Space(nextCmd 와 같은 표)
+ *     원격 = 소켓 wss …/ws?r=draw(명령 draw) · 콘솔 「추첨 › 진행」 큰 버튼 = 이 화면 Space(nextCmd 와 같은 표)
  *     장면 이름(idle · intro · checkin · closed · card · mix · tension · exit · reveal · board · end · fin)과 명령 이름은 옛 화면 그대로(콘솔이 그 이름으로 버튼을 켠다)
  *   당첨 결정 = 공이 출구로 나오기 시작하는 순간(exit) 행운권 전체(draw_pool · 이미 당첨 · 부재로 빠진 분 제외 · 1인 1회)에서 암호 난수로 K 장 · 바로 이 기기에 저장
- *     서버 기록(draw_log)은 번호 릴이 다 선 순간(reveal) 보낸다 · 당첨자 폰 알림이 무대 공개보다 먼저 울리지 않게 · 새로고침해도 같은 당첨이 이어진다
- *   당첨자 확인 = 소켓 drawack(또는 draw_acks) · 오면 그 칸에 「확인 완료」만 덧붙인다 · 기다리지 않는다 · 확인이 없다는 이유로 부재 처리하지 않는다(당첨 확인 계약.md 0절)
+ *     서버 기록(draw_log)은 번호 릴이 다 선 순간(reveal) 보낸다 · 새로고침해도 같은 당첨이 이어진다
+ *   당첨 안내 · 폰 확인 표시는 무대에 없다(261017 K1 · 앱 · 서버에서 걷음) · 칸에는 번호 · 실명 · 부서만
  *   그림 = 2D 캔버스 하나에 3D 투영(drum.js 그대로) · 성능 단계 0 · 1 · 2(fps 가 낮으면 자동으로 내린다 · ?q=2 고정 · ?hud=1 프레임 수)
  *   같은 브라우저 저장(axfDraw.state.v1 · axfDraw.cfg.v1)을 옛 화면과 함께 쓴다 · 옛 화면은 주소 ?classic=1 로만(K 키 없앰 · 261016)
  *
@@ -123,14 +123,14 @@
   function nf(v) { return Number(v || 0).toLocaleString("en-US"); }
   function cryptoShuffle(a) { var u = cryptoUnits(a.length); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(u[i] * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
 
-  /* ─────────────── 추첨 상태 · 옛 화면과 같은 모양(+ batch · ack) ───────────────
+  /* ─────────────── 추첨 상태 · 옛 화면과 같은 모양(+ batch) ───────────────
    * results[] = { id, round, slot, no, pk, nm(가린 이름), dp(draw_pool 부문), fn · fd(draw_who 실명 · 부서 · 당첨자만), prize, rname, at, st, pool, big, q(서버에 아직 안 보냄) }
-   * batch = 지금 공개 중인 한 번의 뽑기(기록 id 목록) · pending = 그 마지막 id(옛 화면 · 콘솔 호환) · ack[id] = 확인 시각 HH:MM */
+   * batch = 지금 공개 중인 한 번의 뽑기(기록 id 목록) · pending = 그 마지막 id(옛 화면 · 콘솔 호환) */
   var ST = load(LS_ST, null);
   if (!ST || ST.v !== 1) ST = { v: 1, seed: Math.floor(Math.random() * 1e9), scene: "idle", pool: null, arrived: [], closed: false, round: 0, results: [], out: {}, src: CFG.mode };
-  ST.ack = ST.ack || {}; ST.batch = ST.batch || [];
+  ST.batch = ST.batch || [];
   /* 261016 모드 · ST.mode = demo | live(시작 화면에서 고른 값) · 없으면 시작 화면 · 라이브 기록이 다른 서버 것이면 시작 화면(고르면 비운다) · 시험 페이지 = 데모 고정 */
-  if (SANDBOX && ST.mode !== "demo") ST = { v: 1, seed: Math.floor(Math.random() * 1e9), scene: "idle", pool: null, arrived: [], closed: false, round: 0, results: [], out: {}, mode: "demo", ack: {}, batch: [] };
+  if (SANDBOX && ST.mode !== "demo") ST = { v: 1, seed: Math.floor(Math.random() * 1e9), scene: "idle", pool: null, arrived: [], closed: false, round: 0, results: [], out: {}, mode: "demo", batch: [] };
   var MODE_BAD = ST.mode === "live" && ST.srv !== SERVER_URL;
   var NEED_START = !ST.mode || MODE_BAD;
   CFG.mode = ST.mode === "live" && !MODE_BAD ? "server" : "demo";
@@ -227,7 +227,6 @@
   function stateApply(rows) {
     var byId = {}, list = [];
     (rows || []).forEach(function (r) {
-      if (r.ack && !ST.ack[r.id]) ST.ack[r.id] = r.ack;
       if (r.st === "undo") { if (byId[r.id]) byId[r.id].st = "undone"; return; }
       var x = byId[r.id];
       if (!x) { x = { id: r.id, round: +r.round || 0, slot: +r.slot || 1, no: String(r.no), pk: r.pk, nm: r.nm || "", dp: "", prize: r.prize, rname: "", at: r.at, st: r.st, pool: 0, srv: 1 }; byId[r.id] = x; list.push(x); }
@@ -240,12 +239,11 @@
     while (ST.round < rs.length - 1 && roundWins(ST.round).length >= rs[ST.round].count) ST.round++;
     return list;
   }
-  /* 예비 노트북 복원 · 이 브라우저에 기록이 없는데 서버 추첨기록이 있으면 그대로 가져온다 · 확인(ack)도 함께 */
+  /* 예비 노트북 복원 · 이 브라우저에 기록이 없는데 서버 추첨기록이 있으면 그대로 가져온다 */
   function serverState() {
     jsonp("draw_state", {}, function (res) {
       if (!res || !res.ok) { SRV.stateStatus = "draw_state 실패 · " + (res && (res.reason || res.err) || "응답 없음"); return; }
       SRV.stateStatus = "draw_state " + (res.n || 0) + "줄";
-      (res.rows || []).forEach(function (r) { if (r.ack && !ST.ack[r.id]) ST.ack[r.id] = r.ack; });
       if (ST.results.length || !res.rows || !res.rows.length) { persist(); return; }
       var list = stateApply(res.rows);
       persist(); toast("서버 추첨기록 " + list.length + "건을 이어받았습니다", true);
@@ -1405,33 +1403,6 @@
     scene("reveal"); uiNames(0);
   }
 
-  /* ─────────────── 당첨자 확인(앱 「확인」 → 서버 draw_ack → 소켓 drawack · 또는 draw_acks 읽기) ───────────────
-   *   무대는 기다리지 않는다 · 오면 그 칸에 「확인 완료」만 덧붙인다 · 누가인지 새로 보이는 것은 없다 */
-  var ACKP = { t: 0, busy: false, again: false };
-  function setAck(id, at) {
-    id = String(id || ""); if (!id || ST.ack[id]) return;
-    var r = resById(id); if (!r || r.st !== "win") return;
-    ST.ack[id] = at || "확인"; persist();
-    if (SC === "reveal" && inBatch(id)) {
-      var j = ST.batch.indexOf(id), el = document.getElementById("wc" + j);
-      if (el) { var ok = el.querySelector(".ok"); fade(ok, 1, 0.35); }
-      var c = LAY.cells[j], sc = LAY.s;
-      if (c) { ring(c.x, c.y, Math.round(48 * Math.max(0.5, TQ().pm)), 700 * sc + 200, 8, 1.0, 140 * sc + 40); }
-    }
-  }
-  function ackPoll() {
-    if (CFG.mode !== "server" || !sessionKey() || T < ACKP.t) return;
-    if (ACKP.busy) { ACKP.again = true; return; }
-    if (SC !== "reveal" && SC !== "board") return;
-    if (!ST.results.some(function (r) { return r.st === "win" && !r.q && !ST.ack[r.id]; })) return;
-    ACKP.t = T + (WSD.st === "ok" ? 15 : 3); ACKP.busy = true;   /* 소켓이 살아 있으면 15초마다 한 번(놓친 사건 맞추기) · 끊기면 3초 */
-    jsonp("draw_acks", {}, function (res) {
-      ACKP.busy = false;
-      if (res && res.ok) (res.rows || []).forEach(function (r) { if (r.st === "ok") setAck(r.id, r.at); });
-      if (ACKP.again) { ACKP.again = false; ACKP.t = Math.min(ACKP.t, T + 1); }   /* 응답을 기다리는 동안 사건이 또 왔으면 1초 뒤 한 번 더 */
-    });
-  }
-
   /* ─────────────── DOM · 글자는 움직이지 않는다(투명도만) ─────────────── */
   var E = {};
   function $(id) { return E[id] || (E[id] = document.getElementById(id)); }
@@ -1541,11 +1512,10 @@
     picInto($("vPic"), $("vImg"), r);
     $("vLab").style.top = (LAY.rows === 1 ? 262 : 250) + "px";
     var cls = LAY.rows > 1 ? " row" : K === 1 ? "" : K === 2 ? " m" : " s", h = "";
-    var ok = '<span class="ok"><span class="ck"></span><b>확인 완료</b></span>';
     for (var j = 0; j < K; j++) {
       var c = LAY.cells[j], top = c.y + LAY.ph * LAY.s / 2 + (LAY.rows > 1 ? 8 : 26);
       h += '<div class="wc' + cls + '" id="wc' + j + '" style="left:' + c.x + "px;top:" + top + "px;width:" + LAY.cw + 'px">' +
-        (LAY.rows > 1 ? '<span class="l1"><span class="nmw"><span class="nm fit"></span>' + ok + '</span></span><span class="dp fit"></span>' : '<span class="nm fit"></span><span class="dp fit"></span>' + ok) + "</div>";
+        (LAY.rows > 1 ? '<span class="l1"><span class="nmw"><span class="nm fit"></span></span></span><span class="dp fit"></span>' : '<span class="nm fit"></span><span class="dp fit"></span>') + "</div>";
     }
     $("vCells").innerHTML = h;
     for (var q = 0; q < K; q++) fillCell(q);
@@ -1569,7 +1539,6 @@
     for (var j = 0; j < WB.length; j++) {
       var el = document.getElementById("wc" + j); if (!el) continue;
       fade(el, 1, 0.4, delay);
-      var ok = el.querySelector(".ok"); fade(ok, ST.ack[WB[j].id] ? 1 : 0, delay ? 0.4 : 0, delay);
     }
   }
   /* 결과 · v5.03 완주 경품 추첨 숫자 발표(옛 화면 그대로) */
@@ -1704,7 +1673,7 @@
   /* 261016 화면 비우기 · 이 기기의 화면 기록만(서버 당첨 기록은 그대로) · 보낼 줄(draw_log 대기)은 지우지 않는다(남아 있으면 다시 시작 · 리셋을 막는다) */
   function blankState(mode) {
     var keepSeq = ST.cmdSeq || {};
-    ST = { cmdSeq: keepSeq, v: 1, seed: Math.floor(Math.random() * 1e9), scene: "idle", pool: null, arrived: [], closed: false, round: 0, results: [], out: {}, src: mode === "live" ? "server" : "demo", ack: {}, batch: [], redo: {}, mode: mode || undefined };
+    ST = { cmdSeq: keepSeq, v: 1, seed: Math.floor(Math.random() * 1e9), scene: "idle", pool: null, arrived: [], closed: false, round: 0, results: [], out: {}, src: mode === "live" ? "server" : "demo", batch: [], redo: {}, mode: mode || undefined };
     if (mode === "live") ST.srv = SERVER_URL;
     for (var i = 0; i < NB; i++) live_[i] = 0;
     NIN = 0; LOAD.q = 0; pn = 0; WB = []; REEL.on = false; EXP.ph = ""; GATE.v = GATE.tgt = 0; NEXTCARD = 0; CONF.until = 0;
@@ -1867,7 +1836,7 @@
   function modeUi() {
     var b = document.body, d = SC !== "start" && ST.mode === "demo", l = SC !== "start" && isLive();
     b.classList.toggle("m-demo", d); b.classList.toggle("m-live", l); b.classList.toggle("demo", d);
-    set("modeBand", SANDBOX ? "DEMO · 시험 페이지 · 가짜 이름 · 서버 기록 없음" : "DEMO · 가짜 이름 · 서버 기록 없음 · 당첨 알림 없음");
+    set("modeBand", SANDBOX ? "DEMO · 시험 페이지 · 가짜 이름 · 서버 기록 없음" : "DEMO · 가짜 이름 · 서버 기록 없음");
     opPaint();
   }
   function opPaint() {
@@ -1970,8 +1939,8 @@
   /* ─────────────── 원격 조종(관리 콘솔 → 서버 → 이 화면) · 옛 화면 규약 그대로 ───────────────
    *   받기: 소켓 { t:'draw', cmd, arg, seq } · 소켓이 없으면 draw_scr 응답 cmd · 모의 명령기(BroadcastChannel axf-draw-remote)
    *   보내기: 2초마다 draw_scr { scene, pool, checked, round, slot, mixing_s, need_s, ready, closed, last, rej, seq, msg, ver, remote }
-   *   확인: 소켓 { t:'drawack', id, st, at } · 이 화면은 그 칸에 「확인 완료」만 덧붙인다 */
-  function remote() { return isLive(); }   /* 261016 라이브 = 상태 보고(draw_scr) · 확인 소켓 · 대형 화면에 운영 글자 없음 · 명령을 받는지는 CONSOLE_CTL */
+   */
+  function remote() { return isLive(); }   /* 261016 라이브 = 상태 보고(draw_scr) · 대형 화면에 운영 글자 없음 · 명령을 받는지는 CONSOLE_CTL */
   var CMD = { based: false, rej: null, last: null, msg: "", scrT: 0, scrEvery: 2, pollT: null, scrBusy: false, scrNo: 0 };
   var RBC = null;
   /* 261016 모의 명령기(axf-draw-remote) 받기 없앰 · 상태만 내보낸다 */
@@ -2102,10 +2071,6 @@
       if (m.t === "ok") { WSD.st = "ok"; WSD.fails = 0; clearInterval(WSD.ping); WSD.ping = setInterval(function () { try { ws.send("p"); } catch (x) {} }, 25000); return; }
       if (m.t === "no") { WSD.give = true; return; }
       if (m.t === "draw" && CMD.based) remoteCmd(m.cmd, m.arg, m.seq, "srv");
-      if (m.t === "drawack") {   /* 261008 당첨자 폰 확인 · 소켓 봉투가 id 를 사건 번호로 덮어써(hub.js) 기록 id 가 오지 않는다 → 사건이 오면 바로 draw_acks 한 번(rid 가 오면 그대로) */
-        if (m.rid) setAck(m.rid, m.at); else if (m.id && resById(String(m.id))) setAck(m.id, m.at);
-        ACKP.t = 0; ackPoll();
-      }
     };
     ws.onclose = function () { if (WSD.ws !== ws) return; var was = WSD.st === "ok"; WSD.ws = null; WSD.st = "off"; clearInterval(WSD.ping); if (WSD.give) return; if (was) { WSD.t = setTimeout(function () { WSD.t = null; wsdOpen(); }, 1500); return; } wsdFail(); };
   }
@@ -2153,7 +2118,6 @@
     stepVideos();
     uiTick();
     scrPush(false);
-    ackPoll();
     stepQuality(dt);
   }
   function render() {
@@ -2250,8 +2214,7 @@
       perf: function (reset) { var o = { tier: QL.tier, qlog: QL.log.slice(), fps: Math.round(FPS.v), long: PERF.long, worstMs: Math.round(PERF.worst * 1000), px: vw + "x" + vh, sc: {} };
         for (var k in PERF.sc) { var p = PERF.sc[k]; o.sc[k] = { avg: +(p.n / Math.max(1e-6, p.t)).toFixed(1), min1s: p.min1 === 999 ? null : +p.min1.toFixed(1), worstMs: Math.round(p.worst * 1000), sec: +p.t.toFixed(1) }; }
         if (reset) { PERF.sc = {}; PERF.long = 0; PERF.worst = 0; } return o; },
-      info: function () { return { K: LAY.K, rows: LAY.rows, s: +LAY.s.toFixed(3), digitPx: Math.round(DIGH * LAY.s), balls: liveCount(), nb: NB, ph: EXP.ph, tickets: bigTickets().length, batch: (ST.batch || []).slice(), ack: Object.assign({}, ST.ack), ws: WSD.st, queue: SRV.queue.length, log: SRV.logStatus || "", status: SRV.status, tier: QL.tier, who: { busy: WHO.busy, fail: WHO.fail, off: WHO.off, got: ST.results.filter(function (r) { return !!r.fn; }).length } }; },
-      ackTest: function (id, at) { setAck(id, at || "17:05"); return !!ST.ack[id]; },   /* 시험용 · 소켓 drawack 한 건을 흉내 */
+      info: function () { return { K: LAY.K, rows: LAY.rows, s: +LAY.s.toFixed(3), digitPx: Math.round(DIGH * LAY.s), balls: liveCount(), nb: NB, ph: EXP.ph, tickets: bigTickets().length, batch: (ST.batch || []).slice(), ws: WSD.st, queue: SRV.queue.length, log: SRV.logStatus || "", status: SRV.status, tier: QL.tier, who: { busy: WHO.busy, fail: WHO.fail, off: WHO.off, got: ST.results.filter(function (r) { return !!r.fn; }).length } }; },
       tier: function (t) { FORCEQ = -1; applyTier(t, "시험"); return QL.tier; },
       srv: function () { return { ws: WSD.st, wsGive: WSD.give, based: CMD.based, seq: cmdSeqOf("srv"), close: SRV.closeStatus || "", status: SRV.status, log: SRV.logStatus || "", queue: SRV.queue.length, state: SRV.stateStatus || "" }; },
       wsKill: function () { WSD.give = true; clearTimeout(WSD.t); if (WSD.ws) try { WSD.ws.close(); } catch (e) {} }
