@@ -378,7 +378,7 @@ function tsfDbg(k, v) {   /* v5.61 시험 훅 · 주소에 ?tsfdbg=1 일 때만 
 /* 다음 사람 · 대기 화면으로(순위 · 카메라 · 설정은 그대로) · 261007 기본 = 광고(ad) · wake = QR 화면(attract) */
 function tsfReset(wake) {
   if (!wake && TSF.ph !== "ad") { TSF.adAt = performance.now(); TSF.adI = -1; }
-  TSF.ph = wake ? "attract" : "ad"; TSF.emp = ""; TSF.nick = ""; TSF.info = null; TSF.busy = false; TSF.ticket = ""; TSF.res = null; TSF.sub = null; TSF.send = ""; TSF.why = ""; TSF.race = null; TSF.err = null; TSF.nm = ""; TSF.nmBad = false; TSF.retry = 0; TSF.via = "";
+  TSF.ph = wake ? "attract" : "ad"; TSF.emp = ""; TSF.nick = ""; TSF.info = null; TSF.busy = false; TSF.ticket = ""; TSF.res = null; TSF.sub = null; TSF.send = ""; TSF.why = ""; TSF.race = null; TSF.err = null; TSF.nm = ""; TSF.nmBad = false; TSF.retry = 0; TSF.via = ""; TSF.qid = "";
   TSF.phAt = performance.now(); TSF.idle = Date.now(); TSF.cam.last = ""; TSF.snd = true; tsfDbg("ph", TSF.ph);
   if (App.current === "type_site") { if (document.querySelector(".tsf")) tsfPaint(); else App.render(); tsfRankPull(true); }
 }
@@ -463,8 +463,10 @@ function tsfAdmin() {
     '<input id="tsfOffCode" class="ax-field" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="관리코드" onkeydown="onEnter(event, tsfOffGo)">' +
     '<p class="ax-meta" id="tsfOffMsg">효과음 ' + (on ? "켜짐" : "꺼짐") + (TSF_CAM ? " · 카메라 " + (C.stream ? "켜짐 " + esc(C.res) : "꺼짐") + " · 한 번 읽기 " + Math.round(TSF.sc.ms) + "ms" : "") + " · 접속 QR " + (TSF.lk.tok ? "켜짐" : "꺼짐") + (TSF.lk.hold ? " · 폰 로그인 중" : "") +
     " · 송출 " + (tvlSeat() ? "자리 " + tvlSeat() + (TVL.st === "ok" ? " 연결됨" : "") : "끔") + "</p>" +   /* 261017 실시간 송출 자리 */
+    '<p class="ax-meta" id="tsfQLn">' + esc(tsfQLine()) + "</p>" +   /* v7.66 이 노트북 대기열 · 마지막 실패 */
     '<button type="button" class="ax-button" onclick="tsfOffGo()">셀프 모드 끄기</button>' +
     '<button type="button" class="ax-button ax-button-weak" onclick="tsfSndGo()">효과음 ' + (on ? "끄기" : "켜기") + "</button>" +
+    (tsfQ().length ? '<button type="button" class="ax-button ax-button-weak" onclick="tsfQGo()">못 보낸 기록 지금 보내기</button>' : "") +
     (tsfStaff() ? '<button type="button" class="ax-button ax-button-weak" onclick="tsfSeatGo()">송출 ' + ["자리 1로", "자리 2로", "자리 3으로", "끄기"][tvlSeat()] + "</button>" : "") +
     (TSF_CAM ? '<button type="button" class="ax-button ax-button-weak" onclick="tsfStaffView()">카메라 전체 보기(20초)</button>' : "") +
     '<button type="button" class="ax-button ax-button-weak" onclick="modalClose()">닫기</button></div>', "스태프 전용");
@@ -895,7 +897,7 @@ function tsfLeftHtml() {
   /* 261007(사용자 「오른쪽 순위표 10등까지 · 일부 정보는 왼쪽으로」) 오른쪽 점수 설명을 왼쪽으로 · 방법 · 점수 두 묶음 · 엔터 없이 한 줄 */
   var rule = '<section class="tsf-p tsf-rule"><p class="tsf-rh">방법</p><p>맞게 치면 엔터 없이 터져요</p><p>목숨 ' + RAIN_LIVES + "개를 다 잃으면 끝</p><p>" + typeTryTxt(tsfLimit()) + "</p><p>최고 점수로 순위</p><p>17:00 마감 · 1~10위<br>Closing Speech에서 순위 발표</p></section>" +
     '<section class="tsf-p tsf-rule"><p class="tsf-rh">점수</p><p>글자 × 10 × 콤보(최대 3배)</p><p>구름이 비면 보너스 스테이지</p><p>빠르고 정확할수록 보너스</p><p>180초 버티면 목숨 × ' + RAIN_LIFE_BONUS + "</p></section>";   /* 줄마다 한 줄에 들어가게 짧게(1920 · 1366 · 24 · 16px) */
-  if (ph === "result" && !tsfClosed()) return '<section class="tsf-p"><p class="tsf-k">다음 도전자</p><p class="tsf-go">SPACE = 새 QR</p><p class="tsf-hint" id="tsfCount">' + Math.round(TSF_RES_MS / 1000) + "초 뒤 처음 화면</p></section>";   /* 261007 처음 화면 = 광고 · SPACE = 곧바로 QR */
+  if (ph === "result" && !tsfClosed()) return '<section class="tsf-p"><p class="tsf-k">다음 도전자</p><p class="tsf-go">SPACE = 새 QR</p><p class="tsf-hint" id="tsfCount">' + (TSF.send === "ok" || TSF.send === "fail" ? Math.round(TSF_RES_MS / 1000) + "초 뒤 처음 화면" : "") + "</p></section>";   /* 261007 처음 화면 = 광고 · SPACE = 곧바로 QR */
   return rule;
 }
 /* 오른쪽 · HIGH SCORE TOP 10(결과 화면에서만 방금 도전한 사람 줄 · 다음 사람에게 남의 줄을 짚어 보이지 않게) · 261007 TOP 5 → 10 · 점수 규칙은 왼쪽(tsfLeftHtml)으로 */
@@ -995,7 +997,7 @@ function tsfPaint() {
   var cl = tsfClosed();
   root.className = "tsf ph-" + TSF.ph + (TSF.sc.on ? " scan-on" : "") + (cl ? " closed" : "");
   TSF.closedK = cl ? "c" + cl.next : "";
-  var lx = el("tsfLx"), lk = TSF.ph + "|" + TSF.closedK + "|" + (TSF.info ? TSF.nick + TSF.info.left : "");
+  var lx = el("tsfLx"), lk = TSF.ph + "|" + TSF.closedK + "|" + (TSF.info ? TSF.nick + TSF.info.left : "") + (TSF.ph === "result" ? "|" + TSF.send : "");
   if (lx && lx._k !== lk) { lx._k = lk; lx.innerHTML = tsfLeftHtml(); tsfLinkPaint(); }
   var rr = el("tsfR"); if (rr) rr.innerHTML = tsfRightHtml();
   var ov = el("tsfOv"), key = TSF.ph + "|" + (TSF.ph === "result" ? TSF.send : "") + "|" + TSF.closedK + "|" + (TSF.ph === "attract" ? TSF.cam.err : "");
@@ -1145,6 +1147,7 @@ function tsfStop() { tvlOff(); if (TSF.t) { clearInterval(TSF.t); TSF.t = null; 
 function tsfTick() {
   if (App.current !== "type_site" || !tsfOn()) { tsfStop(); return; }
   tsfLinkTick();
+  try { tsfQTick(); } catch (e) {}   /* v7.66 못 보낸 기록 다시 보내기(판 중에도) */
   if (RG.on) return;
   var now = Date.now(), el2 = (performance.now() - TSF.phAt) / 1000, ph = TSF.ph, cl = tsfClosed();
   if ((cl ? "c" + cl.next : "") !== TSF.closedK) tsfPaint();
@@ -1158,9 +1161,9 @@ function tsfTick() {
   else if (ph === "err" && el2 > ((TSF.err && TSF.err.dur) || 4)) { if (!tsfWake()) tsfReset(); }   /* 261007 안내 뒤 = QR 화면(다시 찍기) · 시간 밖이면 광고 */
   else if ((ph === "ready" && now - TSF.idle > TSF_READY_MS) || (ph === "nick" && now - TSF.idle > TSF_NICK_MS)) tsfReset();   /* 자리를 뜬 사람이 다음 사람에게 남지 않게 */
   else if (ph === "result") {
-    var left = Math.max(0, Math.ceil((TSF_RES_MS - (performance.now() - TSF.resAt)) / 1000)), c = el("tsfCount");
-    if (c) c.textContent = left + "초 뒤 처음 화면";
-    if (left <= 0 && TSF.send !== "sending") tsfReset();   /* 261006 결과 화면 왼쪽 QR 없음 · 10초 뒤 대기 화면 가운데 QR */
+    var left = Math.max(0, Math.ceil((TSF_RES_MS - (performance.now() - TSF.resAt)) / 1000)), c = el("tsfCount"), fin = TSF.send === "ok" || TSF.send === "fail";
+    if (c) c.textContent = fin ? left + "초 뒤 처음 화면" : "";
+    if (left <= 0 && fin) tsfReset();   /* 261006 결과 화면 왼쪽 QR 없음 · 10초 뒤 대기 화면 가운데 QR · v7.66 저장됐거나 서버가 받지 않는 판(limit · range 등)일 때만 · 못 보냈으면 결과를 남기고 SPACE = 다음 사람(대기열은 계속 다시 보낸다) */
   }
   if (TSF.cam.stream && !TSF.cam.timer) tsfCamAttach();
   if (TSF.ph === "attract" || TSF.ph === "ad") { tsfRankPull(); tsfCfgPull(); }
@@ -1208,19 +1211,95 @@ function tsfDone(res) {
   res.prev = (TSF.info && TSF.info.best) || 0;
   tvlEnd("over");   /* 261017 실시간 송출 · 판 끝 한 건(제출 전) */
   TSF.res = res; TSF.ph = "result"; TSF.resAt = performance.now(); TSF.phAt = TSF.resAt; tsfPoke(); tsfDbg("ph", "result");
-  App.render(); tsfSend();
+  try { TSF.qid = tsfQAdd(res); } catch (e) { TSF.qid = ""; }   /* v7.66 기록을 먼저 이 기기 대기열에 · 그다음 보내기 · 그리기 예외가 제출을 막지 않게(그리기는 맨 뒤 try) */
+  tsfSend();
+  try { App.render(); } catch (e) { tsfQErr("render " + String(e && e.message || e).slice(0, 30), null); }
 }
 function tsfQuit() { tvlEnd("quit"); tsfErr("도전을 멈췄어요", "1회를 썼어요"); App.render(); }
+/* 판 끝 · 결과 화면 「다시 보내기」 · 이 판은 이미 대기열에 있다(tsfDone) · 대기열 앞 판부터 곧바로 보낸다 */
 function tsfSend() {
-  var r = TSF.res; if (!r) return;
+  if (!TSF.res) return;
+  if (!TSF.qid) { try { TSF.qid = tsfQAdd(TSF.res); } catch (e) {} }
   TSF.send = "sending"; TSF.why = "";
-  var paint = function () { if (App.current === "type_site" && TSF.ph === "result") tsfPaint(); };
-  admCall({ action: "type_self_submit", key: tsfKey(), tok: tsfTok(), emp: TSF.emp, ticket: TSF.ticket, score: r.score, hits: r.hits, combo: r.combo, acc: r.acc, g: TVL.sub || null }, function (x) {   /* 261017 g = 송출 판 번호(다시 보내기도 같은 g · 없으면 싣지 않는다) */
-    if (x && x.ok) { TSF.send = "ok"; TSF.sub = x; if (x.top) { TSF.top = { ok: true, top: x.top, me: x.me, tries: x.cap || x.limit }; TSF.topT = Date.now(); } if (x.pb) setTimeout(function () { sfx("best"); }, 250); }   /* v4.50(260925) 테스트 사번도 실제로 저장되어 dry 가 없다 */
-    else { TSF.send = "fail"; TSF.why = (x && x.reason) || ""; }
-    TSF.resAt = performance.now(); paint();
-  }, function () { TSF.send = "fail"; TSF.why = "net"; TSF.resAt = performance.now(); paint(); });
+  tsfQFlush(true);
+  try { tsfResPaint(); } catch (e) {}
 }
+function tsfResPaint() { if (App.current === "type_site" && TSF.ph === "result") tsfPaint(); }
+/* 지금 결과 화면 판의 서버 답 · ok = 저장(재전송이면 again) · 그 밖 = 다시 보내도 같은 거절(limit · range 등) */
+function tsfSubRes(x, why) {
+  if (x && x.ok) { TSF.send = "ok"; TSF.why = ""; TSF.sub = x; if (x.top) { TSF.top = { ok: true, top: x.top, me: x.me, tries: x.cap || x.limit }; TSF.topT = Date.now(); } if (x.pb) setTimeout(function () { sfx("best"); }, 250); }   /* v4.50(260925) 테스트 사번도 실제로 저장되어 dry 가 없다 */
+  else { TSF.send = "fail"; TSF.why = why || ""; }
+  TSF.resAt = performance.now(); tsfResPaint();
+}
+/* ── v7.66 (261017 · 15:21 판 두 개 유실 · 제출 요청이 서버에 닿지 못했는데 앱이 10초 뒤 결과를 지우고 기록을 버렸다) 제출 대기열 ──
+   판이 끝나면 기록을 먼저 이 기기 보관 self_q 에 넣고 보낸다 · 새로 고침 · 페이지를 다시 열어도 남는다(셀프 화면이 다시 보낸다)
+   항목 = { id(sid · 서버 멱등 열쇠) · emp · tk(표) · g(송출 판 번호) · score · hits · combo · acc · at(판 끝 시각) · n(실패 횟수) · why(마지막 실패) }
+   빼는 때 = 저장 성공 · limit · range · dup · param · unknown · window(서버가 받지 않는 판 · 다시 보내도 같다) · 그 밖(fail · network · bad · busy · timeout · auth …)은 남긴다
+   다시 = 1 · 3 · 10초 뒤 · 그 뒤 30초마다(결과 · 대기 · 광고 · 다른 사람 판 중에도 · 셀프 화면에 있는 동안) · 「다시 보내기」 · 와이파이 복귀 = 곧바로 · 한 번에 한 건 · 앞 판부터 순서대로
+   서버 멱등(tsub_ · 표 · g · sid) = 같은 판이 두 번 가도 한 줄 · 실패 사유 · 시각 20건 = self_err_log · F2 「관리」 = 못 보낸 기록 n건 */
+var TSF_Q_BACK = [1000, 3000, 10000], TSF_Q_IDLE = 30000, TSF_Q_MAX = 60;
+var TSF_Q_DROP = { limit: 1, range: 1, dup: 1, param: 1, unknown: 1, window: 1 };
+var TSFQ = { busy: "", next: 0, chk: 0 };
+function tsfQ() { var q = S.get("self_q", []); return Array.isArray(q) ? q.filter(function (x) { return x && x.id && x.emp; }) : []; }
+function tsfQPut(q) { S.put("self_q", q.slice(-TSF_Q_MAX)); }
+function tsfQAdd(r) {
+  var id = Date.now().toString(36);
+  while (id.length < 16) id += "abcdefghijkmnpqrstuvwxyz23456789".charAt(Math.floor(Math.random() * 32));
+  var q = tsfQ();
+  q.push({ id: id, emp: TSF.emp, tk: TSF.ticket || "", g: TVL.sub || "", score: r.score, hits: r.hits, combo: r.combo, acc: r.acc, at: Date.now(), n: 0, why: "" });
+  tsfQPut(q); tsfDbg("q", "add " + id);
+  return id;
+}
+function tsfQErr(why, it) {
+  var a = S.get("self_err_log", []); if (!Array.isArray(a)) a = [];
+  a.push({ at: Date.now(), why: String(why || "").slice(0, 40), emp: it ? it.emp : "", score: it ? it.score : null, n: it ? (it.n || 0) + 1 : 0 });
+  S.put("self_err_log", a.slice(-20));
+}
+/* 한 건 보내기 · 송출 판 번호 g · 대기열 번호 sid(새 서버 멱등) · 키 · 토큰은 보내는 때의 값 */
+function tsfQSend(it, cb) {
+  admCall({ action: "type_self_submit", key: tsfKey(), tok: tsfTok(), emp: it.emp, ticket: it.tk, score: it.score, hits: it.hits, combo: it.combo, acc: it.acc, g: it.g || null, sid: it.id }, function (x) {   /* 261017 g = 송출 판 번호(다시 보내기도 같은 g · 없으면 싣지 않는다) */
+    cb(x, x && x.ok ? "" : (x && x.reason) || "fail");
+  }, function (why) { cb(null, why || "network"); });
+}
+function tsfQFlush(force) {
+  if (TSFQ.busy || !tsfOn()) return;
+  var q = tsfQ(), it = q[0];
+  if (!it) { TSFQ.next = 0; return; }
+  if (!force && (!TSFQ.next || Date.now() < TSFQ.next)) return;
+  TSFQ.busy = it.id; TSFQ.next = 0;
+  tsfQSend(it, function (x, why) {
+    TSFQ.busy = "";
+    var q2 = tsfQ(), k = -1, cur = TSF.ph === "result" && !!TSF.qid;
+    for (var i = 0; i < q2.length; i++) if (q2[i].id === it.id) k = i;
+    if ((x && x.ok) || TSF_Q_DROP[why]) {
+      if (k >= 0) q2.splice(k, 1);
+      tsfQPut(q2);
+      if (!(x && x.ok)) tsfQErr(why, it);
+      tsfDbg("q", (x && x.ok ? "ok " : "drop " + why + " ") + it.id);
+      if (cur && it.id === TSF.qid) tsfSubRes(x, why);
+      if (q2.length) TSFQ.next = Date.now() + 300;   /* 다음 판 곧바로 */
+      return;
+    }
+    var n = 1;
+    if (k >= 0) { n = q2[k].n = (q2[k].n || 0) + 1; q2[k].why = why; q2[k].last = Date.now(); tsfQPut(q2); }
+    tsfQErr(why, it);
+    TSFQ.next = Date.now() + (n <= TSF_Q_BACK.length ? TSF_Q_BACK[n - 1] : TSF_Q_IDLE);
+    tsfDbg("q", "retry " + why + " " + it.id + " n" + n);
+    if (cur && TSF.send !== "ok" && TSF.send !== "fail" && q2.some(function (y) { return y.id === TSF.qid; })) { TSF.send = "retry"; TSF.why = why; tsfResPaint(); }   /* 앞 판이 막혀도 지금 판은 「자동으로 다시 보내는 중」 */
+  });
+}
+/* 셀프 시계(0.265초)가 부른다 · 판 중에도 · 예약이 없으면 5초마다 대기열을 본다(새로 고침 · 다시 연 페이지 · 다른 탭이 남긴 판) */
+function tsfQTick() {
+  var now = Date.now();
+  if (!TSFQ.busy && !TSFQ.next && now > TSFQ.chk) { TSFQ.chk = now + 5000; if (tsfQ().length) TSFQ.next = now + 1000; }
+  if (TSFQ.next && now >= TSFQ.next) tsfQFlush();
+}
+window.addEventListener("online", function () { try { if (tsfQ().length) TSFQ.next = Date.now() + 500; } catch (e) {} });
+function tsfQLine() {
+  var n = tsfQ().length, a = S.get("self_err_log", []), l = Array.isArray(a) && a.length ? a[a.length - 1] : null, d = l ? new Date(l.at) : null;
+  return "못 보낸 기록 " + n + "건" + (l ? " · 마지막 실패 " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2) + " " + l.why : "");
+}
+function tsfQGo(ok) { if (ok !== true && !tsfCodeOk(tsfQGo)) return; modalClose(); tsfQFlush(true); }
 /* ── 261017 (사용자 결정 · 데이터 중계) 1F 타자왕 실시간 송출 · 게임 노트북 「보내기」(②단계) · 프로토콜 = 디자인 시안/사이니지 명세/타자왕_실시간송출_프로토콜_261017.md 1 · 2 · 3절
    자리 = 이 노트북 저장 self_seat(1 | 2 | 3(261017 예비 노트북 · 보통 TV 없음) · 0 = 끔 · 기본 끔) · 주소에 seat=1 · seat=2 · seat=0(#self&seat=1 · ?seat=2)을 붙여 한 번 열면 저장(다음부터 주소 없이) · 스태프 「관리」(F2 · 관리코드)에서 바꾼다
    스태프가 관리코드로 켠 노트북만(체험 PC 는 자리를 보내지 않는다) · 시작(type_self_start + seat) 응답에 live(판 번호 g)가 와야만 소켓을 연다
@@ -1428,13 +1507,14 @@ function tsfResHtml() {
   var r = TSF.res || {}, x = TSF.sub || {}, lim = x.limit || tsfLimit();
   /* v4.50(260925) 테스트 사번도 실제로 저장되어 dry 가 없다 · TSF.emp 가 테스트 사번이면 줄 끝에만 표시 */
   var rank = TSF.send === "sending" ? "기록 저장 중" : TSF.send === "ok" ? (x.pb ? "신기록!" : "내 최고 " + typePts(x.best || 0)) + (x.me ? " · 현장 " + x.me.rank + "위" : "") + (TEST_EMP.indexOf(TSF.emp) >= 0 ? " · 테스트 사번" : "") :
-    "저장하지 못했어요 · " + (TSF.why === "net" ? "서버 응답 없음" : TSF.why === "limit" ? "도전 횟수를 넘었어요" : TSF_WHY[TSF.why] || TSF.why);
+    TSF.send === "retry" ? "저장하지 못했어요 · 자동으로 다시 보내는 중" :   /* v7.66 기록은 이 노트북 대기열에 있다 */
+    "저장하지 못했어요 · " + (TSF.why === "limit" ? "도전 횟수를 넘었어요" : TSF_WHY[TSF.why] || TSF.why);
   var more = typeMore(x), left = TSF.send === "ok" ? (x.left > 0 ? "남은 기회 " + x.left + "회 · 다시 하려면 QR 찍기" : more ? more.t + " · 지금 스탬프 " + x.stamps + "개" : "도전 " + lim + "회를 모두 쓰셨어요 · 고마워요") : "";   /* 261017 스탬프 기회 */
   var cap = r.why === "cap";
   return rtGoHtml({ title: cap ? "TIME UP" : "GAME OVER", sub: "AX 단어 소나기 · " + (TSF.nick || "익명 참가자"),
     line: cap ? "180초를 버텼어요 · 목숨 보너스" : "단어 " + (RG.lives0 || RAIN_LIVES) + "개를 놓쳤어요",
     body: '<p class="gs-sc">' + typePts(r.score || 0) + "</p>" + '<p class="rt-go-rank">' + esc(rank) + "</p>" + (left ? '<p class="rt-go-rank">' + esc(left) + "</p>" : "") +
-      (TSF.send === "fail" && TSF.why !== "limit" && TSF.why !== "range" ? '<button type="button" class="ax-button rt-btn" onclick="tsfSend()">다시 보내기</button>' : "") +
+      (TSF.send === "retry" ? '<button type="button" class="ax-button rt-btn" onclick="tsfSend()">다시 보내기</button>' : "") +   /* v7.66 서버가 받지 않는 판(fail)은 단추 없음 */
       rtFoldHtml("기록 자세히 보기", rtFoldSec("점수 구성", rtRefTable([["단어 점수", typePts((r.score || 0) - (r.bns || 0) - (r.capBns || 0))], ["보너스 스테이지", typePts(r.bns || 0) + " · " + (r.bnsN || 0) + "번"], ["목숨 보너스", typePts(r.capBns || 0)]])) +
         rtFoldSec("참고 기록", rtRefTable([["터뜨린 단어", (r.hits || 0) + "개"], ["최고 콤보", r.combo || 0], ["정확도", (r.acc || 0) + "%"], ["버틴 시간", typeSec(r.surv || 0)]]))) });
 }
