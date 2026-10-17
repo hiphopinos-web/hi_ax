@@ -1555,8 +1555,8 @@
     set("fNote", "결과는 앱 내 보상에서 확인" + (f.ship ? " · " + esc(f.ship) + " 배송" : ""));
   }
   /* 등수 사진 = 앱 경품 사진(../assets/prize/ · 옛 화면과 같은 파일 · 같은 크기 표) */
-  var PIC_DIR = "../assets/prize/", PIC = { "1등": "ld1_ipad", "2등": "ld2_shilla", "3등": "ld3_minix", "4등": "ld4_airpods", "5등": "ld5_pulio", "6등": "ld6_hyundai" }, PIC_OK = {};
-  var PIC_K = { ld1_ipad: 0.79, ld2_shilla: 0.59, ld3_minix: 0.90, ld4_airpods: 0.92, ld5_pulio: 0.84, ld6_hyundai: 0.90, rl1_tumbler_v2: 0.87, rl4_sticker_v2: 0.75, rl2_keyring_v2: 0.83, rl5_pen_v2: 0.79 };
+  var PIC_DIR = "../assets/prize/", PIC = { "1등": "ld1_ipad", "2등": "ld2_shilla", "3등": "ld3_minix", "4등": "ld4_airpods5", "5등": "ld5_pulio", "6등": "ld6_hyundai" }, PIC_OK = {};
+  var PIC_K = { ld1_ipad: 0.79, ld2_shilla: 0.59, ld3_minix: 0.90, ld4_airpods5: 0.92, ld5_pulio: 0.84, ld6_hyundai: 0.90, rl1_tumbler_v2: 0.87, rl4_sticker_v2: 0.75, rl2_keyring_v2: 0.83, rl5_pen_v2: 0.79 };
   function picK(img, f) { var k = (PIC_K[f] || 0.59) * 100 + "%"; img.style.width = k; img.style.height = k; }
   (function () { Object.keys(PIC).forEach(function (k) { var im = new Image(); im.onload = function () { PIC_OK[k] = 1; }; im.onerror = function () { PIC_OK[k] = 0; }; im.src = PIC_DIR + PIC[k] + ".webp"; }); })();
   function picInto(box, img, r) {
