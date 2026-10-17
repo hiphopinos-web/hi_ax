@@ -597,7 +597,7 @@ function ownIs(x) { var e = ownEmp(); return !!e && !!x && typeof x === "object"
    끝이 * 인 항목 = 앞부분이 같은 키 전부(type_rank_app · oly2_done_pang 처럼 뒤가 바뀌는 키).
    같은 사람이 로그아웃 뒤 다시 들어와도 쓰던 설문 · 아이디어 초안은 지워진다(사용자 감수). */
 var STORE_DEVICE = ["vid", "a2hs", "fs", "t",
-  "site_sound", "site_bgm", "game_sound", "rain_sound", "jp_tut",
+  "site_sound", "site_bgm", "site_bgm_def", "game_sound", "rain_sound", "jp_tut",
   "self_on", "self_key", "self_tok", "scan_spot", "scan_sub", "ssc_cnt", "ssc_snd", "adm_tab", "tyaw_tab", "tyaw_hide", "tyaw_oly_pg", "self_dev", "self_seat", "self_q", "self_err_log",
   "type_rank_*", "oly_tab", "oly_ev",
   "notices", "notices_wipe1", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "resv_conf", "crowd", "stv", "att_w",

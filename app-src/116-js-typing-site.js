@@ -462,12 +462,12 @@ function tsfAdmin() {
   var on = S.get("site_sound", true) === true, C = TSF.cam;
   modalOpen('<div class="ax-stack-tight axs-gap12"><label class="ax-sr-only" for="tsfOffCode">관리코드</label>' +
     '<input id="tsfOffCode" class="ax-field" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="관리코드" onkeydown="onEnter(event, tsfOffGo)">' +
-    '<p class="ax-meta" id="tsfOffMsg">효과음 ' + (on ? "켜짐" : "꺼짐") + " · 배경 음악 " + (S.get("site_bgm", true) === true ? "켜짐" : "꺼짐") + (TSF_CAM ? " · 카메라 " + (C.stream ? "켜짐 " + esc(C.res) : "꺼짐") + " · 한 번 읽기 " + Math.round(TSF.sc.ms) + "ms" : "") + " · 접속 QR " + (TSF.lk.tok ? "켜짐" : "꺼짐") + (TSF.lk.hold ? " · 폰 로그인 중" : "") +
+    '<p class="ax-meta" id="tsfOffMsg">효과음 ' + (on ? "켜짐" : "꺼짐") + " · 배경 음악 기본 " + (S.get("site_bgm_def", true) === true ? "켜짐" : "꺼짐") + (TSF_CAM ? " · 카메라 " + (C.stream ? "켜짐 " + esc(C.res) : "꺼짐") + " · 한 번 읽기 " + Math.round(TSF.sc.ms) + "ms" : "") + " · 접속 QR " + (TSF.lk.tok ? "켜짐" : "꺼짐") + (TSF.lk.hold ? " · 폰 로그인 중" : "") +
     " · 송출 " + (tvlSeat() ? "자리 " + tvlSeat() + (TVL.st === "ok" ? " 연결됨" : "") : "끔") + "</p>" +   /* 261017 실시간 송출 자리 */
     '<p class="ax-meta" id="tsfQLn">' + esc(tsfQLine()) + "</p>" +   /* v7.66 이 노트북 대기열 · 마지막 실패 */
     '<button type="button" class="ax-button" onclick="tsfOffGo()">셀프 모드 끄기</button>' +
     '<button type="button" class="ax-button ax-button-weak" onclick="tsfSndGo()">효과음 ' + (on ? "끄기" : "켜기") + "</button>" +
-    '<button type="button" class="ax-button ax-button-weak" onclick="tsfBgmGo()">배경 음악 기본값 ' + (S.get("site_bgm", true) === true ? "끄기" : "켜기") + "</button>" +   /* 261017 기기 저장 site_bgm · 오른쪽 위 단추 · F4 와 같은 값 */
+    '<button type="button" class="ax-button ax-button-weak" onclick="tsfBgmGo()">배경 음악 기본값 ' + (S.get("site_bgm_def", true) === true ? "끄기" : "켜기") + "</button>" +   /* 261017 기기 저장 site_bgm · 오른쪽 위 단추 · F4 와 같은 값 */
     (tsfQ().length ? '<button type="button" class="ax-button ax-button-weak" onclick="tsfQGo()">못 보낸 기록 지금 보내기</button>' : "") +
     (tsfStaff() ? '<button type="button" class="ax-button ax-button-weak" onclick="tsfSeatGo()">송출 ' + ["자리 1로", "자리 2로", "자리 3으로", "끄기"][tvlSeat()] + "</button>" : "") +
     (TSF_CAM ? '<button type="button" class="ax-button ax-button-weak" onclick="tsfStaffView()">카메라 전체 보기(20초)</button>' : "") +
@@ -503,7 +503,7 @@ function tsfSndGo(ok) {
 }
 function tsfBgmGo(ok) {
   if (ok !== true && !tsfCodeOk(tsfBgmGo)) return;
-  if (typeof bgmToggle === "function") bgmToggle();
+  if (typeof bgmDefToggle === "function") bgmDefToggle();   /* 261017 기본값 + 지금 값 */
   modalClose();
 }
 function tsfStaffView(ok) { if (ok !== true && !tsfCodeOk(tsfStaffView)) return; modalClose(); TSF.sc.staff = performance.now(); tsfScanShow(true); }
@@ -794,6 +794,7 @@ function tsfCheckRes(r, via) {
   if (r.left <= 0) { tsfErr(tsfLimitMsg(r), tsfLimitSub(r, "순위는 오른쪽 화면에서"), 6); sfx("rgmiss"); return; }   /* 261017 스탬프가 상한보다 적으면 「스탬프를 더 모으면 한 번 더 도전」 · 지금 스탬프 n개 */
   TSF.emp = r.emp; TSF.info = r; TSF.nick = r.nick || ""; TSF.via = via || "";
   tsfRacePull();
+  if (typeof bgmReset === "function") bgmReset();   /* 261017 새 사람 = 배경 음악 기본값 */
   tsfPh("join"); sfx("rgjoin");
 }
 /* ── v5.61 방법 2 · 노트북 화면 접속 QR(앱 주소#q=type&lt=토큰) · 대기 · 안내 · 결과(8초 뒤)에서만 띄운다 · 30초마다 새 토큰(261007 40 → 30 · 화면 QR 은 45초까지만) · 1.5초마다 서버에 묻는다 ──

@@ -294,6 +294,9 @@ function bgmToggle() {
   bgmBtnSync();
   return on;
 }
+function bgmDef() { return S.get("site_bgm_def", true) === true; }   /* 261017 스태프 관리 기본값(기기 저장) */
+function bgmReset() { S.put("site_bgm", bgmDef()); bgmBtnSync(); }   /* 261017 새 사람(확인 통과 · READY 앞) = 기본값으로 되돌림(결정 b · 앞 사람이 끈 음악이 넘어가지 않게) */
+function bgmDefToggle() { var on = !bgmDef(); S.put("site_bgm_def", on); S.put("site_bgm", on); if (on && S.get("site_sound", true) === true) sfxUnlock(); bgmBtnSync(); return on; }
 function bgmIcon(on) {   /* 도트 음표 · 끔 = 사선 */
   return '<svg viewBox="0 0 16 16" width="24" height="24" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M6 2h8v2H8v7H6zM12 4h2v7h-2zM3 10h5v4H3zM9 9h5v4H9z"/>' + (on ? "" : '<path class="x" d="M1 1h2v2H1zM3 3h2v2H3zM5 5h2v2H5zM7 7h2v2H7zM9 9h2v2H9zM11 11h2v2h-2zM13 13h2v2h-2z"/>') + "</svg>";
 }
