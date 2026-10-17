@@ -40,9 +40,9 @@ var STN={ ok:"정상", warn:"주의", bad:"위험" };
 var NB_KIND=[["lg","최초 로그인"],["qz","AX 퀴즈"],["p4","미니 게임"],["p5","아이디어 한 줄"],["p2","AX PLAY"],["st","계단 이용"],["p3","17F 강연(2개)"],["p3h","17F 강연 한쪽(1개)"],["p10","10F 실습(2개)"],["p10h","10F 실습 한쪽(1개)"],["ln","AX 라운지 완료(2개)"],["cc","18F 커피챗 완료(1개)"],["sv","설문 참여"]];
 function nbKinds(kinds){ var m={}; kinds.forEach(function(k){ m[k.id]=k; }); return NB_KIND.map(function(x){ var k=m[x[0]]; return { id:x[0], n:x[1], c:k?k.c:null }; }); }
 SCREENS.now={
-  title:"지금", desc:"앱 사용 · 이상 신호 · 지금 단계 · 스탬프 · 경품 · 스태프 요청",
-  need:function(){ return [usNeed(),{ k:"rst", a:"roll_stat", ttl:60000 },{ k:"sreqo", a:"sreq_list", p:{ st:"open", n:20 }, ttl:15000 },{ k:"inv", a:"inv_state", ttl:60000 },{ k:"kss", a:"kit_size_state", ttl:60000 }]; },
-  mount:function(vb){ vb.innerHTML='<div id="nwChips" class="chips"></div><div id="nwErr"></div><div id="nwUseA"></div><div class="grid g4 mb" id="nwSig"></div><div id="nwUseB"></div><div class="grid g32"><div class="col" id="nwL"></div><div class="col" id="nwR"></div></div>'; },
+  title:"지금", desc:"앱 사용 · 지금까지 · 이상 신호 · 지금 단계 · 스탬프 · 경품 · 스태프 요청",
+  need:function(){ return [usNeed(),sfNeed(),{ k:"rst", a:"roll_stat", ttl:60000 },{ k:"sreqo", a:"sreq_list", p:{ st:"open", n:20 }, ttl:15000 },{ k:"inv", a:"inv_state", ttl:60000 },{ k:"kss", a:"kit_size_state", ttl:60000 }]; },
+  mount:function(vb){ vb.innerHTML='<div id="nwChips" class="chips"></div><div id="nwErr"></div><div id="nwUseA"></div><div id="nwSfA"></div><div class="grid g4 mb" id="nwSig"></div><div id="nwUseB"></div><div class="grid g32"><div class="col" id="nwL"></div><div class="col" id="nwR"></div></div><div id="nwSfB"></div>'; },
   paint:function(){
     var b=S.data.nb, g=dataGate("nb","진행판");
     if(g){ el("nwSig").innerHTML=g; return; }
@@ -60,8 +60,10 @@ SCREENS.now={
     /* 261017 앱 사용 · 당일 08:00~17:30 = 이상 신호 아래 · 그 밖 = 맨 위(D6) · 옛 접속 카드는 앱 사용 아래 한 줄로 합침 */
     var ub=usBelow(); el(ub?"nwUseA":"nwUseB").innerHTML=""; el(ub?"nwUseB":"nwUseA").innerHTML=nwUsage(b); usAreaDraw();
     var C={ stamp:nwStamp(b), focus:nwFocus(b, ph), prize:nwPrize(b), req:nwReq() };
-    var L=["stamp"];
-    var R=ph.id==="after"||ph.id==="close"?["focus","prize","req"]:["focus","req","prize"];
+    /* 261017 지금까지 · 행사일이 아닌 날 = 앱 사용 아래 펼침(스탬프 카드는 지금까지가 대신) · 행사일 = 맨 아래 접힘 */
+    var ev=sfEvDay(); el(ev?"nwSfA":"nwSfB").innerHTML=""; el(ev?"nwSfB":"nwSfA").innerHTML=nwSofarWrap();
+    var L=ev?["stamp"]:["focus"];
+    var R=!ev?["req","prize"]:ph.id==="after"||ph.id==="close"?["focus","prize","req"]:["focus","req","prize"];
     el("nwL").innerHTML=L.map(function(k){ return C[k]; }).join("");
     el("nwR").innerHTML=R.map(function(k){ return C[k]; }).join("");
   }
