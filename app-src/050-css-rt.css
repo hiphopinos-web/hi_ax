@@ -84,6 +84,13 @@
   #rgPlay.rt .rgp-top .rgp-x, #rgPlay.rt .rgp-top .snd-btn { height: 40px; min-height: 40px; margin: 3px; padding: 0 12px; border: 0; border-radius: 0; background: var(--rt-tan2); color: var(--rt-bark);
     font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; box-shadow: var(--rt-line), inset -3px -3px 0 0 var(--rt-tan); }
   #rgPlay.rt .rgp-top .snd-btn.on { background: var(--rt-o100); color: var(--rt-btn); box-shadow: var(--rt-line), inset -3px -3px 0 0 var(--rt-deep); }
+  /* 261017 1F 타자왕 배경 음악 단추(사용자 확정 D6 · 화면 오른쪽 위 · 판 도중 · 대기 · 결과) · body 에 붙는 단추라 rt 토큰을 단추가 직접 갖는다(class "rt tsf-bgm") · 켬 = 주황 · 끔 = 나무색 + 사선 */
+  .rt.tsf-bgm { position: fixed; top: 10px; right: 14px; z-index: 320; display: inline-flex; align-items: center; gap: 8px; height: 40px; margin: 0; padding: 0 12px 0 10px; border: 0; border-radius: 0; background: var(--rt-tan2); color: var(--rt-bark);
+    font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; line-height: 1; white-space: nowrap; box-shadow: var(--rt-line), inset -3px -3px 0 0 var(--rt-tan); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .rt.tsf-bgm.on { background: var(--rt-o100); color: var(--rt-btn); box-shadow: var(--rt-line), inset -3px -3px 0 0 var(--rt-deep); }
+  .rt.tsf-bgm svg { display: block; flex: none; }
+  .rt.tsf-bgm .x { fill: var(--rt-deep); }
+  #rgPlay.rt.site .rg-hud { padding-right: 150px; box-sizing: border-box; }   /* 오른쪽 위 음악 단추 자리 */
   #rgPlay.rt .rgp-top .rgp-x.off, #rgPlay.rt .rgp-top .rgp-x:disabled { background: var(--rt-dim); color: var(--rt-night); box-shadow: var(--rt-line); }
   #rgPlay.rt .rgp-mid canvas { border: 3px solid var(--rt-ink); border-radius: 0; box-shadow: 0 0 0 3px var(--rt-wood); }
   #rgPlay.rt .rgp-mid.fill canvas { border: 0; box-shadow: none; }

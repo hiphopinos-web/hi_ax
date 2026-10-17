@@ -307,13 +307,15 @@
       var b = S.bns;
       if (!b) { b = S.bns = { text: clip(bn.t, 80), keys: KEYS[bn.t] || [], lim: rgBonusLim(String(bn.t || "").length), left: 0, ph: "", t: 0, at: pnow, typed: "", res: null, no: Math.max(1, S.cloudNo), phAt: F.hs, typeAt: 0, sc0: P ? P.sc : F.sc }; }
       b.text = clip(bn.t, 80); b.typed = clip(bn.ty, 80);
+      if ((bn.ph === "res" || bn.ph === "bin") && bn.v >= 0) b.v = Math.round(Number(bn.v)) || 0;   /* 261017 줄어드는 숫자 · 멈춘 값은 노트북 값(bn.v) · 그 전은 이 화면 시계(b.left)로 그린다(rgBonusVal) */
       if (b.ph !== bn.ph) {
         b.ph = bn.ph; b.phAt = F.hs;
-        if (bn.ph === "type") { b.typeAt = F.hs; }
+        if (bn.ph === "type") { b.typeAt = F.hs; b.sc0 = F.sc; }   /* 261017 보너스 점수 = 「시작!」 때 점수와의 차이(구름이 걷히는 순간의 마지막 단어 점수가 섞이지 않게) */
         if (bn.ph === "res" && !b.res) {
           var left = b.typeAt ? Math.max(0, b.lim - (F.hs - b.typeAt) / 1000) : 0;
-          b.res = rgBonusScore(b.typed, b.text, b.typed === b.text ? "enter" : "time", left);
+          b.res = rgBonusScore(b.typed, b.text, b.typed === b.text ? "enter" : "time", left, b.lim, b.v != null ? b.v : null);
           if (F.sc > b.sc0) b.res.pts = F.sc - b.sc0;
+          if (b.v == null && b.res.ok > 0 && F.sc > b.sc0) b.res.v = b.v = Math.round(b.res.pts * b.res.n / b.res.ok);   /* 261017 서버가 bn.v 를 넘기지 않으면(hub 정리) 받은 점수에서 멈춘 숫자를 되짚는다 */
         }
         if (bn.ph === "bin" || bn.ph === "btitle" || bn.ph === "bout") r.cloud = null;
       }

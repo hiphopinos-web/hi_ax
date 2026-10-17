@@ -64,11 +64,30 @@ function sfxNoise(dur, o) {
   src.connect(f); f.connect(g); g.connect(SFX.master); src.start(t); src.stop(t + dur + 0.02);
 }
 var SFX_LEN = { tick: 0.06, go: 0.35, fanfare: 0.75, over: 0.5, best: 0.45, click: 0.04, tok: 0.06, shook: 0.14, ppok: 0.14, cascade: 0.2, kwang: 0.4, ttuk: 0.1,
-  ppyong: 0.16, ppyong2: 0.16, ppyongS: 0.16, ting: 0.22, puck: 0.14, hit: 0.12, tik: 0.05, floor: 0.12, level: 0.3, tak: 0.05, dingdong: 0.65, kung: 0.34,
+  ppyong: 0.16, ppyong2: 0.16, ppyongS: 0.16, ting: 0.22, puck: 0.14, hit: 0.12, tik: 0.05, floor: 0.22, level: 0.3, rgtick: 0.04, tak: 0.05, dingdong: 0.65, kung: 0.34,
   oxok: 0.22, oxup: 0.32, oxcrk: 0.08, oxsplash: 0.45, rgmiss: 0.16, rgcombo: 0.3, rglast: 0.45, scan: 0.2, rgpass: 0.3, rgjoin: 0.5, rgbonus: 0.6, rgcd: 0.18, rgstart: 0.42 };
+/* 261017 1F 타자왕(셀프 · SFX.site) 효과음 = 낮고 묵직하게(「타자왕 개편 제안」 6절) · 계열마다 한 옥타브쯤 내리고 사각파는 600Hz 아래만 · 맨 위는 삼각 · 사인 · 같은 이름을 쓰는 앱 게임(점프 · 테트리스 · 팡)은 그대로 */
+function sfxSite(name, p) {
+  var T = sfxTone, N = sfxNoise;
+  switch (name) {
+    case "hit": var fm = Math.pow(1.03, Math.min(6, p || 1)); T(196 * fm, 0.09, { to: 147 * fm, type: "triangle", vol: 0.38 }); T(98, 0.12, { to: 70, vol: 0.45 }); N(0.035, { filter: "lowpass", freq: 900, vol: 0.2 }); return true;
+    case "rgmiss": T(147, 0.08, { to: 123, vol: 0.3 }); N(0.05, { filter: "lowpass", freq: 600, vol: 0.25 }); return true;
+    case "floor": T(110, 0.22, { to: 55, vol: 0.6 }); N(0.18, { filter: "lowpass", freq: 500, to: 150, vol: 0.45 }); N(0.04, { freq: 1800, q: 3, vol: 0.25 }); bgmDuck(); return true;
+    case "rgcombo": [330, 392, 494].forEach(function (f, i) { T(f, 0.08, { type: "triangle", vol: 0.22, delay: i * 0.06 }); }); return true;
+    case "rglast": [247, 185, 247, 185].forEach(function (f, i) { T(f, 0.14, { type: "triangle", vol: 0.3, delay: i * 0.15 }); }); return true;
+    case "level": [392, 494, 659].forEach(function (f, i) { T(f, 0.09, { type: "triangle", vol: 0.22, delay: i * 0.07 }); }); return true;
+    case "rgbonus": [262, 330, 392, 523].forEach(function (f, i) { T(f, 0.09, { type: "triangle", vol: 0.22, delay: i * 0.08 }); }); T(65, 0.3, { vol: 0.4 }); return true;
+    case "rgcd": var fd = 262 * Math.pow(1.122, 3 - Math.max(1, Math.min(3, p || 3))); T(150, 0.16, { to: 70, vol: 0.7 }); T(fd, 0.16, { type: "triangle", vol: 0.3 }); return true;
+    case "rgstart": T(110, 0.22, { to: 55, vol: 0.75 }); T(392, 0.1, { type: "triangle", vol: 0.26 }); T(523, 0.32, { type: "triangle", vol: 0.26, delay: 0.08 }); T(784, 0.3, { type: "triangle", vol: 0.18, delay: 0.08 }); return true;
+    case "best": [523, 659, 784, 1047].forEach(function (f, i) { T(f, 0.1, { type: "triangle", vol: 0.26, delay: i * 0.06 }); }); return true;
+    case "rgtick": T(p ? 247 : 220, 0.03, { vol: 0.12 }); return true;   /* 줄어드는 숫자 · 25% 아래(p = 1) 한 음 높게 */
+  }
+  return false;
+}
 /* 이름 → 소리 · p = 연쇄 단계·콤보 등 */
 function sfxPlay(name, p) {
   var T = sfxTone, N = sfxNoise;
+  if (SFX.site && sfxSite(name, p)) return;
   switch (name) {
     case "tick": T(1250, 0.06, { vol: 0.35 }); N(0.025, { freq: 4000, filter: "highpass", vol: 0.12 }); break;
     case "go": T(988, 0.14, { type: "triangle", vol: 0.5 }); T(1319, 0.28, { type: "triangle", vol: 0.45, delay: 0.08 }); break;
@@ -121,6 +140,7 @@ function sfx(name, p) {
   if (!sndOn()) return;
   var c = sfxCtx(); if (!c) return;
   if (c.state !== "running") { try { c.resume(); } catch (e) {} }
+  if (SFX.master) SFX.master.gain.value = SFX.site ? 0.7 : 0.85;   /* 261017 셀프 효과음 0.7(배경 음악 자리) */
   if (SFX.voices >= 8) return;
   SFX.voices++;
   setTimeout(function () { SFX.voices = Math.max(0, SFX.voices - 1); }, ((SFX_LEN[name] || 0.2) + 0.05) * 1000);
@@ -161,5 +181,147 @@ function sndChoose(on, key) {
   gspStop();
   new Function(SND_START[key])();
 }
+
+/* ═══ 261017 1F 타자왕 배경 음악(「타자왕 개편 제안」 7절 · 사용자 확정 D6 · D8) ═══
+   WebAudio 직접 합성 · 음원 파일 없음 · 곡 두 개 모두 직접 지음(기존 곡 멜로디 · 진행 차용 없음 · 흔한 화음 진행만) ·
+   네 성부 = 펄스 A(멜로디 · 듀티 25%) · 펄스 B(아르페지오 · 12.5%) · 삼각(베이스) · 잡음(킥 = 사인 120→45Hz · 스네어 = 대역 1.8k · 하이햇 = 고역 7k 0.02초) · 펄스 = PeriodicWave ·
+   판 곡 = 가단조 16마디 반복(1단계 112BPM · 단계마다 +4 · 100초 뒤 10초마다 +1 · 최대 140) · 보너스 스테이지 곡 = 다장조 4마디 반복 150BPM ·
+   흐름 = 대기 · 카운트다운 무음 → 「시작!」부터 판 곡 → 보너스 스테이지 전환(title) ~ 결과(res) 다장조 곡 → 판 복귀에 판 곡 이어서 → 게임 오버 0.4초 줄임 → 결과 화면 무음 ·
+   음량 = 음악 버스 0.2(효과음과 같은 압축기) · 목숨 잃을 때 0.15초 0.6배 · 켜고 끄기 = 화면 오른쪽 위 단추 · F4 · 기기 저장 site_bgm(기본 켬) · 효과음 끔(site_sound)이면 음악도 안 난다 ·
+   스케줄러 25ms · 0.12초 앞서 예약 · 송출 TV 는 이 파일을 읽지 않는다(무음 그대로) */
+var BGM = { t: 0, bus: null, wv: null, cur: "", pos: 0, next: 0, gpos: 0, vol: 0.2, n: 0 };
+var BGM_SONG = {
+  game: { bars: [[57, 60, 64], [53, 57, 60], [48, 52, 55], [55, 59, 62], [57, 60, 64], [53, 57, 60], [55, 59, 62], [52, 56, 59], [50, 53, 57], [57, 60, 64], [53, 57, 60], [55, 59, 62], [57, 60, 64], [53, 57, 60], [52, 56, 59], [57, 60, 64]],
+    root: [45, 41, 48, 43, 45, 41, 43, 40, 38, 45, 41, 43, 45, 41, 40, 45],
+    mel: [[64, 0, 69, 0, 67, 64, 62, 60], [57, 0, 60, 0, 65, 0, 64, 60], [64, 67, 72, 0, 71, 67, 64, 0], [62, 0, 59, 0, 62, 67, 65, 62],
+      [64, 0, 69, 0, 72, 71, 69, 64], [65, 64, 60, 57, 60, 0, 65, 0], [67, 0, 62, 0, 59, 62, 67, 71], [68, 0, 64, 0, 59, 0, -1, -1],
+      [62, 65, 69, 0, 65, 62, 57, 0], [60, 64, 69, 0, 64, 60, 57, 60], [65, 0, 69, 0, 72, 0, 69, 65], [67, 65, 62, 59, 62, 0, 67, 0],
+      [69, 0, 64, 0, 60, 64, 69, 72], [72, 71, 69, 65, 69, 0, 72, 0], [71, 0, 68, 0, 64, 68, 71, 74], [72, 0, 71, 0, 69, 0, -1, -1]] },
+  bns: { bars: [[60, 64, 67], [57, 60, 64], [53, 57, 60], [55, 59, 62]], root: [48, 45, 41, 43],
+    mel: [[60, 64, 67, 72, 67, 64, 60, 64], [57, 60, 64, 69, 64, 60, 57, 60], [65, 69, 72, 69, 65, 60, 65, 69], [67, 0, 71, 0, 74, 0, 67, 0]] }
+};
+function bgmPref() { return S.get("site_bgm", true) === true; }
+function bgmOk() { return !!SFX.site && S.get("site_sound", true) === true && bgmPref(); }
+function bgmHz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+function bgmWave(c, d) {   /* 펄스 · 듀티 d · 배음 32 개 */
+  var n = 32, re = new Float32Array(n), im = new Float32Array(n);
+  for (var k = 1; k < n; k++) { re[k] = Math.sin(2 * Math.PI * k * d) / (k * Math.PI); im[k] = (1 - Math.cos(2 * Math.PI * k * d)) / (k * Math.PI); }
+  return c.createPeriodicWave(re, im);
+}
+function bgmBus() {
+  var c = sfxCtx(); if (!c) return null;
+  if (!SFX.master) sfxChain(c);
+  if (!BGM.bus || BGM.bus.context !== c) {
+    var g = c.createGain(); g.gain.value = 0.0001; g.connect(SFX.comp || c.destination); BGM.bus = g;
+    if (!BGM.wv) BGM.wv = { a: bgmWave(c, 0.25), b: bgmWave(c, 0.125) };
+  }
+  return c;
+}
+function bgmNote(c, w, f, t, dur, v) {
+  var o = c.createOscillator(), g = c.createGain();
+  if (typeof w === "string") o.type = w; else o.setPeriodicWave(w);
+  o.frequency.setValueAtTime(f, t);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + 0.006); g.gain.setValueAtTime(v, t + Math.max(0.01, dur * 0.7)); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(BGM.bus); o.start(t); o.stop(t + dur + 0.02); BGM.n++;
+}
+function bgmDrum(c, k, t) {
+  if (k === "kick") { var o = c.createOscillator(), g = c.createGain(); o.frequency.setValueAtTime(120, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.12); g.gain.setValueAtTime(0.7, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.14); o.connect(g); g.connect(BGM.bus); o.start(t); o.stop(t + 0.16); return; }
+  var src = c.createBufferSource(), f = c.createBiquadFilter(), g2 = c.createGain(), d = k === "snare" ? 0.12 : 0.02;
+  src.buffer = sfxNoiseBuf(c); f.type = k === "snare" ? "bandpass" : "highpass"; f.frequency.value = k === "snare" ? 1800 : 7000; f.Q.value = 1;
+  g2.gain.setValueAtTime(k === "snare" ? 0.32 : 0.12, t); g2.gain.exponentialRampToValueAtTime(0.0001, t + d);
+  src.connect(f); f.connect(g2); g2.connect(BGM.bus); src.start(t); src.stop(t + d + 0.02);
+}
+/* 한 박(16분음표) · pos = 곡 안 16분음표 번호 · 멜로디 · 베이스 = 8분음표 · 0 = 앞 음을 끈다 · -1 = 쉼 */
+function bgmStep(c, song, pos, t, sp) {
+  var S0 = BGM_SONG[song], bar = Math.floor(pos / 16) % S0.mel.length, st = pos % 16, ch = S0.bars[bar], r = S0.root[bar];
+  if (st % 2 === 0) {
+    var m = S0.mel[bar], i = st / 2, nt = m[i];
+    if (nt > 0) { var len = 1; while (i + len < 8 && m[i + len] === 0) len++; bgmNote(c, BGM.wv.a, bgmHz(nt), t, len * 2 * sp * 0.92, 0.3); }
+    bgmNote(c, "triangle", bgmHz(r + (i % 2 ? 12 : 0) + (i === 6 ? 7 : 0)), t, 2 * sp * 0.9, 0.42);
+    bgmDrum(c, "hat", t);
+  }
+  bgmNote(c, BGM.wv.b, bgmHz(ch[[0, 1, 2, 1][st % 4]] + 12), t, sp * 0.8, 0.06);
+  if (st === 0 || st === 8 || (song === "bns" && st === 10)) bgmDrum(c, "kick", t);
+  if (st === 4 || st === 12) bgmDrum(c, "snare", t);
+}
+function bgmBpm(song) {
+  if (song === "bns") return 150;
+  return Math.min(140, 112 + 4 * Math.max(0, (RG.stage || 1) - 1) + Math.max(0, Math.floor(((RG.surv || 0) - 100) / 10)));
+}
+function bgmWant() {
+  if (typeof RG === "undefined" || !RG.on || RG.mode !== "site" || RG.paused || RG.ending || !bgmOk()) return "";
+  if (RG.bonus) { var ph = RG.bonus.ph; return ph === "title" || ph === "wout" || ph === "intro" || ph === "count" || ph === "type" || ph === "res" ? "bns" : ""; }
+  return RG.wait || RG.cd > 0 || !RG.t0 ? "" : "game";
+}
+function bgmTick() {
+  var want = bgmWant();
+  if (!want && !BGM.cur) { if (!(typeof RG !== "undefined" && RG.on)) bgmStop(); return; }
+  var c = bgmBus(); if (!c || c.state !== "running") return;
+  var now = c.currentTime;
+  if (want !== BGM.cur) {
+    var fade = typeof RG !== "undefined" && RG.ending ? 0.4 : 0.08;   /* 게임 오버 = 0.4초 줄인다 */
+    if (BGM.cur) {
+      if (BGM.cur === "game") BGM.gpos = BGM.pos;
+      var old = BGM.bus; BGM.bus = null;
+      try { old.gain.cancelScheduledValues(now); old.gain.setValueAtTime(Math.max(0.0001, old.gain.value), now); old.gain.exponentialRampToValueAtTime(0.0001, now + fade); } catch (e) {}
+      setTimeout(function () { try { old.disconnect(); } catch (e) {} }, fade * 1000 + 400);   /* 예약해 둔 음은 옛 버스와 함께 끊긴다 */
+      bgmBus(); BGM.next = now + fade;
+    } else BGM.next = now + 0.05;
+    BGM.cur = want; BGM.pos = want === "game" ? BGM.gpos : 0;
+    if (!want) return;
+    BGM.bus.gain.setValueAtTime(0.0001, BGM.next); BGM.bus.gain.exponentialRampToValueAtTime(BGM.vol, BGM.next + 0.05);
+  }
+  var sp = 60 / bgmBpm(BGM.cur) / 4, N = BGM_SONG[BGM.cur].mel.length * 16;
+  if (BGM.next < now) BGM.next = now + 0.02;
+  while (BGM.next < now + 0.12) { try { bgmStep(c, BGM.cur, BGM.pos, BGM.next, sp); } catch (e) {} BGM.next += sp; BGM.pos = (BGM.pos + 1) % N; }
+}
+function bgmArm() { BGM.gpos = 0; if (!BGM.t) BGM.t = setInterval(bgmTick, 25); }   /* 판이 열릴 때(rgPlayOpen · 셀프만) · 판 곡은 처음부터 */
+function bgmStop() {
+  if (BGM.t) { clearInterval(BGM.t); BGM.t = 0; }
+  if (BGM.bus) { try { var c = BGM.bus.context, g = BGM.bus; g.gain.cancelScheduledValues(c.currentTime); g.gain.setValueAtTime(0.0001, c.currentTime); setTimeout(function () { try { g.disconnect(); } catch (e) {} }, 300); } catch (e) {} BGM.bus = null; }
+  BGM.cur = "";
+}
+/* 목숨을 잃을 때 0.15초 0.6배 */
+function bgmDuck() {
+  if (!BGM.bus || !BGM.cur) return;
+  try { var t = BGM.bus.context.currentTime, g = BGM.bus.gain; g.cancelScheduledValues(t); g.setValueAtTime(BGM.vol * 0.6, t); g.setValueAtTime(BGM.vol * 0.6, t + 0.15); g.linearRampToValueAtTime(BGM.vol, t + 0.2); } catch (e) {}
+}
+/* 켜고 끄기 · 화면 오른쪽 위 단추 · F4 · 기기 저장(조용한 저장 S.put · 판 도중 다시 그리기 없음) */
+function bgmToggle() {
+  var on = !bgmPref();
+  S.put("site_bgm", on);
+  if (on && S.get("site_sound", true) === true) sfxUnlock();
+  bgmBtnSync();
+  return on;
+}
+function bgmIcon(on) {   /* 도트 음표 · 끔 = 사선 */
+  return '<svg viewBox="0 0 16 16" width="24" height="24" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M6 2h8v2H8v7H6zM12 4h2v7h-2zM3 10h5v4H3zM9 9h5v4H9z"/>' + (on ? "" : '<path class="x" d="M1 1h2v2H1zM3 3h2v2H3zM5 5h2v2H5zM7 7h2v2H7zM9 9h2v2H9zM11 11h2v2h-2zM13 13h2v2h-2z"/>') + "</svg>";
+}
+function bgmBtnSync() {
+  var b = document.getElementById("tsfBgm"); if (!b) return;
+  var on = bgmPref() && S.get("site_sound", true) === true;
+  if (b._on === on) return;
+  b._on = on;
+  b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false"); b.setAttribute("aria-label", "배경 음악 " + (on ? "끄기" : "켜기") + " · F4"); b.title = "배경 음악 " + (on ? "켬" : "끔") + " · F4";
+  b.innerHTML = bgmIcon(on) + "<span>" + (on ? "음악 켬" : "음악 끔") + "</span>";
+}
+/* 셀프 화면에 단추 하나(판 도중 · 대기 · 결과 모두) · 누르면 입력칸 초점을 빼앗지 않는다(mousedown · pointerdown 기본 동작 막음 · tabindex -1) */
+function bgmBtn(show) {
+  var b = document.getElementById("tsfBgm");
+  if (!show) { if (b) b.remove(); return; }
+  if (!b) {
+    b = document.createElement("button"); b.type = "button"; b.id = "tsfBgm"; b.className = "rt tsf-bgm"; b.tabIndex = -1;
+    b.addEventListener("pointerdown", function (e) { e.preventDefault(); e.stopPropagation(); });
+    b.addEventListener("mousedown", function (e) { e.preventDefault(); });
+    b.addEventListener("click", function (e) { e.preventDefault(); bgmToggle(); if (typeof rgFocusWant === "function" && rgFocusWant()) rgFocus(); });
+    document.body.appendChild(b);
+  }
+  bgmBtnSync();
+}
+document.addEventListener("keydown", function (e) {
+  if (e.key !== "F4" || typeof App === "undefined" || App.current !== "type_site" || typeof tsfOn !== "function" || !tsfOn() || document.getElementById("modal")) return;
+  e.preventDefault(); e.stopPropagation();
+  if (!e.repeat) bgmToggle();
+}, true);
 
 

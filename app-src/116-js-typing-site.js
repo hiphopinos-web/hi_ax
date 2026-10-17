@@ -24,11 +24,12 @@ function rgTopHtml() {
 }
 function rgPlayOpen() {
   RGP.on = true; RGP.touch = rgTouch();   /* 입력창 안내 문구가 기기에 맞게 나오게 먼저 켠다 */
-  gsOverlayOpen({ key: "type", title: "AX 단어 소나기", top: rgTopHtml(), fill: true, cls: "rain" + (RG.big ? " big" : ""), cw: 180, ch: 300, canvasId: "rgCv", bottom: rgFormHtml(),
+  gsOverlayOpen({ key: "type", title: "AX 단어 소나기", top: rgTopHtml(), fill: true, cls: "rain" + (RG.big ? " big" : "") + (RG.mode === "site" ? " site" : ""), cw: 180, ch: 300, canvasId: "rgCv", bottom: rgFormHtml(),
     down: function (e) { e.preventDefault(); if (RG.wait) rgBegin(); rgFocus(); },   /* v4.29 대기 화면은 판을 눌러도 시작 */
     resized: function (cv, w, h) { rgFit(cv, w, h); rgFormFit(); },
     running: function () { return RG.on && !RG.paused && !RG.ending; }, isPaused: function () { return !!RG.paused; },
     pause: rgPause, resume: rgResume, quit: rgQuit });
+  if (RG.mode === "site" && typeof bgmArm === "function") { bgmArm(); bgmBtn(true); }   /* 261017 배경 음악 · 오른쪽 위 단추 */
   rgSideTopPull();
 }
 /* v4.29 넓은 화면 옆판 · 서버 순위판(type_rank) 읽기만 · v5.29 (사용자 261003) 앱 솔로도 1F 현장 순위 · 앱(폰) 순위(mode app)는 받지도 보이지도 않는다
@@ -461,11 +462,12 @@ function tsfAdmin() {
   var on = S.get("site_sound", true) === true, C = TSF.cam;
   modalOpen('<div class="ax-stack-tight axs-gap12"><label class="ax-sr-only" for="tsfOffCode">관리코드</label>' +
     '<input id="tsfOffCode" class="ax-field" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="관리코드" onkeydown="onEnter(event, tsfOffGo)">' +
-    '<p class="ax-meta" id="tsfOffMsg">효과음 ' + (on ? "켜짐" : "꺼짐") + (TSF_CAM ? " · 카메라 " + (C.stream ? "켜짐 " + esc(C.res) : "꺼짐") + " · 한 번 읽기 " + Math.round(TSF.sc.ms) + "ms" : "") + " · 접속 QR " + (TSF.lk.tok ? "켜짐" : "꺼짐") + (TSF.lk.hold ? " · 폰 로그인 중" : "") +
+    '<p class="ax-meta" id="tsfOffMsg">효과음 ' + (on ? "켜짐" : "꺼짐") + " · 배경 음악 " + (S.get("site_bgm", true) === true ? "켜짐" : "꺼짐") + (TSF_CAM ? " · 카메라 " + (C.stream ? "켜짐 " + esc(C.res) : "꺼짐") + " · 한 번 읽기 " + Math.round(TSF.sc.ms) + "ms" : "") + " · 접속 QR " + (TSF.lk.tok ? "켜짐" : "꺼짐") + (TSF.lk.hold ? " · 폰 로그인 중" : "") +
     " · 송출 " + (tvlSeat() ? "자리 " + tvlSeat() + (TVL.st === "ok" ? " 연결됨" : "") : "끔") + "</p>" +   /* 261017 실시간 송출 자리 */
     '<p class="ax-meta" id="tsfQLn">' + esc(tsfQLine()) + "</p>" +   /* v7.66 이 노트북 대기열 · 마지막 실패 */
     '<button type="button" class="ax-button" onclick="tsfOffGo()">셀프 모드 끄기</button>' +
     '<button type="button" class="ax-button ax-button-weak" onclick="tsfSndGo()">효과음 ' + (on ? "끄기" : "켜기") + "</button>" +
+    '<button type="button" class="ax-button ax-button-weak" onclick="tsfBgmGo()">배경 음악 기본값 ' + (S.get("site_bgm", true) === true ? "끄기" : "켜기") + "</button>" +   /* 261017 기기 저장 site_bgm · 오른쪽 위 단추 · F4 와 같은 값 */
     (tsfQ().length ? '<button type="button" class="ax-button ax-button-weak" onclick="tsfQGo()">못 보낸 기록 지금 보내기</button>' : "") +
     (tsfStaff() ? '<button type="button" class="ax-button ax-button-weak" onclick="tsfSeatGo()">송출 ' + ["자리 1로", "자리 2로", "자리 3으로", "끄기"][tvlSeat()] + "</button>" : "") +
     (TSF_CAM ? '<button type="button" class="ax-button ax-button-weak" onclick="tsfStaffView()">카메라 전체 보기(20초)</button>' : "") +
@@ -496,6 +498,12 @@ function tsfSndGo(ok) {
   var on = !(S.get("site_sound", true) === true);
   S.set("site_sound", on);
   if (on) { sfxUnlock(); SFX.site = true; sfx("click"); }
+  if (typeof bgmBtnSync === "function") bgmBtnSync();
+  modalClose();
+}
+function tsfBgmGo(ok) {
+  if (ok !== true && !tsfCodeOk(tsfBgmGo)) return;
+  if (typeof bgmToggle === "function") bgmToggle();
   modalClose();
 }
 function tsfStaffView(ok) { if (ok !== true && !tsfCodeOk(tsfStaffView)) return; modalClose(); TSF.sc.staff = performance.now(); tsfScanShow(true); }
@@ -896,7 +904,7 @@ function tsfLeftHtml() {
   }
   /* 261007(사용자 「오른쪽 순위표 10등까지 · 일부 정보는 왼쪽으로」) 오른쪽 점수 설명을 왼쪽으로 · 방법 · 점수 두 묶음 · 엔터 없이 한 줄 */
   var rule = '<section class="tsf-p tsf-rule"><p class="tsf-rh">방법</p><p>맞게 치면 엔터 없이 터져요</p><p>목숨 ' + RAIN_LIVES + "개를 다 잃으면 끝</p><p>" + typeTryTxt(tsfLimit()) + "</p><p>최고 점수로 순위</p><p>17:00 마감 · 1~10위<br>Closing Speech에서 순위 발표</p></section>" +
-    '<section class="tsf-p tsf-rule"><p class="tsf-rh">점수</p><p>글자 × 10 × 콤보(최대 3배)</p><p>구름이 비면 보너스 스테이지</p><p>빠르고 정확할수록 보너스</p><p>180초 버티면 목숨 × ' + RAIN_LIFE_BONUS + "</p></section>";   /* 줄마다 한 줄에 들어가게 짧게(1920 · 1366 · 24 · 16px) */
+    '<section class="tsf-p tsf-rule"><p class="tsf-rh">점수</p><p>글자 × 10 × 콤보(최대 3배)</p><p>구름이 비면 보너스 한 번</p><p>줄어드는 숫자가 보너스 점수</p></section>';   /* 261017 보너스 스테이지 문구 · 옛 상한 시간 줄(버티면 목숨) 삭제(사용자 확정 D5 · 코드는 안전장치로 남김) */   /* 줄마다 한 줄에 들어가게 짧게(1920 · 1366 · 24 · 16px) */
   if (ph === "result" && !tsfClosed()) return '<section class="tsf-p"><p class="tsf-k">다음 도전자</p><p class="tsf-go">SPACE = 새 QR</p><p class="tsf-hint" id="tsfCount">' + (TSF.send === "ok" || TSF.send === "fail" ? Math.round(TSF_RES_MS / 1000) + "초 뒤 처음 화면" : "") + "</p></section>";   /* 261007 처음 화면 = 광고 · SPACE = 곧바로 QR */
   return rule;
 }
@@ -993,6 +1001,7 @@ function tsfOvHtml() {
 /* 칸만 고치기 · 왼쪽 · 오른쪽 · 가운데 DOM(단계 · 시간 밖 · 카메라 오류가 바뀔 때만 · 닉네임 칸이 끊기지 않게) · 접속 QR */
 function tsfPaint() {
   if (App.current !== "type_site") return;
+  if (typeof bgmBtn === "function") bgmBtn(tsfOn());   /* 261017 배경 음악 단추 · 대기 · 결과에도 */
   var root = document.querySelector(".tsf"); if (!root) return;
   var cl = tsfClosed();
   root.className = "tsf ph-" + TSF.ph + (TSF.sc.on ? " scan-on" : "") + (cl ? " closed" : "");
@@ -1089,7 +1098,7 @@ function tsfReadyDraw(ctx, w, h, blink) {
   var line = function (t, yy, px, col) { ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.font = rtFont(px); if (ctx.measureText(t).width > w - 32 && px > 16) px = 16; rtText(ctx, t, cx, yy, px, col, RAIN_PAL.ink); };
   var rows = [
     ["rain", "단어 치기", ["내리는 단어를 맞게 치면 엔터 없이 터져요", "바닥에 닿으면 목숨 -1 · 목숨 " + (RAIN_LIVES || 5) + "개"]],   /* 261007 엔터 없이(rgAutoOn · site) */
-    ["line", "보너스 스테이지", ["구름이 다 비면 문장을 따라 쳐요", "다 맞으면 엔터 없이 끝 · 빠를수록 보너스"]],
+    ["line", "보너스 스테이지", ["구름이 다 비면 문장을 따라 쳐요", "다 맞으면 엔터 없이 끝 · 줄어드는 숫자가 점수"]],   /* 261017 줄어드는 숫자 */
     ["star", "점수 · 순위", ["단어 + 콤보 + 보너스 스테이지", typeTryTxt(tsfLimit()) + " · 최고 점수로 순위"]]
   ];
   var u = cmp ? 3 : 4, iw = 16 * u, px = 14, pw = w - 2 * px, pad = cmp ? 12 : 16, tx = px + pad + iw + 18, tw = px + pw - pad - tx, hl = cmp ? 34 : 40, dl = cmp ? 20 : 24, gap = cmp ? 8 : 14;
@@ -1143,7 +1152,7 @@ function tsfFrame() {
   if (!RG.on) { tsfPrevDraw(); tsfScanDraw(); }
   TSF.raf = requestAnimationFrame(tsfFrame);
 }
-function tsfStop() { tvlOff(); if (TSF.t) { clearInterval(TSF.t); TSF.t = null; } if (TSF.raf) { cancelAnimationFrame(TSF.raf); TSF.raf = 0; } tsfCamStop(); }
+function tsfStop() { if (typeof bgmBtn === "function") { bgmBtn(false); bgmStop(); } tvlOff(); if (TSF.t) { clearInterval(TSF.t); TSF.t = null; } if (TSF.raf) { cancelAnimationFrame(TSF.raf); TSF.raf = 0; } tsfCamStop(); }
 function tsfTick() {
   if (App.current !== "type_site" || !tsfOn()) { tsfStop(); return; }
   tsfLinkTick();
@@ -1204,8 +1213,10 @@ function tsfGo() {
     }
   }, function () {});   /* 응답이 없으면 그대로 한다 · 제출 때 서버가 남은 횟수로 다시 본다 */
   var T = tsfTry(); TVL.tn = T.n; TVL.tm = T.max;   /* 261017 송출 tn · tm(시작 응답 전 값 · 응답이 오면 서버 값) */
-  rgStart("site", { wait: false, bonus: true, race: TSF.race, cdSub: T.n + "번째 도전" });   /* 261017 첫 카운트다운에 한 번 크게(엔진 RG.cdSub) */
+  rgStart("site", { wait: false, bonus: true, race: TSF.race, cdSub: T.n + "번째 도전", cloudN: tsfBnsTest() });   /* 261017 첫 카운트다운에 한 번 크게(엔진 RG.cdSub) */
 }
+/* 261017 시험 손잡이(「타자왕 개편 제안」 5절) · 주소에 bns=2 · 테스트 사번만 · 첫 구름 2단어(보너스 스테이지까지 빨리) */
+function tsfBnsTest() { try { return /[?&#]bns=2(&|$)/.test(String(location.search) + "#" + String(location.hash).replace(/^#/, "")) && TEST_EMP.indexOf(TSF.emp) >= 0 ? 2 : 0; } catch (e) { return 0; } }
 /* rgEndFinal(site) 이 부른다 */
 function tsfDone(res) {
   res.prev = (TSF.info && TSF.info.best) || 0;
@@ -1417,6 +1428,7 @@ function tvlFrame(x) {
   TVL.prev = cur; TVL.ht0 = RG.hits || 0; TVL.sc0 = RG.score || 0;
   var inp = ""; try { inp = String(rgInVal() || "").slice(0, 24); } catch (e) {}
   var b = RG.bonus, bn = b ? { t: String(b.text || "").slice(0, 80), ty: String(b.typed || "").slice(0, 80), ph: String(b.ph || "").slice(0, 8) } : null;
+  if (bn && (b.ph === "type" || b.ph === "res" || b.ph === "bin") && typeof rgBonusVal === "function") bn.v = tvlN(rgBonusVal(b), 0, 9999);   /* 261017 줄어드는 숫자(사용자 확정 D9) · 송출 화면도 그린다 · 멈춘 값 그대로 */
   var f = { t: "tl", g: TVL.g, q: 0, at: Date.now(), el: TVL.el, sc: tvlN(RG.score, 0, 60000), ht: tvlN(RG.hits, 0, 400), lv: tvlN(RG.lives, 0, 9), cb: tvlN(RG.combo, 0, 999), st: tvlN(RG.stage, 0, 20),
     cd: RG.cd > 0 ? tvlN(Math.ceil(RG.cd), 0, 9) : 0, pz: RG.paused ? 1 : 0, inp: inp, w: w, hw: hw, bn: bn, x: x || "", tn: tvlN(TVL.tn, 0, 9), tm: tvlN(TVL.tm, 0, 9) };   /* 261017 tn = 몇 번째 도전 · tm = 이 사람 최대 기회(옛 Hub 는 버린다) */
   if (RG.hurt > 0 && !RG.paused) f.hu = tvlN(RG.hurt * 1000, 0, 5000);   /* v7.60 목숨을 잃은 뒤 느려진 남은 ms(송출 화면 앞질러 그리기) */
@@ -1512,7 +1524,7 @@ function tsfResHtml() {
   var more = typeMore(x), left = TSF.send === "ok" ? (x.left > 0 ? "남은 기회 " + x.left + "회 · 다시 하려면 QR 찍기" : more ? more.t + " · 지금 스탬프 " + x.stamps + "개" : "도전 " + lim + "회를 모두 쓰셨어요 · 고마워요") : "";   /* 261017 스탬프 기회 */
   var cap = r.why === "cap";
   return rtGoHtml({ title: cap ? "TIME UP" : "GAME OVER", sub: "AX 단어 소나기 · " + (TSF.nick || "익명 참가자"),
-    line: cap ? "180초를 버텼어요 · 목숨 보너스" : "단어 " + (RG.lives0 || RAIN_LIVES) + "개를 놓쳤어요",
+    line: cap ? "5분을 버텼어요 · 목숨 보너스" : "단어 " + (RG.lives0 || RAIN_LIVES) + "개를 놓쳤어요",
     body: '<p class="gs-sc">' + typePts(r.score || 0) + "</p>" + '<p class="rt-go-rank">' + esc(rank) + "</p>" + (left ? '<p class="rt-go-rank">' + esc(left) + "</p>" : "") +
       (TSF.send === "retry" ? '<button type="button" class="ax-button rt-btn" onclick="tsfSend()">다시 보내기</button>' : "") +   /* v7.66 서버가 받지 않는 판(fail)은 단추 없음 */
       rtFoldHtml("기록 자세히 보기", rtFoldSec("점수 구성", rtRefTable([["단어 점수", typePts((r.score || 0) - (r.bns || 0) - (r.capBns || 0))], ["보너스 스테이지", typePts(r.bns || 0) + " · " + (r.bnsN || 0) + "번"], ["목숨 보너스", typePts(r.capBns || 0)]])) +
