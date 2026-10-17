@@ -31,9 +31,8 @@ function lockUI(msg){
   var e=aemp(), set=PWM.set, pw=PWM.mode==="pw";
   if(set){
     b.innerHTML='<p class="cap">사번 '+esc(set.emp)+' · 처음 들어왔습니다 · 앞으로 쓸 비밀번호를 정합니다</p>'+
-      '<label>새 비밀번호<input id="pw1" type="password" autocomplete="new-password" maxlength="64" oninput="pwHint()"></label>'+
-      '<label>한 번 더<input id="pw2" type="password" autocomplete="new-password" maxlength="64" oninput="pwHint()"></label>'+
-      '<p class="cap mt4" id="pwH">8자 이상 · 사번과 같은 값 · 흔한 값은 쓸 수 없음</p>'+
+      '<label>새 비밀번호<input id="pw1" type="password" autocomplete="new-password" maxlength="64" placeholder="비밀번호(8자 이상)" oninput="pwHint()"></label>'+
+      '<label>다시 입력<input id="pw2" type="password" autocomplete="new-password" maxlength="64" oninput="pwHint()"></label>'+pwGuideHtml("pw")+
       '<button class="btn pri big" type="button" id="lockGo" onclick="pwSetGo()">비밀번호 정하기</button>'+
       '<div class="err" id="lockErr" role="alert"></div><p class="cap mt"><a href="#" onclick="pwBack();return false">처음으로</a></p>';
     el("pw1").addEventListener("keydown",function(ev){ if(ev.key==="Enter") el("pw2").focus(); }); el("pw2").addEventListener("keydown",function(ev){ if(ev.key==="Enter") pwSetGo(); });
@@ -41,8 +40,8 @@ function lockUI(msg){
   } else {
     var k=pw?PWM.kind:"key", lab=k==="code"?"설정 코드":k==="key"?"관리코드":"비밀번호";
     b.innerHTML='<label>사번<input id="aemp" inputmode="text" autocomplete="username" autocapitalize="characters" value="'+esc(e)+'"></label>'+
-      '<label>'+lab+'<input id="key" type="password" autocomplete="'+(k==="key"?"off":"current-password")+'"'+(k==="code"?' inputmode="numeric" maxlength="6"':'')+'></label>'+
-      (k==="code"?'<p class="cap mt4">슈퍼관리자에게 받은 6자리 · 24시간 안 · 한 번만</p>':'')+
+      '<label>'+lab+'<input id="key" type="password" autocomplete="'+(k==="key"?"off":"current-password")+'"'+(k==="code"?' inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="6자리 숫자"':k==="pw"?' placeholder="비밀번호(8자 이상)"':'')+'></label>'+
+      (k==="code"?'<p class="cap mt4">슈퍼관리자에게 받은 6자리 숫자 · 24시간 유효 · 한 번만</p>':'')+
       '<button class="btn pri big" type="button" id="lockGo" onclick="unlock()">들어가기</button>'+
       '<div class="err" id="lockErr" role="alert"></div>'+
       (pw?'<p class="cap mt">'+(k==="code"?'<a href="#" onclick="pwKind(\'pw\');return false">비밀번호로 입장</a>':'<a href="#" onclick="pwKind(\'code\');return false">설정 코드로 처음 입장</a>')+
@@ -55,7 +54,7 @@ function lockUI(msg){
 }
 function pwKind(k){ PWM.kind=k; lockUI(""); }
 function pwBack(){ PWM.set=null; PWM.kind="pw"; lockUI(""); }
-function pwHint(){ var h=el("pwH"); if(!h) return; var a=(el("pw1")||{}).value||"", b=(el("pw2")||{}).value||""; var w=a?pwWhy(a,(PWM.set||{}).emp):""; h.textContent=!a?"8자 이상 · 사번과 같은 값 · 흔한 값은 쓸 수 없음":w?PW_WHY[w]:b&&a!==b?PW_WHY.twice:b?"정할 수 있습니다":"한 번 더 넣습니다"; }
+function pwHint(){ pwChkUpd("pw",(PWM.set||{}).emp); }
 function lockMsg(r, kind){
   r=r||{};
   if(r.reason==="locked") return "5번 틀려 잠겼습니다 · "+Math.max(1,Math.ceil(num(r.retry)/60))+"분 뒤 다시 합니다";
@@ -91,18 +90,46 @@ function pwSetGo(){
   call("adm_pw_set",{ aemp:set.emp, tok:set.tok, pw:a },25000).then(function(r){
     el("pw1").value=""; el("pw2").value="";
     if(r&&r.ok){ setTok(r.tok||""); S.me=meOf(r,set.emp); PWM.set=null; el("lock").hidden=true; start(); toast("비밀번호를 정했습니다 · 다음부터 사번 + 비밀번호로 들어옵니다",{ ms:6000 }); return; }
-    el("lockErr").textContent=r&&r.reason==="pwrule"?(PW_WHY[r.why]||"비밀번호 규칙에 맞지 않습니다"):r&&r.reason==="codeexp"?"설정 코드가 만료됐습니다 · 슈퍼관리자에게 다시 받습니다":r&&r.reason==="auth"?"설정 코드 입장이 끝났습니다 · 처음부터 다시 합니다":"저장하지 못했습니다 · "+why(r);
+    el("lockErr").textContent=r&&(r.reason==="pwrule"||r.reason==="pwderive")?pwFailTx(r):r&&r.reason==="codeexp"?"설정 코드가 만료됐습니다 · 슈퍼관리자에게 다시 받습니다":r&&r.reason==="auth"?"설정 코드 입장이 끝났습니다 · 처음부터 다시 합니다":"저장하지 못했습니다 · "+why(r);
   });
 }
 /* 바꾸기(들어온 뒤) · 기록 · 설정 › 서버 상태 */
 function pwChangeAsk(){
   if(!(S.me&&S.me.pw)){ toast("개인 비밀번호로 들어온 뒤 바꿉니다",{ bad:1 }); return; }
-  var e=S.me.emp||aemp();
+  var e=S.me.emp||aemp(); PWM.ckEmp=e;
   confirmBox({ t:"비밀번호를 바꿀까요?", who:"사번 "+e, sub:"바꾸면 이 콘솔은 그대로 · 다른 기기의 입장은 끊김",
-    body:'<label class="fld">새 비밀번호<input class="in" id="pc1" type="password" autocomplete="new-password" maxlength="64" oninput="gateUpd()"></label><label class="fld">한 번 더<input class="in" id="pc2" type="password" autocomplete="new-password" maxlength="64" oninput="gateUpd()"></label><p class="cap mt4">8자 이상 · 사번과 같은 값 · 흔한 값은 쓸 수 없음</p>',
+    body:'<label class="fld">새 비밀번호<input class="in" id="pc1" type="password" autocomplete="new-password" maxlength="64" placeholder="비밀번호(8자 이상)" oninput="pwChkUpd(\'pc\',PWM.ckEmp);gateUpd()"></label><label class="fld">다시 입력<input class="in" id="pc2" type="password" autocomplete="new-password" maxlength="64" oninput="pwChkUpd(\'pc\',PWM.ckEmp);gateUpd()"></label>'+pwGuideHtml("pc"),
     focus:"pc1", ok:"바꾸기",
-    gate:function(){ var a=(el("pc1")||{}).value||"", b=(el("pc2")||{}).value||""; return !!a&&a===b&&!pwWhy(a,e); },
+    gate:function(){ return pwChkUpd("pc",e); },
     run:function(){ return call("adm_pw_set",{ aemp:e, pw:el("pc1").value },25000); },
-    fail:function(r){ return r&&r.reason==="pwrule"?(PW_WHY[r.why]||"비밀번호 규칙에 맞지 않습니다"):r&&r.reason==="auth"?"개인 비밀번호로 들어온 입장이 아닙니다":""; },
+    fail:function(r){ return r&&r.reason==="auth"?"개인 비밀번호로 들어온 입장이 아닙니다":pwFailTx(r,""); },
     done:function(r){ if(r.tok) setTok(r.tok); toast("비밀번호를 바꿨습니다"); } });
 }
+/* 261017 후속(사용자 「비밀번호 칸에 가이드가 없어 숫자인지 몇 글자인지 모르겠다」) 비밀번호 안내 한 줄 + 조건별 바로 표시 · 정하는 화면 둘(설정 코드로 처음 입장 · 비밀번호 바꾸기)이 같이 쓴다
+ *   글자는 서버 규칙(pwprep.js pwRule)과 같다 · 8~64자 · 영문 · 숫자 · 기호 자유(조합 강제 없음) · 사번과 같은 값 · 흔한 값 · 한 글자만 반복(11111111) · 숫자만 이어짐(12345678 · 87654321) 거절
+ *   조건 줄 = 비어 있음 회색 「·」 · 맞음 진한 글자 「✔」 · 아님 주황 「✕」 · 둘째 칸 = 일치 · 불일치 */
+var PW_GUIDE="8~64자 · 영문 · 숫자 · 기호 자유 · 사번과 같은 값 · 흔한 값 · 11111111 같은 반복 · 12345678 같은 연속은 안 됨";   /* 「안 됨」은 줄 끝에서 갈리지 않게 붙임 공백 */
+var PW_CK=[["len","8자 이상"],["emp","사번과 다름"],["common","흔한 값 아님"],["rep","반복 · 연속 아님"]];
+/* 조건마다 따로 본다(pwWhy 는 첫 위반 하나만 돌려줘 12345678 처럼 흔한 값이면서 연속인 값도 두 줄 다 ✕) · 식은 pwWhy 와 같다 */
+function pwFlags(s, emp){
+  var low=s.toLowerCase(), e=normE(emp||""), up=true, dn=true;
+  for(var i=1;i<s.length;i++){ var d=s.charCodeAt(i)-s.charCodeAt(i-1); if(d!==1&&d!==-9) up=false; if(d!==-1&&d!==9) dn=false; }
+  return { len:s.length>=8&&s.length<=64, emp:!(e&&(low===e.toLowerCase()||low===("0"+e).toLowerCase())), common:PW_COMMON.indexOf(low)<0, rep:!/^(.)\1+$/.test(s)&&!(/^\d+$/.test(s)&&s.length>1&&(up||dn)) };
+}
+function pwGuideHtml(pfx){
+  return '<p class="cap mt4">'+esc(PW_GUIDE)+'</p><ul class="pwck" id="'+pfx+'_ck">'+PW_CK.map(function(c){ return '<li data-k="'+c[0]+'">· '+esc(c[1])+'</li>'; }).join("")+'</ul><p class="pwck2" id="'+pfx+'_m"></p>';
+}
+function pwChkUpd(pfx, emp){
+  var a=(el(pfx+"1")||{}).value||"", b=(el(pfx+"2")||{}).value||"", w=a?pwWhy(a,emp):"", f=a?pwFlags(a,emp):null, ul=el(pfx+"_ck"), m=el(pfx+"_m");
+  if(ul) PW_CK.forEach(function(c){ var li=ul.querySelector('[data-k="'+c[0]+'"]'); if(!li) return; var on=f?f[c[0]]:null; li.className=on===null?"":on?"on":"no"; li.textContent=(on===null?"· ":on?"✔ ":"✕ ")+c[1]+(c[0]==="len"&&a.length>64?" · 64자까지":""); });
+  if(m){ m.className="pwck2"+(b?(a===b?" on":" no"):""); m.textContent=b?(a===b?"✔ 일치":"✕ 불일치 · 두 번 넣은 값이 다름"):""; }
+  return !!a&&!w&&a===b;
+}
+/* 서버 거절 이유 → 사람 글 */
+function pwFailTx(r, dflt){
+  if(!r) return dflt||"";
+  if(r.reason==="pwrule") return PW_WHY[r.why]||"비밀번호 규칙에 맞지 않습니다";
+  if(r.reason==="pwderive") return "서버가 비밀번호를 처리하지 못했습니다 · 잠시 뒤 다시";
+  return dflt||"";
+}
+
