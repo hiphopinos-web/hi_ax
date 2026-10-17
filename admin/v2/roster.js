@@ -6,7 +6,7 @@
  *   맨 앞 사번(sup)은 서버가 빼지 못하게 막는다 · 처음 저장하는 순간부터 그 명단대로 들어온다 · 261016 PIN 없음(확인 창) */
 var DNY_W="접속거부기록";
 PP_SUBS.splice(PP_SUBS.map(function(x){ return x[0]; }).indexOf("gate")+1,0,["deny","접속 거부"]);
-LG_SUBS.splice(LG_SUBS.map(function(x){ return x[0]; }).indexOf("code"),0,["adm","관리자 명단"]);
+LG_SUBS.splice(LG_SUBS.map(function(x){ return x[0]; }).indexOf("urls"),0,["adm","관리자 명단"]);   /* 261017 「스태프 코드」 칩이 없어져 「화면 주소」 앞에 둔다 */
 /* ── 접속 거부 ── */
 function dnyGrid(){
   return gridOf("deny",{ file:"접속 거부", key:function(r){ return r.emp; }, sort:{ k:"last", d:-1 }, src:{ a:"og_deny_list", p:{} }, h:480, empty:"거부 기록이 없습니다", onRow:function(k){ pcOpen(k, MG.deny); },
