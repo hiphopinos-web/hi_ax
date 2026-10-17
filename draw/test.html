@@ -120,9 +120,9 @@
     if ((s === "idle" || s === "closed" || s === "board") && dt > 900) { x.act("next"); A.wait = Date.now() + 600; }
     else if (s === "mix" && dt > 1800) { x.act("next"); A.wait = Date.now() + 600; }
     else if (s === "reveal" && dt > 2800) {
-      if (top && $("cRedo").checked && (r.name === "3등" || r.name === "1등") && !A.redo[r.name]) { A.redo[r.name] = 1; x.ui.redo(); x.ui.redo(); log(r.name + " 다시 추첨(두 번 누름)"); }
-      else { x.act("next"); if (top) x.act("next"); }
-      A.wait = Date.now() + 600;
+      if (top && $("cRedo").checked && (r.name === "3등" || r.name === "1등") && !A.redo[r.name]) { A.redo[r.name] = 1; x.ui.redo(); setTimeout(function () { x.ui.redo(); }, 450); log(r.name + " 다시 추첨(두 번 누름 · 0.45초 간격 · 261017 D1)"); }
+      else { x.act("next"); if (top) setTimeout(function () { x.act("next"); }, 450); }
+      A.wait = Date.now() + 900;
     }
     else if (s === "end") { A.on = false; log("끝 화면 · 자동 진행 끝"); }
   }
@@ -134,7 +134,7 @@
   };
   $("bNext").onclick = function () { var x = X(); if (x) x.act("next"); };
   $("bRedo").onclick = function () { var x = X(); if (!x) return; x.ui.redo(); log(x.scene() === "reveal" ? "다시 추첨 단추 한 번(한 번 더 누르면 다시 추첨)" : "지금은 다시 추첨 단추가 없다(3 · 2 · 1등 공개 중에만)"); };
-  $("bRestart").onclick = function () { var x = X(); if (!x) return; A.on = false; x.ui.op("restart"); x.ui.op("restart"); log("처음부터"); };
+  $("bRestart").onclick = function () { var x = X(); if (!x) return; A.on = false; x.ui.op("restart"); setTimeout(function () { x.ui.op("restart"); }, 450); log("처음부터"); };
   $("bReload").onclick = function () {
     var x = X(); if (!x) return;
     var b = JSON.stringify(x.state().results.map(function (r) { return [r.id, r.st]; })), sc0 = x.scene(), r0 = x.state().round;

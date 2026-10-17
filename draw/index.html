@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lucky Draw · AX Festival 2026</title>
 <meta name="robots" content="noindex">
+<script>/* 261017 D6 · 행사일(10/26 · 한국 시각 · 이 기기 시계)에는 옛 화면(?classic=1 · 체크인 ?ck=1 포함)을 열지 않고 드럼 판 시작 화면으로 */
+(function () { var d = new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10); if (d === "2026-10-26" && /[?&]classic=1(&|$)/.test(location.search)) { location.replace("stage.html?old=blocked"); document.write("<plaintext hidden>"); } })();</script>
 <script>/* 261008 무대 기본 = 드럼 판(stage.html · 사용자 결정) · 이 파일은 옛 화면(유리 통 · assets/draw.js)으로 남긴다 · 주소에 ?classic=1 이면 여기 그대로
    같은 브라우저 저장(axfDraw.state.v1)을 두 화면이 함께 써서 바꿔도 당첨 · 등수가 이어진다 · 조작 창(#control)은 연 화면을 따른다 */
 (function () { var q = location.search; if (!/[?&]classic=1(&|$)/.test(q)) location.replace("stage.html" + q + location.hash); })();</script>

@@ -156,6 +156,10 @@
   @keyframes kbHit { from { transform: scale(2.4); } to { transform: scale(1); } }
   @keyframes kbNo { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
   body[data-scene="start"] #kBar, body[data-scene="restore"] #kBar { display: none; }
+  /* 261017 D5 · 데모 = 화면 아래 가운데 큰 반투명 글자 「DEMO」(객석 뒷줄에서도 · 이름 · 번호 글자 뒤 · 누름 없음) · 라이브에는 없다 */
+  #demoMark { position: absolute; left: 0; right: 0; bottom: 6px; display: none; text-align: center; font-family: var(--f); font-size: 230px; line-height: 1; font-weight: 800; letter-spacing: .12em;
+    color: rgba(255,255,255,.2); pointer-events: none; }
+  body.m-demo #demoMark { display: block; }
   body.mouse #kBar { bottom: 74px; }   /* 운영 줄(마우스)이 나오면 그 위로 */
   @media (prefers-reduced-motion: reduce) { #kBar.hit i, #kBar.no.hit { animation: none; } }
   #hud { position: absolute; left: 120px; bottom: 80px; font-size: 22px; color: #9f9; font-family: Consolas, monospace; display: none; }
@@ -280,6 +284,7 @@
 <canvas id="cv"></canvas>
 <video id="vIntro" class="vid" src="assets/intro.mp4" muted playsinline preload="auto"></video>
 <div id="frame">
+  <div id="demoMark">DEMO</div>
   <div id="lock"><div id="wm"></div><div id="slg">ME to WE</div></div>
 
   <section id="pPool" class="panel"><div class="col">
