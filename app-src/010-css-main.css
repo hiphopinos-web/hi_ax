@@ -100,6 +100,7 @@
   .axs-lf .lf-note ax-seg { display: inline-block; }
   .axs-lf .lf-find .ax-button { min-height: 44px; margin: 0; padding: 0 var(--ax-space-16); font: 600 0.9375rem/1.2 var(--ax-font); }
   .axs-lf .lf-links .ax-link[hidden] { display: none; }
+  #entryForm #lgLost { color: var(--ax-color-ink); }   /* v7.74 (사용자 261017) 첫 화면 「비밀번호 초기화 요청」 = 「입장」 단추 바로 아래 가운데 한 줄 · 검정(본문 진한 글자) · 재방문 화면 링크는 흰 글자 그대로 */
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
   .note { text-align: center; font-size: calc(12.5px * var(--fs)); line-height: 1.5; color: var(--muted); }
 
@@ -1372,6 +1373,9 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   /* 떠오름 = 바뀐 내용 · 도착한 곳 · 펼친 내용 · 시트 안 내용 바뀜 */
   .ax-mo-rise { animation: axMoRise var(--ax-motion-in) var(--ax-motion-ease-fade) both; }
   @keyframes axMoRise { from { opacity: 0; transform: translateY(var(--ax-motion-rise)); } }
+  /* v7.74 1F 로비 맵 손가락 안내(020 판 문법 절 .f1h) · 고리 퍼짐 · 말풍선 떠오름 · 판 문법 절은 .axs-pan 규칙만 두므로 여기 */
+  @keyframes axF1Rg { 0% { opacity: 0.9; transform: scale(0.45); } 100% { opacity: 0; transform: scale(1.7); } }
+  @keyframes axF1Bb { from { opacity: 0; transform: translate(-50%, var(--ax-motion-rise)); } to { opacity: 1; transform: translate(-50%, 0); } }
   /* 시트 셋 · 뒷배경 = ::before 층(먹 40% · 끌면 --dd 로 옅어짐) · 패널은 그 위 */
   #modal::before, #axsSheet::before { content: ""; position: absolute; inset: 0; background: rgba(25, 31, 40, 0.4); background: color-mix(in srgb, var(--ax-color-ink) 40%, transparent); opacity: var(--dd, 1); pointer-events: none; }
   #axsSheet .ax-sheet { position: relative; z-index: 1; }

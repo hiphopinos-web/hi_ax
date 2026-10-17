@@ -1059,10 +1059,10 @@ function lfBusy(btn, on, label) {
    사번 · 이름 · 비밀번호 세 칸 · 버튼 「입장」 하나 · 화면을 넘기지 않는다 · 입장은 login 하나로 끝낸다(묻기를 기다리지 않는다)
    서버 login_peek 은 그대로 · 사번 · 이름이 다 들어오면(입력 0.4초 멈춤 · 칸을 떠남 · 비밀번호 칸에 들어옴) 뒤에서 묻고 비밀번호 칸의 흐린 안내 · 칸 아래 줄을 바꾼다
      new = 「처음 입장 · 새로 정할 숫자 4자리」 · reset = 「초기화됨 · 새로 정할 숫자 4자리」 · 둘 다 숫자 보임(숨기기) + 아래 줄 「다음 입장부터 이 4자리 · 사내 비밀번호와 다르게」
-     pin = 「10/17에 정한 숫자 4자리」(등록 날짜 · 모르면 「처음 입장 때 정한 숫자 4자리」 · 가림 · 보기) + 「비밀번호를 잊었어요」
+     pin = 「10/17에 정한 숫자 4자리」(등록 날짜 · 모르면 「처음 입장 때 정한 숫자 4자리」 · 가림 · 보기) + 「비밀번호 초기화 요청」(v7.74 사용자 261017 · 모든 상태에서 늘 보임 · 옛 「비밀번호를 잊었어요」 정한 계정만)
      기본(묻기 전 · 사번 · 이름 미완성 · 답 없음 · 느림 · 실패 · 옛 서버 · 사번 · 이름 불일치) = 「숫자 4자리 · 처음이면 새로 정하기」 · 불일치 오류는 입장을 누를 때 login 이 알린다
      잠김 = 잠김 안내 + 「비밀번호 찾기」 · notopen · ended = beCall 이 안내 화면 · 답은 그 사번 · 이름 그대로일 때만 쓴다(LP.key · LP.seq) · 칸을 고치면 기본으로
-   틀림 = 1 · 2회 「맞지 않아요 · 10/19에 정한 4자리」 · 3회부터 + 「비밀번호 찾기」(v7.69 이때 「비밀번호를 잊었어요」 링크는 숨김) · 잠김 = 「비밀번호 찾기」 · 횟수 = 이 화면 세션(서버는 그대로 10분 10회)
+   틀림 = 1 · 2회 「맞지 않아요 · 10/19에 정한 4자리」 · 3회부터 + 「비밀번호 찾기」(v7.69 이때 「비밀번호 초기화 요청」 링크는 숨김) · 잠김 = 「비밀번호 찾기」 · 횟수 = 이 화면 세션(서버는 그대로 10분 10회)
    찾기 요청을 보낸 기기 = 정한 계정 안내에 「초기화 요청 보냄」 알약(axf_pw_req_at · 초기화되면 peek 가 reset 을 준다 · 입장하면 지운다) */
 var LP = { mode: "", key: "", seq: 0, tm: 0, reg: "", bad: {}, sa: false, WAIT_MS: 400 };
 var LP_REQ = "axf_pw_req_at";
@@ -1124,7 +1124,7 @@ function lpMode(mode) {
   var noteOn = set, wasOn = nw && !nw.hidden;
   if (note) note.innerHTML = noteOn ? segHtml("다음 입장부터 이 4자리 · 사내 비밀번호와 다르게") : "";
   if (nw) nw.hidden = !noteOn;
-  if (el("lgLinks")) el("lgLinks").hidden = mode !== "pin" || !!(el("lgFindW") && !el("lgFindW").hidden);   /* v7.69 「비밀번호 찾기」 단추가 떠 있으면 링크 숨김 */
+  if (el("lgLinks")) el("lgLinks").hidden = !!(el("lgFindW") && !el("lgFindW").hidden);   /* v7.69 「비밀번호 찾기」 단추가 떠 있으면 링크 숨김 · v7.74 (사용자 261017) 그 밖에는 늘 보임(새 계정 · 확인 전 · 확인 실패 포함 · 옛 정한 계정(pin)일 때만) */
   lpReqShow("lgReqW", "lgReq", mode === "pin" ? (el("empId").value || "").trim() : "");
   lfSoon();
   if (noteOn && !wasOn && nw && typeof AXM !== "undefined") AXM.rise(nw);
@@ -1169,10 +1169,10 @@ function lpPeek(k) {
   }, function () { if (seq === LP.seq) LP.key = ""; });
 }
 /* 틀림 계단 · o = { box, err, find(찾기 줄 id), input, emp, reg, reason: pw | lock, retry } */
-/* v7.69 (261017 v7.68 후속) 「비밀번호 찾기」 단추(틀림 3회 · 잠김)가 보이면 같은 화면의 「비밀번호를 잊었어요」 링크를 숨긴다(같은 곳으로 가는 길 두 개 없음) · 재방문 화면은 「다른 사번으로 입장」 그대로 */
+/* v7.69 (261017 v7.68 후속) 「비밀번호 찾기」 단추(틀림 3회 · 잠김)가 보이면 같은 화면의 「비밀번호 초기화 요청」(옛 「비밀번호를 잊었어요」) 링크를 숨긴다(같은 곳으로 가는 길 두 개 없음) · 재방문 화면은 「다른 사번으로 입장」 그대로 */
 function lpLostSync(fid) {
   var f = el(fid), on = !!f && !f.hidden;
-  if (fid === "lgFindW" && el("lgLinks") && on) el("lgLinks").hidden = true;
+  if (fid === "lgFindW" && el("lgLinks")) el("lgLinks").hidden = on;   /* v7.74 링크가 늘 보이므로 찾기 단추가 사라지면 다시 보임 */
   if (fid === "qFindW") { var q = document.querySelector('#quick .lf-links [onclick^="pwLostOpen"]'); if (q) q.hidden = on; }
 }
 function lpBad(o) {

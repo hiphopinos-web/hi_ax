@@ -211,17 +211,26 @@
 .axs-pan .axs-pbfs { display: flex; flex-direction: column; gap: var(--ax-space-12); }
 .axs-pan .axs-pbfs .axs-evps { margin-top: 0; }
 /* 지도 카드 · 그림 위 투명 단추(구역 시트 · 계단) · 글자는 그림(큰글씨 배율 없음) */
-.axs-pan .axs-f1map { padding: 10px var(--ax-space-8) 14px; }
+.axs-pan .axs-f1map { padding: 6px 6px 2px; }   /* v7.74 (사용자 261017 세로 짧은 폰) 위아래 여백 줄임 · 옛 10px 8px 14px */
 .axs-pan .axs-f1map .mw { position: relative; }
 .axs-pan .axs-f1map .mp { display: block; width: 100%; height: auto; }
 .axs-pan .axs-f1map text { font-family: var(--ax-font); font-weight: 700; fill: var(--ax-color-ink); }
 .axs-pan .axs-f1map text.sm { font-weight: 600; fill: var(--ax-color-body); }
 .axs-pan .axs-f1map .mb { position: absolute; margin: 0; padding: 0; border: 0; border-radius: 6px; background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.axs-pan .axs-f1map .mb:active { background: rgba(25, 31, 40, 0.06); }
+/* v7.74 (사용자 261017 「구역을 단추처럼」) 누르는 동안 그 구역 묶음(칸 · 겹 · 글자 · 「›」) 살짝 작아짐 · 놓으면 닫힘 시간으로 되돌아옴 · 동작 줄이기 = 없음 · 옛 누름 = 단추 위 옅은 회색 면 */
+.axs-pan .axs-f1map .hl.on ~ .cv { stroke: var(--ax-color-ink); }   /* 고른 칸(주황) 위 「›」 = 글자와 같은 진한 색 */
+.axs-pan .axs-f1map .zg { transform-box: fill-box; transform-origin: center; transition: transform var(--ax-motion-out) var(--ax-motion-ease-exit); }
+.axs-pan .axs-f1map .zg.pr { transform: scale(0.96); transition: transform 100ms var(--ax-motion-ease-fade); }
+@media (prefers-reduced-motion: reduce) { .axs-pan .axs-f1map .zg, .axs-pan .axs-f1map .zg.pr { transform: none; transition: none; } }
+/* v7.74 (사용자 261017 「처음 한 번 손가락 안내」) 골라지지 않은 구역 가운데 · 주황 고리 3번 퍼짐(1.4초 · 처음 0.4초 뒤) + 검정 말풍선 「누르면 설명」(꼬리 = 구역 쪽) · 누름은 지나감 · 동작 줄이기 = 말풍선만 */
+.axs-pan .axs-f1map .f1h { position: absolute; width: 0; height: 0; pointer-events: none; }
+.axs-pan .axs-f1map .f1h .rg { position: absolute; left: -22px; top: -22px; width: 44px; height: 44px; box-sizing: border-box; border: 3px solid var(--ax-color-brand); border-radius: 50%; opacity: 0; animation: axF1Rg 1400ms var(--ax-motion-ease-fade) var(--hd, 400ms) 3 forwards; }
+.axs-pan .axs-f1map .f1h b { position: absolute; left: 0; bottom: 24px; padding: 5px 10px; border-radius: var(--ax-radius-8); background: var(--ax-color-ink); color: #FFFFFF; font: var(--ax-type-caption); font-weight: 600; white-space: nowrap; transform: translateX(-50%); animation: axF1Bb var(--ax-motion-in) var(--ax-motion-ease-fade) var(--hd, 400ms) both; }
+.axs-pan .axs-f1map .f1h b::after { content: ""; position: absolute; left: 50%; top: 100%; margin-left: -5px; border: 5px solid transparent; border-top-color: var(--ax-color-ink); }
+.axs-pan .axs-f1map .f1h.still .rg { animation: none; }
+.axs-pan .axs-f1map .f1h.out { opacity: 0; transition: opacity var(--ax-motion-out) var(--ax-motion-ease-fade); }
+@media (prefers-reduced-motion: reduce) { .axs-pan .axs-f1map .f1h .rg { display: none; } .axs-pan .axs-f1map .f1h b { animation: none; } .axs-pan .axs-f1map .f1h.out { transition: none; } }
 .axs-pan .axs-f1map .mb:focus-visible { outline: 2px solid var(--ax-color-ink); outline-offset: 1px; }
-.axs-pan .axs-f1map .lgd { display: flex; flex-wrap: wrap; gap: var(--ax-space-4) 14px; margin: 10px var(--ax-space-4) 0; font: var(--ax-type-caption); color: var(--ax-color-body); }
-.axs-pan .axs-f1map .lgd span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
-.axs-pan .axs-f1map .lgd svg { flex: none; width: 16px; height: 16px; }
 /* v7.69 (사용자 확정 261017) 지도 고른 칸 = 주황 겹(O100 · 흐려짐만 · 열림 0.3초 · 닫힘 0.18초 · 앱 공용 곡선) · 동작 줄이기 = 즉시 */
 .axs-pan .axs-f1map .hl { fill: var(--ax-color-brand); opacity: 0; transition: opacity var(--ax-motion-out) var(--ax-motion-ease-exit); pointer-events: none; }
 .axs-pan .axs-f1map .hl.on { opacity: 1; transition: opacity var(--ax-motion-in) var(--ax-motion-ease-fade); }
@@ -241,8 +250,15 @@
 .fs-big .axs-pan .axs-f1d .zr { grid-template-columns: minmax(0, 1fr); grid-template-areas: "zsg" "ztx" "bn" "zgo"; }
 .fs-big .axs-pan .axs-f1d .bn { justify-self: start; }
 .fs-big .axs-pan .axs-f1d .bn:empty { display: none; }
-/* v7.71 (사용자 261017) 지도 아래 각주 한 줄 「* 주차장 체크인존(선착순 참여상 수령)」 · 작은 회색(caption · muted · 홈 .cstrip2 .sb 와 같은 글) · 누르면 WELCOME 시트 · 한 줄(괄호 묶음은 가르지 않음) */
-.axs-pan .axs-f1map .fn { display: block; margin: calc(var(--ax-space-12) * -1) var(--ax-space-4) -4px; padding: 6px 0; border: 0; background: transparent; font: var(--ax-type-caption); color: var(--ax-color-muted); text-align: left; white-space: nowrap; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+/* v7.71 (사용자 261017) 지도 아래 각주 한 줄 「* 주차장 체크인존(선착순 참여상 수령)」 · 누르면 WELCOME 시트 · 한 줄(괄호 묶음은 가르지 않음)
+   v7.74 (사용자 261017 「회색 말고 검정으로 조금 강조」) 작은 글씨(caption) 그대로 · 본문 진한 글자(ink) · 600 · 옛 회색(muted) · 범례 줄이 빠져 지도 바로 아래 */
+.axs-pan .axs-f1map .fn { display: block; margin: 0 var(--ax-space-4); padding: 4px 0 6px; border: 0; background: transparent; font: var(--ax-type-caption); font-weight: 600; color: var(--ax-color-ink); text-align: left; white-space: nowrap; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+/* v7.74 (사용자 261017) 구획 머리 줄 오른쪽 운영 시간(barHrsHtml · 1F 로비 맵 · 10F · 18F) · 제목 줄과 같은 줄 · 알약 + 값 한 줄 · 옛 칸 맨 위 정보 줄 */
+.axs-pan .axs-bar.hb { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--ax-space-8); row-gap: 2px; align-items: center; }
+.axs-pan .axs-bar.hb > b, .axs-pan .axs-bar.hb > span { grid-column: 1; min-width: 0; }
+.axs-pan .axs-bar.hb > .axs-hrs { grid-column: 2; grid-row: 1; flex-wrap: nowrap; align-items: center; gap: var(--ax-space-8); margin: 0; }
+/* v7.74 EVENT 사진 줄 굵은 글 안 「 · 」 묶음(pbfNw)은 굵은 글 그대로(옆 회색 작은 글 규칙이 닿지 않게) */
+.axs-pan .axs-evpic b .axs-nwr { font: inherit; color: inherit; }
 /* 영상 보기 접기(홈 axs-sfd 부품) · 영상 줄 = 썸네일 16:9 · 오른쪽 아래 길이 · 제목 · 회색 한 줄 · 셰브론 */
 .axs-pan .axs-vfd { margin-top: calc(var(--ax-space-8) * -1); }
 .axs-pan .axs-vfd .axs-sfdb i { font-style: normal; font-weight: 500; color: var(--ax-color-muted); }

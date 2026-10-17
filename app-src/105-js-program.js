@@ -321,9 +321,9 @@ function zonePicHtml(z) {
 /* v7.48 EVENT 시트 선착순 사진 칸(작은 사진 + 이름 · 가격 없음) · v7.69 (사용자 261017) 두 줄(시각 표기 「08:30 ~ : 」 · 사용자 261017) = 08:30 커피(AX 라운지 · 커피챗 지급품과 같은 사진 TREATS[0] · assets/prize) · 14:00 쿠키 세트(event_cookie)
    시간 · 수량 글 = PB_FCFS(101) 한 곳 · 옛 한 줄 「쿠키 세트 · 14:00 · 커피와 무작위」 */
 function evPicHtml() {
-  var row = function (src, alt, b, sub) { return '<div class="axs-evpic"><img src="' + src + '" alt="' + esc(alt) + '" width="96" height="96" loading="lazy" decoding="async" onerror="this.parentNode.remove()"><span><b>' + esc(b) + "</b>" + (sub ? esc(sub) : "") + "</span></div>"; };
-  return '<div class="axs-evps">' + row(PRIZE_DIR + TREATS[0].img + ".webp", "커피", PB_FCFS[0][0] + " ~ : " + PB_FCFS[0][1], "") +
-    row(ZONE_DIR + "event_cookie.webp", "쿠키 세트", PB_FCFS[1][0] + " ~ : 쿠키 세트", "베이크샵 달곰(쿠키, 휘낭시에)") + "</div>";
+  var row = function (src, alt, b, sub) { return '<div class="axs-evpic"><img src="' + src + '" alt="' + esc(alt) + '" width="96" height="96" loading="lazy" decoding="async" onerror="this.parentNode.remove()"><span><b>' + pbfNw(esc(b)) + "</b>" + (sub ? esc(sub) : "") + "</span></div>"; };
+  return '<div class="axs-evps">' + row(PRIZE_DIR + TREATS[0].img + ".webp", "커피", pbfTxt(0), "") +
+    row(ZONE_DIR + "event_cookie.webp", "쿠키 세트", pbfTxt(1), "베이크샵 달곰(쿠키, 휘낭시에)") + "</div>";   /* v7.74 (사용자 261017) 둘째 줄 = 「14:00 ~ : 커피 · 쿠키 세트 100개 · 무작위」(PB_FCFS[1] 그대로 · 「 · 」 자리에서만 줄바꿈 pbfNw) + 「베이크샵 달곰(쿠키, 휘낭시에)」 · 옛 「14:00 ~ : 쿠키 세트」 */
 }
 function zoneCaseHtml(z) {
   return z.cases ? '<hr class="axs-rule"><div class="axs-zcase"><h3>사례 ' + z.cases.length + "개</h3>" + z.cases.map(function (c) { return "<p><b>" + esc(c[0]) + "</b><span>" + esc(c[1]) + "</span></p>"; }).join("") + "</div>" : "";
@@ -428,11 +428,11 @@ function applySumRows() { return ["프로그램 참여 스탬프는 합쳐 2개�
 function progApplyTabHtml() {
   var cc = applyCchatHtml();   /* 261013 오후 순서 = 17F AWS · 17F MS · 18F 커피챗 · v7.39 (사용자 261016 계획서 3-1 · 0-2-4) 라운지 카드 없음(사전 신청자 = 홈 나의 일정 · 1F 칸 표 · 내 상담) */
   var ten = applyTenHtml();   /* v7.67 (사용자 261017 셋째 칸 변경) 사전 신청자 = 10F 머리 + 실습 줄을 맨 위로(옛 D2 칸 맨 아래 줄 대체) · 운영 시간도 층 순서 */
-  return '<div class="axs-apply axs-pan" aria-label="' + progApplyNm() + '">' + hrsHtml(ten ? ["10F " + F10_HOURS, "18F " + F18_HOURS] : "18F " + F18_HOURS) +
-    (ten ? '<div class="axs-bar"><b>10F</b><span>실습형 세션</span></div>' + ten : "") +
+  return '<div class="axs-apply axs-pan" aria-label="' + progApplyNm() + '">' +   /* v7.74 (사용자 261017) 운영 시간 = 각 구획 머리 줄 오른쪽(1F 칸 로비 맵과 같은 알약 · 정렬 barHrsHtml) · 옛 칸 맨 위 한 줄(10F · 18F 두 값) · 17F 는 운영 시간 없음 · 커피챗 카드가 없으면 18F 머리째 없음 */
+    (ten ? barHrsHtml("10F", "실습형 세션", F10_HOURS) + ten : "") +
     '<div class="axs-bar"><b>17F 대강당</b><span>신청 없이 자유 참석</span></div>' + apply17Html("l1") + apply17Html("l2") +
     '<button type="button" class="ax-link axs-plain axs-self axs-tlnk" onclick="progTimeGo()">' + lnkChev("오전 강연 · Closing Speech는 시간표") + "</button>" +
-    (cc ? '<div class="axs-bar"><b>18F</b><span>AX 커피챗</span></div>' + cc : "") +
+    (cc ? barHrsHtml("18F", "AX 커피챗", F18_HOURS) + cc : "") +
     '<p class="ax-meta axs-apsum segfix">' + applySumRows().map(function (t) { return "<ax-seg>" + esc(t) + "</ax-seg>"; }).join("") + "</p></div>";
 }
 /* v5.65 「참여 전 확인」 펼침 = 같은 화면 패널(시트 아님 · 설계안 결정 1) · 다시 그리지 않고 패널만 연다 · 닫는다
@@ -593,6 +593,7 @@ function f1DescHtml() {
 }
 /* 지도 구역 누름 = 그 칸 주황(.hl 흐려짐 · 앱 공용 곡선 · 시간) + 설명 칸 내용만 바꿈(떠오름 AXM.rise · 동작 줄이기 = 즉시) · 다시 그리지 않는다 */
 function f1Pick(id) {
+  f1HintDone();   /* v7.74 아무 구역이나 한 번 누르면 손가락 안내 끝(기기 기록) */
   if (F1_TB.indexOf(id) < 0) return;
   var was = f1SelId(); F1SEL.z = id;
   if (was === id) return;
@@ -607,44 +608,69 @@ function f1Pick(id) {
    구역 칸마다 주황 겹(.hl · 고른 칸만 on) = 회색 칸 바로 위 · 글자 · 아이콘 아래 · 계단 겹은 벽을 덮지 않게 안으로 4 */
 var F1_MAP_W = 724, F1_MAP_H = 404;
 var F1_MAP_BT = [["lounge", 23, 26, 256, 108], ["event", 23, 146, 116, 228], ["play", 150, 294, 226, 80], ["lab", 386, 294, 228, 80], ["vision", 624, 176, 78, 198], ["stair", 290, 36, 60, 74], ["stair", 526, 42, 60, 74]];
+/* v7.74 (사용자 261017 「구역을 단추처럼」) 바닥(벽 안) = 옅은 회색 · 구역 칸 = 흰 면 + 옅은 그림자(f1Sh) + 오른쪽 아래 작은 「›」(.cv) · 고른 칸 = 주황 겹 그대로(.hl)
+   구역마다 한 묶음(g.zg data-i = F1_MAP_BT 차례 · 칸 · 겹 · 글자 · 아이콘 · 「›」) · 누르는 동안 묶음이 살짝 작아짐(f1Press · .zg.pr · transform 만) · 옛 회색 칸(#F2F4F6) · 흰 바닥 */
 function f1MapSvg() {
   var sel = f1SelId();
-  var B = function (b) { return '<rect x="' + b[1] + '" y="' + b[2] + '" width="' + b[3] + '" height="' + b[4] + '" rx="6" fill="#F2F4F6" stroke="#CBD0D6" stroke-width="2.5"/>'; };
-  var H = function (b) { var i = b[0] === "stair" ? 4 : 0; return '<rect class="hl' + (b[0] === sel ? " on" : "") + '" data-zone="' + b[0] + '" x="' + (b[1] + i) + '" y="' + b[2] + '" width="' + (b[3] - 2 * i) + '" height="' + b[4] + '" rx="6"/>'; };
+  var B = function (b) { return '<rect x="' + b[1] + '" y="' + b[2] + '" width="' + b[3] + '" height="' + b[4] + '" rx="8" fill="#FFFFFF" stroke="#DDE1E6" stroke-width="2" filter="url(#f1Sh)"/>'; };
+  var H = function (b) { var i = b[0] === "stair" ? 4 : 0; return '<rect class="hl' + (b[0] === sel ? " on" : "") + '" data-zone="' + b[0] + '" x="' + (b[1] + i) + '" y="' + b[2] + '" width="' + (b[3] - 2 * i) + '" height="' + b[4] + '" rx="8"/>'; };
+  var CV = function (b) { var x = b[1] + b[3] - 15, y = b[2] + b[4] - 17; return '<path class="cv" d="M' + (x - 4) + " " + (y - 8) + "L" + (x + 4) + " " + y + "L" + (x - 4) + " " + (y + 8) + '" fill="none" stroke="#6B7684" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>'; };
   var T = function (x, y, s, t, a) { return '<text x="' + x + '" y="' + y + '" font-size="' + s + '" text-anchor="' + (a || "middle") + '">' + t + "</text>"; };
   var tri = function (x, y, d) { var p = { d: [[-11, -7], [11, -7], [0, 7]], u: [[-11, 7], [11, 7], [0, -7]], l: [[7, -11], [7, 11], [-7, 0]] }[d]; return '<path d="M' + p.map(function (v) { return (x + v[0]) + " " + (y + v[1]); }).join("L") + 'Z" fill="#4E5968"/>'; };
   var mk = function (x, y, svg, s) { return '<g transform="translate(' + (x - s / 2) + " " + (y - s / 2) + ") scale(" + (s / 24) + ')">' + svg.replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/, "") + "</g>"; };
   var wall = 'fill="none" stroke="#9AA3AE" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"', c = function (id) { return f1Cell(id) || [""]; };
+  var IN = [T(151, 93, 36, zoneById("lounge").sign) + (f1LnOn() ? mk(252, 52, c("lounge")[0], 30) : ""), T(81, 214, 33, "EVENT") + mk(81, 268, c("event")[0], 44),
+    T(263, 347, 36, "AX PLAY") + mk(176, 318, c("play")[0], 30), T(500, 347, 36, "AX LAB") + mk(412, 318, c("lab")[0], 30),
+    '<text x="663" y="275" font-size="31" text-anchor="middle" transform="rotate(-90 663 275)" dy="11">AX VISION</text>',
+    mk(320, 92, f1Stair("#4E5968"), 34) + mk(320, 56, c("stair")[0], 26), mk(556, 98, f1Stair("#4E5968"), 34) + mk(556, 62, c("stair")[0], 26)];
+  var G = function (b, i) { var st = b[0] === "stair"; return '<g class="zg" data-i="' + i + '">' + (st ? "" : B(b)) + H(b) + IN[i] + (st ? "" : CV(b)) + "</g>"; };
   return '<svg class="mp" viewBox="0 0 ' + F1_MAP_W + " " + F1_MAP_H + '" aria-hidden="true">' +
+    '<defs><filter id="f1Sh" x="-12%" y="-12%" width="124%" height="140%" color-interpolation-filters="sRGB"><feDropShadow dx="0" dy="3" stdDeviation="3.5" flood-color="#191F28" flood-opacity="0.16"/></filter></defs>' +
+    '<path d="M10 12H596V137H712V388H10Z" fill="#F2F4F6"/>' +
     '<polyline ' + wall + ' points="380,12 10,12 10,388 380,388"/><polyline ' + wall + ' points="430,388 712,388 712,256"/><polyline ' + wall + ' points="712,196 712,137 455,137"/>' +
     '<polyline ' + wall + ' points="416,12 596,12 596,98"/><polyline ' + wall + ' points="290,12 290,137 302,137"/><polyline ' + wall + ' points="336,137 372,137"/>' +
-    F1_MAP_BT.slice(0, 5).map(B).join("") + F1_MAP_BT.map(H).join("") +
-    T(151, 93, 36, zoneById("lounge").sign) + (f1LnOn() ? mk(252, 52, c("lounge")[0], 30) : "") +
-    T(81, 214, 33, "EVENT") + mk(81, 268, c("event")[0], 44) +
-    T(263, 347, 36, "AX PLAY") + mk(176, 318, c("play")[0], 30) +
-    T(500, 347, 36, "AX LAB") + mk(412, 318, c("lab")[0], 30) +
-    '<text x="663" y="275" font-size="31" text-anchor="middle" transform="rotate(-90 663 275)" dy="11">AX VISION</text>' +
-    '<rect x="440" y="156" width="152" height="40" rx="4" fill="#F2F4F6"/><text x="516" y="186" font-size="28" text-anchor="middle" class="sm">안내데스크</text>' +
+    '<rect x="440" y="156" width="152" height="40" rx="4" fill="#E5E8EB"/><text x="516" y="186" font-size="28" text-anchor="middle" class="sm">안내데스크</text>' +
     [180, 262, 344, 426].map(function (x) { return '<rect x="' + x + '" y="236" width="22" height="22" fill="#CBD0D6"/>'; }).join("") +
-    mk(320, 92, f1Stair("#4E5968"), 34) + mk(320, 56, c("stair")[0], 26) + mk(556, 98, f1Stair("#4E5968"), 34) + mk(556, 62, c("stair")[0], 26) +
+    F1_MAP_BT.map(G).join("") +
     tri(398, 16, "d") + tri(319, 150, "u") + tri(596, 116, "l") + tri(712, 226, "l") + tri(405, 394, "u") + "</svg>";
 }
+/* v7.74 (사용자 261017) 지도 카드 = 지도 + 각주 한 줄(검정 · 작은 글씨)만 · 옛 범례 줄(lgd 「스탬프」 「3개면 룰렛」 · 도장 뜻은 설명 칸 스탬프 칸에) 뺌 · 위아래 여백 줄임 */
 function f1MapHtml() {
   var nm = { lounge: "AX 라운지", event: "EVENT", play: "AX PLAY", lab: "AX LAB", vision: "AX VISION", stair: "계단" }, sel = f1SelId();
   var pc = function (v, w) { return (v / w * 100).toFixed(2) + "%"; };
   return '<section class="ax-card axs-f1map"><div class="mw" role="group" aria-label="1층 지도 · 구역을 누르면 아래 설명이 바뀜">' + f1MapSvg() +
-    F1_MAP_BT.map(function (b) { return '<button type="button" class="mb" data-zone="' + b[0] + '" style="left:' + pc(b[1], F1_MAP_W) + ";top:" + pc(b[2], F1_MAP_H) + ";width:" + pc(b[3], F1_MAP_W) + ";height:" + pc(b[4], F1_MAP_H) + '" onclick="f1Pick(\'' + b[0] + '\')" aria-pressed="' + (b[0] === sel) + '" aria-label="' + nm[b[0]] + '"></button>'; }).join("") + "</div>" +
-    '<p class="lgd" aria-hidden="true"><span>' + f1Seal(false) + "스탬프</span><span>" + f1Roul(false) + "3개면 룰렛</span></p>" +
-    '<button type="button" class="fn" onclick="zoneOpen(\'welcome\')">* 주차장 체크인존(선착순 참여상 수령)</button></section>';   /* v7.69 메달(WELCOME)은 지도 밖이라 범례에서 뺌 */
+    F1_MAP_BT.map(function (b, i) { return '<button type="button" class="mb" data-zone="' + b[0] + '" data-i="' + i + '" style="left:' + pc(b[1], F1_MAP_W) + ";top:" + pc(b[2], F1_MAP_H) + ";width:" + pc(b[3], F1_MAP_W) + ";height:" + pc(b[4], F1_MAP_H) + '" onclick="f1Pick(\'' + b[0] + '\')" onpointerdown="f1Press(this, 1)" onpointerup="f1Press(this, 0)" onpointercancel="f1Press(this, 0)" onpointerleave="f1Press(this, 0)" aria-pressed="' + (b[0] === sel) + '" aria-label="' + nm[b[0]] + '"></button>'; }).join("") + f1HintHtml(sel) + "</div>" +
+    '<button type="button" class="fn" onclick="zoneOpen(\'welcome\')">* 주차장 체크인존(선착순 참여상 수령)</button></section>';
 }
+/* 누르는 동안 그 구역 묶음 살짝 작아짐(.zg.pr · 놓으면 되돌아옴 · 스크롤로 넘어가면 pointercancel) */
+function f1Press(b, on) { var g = b.parentNode && b.parentNode.querySelector('.zg[data-i="' + b.getAttribute("data-i") + '"]'); if (g) g.classList.toggle("pr", !!on); }
+/* v7.74 (사용자 261017 「처음 한 번 손가락 안내」) 1F 칸에 처음 오면 골라지지 않은 구역(AX PLAY · 그 칸을 골랐으면 AX LAB) 위에 동그라미 3번 퍼짐 + 말풍선 「누르면 설명」
+   아무 구역이나 한 번 누르면 기기에 기록(localStorage F1_HINT_KEY)하고 다시 안 나옴 · 저장소를 못 쓰면 안 띄움 · 다시 그려도 퍼짐은 처음 시각부터 이어서(--hd 음수 지연) · 다 퍼진 뒤 = 말풍선만
+   동작 줄이기 = 퍼짐 없이 말풍선만(CSS) · 누름은 말풍선을 지나 지도 단추로(pointer-events none) · transform · opacity 만 */
+var F1_HINT_KEY = "axfF1Tap";
+function f1HintOn() { try { return !localStorage.getItem(F1_HINT_KEY); } catch (e) { return false; } }
+function f1HintHtml(sel) {
+  if (!f1HintOn()) return "";
+  var id = sel === "play" ? "lab" : "play", b = F1_MAP_BT.filter(function (x) { return x[0] === id; })[0];
+  var t0 = F1SEL.ht || (F1SEL.ht = Date.now()), dl = 400 - (Date.now() - t0);
+  return '<span class="f1h' + (dl < -4200 ? " still" : "") + '" id="f1Hint" aria-hidden="true" style="left:' + ((b[1] + b[3] / 2) / F1_MAP_W * 100).toFixed(2) + "%;top:" + ((b[2] + b[4] / 2) / F1_MAP_H * 100).toFixed(2) + "%;--hd:" + dl + 'ms"><i class="rg"></i><b>누르면 설명</b></span>';
+}
+function f1HintDone() {
+  try { localStorage.setItem(F1_HINT_KEY, "1"); } catch (e) {}
+  var h = el("f1Hint"); if (!h) return;
+  h.removeAttribute("id");
+  if (AXM.rm()) { h.remove(); return; }
+  h.classList.add("out"); setTimeout(function () { if (h.parentNode) h.remove(); }, 200);
+}
+/* v7.74 (사용자 261017) 구획 머리 줄 + 오른쪽 운영 시간(같은 알약 hrsHtml · 한 줄) · 1F 로비 맵 · 10F · 18F 같은 부품 */
+function barHrsHtml(t, sub, hrs) { return '<div class="axs-bar hb"><b>' + esc(t) + "</b>" + (sub ? "<span>" + esc(sub) + "</span>" : "") + hrsHtml(hrs) + "</div>"; }
 /* 정보 줄 = 알약 「운영 시간」(주황 테두리 · 주황 글자) + 값 · 1F 칸 · 17F · 18F 칸 같은 부품 */
 function hrsHtml(v) { return '<div class="axs-hrs"><span class="pl">운영 시간</span><span class="vs">' + [].concat(v).map(function (t) { return '<span class="v">' + esc(t) + "</span>"; }).join("") + "</span></div>"; }   /* v = 한 값 또는 층 순서 배열(줄마다 한 층 · 값 시작선 한 열) */
 /* v7.67 (사용자 확정 261017) 1F 칸 = 정보 줄(운영 시간) → v7.71 (사용자 261017) 머리 「로비 맵」(지도 + 각주 「* 주차장 체크인존(선착순 참여상 수령)」 + 설명 칸) → 머리 「선착순 이벤트」(TIME EVENT 카드) → (Views.guide) 머리 「영상 보기」(접기 progIvHtml) · v7.69 WELCOME 한 줄 카드 → v7.71 지도 아래 각주
    옛 상시 운영 = 1F 로비 머리 · 행사 둘러보기 카드(tourRowHtml · 이제 홈에만) · 둘러보기 · 참여하기 묶음 줄 · EVENT 안 1F 타자왕 순위 줄(EVENT 시트 타자왕 칸으로) · 18F 커피챗 줄(17F · 18F 칸 카드 하나로) */
 function progAlwaysHtml() {
   var pc = pbfCardHtml();
-  return hrsHtml(F1_HOURS) +
-    '<section class="axs-zsec" id="zone1f"><div class="axs-bar"><b>로비 맵</b></div>' + f1MapHtml() + f1DescHtml() + "</section>" +
+  return '<section class="axs-zsec" id="zone1f">' + barHrsHtml("로비 맵", "", F1_HOURS) + f1MapHtml() + f1DescHtml() + "</section>" +   /* v7.74 (사용자 261017) 운영 시간 = 「로비 맵」 머리 줄 오른쪽 · 옛 칸 맨 위 정보 줄 */
     (pc ? '<section class="axs-zsec" id="zonePbf"><div class="axs-bar"><b>선착순 이벤트</b></div>' + pc + "</section>" : "");
 }
 /* 구역 상세 · 간판 칩(v4.94 포인트 크기) → 부제 한 줄 → 보조 줄(운영 시간 · 룰렛 · 스탬프 없음) → 얇은 ink 줄 → 하는 일(주황 점) → (사실 표) → 행동 버튼 하나(있을 때만) · 뒤로 = 프로그램
