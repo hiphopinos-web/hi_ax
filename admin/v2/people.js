@@ -107,11 +107,12 @@ function ppPivot(rows, kind){
 /* ── 명단 올리기 고르기 ── */
 function ppUpPick(){
   var box=el("ppUp"); if(!box) return;
-  box.innerHTML='<div class="grid g3">'+[["pre10","10F 사전 신청","사번 · 세션(A~E · E 1회 · 2회) · 이름 · 교체 또는 추가 · 키트 · 출석 자격이 함께 움직입니다"],["gate","접속 허용","사번 또는 이름 · 클로즈 베타 · 사전 신청 기간에 앱에 들어올 사람"],["kstaff","스태프 옷","사번 또는 이름 · 스태프 의류 명단 · 빠진 사람의 사이즈 몫이 풀립니다"]].map(function(x){
+  box.innerHTML=(typeof gmLastH==="function"?gmLastH():"")+'<div class="grid g3">'+[["pre10","10F 사전 신청","사번 · 세션(A~E · E 1회 · 2회) · 이름 · 교체 또는 추가 · 키트 · 출석 자격이 함께 움직입니다"],["gate","접속 허용","사번 또는 이름 · 클로즈 베타 · 사전 신청 기간에 앱에 들어올 사람"],["kstaff","스태프 옷","사번 또는 이름 · 스태프 의류 명단 · 빠진 사람의 사이즈 몫이 풀립니다"]].map(function(x){
     return '<div class="card"><h2>'+esc(x[1])+'</h2><p class="cap">'+esc(x[2])+'</p><button class="btn pri mt" type="button" onclick="ppUpOpen(\''+x[0]+'\')">'+esc(x[1])+' 올리기</button></div>'; }).join("")+'</div>'+
+    '<div class="grid g3 mt"><div class="card"><h2>종이 기록 반영</h2><p class="cap">서버 장애 중 종이 출석부 · 사번 · 항목(AX PLAY · 계단 · 17F · 10F · 커피챗 · 라운지) · 현장 시각 · 미리 세기 → 적용 · 오늘 안에 되돌림</p><button class="btn pri mt" type="button" onclick="ppUpOpen(\'gm\')">종이 기록 반영</button></div></div>'+
     '<p class="cap mt">파일은 서버로 보내지 않고 고른 열만 줄 글자로 보냅니다 · 미리 세기에 문제 줄이 있으면 적용하지 않습니다 · 이름만 있는 줄은 명부에서 찾고, 같은 이름이 여럿이면 줄을 눌러 고릅니다</p>';
 }
-function ppUpOpen(k){ var sp={ pre10:PRE10_UP, gate:GATE_UP, kstaff:KSTAFF_UP }[k]; if(!sp) return; upOpen(sp); S.ui.pup=1; S.ui.lup=0; render(); el("main").scrollTop=0; }
+function ppUpOpen(k){ var sp={ pre10:PRE10_UP, gate:GATE_UP, kstaff:KSTAFF_UP, gm:typeof GM_UP!=="undefined"?GM_UP:null }[k]; if(!sp) return; upOpen(sp); S.ui.pup=1; S.ui.lup=0; render(); el("main").scrollTop=0; }
 function ppUpBack(){ S.ui.pup=0; UP=null; render(); load(false); }
 
 /* ── 한 사람 카드(오른쪽 서랍) ── */

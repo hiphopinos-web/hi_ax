@@ -6,7 +6,7 @@
  * 이름만 있는 줄(sp.byName) = og_gate_find(이름) 로 명부에서 찾는다 · 한 명이면 그 사번 · 여럿이면 「동명이인」 줄 → 줄을 눌러 고름(UP.pick) · 없으면 문제 줄
  * 사번과 이름이 다 있으면 명부 이름과 대조(다르면 문제 줄) */
 var UP=null;
-function upNew(sp){ return { sp:sp, src:"", wb:null, sh:0, aoa:null, head:true, map:{}, mode:"replace", pv:null, sent:null, rows:null, busy:false, err:"", g:null, pick:{}, nmc:{} }; }
+function upNew(sp){ return { sp:sp, src:"", wb:null, sh:0, aoa:null, head:true, map:{}, mode:(sp.modes&&sp.modes[0]&&sp.modes[0][0])||"replace", pv:null, sent:null, rows:null, busy:false, err:"", g:null, pick:{}, nmc:{} }; }
 function upOpen(sp){ UP=upNew(sp); }
 
 /* ── 값 다듬기 ── */
@@ -123,7 +123,7 @@ function upPreview2(recs){
   var lines=[];
   recs.forEach(function(o){ var x=UP.sp.line(o); o.bad=x.bad||""; o.bk=x.k||""; o.emp=x.emp||o.emp0; o.t=x.t; o.s=x.s; o.sid=x.sid; if(!x.bad){ o.li=lines.length; lines.push(x.txt); } });
   var txt=lines.join(UP.sp.sep||"\n");
-  (lines.length?call(UP.sp.preview,{ rows:txt, mode:UP.mode },30000):Promise.resolve({ ok:true, rows:[], diff:{ add:0, del:0, keep:0 }, n:0, resv:{ add:0, move:0, keep:0, none:0, left:0, err:[], cap:[], dupSeat:[] } })).then(function(r){
+  (lines.length?call(UP.sp.preview,Object.assign({ rows:txt, mode:UP.mode },UP.sp.pp||{}),30000):Promise.resolve({ ok:true, rows:[], diff:{ add:0, del:0, keep:0 }, n:0, resv:{ add:0, move:0, keep:0, none:0, left:0, err:[], cap:[], dupSeat:[] } })).then(function(r){
     UP.busy=false;
     if(!r||r.ok===false){ UP.err=r&&r.reason==="rows"?"한 번에 "+n0(r.max)+"줄까지 올립니다":"미리 세지 못했습니다 · "+why(r); upPaint(); return; }
     UP.pv=r; UP.sent=txt; UP.chip0=true;
@@ -131,11 +131,11 @@ function upPreview2(recs){
     upPaint();
   });
 }
-function upBad(){ return (UP.rows||[]).filter(function(o){ return o.k!=="ok"; }).length; }
+function upBad(){ return (UP.rows||[]).filter(UP.sp.isBad||function(o){ return o.k!=="ok"; }).length; }   /* 261017 sp.isBad = 적용을 막는 줄(종이 기록 반영은 「넣지 않음」 줄을 두고 적용) */
 function upApply(){
   var pv=UP.pv, sp=UP.sp; if(!pv||upBad()||!UP.rows.length) return;
   var s=sp.sum(pv, UP.mode);
-  confirmBox({ t:sp.askT, who:s.who, sub:s.sub, ok:"적용", danger:s.danger,
+  confirmBox({ t:sp.askT, who:s.who, sub:s.sub, body:s.body, focus:s.focus, ok:"적용", danger:s.danger,
     run:function(){ return call(sp.apply,Object.assign({ rows:UP.sent, mode:UP.mode, sig:pv.sig, confirm:sp.word },sp.ap?sp.ap(pv):{}),30000); },
     fail:function(r){ return r&&r.reason==="state"?"미리 센 뒤 명단이 바뀌었습니다 · 미리 세기를 다시 합니다":r&&(r.reason==="fmt"||r.reason==="cap"||r.reason==="count")?"서버가 다시 센 결과가 다릅니다 · 미리 세기를 다시 합니다":r&&r.reason==="empty"?"올릴 사람이 없습니다":""; },
     done:function(r){ sp.done(r); } });
@@ -176,7 +176,7 @@ function upPaint(){
   var s3=el("upS3");
   if(!UP.rows){ s3.innerHTML='<h2>3 · 미리 세기 결과</h2>'+emptyH(UP.aoa?"「미리 세기」를 누르면 줄마다 결과가 보입니다":"파일을 먼저 고릅니다"); return; }
   var bad=upBad(), pv=UP.pv;
-  if(!UP.g) UP.g=XG.make({ id:sp.id, file:sp.file, noWho:1, key:function(r){ return String(r.no); }, sort:{ k:"no", d:1 }, chips:sp.chips, cols:sp.cols, h:420, empty:"줄이 없습니다", ph:"사번 · 이름 찾기", onRow:upRowOpen });
+  if(!UP.g) UP.g=XG.make({ id:sp.id, file:sp.file, noWho:sp.who?0:1, key:function(r){ return String(r.no); }, sort:{ k:"no", d:1 }, chips:sp.chips, cols:sp.cols, h:420, empty:"줄이 없습니다", ph:"사번 · 이름 찾기", onRow:upRowOpen });
   if(!el("upKp")) s3.innerHTML='<h2>3 · 미리 세기 결과</h2><div id="upKp"></div><div id="upBand"></div><div id="upTbl"></div><div class="up-go" id="upGo"></div>';
   el("upKp").innerHTML=sp.kpis(pv, UP.rows, UP.mode);
   el("upBand").innerHTML=bad?band("bad","문제 "+n0(bad)+"줄 · 파일을 고친 뒤 다시 올립니다 · 문제가 있으면 적용하지 않습니다"):UP.rows.length?band("info","문제 없음 · 적용할 수 있습니다"):band("warn","올릴 줄이 없습니다");

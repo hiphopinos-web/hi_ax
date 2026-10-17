@@ -9,7 +9,7 @@ var LOG_CAT=[["all","전체",null],["p","사람",function(r){ return r.cat==="p"
 var BYK_N={ "콘솔":"콘솔", "스태프":"스태프 폰", "기기":"코드 기기", "서버":"서버 자동" };
 var GEN_UNDO={ roll_undo:"명단 넣기 · 빼기 되돌리기", resv_set:"라운지 상담 상태 되돌리기", cchat_status:"커피챗 상태 되돌리기", stamp_revoke:"담당자 스탬프 취소", inv_undo:"교환 기록 되돌리기", pre10_undo:"10F 묶음 넣기 되돌리기",
   list_rows_cancel:"커피챗 넣음 취소", lng_pre_row_add:"라운지 명단에 다시 넣기", lng_pre_row_del:"라운지 명단에서 빼기" };   /* 261017 서버 act_log 가 주는 되돌리기 3종 */
-var GEN_NOTE={ roll_undo:"그 뒤에 따로 바뀐 사람은 건너뜀", resv_set:"참가자 앱에 바로 반영 · 승인으로 되돌리면 승인 알림이 다시 나갈 수 있음", cchat_status:"참가자 앱에 바로 반영", stamp_revoke:"룰렛 · 행운권 · 선착순과 엮이면 서버가 막음", inv_undo:"원장에 되돌림 한 줄이 남음(지우지 않음)", pre10_undo:"그 뒤에 10F 명단이 또 바뀌었으면 되돌리지 못함",
+var GEN_NOTE={ roll_undo:"그 뒤에 따로 바뀐 사람은 건너뜀 · 종이 기록 반영은 룰렛 · 행운권 · 선착순과 엮인 줄도 건너뜀", resv_set:"참가자 앱에 바로 반영 · 승인으로 되돌리면 승인 알림이 다시 나갈 수 있음", cchat_status:"참가자 앱에 바로 반영", stamp_revoke:"룰렛 · 행운권 · 선착순과 엮이면 서버가 막음", inv_undo:"원장에 되돌림 한 줄이 남음(지우지 않음)", pre10_undo:"그 뒤에 10F 명단이 또 바뀌었으면 되돌리지 못함",
   list_rows_cancel:"대기 상태일 때만 · 상태 = 취소 · 활동 기록에서 다시 되돌릴 수 있음", lng_pre_row_add:"넣었던 시간 · 미팅룸으로 · 그 자리가 찼으면 서버가 막음", lng_pre_row_del:"체크인 · 완료 전일 때만 · 상담 줄은 취소로 남음" };
 var LG_DONE={};   /* 261017 이 콘솔에서 되돌린 줄(ref → 시각) · 서버가 다시 줄 때까지 단추 숨김 */
 var SCR_URLS=[["추첨 화면","17F 대형 스크린 · 원격 모드","../../draw/?remote=1"],["타자왕 TV","1F 타자왕 순위판","../../tv/typing/"],["타자왕 체험","1F 현장 노트북","../../typing/"],
@@ -47,7 +47,7 @@ SCREENS.log={
 };
 function scrUrl(p){ try{ return new URL(p, location.href).href; }catch(e){ return p; } }
 /* ── 활동 기록 ── */
-function lgWhat(r){ if(r.cnt) return (r.list==="gate"?"접속 허용 명단":r.list==="staff_app"?"앱 스태프 명단":r.list==="staff_wear"?"스태프 의류 명단":"명단")+(r.op==="add"?"에 넣음":"에서 뺌")+" · "+r.cnt+"명"; return String(r.x||"").replace(/상담석/g,"미팅룸"); }   /* 261016 밤 라운지 상담석 = 미팅룸(서버 운영로그 글자는 그대로 · 화면만) */
+function lgWhat(r){ if(r.cnt&&r.list==="stamp") return "종이 기록 일괄 반영 · 스탬프 "+(r.gmN||"")+"줄 · "+r.cnt+"명"; if(r.cnt) return (r.list==="gate"?"접속 허용 명단":r.list==="staff_app"?"앱 스태프 명단":r.list==="staff_wear"?"스태프 의류 명단":"명단")+(r.op==="add"?"에 넣음":"에서 뺌")+" · "+r.cnt+"명"; return String(r.x||"").replace(/상담석/g,"미팅룸"); }   /* 261016 밤 라운지 상담석 = 미팅룸(서버 운영로그 글자는 그대로 · 화면만) */
 function lgUndoTx(r){ var u=r.undo; if(!u) return ""; if(u.done) return u.done+" 되돌림"; if(LG_DONE[r.ref]) return LG_DONE[r.ref]+" 되돌림"; if(u.a==="roulette_undo") return ""; if(u.ok) return GEN_UNDO[u.a]?"가능":""; return u.cur?"지금 "+u.cur:"오늘만 · 지남"; }
 function lgKpi(){ var d=S.data.alog, b=el("lgK"); if(!b) return; if(!d||!d.ok){ b.innerHTML=""; return; } var c=d.cnt||{};
   b.innerHTML=kpi({ l:"오늘 기록", v:n0(c.all), u:"건", s:"스캔 "+n0(c.x)+"건 포함" })+kpi({ l:"되돌릴 수 있는 묶음", v:n0(d.undo), u:"묶음", s:"명단 넣기 · 빼기" })+kpi({ l:"실패", v:n0(d.fail), u:"건", st:num(d.fail)?"warn":"", s:"스캔 거절 등" })+kpi({ l:"실패한 콘솔 쓰기", v:n0(d.wfailN||0), u:"건", st:num(d.wfailN)?"warn":"", s:"서버가 거절한 처리" }); }
