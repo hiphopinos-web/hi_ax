@@ -2,7 +2,7 @@
  * 칩 = 활동 기록 · 급한 단추 · 서버 상태 · 화면 주소 · 스태프 코드
  * 활동 기록 = act_log(오늘 · 최근 200줄) 명단 · 줄을 누르면 서랍 · 되돌리기(roll_undo 묶음 · resv_set · cchat_status · stamp_revoke · inv_undo · pre10_undo · 서버가 준 undo 그대로)
  * 급한 단추 3개 = 룰렛 소진 안내(roulette_out · 되돌리기 토스트) · 푸시 정지(push_cfg · 알림 탭과 같은 함수) · 앱 접속 범위(og_scope_set · 확인 창)
- * 서버 상태 = now_board · 이 콘솔의 최근 호출(NET) · 화면 주소 = 추첨 · 타자왕 TV · 스탬프 월(열기 · 복사) · 261016 체크인 창구 · 대기판 걷음
+ * 서버 상태 = now_board · 이 콘솔의 최근 호출(NET) · 화면 주소 = 추첨 · 타자왕 TV · 타자왕 체험(열기 · 복사) · 261016 체크인 창구 · 대기판 걷음 · 261017 스탬프 월 걷음(사이니지 폐기)
  * 스태프 코드 = adm_roster.staffCode(설정됨 · 비어 있음만 · 값은 받지도 그리지도 않음) · 바꾸기 · 비우기 = adm_code_set(POST · 확인 창) · 운영 설정 76개 「바꾸기」는 넣지 않는다(결정 · 대화로 처리) */
 var LG_SUBS=[["log","활동 기록"],["urgent","급한 단추"],["srv","서버 상태"],["urls","화면 주소"],["qr","현장 QR"],["code","스태프 코드"]];
 var LOG_CAT=[["all","전체",null],["p","사람",function(r){ return r.cat==="p"; }],["r","명단",function(r){ return r.cat==="r"; }],["s","스탬프 · 경품",function(r){ return r.cat==="s"; }],["n","알림",function(r){ return r.cat==="n"; }],["c","설정",function(r){ return r.cat==="c"; }],["x","스캔",function(r){ return r.cat==="x"; }],["ck","체크인존",function(r){ return r.k==="ck_gate"; }],["u","되돌릴 수 있음",function(r){ return !!(r.undo&&r.undo.ok&&!r.undo.done&&!LG_DONE[r.ref]); }],["f","실패",function(r){ return /^x:/.test(r.res||""); }]];
@@ -12,7 +12,7 @@ var GEN_UNDO={ roll_undo:"명단 넣기 · 빼기 되돌리기", resv_set:"라�
 var GEN_NOTE={ roll_undo:"그 뒤에 따로 바뀐 사람은 건너뜀", resv_set:"참가자 앱에 바로 반영 · 승인으로 되돌리면 승인 알림이 다시 나갈 수 있음", cchat_status:"참가자 앱에 바로 반영", stamp_revoke:"룰렛 · 행운권 · 선착순과 엮이면 서버가 막음", inv_undo:"원장에 되돌림 한 줄이 남음(지우지 않음)", pre10_undo:"그 뒤에 10F 명단이 또 바뀌었으면 되돌리지 못함",
   list_rows_cancel:"대기 상태일 때만 · 상태 = 취소 · 활동 기록에서 다시 되돌릴 수 있음", lng_pre_row_add:"넣었던 시간 · 미팅룸으로 · 그 자리가 찼으면 서버가 막음", lng_pre_row_del:"체크인 · 완료 전일 때만 · 상담 줄은 취소로 남음" };
 var LG_DONE={};   /* 261017 이 콘솔에서 되돌린 줄(ref → 시각) · 서버가 다시 줄 때까지 단추 숨김 */
-var SCR_URLS=[["추첨 화면","17F 대형 스크린 · 원격 모드","../../draw/?remote=1"],["타자왕 TV","1F 타자왕 순위판","../../tv/typing/"],["스탬프 월","1F 스탠바이미","../../wall/"],["타자왕 체험","1F 현장 노트북","../../typing/"]];
+var SCR_URLS=[["추첨 화면","17F 대형 스크린 · 원격 모드","../../draw/?remote=1"],["타자왕 TV","1F 타자왕 순위판","../../tv/typing/"],["타자왕 체험","1F 현장 노트북","../../typing/"]];
 function lgSub(){ return subsOf(LG_SUBS,"log"); }
 SCREENS.log={
   title:"기록 · 설정", desc:"",
