@@ -745,7 +745,7 @@ function myResv() {
 var DAPSEL = null;
 function dapPick(t) { if (resvTaken(t)) return; DAPSEL = DAPSEL === t ? null : t; App.render(); }
 /* v5.60 G 「진행 방식 보기」 모달 두 개(dapModal · cchatModal)를 지웠다 · 내용은 상세 본문 한 곳에(지운 문장 = 00–10분 업무 설명 · 10–20분 병목 · 20–30분 개선방안 · 사은품 띠 · 커피챗 주제 소개 → 각자 고민 → 멘토와 다음 한 걸음 · 테이블 카드 안내) */
-/* 커피챗 취소 · 과제상담(resv_cancel)과 같은 흐름 (260830 사용자 지적: 취소할 수가 없다).
+/* 커피챗 취소 (260830 사용자 지적: 취소할 수가 없다) · v7.75 (사용자 확정 261017) AX 라운지(resv_cancel)는 참가자 취소 없음 · 커피챗만 이 흐름.
    서버에 `cchat_cancel` 이 아직 없으면 로컬만 정리하고 그 사실을 그대로 알린다.
    조용히 로컬만 지우면 매칭 담당자는 그 자리를 계속 비워 두게 된다. */
 var CCHAT_CX_TS = 0;

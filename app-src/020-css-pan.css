@@ -195,7 +195,7 @@
 .axs-pan .axs-f1d .axs-sign { background: var(--ax-color-divider); color: var(--ax-color-body); }   /* v7.69 옛 구역 표(axs-f1tb) 자리 = 설명 칸 */
 /* 정보 줄 = 알약 라벨(주황 테두리 · 주황 글자) + 값 */
 .axs-pan .axs-hrs { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--ax-space-8) var(--ax-space-12); margin: calc(var(--ax-space-8) * -1) 0 calc(var(--ax-space-4) * -1); }
-.axs-pan .axs-hrs .pl { display: inline-flex; align-items: center; justify-content: center; min-height: 26px; padding: 0 10px; border: 1px solid var(--ax-color-brand); border-radius: 999px; color: var(--ax-color-brandText); font: var(--ax-type-t7); font-weight: 600; white-space: nowrap; }
+.axs-pan .axs-hrs .pl, .axs-pan .axs-pbq .pl { display: inline-flex; align-items: center; justify-content: center; min-height: 26px; padding: 0 10px; border: 1px solid var(--ax-color-brand); border-radius: 999px; color: var(--ax-color-brandText); font: var(--ax-type-t7); font-weight: 600; white-space: nowrap; }
 .axs-pan .axs-hrs .vs { display: flex; flex-direction: column; }
 .axs-pan .axs-hrs .v { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); white-space: nowrap; line-height: 26px; }
 /* TIME EVENT 카드 · 테두리 O25 · 세 줄 = 주황 점 목록(둘째 줄 내어쓰기) */
@@ -203,10 +203,14 @@
 .axs-pan .axs-pbf .h { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ax-space-8); }
 .axs-pan .axs-pbf .h b { font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
 @media (max-width: 374px) { .axs-pan .axs-pbf { padding: var(--ax-space-20); } .axs-pan .axs-pbf .h { gap: 6px; } .axs-pan .axs-pbf .h b { font: var(--ax-type-t6-strong); } }   /* 360 · 간판 + 이름 + 칩 한 줄 */
-.axs-pan .axs-pbl { display: flex; flex-direction: column; gap: var(--ax-space-4); margin: 0; padding: 0; list-style: none; }
-.axs-pan .axs-pbl li { position: relative; padding-left: calc(var(--axs-dot) + var(--axs-dot-gap)); font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; }
-.axs-pan .axs-pbl li::before { content: ""; position: absolute; left: 0; top: var(--axs-dot-top); width: var(--axs-dot); height: var(--axs-dot); border-radius: 50%; background: var(--ax-color-brand); }
-.axs-pan .axs-pbl b { font-weight: 600; color: var(--ax-color-ink); }
+.axs-pan .axs-pbq { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--ax-space-8) var(--ax-space-12); align-items: start; }   /* v7.75 (사용자 261017) 「언제?」 「어떻게?」 라벨 줄 · 알약 = 운영 시간 알약(.axs-hrs .pl)과 같은 규칙 · 같은 너비(격자 열) · 값 시작선 한 열 · 옛 주황 점 목록 axs-pbl */
+.axs-pan .axs-pbq .r { display: contents; }
+.axs-pan .axs-pbq .pl { justify-self: stretch; }
+.axs-pan .axs-pbq .vs { display: flex; flex-direction: column; min-width: 0; }
+.axs-pan .axs-pbq .v { font: var(--ax-type-t6); line-height: 26px; color: var(--ax-color-body); word-break: keep-all; }
+.axs-pan .axs-pbq b { font-weight: 600; color: var(--ax-color-ink); }
+@media (max-width: 374px) { .fs-big .axs-pan .axs-pbq { grid-template-columns: minmax(0, 1fr); gap: var(--ax-space-4); } .fs-big .axs-pan .axs-pbq .pl { justify-self: start; min-width: 5.6em; } .fs-big .axs-pan .axs-pbq .r + .r .pl { margin-top: var(--ax-space-8); } }   /* 360 큰글씨 = 라벨 위 · 값 아래(값 칸 넓게 · 넘침 0) · 두 라벨 같은 너비 */
+.axs-pan .axs-pbtt .axs-chip { min-height: 24px; margin-left: 2px; padding: 0 var(--ax-space-8); vertical-align: 0.2em; }   /* v7.75 선착순 시트 제목 끝 「10/26」 알약 · 제목 글자 가운데 높이 */
 .axs-pan .axs-pbfm { min-height: var(--ax-touch-size); margin: calc(var(--ax-space-8) * -1) 0; }
 .axs-pan .axs-pbfs { display: flex; flex-direction: column; gap: var(--ax-space-12); }
 .axs-pan .axs-pbfs .axs-evps { margin-top: 0; }
@@ -236,18 +240,20 @@
 .axs-pan .axs-f1map .hl.on { opacity: 1; transition: opacity var(--ax-motion-in) var(--ax-motion-ease-fade); }
 @media (prefers-reduced-motion: reduce) { .axs-pan .axs-f1map .hl, .axs-pan .axs-f1map .hl.on { transition: none; } }
 /* 설명 칸 = 1행 간판 + 스탬프 칸 · 2행 하는 일 · 3행 「자세히 보기 ›」 · 내용 바뀜 = 떠오름(AXM.rise) · 큰글씨 = 스탬프 칸이 하는 일 아래 · 옛 구역 표(axs-f1tb) 대체 */
-.axs-pan .axs-f1d { padding: var(--ax-space-16) var(--ax-space-20) var(--ax-space-8); }
-.axs-pan .axs-f1d .zr { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "zsg bn" "ztx ztx" "zgo zgo"; column-gap: var(--ax-space-12); row-gap: 6px; align-items: center; }
+.axs-pan .axs-f1d { padding: 10px var(--ax-space-20) var(--ax-space-4); }   /* v7.75 (사용자 261017 iPhone SE 375×667) 위아래 여백 16/8 → 10/4 */
+.axs-pan .axs-f1d .zr { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "zsg zgo" "ztx bn"; column-gap: var(--ax-space-12); row-gap: 6px; align-items: center; }
 .axs-pan .axs-f1d .zsg { grid-area: zsg; display: flex; align-items: center; min-width: 0; min-height: 26px; }
 .axs-pan .axs-f1d .ztx { grid-area: ztx; min-width: 0; font: var(--ax-type-t6); color: var(--ax-color-ink); word-break: keep-all; }
 .axs-pan .axs-f1d .bn { grid-area: bn; justify-self: end; display: flex; align-items: center; gap: 6px; min-width: 0; }
 .axs-pan .axs-f1d .bn svg { flex: none; width: 20px; height: 20px; }
 .axs-pan .axs-f1d .bn .t { font: var(--ax-type-t7); font-weight: 600; color: var(--ax-color-ink); white-space: nowrap; }
 .axs-pan .axs-f1d .bn.on .t { color: var(--ax-color-brandText); }
-.axs-pan .axs-f1d .zgo { grid-area: zgo; justify-self: start; min-height: var(--ax-touch-size); color: var(--ax-color-body); }
+.axs-pan .axs-f1d .zgo { grid-area: zgo; justify-self: end; min-height: var(--ax-touch-size); margin: calc((26px - var(--ax-touch-size)) / 2) 0; color: var(--ax-color-body); }   /* v7.75 (사용자 261017) 간판 줄 오른쪽 · 누르는 칸 그대로 · 줄 높이는 간판(26)만큼(위아래 음수 여백) · 스탬프 칸은 둘째 줄 오른쪽 */
 .axs-pan .axs-f1d .stl { display: inline-flex; align-items: center; gap: 6px; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
 .axs-pan .axs-f1d .stl svg { flex: none; width: 22px; height: 22px; color: var(--ax-color-body); }
-.fs-big .axs-pan .axs-f1d .zr { grid-template-columns: minmax(0, 1fr); grid-template-areas: "zsg" "ztx" "bn" "zgo"; }
+.axs-pan .axs-f1d .zr.nb { grid-template-areas: "zsg zgo" "ztx ztx"; }   /* v7.75 스탬프 칸이 없는 구역(AX VISION) = 하는 일이 줄 끝까지 */
+.axs-pan .axs-f1d .zr.nb .bn { display: none; }
+.fs-big .axs-pan .axs-f1d .zr { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "zsg zgo" "ztx ztx" "bn bn"; }
 .fs-big .axs-pan .axs-f1d .bn { justify-self: start; }
 .fs-big .axs-pan .axs-f1d .bn:empty { display: none; }
 /* v7.71 (사용자 261017) 지도 아래 각주 한 줄 「* 주차장 체크인존(선착순 참여상 수령)」 · 누르면 WELCOME 시트 · 한 줄(괄호 묶음은 가르지 않음)

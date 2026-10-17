@@ -511,8 +511,11 @@ function pbfLive() { if (!pbfDay()) return false; var m = hmNow(); return m >= t
 function pbfChip() { return '<span class="axs-chip">' + (pbfDay() ? "오늘" : "10/26") + "</span>"; }
 function pbfSign(lg) { return zoneSign("TIME EVENT", "tev" + (lg ? " lg" : "")); }
 function pbfNeedRows() { return [["cam", "포토부스 사진 촬영 후 받기", "소진 시 종료"], ["coffee", pbfTxt(0), "", pbfNw(esc(pbfTxt(0)))], ["time", pbfTxt(1), "", pbfNw(esc(pbfTxt(1)))]]; }   /* r[3] = 굵은 줄 HTML(「 · 」 자리에서만 꺾임 · 목록 모양 없음 · needBoxHtml) */
+/* v7.75 (사용자 261017) 질문 라벨 줄 「언제?」(PB_FCFS 두 줄) · 「어떻게?」(PB_FCFS_HOW) · 라벨 = 정보 줄 알약(운영 시간 hrsHtml 과 같은 .pl · 같은 너비) · 값 시작선 한 열(격자)
+   선착순 시트 · 1F 칸 TIME EVENT 카드가 같이 쓴다 · 옛 주황 점 세 줄(axs-pbl) */
 function pbfRowsHtml() {
-  return '<ul class="axs-pbl">' + PB_FCFS.map(function (r) { return "<li>" + pbfNw("<b>" + esc(r[0]) + " ~</b> : " + esc(r[1])) + "</li>"; }).join("") + "<li>" + pbfNw(esc(PB_FCFS_HOW)) + "</li></ul>";
+  var row = function (q, vs) { return '<div class="r"><span class="pl">' + q + '</span><span class="vs">' + vs.map(function (h) { return '<span class="v">' + h + "</span>"; }).join("") + "</span></div>"; };
+  return '<div class="axs-pbq">' + row("언제?", PB_FCFS.map(function (r) { return pbfNw("<b>" + esc(r[0]) + " ~</b> : " + esc(r[1])); })) + row("어떻게?", [pbfNw(esc(PB_FCFS_HOW))]) + "</div>";
 }
 /* 줄 안 「 · 」 조각 = 줄바꿈 없는 덩어리 · 넘치면 「 · 」 자리에서 꺾여 둘째 줄이 「· 」로 시작(주황 점 목록 줄 안이라 segHtml 목록 모양을 쓰지 않는다 · 점 두 개 방지) */
 function pbfNw(h) { return String(h).split(" · ").map(function (t, i) { return '<span class="axs-nwr">' + (i ? "· " : "") + t + "</span>"; }).join(" ");
@@ -544,7 +547,8 @@ function pbfAutoSoon() {
 function navTap(t) { var was = App.tabOf(App.current); App.tab(t); if (t === "guide" && was !== "guide") pbfAutoSoon(); }
 /* 시트 본문 · 세 줄 → 쿠키 세트 사진 → EVENT 시트로 가는 한 줄 */
 function pbfSheet() {
-  return { cls: "axs-pan", fit: true, name: pbfSign(true), chips: pbfChip(), title: "선착순 이벤트",
+  /* v7.75 (사용자 261017) 제목 「1층 포토부스 선착순 이벤트」 · 「10/26」(당일 「오늘」) 알약 = 제목 끝에 붙음(마지막 낱말과 한 덩어리 · 넘치면 제목이 꺾여도 알약은 끝 낱말과 같이) · 옛 칩 줄 + 제목 「선착순 이벤트」 */
+  return { cls: "axs-pan", fit: true, name: pbfSign(true), chips: "", title: '1층 포토부스 선착순 <span class="axs-nwr axs-pbtt">이벤트 ' + pbfChip() + "</span>",
     body: '<div class="axs-pbfs">' + pbfRowsHtml() + evPicHtml() + '<button type="button" class="ax-link axs-plain axs-self" onclick="zoneOpen(\'event\')">' + lnkChev("EVENT 부스 보기") + "</button></div>", foot: "" };
 }
 /* ── 1F 칸 지도 · 표의 스탬프 칸 · 받기 전 회색 · 받은 뒤 주황(D10 · 스탬프 탭과 같은 판정 S stamps) · 아이콘 = 시안 그대로(도장 · 룰렛 · 메달 · 계단) ── */
@@ -576,12 +580,13 @@ function f1Cell(id) {
   var g = f1Got(st); return [f1Seal(g), g ? "받음" : "스탬프 1개", g];
 }
 function f1Go(id) { return id === "stair" ? "stairOpen()" : "zoneOpen('" + id + "')"; }
-/* v7.69 (사용자 확정 261017) 지도 아래 설명 칸 한 구역 = 1행 간판 + 오른쪽 스탬프 칸 · 2행 하는 일 한 줄 · 3행 「자세히 보기 ›」(구역 시트 · 계단 동행) · 큰글씨 = 스탬프 칸이 하는 일 아래(CSS)
+/* v7.75 (사용자 261017 iPhone SE) 1행 간판 + 오른쪽 「자세히 보기 ›」 · 2행 하는 일 + 오른쪽 스탬프 칸 · 큰글씨 = 스탬프 칸이 하는 일 아래(CSS · 마크업 그대로)
+   v7.69 (사용자 확정 261017) 지도 아래 설명 칸 한 구역 = 1행 간판 + 오른쪽 스탬프 칸 · 2행 하는 일 한 줄 · 3행 「자세히 보기 ›」(구역 시트 · 계단 동행) · 큰글씨 = 스탬프 칸이 하는 일 아래(CSS)
    옛 v7.67 구역 표 7줄(f1TableHtml · 줄 전체 = 시트 단추)은 지웠다 · 지도에서 구역을 누르면 이 칸 내용만 바뀐다(f1Pick) */
 function zoneRowHtml(id) {
   var z = id === "stair" ? null : zoneById(id), c = f1Cell(id);
   var sg = z ? zoneSign(z.sign) : '<span class="stl">' + f1Stair() + "계단</span>", tx = z ? z.tb : "계단으로 한 층 이동";
-  return '<div class="zr" data-zone="' + id + '"><span class="zsg">' + sg + "</span>" +
+  return '<div class="zr' + (c ? "" : " nb") + '" data-zone="' + id + '"><span class="zsg">' + sg + "</span>" +
     '<span class="bn' + (c && c[2] ? " on" : "") + '">' + (c ? c[0] + '<span class="t">' + esc(c[1]) + "</span>" : "") + "</span>" +
     '<span class="ztx">' + segHtml(esc(tx)) + '</span><button type="button" class="ax-link axs-plain axs-self zgo" onclick="' + f1Go(id) + '" aria-label="' + esc((z ? z.hdr || z.sign : "계단") + " 자세히 보기") + '">' + lnkChev("자세히 보기") + "</button></div>";
 }
@@ -800,7 +805,6 @@ function progDetail(s) {
   var D = { cat: "", org: "", title: s.ttl, who: "", whoSub: "", av: "", st: "", stc: "", kv: [], cfKv: [], extra: "", after: "", secT: "참여 전 확인해 주세요", secB: "", need: "", link: "", help: "", btn: "" };   /* 261008 need = 「받으려면」 상자(needBoxHtml · 확인 블록 제목 아래 · 회색 맨글자 대신) · v5.69 after = 확인 블록 아래(상담 완료 사은품 코드 · 「아래 코드를」 문장 바로 아래) */
   var day = "10월 26일 · ", pl = s.id === "expo" ? "1F 로비" : s.id === "dap" ? "1F AX 라운지" : sessPlace(s);
   var timeBtn = progBtn("전체 시간표 보기", "homeSched()");
-  var cxBtn = progBtn("신청 취소하기", "progCancelOpen(\'" + s.id + "\')", "axs-btn-danger", "cxBtn");
   var st = progState(s); D.st = st[0]; D.stc = st[1];
   if (s.kind === "stage") {
     /* v4.99 Intro · Outro 상세 · 카드(분류 칩 · 제목 · 사람 · 사실 표) + 안내 한 묶음 · 사은품 · 경품 이름은 쓰지 않는다 */
@@ -870,7 +874,7 @@ function progDetail(s) {
       D.secB = r.status === "checked" ? "업무 설명 → 병목 → 개선방안 순서로 진행돼요." : r.status === "done" ? "아래 코드를 AX 라운지 데스크에 보여 주고 사은품을 받으세요." : "";
       if (r.status === "done") D.after = '<div class="ax-inset ax-stack-tight axs-gift"><p class="ax-card-title">사은품 교환권 · 1회</p>' + qrHtml() + '<p class="ax-type-t5-strong axs-center-tx">GIFT-' + esc((S.get("user", {}) || {}).empId || "") + '</p></div>';   /* v5.60 W4 「중복 수령 방지 코드예요」 줄 삭제 */
       if (r.status !== "checked" && r.status !== "done") D.need = needBoxHtml("스탬프 받으려면", "스탬프 받으려면", [["qr", "상담 시작 · 끝에 스태프에게 내 QR 보여 주기", "상담 시간에 1F AX 라운지에서"], ["stamp", "종료 때 프로그램 참여 2개", progSrcTxt() + " 합쳐 최대 2개"]]);   /* 261013 참석 확인 스탬프 ln · 261016 (사용자 스태프 QR 정리) 라운지 체크인 = 출석만 · 종료 스캔 = 2개 */
-      if (RESV_LIVE.indexOf(r.status) >= 0 && r.status !== "checked") { D.help = "참여가 어려우면 신청을 취소할 수 있어요"; D.btn = progBtn("내 QR", "qrPanelOpen('mine')") + cxBtn; }
+      if (RESV_LIVE.indexOf(r.status) >= 0 && r.status !== "checked") { D.help = DAP_CX_TXT; D.btn = progBtn("내 QR", "qrPanelOpen('mine')"); }   /* v7.75 (사용자 확정 261017 「AX 라운지는 신청 취소가 안 되는 게 맞음」) 신청 취소 단추 · 시트 없음 · 안내 한 줄(작은 회색 help) */
       else { D.help = ""; D.btn = progBtn("나의 일정 보기", "mySched()", "ax-button-weak"); }
       return D;
     }
@@ -1066,16 +1070,17 @@ function sheetClose(silent) {
   if (oc) { try { oc(); } catch (e) {} }
   if (!silent && SHEET.back) { var t = el(SHEET.back); if (t) t.focus(); }
 }
-/* 신청 취소 확인 (M03-cancel) · 실패하면 신청을 그대로 유지한다 */
+/* 신청 취소 확인 (M03-cancel) · 실패하면 신청을 그대로 유지한다
+   v7.75 (사용자 확정 261017) 커피챗만 · AX 라운지(dap)는 참가자 취소 없음(DAP_CX_TXT · 서버 resv_cancel = nocancel · 취소 · 노쇼는 콘솔 resv_set) */
+var DAP_CX_TXT = "신청 취소는 데이터사이언스파트로 연락하세요";
 function progCancelOpen(id) {
   var s = progById(id);
   if (!s) return;
-  if (id !== "dap" && id !== "cchat") { var m = sessMine(id); if (m && m.test) toast("테스트 항목이에요 · 서버에 쓰지 않습니다"); return; }   /* v4.26 세션 신청 취소(sess_cancel)는 없다 */
+  if (id !== "cchat") { var m = sessMine(id); if (m && m.test) toast("테스트 항목이에요 · 서버에 쓰지 않습니다"); return; }   /* v4.26 세션 신청 취소(sess_cancel)는 없다 */
   var d = progDetail(s);
-  var when = id === "dap" ? (myResv() || {}).slot || "" : id === "cchat" ? (S.get("cchat", {}) || {}).round || "" : progTm(s.tm);
-  var ccw = id === "cchat";   /* v7.39 (사용자 261016 D4) 커피챗 신청 취소 = 글 · 아이디어 한 줄 스탬프는 그대로 */
-  sheetOpen({ id: "cancel", arg: id, danger: true, back: "cxBtn", title: ccw ? "커피챗 신청을 취소할까요?" : "신청을 취소할까요?",
-    lead: esc(d.cat + (d.org && d.cat.indexOf(d.org) < 0 ? " · " + d.org : "")) + (when ? "<br>10월 26일 " + esc(when) : "") + (ccw ? "<br>상담 내용은 아이디어 한 줄로 남아 있어요" : ""),
+  var when = (S.get("cchat", {}) || {}).round || "";   /* v7.39 (사용자 261016 D4) 커피챗 신청 취소 = 글 · 아이디어 한 줄 스탬프는 그대로 */
+  sheetOpen({ id: "cancel", arg: id, danger: true, back: "cxBtn", title: "커피챗 신청을 취소할까요?",
+    lead: esc(d.cat + (d.org && d.cat.indexOf(d.org) < 0 ? " · " + d.org : "")) + (when ? "<br>10월 26일 " + esc(when) : "") + "<br>상담 내용은 아이디어 한 줄로 남아 있어요",
     keep: "신청 유지하기", go: "progCancelGo()", goLbl: "신청 취소하기", goBusy: "취소하는 중" });
 }
 /* 신청 확인 (P03) · v4.18 전체 화면 대신 시트 · 큰글씨에서도 짧게 유지되는 내용만 담는다 */
@@ -1092,17 +1097,16 @@ function progCancelGo() {
   var id = SHEET.spec.arg, u = S.get("user", {}) || {};
   sheetBusy(true);
   var ok = function () {
-    if (id === "dap") S.set("resv", resvAll().filter(function (r) { return !(r.mine && RESV_LIVE.indexOf(r.status) >= 0); }));
-    if (id === "cchat") { S.set("cchat", null); S.set("cchat_srv", null); CCHAT_CX_TS = Date.now(); }
+    S.set("cchat", null); S.set("cchat_srv", null); CCHAT_CX_TS = Date.now();
     sheetClose(true);
-    toast(id === "cchat" ? "커피챗 신청을 취소했어요" : "신청을 취소했어요");
+    toast("커피챗 신청을 취소했어요");
     mySched();
     delete App.from.guide_time;   /* 내 일정에서 뒤로 = 나의 참여 (취소한 상세로 돌아가지 않는다) */
   };
   var bad = function (m) { sheetFail({ t: m, b: "신청은 그대로 유지돼요." }); };
   if (!BE.on || !u.empId) return ok();
-  if (id !== "dap" && id !== "cchat") return;
-  beCall({ action: id === "dap" ? "resv_cancel" : "cchat_cancel", emp: u.empId }, function (res) {
+  if (id !== "cchat") return;   /* v7.75 AX 라운지(dap) 취소 호출 없음 */
+  beCall({ action: "cchat_cancel", emp: u.empId }, function (res) {
     /* v4.68 (QA 5 교차) notfound + cur = 운영자가 같은 순간 노쇼 · 입장(체크인 · 참석) · 완료로 처리해 서버에는 취소할 신청이 없다(새 서버만 cur)
      *   예전에는 「신청을 취소했어요」가 떠서 참가자는 취소된 줄 알고 운영 기록은 노쇼였다 · 시트에 그대로 알리고 곧바로 동기화(지금 상태) */
     if (res && res.reason === "notfound" && res.cur) { sheetFail({ t: "취소되지 않았어요", b: "이미 " + ({ "노쇼": "노쇼", "체크인": "입장", "참석": "입장", "완료": "완료" }[res.cur] || res.cur) + " 처리된 신청이에요" }); beSync(); return; }
@@ -1202,24 +1206,27 @@ setInterval(function () {
   var ph = evPhase(), k = ph + (ph === "before" ? -1 : ph === "after" ? 99999 : hmNow());
   if (k !== MYFL_KEY) { MYFL_KEY = k; f.innerHTML = progFlowHtml(0, myFlowItems()); }
 }, 20000);
-/* v5.65 나의 참여 › 나의 일정 갈래 · 이름은 위 세그먼트가 말한다(옛 제목 줄 「나의 일정」 삭제 · 날짜 · 개수 한 줄만) */
+/* v7.75 (사용자 확정 261017) 나의 일정 아래 취소 안내 · AX 라운지 = 데이터사이언스파트로 연락(앱 취소 없음) · 커피챗 = 신청 상세 · 둘 다면 이름을 붙여 두 줄 */
+function myCxHtml(items) {
+  var rv = items.some(function (x) { return x.kind === "resv"; }), cc = items.some(function (x) { return x.kind === "cchat"; });
+  return (rv ? '<p class="ax-meta">' + (cc ? "AX 라운지 " : "") + DAP_CX_TXT + "</p>" : "") + (cc ? '<p class="ax-meta">' + (rv ? "커피챗 " : "") + "신청 취소는 신청 상세에서 할 수 있어요</p>" : "");
+}
+/* v5.65 나의 참여 › 나의 일정 갈래 ·이름은 위 세그먼트가 말한다(옛 제목 줄 「나의 일정」 삭제 · 날짜 · 개수 한 줄만) */
 function myAgendaHtml() {
   var items = myAgendaItems(), n = items.length;
   if (myFlowOn()) {   /* v6.04 10F 명단 = 하루 흐름 */
     var fl = myFlowItems(), nm = fl.filter(function (o) { return o.mine; }).length, rws = items.filter(function (x) { return !x.iv || myAgendaNow(x); });
-    var cx1 = items.some(function (x) { return x.kind === "resv" || x.kind === "cchat"; });
     return '<section class="axs-msec" id="mysched"><p class="ax-meta">10월 26일 · 신청 ' + nm + "개 · 자유 참석 " + (fl.length - nm) + "개</p>" +
       (rws.length ? '<div class="axs-tt axs-mtt">' + rws.map(myAgendaRow).join("") + "</div>" : "") +
       '<div class="axs-fl axs-myfl" id="myFlow">' + progFlowHtml(0, fl) + "</div>" +
-      (cx1 ? '<p class="ax-meta">신청 취소는 신청 상세에서 할 수 있어요</p>' : "") + "</section>";
+      myCxHtml(items) + "</section>";
   }
   var head = n ? '<p class="ax-meta">10월 26일 · ' + n + "개</p>" : "";
   if (!n) return '<section class="axs-msec" id="mysched">' + head + '<p class="ax-description segfix">' + segHtml("신청한 프로그램이 아직 없어요 · 17F 강연과 1F 전시는 신청 없이 갈 수 있어요") + '</p>' +
     '<button type="button" class="ax-button ax-button-weak" onclick="progAlwaysGo()">1F 보기</button></section>';   /* v7.67 (사용자 261017 D1) 옛 「상시 운영 보기」 · 목적지 그대로(1F 칸) */
-  var cx = items.some(function (x) { return x.kind === "resv" || x.kind === "cchat"; });
   return '<section class="axs-msec" id="mysched">' + head +
     (items.length ? '<div class="axs-tt axs-mtt">' + items.map(myAgendaRow).join("") + "</div>" : "") +
-    (cx ? '<p class="ax-meta">신청 취소는 신청 상세에서 할 수 있어요</p>' : "") + "</section>";
+    myCxHtml(items) + "</section>";
 }
 
 /* ═══ 다른 화면에서 특정 층으로 들어오는 통로 (스탬프 03 · 홈 배너 등) ═══
