@@ -74,7 +74,7 @@
     rounds: [
       { name: "6등", prize: "현대백화점 상품권 10만원", count: 3 },
       { name: "5등", prize: "풀리오 종아리 마사지기", count: 2 },
-      { name: "4등", prize: "에어팟 4", count: 2 },
+      { name: "4등", prize: "에어팟 5", count: 2 },
       { name: "3등", prize: "미닉스 음식물 처리기", count: 1 },
       { name: "2등", prize: "신라호텔 파크뷰 뷔페 식사권 2매", count: 1 },
       { name: "1등", prize: "아이패드", count: 1 }
@@ -1462,7 +1462,7 @@
   var LK7 = { pics: ["rl1_tumbler_v2", "rl4_sticker_v2", "rl2_keyring_v2", "rl5_pen_v2"] };
   function lk7Html() {
     return '<span class="pics">' + LK7.pics.map(function (f) { var k = (PIC_K[f] || 0.59) * 100 + "%"; return '<span><img src="' + PIC_DIR + f + '.webp" alt="" decoding="async" style="width:' + k + ";height:" + k + '"></span>'; }).join("") + "</span>" +
-      "<span><b>7등 랜덤 굿즈 · 수량 추후 공개</b><em>행사 뒤 추첨 · 행랑 발송</em></span>";
+      "<span><b>7등 랜덤 굿즈 · 무작위 경품</b><em>행사 종료 후 행운권 중 랜덤 선정 후 행랑 발송</em></span>";
   }
   function fitText(el, mx, mn, lines) {
     if (!el) return;
