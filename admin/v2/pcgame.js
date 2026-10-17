@@ -5,7 +5,7 @@
  * 초기화 = test_reset(dry 1 = 지울 줄 수 · 확인 문구 「처음상태」 · 실행은 콘솔 사람 로그인 · POST) · 행사일에는 실제 사번 eventday 거절 · 테스트 사번은 언제든
  *   지우는 탭 = 서버 TEST_RESET_TABS(게임 · 타자 · 대전 · 닉네임 · 참여 · 응모권 · 출석 · 접속 · 추첨 체크인 · 아이디어 · 계단 · 상담 · 커피챗 · 분실 요청 · 담당 표시) + PIN
  *   남는 것 = 계정 · 설문 응답 · 선착순 · 참여상 · 럭키드로우 · 재고 장부 · 옷 사이즈 · 번호표 · 체크인 번호 · 명단 · 알림 기기 · 운영로그 */
-var GAME_NM=[["pang","AX 팡"],["jump","점프"],["tetris","테트리스"],["ox","AX 퀴즈"],["word","기억력(옛 기록)"]];
+var GAME_NM=[["pang","AX 팡"],["jump","점프"],["tetris","테트리스"],["ox","AX 퀴즈"]];
 var MINI3=["pang","jump","tetris"];
 function pcUsrLoad(e, s){ call("usr_info",{ emp:e }).then(function(r){ if(s!==PC.seq) return; PC.u=r||{ ok:false }; pcDraw(); }); }
 function pcGameHtml(d){
@@ -17,7 +17,7 @@ function pcGameHtml(d){
   var done=MINI3.filter(function(g){ return old?n(g)>0:G[g]&&G[g].best!=null; }).length;
   var rows=[], none=[];
   GAME_NM.forEach(function(x){ var g=x[0], o=G[g]||{}, k=n(g);
-    if(!k){ if(g!=="word") none.push(x[1]); return; }
+    if(!k){ none.push(x[1]); return; }
     var best=old?"-":g==="ox"?(o.of?"정답 "+n0(o.right)+" / "+n0(o.of):"-"):o.best!=null?n0(o.best)+"점"+(o.rank?" · "+n0(o.rank)+"위":""):"-";
     rows.push([x[1], best, k, o.last]); });
   var ts=T.site||{}, tr=T.race||{}, tk=old?num(cnt.type):num(ts.n);
