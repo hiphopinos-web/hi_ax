@@ -83,7 +83,7 @@ function myItems(withTest) {
       call: qc, kind: "queue:" + qk, iv: null });
   }
   var sl0 = stairState().leg;   /* v4.06 계단 진행 중 · 도착 층 QR 을 찍을 때까지 맨 위 */
-  if (sl0) out.push({ min: -1, go: "stairOpen()", badge: "계단", label: "지금", title: "계단 이용", gTitle: "계단 이용", sub: sl0.fl + "F 시작 · 도착 층 QR", gSub: sl0.fl + "F " + (sl0.route || stairRoute(sl0.r)) + " 시작 · 도착 층 QR", kind: "stair", iv: null });
+  if (sl0) out.push({ min: -1, go: "stairOpen()", badge: "계단", label: "지금", title: "계단 이용", gTitle: "계단 이용", sub: sl0.fl + "F 시작 · 도착 층 QR", gSub: sl0.fl + "F 시작 · 도착 층 QR", kind: "stair", iv: null });
   var mr = myResv();
   if (mr && RESV_LIVE.indexOf(mr.status) >= 0) {   /* v7.39 (사용자 261016 계획서 3-2) 사전 신청 상담 줄 「AX 라운지 · 10:30 · 1F AX 라운지」(이름 = 「AX 라운지」 v5.85 통일 그대로) · 칸 미정 = 시각 없는 줄(맨 뒤) */
     var mrA = mr.slot ? sessStartMin(mr.slot) : 9997;

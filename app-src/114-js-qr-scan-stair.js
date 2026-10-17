@@ -590,7 +590,7 @@ var STAIR_SAFE = "뛰지 마세요 · 방화문은 닫아 주세요";
 /* v4.54 다른 사번 · 사번 없는 옛 상태는 없는 것으로 본다(진행 중 표시 · 도착 층 안내가 다음 사람에게 뜨지 않게) · 서버 sync 가 곧 내 것을 채운다 */
 function stairState() { var s = S.get("stair", null); return ownIs(s) ? s : { leg: null, total: 0, goal: 1 }; }
 function stairPut(s) { S.set("stair", Object.assign({}, s, { emp: ownEmp() })); }
-function stairRoute(r) { return r == 2 ? "비상계단 2" : r == 1 ? "비상계단 1" : ""; }
+function stairRoute(r) { return ""; }   /* v7.61 (사용자 261017 「계단실 1 · 2 구분 없이 18 세트, 양쪽에 같은 QR」) 계단실 번호는 화면에 쓰지 않는다 · 서버 route 도 무시 */
 function stairByCode(code, fl, r, t) {
   var u = S.get("user", {}) || {};
   if (!u.empId) { srShow({ st: "fail", why: "param" }); return; }
@@ -643,7 +643,7 @@ function stairDone(res, sc, late, act) {
   if (res.leg === "start" && !res.reclass) stampBuzz(25);
   if (late) {
     var body = res.leg === "end" ? res.from.fl + "F → " + res.to.fl + "F · " + res.floors + "개 층" + (s.goal > 1 ? " · 누적 " + res.total + " / " + s.goal : "")
-      : res.leg === "start" ? res.fl + "F 시작 · " + stairRoute(res.r) : res.leg === "fix" ? "지난번 종료를 찍지 않았어요" : res.fl + "F";
+      : res.leg === "start" ? res.fl + "F 시작" : res.leg === "fix" ? "지난번 종료를 찍지 않았어요" : res.fl + "F";
     STR.res = res; STR.sc = sc; STR.mode = res.leg === "dup" ? "start" : res.leg;
     notice({ key: "stair:late:" + res.leg + ":" + (sc.t || ""), title: "저장한 계단 스캔 처리", body: body, go: "stair", goLbl: "계단 화면" });
     return;
@@ -755,7 +755,7 @@ function stairHtml() {
       '<div class="axs-chiprow"><span class="axs-chip ok">보정 완료</span><span class="axs-chip off">자기 신고</span>' + (st2 ? '<span class="axs-chip ok">계단 스탬프 적립</span>' : "") + "</div>" +
       '<p class="ax-description">' + (o.endFl ? o.from.fl + "F → " + o.endFl + "F · " + o.floors + "개 층" : "계단을 쓰지 않음") + "</p>" +
       '<h1 class="ax-title">여기서 새로<br>시작할까요?</h1>' +
-      (sc.fl ? '<p class="axs-st-big">' + esc(sc.fl) + "F" + (sc.r ? " · " + stairRoute(sc.r) : "") + "</p>" : "") +
+      (sc.fl ? '<p class="axs-st-big">' + esc(sc.fl) + "F</p>" : "") +
       '<section class="ax-card axs-gap12">' + stairGauge(o.total, goal) + "</section>",
       btn: ax2Btn("여기서 시작할게요", "stairRestart()", "시작하지 않을게요", "App.tab('exp')") };
   }
@@ -779,7 +779,7 @@ var EXP_GUIDE = {
   p2: { chip: "1F · AX PLAY", nm: "AX PLAY 체험", sc: "1F", h: "AX PLAY에서<br>체험해 보세요", d: "체험한 뒤 스태프에게 내 QR을 보여 주세요.",
     steps: [["부스 체험", "HiDI-Q · Hi-Helper 중 1곳"], ["내 QR 보여주기", "스태프가 내 QR을 스캔"], ["적립 확인", "스탬프 탭에서 확인"]],
     meta: "08:30~17:00 · 1인 1회", cta: "내 QR 보여주기", act: "qrPanelOpen('mine')" },
-  st: { chip: "1F~18F · 비상계단 1·2", nm: "계단 이용", h: "계단으로<br>이동해 보세요", d: "한 개 층만 이동해도 스탬프를 받아요.",   /* 261005 최종 QA · 「출발 층과 도착 층 방화문 앞 QR을 찍어요」 = 아래 단계 01 · 03 과 같은 말 */
+  st: { chip: "1F~18F", nm: "계단 이용", h: "계단으로<br>이동해 보세요", d: "한 개 층만 이동해도 스탬프를 받아요.",   /* 261005 최종 QA · 「출발 층과 도착 층 방화문 앞 QR을 찍어요」 = 아래 단계 01 · 03 과 같은 말 */
     steps: [["출발 층 QR 스캔", "방화문 앞 QR"], ["계단으로 이동", STAIR_SAFE], ["도착 층 QR 스캔", "오르기·내려가기 모두 인정"]],
     meta: "", cta: "계단 QR 스캔하기" }
 };
@@ -820,7 +820,7 @@ function expGuideParts(id) {
   var prog = "";
   if (id === "st" && ((s.goal || 1) > 1 || (s.total || 0) >= 1 || s.leg)) {
     prog = '<section class="ax-card axs-gap12">' + stairGauge(s.total || 0, s.goal || 1) +
-      (s.leg ? '<p class="ax-description">진행 중 · ' + s.leg.fl + "F " + esc(s.leg.route || stairRoute(s.leg.r)) + " 시작 · " + esc(s.leg.at || "") + "</p>" +
+      (s.leg ? '<p class="ax-description">진행 중 · ' + s.leg.fl + "F 시작 · " + esc(s.leg.at || "") + "</p>" +
         '<button type="button" class="ax-button ax-button-weak" onclick="stairOpen()">진행 화면 보기</button>' : "") + "</section>";
   }
   return { steps: steps, prog: prog, desc: id === "st" && (s.goal || 1) > 1 ? "출발 층과 도착 층 방화문 앞 QR을 찍어요. 누적 " + s.goal + "개 층이면 스탬프를 받아요." : g.d };
@@ -833,7 +833,7 @@ function expGuideHtml() {
   var prog = "";
   if (id === "st" && ((s.goal || 1) > 1 || (s.total || 0) >= 1 || s.leg)) {   /* 261005 최종 QA · 아직 안 한 사람(목표 1 · 0개 층)에게는 「한 개 층만 이동해도 적립」만 든 카드가 설명 줄을 한 번 더 말했다 · 이동 기록이 있을 때만 */
     prog = '<section class="ax-card axs-gap12">' + stairGauge(s.total || 0, s.goal || 1) +
-      (s.leg ? '<p class="ax-description">진행 중 · ' + s.leg.fl + "F " + esc(s.leg.route || stairRoute(s.leg.r)) + " 시작 · " + esc(s.leg.at || "") + "</p>" +
+      (s.leg ? '<p class="ax-description">진행 중 · ' + s.leg.fl + "F 시작 · " + esc(s.leg.at || "") + "</p>" +
         '<button type="button" class="ax-button ax-button-weak" onclick="stairOpen()">진행 화면 보기</button>' : "") + "</section>";
   }
   return '<div class="ax-stack axs-sthost">' + stampTagHtml(id) +   /* v4.70 오른쪽 위 도장 · 옛 「적립 완료」 칩은 도장이 대신한다 */

@@ -65,13 +65,102 @@ document.addEventListener("visibilitychange", function () {
   if (document.hidden) { if (POLL.t) { clearTimeout(POLL.t); POLL.t = null; } return; }
   pollNext(beJitShow());   /* 다시 보이면 곧바로 한 번 · 261008 0~1.5초 무작위 뒤(여러 폰이 같은 순간 화면을 켜도 한 점에 몰리지 않게 · 손에는 눈에 띄지 않는 길이) */
 });
+/* ══════════ v7.61 A1 앱 사용 시간(화면별 포그라운드 초 · 사용자 확정 261017 D1 가 · 규격 QA/out/a1_fg_spec_261017.md · 설계 앱 사용 대시보드 2-6 · 2-7) ══════════
+   잰다 = 화면이 보이고 로그인한 동안 · 화면 그룹 글자(FG_GRP) · 마지막 입력 뒤 3분(FG_IDLE)이 지나면 그 3분 끝에서 멈춘다 · 영상 · 게임 · 계단 동행 중은 입력이 없어도 잰다(fgBusy)
+   타이머 없음 = 화면 전환(App.go) · 누름(click) · 뒤로(popstate) · 숨김(visibilitychange · pagehide · freeze) · 3분 쉬고 다시 입력 · sync 때만 시각 두 개를 빼서 더한다
+   구간 하나 30분(FG_SEG) 상한 · performance.now 가 뒤로 가면 버림 · 서울 10분 칸 「MMDDhhmm」으로 나눠 이 기기 저장(fg · STORE_PERSON · 로그아웃 때 지움)
+   보내기 = 이미 가는 sync 에 fg · fq 를 싣는다(새 요청 없음) · 묶음 하나(p)를 보내고 응답 fgok 가 그 fq 와 같을 때만 지운다 · fgok 가 없으면(옛 서버) 같은 묶음을 다음 sync 에 다시 싣는다
+   재지 않음 = 데모 · TV · 캡처 주소(visitSkip) · 송출 화면 · 셀프 노트북 타자왕 · 로그인 전 · 테스트 사번은 재서 보낸다(서버가 세지 않고 fgok 만 준다) · 화면 문구 변경 없음 */
+var FG_IDLE = 180000, FG_SEG = 1800000, FG_SLOT = 600000, FG_KEEP = 172800000, FG_MAXP = 16;
+var FG = { run: false, t0: 0, tl: 0, g: "", busy: false };   /* run = 지금 재는 구간이 있다 */
+var FG_GRP = { home: "h", guide: "p", guide_time: "p", sess_d: "p", sess_cf: "p", sess_ok: "p", booth: "p", dap: "p",
+  exp: "s", exp_g: "s", passport: "s", my: "m", prizes: "m", kit: "m", rewards: "m",
+  games: "g", quiz: "g", quiz_play: "g", type_site: "g", game_tetris: "g", game_pang: "g", game_jump: "g", oly_rank: "g", type_rank: "g",
+  floor_d: "t", zone_d: "t", scan_q: "q", scan_res: "q", stair: "q", ideas: "i", ideas_mine: "i", cc_apply: "i", ev_cchat: "i", survey: "v", admin: "a", sscan: "a" };
+function fgPerf() { try { return performance.now(); } catch (e) { return Date.now(); } }
+function fgOn() {
+  try {
+    if (!BE.on || document.hidden || visitSkip() || typeof App === "undefined" || !App.current) return false;
+    if (SIGNAGE.indexOf(App.current) >= 0 || (App.current === "type_site" && typeof tsfOn === "function" && tsfOn())) return false;
+    return !!(S.get("user", {}) || {}).empId;
+  } catch (e) { return false; }
+}
+function fgGroup() { return window.AXTour && window.AXTour.isOpen() ? "t" : FG_GRP[App.current] || "x"; }
+function fgBusy() {
+  try {
+    if (/^game_|^quiz_play$|^type_site$/.test(App.current || "")) return true;
+    if (App.current === "stair" && typeof STR !== "undefined" && STR.mode === "start") return true;
+    var vs = document.getElementsByTagName("video");
+    for (var i = 0; i < vs.length; i++) if (!vs[i].paused && !vs[i].ended) return true;
+  } catch (e) {}
+  return false;
+}
+function fgSlotKey(ms) { var d = new Date(ms + 9 * 3600000), z = function (n) { return (n < 10 ? "0" : "") + n; }; return z(d.getUTCMonth() + 1) + z(d.getUTCDate()) + z(d.getUTCHours()) + z(Math.floor(d.getUTCMinutes() / 10) * 10); }
+/* 지난 구간을 닫아 그룹 몫에 더한다 · force 가 아니면 그룹이 바뀌었을 때만 · 닫은 뒤 새 구간(지금 보이고 로그인했으면) */
+function fgTick(force) {
+  var on = fgOn(), g = on ? fgGroup() : "", now = fgPerf();
+  if (!force && on && FG.run && g === FG.g) { if (fgBusy()) FG.busy = true; return; }
+  if (FG.run && FG.g) {
+    var end = now;
+    if (!(FG.busy || fgBusy())) end = Math.min(now, Math.max(FG.tl, FG.t0) + FG_IDLE);   /* 무입력 3분 = 그 3분 끝까지 */
+    var dur = Math.min(end - FG.t0, FG_SEG);
+    if (dur >= 500) {
+      var we = Date.now() + (typeof sesOff === "function" ? sesOff() : 0) - (now - end), ws = we - dur, add = {};
+      while (ws < we) { var nx = Math.min(we, Math.floor(ws / FG_SLOT) * FG_SLOT + FG_SLOT), k = fgSlotKey(ws); add[k] = (add[k] || 0) + (nx - ws) / 1000; ws = nx; }
+      var st = S.get("fg", null) || {}, b = st.b || {};
+      Object.keys(add).forEach(function (k) { var c = b[k] || (b[k] = {}); c[FG.g] = Math.round(((c[FG.g] || 0) + add[k]) * 10) / 10; });
+      st.b = b; S.put("fg", st);
+    }
+  }
+  FG.run = on; FG.t0 = now; FG.g = g; FG.busy = on && fgBusy();
+  if (on && !FG.tl) FG.tl = now;
+}
+/* 입력 · 3분 넘게 쉬다 다시 누르면 쉰 구간을 닫고 새로 시작 */
+function fgIn() { var now = fgPerf(); if (FG.run && now - Math.max(FG.tl, FG.t0) > FG_IDLE) { fgTick(true); FG.tl = fgPerf(); return; } FG.tl = now; }
+/* sync 에 실을 값 · 보낼 묶음이 없으면 fg 빈 값만(서버는 fg 칸이 아예 없으면 옛 앱으로 본다) */
+function fgPack() {
+  try {
+    fgTick(true);
+    var st = S.get("fg", null) || {}, b = st.b || {}, p = st.p, nowW = Date.now() + (typeof sesOff === "function" ? sesOff() : 0), cut = fgSlotKey(nowW - FG_KEEP), ch = false;
+    Object.keys(b).forEach(function (k) { if (k < cut) { delete b[k]; ch = true; } });   /* 48시간 지난 칸(MMDDhhmm 글자 비교 · 행사가 10월이라 해 넘김 없음) */
+    if (p && !(nowW - (p.t || 0) < FG_KEEP)) { p = null; ch = true; }
+    if (!p) {
+      var ks = Object.keys(b).sort(), parts = [];
+      ks.forEach(function (k) {
+        if (parts.length >= FG_MAXP) return;
+        var c = b[k], bits = [];
+        Object.keys(c).sort().forEach(function (g) { var n = Math.floor(c[g]); if (n > 0) { bits.push(g + Math.min(n, 9999)); c[g] = Math.round((c[g] - n) * 10) / 10; } if (!(c[g] > 0)) delete c[g]; });
+        if (!Object.keys(c).length) delete b[k];
+        if (bits.length) parts.push(k + ":" + bits.join("."));
+      });
+      if (parts.length) { p = { q: String(visitDid()).slice(0, 6) + "-" + Date.now().toString(36), s: parts.join("|"), t: nowW }; ch = true; }
+    }
+    if (ch) { st.b = b; st.p = p; S.put("fg", st); }
+    return p ? { fg: p.s, fq: p.q } : { fg: "" };
+  } catch (e) { return { fg: "" }; }
+}
+function fgAck(q, res) {
+  if (!q || !res || res.fgok !== q) return;   /* fgok 가 없으면(옛 서버) 지우지 않는다 · 다음 sync 에 같은 묶음 */
+  var st = S.get("fg", null) || {};
+  if (st.p && st.p.q === q) { st.p = null; S.put("fg", st); }
+}
+["pointerdown", "keydown", "wheel", "touchstart"].forEach(function (t) { window.addEventListener(t, fgIn, { capture: true, passive: true }); });
+window.addEventListener("scroll", fgIn, { capture: true, passive: true });
+window.addEventListener("click", function () { fgTick(false); });   /* 누른 뒤(화면 · 둘러보기 덮개가 바뀐 뒤) 그룹이 바뀌었으면 끊는다 */
+window.addEventListener("popstate", function () { setTimeout(function () { fgTick(false); }, 0); });
+document.addEventListener("visibilitychange", function () { if (document.hidden) fgTick(true); else { FG.tl = fgPerf(); fgTick(true); } });
+window.addEventListener("pagehide", function () { fgTick(true); });
+window.addEventListener("pageshow", function () { if (!document.hidden) { FG.tl = fgPerf(); fgTick(true); } });
+document.addEventListener("freeze", function () { fgTick(true); });
 function beSync(after) {
   if (!BE.on) return;
-  var u = S.get("user", {});
-  beCall({ action: "sync", emp: u.empId || "", sv: svWantPre() ? 1 : "" }, function (res) {   /* v7.15 sv = 1 · 설문 화면에서 Q2-0 미리 체크를 아직 안 했을 때만 참석 목록(my.svPre)을 달라고 한다 */
+  var u = S.get("user", {}), fgP = u.empId ? fgPack() : null, sp = { action: "sync", emp: u.empId || "", sv: svWantPre() ? 1 : "" };   /* v7.61 A1 fg · fq(로그인했을 때만 · 끝에 덧붙인다) */
+  if (fgP) { sp.fg = fgP.fg; if (fgP.fq) sp.fq = fgP.fq; }
+  beCall(sp, function (res) {   /* v7.15 sv = 1 · 설문 화면에서 Q2-0 미리 체크를 아직 안 했을 때만 참석 목록(my.svPre)을 달라고 한다 */
     if (res && res.ok && res.poll >= 30 && res.poll <= 120) POLL.base = res.poll * 1000;   /* v4.57 운영이 붐비는 시간에 서버 설정으로 폴링을 늘린다(재배포 없이) */
     if (res && res.ok) wsCfg(res.ws);   /* v4.75 소켓 설정(새 서버만 보낸다 · 없거나 0 이면 소켓을 닫고 폴링만) */
     if (res && res.ok && typeof pushCfg === "function") pushCfg(res.push);   /* v4.76 웹 푸시 공개키(새 서버 · 비밀값 있는 Worker 만 · 없으면 알림 항목이 뜨지 않는다) */
+    if (fgP && fgP.fq) fgAck(fgP.fq, res);   /* v7.61 A1 응답 fgok = 보낸 fq 일 때만 묶음을 지운다 */
     if (after) after(!!(res && res.ok));
     if (!res || !res.ok) return;
     if (genCheck(res.gen)) setTimeout(function () { App.render(); }, 0);   /* 261008 데이터 세대 · 오픈 전 초기화 뒤 이 기기의 시험 흔적을 한 번 비우고 아래에서 서버 정본으로 다시 채운다 · 대기열 재전송(scanQFlush 등)보다 먼저 */

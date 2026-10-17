@@ -185,6 +185,7 @@ var App = {
       if (this.PARENT[v] === prev) delete this.from[v]; else this.from[v] = prev;
     }
     this.current = v;
+    if (typeof fgTick === "function") fgTick(false);   /* v7.61 A1 화면 그룹이 바뀌면 지난 구간을 닫는다 */
     detHist(v, isBack, dPrev);   /* v5.69 시트에서 시트로 = 앞 내용을 기억(뒤로 = 앞 내용) */
     if (TOUR_RET && v !== TOUR_RET.v && !this.isAnc(TOUR_RET.v, v)) TOUR_RET.away = true;   /* v5.73 도착한 화면 밖으로 가도 둘러보기 출처는 남는다(「3D로 돌아가기」가 앱 어디서나 · 지움 = 3D로 돌아감 · 둘러보기를 새로 엶 · 새로고침) · away = 뒤로 · 활동 마침은 더 이상 3D로 잇지 않음 · 옛 v5.53 = 밖으로 가면 지움 */
     if (typeof trdHide === "function") trdHide();   /* v5.57 화면을 옮기면 자동 복귀 띠 · 기다림을 접는다(한 판 더 · 다시 하기 · 다른 화면) */

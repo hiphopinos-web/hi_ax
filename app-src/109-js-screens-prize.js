@@ -129,7 +129,7 @@ function rewItems() {
   /* v5.90 행운권 7등 랜덤 굿즈 · 서버 my.lk7 이 있고 행운권 보유(in)일 때 · 추첨 전 「추첨 대기」
      v5.92 (사용자 261006 「7등 랜덤 굿즈의 경우에는 정말 랜덤으로」) 고정 세트 없음 · 룰렛 남은 경품에서 무작위 · 수는 PRIZES.lk7 한 곳 */
   var l7 = S.get("lk7", null);   /* v6.25 7등 수량 = 「수량 추후 공개」(사용자 261007 · 남은 경품으로 꾸려서 수가 정해지지 않았다) · 수는 어디에도 쓰지 않는다 */
-  if (l7 && l7.in && l7.ph !== "done") items.push({ k: "lk7", used: false, chip: "추첨 대기", cc: "", nm: "랜덤 굿즈", big: "", why: "무작위 경품 · 행사 뒤 추첨 · 행랑 발송" });
+  if (l7 && l7.in && l7.ph !== "done") items.push({ k: "lk7", used: false, chip: "추첨 대기", cc: "", nm: "랜덤 굿즈", big: "", why: "행사 종료 후 행운권 중 랜덤 선정 후 행랑 발송" });   /* v7.61 (사용자 261017) 7등 문장 = 경품 시트 카드와 같은 한 줄 */
   /* 261017 (사용자 확정) 추첨 뒤 「당첨」 칩 걷음 · 서버도 w 를 보내지 않는다 */
   return items;
 }
@@ -151,14 +151,14 @@ var PRIZES = {
     { rk: "1등", nm: "아이패드", q: 1, img: "ld1_ipad" },
     { rk: "2등", nm: "신라호텔 파크뷰 뷔페 식사권 2매", q: 1, img: "ld2_shilla" },
     { rk: "3등", nm: "미닉스 음식물 처리기", q: 1, img: "ld3_minix" },
-    { rk: "4등", nm: "에어팟 4", q: 2, img: "ld4_airpods" },
+    { rk: "4등", nm: "에어팟 5", q: 2, img: "ld4_airpods" },   /* v7.61 (사용자 261017) 이름 4 → 5 · 사진은 Apple 공식 사진을 받으면 새 파일 이름으로 바꾼다 */
     { rk: "5등", nm: "풀리오 종아리 마사지기", q: 2, img: "ld5_pulio" },
     { rk: "6등", nm: "현대백화점 상품권 10만원", q: 3, img: "ld6_hyundai" }] },
   /* v5.90 fin 칸 = 선착순 참여상(키는 그대로 · 구역 id pz-fin) · 7등 랜덤 굿즈(lk7 · v5.92 대표 그림 한 장 lk7_random_v2 = 룰렛 _v2 사진 여섯 장을 묶은 것 · 고정 세트 없음) · 아이디어왕(idea · AI 구독권 카드 그림 idea1 ~ 3 · 사용자 261006 「가」 · 바꿀 때는 파일만) */
   fin: { unit: "개", list: [
     { rk: "", nm: "무선 무드등 가습기", q: 200, img: "fin_humidifier_v2" }] },
   lk7: { unit: "명", list: [
-    { rk: "7등", nm: "랜덤 굿즈", sub: "무작위 경품", qt: "수량 추후 공개", img: "lk7_random_v2" }] },
+    { rk: "7등", nm: "랜덤 굿즈", sub: "행사 종료 후 행운권 중 랜덤 선정 후 행랑 발송", qt: "무작위 경품", img: "lk7_random_v2" }] },   /* v7.61 (사용자 261017) 수량 자리 = 「무작위 경품」 · 부제 = 받는 방법 한 문장 */
   idea: { unit: "명", list: [
     { rk: "1등", nm: "AI 구독권 6개월", q: 1, img: "idea1" },
     { rk: "2등", nm: "AI 구독권 3개월", q: 1, img: "idea2" },
@@ -226,11 +226,11 @@ var PZ_ICO = {
 /* v5.90 (261006 경품 기획 변경 · 계약.md 5절) 행운권 받으려면 줄2 = 참석 조건(sync lkcond) 따라 · 7등 · 선착순 참여상 · 아이디어왕 구역 · 서버 필드가 없으면(on) 구역을 그리지 않는다 */
 var PZ_SEC = [
   { k: "draw", en: "LUCKY DRAW", t: "행운권 추첨", need: function () { return [["stamp", "스탬프 4개부터 행운권", "6개면 3장"], lkCond() ? ["qr", "Closing Speech 참석 · 17F 입구 QR 체크인", "16:40부터 · 17:00 현장 추첨"] : ["cup", "17F Closing Speech 현장 추첨", "17:00 · 경품은 따로 전달"]]; } },
-  { k: "lk7", en: "7TH PRIZE", t: "행운권 7등 · 랜덤 굿즈", on: function () { return !!S.get("lk7", null); }, need: function () { return [["stamp", "스탬프 4개 이상(행운권 보유)", "1~6등 당첨자는 제외"], ["box", "행사 뒤 추첨", "무작위 경품 · 행랑 발송"]]; } },   /* v5.92 정말 랜덤(사용자 261006) */
+  { k: "lk7", en: "7TH PRIZE", t: "행운권 7등 · 랜덤 굿즈", on: function () { return !!S.get("lk7", null); }, need: function () { return [["stamp", "스탬프 4개 이상(행운권 보유)", "1~6등 당첨자는 제외"], ["box", "행사 뒤 추첨", "행사 종료 후 행운권 중 랜덤 선정 후 행랑 발송"]]; } },   /* v5.92 정말 랜덤(사용자 261006) */
   { k: "fin", en: "FIRST COME", t: "선착순 참여상", on: function () { return !!fxGet(); }, need: function () { var x = fxGet() || {}; var st = fcfsStartHm(); return [["stamp", "스탬프 6개를 모은 순서 " + (x.cap || 200) + "명", ""], ["box", "1F 주차장 체크인존 · 내 QR 제시", (st ? st + "~" : "") + (x.cut || "17:00") + " · 못 받으면 행사 뒤 발송"]]; }   /* 261016 (사용자) 달성순 1~200 · 교환 = 당일 체크인존(17:00 지급 마감) · 못 받은 사람 발송 */   /* v6.83 「E 창구」 뺌(사용자 261009) */   /* v5.98 받기 선착순 */, qt: function () { return fcfsQtyTxt(); } },   /* v5.97 (사용자 261006 밤) 남은 수량은 상품 제목 오른쪽 한 곳(fcfsQtyTxt) · 상자 줄 삭제 · 「당일 못 받으면 발송」 줄 삭제(「선착순인데 당일 못 받는 건 말이 안 되잖아」) */
   { k: "roulette", en: "ROULETTE", t: "룰렛", need: function () { return [["stamp", "스탬프 3개면 룰렛 1회", "1인 1회"], ["qr", "1F EVENT 룰렛 부스에서 내 QR 제시", S.get("rcut", "") ? "룰렛 " + S.get("rcut", "") + " 마감" : ""]]; } },
   { k: "idea", en: "IDEA KING", t: "아이디어왕", r3: 1, on: function () { return !!S.get("idea_pub", null); }, need: function () { var ip = S.get("idea_pub", null) || {}; return [["stamp", (ip.cut || "16:00") + "까지 아이디어 한 줄", "AX 라운지 · 커피챗 · 앱 어느 경로든"], ["cup", "Closing Speech에서 시상", ideaKingN() + "명 · AI 구독권"]]; } },
-  { k: "type", en: "TYPING KING", t: "1F 타자왕 1~3위", sep: 1, need: [["key", "1F 현장 기록 1~3위", "17:00 마감 · 스탬프와 별개"], ["cup", "Closing Speech 시상 참석", ""]], go: ["실시간 순위 보기", "typeSiteRankGo()"] }   /* v5.18 맨 아래 · 선으로 나눔 · 순위판 입구 = 블록 맨 아래(v5.73) · v5.97 Outro 시상 보조 줄 삭제(사용자 261006 밤 「투머치」) */
+  { k: "type", en: "TYPING KING", t: "1F 타자왕 1~10위", sep: 1, need: [["key", "1F 현장 기록 1~10위", "17:00 마감 · Closing Speech에서 순위 발표"]], go: ["실시간 순위 보기", "typeSiteRankGo()"] }   /* v5.18 맨 아래 · 선으로 나눔 · 순위판 입구 = 블록 맨 아래(v5.73) · v5.97 Outro 시상 보조 줄 삭제(사용자 261006 밤 「투머치」) */   /* v7.61 (사용자 261017) 1~10위 · 덧붙임 = 순위 발표 · 옛 둘째 줄(시상 자리)과 별개 표시 걷음 */
 ];
 /* 「받으려면」 박스 · 연주황 면(brandSoft) · 아이콘 주황 · 굵은 글 ink · 옅은 글 body · 읽어 주기 = 「받으려면」 + 줄마다 */
 /* 261008 상자 공용(사용자 「참여 전 확인 아래 부분을 행운권 추첨의 받으려면 부분처럼 정비 · 정돈되지 않은 부분들도」) · 조건 · 방법 · 받는 법 안내 = 이 상자 하나 · 같은 CSS(.axs-pz-need)
@@ -336,14 +336,14 @@ function prizeCoverHtml(noHead) {
       (s.fin && fxGet() ? '<span class="fn" aria-hidden="true">+<span class="g">' + PZ_GIFT + "</span>선착순</span>" : "") +
       '<span class="bt" aria-hidden="true">' + (st === "nx" ? '<span class="tag">다음</span>' : st === "on" ? '<span class="tag on">' + CHECK_SVG + "달성</span>" : "") + '<span class="dn">' + PZ_DOWN + "</span></span></button>";
   }).join("");
-  return '<section class="axs-pz-cv">' + (noHead ? "" : '<p class="ey">AX Festival 2026</p><h1 class="ttl">스탬프 개수별 경품</h1>') +   /* v5.69 시트 = 제목은 시트 머리 */
+  return '<section class="axs-pz-cv">' + (noHead ? "" : '<p class="ey">AX Festival 2026</p><h1 class="ttl">경품 보기</h1>') +   /* v5.69 시트 = 제목은 시트 머리 */
     '<div class="now"><div class="tx"><p class="k">지금 내 스탬프</p><p class="nx">' + pzNextTxt(n) + '</p></div><p class="n"><b>' + n + "</b>개</p></div>" +
     '<div class="stp" role="img" aria-label="스탬프 ' + n + " / " + STAMP_DENOM + '"><span class="ln" aria-hidden="true"></span><span class="fl" aria-hidden="true" style="width:' + fill + '"></span>' + dots + "</div>" +
     '<div class="cds">' + cards + "</div></section>";
 }
 /* v5.69 경품 시트(detPaint · 라우트 prizes) · 제목 = 시트 머리(v5.79 짧은 이름 = 이 제목 그대로 · 본문 첫 줄 제목 없음) · 본문 = 표지(지금 내 스탬프 · 1~6 · 단계 카드) + 구역 · 버튼 없음(읽기) · 구역 바로 가기(prizeGo k)는 시트 본문 스크롤 */
 function prizeSheet() {
-  return { name: "스탬프 개수별 경품", body: '<div class="axs-pz' + (Date.now() - PZ.t < 900 ? " in" : "") + '">' + prizeCoverHtml(true) + PZ_SEC.map(prizeSecHtml).join("") + "</div>" };
+  return { name: "경품 보기", body: '<div class="axs-pz' + (Date.now() - PZ.t < 900 ? " in" : "") + '">' + prizeCoverHtml(true) + PZ_SEC.map(prizeSecHtml).join("") + "</div>" };
 }
 function prizePosterHtml() {
   return '<div class="axs-pz' + (Date.now() - PZ.t < 900 ? " in" : "") + '">' + prizeCoverHtml() + PZ_SEC.map(prizeSecHtml).join("") + "</div>";
