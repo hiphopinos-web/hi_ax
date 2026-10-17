@@ -19,10 +19,10 @@ function grRows(d, ev){
   if(!d||!d.games) return [];
   var mini=grMini(d);
   if(ev!=="all"){ var gm=d.games[ev]; if(!gm||mini.indexOf(ev)<0) return [];
-    return (gm.rows||[]).map(function(r,i){ return { rank:i+1, emp:r.emp, name:r.name, nick:grNick(r), hidden:!!r.hidden, score:Number(r.best)||0, plays:Number(r.plays)||0, at:r.last||"", key:r.key||"" }; }); }
-  var ok={}, first=d.games[mini[0]];
-  ((first&&first.rows)||[]).forEach(function(r){ ok[normE(r.emp)]=1; });   /* 시험 사번은 종목 순위에 없다 → 종합에서도 뺀다 */
-  return ((d.oly&&d.oly.rows)||[]).filter(function(r){ return Number(r.done)===mini.length&&ok[normE(r.emp)]; })
+    return (gm.rows||[]).map(function(r,i){ return { rank:i+1, emp:r.emp, name:r.name, nick:grNick(r), hidden:!!r.hidden, score:Number(r.best)||0, plays:Number(r.plays)||0, at:r.bestTs||r.last||"", key:r.key||"" }; }); }   /* 261017 기록 시각 = 최고점 판(bestTs · 옛 서버 = 마지막 판) */
+  var orows=(d.oly&&d.oly.rows)||[], hasT=orows.some(function(r){ return r.test!=null; }), ok={}, first=d.games[mini[0]];
+  if(!hasT) ((first&&first.rows)||[]).forEach(function(r){ ok[normE(r.emp)]=1; });   /* 옛 서버(test 칸 없음) = 시험 사번은 종목 순위에 없다 → 종합에서도 뺀다 */
+  return orows.filter(function(r){ return Number(r.done)===mini.length&&(hasT?Number(r.test)!==1:ok[normE(r.emp)]); })   /* 261017 서버 oly.rows test 칸 */
     .map(function(r,i){ return { rank:i+1, emp:r.emp, name:r.name, nick:grNick(r), hidden:!!r.hidden, score:Number(r.total)||0, at:r.doneAt||"", key:"" }; });
 }
 function grGrid(ev){
@@ -36,7 +36,7 @@ function grGrid(ev){
       { k:"score", t:all?"총점":"최고점", type:"num", w:90 },
       all?null:{ k:"key", t:"대표 기록", w:110 },
       all?null:{ k:"plays", t:"판 수", type:"num", w:64 },
-      { k:"at", t:all?"세 종목 완주":"마지막 판", type:"date", w:110 }].filter(Boolean) });
+      { k:"at", t:all?"세 종목 완주":"최고점 시각", type:"date", w:110 }].filter(Boolean) });
 }
 function grChipsH(ev){ var d=S.data.grank, ok=d&&d.games;
   return GR_EV.map(function(x){ var on=x[0]===ev, n=ok?grRows(d,x[0]).length:null;
