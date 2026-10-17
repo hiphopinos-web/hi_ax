@@ -451,9 +451,11 @@ function tsfAdmin() {
   var on = S.get("site_sound", true) === true, C = TSF.cam;
   modalOpen('<div class="ax-stack-tight axs-gap12"><label class="ax-sr-only" for="tsfOffCode">관리코드</label>' +
     '<input id="tsfOffCode" class="ax-field" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="관리코드" onkeydown="onEnter(event, tsfOffGo)">' +
-    '<p class="ax-meta" id="tsfOffMsg">효과음 ' + (on ? "켜짐" : "꺼짐") + (TSF_CAM ? " · 카메라 " + (C.stream ? "켜짐 " + esc(C.res) : "꺼짐") + " · 한 번 읽기 " + Math.round(TSF.sc.ms) + "ms" : "") + " · 접속 QR " + (TSF.lk.tok ? "켜짐" : "꺼짐") + (TSF.lk.hold ? " · 폰 로그인 중" : "") + "</p>" +
+    '<p class="ax-meta" id="tsfOffMsg">효과음 ' + (on ? "켜짐" : "꺼짐") + (TSF_CAM ? " · 카메라 " + (C.stream ? "켜짐 " + esc(C.res) : "꺼짐") + " · 한 번 읽기 " + Math.round(TSF.sc.ms) + "ms" : "") + " · 접속 QR " + (TSF.lk.tok ? "켜짐" : "꺼짐") + (TSF.lk.hold ? " · 폰 로그인 중" : "") +
+    " · 송출 " + (tvlSeat() ? "자리 " + tvlSeat() + (TVL.st === "ok" ? " 연결됨" : "") : "끔") + "</p>" +   /* 261017 실시간 송출 자리 */
     '<button type="button" class="ax-button" onclick="tsfOffGo()">셀프 모드 끄기</button>' +
     '<button type="button" class="ax-button ax-button-weak" onclick="tsfSndGo()">효과음 ' + (on ? "끄기" : "켜기") + "</button>" +
+    (tsfStaff() ? '<button type="button" class="ax-button ax-button-weak" onclick="tsfSeatGo()">송출 ' + ["자리 1로", "자리 2로", "끄기"][tvlSeat()] + "</button>" : "") +
     (TSF_CAM ? '<button type="button" class="ax-button ax-button-weak" onclick="tsfStaffView()">카메라 전체 보기(20초)</button>' : "") +
     '<button type="button" class="ax-button ax-button-weak" onclick="modalClose()">닫기</button></div>', "스태프 전용");
   setTimeout(function () { var n = el("tsfOffCode"); if (n) n.focus(); }, 60);
@@ -1116,7 +1118,7 @@ function tsfMount() {
   if (!TSF.phAt) TSF.phAt = performance.now();
   if (!TSF.raf) TSF.raf = requestAnimationFrame(tsfFrame);
   TSF.sc.on = false;
-  tsfCamStart(); tsfRankPull(); tsfCfgPull(); tsfLinkPaint();
+  tsfCamStart(); tsfRankPull(); tsfCfgPull(); tsfLinkPaint(); tvlUrlSeat();
   if (TSF.ph === "nick") tsfNickFocus();
   if (typeof BOT_DOT !== "undefined" && !BOT_DOT.ok && typeof botDotLoad === "function") botDotLoad(tsfPrevDraw);
 }
@@ -1126,7 +1128,7 @@ function tsfFrame() {
   if (!RG.on) { tsfPrevDraw(); tsfScanDraw(); }
   TSF.raf = requestAnimationFrame(tsfFrame);
 }
-function tsfStop() { if (TSF.t) { clearInterval(TSF.t); TSF.t = null; } if (TSF.raf) { cancelAnimationFrame(TSF.raf); TSF.raf = 0; } tsfCamStop(); }
+function tsfStop() { tvlOff(); if (TSF.t) { clearInterval(TSF.t); TSF.t = null; } if (TSF.raf) { cancelAnimationFrame(TSF.raf); TSF.raf = 0; } tsfCamStop(); }
 function tsfTick() {
   if (App.current !== "type_site" || !tsfOn()) { tsfStop(); return; }
   tsfLinkTick();
@@ -1176,8 +1178,9 @@ function tsfGo() {
   if (TSF.ph !== "ready" || !TSF.info || TSF.busy) return;
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
   TSF.ph = "play"; TSF.res = null; TSF.sub = null; TSF.send = ""; TSF.ticket = ""; tsfDbg("ph", "play"); tsfLinkDrop(); tsfScanShow(false);
-  admCall({ action: "type_self_start", key: tsfKey(), tok: tsfTok(), emp: TSF.emp, dev: tsfDev() }, function (r) {
-    if (r && r.ok) { TSF.ticket = r.ticket || ""; return; }
+  var lv = tvlNew();   /* 261017 실시간 송출 · 이 판 번호표(응답이 늦게 와도 다른 판에 붙지 않게) · seat 없으면 null(보내지 않는다) */
+  admCall({ action: "type_self_start", key: tsfKey(), tok: tsfTok(), emp: TSF.emp, dev: tsfDev(), seat: lv.seat || null }, function (r) {
+    if (r && r.ok) { TSF.ticket = r.ticket || ""; tvlBegin(lv, r.live); return; }
     if (r && ["limit", "unknown", "window", "auth", "param", "locked", "dup"].indexOf(r.reason) >= 0) {
       if (RG.on && RG.mode === "site") rgStop();
       tsfErr(r.reason === "limit" ? tsfLimitMsg(r) : TSF_WHY[r.reason] || "시작하지 못했어요");
@@ -1189,19 +1192,181 @@ function tsfGo() {
 /* rgEndFinal(site) 이 부른다 */
 function tsfDone(res) {
   res.prev = (TSF.info && TSF.info.best) || 0;
+  tvlEnd("over");   /* 261017 실시간 송출 · 판 끝 한 건(제출 전) */
   TSF.res = res; TSF.ph = "result"; TSF.resAt = performance.now(); TSF.phAt = TSF.resAt; tsfPoke(); tsfDbg("ph", "result");
   App.render(); tsfSend();
 }
-function tsfQuit() { tsfErr("도전을 멈췄어요", "1회를 썼어요"); App.render(); }
+function tsfQuit() { tvlEnd("quit"); tsfErr("도전을 멈췄어요", "1회를 썼어요"); App.render(); }
 function tsfSend() {
   var r = TSF.res; if (!r) return;
   TSF.send = "sending"; TSF.why = "";
   var paint = function () { if (App.current === "type_site" && TSF.ph === "result") tsfPaint(); };
-  admCall({ action: "type_self_submit", key: tsfKey(), tok: tsfTok(), emp: TSF.emp, ticket: TSF.ticket, score: r.score, hits: r.hits, combo: r.combo, acc: r.acc }, function (x) {
+  admCall({ action: "type_self_submit", key: tsfKey(), tok: tsfTok(), emp: TSF.emp, ticket: TSF.ticket, score: r.score, hits: r.hits, combo: r.combo, acc: r.acc, g: TVL.sub || null }, function (x) {   /* 261017 g = 송출 판 번호(다시 보내기도 같은 g · 없으면 싣지 않는다) */
     if (x && x.ok) { TSF.send = "ok"; TSF.sub = x; if (x.top) { TSF.top = { ok: true, top: x.top, me: x.me, tries: x.limit }; TSF.topT = Date.now(); } if (x.pb) setTimeout(function () { sfx("best"); }, 250); }   /* v4.50(260925) 테스트 사번도 실제로 저장되어 dry 가 없다 */
     else { TSF.send = "fail"; TSF.why = (x && x.reason) || ""; }
     TSF.resAt = performance.now(); paint();
   }, function () { TSF.send = "fail"; TSF.why = "net"; TSF.resAt = performance.now(); paint(); });
+}
+/* ── 261017 (사용자 결정 · 데이터 중계) 1F 타자왕 실시간 송출 · 게임 노트북 「보내기」(②단계) · 프로토콜 = 디자인 시안/사이니지 명세/타자왕_실시간송출_프로토콜_261017.md 1 · 2 · 3절
+   자리 = 이 노트북 저장 self_seat(1 | 2 · 0 = 끔 · 기본 끔) · 주소에 seat=1 · seat=2 · seat=0(#self&seat=1 · ?seat=2)을 붙여 한 번 열면 저장(다음부터 주소 없이) · 스태프 「관리」(F2 · 관리코드)에서 바꾼다
+   스태프가 관리코드로 켠 노트북만(체험 PC 는 자리를 보내지 않는다) · 시작(type_self_start + seat) 응답에 live(판 번호 g)가 와야만 소켓을 연다
+   옛 서버(live 없음) = 소켓 · 진행 모두 없음 · 인사 답 ok 에 w 1 이 없으면(옛 Hub) 곧바로 닫고 이 화면에서는 다시 열지 않는다
+   판 동안 0.5초마다 tl 한 건(판 상태는 읽기만 · 판정 · 점수 · 입력 경로는 그대로) · 판 끝 x over · 중간 그만둠 x quit · 제출(type_self_submit)에 g · 다시 보내기도 같은 g
+   소켓은 셀프 화면에 있는 동안 열어 둔다 · 끊기면 1 · 2 · 4 · 8 · 15초(+0~1초) 뒤 다시(와이파이 복귀 online = 곧바로) · 끊긴 동안 진행은 버린다(쌓지 않는다) · 핑 평소 25초 · 판 동안 5초(4초 안에 답 없으면 떼고 다시)
+   모든 보내기는 try 로 감싸 실패해도 게임에 닿지 않는다 · 사번 · 실명 · 닉네임 · 표(ticket)는 싣지 않는다 */
+var TVL = { ws: null, st: "off", gen: 0, g: "", sub: "", q: 0, t: null, rt: null, pt: null, fails: 0, cap: false, no: false, ids: null, nid: 0, prev: {}, sc0: 0, ht0: 0, el: 0, pong: 0, pingAt: 0, url: false, sent: 0 };
+var TVL_MS = 500, TVL_BACK = [1000, 2000, 4000, 8000, 15000];
+function tvlSeat() { try { var v = Number(S.get("self_seat", 0)); return tsfStaff() && (v === 1 || v === 2) ? v : 0; } catch (e) { return 0; } }
+function tvlUrlSeat() {   /* 주소 값은 이 페이지에서 한 번만 읽는다(스태프가 「관리」에서 바꾼 값을 다시 그리기가 덮지 않게) */
+  if (TVL.url) return; TVL.url = true;
+  try { var m = /[?&#]seat=([0-2])(?![0-9])/.exec(location.search + "&" + location.hash.replace(/^#/, "")); if (m) S.put("self_seat", Number(m[1])); } catch (e) {}
+}
+function tvlDev() { return "tvs" + tsfDev() + tvlSeat(); }
+function tvlNew() { TVL.gen++; TVL.sub = ""; try { tvlEnd("quit"); } catch (e) {} return { gen: TVL.gen, seat: tvlSeat() }; }
+/* 시작 응답 · live 가 판 번호 형식이고 아직 같은 판이 돌고 있을 때만 */
+function tvlBegin(lv, g) {
+  try {
+    if (!lv || !lv.seat || lv.gen !== TVL.gen || !/^[0-9a-f]{8}$/.test(String(g || ""))) return;
+    TVL.sub = g;   /* 제출에는 판이 이미 끝났어도 싣는다(서버가 이 사번의 판인지 본다) */
+    if (!RG.on || RG.mode !== "site" || TSF.ph !== "play" || tvlSeat() !== lv.seat) return;
+    TVL.cap = true; TVL.no = false;
+    TVL.g = g; TVL.q = 0; TVL.ids = typeof WeakMap === "function" ? new WeakMap() : null; TVL.nid = 0; TVL.prev = {}; TVL.sc0 = RG.score || 0; TVL.ht0 = RG.hits || 0; TVL.el = 0;
+    tvlOpen();
+    if (!TVL.t) TVL.t = setInterval(tvlTick, TVL_MS);
+    tsfDbg("tvl", "begin");
+  } catch (e) {}
+}
+function tvlTick() {
+  try {
+    if (!TVL.g) { clearInterval(TVL.t); TVL.t = null; return; }
+    if (!RG.on || RG.mode !== "site" || App.current !== "type_site") { tvlEnd("quit"); return; }
+    tvlSend(tvlFrame(""));
+  } catch (e) {}
+}
+/* 판 끝(over) · 그만둠(quit) 한 건 · 판 번호를 비운다 · 같은 판에 두 번 보내지 않는다 */
+function tvlEnd(x) {
+  try {
+    if (!TVL.g) return;
+    var f = null; try { f = tvlFrame(x); } catch (e) {}
+    if (f && tvlSend(f)) tsfDbg("tvl", "x " + x);
+  } catch (e) {}
+  TVL.g = ""; if (TVL.t) { clearInterval(TVL.t); TVL.t = null; }
+}
+/* 화면을 떠남 · 셀프 모드 끔 · 자리 끔 = 판이 돌고 있으면 quit 한 건 · 소켓 · 시계 정리 */
+function tvlOff() {
+  try { tvlEnd("quit"); } catch (e) {}
+  try {
+    if (TVL.rt) { clearTimeout(TVL.rt); TVL.rt = null; }
+    tvlPing(false);
+    var ws = TVL.ws; TVL.ws = null; TVL.st = "off";
+    if (ws) ws.close(1000);
+  } catch (e) {}
+}
+function tvlN(v, lo, hi) { v = Math.round(Number(v) || 0); return v < lo ? lo : v > hi ? hi : v; }
+/* 판 상태 한 장(읽기만) · 단어 id = 판 안에서 단어 객체마다 고정(WeakMap) · hw = 지난 건 뒤 사라진 단어 중 터뜨린 것(늘어난 hits 만큼 · 덜 떨어진 것부터) */
+function tvlFrame(x) {
+  var L = RG.L, W = (L && L.W) || 0, now = performance.now(), w = [], cur = {}, curP = [], hw = [];
+  if (RG.t0 && !RG.paused && !RG.bonus && !RG.ending && !(RG.cd > 0)) TVL.el = tvlN(now - RG.t0, 0, 900000);
+  var ws = RG.words || [];
+  for (var i = 0; i < ws.length; i++) {
+    var o = ws[i], id = TVL.ids ? TVL.ids.get(o) : null;
+    if (id == null) { id = (++TVL.nid) % 1000000; if (TVL.ids) TVL.ids.set(o, id); }
+    var p = tvlN((o.p || 0) * 1000, 0, 1000);
+    cur[id] = p;
+    if (w.length < 30) w.push([id, String(o.text || "").slice(0, 12), W ? tvlN(o.x / W * 1000, 0, 1000) : 0, p, tvlN((o.fall || 0) * 1000, 0, 600000), o.cl ? 1 : 0]);
+  }
+  var dh = (RG.hits || 0) - TVL.ht0, ds = (RG.score || 0) - TVL.sc0;
+  if (dh > 0) {
+    for (var k in TVL.prev) if (!(k in cur)) curP.push([Number(k), TVL.prev[k]]);
+    curP.sort(function (a, b) { return a[1] - b[1]; });
+    for (var j = 0; j < curP.length && j < dh && hw.length < 10; j++) hw.push([curP[j][0], tvlN(ds / dh, 0, 60000)]);
+  }
+  TVL.prev = cur; TVL.ht0 = RG.hits || 0; TVL.sc0 = RG.score || 0;
+  var inp = ""; try { inp = String(rgInVal() || "").slice(0, 24); } catch (e) {}
+  var b = RG.bonus, bn = b ? { t: String(b.text || "").slice(0, 80), ty: String(b.typed || "").slice(0, 80), ph: String(b.ph || "").slice(0, 8) } : null;
+  return { t: "tl", g: TVL.g, q: 0, at: Date.now(), el: TVL.el, sc: tvlN(RG.score, 0, 60000), ht: tvlN(RG.hits, 0, 400), lv: tvlN(RG.lives, 0, 9), cb: tvlN(RG.combo, 0, 999), st: tvlN(RG.stage, 0, 20),
+    cd: RG.cd > 0 ? tvlN(Math.ceil(RG.cd), 0, 9) : 0, pz: RG.paused ? 1 : 0, inp: inp, w: w, hw: hw, bn: bn, x: x || "" };
+}
+/* 연결이 살아 있을 때만 · 아니면 버린다 · 망이 느려 쌓이면(8KB · 진행 열 건 안팎) 버린다 */
+function tvlSend(f) {
+  try {
+    var ws = TVL.ws;
+    if (!f || !ws || TVL.st !== "ok" || ws.readyState !== 1 || ws.bufferedAmount > 8192) return false;
+    f.q = ++TVL.q; ws.send(JSON.stringify(f)); TVL.sent++;
+    return true;
+  } catch (e) { return false; }
+}
+function tvlOpen() {
+  try {
+    if (TVL.ws || TVL.rt || !TVL.cap || TVL.no || !tvlSeat() || App.current !== "type_site" || typeof WebSocket === "undefined") return;
+    var u = typeof wsUrl === "function" ? wsUrl() : "";
+    if (!u) return;
+    var ws = new WebSocket(u + "?r=tv");
+    TVL.ws = ws; TVL.st = "open";
+    ws.onopen = function () {
+      if (TVL.ws !== ws) return;
+      var h = { t: "hello", v: "tvsrc-1", w: 1, d: tvlDev() }, tk = tsfTok();
+      if (tk) h.tok = tk; else h.key = tsfKey();
+      try { ws.send(JSON.stringify(h)); } catch (e) {}
+    };
+    ws.onmessage = function (e) {
+      if (TVL.ws !== ws) return;
+      if (e.data === "o") { TVL.pong = Date.now(); return; }
+      var m = null; try { m = JSON.parse(e.data); } catch (x) { return; }
+      if (!m || typeof m.t !== "string") return;
+      if (m.t === "ok") {
+        if (m.w !== 1) { TVL.no = true; TVL.cap = false; tvlOff(); return; }   /* 옛 Hub(쓰기 소켓 없음) · 이 화면에서는 다시 열지 않는다 */
+        TVL.st = "ok"; TVL.fails = 0; TVL.pong = Date.now(); tvlPing(true); tsfDbg("tvl", "ok");
+      } else if (m.t === "no") { if (m.reason === "auth" || m.reason === "off") TVL.no = true; tsfDbg("tvl", "no " + m.reason); }
+      else if (m.t === "tlno") tsfDbg("tvl", "tlno " + m.reason);
+    };
+    ws.onclose = function (e) {
+      if (TVL.ws !== ws) return;
+      var was = TVL.st === "ok"; TVL.ws = null; TVL.st = "off"; tvlPing(false); tsfDbg("tvl", "close " + (e && e.code));
+      if (was) TVL.fails = 0;
+      if (TVL.no || (e && e.code === 4000)) return;   /* 4000 = 같은 기기 이름의 새 연결로 바뀜 */
+      tvlRetry();
+    };
+    ws.onerror = function () {};
+  } catch (e) { TVL.ws = null; TVL.st = "off"; tvlRetry(); }
+}
+function tvlRetry() {
+  try {
+    if (TVL.rt || !TVL.cap || TVL.no || !tvlSeat()) return;
+    var ms = TVL_BACK[Math.min(TVL_BACK.length - 1, TVL.fails)] + Math.random() * 1000; TVL.fails++;
+    TVL.rt = setTimeout(function () { TVL.rt = null; if (App.current === "type_site" && tsfOn()) tvlOpen(); }, ms);
+  } catch (e) {}
+}
+/* 생존 · 평소 25초마다 p → o(45초 안에 답이 없으면 끊음) · 판 동안은 5초마다(4초 안에 답이 없으면 끊음) · 와이파이가 끊긴 연결에 진행이 쌓였다 늦게 나가지 않게 버리고 새로 붙는다 */
+function tvlPing(on) {
+  if (TVL.pt) { clearInterval(TVL.pt); TVL.pt = null; }
+  if (!on) return;
+  TVL.pingAt = 0;
+  TVL.pt = setInterval(function () {
+    try {
+      var ws = TVL.ws, now = Date.now(); if (!ws || TVL.st !== "ok") return;
+      if (TVL.pingAt > TVL.pong && now - TVL.pingAt > (TVL.g ? 4000 : 45000)) { tvlDrop(); return; }
+      if (now - Math.max(TVL.pingAt, TVL.pong) >= (TVL.g ? 5000 : 25000)) { TVL.pingAt = now; ws.send("p"); }
+    } catch (e) {}
+  }, 1000);
+}
+/* 답 없는 연결 · 기다리지 않고 떼어 낸 뒤(늦게 오는 닫힘은 무시) 곧바로 다시 */
+function tvlDrop() {
+  try {
+    var ws = TVL.ws; TVL.ws = null; TVL.st = "off"; tvlPing(false); tsfDbg("tvl", "drop");
+    if (ws) { try { ws.close(); } catch (e) {} }
+    TVL.fails = 0; tvlRetry();
+  } catch (e) {}
+}
+/* 와이파이가 돌아오면 기다리던 다시 붙기를 곧바로 */
+window.addEventListener("online", function () { try { if (TVL.rt && TVL.cap && !TVL.no) { clearTimeout(TVL.rt); TVL.rt = null; TVL.fails = 0; tvlOpen(); } } catch (e) {} });
+/* 스태프 「관리」 · 자리 끔 → 1 → 2 → 끔 */
+function tsfSeatGo(ok) {
+  if (ok !== true && !tsfCodeOk(tsfSeatGo)) return;
+  var v = (tvlSeat() + 1) % 3;
+  S.put("self_seat", v);
+  if (!v) tvlOff(); else if (TVL.ws) { tvlOff(); tvlOpen(); }   /* 자리를 바꾸면 기기 이름이 바뀐다 · 새 이름으로 다시 */
+  modalClose();
 }
 function tsfResHtml() {
   var r = TSF.res || {}, x = TSF.sub || {}, lim = x.limit || tsfLimit();
