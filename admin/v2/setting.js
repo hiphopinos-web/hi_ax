@@ -13,8 +13,7 @@ var GEN_NOTE={ roll_undo:"그 뒤에 따로 바뀐 사람은 건너뜀 · 종이
   list_rows_cancel:"대기 상태일 때만 · 상태 = 취소 · 활동 기록에서 다시 되돌릴 수 있음", lng_pre_row_add:"넣었던 시간 · 미팅룸으로 · 그 자리가 찼으면 서버가 막음", lng_pre_row_del:"체크인 · 완료 전일 때만 · 상담 줄은 취소로 남음" };
 var LG_DONE={};   /* 261017 이 콘솔에서 되돌린 줄(ref → 시각) · 서버가 다시 줄 때까지 단추 숨김 */
 var SCR_URLS=[["추첨 화면","17F 대형 스크린 · 원격 모드","../../draw/?remote=1"],["타자왕 TV","1F 타자왕 순위판","../../tv/typing/"],["타자왕 체험","1F 현장 노트북","../../typing/"],
-  ["타자왕 노트북 1","1F 현장 노트북 · 관리코드로 셀프","../../#self&seat=1"],["타자왕 노트북 2","1F 현장 노트북","../../#self&seat=2"],["타자왕 실시간 송출","1F 스탠바이미 · 게임 화면","../../tv/typing/?live=1"],["타자왕 송출 테스트","리허설 · 테스트 사번 판 보이기","../../tv/typing/?live=1&test=1"],
-  ["송출 1자리 고정","1F 스탠바이미 · 1번 자리만","../../tv/typing/?live=1&mode=1&seat=1"],["송출 2명 분할 고정","1F 스탠바이미 · 늘 좌우 분할","../../tv/typing/?live=1&mode=split"]];
+  ["타자왕 노트북 1","1F 현장 노트북 · 관리코드로 셀프","../../#self&seat=1"],["타자왕 노트북 2","1F 현장 노트북","../../#self&seat=2"],["타자왕 TV 1","1F 스탠바이미","../../tv/typing/?live=1&mode=1&seat=1&o=port"],["타자왕 TV 2","1F 스탠바이미","../../tv/typing/?live=1&mode=1&seat=2&o=port"],["타자왕 노트북 3(예비)","보통 TV 없이 운영","../../tv/typing/?live=1&mode=1&seat=3&o=port"],["타자왕 송출 테스트","리허설 · 테스트 사번 판 보이기","../../tv/typing/?live=1&test=1"]];
 function lgSub(){ return subsOf(LG_SUBS,"log"); }
 SCREENS.log={
   title:"기록 · 설정", desc:"",
@@ -34,7 +33,7 @@ SCREENS.log={
     if(s==="qr"){ qrMount(vb,h); return; }
     if(s==="urgent"){ vb.innerHTML=h+'<div class="grid g2"><div class="col"><div class="card" id="urR"></div><div class="card" id="urP"></div></div><div class="card" id="ogC"></div></div>'; return; }
     if(s==="srv"){ vb.innerHTML=h+'<div class="grid g2"><div class="card" id="svA"></div><div class="card" id="svB"></div></div>'; return; }
-    if(s==="urls"){ vb.innerHTML=h+'<div class="card"><table class="tb"><thead><tr><th>화면</th><th>어디</th><th>주소</th><th></th></tr></thead><tbody>'+SCR_URLS.map(function(x,i){ var u=scrUrl(x[2]); return '<tr><td><b>'+esc(x[0])+'</b></td><td class="cap">'+esc(x[1])+'</td><td class="cap ur-u">'+esc(u)+'</td><td class="n"><span class="btns ur-b"><a class="btn sm" href="'+esc(u)+'" target="_blank" rel="noopener">열기</a><button class="btn sm" type="button" onclick="copyTx(scrUrl(SCR_URLS['+i+'][2]),\'주소를 복사했습니다\')">복사</button></span></td></tr>'; }).join("")+'</tbody></table><p class="cap mt">추첨 화면은 화면에서 관리코드를 한 번 넣습니다 · 추첨 진행은 무대 › 행운권 추첨</p><p class="cap">노트북은 주소로 한 번 열면 자리 저장 · 바꾸기 F2 관리 › 송출 자리</p></div>'; return; }
+    if(s==="urls"){ vb.innerHTML=h+'<div class="card"><table class="tb"><thead><tr><th>화면</th><th>어디</th><th>주소</th><th></th></tr></thead><tbody>'+SCR_URLS.map(function(x,i){ var u=scrUrl(x[2]); return '<tr><td><b>'+esc(x[0])+'</b></td><td class="cap">'+esc(x[1])+'</td><td class="cap ur-u">'+esc(u)+'</td><td class="n"><span class="btns ur-b"><a class="btn sm" href="'+esc(u)+'" target="_blank" rel="noopener">열기</a><button class="btn sm" type="button" onclick="copyTx(scrUrl(SCR_URLS['+i+'][2]),\'주소를 복사했습니다\')">복사</button></span></td></tr>'; }).join("")+'</tbody></table><p class="cap mt">추첨 화면은 화면에서 관리코드를 한 번 넣습니다 · 추첨 진행은 무대 › 행운권 추첨</p><p class="cap">노트북은 주소로 한 번 열면 자리 저장 · 바꾸기 F2 관리 › 송출 자리</p><p class="cap">노트북마다 실행 아이콘(현장 실행/타자왕 노트북1.bat · 2.bat · 3.bat)을 두 번 누르면 게임 창과 TV 송출 창이 함께 열립니다</p></div>'; return; }
     vb.innerHTML=h+'<div class="card" id="scB"></div>';
   },
   paint:function(){ var s=lgSub();
