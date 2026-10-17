@@ -10,7 +10,8 @@
      게임 몽타주 = 실제 게임 엔진(../../assets/rain-engine.js)의 그리기 함수로 그린다(구름 비 · 자동 터짐 · CLOUD CLEAR · 도트 전환 · BONUS STAGE · 문장 PERFECT)
      데이터 = 공개 순위 type_rank(mode site · n 10 · 읽기 전용 · 관리코드 없음) · 30초 폴링 · 실패 60 → 120초 · 화면이 가려지면 멈춤
      ?promo=1 = 참가자 앱 홍보 칸 · 광고 + 상품 23초 · 서버 호출 0 · ?promo=1&rank=1 = 앱 「타자 순위」 칸용 가벼운 판(광고 + 상품 + 순위 11초 · 60초 폴링 · 순위부터 = &t=23 · 가상 이름은 &fill=1 일 때만)
-     promo 본문 서체 = 앱과 같은 CDN 부분 글꼴(1.7MB 자체 글꼴을 받지 않는다) · 주소 뒤 값은 assets/typing.js 맨 위 -->
+     promo 본문 서체 = 앱과 같은 CDN 부분 글꼴(1.7MB 자체 글꼴을 받지 않는다) · 주소 뒤 값은 assets/typing.js 맨 위
+     ?live=1 = 1F 타자왕 실시간 송출(261017 · assets/live.js · live.css) · 게임 노트북 판을 서버 소켓으로 받아 같은 엔진으로 다시 그린다 · 판이 없으면 이 광고 루프 그대로 · 주소 뒤 값은 assets/live.js 맨 위 -->
 <link rel="icon" href="../../icons/icon-192.png">
 <script>
   if (/[?&]promo=1(&|$)/.test(location.search)) {   /* 홍보 칸 · 1.7MB 자체 글꼴 대신 앱이 이미 받은 CDN 부분 글꼴 */
@@ -223,5 +224,6 @@
 <script src="../../assets/rain-engine.js"></script>
 <script src="assets/dotglyph.js"></script>
 <script src="assets/typing.js"></script>
+<script src="assets/live.js"></script>
 </body>
 </html>

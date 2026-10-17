@@ -196,7 +196,8 @@
     }
     return '<svg viewBox="0 0 21 21" fill="#000" shape-rendering="crispEdges" aria-hidden="true">' + h + "</svg>";
   }
-  $("qr").innerHTML = qrSvg(7);
+  var LIVE = Q.live === "1" && !PROMO;   /* 261017 실시간 송출 주소(?live=1 · assets/live.js) · 송출 화면에는 QR 그림을 두지 않는다(가짜 QR 이라도 멀리서 찍으려 하지 않게) */
+  if (!LIVE) $("qr").innerHTML = qrSvg(7);
   /* 떨어지는 단어 두 개 · 행동 장면 시작 기준 초(a → b 사이 같은 빠르기로 y0 → y1) · hit = 쳐져 오렌지 · out = 터짐 */
   var WD = [{ e: $("wd1"), a: 1.5, b: 3.1, y0: 12, y1: 124, hit: 2.6, out: 3.1 }, { e: $("wd2"), a: 1.5, b: 3.8, y0: -44, y1: 96 }];
   function wdAt(s) {
@@ -751,9 +752,9 @@
     while (r >= DUR[PLAY.list[i]]) { r -= DUR[PLAY.list[i]]; i++; }
     PLAY.i = i; enter(PLAY.list[i], now - r);
   }
-  var last = 0, START = 0, RAF = 0, PAUSED = false, PAUSE_AT = 0, IO_VIS = true;
+  var last = 0, START = 0, RAF = 0, PAUSED = false, PAUSE_AT = 0, IO_VIS = true, HOLD = false;
   function frame(ms) {
-    RAF = 0; if (PAUSED) return;
+    RAF = 0; if (PAUSED || HOLD) return;
     RAF = requestAnimationFrame(frame);
     var now = ms / 1000;
     if (!last) PLAY.t0 += now - START;   /* 첫 프레임 = 루프 시작 위치를 그때에 맞춘다(글꼴 · 그림 받느라 늦어도) */
@@ -779,6 +780,9 @@
     if (RK.want) { RK.want = false; poll(); }
   }
   TY.paused = function () { return PAUSED; };
+  /* 261017 실시간 송출(live.js) · 중계하는 동안 광고 루프 그리기만 멈춘다(순위 폴링은 그대로) · 끝나면 정한 장면부터 다시 */
+  TY.hold = function (on) { on = !!on; if (on === HOLD) return; HOLD = on; if (on) { if (RAF) cancelAnimationFrame(RAF); RAF = 0; } else if (!PAUSED && !RAF) RAF = requestAnimationFrame(frame); };
+  TY.from = function (id) { SOLO = ""; PLAY.list = listNow(); var i = PLAY.list.indexOf(id); PLAY.i = i < 0 ? 0 : i; enter(PLAY.list[PLAY.i], performance.now() / 1000); };
   if (PROMO) {
     body.classList.add("promo");
     document.addEventListener("visibilitychange", function () { pauseSet(document.hidden || !IO_VIS); });

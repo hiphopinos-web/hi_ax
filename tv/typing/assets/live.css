@@ -1,0 +1,71 @@
+/* 1F 타자왕 실시간 송출(?live=1) · live.js 가 붙인다 · 색 · 글꼴 토큰은 index.html :root 그대로 */
+#lv { position: fixed; inset: 0; z-index: 50; display: none; opacity: 0; overflow: hidden;
+  background: radial-gradient(circle, var(--wood) 0 calc(var(--dot) * .056), transparent calc(var(--dot) * .07)) 50% 50% / var(--dot) var(--dot), var(--night);
+  transition: opacity .35s cubic-bezier(.2,.7,.2,1); }
+#lv.on { display: block; }
+#lv.in { opacity: 1; }
+#lv.out { transition-duration: .25s; }
+body.lvOn #stage, body.lvOn #net, body.lvOn #demoMark { visibility: hidden; }
+#lvSt { position: absolute; left: 50%; top: 50%; transform-origin: 50% 50%; }
+#lvLine { position: absolute; background: var(--ink); box-shadow: 0 0 0 2px var(--wood); }
+
+/* 머리 · 한 판일 때만 · 어느 3초를 봐도 무엇인지 */
+#lvHead { position: absolute; left: 86px; right: 90px; top: 44px; height: 64px; display: flex; align-items: center; justify-content: space-between; }
+#lvHead.port { left: 64px; right: 64px; top: 48px; }
+#lvHead b { font-family: var(--neo); font-weight: 400; font-size: 52px; line-height: 64px; color: var(--o100); text-shadow: 4px 4px 0 var(--ink); white-space: nowrap; }
+#lvHead span { display: flex; align-items: center; gap: 14px; font-family: var(--neo); font-size: 40px; line-height: 56px; color: var(--cream); background: var(--bark); padding: 0 20px 0 16px; box-shadow: var(--line4); }
+#lvHead span i { width: 20px; height: 20px; background: var(--o100); box-shadow: 0 0 0 3px var(--ink); }
+
+/* 자리 한 벌 */
+.lvSeat { position: absolute; }
+.lvSeat > div { position: absolute; }
+.lvTag { height: 52px; padding: 0 18px; background: var(--o100); color: var(--btn); font-family: var(--neo); font-size: 36px; line-height: 52px; white-space: nowrap; box-shadow: var(--line4); }
+.lvNick { font-family: var(--pre); font-weight: 800; color: var(--cream); letter-spacing: -1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lvScl { font-family: var(--pre); font-weight: 600; font-size: 36px; line-height: 40px; color: var(--tan); }
+.lvSc { font-family: var(--neo); font-weight: 400; color: var(--o100); text-shadow: 6px 6px 0 var(--ink); white-space: nowrap; }
+.lvRk { font-family: var(--pre); font-weight: 800; color: var(--cream); letter-spacing: -1px; white-space: nowrap; line-height: var(--big); }
+.lvRk b { font-family: var(--neo); font-weight: 400; font-size: var(--big); color: var(--o100); text-shadow: 5px 5px 0 var(--ink); letter-spacing: 0; display: inline-block; transform-origin: 30% 60%; }
+.lvRk span { font-weight: 700; color: var(--tan2); }
+.lvRk.up b { animation: lvUp .6s cubic-bezier(.2,.9,.3,1.2) 1; }
+@keyframes lvUp { 0% { transform: scale(1); } 30% { transform: scale(1.22); } 100% { transform: scale(1); } }
+.lvLife { display: flex; gap: calc(var(--hz) * .3); height: calc(var(--hz) * .86); }
+.lvLife i { display: block; width: var(--hz); height: calc(var(--hz) * .86); }
+.lvLife svg { display: block; width: 100%; height: 100%; fill: var(--wood); }
+.lvLife i.on svg { fill: var(--o100); }
+.lvLife i.hit svg { fill: var(--cream); }
+.lvStg { font-family: var(--neo); color: var(--tan2); line-height: 1; white-space: nowrap; }
+.lvRace { --rh: 62px; }
+.lvRace p { margin: 0 0 8px; height: var(--rh); display: flex; align-items: center; padding: 0 28px; background: var(--bark); font-family: var(--neo); font-size: 40px; color: var(--cream); white-space: nowrap; }
+.lvRace p i { flex: none; width: 110px; font-style: normal; color: var(--tan); }
+.lvRace p b { flex: 1; min-width: 0; font-weight: 400; overflow: hidden; text-overflow: ellipsis; }
+.lvRace p em { flex: none; margin-left: 24px; font-style: normal; color: var(--tan2); }
+.lvRace p.me { background: var(--o100); }
+.lvRace p.me i, .lvRace p.me b, .lvRace p.me em { color: var(--btn); }
+
+/* 게임판 · 틀 = 먹 3 · O100 4 · 먹 3(엔진 rgFrameDraw 와 같은 세 겹) · 아래 입력칸이 같은 틀 안에 */
+.lvBd { background: var(--ink); box-shadow: inset 0 0 0 3px var(--ink), inset 0 0 0 7px var(--o100), inset 0 0 0 10px var(--ink); }
+.lvBd canvas { position: absolute; left: 10px; top: 10px; display: block; image-rendering: pixelated; }
+.lvIn { position: absolute; left: 10px; display: flex; align-items: center; padding: 0 24px; background: var(--night); font-family: var(--neo); color: var(--cream); white-space: nowrap; overflow: hidden; }
+.lvIn i { display: inline-block; width: .42em; height: .85em; margin-left: .08em; background: var(--o100); animation: blk .5s steps(1) infinite; }
+.lvBd.noin .lvIn span, .lvBd.noin .lvIn i { visibility: hidden; }
+.lvPz { left: 50%; top: 40%; transform: translate(-50%, -50%); display: none; padding: 0 28px; background: var(--night); color: var(--o100); font-family: var(--neo); font-size: 48px; line-height: 76px; box-shadow: var(--line4); }
+.lvPz.on { display: block; }
+
+/* 결과 · 판 위 · 「N위 진입!」 */
+.lvRes { position: absolute; left: 10px; right: 10px; top: 10px; bottom: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+  background: rgba(27, 23, 18, .88); opacity: 0; transform: scale(.9); transition: opacity .3s cubic-bezier(.2,.7,.2,1), transform .38s cubic-bezier(.2,.9,.3,1.2); pointer-events: none; }
+.lvRes.on { opacity: 1; transform: scale(1); }
+.lvRes b { font-family: var(--neo); font-weight: 400; font-size: 120px; line-height: 132px; color: var(--cream); text-shadow: 6px 6px 0 var(--ink); white-space: nowrap; }
+.lvRes.hi b { color: var(--o100); text-shadow: 6px 6px 0 var(--deep); }
+.lvRes em { font-family: var(--neo); font-style: normal; font-size: 64px; line-height: 72px; color: var(--cream); white-space: nowrap; }
+.lvRes small { font-family: var(--pre); font-weight: 700; font-size: 40px; line-height: 52px; color: var(--tan2); white-space: nowrap; }
+.lvRes small:empty, .lvRes em:empty { display: none; }
+.lvSeat:not(.one) .lvRes b { font-size: 96px; line-height: 108px; }
+.lvSeat:not(.one) .lvRes em { font-size: 52px; line-height: 60px; }
+
+/* 빈 자리(분할 고정 · &mode=2) */
+.lvIdle { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 20px; background: var(--bark); box-shadow: var(--line4); }
+.lvIdle b { font-family: var(--neo); font-weight: 400; font-size: 56px; color: var(--tan); }
+.lvIdle span { font-family: var(--pre); font-weight: 700; font-size: 44px; color: var(--dim); }
+.lvSeat.empty > div { display: none; }
+.lvSeat.empty > .lvIdle { display: flex; }
