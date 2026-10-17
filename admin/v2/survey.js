@@ -1,7 +1,7 @@
 /* AXF CONTROL v2 · 기록 · 설정 › 설문 (261016 4단계 · 지금 콘솔 survey.js 집계 부분을 옮김)
  * 데이터 = survey_list(집계 · test=1 이면 시험 사번 포함 · 30초) · 사번이 든 원본 CSV 는 화면에 두지 않는다(대화로)
  * 위 = 시험 사번 빼고 | 포함 · 숫자 4칸 · Q1 셋 · Q2 프로그램 참여율 · 평균 + 분포 · Q3 셋 · 아래 = Q4 자유 의견(공통 표 · 엑셀 · 사번 없음) */
-var SVY_T={ q1_1:"전반 만족", q1_2:"행사 운영", q1_3:"재참여 · 추천", q3_1:"AX 3개년 로드맵", q3_2:"Hi-Helper · HiDI-Q 사용 계획", q3_3:"DAP" };
+var SVY_T={ q1_1:"전반 만족", q1_2:"행사 운영", q1_3:"재참여 · 추천", q3_1:"AX 3개년 로드맵", q3_2:"Hi-Helper · HiDI Q 사용 계획", q3_3:"DAP" };
 var SVY={ test:false };
 LG_SUBS.splice(1,0,["sv","설문"]);
 function svyPc(a,b){ return b>0?Math.round(a/b*1000)/10:0; }
