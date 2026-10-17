@@ -1816,6 +1816,8 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-seg.axs-seg3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .axs-seg3 button { padding: 0 var(--ax-space-4); line-height: 1.25; word-break: keep-all; }
   .axs-seg3 .axs-sdot { display: inline-block; width: 6px; height: 6px; margin-left: 3px; border-radius: 50%; background: var(--ax-color-brand); vertical-align: top; transform: translateY(1px); }
+  .fs-big .axs-seg3 button.ten { letter-spacing: -0.02em; word-spacing: -0.1em; }   /* v7.69 (사용자 261017 「10 · 17 · 18F」 한 줄) 큰글씨 360 · 390 = 글자 사이 · 낱말 사이만 조금 좁힘(글자 크기 그대로) · 점은 칸 오른쪽 위 */
+  .fs-big .axs-seg3 button.ten .axs-sdot { position: absolute; top: 8px; right: 6px; margin: 0; transform: none; }
   /* 신청하기 칸 = 흰 카드 두 장(ax-card) · 층 점 글자(O100) + 이름 + 신청함 칩 → 한 줄 → 사실 표 → (커피 · 간식 사진) → 주 버튼 + 「자세히 보기」 · 맨 아래 10F 줄(사전 신청자 · 테스트 사번만) */
   .axs-apply { display: flex; flex-direction: column; gap: var(--ax-space-12); }
   .axs-apc { gap: var(--ax-space-16); }

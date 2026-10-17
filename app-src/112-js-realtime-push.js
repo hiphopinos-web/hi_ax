@@ -802,7 +802,7 @@ function pushSeen(tag) {
 }
 function pushGo(go, tag) {
   pushSeen(tag);
-  if (["home", "photoq", "ev_cchat", "dap", "notices"].indexOf(go) < 0 && go !== "exp" && go !== "rewards") go = "home";   /* v5.98 스캔 알림 = 스탬프 탭(exp) · 나의 보상(rewards) */   /* v4.78 A5 notices = 공지 목록(긴급 공지 · 대상 지정) */
+  if (["home", "photoq", "ev_cchat", "dap", "notices", "survey", "quiz", "type_rank"].indexOf(go) < 0 && go !== "exp" && go !== "rewards") go = "home";   /* v7.69 hiax.app 짧은 주소 /survey · /quiz · /typing 이 #go= 로 넘겨줌(hiax-go) · 잠금(행사 전 · 설문 시각)은 그 화면 그대로 */   /* v5.98 스캔 알림 = 스탬프 탭(exp) · 나의 보상(rewards) */   /* v4.78 A5 notices = 공지 목록(긴급 공지 · 대상 지정) */
   if (!((S.get("user", {}) || {}).empId) || el("app").hidden) { PUSHGO = { go: go, tag: tag || "" }; return; }
   if (typeof DET !== "undefined") DET.canon = Date.now();   /* v5.69 푸시 · 딥링크 = 그 항목이 있는 목록 위에 상세 시트 */
   App.go(go);

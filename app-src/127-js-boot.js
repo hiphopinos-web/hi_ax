@@ -178,7 +178,7 @@
     splash.classList.add("gone");
     el("qName").textContent = known.name || "";
     el("qEmp").textContent = known.empId;
-    if (el("qNote")) el("qNote").textContent = lpHint(known.reg);   /* 261016 「10/19(월) 14:02 에 정한 4자리」 · 모르면 「처음 입장 때 정한 4자리」 */
+    if (el("qNote")) el("qNote").textContent = lpHint(known.reg);   /* 261016 · v7.69 「10/19(월) 14:02에 정한 4자리」 · 모르면 「처음 입장 때 정한 4자리」 */
     lpReqShow("qReqW", "qReq", known.empId);
     el("quick").hidden = false;
     lfMount(el("quick"));   /* v5.02 재방문도 첫 화면과 같은 틀(전체 오렌지 · 유동 배치) */

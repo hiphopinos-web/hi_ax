@@ -1062,7 +1062,7 @@ function lfBusy(btn, on, label) {
      pin = 「10/17에 정한 숫자 4자리」(등록 날짜 · 모르면 「처음 입장 때 정한 숫자 4자리」 · 가림 · 보기) + 「비밀번호를 잊었어요」
      기본(묻기 전 · 사번 · 이름 미완성 · 답 없음 · 느림 · 실패 · 옛 서버 · 사번 · 이름 불일치) = 「숫자 4자리 · 처음이면 새로 정하기」 · 불일치 오류는 입장을 누를 때 login 이 알린다
      잠김 = 잠김 안내 + 「비밀번호 찾기」 · notopen · ended = beCall 이 안내 화면 · 답은 그 사번 · 이름 그대로일 때만 쓴다(LP.key · LP.seq) · 칸을 고치면 기본으로
-   틀림 = 1 · 2회 「맞지 않아요 · 10/19 에 정한 4자리」 · 3회부터 + 「비밀번호 찾기」 · 잠김 = 「비밀번호 찾기」 · 횟수 = 이 화면 세션(서버는 그대로 10분 10회)
+   틀림 = 1 · 2회 「맞지 않아요 · 10/19에 정한 4자리」 · 3회부터 + 「비밀번호 찾기」(v7.69 이때 「비밀번호를 잊었어요」 링크는 숨김) · 잠김 = 「비밀번호 찾기」 · 횟수 = 이 화면 세션(서버는 그대로 10분 10회)
    찾기 요청을 보낸 기기 = 정한 계정 안내에 「초기화 요청 보냄」 알약(axf_pw_req_at · 초기화되면 peek 가 reset 을 준다 · 입장하면 지운다) */
 var LP = { mode: "", key: "", seq: 0, tm: 0, reg: "", bad: {}, sa: false, WAIT_MS: 400 };
 var LP_REQ = "axf_pw_req_at";
@@ -1076,8 +1076,8 @@ function lpReg(reg) {
   var md = (+m[2]) + "/" + (+m[3]);
   return { day: md, full: md + "(" + LP_WD[new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).getUTCDay()] + ") " + m[4] + ":" + m[5] };
 }
-function lpHint(reg) { var r = lpReg(reg); return r ? r.full + " 에 정한 4자리" : "처음 입장 때 정한 4자리"; }
-function lpBadTxt(reg) { var r = lpReg(reg); return "맞지 않아요 · " + (r ? r.day + " 에 정한 4자리" : "처음 입장 때 정한 4자리"); }
+function lpHint(reg) { var r = lpReg(reg); return r ? r.full + "에 정한 4자리" : "처음 입장 때 정한 4자리"; }   /* v7.69 (261017) 날짜 뒤 붙여 쓰기 · 옛 「10/19(월) 14:02 에」 */
+function lpBadTxt(reg) { var r = lpReg(reg); return "맞지 않아요 · " + (r ? r.day + "에 정한 4자리" : "처음 입장 때 정한 4자리"); }
 function lpLockTxt(sec) { return "10분 동안 잠겼어요 · 비밀번호 찾기로 초기화 요청"; }   /* v7.34 261016 「N분 뒤 풀림」 줄 삭제(사용자 확정) */
 function lpReqGet(emp) { try { var o = JSON.parse(localStorage.getItem(LP_REQ) || "null"); return o && emp && String(o.emp) === String(emp) && o.t ? o : null; } catch (e) { return null; } }
 function lpReqSet(emp) { try { localStorage.setItem(LP_REQ, JSON.stringify({ emp: String(emp), t: Date.now() })); } catch (e) {} }
@@ -1124,7 +1124,7 @@ function lpMode(mode) {
   var noteOn = set, wasOn = nw && !nw.hidden;
   if (note) note.innerHTML = noteOn ? segHtml("다음 입장부터 이 4자리 · 사내 비밀번호와 다르게") : "";
   if (nw) nw.hidden = !noteOn;
-  if (el("lgLinks")) el("lgLinks").hidden = mode !== "pin";
+  if (el("lgLinks")) el("lgLinks").hidden = mode !== "pin" || !!(el("lgFindW") && !el("lgFindW").hidden);   /* v7.69 「비밀번호 찾기」 단추가 떠 있으면 링크 숨김 */
   lpReqShow("lgReqW", "lgReq", mode === "pin" ? (el("empId").value || "").trim() : "");
   lfSoon();
   if (noteOn && !wasOn && nw && typeof AXM !== "undefined") AXM.rise(nw);
@@ -1169,6 +1169,12 @@ function lpPeek(k) {
   }, function () { if (seq === LP.seq) LP.key = ""; });
 }
 /* 틀림 계단 · o = { box, err, find(찾기 줄 id), input, emp, reg, reason: pw | lock, retry } */
+/* v7.69 (261017 v7.68 후속) 「비밀번호 찾기」 단추(틀림 3회 · 잠김)가 보이면 같은 화면의 「비밀번호를 잊었어요」 링크를 숨긴다(같은 곳으로 가는 길 두 개 없음) · 재방문 화면은 「다른 사번으로 입장」 그대로 */
+function lpLostSync(fid) {
+  var f = el(fid), on = !!f && !f.hidden;
+  if (fid === "lgFindW" && el("lgLinks") && on) el("lgLinks").hidden = true;
+  if (fid === "qFindW") { var q = document.querySelector('#quick .lf-links [onclick^="pwLostOpen"]'); if (q) q.hidden = on; }
+}
 function lpBad(o) {
   var n = 0;
   if (o.reason === "pw") n = LP.bad[o.emp] = (LP.bad[o.emp] || 0) + 1;
@@ -1176,5 +1182,6 @@ function lpBad(o) {
   lfErr(o.box, o.err, msg, o.input);
   o.err.innerHTML = segHtml(esc(msg));
   if (el(o.find)) el(o.find).hidden = !(o.reason === "lock" || n >= 3);
+  lpLostSync(o.find);
   lfSoon();
 }
