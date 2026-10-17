@@ -264,7 +264,7 @@ var App = {
     var activeTab = this.tabOf(v), ico = this.NAV_ICO;
     var btn = function (t) {   /* v5.75 선택 표시 세 겹 = 채움 아이콘(-f) + 주황 아이콘 + 짙은 굵은 라벨(CSS) · 선택 안 됨 = 선 아이콘 + 회색 */
       var on = activeTab === t[0];
-      return '<button class="ax-nav-link"' + (on ? ' aria-current="page"' : "") + ' onclick="App.tab(\'' + t[0] + '\')">' +
+      return '<button class="ax-nav-link"' + (on ? ' aria-current="page"' : "") + ' onclick="navTap(\'' + t[0] + '\')">' +
         '<svg class="ax-icon" aria-hidden="true"><use href="#' + ico[t[0]] + (on ? "-f" : "") + '"/></svg><span>' + t[1] + "</span></button>";
     };
     var T = this.TABS;

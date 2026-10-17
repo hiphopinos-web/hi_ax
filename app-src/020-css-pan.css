@@ -192,7 +192,7 @@
 /* ═══ v7.67 프로그램 탭 층별 칸 · 1F 칸(운영 시간 · TIME EVENT 카드 · 지도 · 구역 표 · 영상 보기) · 17F · 18F 칸 머리 · EVENT 부스 시트 · 선착순 시트(사용자 확정 261017 · 시안 디자인 시안/상시운영 1F 지도_261017) ═══ */
 /* 구역 간판 = 시트 머리 · 판 퀴즈 등은 주황 그대로(사용자 결정 261017 D16) · 1F 칸 구역 표 알약만 회색(divider 면 + body 글자 · 5.78:1 · 사용자 확정 261017) */
 .axs-pan .axs-sign.tev { background: var(--ax-color-brand); color: #FFFFFF; }   /* TIME EVENT = 1F 칸의 주황 채움 하나 */
-.axs-pan .axs-f1d .axs-sign, .axs-pan .axs-f1wc .axs-sign { background: var(--ax-color-divider); color: var(--ax-color-body); }   /* v7.69 옛 구역 표(axs-f1tb) 자리 = 설명 칸 · WELCOME 한 줄 카드 */
+.axs-pan .axs-f1d .axs-sign { background: var(--ax-color-divider); color: var(--ax-color-body); }   /* v7.69 옛 구역 표(axs-f1tb) 자리 = 설명 칸 */
 /* 정보 줄 = 알약 라벨(주황 테두리 · 주황 글자) + 값 */
 .axs-pan .axs-hrs { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--ax-space-8) var(--ax-space-12); margin: calc(var(--ax-space-8) * -1) 0 calc(var(--ax-space-4) * -1); }
 .axs-pan .axs-hrs .pl { display: inline-flex; align-items: center; justify-content: center; min-height: 26px; padding: 0 10px; border: 1px solid var(--ax-color-brand); border-radius: 999px; color: var(--ax-color-brandText); font: var(--ax-type-t7); font-weight: 600; white-space: nowrap; }
@@ -241,12 +241,8 @@
 .fs-big .axs-pan .axs-f1d .zr { grid-template-columns: minmax(0, 1fr); grid-template-areas: "zsg" "ztx" "bn" "zgo"; }
 .fs-big .axs-pan .axs-f1d .bn { justify-self: start; }
 .fs-big .axs-pan .axs-f1d .bn:empty { display: none; }
-/* WELCOME 한 줄 카드(지도 밖 · 주차장 체크인존) · 누르면 WELCOME 시트 */
-.axs-pan .axs-f1wc { display: flex; flex-direction: row; align-items: center; gap: var(--ax-space-12); width: 100%; padding: 14px var(--ax-space-20); border: 0; color: var(--ax-color-ink); font-family: inherit; text-align: left; cursor: pointer; }
-.axs-pan .axs-f1wc .axs-sign { flex: none; }
-.axs-pan .axs-f1wc .t { flex: 1 1 auto; min-width: 0; font: var(--ax-type-t6); color: var(--ax-color-ink); word-break: keep-all; }
-.axs-pan .axs-f1wc .cv { flex: none; line-height: 0; color: var(--ax-color-disabled); }
-.axs-pan .axs-f1wc .cv .axs-chev { width: 16px; height: 16px; }
+/* v7.71 (사용자 261017) 지도 아래 각주 한 줄 「* 주차장 체크인존(선착순 참여상 수령)」 · 작은 회색(caption · muted · 홈 .cstrip2 .sb 와 같은 글) · 누르면 WELCOME 시트 · 한 줄(괄호 묶음은 가르지 않음) */
+.axs-pan .axs-f1map .fn { display: block; margin: calc(var(--ax-space-12) * -1) var(--ax-space-4) -4px; padding: 6px 0; border: 0; background: transparent; font: var(--ax-type-caption); color: var(--ax-color-muted); text-align: left; white-space: nowrap; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 /* 영상 보기 접기(홈 axs-sfd 부품) · 영상 줄 = 썸네일 16:9 · 오른쪽 아래 길이 · 제목 · 회색 한 줄 · 셰브론 */
 .axs-pan .axs-vfd { margin-top: calc(var(--ax-space-8) * -1); }
 .axs-pan .axs-vfd .axs-sfdb i { font-style: normal; font-weight: 500; color: var(--ax-color-muted); }

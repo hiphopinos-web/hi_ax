@@ -520,7 +520,7 @@ function pbfNw(h) { return String(h).split(" · ").map(function (t, i) { return 
 function pbfOpen() { zoneOpen("pbf"); }
 function pbfCardHtml() {
   if (!pbfCardOn()) return "";
-  return '<section class="ax-card axs-pbf" aria-label="선착순 이벤트"><div class="h">' + pbfSign() + "<b>선착순 이벤트</b>" + pbfChip() + "</div>" + pbfRowsHtml() +
+  return '<section class="ax-card axs-pbf" aria-label="선착순 이벤트"><div class="h">' + pbfSign() + pbfChip() + "</div>" + pbfRowsHtml() +
     '<button type="button" class="ax-link axs-plain axs-self axs-pbfm" onclick="pbfOpen()">' + lnkChev("자세히 보기") + "</button></section>";
 }
 /* 홈 광고판 바로 아래 · 스탬프 위 한 줄 · 행사 당일 08:30~17:00 에만(행사 전 문구 없음 · 사용자 261017) · 누르면 같은 시트 */
@@ -528,17 +528,20 @@ function pbfHomeHtml() {
   if (!pbfLive()) return "";
   return '<button type="button" class="axs-pbfh" onclick="pbfOpen()"><span class="t"><b>1F 선착순 이벤트 중</b> · 자세히 보기</span>' + CHEV_SVG + "</button>";
 }
-/* 첫 진입 시트 · 1F 칸을 그릴 때(progAlwaysHtml) · 하루 한 번(기기 키 · 날짜) · 다른 시트 · 확인 창 · 영상 · 둘러보기 위에는 띄우지 않는다 */
+/* v7.71 (사용자 261017) 선착순 시트 첫 진입 = 아래 메뉴 「프로그램」을 누르는 순간(다른 탭에서 올 때 · navTap) · 옛 v7.67 = 1F 칸에 들어올 때(progAlwaysHtml) · 1F 칸 진입에서는 뜨지 않는다
+   조건(옛 그대로) = 10/26 17:00 전(pbfCardOn) · 하루 한 번(기기 키 pbf_seen · 날짜 · 닫아도 그날은 다시 안 뜸) · 다른 시트 · 확인 창 · 영상 · 둘러보기 위에는 띄우지 않음 */
 function pbfDayKey() { var d = appNow(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
 function pbfAutoSoon() {
   if (!pbfCardOn() || S.get("pbf_seen", "") === pbfDayKey()) return;
   setTimeout(function () {
     var k = pbfDayKey();
-    if (App.current !== "guide" || PROG.seg !== "always" || detShown() || document.hidden || !pbfCardOn() || S.get("pbf_seen", "") === k) return;
+    if (App.current !== "guide" || detShown() || document.hidden || !pbfCardOn() || S.get("pbf_seen", "") === k) return;
     if (el("axsSheet") || el("modal") ||(typeof IVP !== "undefined" && IVP.on) || (typeof tourInvHold === "function" && tourInvHold())) return;
     S.set("pbf_seen", k); pbfOpen();
   }, 450);
 }
+/* 아래 메뉴 누름 · 프로그램 탭을 다른 탭에서 눌렀을 때만 선착순 시트(같은 탭 안에서 다시 누름 · 상세 시트에서 돌아옴 · 홈 링크 · 딥링크는 아님) */
+function navTap(t) { var was = App.tabOf(App.current); App.tab(t); if (t === "guide" && was !== "guide") pbfAutoSoon(); }
 /* 시트 본문 · 세 줄 → 쿠키 세트 사진 → EVENT 시트로 가는 한 줄 */
 function pbfSheet() {
   return { cls: "axs-pan", fit: true, name: pbfSign(true), chips: pbfChip(), title: "선착순 이벤트",
@@ -599,10 +602,6 @@ function f1Pick(id) {
   [].forEach.call(mp.querySelectorAll(".mb"), function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-zone") === id)); });
   d.innerHTML = zoneRowHtml(id); AXM.rise(d);
 }
-/* WELCOME = 지도 밖(주차장 체크인존) 한 줄 카드 · 누르면 WELCOME 시트 */
-function f1WelHtml() {
-  return '<button type="button" class="ax-card axs-f1wc" onclick="zoneOpen(\'welcome\')">' + zoneSign("WELCOME") + '<span class="t">' + pbfNw("주차장 체크인존 · 선착순 참여상 수령처") + '</span><span class="cv">' + CHEV_SVG + "</span></button>";
-}
 /* 지도 = 리플릿 배치 그대로(위 = 리플릿 위 · D6 가로) · 그림(role img · 큰글씨 배율 없음 · 읽는 정보는 표) · 블록 위 투명 단추(구역 시트 · 계단 동행) · viewBox 884 x 404 */
 /* v7.69 (사용자 261017) WELCOME 칸은 지도 밖 한 줄 카드(f1WelHtml) · 지도 폭 884 → 724(벽 오른쪽 끝 712) · 그만큼 크게
    구역 칸마다 주황 겹(.hl · 고른 칸만 on) = 회색 칸 바로 위 · 글자 · 아이콘 아래 · 계단 겹은 벽을 덮지 않게 안으로 4 */
@@ -635,16 +634,18 @@ function f1MapHtml() {
   var pc = function (v, w) { return (v / w * 100).toFixed(2) + "%"; };
   return '<section class="ax-card axs-f1map"><div class="mw" role="group" aria-label="1층 지도 · 구역을 누르면 아래 설명이 바뀜">' + f1MapSvg() +
     F1_MAP_BT.map(function (b) { return '<button type="button" class="mb" data-zone="' + b[0] + '" style="left:' + pc(b[1], F1_MAP_W) + ";top:" + pc(b[2], F1_MAP_H) + ";width:" + pc(b[3], F1_MAP_W) + ";height:" + pc(b[4], F1_MAP_H) + '" onclick="f1Pick(\'' + b[0] + '\')" aria-pressed="' + (b[0] === sel) + '" aria-label="' + nm[b[0]] + '"></button>'; }).join("") + "</div>" +
-    '<p class="lgd" aria-hidden="true"><span>' + f1Seal(false) + "스탬프</span><span>" + f1Roul(false) + "3개면 룰렛</span></p></section>";   /* v7.69 메달(WELCOME)은 지도 밖이라 범례에서 뺌 */
+    '<p class="lgd" aria-hidden="true"><span>' + f1Seal(false) + "스탬프</span><span>" + f1Roul(false) + "3개면 룰렛</span></p>" +
+    '<button type="button" class="fn" onclick="zoneOpen(\'welcome\')">* 주차장 체크인존(선착순 참여상 수령)</button></section>';   /* v7.69 메달(WELCOME)은 지도 밖이라 범례에서 뺌 */
 }
 /* 정보 줄 = 알약 「운영 시간」(주황 테두리 · 주황 글자) + 값 · 1F 칸 · 17F · 18F 칸 같은 부품 */
 function hrsHtml(v) { return '<div class="axs-hrs"><span class="pl">운영 시간</span><span class="vs">' + [].concat(v).map(function (t) { return '<span class="v">' + esc(t) + "</span>"; }).join("") + "</span></div>"; }   /* v = 한 값 또는 층 순서 배열(줄마다 한 층 · 값 시작선 한 열) */
-/* v7.67 (사용자 확정 261017) 1F 칸 = 정보 줄(운영 시간) → TIME EVENT 카드 → 머리 「로비 / 자유 관람」(칸 안에서는 「1F」를 쓰지 않는다) → 지도 → 설명 칸(v7.69 · 옛 구역 표 7줄) → WELCOME 한 줄 카드(v7.69) → (Views.guide) 영상 보기 접기(progIvHtml)
+/* v7.67 (사용자 확정 261017) 1F 칸 = 정보 줄(운영 시간) → v7.71 (사용자 261017) 머리 「로비 맵」(지도 + 각주 「* 주차장 체크인존(선착순 참여상 수령)」 + 설명 칸) → 머리 「선착순 이벤트」(TIME EVENT 카드) → (Views.guide) 머리 「영상 보기」(접기 progIvHtml) · v7.69 WELCOME 한 줄 카드 → v7.71 지도 아래 각주
    옛 상시 운영 = 1F 로비 머리 · 행사 둘러보기 카드(tourRowHtml · 이제 홈에만) · 둘러보기 · 참여하기 묶음 줄 · EVENT 안 1F 타자왕 순위 줄(EVENT 시트 타자왕 칸으로) · 18F 커피챗 줄(17F · 18F 칸 카드 하나로) */
 function progAlwaysHtml() {
-  pbfAutoSoon();
-  return hrsHtml(F1_HOURS) + pbfCardHtml() +
-    '<section class="axs-zsec" id="zone1f"><div class="axs-bar"><b>로비</b><span>자유 관람</span></div>' + f1MapHtml() + f1DescHtml() + f1WelHtml() + "</section>";
+  var pc = pbfCardHtml();
+  return hrsHtml(F1_HOURS) +
+    '<section class="axs-zsec" id="zone1f"><div class="axs-bar"><b>로비 맵</b></div>' + f1MapHtml() + f1DescHtml() + "</section>" +
+    (pc ? '<section class="axs-zsec" id="zonePbf"><div class="axs-bar"><b>선착순 이벤트</b></div>' + pc + "</section>" : "");
 }
 /* 구역 상세 · 간판 칩(v4.94 포인트 크기) → 부제 한 줄 → 보조 줄(운영 시간 · 룰렛 · 스탬프 없음) → 얇은 ink 줄 → 하는 일(주황 점) → (사실 표) → 행동 버튼 하나(있을 때만) · 뒤로 = 프로그램
    v4.99 스탬프 도장 = 카드 오른쪽 위(강연 상세 sess_d 와 같은 axs-sthost · stampTagHtml) */
