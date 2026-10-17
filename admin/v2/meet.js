@@ -227,6 +227,7 @@ function mtChgN(M){ var c={ add:0, mv:0, out:0 }; M.chg.forEach(function(x){ if(
 function mtApplyAsk(){
   var M=mtCcM(), cn=mtChgN(M), add=cn.add, mv=cn.mv, out=cn.out, od=mtOrdChanged();
   if(!M.chg.length&&!od) return;
+  var d0=S.data.cc; if(!(d0&&d0.ok&&d0.pub)){ toast("서버 갱신 뒤 저장할 수 있습니다 · 옛 서버는 저장과 알림이 함께 나갑니다",{ bad:1 }); return; }   /* 261017 옛 서버(cchat_list pub 없음)는 draft 를 모른다 */
   confirmBox({ t:"초안 "+(M.chg.length+(od?1:0))+"건을 저장할까요?", who:"선정 "+add+"명 · 시간 바뀜 "+mv+"명 · 칸에서 뺌 "+out+"명", sub:"참가자 앱에는 알림 보내기 전까지 보이지 않음 · 알림 없음"+(od?" · 대기 줄 순서 저장":""), ok:"저장",
     run:function(){ return mtCcRun(M.chg.map(function(c){ return { e:c.e, to:c.to }; }), 1).then(function(res){ return (od?mtOrdSave():Promise.resolve(null)).then(function(){ return res; }); }); },
     done:function(res){ MT.fail=res.fail.length?res.fail:null; paint(); reload(["cc","nb","mnc"]);
