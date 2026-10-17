@@ -169,7 +169,7 @@ function floorGuideHtml() {
   if (f === 17) body = '<div class="axs-fl">' + progFlowHtml(17) + "</div>";
   else body = '<div class="axs-tt">' + SESSIONS.filter(function (s) { return s.fl === 10; }).map(function (s, i) {
     var tp = s.tm.split("~"), mi = !!sessMine(s.id);
-    return progTTRow("f" + i, { t0: tp[0], t1: tp[1], tok: mi ? "mine" : "", cls: mi ? " my" : "", title: s.ttl + " · " + sessPlace(s).replace(/^10F\s*·?\s*/, ""), badge: mi ? '<span class="axs-chip ok">내 세션</span>' : "", sub: s.sub, go: "sessOpen('" + s.id + "')" });
+    return progTTRow("f" + i, { t0: tp[0], t1: tp[1], tok: mi ? "mine" : "", cls: mi ? " my" : "", titleHtml: pbfNw(esc(s.ttl.replace(/^세션\s*/, "") + " · " + sessPlace(s).replace(/^10F\s*·?\s*/, ""))), badge: mi ? '<span class="axs-chip ok">내 세션</span>' : "", sub: s.sub, go: "sessOpen('" + s.id + "')" });
   }).join("") + "</div>";
   return '<div class="ax-stack axs-flg"><p class="ax-description">' + esc(g.sub) + "</p>" + body + tourFloorBackHtml() + "</div>";   /* 층 이름은 헤더(FLOOR_GD hdr) · 판 문법(axs-bar)은 쓰지 않는다 */
 }

@@ -1512,13 +1512,18 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-ttc .axs-chev { width: 20px; height: 20px; display: block; transform: rotate(90deg); transition: transform 0.18s ease; }
   .axs-ttc.up .axs-chev { transform: rotate(-90deg); }
   .axs-tt .rc .rb { padding: 0 0 var(--ax-space-16); }
+  /* v7.77 (사용자 261017) 10F 실습형 세션 목록(floor_d) = 6장이 폰 한 화면에 · 카드 사이 24 → 12 · 카드 높이 64 → 56 · 안쪽 위아래 9 → 6 · 시간 칸(tok 48) · 글자 크기 그대로 · 눌리는 높이 56 */
+  .axs-flg .axs-tt { gap: var(--ax-space-12); }
+  .axs-flg .axs-tt .rc { --rc-h: 56px; }
+  .axs-flg .axs-tt .rc .bd { padding: 6px 0; }
+  .axs-flg .axs-tt .rc .rh .tt { white-space: normal; overflow: visible; text-overflow: clip; }   /* 큰 글씨에서 제목이 넘치면 말줄임 대신 「 · 」 자리에서 둘째 줄로 */
   /* v5.21 시간표 = 점 노드 흐름 한 줄(사용자 261003 · 설계 「시간표 흐름/설계.md」 안 A · design.md A-5 5-10) · 시각 | 노드 + 레일 | 카드
      노드 3상태(지남 O50 작은 점 · 지금 O100 큰 점 + O25 고리 하나 · 앞 = 속 빈 점) · 같이 진행 중인 다른 줄(on) = O100 작은 점
      O25 · O50 = brand 를 흰색과 섞은 값(30% · 60% = design.md 오렌지 사다리 O25 · O50 과 같은 색 · 토큰에 없는 단이라 섞어 만든다)
      레일 = 노드 가운데에서 다음 노드 가운데까지(카드 높이 · 줄 간격과 무관하게 끊기지 않는다) · 바탕 회색 점선 위에 흐른 만큼 덧칠(지난 구간 O50 · 지금 구간 O100)
      카드 = 흰 면 · 지금 진행 중 하나만 주황 2px 테두리 · 지난 카드 = 면 없이 옅은 선 · 내 것은 칩 하나(틴트 없음) */
   .axs-fl { --fl-o25: color-mix(in srgb, var(--ax-color-brand) 30%, var(--ax-color-surface)); --fl-o50: color-mix(in srgb, var(--ax-color-brand) 60%, var(--ax-color-surface)); --nc: calc(12px + 0.703125rem); display: flex; flex-direction: column; padding-bottom: var(--ax-space-8); }
-  .axs-fl .fr { display: grid; grid-template-columns: 2.75rem 24px minmax(0, 1fr); column-gap: var(--ax-space-8); padding-bottom: calc(10px + var(--ex, 0px)); }
+  .axs-fl .fr { display: grid; grid-template-columns: 2.75rem 24px minmax(0, 1fr); column-gap: var(--ax-space-8); padding-bottom: var(--ax-space-12); }
   .axs-fl .tm { padding-top: 12px; white-space: nowrap; font: var(--ax-type-t6-strong); font-variant-numeric: tabular-nums; color: var(--ax-color-ink); }
   .axs-fl .fr.past .tm { color: var(--ax-color-muted); font-weight: 500; }
   .axs-fl .fr.now .tm { color: var(--ax-color-brandText); }
@@ -1527,12 +1532,12 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-fl .fr.past .nd { background: var(--fl-o50); box-shadow: none; }
   .axs-fl .fr.on .nd { background: var(--ax-color-brand); box-shadow: none; }
   .axs-fl .fr.now .nd { top: calc(var(--nc) - 7px); width: 14px; height: 14px; background: var(--ax-color-brand); box-shadow: 0 0 0 4px var(--fl-o25); }
-  .axs-fl .rl { position: absolute; z-index: 1; left: 50%; width: 6px; margin-left: -3px; top: var(--nc); bottom: calc(-10px - var(--ex, 0px) - var(--nc)); }
+  .axs-fl .rl { position: absolute; z-index: 1; left: 50%; width: 6px; margin-left: -3px; top: var(--nc); bottom: calc(var(--ax-space-12) * -1 - var(--nc)); }
   .axs-fl .rl::before, .axs-fl .rl::after { content: ""; position: absolute; left: 0; right: 0; top: 0; background: radial-gradient(circle, var(--dc) 1.6px, transparent 2.1px) 50% 0 / 6px 9px repeat-y; }
   .axs-fl .rl::before { --dc: var(--ax-color-disabled); bottom: 0; }
   .axs-fl .rl::after { --dc: var(--fl-o50); height: calc(var(--p, 0) * 100%); }
   .axs-fl .rl.cur::after { --dc: var(--ax-color-brand); }
-  .axs-fl .cs { display: flex; flex-direction: column; gap: var(--ax-space-8); min-width: 0; }
+  .axs-fl .cs { display: flex; flex-direction: column; gap: var(--ax-space-12); min-width: 0; }   /* v7.77 같은 시각 카드 사이도 줄 사이(fr 아래 12)와 같은 12 */
   .axs-fl .fc { position: relative; display: block; width: 100%; margin: 0; padding: 12px 36px 12px 14px; border: 0; border-radius: var(--ax-radius-16); background: var(--ax-color-surface); box-shadow: inset 0 0 0 2px transparent; color: var(--ax-color-ink); text-align: left; font: inherit; cursor: pointer; }
   .axs-fl .fc .mt { display: flex; align-items: center; gap: 6px; min-height: 14px; font: var(--ax-type-caption); color: var(--ax-color-muted); }
   .axs-fl .fc .mt .dg { flex: none; color: var(--ax-color-brand); }   /* v5.60 (사용자 261004 시안 A-1 「이거 마음에 들어」 · design.md 5-20 항목 5) 층 점 글자 = 브랜드 주황 O100 · 지난 카드 = muted(아래) · 장소 · 끝 시각 muted 그대로 */
@@ -1563,7 +1568,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-fl .fx10 .chv { flex: none; width: 20px; height: 20px; color: var(--ax-color-disabled); }
   .axs-fl .fx10 .chv .axs-chev { display: block; width: 20px; height: 20px; }
   /* v7.48 (사용자 261016) 14:00 1F EVENT 포토부스 선착순 줄(progFlowEv) · fx10 과 같은 낮은 위계 · 시작~30분 = 같은 회색 면 + 주황 글 「지금 · 소진 시까지」 · 끝난 뒤 = 면 없음 · 흐림 · 셰브론 숨김(누르면 시트는 열림) */
-  .axs-fl .fev { display: flex; align-items: center; gap: var(--ax-space-8); width: 100%; min-height: 48px; margin: 0; padding: 10px 10px 10px 14px; border: 0; border-radius: var(--ax-radius-12); background: var(--ax-color-inset); box-shadow: inset 0 0 0 1px var(--ax-color-divider); color: var(--ax-color-ink); text-align: left; font: inherit; cursor: pointer; }
+  .axs-fl .fev { display: flex; align-items: center; gap: var(--ax-space-8); width: 100%; min-height: 48px; margin: 0; padding: 12px 10px 10px 14px; border: 0; border-radius: var(--ax-radius-12); background: var(--ax-color-inset); box-shadow: inset 0 0 0 1px var(--ax-color-divider); color: var(--ax-color-ink); text-align: left; font: inherit; cursor: pointer; }
   .axs-fl .fev .x { display: flex; flex: 1 1 auto; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }
   .axs-fl .fev .mt { display: flex; align-items: center; gap: 6px; font: var(--ax-type-caption); color: var(--ax-color-muted); }
   .axs-fl .fev .mt .dg-w { display: flex; flex: none; color: var(--ax-color-brand); }
@@ -2175,6 +2180,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-msec { display: flex; flex-direction: column; gap: var(--ax-space-8); }
   .axs-msec > .ax-row { margin-bottom: var(--ax-space-4); }
   .axs-msec .axs-mtt { gap: var(--ax-space-8); }
+  .axs-msec .axs-myev { min-height: var(--ax-touch-size); color: var(--ax-color-ink); font: var(--ax-type-t6); }   /* v7.77 나의 일정 맨 아래 「선착순 이벤트 자세히 보기 ›」 가벼운 링크 줄(카드 아님 · 검정 글자) */
   /* v5.64 펼친 내 세션 카드 규칙 삭제 · 나의 일정 시간표 줄로 */
   #zone1f, #zone18f, #mysched { scroll-margin-top: calc(var(--stick, 0px) + var(--ax-space-12)); }
   /* v5.46 1층 둘러보기 초대(시안 「디자인 시안/둘러보기 초대/inv.css」) · 봉투 = O50 · O25 · O10 면(brand 와 surface 를 섞은 토큰 · hex 없음 · 주황 O100 채움은 주 버튼 하나) · 파랑 · 이모지 없음

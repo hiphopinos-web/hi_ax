@@ -175,7 +175,7 @@ function progAlwaysGo() {
    갈 곳이 없는 줄은 누를 수 없고, 펼침에만 있던 한 줄(누가 · 무엇)을 제목 아래에 둔다 · v4.99 Intro · Outro 도 상세 한 장으로 간다(TL_PROG intro · outro) */
 function progTTRow(k, o) {
   return rcHtml({ cls: o.cls + (o.go ? "" : " na"), onclick: o.go || "", link: !!o.go, chev: o.go ? undefined : false, left: tokBadge(o.t0, o.tok, o.t1 ? "~" + o.t1 : null),
-    title: esc(o.title) + (o.mine ? '<span class="ax-sr-only"> · 나의 일정</span>' : ""), badges: o.badge || "", sub: o.sub ? esc(o.sub) : "" });
+    title: (o.titleHtml || esc(o.title)) + (o.mine ? '<span class="ax-sr-only"> · 나의 일정</span>' : ""), badges: o.badge || "", sub: o.sub ? esc(o.sub) : "" });
 }
 /* v5.85 세 칸 · 「신청<wbr>하기」 = 좁은 폭(240 · 큰 글씨)에서 「신청 / 하기」로 나뉜다 · 「신청하기」 옆 작은 주황 점 = 둘 중 지금 신청할 수 있는 것이 하나라도 남음(applyOpenN) · 둘 다 신청했거나 마감이면 점 없음 */
 function progSegHtml() {
@@ -228,10 +228,10 @@ function progFlowHtml(onlyFl, myIts) {
   return g.map(function (r, i) {
     var nx = g[i + 1], b = Math.max.apply(null, r.its.map(function (o) { return o.b; }));
     var st = focus && r.its.indexOf(focus) >= 0 ? "now" : r.its.some(function (o) { return hmN >= o.a && hmN < o.b; }) ? "on" : hmN >= b ? "past" : "next";
-    var span = nx ? nx.a - r.a : 0, p = nx ? Math.max(0, Math.min(1, (hmN - r.a) / span)) : 0, ex = nx ? Math.min(52, Math.round(span * 0.35)) : 0;
+    var span = nx ? nx.a - r.a : 0, p = nx ? Math.max(0, Math.min(1, (hmN - r.a) / span)) : 0;   /* v7.77 (사용자 261017) 시간 차에 비례해 줄 사이를 벌리던 여분 --ex(최대 52px · 시간 차 × 0.35)를 없앴다 · 카드 사이 간격 = 한 값(12) */
     var rl = nx ? '<i class="rl' + (p >= 1 ? " done" : p > 0 ? " cur" : "") + '" style="--p:' + p.toFixed(3) + '"></i>' : "";
     var mn = myIts && r.its.some(function (o) { return o.mine; }) ? " mine" : "";   /* 나의 일정 · 내 일정이 든 줄 = 노드도 주황 채운 점 */
-    return '<div class="fr ' + st + mn + '" style="--ex:' + ex + 'px"><span class="tm">' + r.t0 + '</span><span class="ln" aria-hidden="true"><i class="nd"></i>' + rl + '</span><div class="cs">' +
+    return '<div class="fr ' + st + mn + '"><span class="tm">' + r.t0 + '</span><span class="ln" aria-hidden="true"><i class="nd"></i>' + rl + '</span><div class="cs">' +
       r.its.map(function (o) { return (myIts ? myFlowCard : progFlowCard)(o, hmN, focus === o); }).join("") + (!onlyFl && !myIts && r.t0 === TEN_ROW_AT && applyTenShow() ? progTenRowHtml() : "") + "</div></div>";
   }).join("");
 }
@@ -1156,7 +1156,7 @@ var MYFL_LEC = ["l1", "l2"];
 function myFlowOn() { return !!tenMine(); }
 function myFlowItems() {
   var tm = tenMine(), tp = tm ? tm.tm.split("~").map(function (t) { return t2m(t); }) : null;
-  var pub = progFlowItems().filter(function (o) { return !o.mine && ((MYFL_LEC.indexOf(o.k) < 0 && !o.brk && !o.ev) || (!!tp && (o.b <= tp[0] || o.a >= tp[1]))); }), mine = [];   /* 261007 휴식 줄도 강연과 같이 내 10F 세션과 겹치면 뺀다 */
+  var pub = progFlowItems().filter(function (o) { return !o.mine && !o.ev && ((MYFL_LEC.indexOf(o.k) < 0 && !o.brk && !o.ev) || (!!tp && (o.b <= tp[0] || o.a >= tp[1]))); }), mine = [];   /* 261007 휴식 줄도 강연과 같이 내 10F 세션과 겹치면 뺀다 */
   myAgendaItems().forEach(function (x) {
     if (!x.iv || myAgendaNow(x)) return;
     var k = x.kind, o = { k: k, my: k, a: x.iv[0], b: x.iv[1], t0: hm2(x.iv[0]), t1: hm2(x.iv[1]), mine: true };
@@ -1219,6 +1219,7 @@ function myAgendaHtml() {
     return '<section class="axs-msec" id="mysched"><p class="ax-meta">10월 26일 · 신청 ' + nm + "개 · 자유 참석 " + (fl.length - nm) + "개</p>" +
       (rws.length ? '<div class="axs-tt axs-mtt">' + rws.map(myAgendaRow).join("") + "</div>" : "") +
       '<div class="axs-fl axs-myfl" id="myFlow">' + progFlowHtml(0, fl) + "</div>" +
+      (pbfCardOn() ? '<button type="button" class="ax-link axs-plain axs-self axs-myev" onclick="pbfOpen()">' + lnkChev("선착순 이벤트 자세히 보기") + "</button>" : "") +   /* v7.77 (사용자 261017) 포토부스 선착순 회색 카드 2장(08:30 · 14:00)을 타임라인에서 빼고 맨 아래 가벼운 링크 줄로 · 누르면 선착순 시트 · 10/26 17:00 뒤(pbfCardOn 거짓)는 숨김 · 시간표 탭 · 홈은 그대로 */
       myCxHtml(items) + "</section>";
   }
   var head = n ? '<p class="ax-meta">10월 26일 · ' + n + "개</p>" : "";
