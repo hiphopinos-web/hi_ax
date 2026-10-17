@@ -12,17 +12,16 @@
       <h1 class="lf-title"><span>AX Festival</span> <span>2026</span></h1>
     </div>
     <form id="entryForm" class="lf-form" novalidate>
-      <div id="saCard" class="lf-clp lf-s1" data-r="card" hidden><div class="axs-sacard"><b>바로가기로 열렸어요</b><span>한 번 더 입장하면 다음부터 바로 열려요</span></div></div>
-      <p class="lf-who lf-s2" id="lgWho" data-r="who" hidden><b id="lgWhoN"></b><span id="lgWhoS"></span></p>
-      <label class="lf-f lf-s1" data-r="field"><input id="empId" inputmode="numeric" pattern="[0-9]*" placeholder=" " autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next" oninput="numOnly(this, event)" data-imeend="num" aria-describedby="err"><span>사번</span></label>
-      <label class="lf-f lf-s1" data-r="field"><input id="userName" placeholder=" " autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="go" aria-describedby="err"><span>이름</span></label>
-      <div class="lf-f lf-pw lf-s2" data-r="field" hidden><input id="userPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" enterkeyhint="go" oninput="numOnly(this, event)" placeholder=" " autocomplete="off" aria-describedby="pinNote err" aria-labelledby="lgPinL"><span id="lgPinL">비밀번호 4자리</span><button type="button" class="lf-eye" id="lgEye" onclick="lpEye('userPin', this)" onmousedown="event.preventDefault()">보기</button></div>
-      <div class="lf-s2" data-r="hint" hidden><p class="lf-note" id="pinNote"></p></div>
-      <div class="lf-clp lf-s2" data-r="pill" id="lgReqW" hidden><p class="ax-meta axs-pend" id="lgReq" role="status"></p></div>
+      <div id="saCard" class="lf-clp" data-r="card" hidden><div class="axs-sacard"><b>바로가기로 열렸어요</b><span>한 번 더 입장하면 다음부터 바로 열려요</span></div></div>
+      <label class="lf-f" data-r="field"><input id="empId" inputmode="numeric" pattern="[0-9]*" placeholder=" " autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next" oninput="numOnly(this, event)" data-imeend="num" aria-describedby="err"><span>사번</span></label>
+      <label class="lf-f" data-r="field"><input id="userName" placeholder=" " autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="next" aria-describedby="err"><span>이름</span></label>
+      <div class="lf-f lf-pw" data-r="field"><input id="userPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" enterkeyhint="go" oninput="numOnly(this, event)" placeholder=" " autocomplete="off" aria-label="비밀번호" aria-describedby="lgPinL pinNote err"><span id="lgPinL">숫자 4자리 · 처음이면 새로 정하기</span><button type="button" class="lf-eye" id="lgEye" onclick="lpEye('userPin', this)" onmousedown="event.preventDefault()">보기</button></div>
+      <div data-r="hint" id="pinNoteW" hidden><p class="lf-note" id="pinNote"></p></div>
+      <div class="lf-clp" data-r="pill" id="lgReqW" hidden><p class="ax-meta axs-pend" id="lgReq" role="status"></p></div>
       <p id="err" role="alert" data-r="err"></p>
       <div class="lf-find" data-r="find" id="lgFindW" hidden><button type="button" class="ax-button ax-button-weak" onclick="pwLostOpen()">비밀번호 찾기</button></div>
-      <div class="lf-btn" data-r="btn"><button type="submit" class="ax-button ax-button-dark">다음</button></div>
-      <div class="lf-clp lf-s2" data-r="links" hidden><div class="lf-links"><button type="button" class="ax-link" id="lgLost" onclick="pwLostOpen()">비밀번호를 잊었어요</button><button type="button" class="ax-link" onclick="lgBack()">다른 사번으로</button></div></div>
+      <div class="lf-btn" data-r="btn"><button type="submit" class="ax-button ax-button-dark">입장</button></div>
+      <div class="lf-clp" data-r="links" id="lgLinks" hidden><div class="lf-links"><button type="button" class="ax-link" id="lgLost" onclick="pwLostOpen()">비밀번호를 잊었어요</button></div></div>
     </form>
   </section>
 

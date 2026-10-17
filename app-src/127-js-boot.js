@@ -205,6 +205,12 @@
   }
 
   el("entryForm").addEventListener("input", function () { lfErrClear(el("entryForm"), el("err")); });   /* v5.02 입력을 고치면 오류 알약이 안내 한 줄로 돌아온다 */
+  /* 261017 한 화면 세 칸 · 사번 · 이름이 다 들어오면 뒤에서 묻는다(lpPeekSoon · 입력 0.4초 멈춤 · 칸을 떠남 · 비밀번호 칸에 들어옴) */
+  ["empId", "userName"].forEach(function (f) {
+    el(f).addEventListener("input", function () { lpPeekSoon(false); });
+    el(f).addEventListener("blur", function () { lpPeekSoon(true); });
+  });
+  el("userPin").addEventListener("focus", function () { lpPeekSoon(true); });
   el("entryForm").addEventListener("submit", function (e) {
     e.preventDefault();
     var id = el("empId").value.trim();
@@ -214,30 +220,26 @@
     var btn = el("entryForm").querySelector("button[type=submit]");
     var show = function (m, f) { lfErr(el("entryForm"), err, m, f); };   /* v5.02 오류 = 안내 자리에 흰 알약 + 문제 칸 테두리 */
     /* 사번 형식은 회사마다 달라 느슨하게 받고, 실제 확인은 서버(명부)가 한다 */
+    /* 261017 한 화면 세 칸 · 사번 · 이름 칸에서 Enter(키보드 「다음」) = 오류 없이 다음 빈 칸으로 · 비밀번호 칸 Enter = 입장 */
+    var ae = document.activeElement, inTop = ae === el("empId") || ae === el("userName"), nx = function (f) { try { el(f).focus(); } catch (x) {} };
     if (!/^[A-Za-z0-9-]{3,15}$/.test(id)) { show("사번을 확인해주세요.", "empId"); return; }
-    if (nm.length < 2) { show("이름을 입력해주세요.", "userName"); return; }
+    if (nm.length < 2) { if (!nm && ae === el("empId")) { nx("userName"); return; } show("이름을 입력해주세요.", "userName"); return; }
     lfErrClear(el("entryForm"), err);
 
-    if (LP.step !== 2) {   /* 261016 1단계 = 사번 · 이름 · 「다음」 */
-      if (!BE.on) {                       /* 서버 없이 단독 동작 (기존 방식) */
-        personClaim(id);   /* v4.56 */
-        S.set("user", { empId: id, name: nm });
-        enterApp();
-        a2hsAuto();
-        return;
-      }
-      if (btn.disabled) return;
-      lfBusy(btn, true);   /* 누른 순간 「확인 중」 · 3초 안에 답이 없으면 통합 화면(lpPeek) */
-      lpPeek(id, nm, btn, show);
+    if (!BE.on) {                       /* 서버 없이 단독 동작 (기존 방식 · 비밀번호 칸 없음) */
+      personClaim(id);   /* v4.56 */
+      S.set("user", { empId: id, name: nm });
+      enterApp();
+      a2hsAuto();
       return;
     }
     var setNew = LP.mode === "new" || LP.mode === "reset";
-    if (!/^\d{4}$/.test(pin)) { show(setNew ? "비밀번호 4자리를 정해 주세요." : "비밀번호 4자리를 입력해 주세요.", "userPin"); return; }
+    if (!/^\d{4}$/.test(pin)) { if (!pin && inTop) { nx("userPin"); return; } show(setNew ? "비밀번호 4자리를 정해 주세요." : "비밀번호 4자리를 입력해 주세요.", "userPin"); return; }
     if (btn.disabled) return;
     try { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch (e) {}   /* v4.94 키보드를 먼저 닫는다(장면은 키보드 없는 화면에서 시작) */
 
-    lfBusy(btn, true);   /* v4.95 로그인 두 화면 예외 · 덮개 없이 버튼 안에서만 */
-    var reset = function () { lfBusy(btn, false, lpBtnLabel()); };
+    lfBusy(btn, true);   /* v4.95 로그인 두 화면 예외 · 덮개 없이 버튼 안에서만 · 261017 묻기(login_peek)를 기다리지 않는다 */
+    var reset = function () { lfBusy(btn, false, "입장"); };
     beHash(id, pin).then(function (h) {
       beCall({ action: "login", emp: id, name: nm, h: h }, function (res) {
         if (!res || !res.ok) {
@@ -250,12 +252,11 @@
             name: "이름이 사번과 맞지 않아요. 다시 확인해 주세요",
             param: "입력값을 다시 확인해주세요."
           };
-          var fld = { notfound: "empId", name: "userName" }[res && res.reason] || "";
-          if (fld) lpStep(1);   /* 통합 화면에서 사번 · 이름이 틀림 = 1단계로 돌아가 그 칸에 */
+          var fld = { notfound: "empId", name: "userName" }[res && res.reason] || "";   /* 261017 한 화면 · 그 칸에 테두리 */
           show((res && msg[res.reason]) || "연결에 실패했어요. 잠시 후 다시 시도해주세요.", fld);
           return;
         }
-        var reg = LP.mode === "pin" ? LP.reg : (setNew || res.isNew) ? lpKst(res.now) : "";   /* 261016 다음 #quick 안내 시각 · 통합 화면 기존 계정 = 모름 */
+        var reg = LP.mode === "pin" ? LP.reg : (setNew || res.isNew) ? lpKst(res.now) : "";   /* 261016 다음 #quick 안내 시각 · 묻기 전에 입장한 기존 계정 = 모름 */
         lpReqClear(id); LP.bad[id] = 0;
         personClaim(id);   /* v4.56 로그인 사번이 이 기기 기록 주인과 다르면 먼저 지운다 */
         S.set("user", { empId: id, name: res.name || nm, dept: res.dept || "", ses: res.ses || "" });   /* v4.67 참가자 세션 토큰(새 서버만) */

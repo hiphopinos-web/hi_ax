@@ -1055,13 +1055,16 @@ function lfBusy(btn, on, label) {
   else { btn.removeAttribute("aria-busy"); btn.textContent = label; }
 }
 
-/* ═══ 261016 로그인 두 단계 · 비밀번호 틀림 계단 (기획 문서/로그인 PIN · 설치 안내 개선_261015.md 4-1 · 4-2 · 사용자 결정 D2 · D3) ═══
-   1단계 = 사번 · 이름 · 「다음」 → 서버 login_peek → 2단계 갈래
-     new = 「비밀번호 4자리 정하기」(숫자 보임 · 숨기기) · reset = 같은 화면 + 「초기화됨 · 새로 정하기」 · pin = 「비밀번호 4자리」(가림 · 보기 · 정한 시각)
-     uni = 통합 화면(3초 안에 답이 없거나 옛 서버) · 두 줄 안내 · login 하나로 끝낸다
-   틀림 = 1 · 2회 「맞지 않아요 · 10/19 에 정한 4자리」 · 3회부터 + 「비밀번호 찾기」 · 잠김 = 남은 분 + 「비밀번호 찾기」 · 횟수 = 이 화면 세션(서버는 그대로 10분 10회)
-   찾기 요청을 보낸 기기 = 정한 계정 화면에 「초기화 요청 보냄」 알약(axf_pw_req_at · 초기화되면 peek 가 reset 을 준다 · 입장하면 지운다) */
-var LP = { step: 1, mode: "", name: "", reg: "", bad: {}, sa: false, PEEK_MS: 3000 };
+/* ═══ 261017 로그인 한 화면 세 칸 · 비밀번호 틀림 계단 (사용자 261017 「한 번 화면을 넘어가는 것 이상해」 · 261016 두 단계 번복 · 결정 이력 261017) ═══
+   사번 · 이름 · 비밀번호 세 칸 · 버튼 「입장」 하나 · 화면을 넘기지 않는다 · 입장은 login 하나로 끝낸다(묻기를 기다리지 않는다)
+   서버 login_peek 은 그대로 · 사번 · 이름이 다 들어오면(입력 0.4초 멈춤 · 칸을 떠남 · 비밀번호 칸에 들어옴) 뒤에서 묻고 비밀번호 칸의 흐린 안내 · 칸 아래 줄을 바꾼다
+     new = 「처음 입장 · 새로 정할 숫자 4자리」 · reset = 「초기화됨 · 새로 정할 숫자 4자리」 · 둘 다 숫자 보임(숨기기) + 아래 줄 「다음 입장부터 이 4자리 · 사내 비밀번호와 다르게」
+     pin = 「10/17에 정한 숫자 4자리」(등록 날짜 · 모르면 「처음 입장 때 정한 숫자 4자리」 · 가림 · 보기) + 「비밀번호를 잊었어요」
+     기본(묻기 전 · 사번 · 이름 미완성 · 답 없음 · 느림 · 실패 · 옛 서버 · 사번 · 이름 불일치) = 「숫자 4자리 · 처음이면 새로 정하기」 · 불일치 오류는 입장을 누를 때 login 이 알린다
+     잠김 = 잠김 안내 + 「비밀번호 찾기」 · notopen · ended = beCall 이 안내 화면 · 답은 그 사번 · 이름 그대로일 때만 쓴다(LP.key · LP.seq) · 칸을 고치면 기본으로
+   틀림 = 1 · 2회 「맞지 않아요 · 10/19 에 정한 4자리」 · 3회부터 + 「비밀번호 찾기」 · 잠김 = 「비밀번호 찾기」 · 횟수 = 이 화면 세션(서버는 그대로 10분 10회)
+   찾기 요청을 보낸 기기 = 정한 계정 안내에 「초기화 요청 보냄」 알약(axf_pw_req_at · 초기화되면 peek 가 reset 을 준다 · 입장하면 지운다) */
+var LP = { mode: "", key: "", seq: 0, tm: 0, reg: "", bad: {}, sa: false, WAIT_MS: 400 };
 var LP_REQ = "axf_pw_req_at";
 var LP_WD = ["일", "월", "화", "수", "목", "금", "토"];
 function lpZ(n) { return (n < 10 ? "0" : "") + n; }
@@ -1097,39 +1100,73 @@ function lpEye(id, b) {
   b.setAttribute("aria-pressed", show ? "true" : "false");
   if (document.activeElement === i) { try { i.setSelectionRange(s, e2); } catch (x) {} }
 }
-/* 첫 화면 단계 바꾸기 · n = 1 | 2 · mode = new | reset | pin | uni */
-function lpStep(n, mode) {
-  var f = el("entryForm");
-  if (!f) return;
-  LP.step = n; LP.mode = n === 2 ? mode : "";
-  f.setAttribute("data-step", String(n));
-  [].forEach.call(f.querySelectorAll(".lf-s1"), function (x) { x.hidden = n !== 1 || (x.id === "saCard" && !LP.sa); });
-  [].forEach.call(f.querySelectorAll(".lf-s2"), function (x) { x.hidden = n !== 2; });
-  if (el("lgFindW")) el("lgFindW").hidden = true;
-  lfErrClear(f, el("err"));
-  var btn = f.querySelector("button[type=submit]"), pin = el("userPin"), eye = el("lgEye");
-  if (n === 1) { btn.textContent = "다음"; pin.value = ""; lfSoon(); return; }
-  var set = mode === "new" || mode === "reset";
-  el("lgWhoN").textContent = (LP.name || "") + "님";
-  el("lgWhoS").textContent = mode === "new" ? "· 처음 입장" : mode === "reset" ? "· 초기화됨 · 새로 정하기" : "";
-  el("lgPinL").textContent = set ? "비밀번호 4자리 정하기" : "비밀번호 4자리";
-  pin.value = ""; pin.type = set ? "text" : "password";
-  if (eye) { eye.textContent = set ? "숨기기" : "보기"; eye.setAttribute("aria-pressed", set ? "true" : "false"); }
-  el("pinNote").innerHTML = set ? segHtml("다음 입장부터 이 4자리 · 사내 비밀번호와 다르게") : mode === "pin" ? esc(lpHint(LP.reg)) : "<ax-seg>처음 입장 : 새로 정할 4자리</ax-seg><ax-seg>다시 입장 : 정했던 4자리</ax-seg>";
-  el("pinNote").classList.toggle("segfix", !set && mode !== "pin");   /* v7.54 두 줄 목록 = 공용 점 부품(주황 바탕 = 점 그 줄 글자색) · 옛 글자 「· 」 + <br> */
-  btn.textContent = set ? "이 번호로 입장" : "입장";
-  if (el("lgLost")) el("lgLost").hidden = set;   /* 정하기 화면 링크 = 「다른 사번으로」 하나 */
-  lpReqShow("lgReqW", "lgReq", set ? "" : el("empId").value.trim());
-  lfSoon();
-  [].forEach.call(f.querySelectorAll(".lf-s2"), function (x) { if (!x.hidden && typeof AXM !== "undefined") AXM.rise(x); });
-  setTimeout(function () { try { pin.focus(); } catch (e) {} }, 150);
+/* 비밀번호 칸의 흐린 안내 · mode = "" | new | reset | pin */
+function lpPinLbl(mode, reg) {
+  if (mode === "new") return "처음 입장 · 새로 정할 숫자 4자리";
+  if (mode === "reset") return "초기화됨 · 새로 정할 숫자 4자리";
+  if (mode === "pin") { var r = lpReg(reg); return (r ? r.day + "에" : "처음 입장 때") + " 정한 숫자 4자리"; }
+  return "숫자 4자리 · 처음이면 새로 정하기";
 }
-function lpBtnLabel() { return LP.step !== 2 ? "다음" : LP.mode === "new" || LP.mode === "reset" ? "이 번호로 입장" : "입장"; }
-/* 「다른 사번으로」 = 1단계 · 사번 · 이름을 비운다 */
-function lgBack() {
-  el("empId").value = ""; el("userName").value = "";
-  lpStep(1);
-  setTimeout(function () { try { el("empId").focus(); } catch (e) {} }, 150);
+/* 비밀번호 칸 갈래 바꾸기 · 칸 값 · 초점 · 커서는 그대로 · 갈래가 바뀔 때만 숫자 보임(정하기) · 가림(정한 계정 · 기본)을 다시 맞춘다 */
+function lpMode(mode) {
+  var pin = el("userPin"), eye = el("lgEye"), note = el("pinNote"), nw = el("pinNoteW");
+  if (!pin) return;
+  mode = mode || "";
+  var was = LP.mode, set = mode === "new" || mode === "reset";
+  LP.mode = mode;
+  if (!mode) LP.reg = "";
+  el("lgPinL").textContent = lpPinLbl(mode, LP.reg);
+  if (was !== mode) {
+    var ty = set ? "text" : "password";
+    if (pin.type !== ty) { var s = pin.selectionStart, e2 = pin.selectionEnd; pin.type = ty; if (document.activeElement === pin) { try { pin.setSelectionRange(s, e2); } catch (x) {} } }
+    if (eye) { eye.textContent = set ? "숨기기" : "보기"; eye.setAttribute("aria-pressed", set ? "true" : "false"); }
+  }
+  var noteOn = set, wasOn = nw && !nw.hidden;
+  if (note) note.innerHTML = noteOn ? segHtml("다음 입장부터 이 4자리 · 사내 비밀번호와 다르게") : "";
+  if (nw) nw.hidden = !noteOn;
+  if (el("lgLinks")) el("lgLinks").hidden = mode !== "pin";
+  lpReqShow("lgReqW", "lgReq", mode === "pin" ? (el("empId").value || "").trim() : "");
+  lfSoon();
+  if (noteOn && !wasOn && nw && typeof AXM !== "undefined") AXM.rise(nw);
+}
+/* 사번 · 이름이 다 들어왔으면 묻기 열쇠 「사번|이름」 · 아니면 "" (입장 검사와 같은 조건) */
+function lpKey() {
+  var id = ((el("empId") || {}).value || "").trim(), nm = ((el("userName") || {}).value || "").trim();
+  return /^[A-Za-z0-9-]{3,15}$/.test(id) && nm.length >= 2 ? id + "|" + nm : "";
+}
+/* 칸이 바뀌면 · now = 칸을 떠남 · 비밀번호 칸에 들어옴(바로) | 입력 중(0.4초 멈추면) */
+function lpPeekSoon(now) {
+  clearTimeout(LP.tm);
+  var k = lpKey();
+  if (k !== LP.key) {   /* 지난 답은 다른 사번 · 이름의 것 · 기본 안내로 */
+    LP.key = ""; LP.seq++;
+    if (LP.mode) lpMode("");
+    if (el("lgFindW")) el("lgFindW").hidden = true;
+  }
+  if (!k || k === LP.key || !BE.on) return;
+  if (now) lpPeek(k); else LP.tm = setTimeout(function () { lpPeek(lpKey()); }, LP.WAIT_MS);
+}
+/* 뒤에서 묻기 · 화면은 넘기지 않는다 · 답은 칸이 그대로일 때만 쓴다 */
+function lpPeek(k) {
+  if (!k || k !== lpKey() || k === LP.key || !BE.on) return;
+  var seq = ++LP.seq, i = k.indexOf("|"), id = k.slice(0, i), nm = k.slice(i + 1);
+  LP.key = k;
+  beCall({ action: "login_peek", emp: id, name: nm }, function (res) {
+    if (seq !== LP.seq || k !== lpKey()) return;   /* 그새 칸을 고쳤다 */
+    if (res && res.ok && /^(new|pin|reset)$/.test(res.state)) {
+      LP.reg = res.state === "pin" ? String(res.reg || "") : "";
+      if (res.state !== "pin") lpReqClear(id);
+      lpMode(res.state);
+      return;
+    }
+    if (res && res.reason === "lock") {
+      LP.reg = ""; lpMode("pin");
+      lpBad({ box: el("entryForm"), err: el("err"), find: "lgFindW", input: "userPin", emp: id, reg: "", reason: "lock", retry: res.retry });
+      return;
+    }
+    if (!res || res.reason === "busy") LP.key = "";   /* 다시 물을 수 있게(칸을 떠나거나 비밀번호 칸에 들어오면) */
+    /* notfound · name · param · 옛 서버(모르는 액션) = 기본 안내 그대로 · notopen · ended = beCall 이 안내 화면을 띄웠다 */
+  }, function () { if (seq === LP.seq) LP.key = ""; });
 }
 /* 틀림 계단 · o = { box, err, find(찾기 줄 id), input, emp, reg, reason: pw | lock, retry } */
 function lpBad(o) {
@@ -1140,33 +1177,4 @@ function lpBad(o) {
   o.err.innerHTML = segHtml(esc(msg));
   if (el(o.find)) el(o.find).hidden = !(o.reason === "lock" || n >= 3);
   lfSoon();
-}
-/* 1단계 「다음」 · 서버에 먼저 묻는다 · 3초 안에 답이 없거나 옛 서버(모르는 액션) = 통합 화면 */
-function lpPeek(id, nm, btn, show) {
-  var done = false, reset = function () { lfBusy(btn, false, lpBtnLabel()); };
-  var uni = function () { LP.name = nm; LP.reg = ""; lpStep(2, "uni"); reset(); };
-  var t = setTimeout(function () { if (done) return; done = true; uni(); }, LP.PEEK_MS);
-  beCall({ action: "login_peek", emp: id, name: nm }, function (res) {
-    if (done) return;
-    done = true; clearTimeout(t);
-    if (res && res.ok && /^(new|pin|reset)$/.test(res.state)) {
-      LP.name = res.name || nm; LP.reg = res.state === "pin" ? String(res.reg || "") : "";
-      if (res.state !== "pin") lpReqClear(id);
-      lpStep(2, res.state); reset(); return;
-    }
-    if (res && (res.reason === "notopen" || res.reason === "ended")) { reset(); return; }   /* beCall 이 「열려요」 · 종료 안내 화면을 띄웠다 */
-    if (res && res.reason === "lock") {
-      LP.name = nm; LP.reg = ""; lpStep(2, "pin"); reset();
-      lpBad({ box: el("entryForm"), err: el("err"), find: "lgFindW", input: "userPin", emp: id, reg: "", reason: "lock", retry: res.retry });
-      return;
-    }
-    var m = res && {
-      notfound: ["사번을 확인하지 못했어요. 다시 확인해 주세요 · 계속되면 운영 데스크에 문의해 주세요", "empId"],
-      name: ["이름이 사번과 맞지 않아요. 다시 확인해 주세요", "userName"],
-      param: ["입력값을 다시 확인해주세요.", ""],
-      busy: ["연결에 실패했어요 · 다시 누르세요", ""]
-    }[res.reason];
-    if (m) { reset(); show(m[0], m[1]); return; }
-    uni();   /* 옛 서버(peek 없음 · unknown action) · 그 밖 */
-  }, function () { if (done) return; done = true; clearTimeout(t); reset(); show("연결에 실패했어요 · 다시 누르세요"); });
 }

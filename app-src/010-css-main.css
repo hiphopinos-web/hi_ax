@@ -90,15 +90,15 @@
   @media (prefers-reduced-motion: reduce) { .axs-lf .lf-btn .ax-button[aria-busy="true"]::after { animation: none; } }
   .axs-lf .lf-who { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 var(--ax-space-8); margin: 0; font: var(--ax-type-t4); color: var(--ax-color-onBrand); }
   .axs-lf .lf-who span { font: var(--ax-type-t6); }
-  /* 261016 로그인 두 단계(기획 문서/로그인 PIN · 설치 안내 개선_261015.md) · 1단계 = 사번 · 이름 · 「다음」 · 2단계 = 머리 · 비밀번호 칸(보기 · 숨기기) · 안내(접히지 않는 hint 줄) · 찾기 요청 알약 · 틀림 계단 · 「비밀번호 찾기」 */
+  /* 261017 로그인 한 화면 세 칸(261016 두 단계 번복) · 사번 · 이름 · 비밀번호 칸(보기 · 숨기기 · 흐린 안내 = 뒤에서 묻은 갈래) · 안내(접히지 않는 hint 줄) · 찾기 요청 알약 · 틀림 계단 · 「비밀번호 찾기」 */
   .axs-lf .lf-f.lf-pw input { padding-right: 72px; letter-spacing: 0.12em; }
   .axs-lf .lf-f.lf-pw > span { right: 72px; }
+  #entryForm .lf-pw input:placeholder-shown:not(:focus) + span { right: var(--ax-space-8); }   /* 261017 빈 칸 = 「보기」를 숨기고 흐린 안내가 칸 너비를 다 쓴다(360 큰글씨 「숫자 4자리 · 처음이면 새로 정하기」 한 줄) */
+  #entryForm .lf-pw input:placeholder-shown:not(:focus) ~ .lf-eye { visibility: hidden; }
   .axs-lf .lf-eye { position: absolute; right: 4px; top: 4px; bottom: 4px; min-width: 64px; padding: 0 var(--ax-space-12); border: 0; border-radius: var(--ax-radius-8); background: transparent; cursor: pointer; color: var(--ax-color-brandText); font: 600 0.875rem/1 var(--ax-font); }
   .axs-lf .lf-form.lf-errs [data-r="hint"] { display: none; }   /* 틀림 안내가 안내 줄 자리에(같은 날짜 · 시각을 말한다) */
   .axs-lf .lf-note ax-seg { display: inline-block; }
   .axs-lf .lf-find .ax-button { min-height: 44px; margin: 0; padding: 0 var(--ax-space-16); font: 600 0.9375rem/1.2 var(--ax-font); }
-  .axs-lf .lf-who.lf-s2 b { font: var(--ax-type-t4); }
-  .axs-lf .lf-who.lf-s2 span:empty { display: none; }
   .axs-lf .lf-links .ax-link[hidden] { display: none; }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
   .note { text-align: center; font-size: calc(12.5px * var(--fs)); line-height: 1.5; color: var(--muted); }
