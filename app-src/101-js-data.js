@@ -92,12 +92,13 @@ var STAMP_CC = { id: "cc", title: "18F 커피챗", short: "커피챗", desc: "�
 var STAMP_LN = { id: "ln", title: "1F AX 라운지", short: "AX 라운지", desc: "승인된 상담 참석", where: "1F · 스태프 인증", staff: 1, x2: 1, tap: "progOpen('dap')", cta: "내 상담" };
 var STAMP_SUBS = [STAMP_CC, STAMP_LN];
 /* 261013 오후 판 = 참여자의 하루 흐름 4단계 · 줄 번호 1~8 = 이 순서(lg qz p4 p5 p2 st p3 sv · 서버 STAMP_IDS 와 같은 순서) */
+/* v7.67 (사용자 261017 층별 칸) p3 cta 「프로그램 보기」 · 옛 「참여하기」(칸 이름이 「17F · 18F」로 바뀜) · 목적지 그대로(progApplyGo) */
 var STAMPS_V2 = [
   { id: "lg", title: "최초 로그인", short: "로그인", desc: "로그인하면 자동 적립", where: "자동", inapp: 1, auto: 1 },
   { id: "qz", title: "AX 퀴즈", short: "AX 퀴즈", desc: "5문제 · 모두 답하면 완주", where: "AX 퀴즈", inapp: 1, tap: "App.go('quiz')", cta: "AX 퀴즈 풀기" },
   { id: "p4", title: "미니 게임", short: "미니 게임", desc: "AX 팡 · 점프 · 테트리스 3종 · 종목마다 한 판", where: "팡 · 점프 · 테트리스", inapp: 1, tap: "App.go('games')", cta: "미니 게임 하기" },
   stampDefV1("p5"), STAMP_P2, stampDefV1("st"),
-  { id: "p3", title: "프로그램 참여", short: "프로그램", desc: "17F 오후 AWS · MS 강연 2개 · 1F AX 라운지 2개 · 18F 커피챗 1개 · 최대 2개", where: "", site: 1, x2: 1, tap: "progApplyGo()", cta: "참여하기" },
+  { id: "p3", title: "프로그램 참여", short: "프로그램", desc: "17F 오후 AWS · MS 강연 2개 · 1F AX 라운지 2개 · 18F 커피챗 1개 · 최대 2개", where: "", site: 1, x2: 1, tap: "progApplyGo()", cta: "프로그램 보기" },
   stampDefV1("sv")
 ];
 /* 단계 4개 · t = 단계 이름 · s = 옆 짧은 말(받는 길 · 시각) · ids = 그 단계 줄(STAMPS_V2 순서 그대로) · 261016 사전등록 체크인(ck 3개) 줄 걷음 */
@@ -172,8 +173,13 @@ function stampKnown(id) { return id === STAMP_HALF || id === STAMP_P10 || id ===
 function stampCount() { return Math.min(STAMP_DENOM, stampGot()); }
 /* 3개 = 룰렛(응모권 0) · 4·5·6 = 1·2·3장 · 6개 넘게 받아도 3장 */
 function raffleTickets(n) { return Math.max(0, Math.min(RAFFLE_MAX, Math.min(REWARD_CAP, n) - 3)); }
+/* v7.67 (사용자 확정 261017) 1F 포토부스 선착순 문구 원천 한 곳 · [시작 시각, 내용] · 표기 = 「08:30 ~ : 커피 50잔」(시작 시각 + 「 ~ : 」 + 내용 · 사용자 표기 그대로)
+   쓰는 곳 = 시간표 두 줄(TIMELINE ev) · 1F 칸 TIME EVENT 카드 · 선착순 시트 · EVENT 시트 「선착순 받으려면」 상자 · 오전 · 오후 중복 수령 언급 없음(261016) */
+var PB_FCFS = [["08:30", "커피 50잔"], ["14:00", "커피 · 쿠키 세트 100개 · 무작위"]], PB_FCFS_HOW = "포토부스 사진 촬영 후 받기 · 소진 시 종료";
+function pbfTxt(i) { var r = PB_FCFS[i] || PB_FCFS[0]; return r[0] + " ~ : " + r[1]; }
 var TIMELINE = [
   /* v3.29 공식 공지 붙임1·2(260917) 기준 · 순서 = 시작 시각순 · NOW_INDEX(데모 1 = 기조연설) 가 이 순서를 가리킨다 */
+  { time: "08:30", end: "09:00", title: "포토부스 선착순", short: "08:30 ~ : 커피 50잔", place: "1F EVENT", desc: "", tag: "", ev: 1 },   /* v7.67 (사용자 261017 D13) 08:30 시작 선착순 줄 · 14:00 줄과 같은 낮은 위계(progFlowEv) · 08:30~09:00 = 「지금 · 소진 시 종료」 표시 구간 */
   { time: "09:30", end: "09:40", title: "Opening Speech", pid: "intro", short: "이석현 대표이사", place: "17F 대강당", desc: "이석현 대표이사 · AX 선포 및 Festival 개최 안내", tag: "자유 참석" },   /* 261008 표기 정본 = 네임택 발주 PDF(사용자 「PDF와 똑같이」) · 제목이 겹치는 줄(Keynote 2개)이 있어 상세 id 는 pid 로 잇는다 */
   { time: "09:40", end: "10:20", title: "Keynote", pid: "key", short: "김택수 기술지원부문장", place: "17F 대강당", desc: "김택수 기술지원부문장 · AI 환경 · 전략", tag: "자유 참석" },
   { time: "10:30", end: "11:00", title: "Keynote", pid: "road", short: "김성재 디지털전략본부장", place: "17F 대강당", desc: "김성재 디지털전략본부장 · 현대해상 AX 로드맵", tag: "자유 참석" },
@@ -182,7 +188,7 @@ var TIMELINE = [
      10F 오후 세션(내내 참석)·점심(시간대 구분 역할)은 시간표 유지 */
   { time: "", end: "", title: "AX 커피챗", short: "13:00~16:00 · 선정되면 앱에서 안내", place: "18F", desc: "13:00~16:00 · 선정되면 앱에서 안내", tag: "신청자 중 선정", always: 1 },   /* v6.07 (사용자 261007) 희망 → 선정 · 운영 13:00~16:00 */
   { time: "13:30", end: "14:50", title: "Agentic AI 시대 일하는 방식의 변화", pid: "l1", short: "AWS 구태훈", place: "17F 대강당", desc: "시작 · 종료 출석체크로 출석", tag: "자유 참석", par: 1 },
-  { time: "14:00", end: "14:30", title: "포토부스 선착순", short: "쿠키 세트 · 커피", place: "1F EVENT", desc: "", tag: "", ev: 1 },   /* v7.48 (사용자 261016) 시간표 흐름의 포토부스 선착순 줄(progFlowEv) · 14:00~14:30 = 「지금 · 소진 시까지」 표시 구간 · 진행 중 강연 판정 · 홈 「지금 · 다음」(nowIdx · schedNowRow)에서는 뺀다 · 오전 커피 50잔은 시작 시각을 앱에 쓰지 않아 흐름에 줄이 없다(EVENT 시트 사실 표만) */
+  { time: "14:00", end: "14:30", title: "포토부스 선착순", short: "14:00 ~ : 커피 · 쿠키 세트 100개 · 무작위", place: "1F EVENT", desc: "", tag: "", ev: 1 },   /* v7.67 (사용자 261017) 줄 글 = pbfTxt(1) 과 같은 글(TIMELINE 은 글자만 · 검사가 PB_FCFS 와 대조) */   /* v7.48 (사용자 261016) 시간표 흐름의 포토부스 선착순 줄(progFlowEv) · 14:00~14:30 = 「지금 · 소진 시까지」 표시 구간 · 진행 중 강연 판정 · 홈 「지금 · 다음」(nowIdx · schedNowRow)에서는 뺀다 · 오전 커피 50잔은 시작 시각을 앱에 쓰지 않아 흐름에 줄이 없다(EVENT 시트 사실 표만) */
   { time: "14:50", end: "15:10", title: "휴식", short: "", place: "17F 대강당", desc: "", tag: "휴식", brk: 1 },   /* 261007 (사용자 확정 「AWS 13:30~14:50 · 휴식 14:50~15:10 · MS 15:10~16:40」) 시간표 17F 작은 줄(progFlowBrk) · 스탬프 · 출석 없음 · 홈 「지금」 = 휴식 · 다음 MS */
   { off: 1, time: "13:30", end: "16:30", title: "10F 실습형 세션 A~E", short: "사전 신청자 참여 · 5개 세션 중 1개", place: "10F", desc: "사전 신청자 참여 · 세션별 장소는 프로그램 탭", tag: "사전 신청자 참여", par: 1 },
   { time: "15:10", end: "16:40", title: "AI와 친해지기", pid: "l2", short: "Microsoft 김한결, 이나경", place: "17F 대강당", desc: "시작 · 종료 출석체크로 출석", tag: "자유 참석", par: 1 },

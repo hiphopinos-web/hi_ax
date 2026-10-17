@@ -152,12 +152,14 @@ function progTm(tm) { return String(tm || "").replace(/\s*[~–-]\s*/, "~"); }  
 /* v5.85 (사용자 261006) 세 칸 [시간표 | 상시 운영 | 신청하기] · PROG.seg = time · always · apply · 처음은 시간표 */
 function progSegOf(g) { return g === "always" || g === "apply" ? g : "time"; }
 function progSeg(g, b) {   /* 261009 b = 누른 칸 · 기준 모션(AXM.seg)으로 칸 바꾸기 · b 없이 부르면(다른 화면에서) 바로 */
-  var go = function () { PROG.seg = progSegOf(g); PROG.scroll = 0; App.render(); if (PROG.seg === "time") progFlowScroll(); };
+  var go = function () { if (progSegOf(g) === "always" && PROG.seg !== "always") VFOLD.open = false; PROG.seg = progSegOf(g); PROG.scroll = 0; App.render(); if (PROG.seg === "time") progFlowScroll(); };   /* v7.67 1F 칸에 새로 오면 영상 묶음 닫힘 */
   if (b) { AXM.seg(b, go, { top: true, ok: function () { return App.current === "guide"; } }); return; }
   window.scrollTo(0, 0); go();
 }
 /* 프로그램 › 신청하기 칸으로(홈 나의 일정 커피챗 줄 · 신청한 프로그램 없음 줄) */
 function progApplyGo() { PROG.seg = "apply"; PROG.scroll = 0; PROG.anchor = ""; App.tab("guide"); window.scrollTo(0, 0); }
+/* v7.67 (사용자 261017 D8) 17F · 18F 칸 「오전 강연 · Closing Speech는 시간표 ›」 = 시간표 칸으로(같은 칸 바꾸기 움직임 AXM.seg) */
+function progTimeGo() { var sg = document.querySelector("#view .axs-seg"), b = sg && sg.querySelectorAll('[role="tab"]')[0]; progSeg("time", b || null); }
 /* v5.73 (사용자 261005 「점심 자유 관람을 눌렀을 때 갑자기 상시 운영 탭으로 날아가는데 좀 더 부드럽게 · 상단의 시간표와 상시운영이 보이는 곳까지 · 지금은 한 칸 밑 위치」)
    시간표에서 누르면 = 세그먼트 손잡이가 「상시 운영」으로 미끄러지고(0.25초) 아래 내용이 흐려졌다 바뀌어 다시 나타남 · 스크롤 = 맨 위(세그먼트가 보이고 바로 아래 1F 로비 머리) 부드럽게
    다른 화면(나의 일정 빈 상태 · 상시 운영 보기 버튼)에서 = 프로그램 탭 맨 위(세그먼트) · 움직임 줄이기 = 바로 · 옛 v4.93 = 1F 로비 머리로(세그먼트가 화면 밖)
@@ -179,9 +181,9 @@ function progSegHtml() {
   var g = progSegOf(PROG.seg), dot = applyOpenN() > 0;
   return '<div class="axs-seg axs-seg3" role="tablist" aria-label="프로그램 보기">' +
     '<button type="button" role="tab" aria-selected="' + (g === "time") + '" onclick="progSeg(\'time\', this)">시간표</button>' +
-    '<button type="button" role="tab" aria-selected="' + (g === "always") + '" onclick="progSeg(\'always\', this)">상시 운영</button>' +
-    '<button type="button" role="tab" aria-selected="' + (g === "apply") + '" onclick="progSeg(\'apply\', this)" data-seg="apply">참여<wbr>하기' +   /* 261013 오후 (사용자) 신청하기 → 참여하기 · 칸 = 스탬프 「프로그램 참여」 묶음과 1:1(17F 오후 강연 2 · AX 라운지 · 커피챗) */
-    (dot ? '<i class="axs-sdot" aria-hidden="true"></i><span class="ax-sr-only"> · 신청 가능</span>' : "") + "</button></div>";
+    '<button type="button" role="tab" aria-selected="' + (g === "always") + '" onclick="progSeg(\'always\', this)">1F</button>' +   /* v7.67 (사용자 261017 D1) 칸 정체성 = 층 · 옛 「상시 운영」 */
+    '<button type="button" role="tab" aria-selected="' + (g === "apply") + '" onclick="progSeg(\'apply\', this)" data-seg="apply">' + (applyTenShow() ? '10F <span class="axs-nwr">· 17F</span> <span class="axs-nwr">· 18F' : '17F <span class="axs-nwr">· 18F') +   /* v7.67 (사용자 261017 셋째 칸 변경) 사전 신청자(applyTenShow) = 「10F · 17F · 18F」 · 일반 = 「17F · 18F」 */   /* v7.67 (사용자 261017 D1) 옛 「참여<wbr>하기」(261013 오후 신청하기 → 참여하기) · 좁은 폭은 「17F」 / 「· 18F」로 나뉜다 */
+    (dot ? '<i class="axs-sdot" aria-hidden="true"></i><span class="ax-sr-only"> · 신청 가능</span>' : "") + "</span></button></div>";
 }
 /* ═══ v5.21 시간표 = 점 노드 흐름 한 줄(사용자 261003 · 정본 「디자인 시안/프로그램 탭 개편/시간표 흐름/설계.md」 안 A · design.md A-5 5-10) ═══
    보이는 것 = 자유 참석으로 갈 수 있는 것만(17F Intro · 기조연설 · 내부 강연 · 점심 · 파트너사 강연 2회 · Outro) · 1F 상시 · 18F 커피챗 운영 · 10F A~E 는 시간표에 없다(상시 운영 탭 · 세션 상세 몫)
@@ -246,7 +248,7 @@ function progFlowBrk(o, hmN) { return '<div class="fbk' + (hmN >= o.b ? " past" 
 function progFlowEv(o, hmN) {
   var on = hmN >= o.a && hmN < o.b, past = hmN >= o.b;
   return '<button type="button" class="fev' + (past ? " past" : on ? " on" : "") + '" onclick="' + o.go + '" data-fl="ev"><span class="x"><span class="mt"><span class="dg-w">' + flFloor(1) + "</span>EVENT</span><b>" + esc(o.ttl) + "</b>" +
-    '<span class="s">' + segHtml(esc(o.sub || "")) + "</span>" + (on ? '<span class="ac">지금 · 소진 시까지</span>' : "") + '</span><span class="chv">' + CHEV_SVG + "</span></button>";
+    '<span class="s">' + segHtml(esc(o.sub || "")) + "</span>" + (on ? '<span class="ac">지금 · 소진 시 종료</span>' : "") + '</span><span class="chv">' + CHEV_SVG + "</span></button>";
 }
 function progFlowCard(o, hmN, isF) {
   if (o.brk) return progFlowBrk(o, hmN);
@@ -281,23 +283,23 @@ function progFlowScroll() {
    필요한 것: 사번 → 물품 명단(서버에만 · 앱 코드에 넣지 않는다) · 서버 액션(체크인 · 물품 조회 · 수령) · 결정 전까지 Welcome 은 구역 목록에 넣지 않는다 */
 var APPLY_GIFT = "커피 · 쿠키 · 노트 · 볼펜";   /* 261008 신청하기 두 카드 사은품 줄 한 문구(라운지 = 앞에 「상담 후」) */
 var FLOOR1 = [
-  { id: "vision", grp: "see", sign: "AX VISION", kor: "회사가 가는 방향을 보는 곳", fact: "AX 로드맵 · 영상", st: "",
+  { id: "vision", grp: "see", sign: "AX VISION", kor: "회사가 가는 방향을 보는 곳", tb: "AX 로드맵 2026~2028 · 영상 보기", fact: "AX 로드맵 · 영상", st: "",
     stm: "회사가 어디로 가는지 보는 곳", todo: ["AX 로드맵 2026~2028을 봐요", "키비주얼 영상을 봐요"] },
-  { id: "lab", grp: "see", sign: "AX LAB", kor: "DAP 과제를 보는 곳", fact: "우수 과제 · 아이디어 한 줄 QR", st: "p5",
-    stm: "DAP 과제 보고 아이디어 남기는 곳", todo: ["우수 과제와 2026 프로젝트를 봐요", "끝 판 QR로 아이디어 한 줄을 써요"], btn: ["아이디어 쓰기", "App.go('ideas')"], btnOff: function () { return ideaGateOff(); } },   /* v5.90 사전 오픈 OFF · 행사 전 = 버튼 숨김 */
+  { id: "lab", grp: "see", sign: "AX LAB", kor: "DAP 과제 · 현장 사례를 보는 곳", tb: "DAP 과제 · 현장 사례 보기", fact: "우수 과제 · 아이디어 한 줄 QR", st: "p5",
+    stm: "DAP 과제 보고 아이디어 남기는 곳", todo: ["우수 과제와 2026 프로젝트를 봐요", "AX in Action 현장 사례를 봐요", "끝 판 QR로 아이디어 한 줄을 써요"], btn: ["아이디어 쓰기", "App.go('ideas')"], btnOff: function () { return ideaGateOff(); } },   /* v5.90 사전 오픈 OFF · 행사 전 = 버튼 숨김 */
   { id: "action", grp: "see", sign: "AX in Action", kor: "AI 업무 사례를 보는 곳", fact: "동료가 만든 앱 3개", st: "",
     stm: "동료가 AI로 만든 현장 앱을 보는 곳", todo: ["현장 인터뷰 영상을 봐요"],
     cases: [["강북이 - 개인 맞춤형 시상 어플리케이션", "영업 사례 · 강북조직파트 김동건 전임"], ["AI컨설팅 도우미 - 판매 화법 어플리케이션", "영업 사례 · 안양AM지점 이은정 지점장"], ["하이핑거 - 보상 업무 지원 어플리케이션", "보상 사례 · 울산대인보상센터 이승철 대리"]] },   /* v5.60 판 16 ~ 18 한 컷(말풍선 · 인용 · 기능 칩) 대신 앱 이름 + 만든 사람(소속 · 이름 · 직급은 판 글자 그대로 · 사용자 「실명 남긴다」) */
-  { id: "lounge", grp: "do", sign: "AX LOUNGE", hdr: "AX 라운지", kor: "내년 DAP 과제 후보를 1:1로 상담하는 곳", fact: "", st: "",   /* v5.94 (사용자 결정 261006) 라운지 상담은 스탬프 없음 */
+  { id: "lounge", grp: "do", sign: "AX LOUNGE", hdr: "AX 라운지", kor: "내년 DAP 과제 후보를 1:1로 상담하는 곳", tb: "사전 신청자 DAP 과제 1:1 상담", fact: "", st: "",   /* v5.94 (사용자 결정 261006) 라운지 상담은 스탬프 없음 */
     stm: "내년 DAP(데이터 분석 프로젝트) 과제를 상담해요",
     lead: "내년 DAP(데이터 분석 프로젝트) 과제를 상담해요",   /* v5.70 시트 「하는 일」 첫 줄 = DAP 풀이(v5.69 시트화로 부제 stm 이 빠지며 함께 사라졌다 · v5.65 사용자 확정 문구) */
     todo: ["데이터사이언스파트와 업무 고민을 나눠요"],   /* v6.83 (사용자 261009 묶음 11) 「앱에서 30분 상담을 신청해요」 덜기 = 아래 주 버튼 「상담 신청」 · 참여 전 확인 「30분」과 겹침 */
     gd: ["아직 막연하다면 커피챗에서 가볍게 나눠요", "18F AX 커피챗 보기", "cchat"], gl: "가볍게 나누려면 18F AX 커피챗",   /* v6.83 (묶음 11) 시트 서로 안내 = 한 줄 링크(gl) · gd 두 문구는 옛 페이지 · 되살릴 때 쓴다 */
     gift: "상담 후 ",   /* 사은품 표 값 = gift + APPLY_GIFT · v6.83 (사용자 261009 묶음 16) 사실 표 = 지금 · 시간 · 장소 · 사은품 · 옛 「참여 전 확인」 접힘 표(진행 · 신청 · 기록 · 사은품)는 아래 상자(need) · 사은품 표로 나눴다 */
     need: null },   /* v7.39 (사용자 261016 · 계획서 3-3) 전면 사전 신청 · 옛 「상담 받으려면」 상자(시간 골라 신청 · 승인되면 앱에서 안내 · 1:1 · 30분 · 기록) 삭제 · 사전 신청자 = 내 상담 상세의 「스탬프 받으려면」 */
-  { id: "play", grp: "do", sign: "AX PLAY", kor: "AI를 직접 써 보는 곳", fact: "HiDI Q · Hi-Helper", st: "p2",
+  { id: "play", grp: "do", sign: "AX PLAY", kor: "AI를 직접 써 보는 곳", tb: "HiDI Q · Hi-Helper 직접 써 보기", fact: "HiDI Q · Hi-Helper", st: "p2",
     stm: "HiDI Q와 Hi-Helper를 직접 써 보는 곳", todo: ["노트북에서 HiDI Q, Hi-Helper를 써 봐요", "스태프에게 내 QR을 보여 주면 적립"], btn: ["체험 안내", "App.go('booth')"] },   /* v5.60 기능 목록 판 한 컷 2장 삭제(판 · 모형에 있다) */
-  { id: "event", grp: "do", sign: "EVENT", kor: "사진 · 룰렛 · 타자왕이 있는 곳", fact: "", st: "",
+  { id: "event", grp: "do", sign: "EVENT", kor: "AI 포토부스 · 룰렛 · 타자왕", tb: "AI 포토부스 · 룰렛 · 타자왕", fact: "", st: "",   /* v7.67 (사용자 261017) 시트 = 부스별 안내(evBoothHtml) · 옛 「사진 · 룰렛 · 타자왕이 있는 곳」 */
     stm: "사진 · 룰렛 · 타자 겨루기", todo: ["AI 포토부스에서 ME to WE 프레임 사진을 찍어요", "스탬프 3개를 모으면 룰렛 1회예요", "1F 타자왕 순위를 봐요"] }   /* v5.05 옛 「AI 포토부스에서 번호표를 받아요」(대기 폐지 · PHOTO_Q) */
 ];
 /* v5.20 (사용자 261003 후킹 권장 1) 구역 상세 「판 한 컷」 · 사진 = assets/zone/<img>.webp(1층 판 p16 ~ 18 · p24 · p28 ~ 29 에서 잘라 폭 860 · 장당 60KB 이하)
@@ -316,7 +318,7 @@ function zonePicHtml(z) {
   return o;
 }
 /* v7.48 EVENT 시트 쿠키 세트 사진 칸(작은 사진 + 이름 · 수량 · 가격 없음) */
-function evPicHtml() { return '<div class="axs-evpic"><img src="' + ZONE_DIR + 'event_cookie.webp" alt="쿠키 세트" width="96" height="96" loading="lazy" decoding="async" onerror="this.parentNode.remove()"><span><b>쿠키 세트</b>50세트 · 선착순 14:00</span></div>'; }
+function evPicHtml() { return '<div class="axs-evpic"><img src="' + ZONE_DIR + 'event_cookie.webp" alt="쿠키 세트" width="96" height="96" loading="lazy" decoding="async" onerror="this.parentNode.remove()"><span><b>쿠키 세트</b>' + PB_FCFS[1][0] + " · 커피와 무작위</span></div>"; }   /* v7.67 (사용자 261017) 옛 「50세트 · 선착순 14:00」 */
 function zoneCaseHtml(z) {
   return z.cases ? '<hr class="axs-rule"><div class="axs-zcase"><h3>사례 ' + z.cases.length + "개</h3>" + z.cases.map(function (c) { return "<p><b>" + esc(c[0]) + "</b><span>" + esc(c[1]) + "</span></p>"; }).join("") + "</div>" : "";
 }
@@ -334,8 +336,17 @@ var FLOOR18 = [
     gift: "",   /* 사은품 표 값 = gift + APPLY_GIFT · v6.83 (사용자 261009 묶음 16 · 보충 2) 사실 표 = 지금 · 시간 · 장소 · 사은품만 · 진행 · 선정 · 알림 · 방식 = 「참여 전 확인」 상자(17F 강연 「스탬프 받으려면」과 같은 부품 needBoxHtml) · 옛 접힘 표 chk(진행 · 시간 · 선정 · 알림) 삭제 */
     need: ["참여하려면", [["time", "시간 고르고 상담 내용 쓰기", "신청 순서대로 시간을 정해 알려 드려요"], ["talk", "주제 소개 → 고민 나누기 → 다음 한 걸음", "1:1 · 20분"]]] }   /* v7.39 (사용자 261016) 아이디어 한 줄 조건 없음 · 첫 줄 = 신청 전 「지금」과 같은 말(사실 표에서 지금 줄을 뺀다) */
 ];
-function zoneById(id) { return FLOOR1.concat(FLOOR18).filter(function (z) { return z.id === id; })[0] || null; }
-function zoneOpen(id) { PROG.zone = id; PROG.zchk = false; App.go("zone_d"); }
+/* v7.67 (사용자 261017 D5 · 261002 「Welcome 구역 목록 제외」 번복) 1F 칸 표 · 지도의 WELCOME = 1F 주차장 체크인존 · 시트 = 체크인 · 선착순 참여상 수령처 · 키트 구성 · 가격은 쓰지 않는다
+   FLOOR1(판 퀴즈 지도 · 둘러보기 6구역 id)에는 넣지 않고 표 · 지도 · 시트만 쓴다 · ZONE_PBF = 선착순 이벤트 시트(첫 진입 · TIME EVENT 카드 · 홈 한 줄이 같이 연다) */
+var ZONE_WELCOME = { id: "welcome", grp: "", sign: "WELCOME", hdr: "WELCOME", kor: "사전 신청자 체크인 · 선착순 참여상 수령처", tb: "체크인 · 선착순 참여상 수령처", fact: "", st: "",
+  todo: ["사전 신청자는 내 QR로 체크인해요", "스탬프 6개를 먼저 채운 1~200번이 선착순 참여상을 받아요"] };   /* 시안 셋째 줄 「당일 못 받으면 행사 뒤 발송」은 화면 글 0 규칙(§248 추가5 · 261006)과 부딪혀 뺌 · 결정 필요로 보고 */
+var ZONE_PBF = { id: "pbf", grp: "", sign: "TIME EVENT", hdr: "선착순 이벤트", kor: "선착순 이벤트", fact: "", st: "", todo: [] };
+/* 1F 칸 구역 표 순서 = 리플릿 순서(D7) · stair = 계단 동행(stairOpen) · AX in Action 은 AX LAB 에 합침(D4 · 시트에 사례 3개) */
+var F1_TB = ["welcome", "vision", "lab", "play", "event", "lounge", "stair"];
+var F1_HOURS = "08:30~17:00", F18_HOURS = "13:00~16:00", F10_HOURS = "13:30~16:40";   /* F10 = 10F 실습 첫 시작 ~ 마지막 끝(세션 A 16:40) */   /* v7.67 (사용자 확정 261017) 행사장 운영 시간 · 1층 · 18층 */
+function zoneById(id) { return FLOOR1.concat(FLOOR18, [ZONE_WELCOME, ZONE_PBF]).filter(function (z) { return z.id === id; })[0] || null; }
+function zoneOpen(id) { PROG.zone = id === "action" ? "lab" : id; PROG.zchk = false; App.go("zone_d"); }   /* v7.67 (D4) AX in Action(둘러보기 판 · 옛 링크) = AX LAB 시트 */
+function zoneCur() { return zoneById(PROG.zone === "action" ? "lab" : PROG.zone) || FLOOR1[0]; }
 /* v5.65 커피챗 입구 하나 · 신청(또는 참석)이 있으면 프로그램 상세 · 없으면 구역 상세 · v5.82 이름 cchatGo(새 입구 세 곳이 부른다) · cchatOpen 은 별칭(둘러보기 · 옛 호출) */
 function cchatGo() { if (S.get("cchat", null) || S.get("cchat_att", false)) progOpen("cchat"); else zoneOpen("cchat"); }
 function cchatOpen() { cchatGo(); }
@@ -394,7 +405,7 @@ function applyCchatHtml() {
 function applyTenShow() { return !!tenMine() || testMode(); }
 function applyTenHtml() {
   if (!applyTenShow()) return "";
-  return '<div class="axs-rows">' + rcHtml({ cls: "", onclick: "progTenGo()", link: true, left: rcIcon(App.ICONS.guide), title: "10F 실습형 세션", sub: "<ax-seg>사전 신청자</ax-seg><ax-seg>시작 · 종료 출석체크 시 각 1개</ax-seg>" }).replace('<div class="rc', '<div data-apply="ten" class="rc').replace('<span class="sb">', '<span class="sb segfix">') + "</div>";   /* v7.54 두 줄 목록(공용 점 부품 · 옛 글자 「· 」 + <br>) */
+  return '<div class="axs-rows">' + rcHtml({ cls: "", onclick: "progTenGo()", link: true, left: rcIcon(App.ICONS.guide), title: "실습형 세션", sub: "<ax-seg>사전 신청자</ax-seg><ax-seg>시작 · 종료 출석체크 시&nbsp;각&nbsp;1개</ax-seg>" }).replace('<div class="rc', '<div data-apply="ten" class="rc').replace('<span class="sb">', '<span class="sb segfix">') + "</div>";   /* v7.54 두 줄 목록(공용 점 부품 · 옛 글자 「· 」 + <br>) */
 }
 /* 261013 오후 (사용자) 참여하기 칸 맨 위 = 17F 오후 파트너 강연 두 장(자유 참석 · 신청 버튼 없음 · 누르면 강연 상세 · 도장 ×2) · 표기 = 시간표(SESSIONS l1 · l2) 그대로
    v7.39 (사용자 261016) 스탬프 줄 = 두 줄 목록(커피챗 카드와 같은 문법) · v7.44 (사용자 261016) 「· 시작 출석체크 시 1개 부여」 「· 종료 출석체크 시 1개 부여」(옛 「입장할 때 화면 QR 1개」 「끝날 때 화면 QR 1개」 대체) */
@@ -404,10 +415,19 @@ function apply17Html(id) {
 }
 /* 261016 (사용자) 묶음 출처 글 · 10F 실습은 사전 신청자(applyTenShow)에게만 · 받으려면 상자 · 칸 맨 아래 줄이 같이 쓴다 */
 function progSrcTxt() { return "17F 강연 · " + (applyTenShow() ? "10F 실습 · " : "") + "라운지 · 커피챗"; }
+function progApplyNm() { return applyTenShow() ? "10F · 17F · 18F" : "17F · 18F"; }   /* v7.67 셋째 칸 이름(칸 단추 · 칸 aria · 홈 경로 줄) */
 function applySumRows() { return ["프로그램 참여 스탬프는 합쳐 2개까지", progSrcTxt().replace(/ · /g, ", ")]; }   /* v7.54 (사용자 261016 「점 통일은 권장대로」 D7) 늘 두 줄 목록(.segfix) · 옛 한 문장 「프로그램 참여 스탬프는 17F 강연 · … 합쳐 2개까지」 */   /* v7.39 (사용자 261016 계획서 0-2-4) 칸 맨 아래 회색 한 줄 · 합계 오해 방지 */
+/* v7.67 (사용자 확정 261017 D1 · D2 · D8) 17F · 18F 칸 = 정보 줄 「운영 시간 · 18F 13:00~16:00」 → 머리 「17F 대강당 / 신청 없이 자유 참석」 → AWS · MS 카드 → 「오전 강연 · Closing Speech는 시간표 ›」 → 머리 「18F / AX 커피챗」 → 커피챗 카드 → 회색 두 줄 → 10F 줄
+   카드 · 문구는 옛 「참여하기」 칸 그대로 · 머리(axs-bar)를 쓰려고 칸 그릇에 판 경계(axs-pan) · 커피챗 카드가 없으면(하루가 끝남) 18F 머리도 없음 */
 function progApplyTabHtml() {
-  var h = apply17Html("l1") + apply17Html("l2") + applyCchatHtml();   /* 261013 오후 순서 = 17F AWS · 17F MS · 18F 커피챗 · v7.39 (사용자 261016 계획서 3-1 · 0-2-4) 라운지 카드 없음(사전 신청자 = 홈 나의 일정 · 상시 운영 1F 줄 · 내 상담) */
-  return '<div class="axs-apply" aria-label="참여하기">' + (h || '<p class="ax-description axs-apnone">지금 신청할 수 있는 프로그램이 없어요</p>') + '<p class="ax-meta axs-apsum segfix">' + applySumRows().map(function (t) { return "<ax-seg>" + esc(t) + "</ax-seg>"; }).join("") + "</p>" + applyTenHtml() + "</div>";
+  var cc = applyCchatHtml();   /* 261013 오후 순서 = 17F AWS · 17F MS · 18F 커피챗 · v7.39 (사용자 261016 계획서 3-1 · 0-2-4) 라운지 카드 없음(사전 신청자 = 홈 나의 일정 · 1F 칸 표 · 내 상담) */
+  var ten = applyTenHtml();   /* v7.67 (사용자 261017 셋째 칸 변경) 사전 신청자 = 10F 머리 + 실습 줄을 맨 위로(옛 D2 칸 맨 아래 줄 대체) · 운영 시간도 층 순서 */
+  return '<div class="axs-apply axs-pan" aria-label="' + progApplyNm() + '">' + hrsHtml(ten ? ["10F " + F10_HOURS, "18F " + F18_HOURS] : "18F " + F18_HOURS) +
+    (ten ? '<div class="axs-bar"><b>10F</b><span>실습형 세션</span></div>' + ten : "") +
+    '<div class="axs-bar"><b>17F 대강당</b><span>신청 없이 자유 참석</span></div>' + apply17Html("l1") + apply17Html("l2") +
+    '<button type="button" class="ax-link axs-plain axs-self axs-tlnk" onclick="progTimeGo()">' + lnkChev("오전 강연 · Closing Speech는 시간표") + "</button>" +
+    (cc ? '<div class="axs-bar"><b>18F</b><span>AX 커피챗</span></div>' + cc : "") +
+    '<p class="ax-meta axs-apsum segfix">' + applySumRows().map(function (t) { return "<ax-seg>" + esc(t) + "</ax-seg>"; }).join("") + "</p></div>";
 }
 /* v5.65 「참여 전 확인」 펼침 = 같은 화면 패널(시트 아님 · 설계안 결정 1) · 다시 그리지 않고 패널만 연다 · 닫는다
    v6.83 (사용자 261009 묶음 16 「참여 전 확인을 눌러서 추가 정보가 나올 필요 없음」) 부르는 곳 없음(구역 상세 = 펼친 상자) · 되살릴 때 쓴다 */
@@ -465,33 +485,138 @@ function zoneLive(z) {
     var cw = !st && !ov && !cl ? ccWaitTxt() : "";   /* v7.52 신청 시작 전 */
     o.btn = st ? ["내 커피챗", "progOpen('cchat')"] : ov ? ["오늘 커피챗은 끝났어요", "", "", true] : cl ? ["신청 마감", "", "", true] : cw ? [cw, "", "ccApplyBtn", true] : ["커피챗 신청하기", "ccApplyGo()", "ccApplyBtn"];
   } else if (z.id === "event") {
-    o.kv = [["운영 시간", "08:30~17:00"]];
-    o.need = [["cam", "포토부스 사진 촬영 후 받기", "1F EVENT 포토부스 앞 · 소진 시까지"], ["coffee", "오전 · 커피 50잔", ""], ["time", "14:00 · 쿠키 세트 50세트 · 커피 50잔", ""]];   /* v7.54 (사용자 261016) 선착순 다섯 줄 = 「선착순 받으려면」 상자(needBoxHtml · 17F 강연 「스탬프 받으려면」과 같은 부품) · 오전 시작 시각 · 오전 오후 중복 언급 없음(사용자 확정) */   /* v7.48 (사용자 261016) 선착순 두 줄 · 오전은 시작 시각 없이 */   /* v5.05 포토부스 대기 없음 · 운영 시간만 */
+    o.kv = [["운영 시간", F1_HOURS]];
+    o.need = pbfNeedRows();   /* v7.67 (사용자 261017) 문구 원천 PB_FCFS · 옛 「1F EVENT 포토부스 앞 · 소진 시까지」 「오전 · 커피 50잔」 「14:00 · 쿠키 세트 50세트 · 커피 50잔」 */
+  } else if (z.id === "welcome") {
+    /* v7.67 (사용자 261017 D5) 내 상태 = 스탬프 탭 레일 캡션과 같은 값(fcfsCapTxt · 선착순 N번 · 선착순 마감 · 수령 완료) · 지급 시작 10:30 은 글자(서버 값 없음) · 마감 = 서버 fx.cut */
+    var fxc = fxGet();   /* 내 상태 한 줄 = 시트 머리 아래(f1Cell welcome · 표 스탬프 칸과 같은 글) */
+    o.kv = [["장소", "1F 주차장 체크인존"], ["선착순 참여상", "10:30~" + (fxc && fxc.cut || "17:00")]];   /* v7.54 (사용자 261016) 선착순 다섯 줄 = 「선착순 받으려면」 상자(needBoxHtml · 17F 강연 「스탬프 받으려면」과 같은 부품) · 오전 시작 시각 · 오전 오후 중복 언급 없음(사용자 확정) */   /* v7.48 (사용자 261016) 선착순 두 줄 · 오전은 시작 시각 없이 */   /* v5.05 포토부스 대기 없음 · 운영 시간만 */
   }
   return o;
 }
 function zoneChip(c) { return c ? '<span class="axs-chip' + (c[1] ? " " + c[1] : "") + '">' + esc(c[0]) + "</span>" : ""; }
-/* 구역 줄 하나 · 왼쪽 = 간판 + (상태 칩) → 한국어 한 줄 → 보조 한 줄 → (EVENT 룰렛 한 줄) · 오른쪽 = 스탬프 도장(걸린 곳만) + 셰브론 · 줄 전체 = 구역 상세
-   v4.99 도장을 줄 아래에서 셰브론 바로 왼쪽으로(줄 높이는 왼쪽 글이 정한다 · 도장 44px) · 상태 칩은 간판 옆 */
-function zoneRowHtml(z) {
-  var L = zoneLive(z), pill = zoneStampHtml(z), ev = z.id === "event";
-  var head = '<span class="zl"><span class="hd">' + zoneSign(z.sign) + zoneChip(L.chip) + "</span>" +
-    '<span class="tx"><span class="k">' + esc(z.kor) + "</span>" + (L.fact ? '<span class="f">' + esc(L.fact) + "</span>" : "") + "</span>" +
-    (ev && pill ? '<span class="cr">' + pill + "</span>" : "") + "</span>" +
-    '<span class="zrt">' + (ev ? "" : pill) + CHEV_SVG + "</span>";
-  var btn = '<button type="button" class="axs-zr" data-zone="' + z.id + '" onclick="zoneOpen(\'' + z.id + '\')">' + head + "</button>";
-  if (z.id !== "event") return btn;
-  /* EVENT = 같은 머리 + 얇은 ink 줄로 나뉜 안쪽 두 줄(포토부스 · 타자왕)은 그 화면으로 바로 */
-  return '<div class="axs-zc">' + btn +
-    '<button type="button" class="axs-zin" onclick="typeSiteRankGo()"><span class="tx"><b>1F 타자왕 순위</b><span>17:00 마감</span></span><span class="act">보기</span></button></div>';   /* v4.91 스탬프 탭에서 옮긴 1F 타자왕 · EVENT 구역 */
+/* ═══ v7.67 (사용자 확정 261017 · 기획 문서/상시운영 탭 1F 지도 개편_261017.md · 시안 디자인 시안/상시운영 1F 지도_261017) 1F 칸 · 선착순 이벤트 ═══
+   선착순 이벤트 세 곳 = 1F 칸 맨 위 TIME EVENT 카드(늘 · 행사 전 칩 「10/26」 · 당일 「오늘」 · 10/26 17:00 뒤 숨김 · D11) · 1F 칸 첫 진입 시트(하루 한 번 · 기기 키 pbf_seen) · 홈 광고판 아래 한 줄(10/26 08:30~17:00 · pbfHomeHtml)
+   셋 모두 같은 시트(zone_d · PROG.zone "pbf" · 아래에서 올라오는 시트 detPaint · 기준 모션 AXM) · 문구 원천 PB_FCFS(101) 한 곳 */
+var PBF_END = new Date(2026, 9, 26, 17, 0);
+function pbfDay() { var d = appNow(); return d.getFullYear() === 2026 && d.getMonth() === 9 && d.getDate() === 26; }
+function pbfCardOn() { return appNow() < PBF_END; }
+function pbfLive() { if (!pbfDay()) return false; var m = hmNow(); return m >= t2m(PB_FCFS[0][0]) && m < t2m("17:00"); }
+function pbfChip() { return '<span class="axs-chip">' + (pbfDay() ? "오늘" : "10/26") + "</span>"; }
+function pbfSign(lg) { return zoneSign("TIME EVENT", "tev" + (lg ? " lg" : "")); }
+function pbfNeedRows() { return [["cam", "포토부스 사진 촬영 후 받기", "소진 시 종료"], ["coffee", pbfTxt(0), "", pbfNw(esc(pbfTxt(0)))], ["time", pbfTxt(1), "", pbfNw(esc(pbfTxt(1)))]]; }   /* r[3] = 굵은 줄 HTML(「 · 」 자리에서만 꺾임 · 목록 모양 없음 · needBoxHtml) */
+function pbfRowsHtml() {
+  return '<ul class="axs-pbl">' + PB_FCFS.map(function (r) { return "<li>" + pbfNw("<b>" + esc(r[0]) + " ~</b> : " + esc(r[1])) + "</li>"; }).join("") + "<li>" + pbfNw(esc(PB_FCFS_HOW)) + "</li></ul>";
 }
+/* 줄 안 「 · 」 조각 = 줄바꿈 없는 덩어리 · 넘치면 「 · 」 자리에서 꺾여 둘째 줄이 「· 」로 시작(주황 점 목록 줄 안이라 segHtml 목록 모양을 쓰지 않는다 · 점 두 개 방지) */
+function pbfNw(h) { return String(h).split(" · ").map(function (t, i) { return '<span class="axs-nwr">' + (i ? "· " : "") + t + "</span>"; }).join(" ");
+}
+function pbfOpen() { zoneOpen("pbf"); }
+function pbfCardHtml() {
+  if (!pbfCardOn()) return "";
+  return '<section class="ax-card axs-pbf" aria-label="선착순 이벤트"><div class="h">' + pbfSign() + "<b>선착순 이벤트</b>" + pbfChip() + "</div>" + pbfRowsHtml() +
+    '<button type="button" class="ax-link axs-plain axs-self axs-pbfm" onclick="pbfOpen()">' + lnkChev("자세히 보기") + "</button></section>";
+}
+/* 홈 광고판 바로 아래 · 스탬프 위 한 줄 · 행사 당일 08:30~17:00 에만(행사 전 문구 없음 · 사용자 261017) · 누르면 같은 시트 */
+function pbfHomeHtml() {
+  if (!pbfLive()) return "";
+  return '<button type="button" class="axs-pbfh" onclick="pbfOpen()"><span class="t"><b>1F 선착순 이벤트 중</b> · 자세히 보기</span>' + CHEV_SVG + "</button>";
+}
+/* 첫 진입 시트 · 1F 칸을 그릴 때(progAlwaysHtml) · 하루 한 번(기기 키 · 날짜) · 다른 시트 · 확인 창 · 영상 · 둘러보기 위에는 띄우지 않는다 */
+function pbfDayKey() { var d = appNow(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
+function pbfAutoSoon() {
+  if (!pbfCardOn() || S.get("pbf_seen", "") === pbfDayKey()) return;
+  setTimeout(function () {
+    var k = pbfDayKey();
+    if (App.current !== "guide" || PROG.seg !== "always" || detShown() || document.hidden || !pbfCardOn() || S.get("pbf_seen", "") === k) return;
+    if (el("axsSheet") || el("modal") ||(typeof IVP !== "undefined" && IVP.on) || (typeof tourInvHold === "function" && tourInvHold())) return;
+    S.set("pbf_seen", k); pbfOpen();
+  }, 450);
+}
+/* 시트 본문 · 세 줄 → 쿠키 세트 사진 → EVENT 시트로 가는 한 줄 */
+function pbfSheet() {
+  return { cls: "axs-pan", fit: true, name: pbfSign(true), chips: pbfChip(), title: "선착순 이벤트",
+    body: '<div class="axs-pbfs">' + pbfRowsHtml() + evPicHtml() + '<button type="button" class="ax-link axs-plain axs-self" onclick="zoneOpen(\'event\')">' + lnkChev("EVENT 부스 보기") + "</button></div>", foot: "" };
+}
+/* ── 1F 칸 지도 · 표의 스탬프 칸 · 받기 전 회색 · 받은 뒤 주황(D10 · 스탬프 탭과 같은 판정 S stamps) · 아이콘 = 시안 그대로(도장 · 룰렛 · 메달 · 계단) ── */
+var F1C = { on: "#FF7F32", off: "#9AA3AE" };
+function f1Seal(on, n) {
+  var c = on ? F1C.on : F1C.off;
+  return '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="' + (on ? "#FFEBE0" : "#FFFFFF") + '" stroke="' + c + '" stroke-width="1.6"/><circle cx="12" cy="12" r="7.6" fill="none" stroke="' + c + '" stroke-width=".8"/>' +
+    (on ? '<path d="M8.2 12.3l2.6 2.5 5-5.4" fill="none" stroke="' + c + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' : '<text x="12" y="15.6" text-anchor="middle" font-size="10" font-weight="700" fill="' + c + '">' + (n || 1) + "</text>") + "</svg>";
+}
+function f1Roul(on) {
+  var c = on ? F1C.on : F1C.off, s = "";
+  for (var i = 0; i < 8; i++) { var a0 = i * Math.PI / 4 - Math.PI / 2, a1 = a0 + Math.PI / 4; s += '<path d="M12 12L' + (12 + 10 * Math.cos(a0)).toFixed(2) + " " + (12 + 10 * Math.sin(a0)).toFixed(2) + "A10 10 0 0 1 " + (12 + 10 * Math.cos(a1)).toFixed(2) + " " + (12 + 10 * Math.sin(a1)).toFixed(2) + 'Z" fill="' + (i % 2 ? (on ? "#FFD8C1" : "#E5E8EB") : "#FFFFFF") + '"/>'; }
+  return '<svg viewBox="0 0 24 24" aria-hidden="true">' + s + '<circle cx="12" cy="12" r="10" fill="none" stroke="' + c + '" stroke-width="1.6"/><circle cx="12" cy="12" r="2" fill="' + c + '"/></svg>';
+}
+function f1Medal(on) {
+  var c = on ? F1C.on : F1C.off;
+  return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 14.5 5.5 22l3.2-1.6L11 23l1-6.5M16.5 14.5l2 7.5-3.2-1.6L13 23l-1-6.5" fill="' + (on ? "#FFD8C1" : "#E5E8EB") + '" stroke="' + c + '" stroke-width="1.2" stroke-linejoin="round"/><circle cx="12" cy="10" r="7.5" fill="#FFFFFF" stroke="' + c + '" stroke-width="1.6"/><text x="12" y="13.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="' + c + '">6</text></svg>';
+}
+function f1Stair(c) { return '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="' + (c || "currentColor") + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M3 20h5v-5h5v-5h5V5h3"/></svg>'; }
+function f1Got(id) { return S.get("stamps", []).indexOf(id) >= 0; }
+function f1RoulOn() { return stampCount() >= 3 && !S.get("roulette_used", false) && !S.get("roulette_out", false); }   /* 현행 판정(zoneStampHtml event) 그대로 */
+function f1LnOn() { return !!loungeMine(); }   /* D3 라운지 스탬프 칸 = 사전 신청자(내 상담)에게만 */
+/* 구역마다 [아이콘, 글, 켜짐] · 없으면 null(빈칸) */
+function f1Cell(id) {
+  if (id === "welcome") { var fc = fcfsCapTxt().replace(/^ · /, ""); return [f1Medal(!!fc && !/마감/.test(fc)), fc || "6개면 선착순 참여상", !!fc && !/마감/.test(fc)]; }
+  if (id === "event") { var ro = f1RoulOn(); return [f1Roul(ro), ro ? "룰렛 1회 사용 가능" : "3개면 룰렛 1회", ro]; }
+  if (id === "lounge") { if (!f1LnOn()) return null; var lg = f1Got("ln"); return [f1Seal(lg, 2), lg ? "받음" : "상담 종료 때 2개", lg]; }
+  var st = { lab: "p5", play: "p2", stair: "st" }[id]; if (!st) return null;
+  var g = f1Got(st); return [f1Seal(g), g ? "받음" : "스탬프 1개", g];
+}
+function f1Go(id) { return id === "stair" ? "stairOpen()" : "zoneOpen('" + id + "')"; }
+/* 구역 표 한 줄 = 1행 간판 + 오른쪽 스탬프 칸 · 2행 하는 일 한 줄 · 줄 전체 = 시트 단추(오른쪽 셰브론) · 큰글씨 = 스탬프 칸이 하는 일 아래(CSS) · v7.67 옛 줄(간판 + 칩 + 한 줄 + 보조 줄 + 도장 · EVENT 안 1F 타자왕 순위 줄)을 바꿨다 */
+function zoneRowHtml(id) {
+  var z = id === "stair" ? null : zoneById(id), c = f1Cell(id);
+  var sg = z ? zoneSign(z.sign) : '<span class="stl">' + f1Stair() + "계단</span>", tx = z ? z.tb : "계단으로 한 층 이동";
+  return '<button type="button" class="zr" data-zone="' + id + '" onclick="' + f1Go(id) + '"><span class="zsg">' + sg + "</span>" +
+    '<span class="bn' + (c && c[2] ? " on" : "") + '">' + (c ? c[0] + '<span class="t">' + esc(c[1]) + "</span>" : "") + "</span>" +
+    '<span class="ztx">' + segHtml(esc(tx)) + '</span><span class="cv">' + CHEV_SVG + "</span></button>";
+}
+function f1TableHtml() {
+  return '<section class="ax-card axs-f1tb" aria-label="1층 구역"><div class="zth" aria-hidden="true"><span>구역 · 하는 일</span><span>스탬프</span></div>' + F1_TB.map(zoneRowHtml).join("") + "</section>";
+}
+/* 지도 = 리플릿 배치 그대로(위 = 리플릿 위 · D6 가로) · 그림(role img · 큰글씨 배율 없음 · 읽는 정보는 표) · 블록 위 투명 단추(구역 시트 · 계단 동행) · viewBox 884 x 404 */
+var F1_MAP_W = 884, F1_MAP_H = 404;
+var F1_MAP_BT = [["lounge", 23, 26, 256, 108], ["event", 23, 146, 116, 228], ["play", 150, 294, 226, 80], ["lab", 386, 294, 228, 80], ["vision", 624, 176, 78, 198], ["welcome", 722, 196, 156, 104], ["stair", 290, 36, 60, 74], ["stair", 526, 42, 60, 74]];
+function f1MapSvg() {
+  var B = function (b) { return '<rect x="' + b[1] + '" y="' + b[2] + '" width="' + b[3] + '" height="' + (b[0] === "welcome" ? 72 : b[4]) + '" rx="6" fill="#F2F4F6" stroke="#CBD0D6" stroke-width="2.5"/>'; };
+  var T = function (x, y, s, t, a) { return '<text x="' + x + '" y="' + y + '" font-size="' + s + '" text-anchor="' + (a || "middle") + '">' + t + "</text>"; };
+  var tri = function (x, y, d) { var p = { d: [[-11, -7], [11, -7], [0, 7]], u: [[-11, 7], [11, 7], [0, -7]], l: [[7, -11], [7, 11], [-7, 0]] }[d]; return '<path d="M' + p.map(function (v) { return (x + v[0]) + " " + (y + v[1]); }).join("L") + 'Z" fill="#4E5968"/>'; };
+  var mk = function (x, y, svg, s) { return '<g transform="translate(' + (x - s / 2) + " " + (y - s / 2) + ") scale(" + (s / 24) + ')">' + svg.replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/, "") + "</g>"; };
+  var wall = 'fill="none" stroke="#9AA3AE" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"', c = function (id) { return f1Cell(id) || [""]; };
+  return '<svg class="mp" viewBox="0 0 ' + F1_MAP_W + " " + F1_MAP_H + '" aria-hidden="true">' +
+    '<polyline ' + wall + ' points="380,12 10,12 10,388 380,388"/><polyline ' + wall + ' points="430,388 712,388 712,256"/><polyline ' + wall + ' points="712,196 712,137 455,137"/>' +
+    '<polyline ' + wall + ' points="416,12 596,12 596,98"/><polyline ' + wall + ' points="290,12 290,137 302,137"/><polyline ' + wall + ' points="336,137 372,137"/>' +
+    F1_MAP_BT.slice(0, 6).map(B).join("") +
+    T(151, 93, 36, zoneById("lounge").sign) + (f1LnOn() ? mk(252, 52, c("lounge")[0], 30) : "") +
+    T(81, 214, 33, "EVENT") + mk(81, 268, c("event")[0], 44) +
+    T(263, 347, 36, "AX PLAY") + mk(176, 318, c("play")[0], 30) +
+    T(500, 347, 36, "AX LAB") + mk(412, 318, c("lab")[0], 30) +
+    '<text x="663" y="275" font-size="31" text-anchor="middle" transform="rotate(-90 663 275)" dy="11">AX VISION</text>' +
+    T(800, 243, 31, "WELCOME") + mk(800, 296, c("welcome")[0], 40) +
+    '<rect x="440" y="156" width="152" height="40" rx="4" fill="#F2F4F6"/><text x="516" y="186" font-size="28" text-anchor="middle" class="sm">안내데스크</text>' +
+    [180, 262, 344, 426].map(function (x) { return '<rect x="' + x + '" y="236" width="22" height="22" fill="#CBD0D6"/>'; }).join("") +
+    mk(320, 92, f1Stair("#4E5968"), 34) + mk(320, 56, c("stair")[0], 26) + mk(556, 98, f1Stair("#4E5968"), 34) + mk(556, 62, c("stair")[0], 26) +
+    tri(398, 16, "d") + tri(319, 150, "u") + tri(596, 116, "l") + tri(712, 226, "l") + tri(405, 394, "u") + "</svg>";
+}
+function f1MapHtml() {
+  var nm = { lounge: "AX 라운지", event: "EVENT", play: "AX PLAY", lab: "AX LAB", vision: "AX VISION", welcome: "WELCOME", stair: "계단" };
+  var pc = function (v, w) { return (v / w * 100).toFixed(2) + "%"; };
+  return '<section class="ax-card axs-f1map"><div class="mw" role="group" aria-label="1층 지도 · 구역은 아래 표와 같음">' + f1MapSvg() +
+    F1_MAP_BT.map(function (b) { return '<button type="button" class="mb" data-zone="' + b[0] + '" style="left:' + pc(b[1], F1_MAP_W) + ";top:" + pc(b[2], F1_MAP_H) + ";width:" + pc(b[3], F1_MAP_W) + ";height:" + pc(b[4], F1_MAP_H) + '" onclick="' + f1Go(b[0]) + '" aria-label="' + nm[b[0]] + '"></button>'; }).join("") + "</div>" +
+    '<p class="lgd" aria-hidden="true"><span>' + f1Seal(false) + "스탬프</span><span>" + f1Roul(false) + "3개면 룰렛</span><span>" + f1Medal(false) + "6개면 선착순 참여상</span></p></section>";
+}
+/* 정보 줄 = 알약 「운영 시간」(주황 테두리 · 주황 글자) + 값 · 1F 칸 · 17F · 18F 칸 같은 부품 */
+function hrsHtml(v) { return '<div class="axs-hrs"><span class="pl">운영 시간</span><span class="vs">' + [].concat(v).map(function (t) { return '<span class="v">' + esc(t) + "</span>"; }).join("") + "</span></div>"; }   /* v = 한 값 또는 층 순서 배열(줄마다 한 층 · 값 시작선 한 열) */
+/* v7.67 (사용자 확정 261017) 1F 칸 = 정보 줄(운영 시간) → TIME EVENT 카드 → 머리 「로비 / 자유 관람」(칸 안에서는 「1F」를 쓰지 않는다) → 지도 → 구역 표 7줄 → (Views.guide) 영상 보기 접기(progIvHtml)
+   옛 상시 운영 = 1F 로비 머리 · 행사 둘러보기 카드(tourRowHtml · 이제 홈에만) · 둘러보기 · 참여하기 묶음 줄 · EVENT 안 1F 타자왕 순위 줄(EVENT 시트 타자왕 칸으로) · 18F 커피챗 줄(17F · 18F 칸 카드 하나로) */
 function progAlwaysHtml() {
-  var grp = function (g, nm) { return '<p class="axs-dot">' + nm + "</p>" + FLOOR1.filter(function (z) { return z.grp === g; }).map(zoneRowHtml).join(""); };
-  var cz = FLOOR18[0], cL = zoneLive(cz);   /* v5.65 18F 줄 = 구역 표(FLOOR18) · 상태 = zoneLive · 누르면 구역 상세(zone_d · 1F AX LOUNGE 와 같은 틀) */
-  return '<section class="axs-zsec" id="zone1f"><div class="axs-bar"><b>1F 로비</b><span>행사 시간 중 자유 관람</span></div>' + tourRowHtml() + grp("see", "둘러보기") + grp("do", "참여하기") + "</section>" +
-    '<section class="axs-zsec" id="zone18f"><div class="axs-bar"><b>18F</b><span>소규모 아이디어 논의</span></div>' +
-    '<button type="button" class="axs-zfl" data-zone="cchat" onclick="zoneOpen(\'cchat\')"><span class="tx"><span class="nm">' + zoneSign(cz.sign) + zoneChip(cL.chip) + '</span><span class="k">' + esc(cz.kor) + '</span><span class="f">' + esc(cL.fact) + "</span></span>" +
-    '<span class="zrt">' + zoneStampHtml(cz) + CHEV_SVG + "</span></button></section>";
+  pbfAutoSoon();
+  return hrsHtml(F1_HOURS) + pbfCardHtml() +
+    '<section class="axs-zsec" id="zone1f"><div class="axs-bar"><b>로비</b><span>자유 관람</span></div>' + f1MapHtml() + f1TableHtml() + "</section>";
 }
 /* 구역 상세 · 간판 칩(v4.94 포인트 크기) → 부제 한 줄 → 보조 줄(운영 시간 · 룰렛 · 스탬프 없음) → 얇은 ink 줄 → 하는 일(주황 점) → (사실 표) → 행동 버튼 하나(있을 때만) · 뒤로 = 프로그램
    v4.99 스탬프 도장 = 카드 오른쪽 위(강연 상세 sess_d 와 같은 axs-sthost · stampTagHtml) */
@@ -517,7 +642,7 @@ function zonePairHtml(z, L) {
     '<div class="axs-xbtns">' + progBtn(esc(b[0]), b[1], "", b[2] || "", !!b[3]) + "</div>" + tourFloorBackHtml() + "</div>";
 }
 function zoneDetailHtml() {
-  var z = zoneById(PROG.zone) || FLOOR1[0], L = zoneLive(z), pill = zoneStampHtml(z), ev = z.id === "event", seal = pill && !ev;
+  var z = zoneCur(), L = zoneLive(z), pill = zoneStampHtml(z), ev = z.id === "event", seal = pill && !ev;
   if (z.gd) return zonePairHtml(z, L);
   var cr = ev ? pill : seal ? (L.tm ? '<span class="axs-pt">' + esc(L.tm) + "</span>" : "") : '<span class="axs-pt">자유 관람 · 스탬프 없음</span>';
   return '<div class="ax-stack axs-pan"><div class="axs-zdt' + (seal ? " axs-sthost" : "") + '">' + (seal ? pill : "") + zoneSign(z.sign, "lg") +
@@ -531,17 +656,28 @@ function zoneDetailHtml() {
    주 버튼(상담 신청 · 커피챗 신청 · 아이디어 쓰기 · 체험 안내)은 아래 고정 · 버튼이 없는 구역(VISION · in Action · EVENT)은 아래 칸 없음
    옛 부제(stm)는 쓰지 않는다 · 제목(kor)과 같은 말을 두 번 하던 자리(문구 다이어트) */
 function zoneSheet() {
-  var z = zoneById(PROG.zone) || FLOOR1[0], L = zoneLive(z), pill = zoneStampHtml(z), ev = z.id === "event", seal = pill && !ev;
-  var meta = ev ? pill : L.tm ? '<span class="axs-pt">' + esc(L.tm) + "</span>" : seal ? "" : '<span class="axs-pt">자유 관람 · 스탬프 없음</span>';
+  var z = zoneCur(), L = zoneLive(z), pill = zoneStampHtml(z), ev = z.id === "event", seal = pill && !ev;
+  if (z.id === "pbf") return pbfSheet();   /* v7.67 선착순 이벤트 시트(첫 진입 · TIME EVENT 카드 · 홈 한 줄) */
+  var wc = z.id === "welcome" ? f1Cell("welcome") : null;
+  var meta = ev ? pill : wc ? '<span class="axs-pt' + (wc[2] ? " on" : "") + '">' + esc(wc[1]) + "</span>" : L.tm ? '<span class="axs-pt">' + esc(L.tm) + "</span>" : seal ? "" : '<span class="axs-pt">자유 관람 · 스탬프 없음</span>';
   var kv = L.kv ? '<dl class="axs-kv' + (ev ? " ev" : "") + '">' + L.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + segHtml(esc(r[1])) + "</dd>"; }).join("") + "</dl>" : "";
   var b = L.btn;
   var body = z.gd ? zoneGdBody(z, L) :   /* v6.83 (묶음 16) 라운지 · 커피챗 = 공용 본문(사실 표 → 사진 → 하는 일 → 참여 전 확인 상자 · 접힘 없음) */
+    ev ? (meta ? '<div class="cr">' + meta + "</div>" : "") + (kv ? '<hr class="axs-rule">' + kv : "") + evBoothHtml() :   /* v7.67 (사용자 261017) EVENT = 부스별 안내(포토부스 · 룰렛 · 타자왕) · 옛 하는 일 3줄 · 선착순 상자 · 쿠키 사진 한 줄 */
     (meta ? '<div class="cr">' + meta + "</div>" : "") +
-    '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + (z.lead ? [z.lead] : []).concat(z.todo).map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" + zoneCaseHtml(z) + zoneExHtml(z) +
-    (kv ? '<hr class="axs-rule">' + kv : "") + (L.need ? needBoxHtml("선착순 받으려면", "선착순 받으려면", L.need) : "") +   /* v7.54 EVENT 선착순 상자 */
+    '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + (z.lead ? [z.lead] : []).concat(z.todo).map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" + zoneCaseHtml(z.id === "lab" ? zoneById("action") : z) + zoneExHtml(z) +   /* v7.67 (D4) AX LAB 시트 = AX in Action 사례 3개 */
+    (kv ? '<hr class="axs-rule">' + kv : "") + (L.need ? needBoxHtml("선착순 받으려면", "선착순 받으려면", L.need) : "") +
     (ev && EV_TYP_PROMO ? typPromoHtml("go") : "") + zonePicHtml(z);   /* v5.96 (사용자 261006 밤 「여기에 타자왕 광고는 없애줘」) EVENT 구역 상세 = 홍보 칸 없음 · 스위치 EV_TYP_PROMO */
   return { cls: "axs-pan", name: zoneSign(z.sign, "lg"), chips: zoneChip(L.chip), title: esc(z.id === "cchat" ? CCHAT_TTL : z.kor), seal: seal ? pill : "", body: body,   /* v5.79 머리 이름 = 구역 간판 하나(현장 부스 사인과 같은 글자 · 한국어 이름을 따로 두지 않는다) · 상태 칩 · 한국어 한 줄 · 도장 = 본문 첫 줄 */
     foot: b ? progBtn(esc(b[0]), b[1], "", b[2] || "", !!b[3]) : "" };
+}
+/* v7.67 (사용자 261017 폰 캡처 「사진 · 룰렛 · 타자왕이 있는 곳」) EVENT 시트 = 부스 세 칸 · 받으려면 줄은 경품 시트 구역(PZ_SEC roulette · type)과 같은 원천 · 선착순 = PB_FCFS
+   타자왕 = 스탬프 1개당 1회 · 최대 3회 · 17:00 마감 · 1~10위 Closing Speech에서 순위 발표 · 옛 1F 칸 EVENT 안 「1F 타자왕 순위」 줄 = 여기 「타자왕 순위 보기」 */
+function evBoothHtml() {
+  var sec = function (h, inner) { return '<section class="axs-dsec axs-evb"><h3>' + h + "</h3>" + inner + "</section>"; };
+  return sec("AI 포토부스", '<p class="k">ME to WE 프레임 사진을 찍어요</p>' + needBoxHtml("선착순 받으려면", "AI 포토부스 선착순 받으려면", pbfNeedRows()) + evPicHtml()) +
+    sec("룰렛", needBoxHtml("받으려면", "룰렛 받으려면", pzNeedRows("roulette"))) +
+    sec("타자왕", needBoxHtml("도전하려면", "타자왕 도전하려면", pzNeedRows("type")) + '<button type="button" class="ax-link axs-plain axs-self" onclick="typeSiteRankGo()">' + lnkChev("타자왕 순위 보기") + "</button>");
 }
 function progOpen(id) { PROG.sid = id; App.go("sess_d"); }
 var RESV_ST = { requested: "승인 대기", booked: "승인 대기", approved: "사전 신청", checked: "상담 중", done: "상담 완료" };   /* v7.39 (사용자 261016 계획서 3-2) 승인 = 사전 명단 줄 · 칩 「사전 신청」(옛 「승인 완료」) */
@@ -1024,7 +1160,7 @@ function myAgendaHtml() {
   }
   var head = n ? '<p class="ax-meta">10월 26일 · ' + n + "개</p>" : "";
   if (!n) return '<section class="axs-msec" id="mysched">' + head + '<p class="ax-description segfix">' + segHtml("신청한 프로그램이 아직 없어요 · 17F 강연과 1F 전시는 신청 없이 갈 수 있어요") + '</p>' +
-    '<button type="button" class="ax-button ax-button-weak" onclick="progAlwaysGo()">상시 운영 보기</button></section>';
+    '<button type="button" class="ax-button ax-button-weak" onclick="progAlwaysGo()">1F 보기</button></section>';   /* v7.67 (사용자 261017 D1) 옛 「상시 운영 보기」 · 목적지 그대로(1F 칸) */
   var cx = items.some(function (x) { return x.kind === "resv" || x.kind === "cchat"; });
   return '<section class="axs-msec" id="mysched">' + head +
     (items.length ? '<div class="axs-tt axs-mtt">' + items.map(myAgendaRow).join("") + "</div>" : "") +

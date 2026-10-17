@@ -188,3 +188,81 @@
 /* 261008 비어 보이는 상세 다듬기(사용자 「(가)로 가자」 · 높이 규칙 그대로) · 구역 시트 상태 한 줄(자유 관람 · 스탬프 없음 · 운영 시각 · 스탬프 3개면 룰렛 1회)을 제목 묶음에 붙인다(간격 20 → 8 · 떠 있던 회색 줄 + 검정 줄 = 한 덩어리 뒤 줄 하나) · 하는 일 줄 = 마지막 줄 한 낱말 막기 */
 #axsDet .axs-pan .axs-dlead + .cr { margin-top: calc(var(--ax-space-12) * -1); }
 #axsDet .axs-pan .axs-todo p { text-wrap: pretty; }
+/* ═══ v7.67 프로그램 탭 층별 칸 · 1F 칸(운영 시간 · TIME EVENT 카드 · 지도 · 구역 표 · 영상 보기) · 17F · 18F 칸 머리 · EVENT 부스 시트 · 선착순 시트(사용자 확정 261017 · 시안 디자인 시안/상시운영 1F 지도_261017) ═══ */
+/* 구역 간판 = 시트 머리 · 판 퀴즈 등은 주황 그대로(사용자 결정 261017 D16) · 1F 칸 구역 표 알약만 회색(divider 면 + body 글자 · 5.78:1 · 사용자 확정 261017) */
+.axs-pan .axs-sign.tev { background: var(--ax-color-brand); color: #FFFFFF; }   /* TIME EVENT = 1F 칸의 주황 채움 하나 */
+.axs-pan .axs-f1tb .axs-sign { background: var(--ax-color-divider); color: var(--ax-color-body); }
+/* 정보 줄 = 알약 라벨(주황 테두리 · 주황 글자) + 값 */
+.axs-pan .axs-hrs { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--ax-space-8) var(--ax-space-12); margin: calc(var(--ax-space-8) * -1) 0 calc(var(--ax-space-4) * -1); }
+.axs-pan .axs-hrs .pl { display: inline-flex; align-items: center; justify-content: center; min-height: 26px; padding: 0 10px; border: 1px solid var(--ax-color-brand); border-radius: 999px; color: var(--ax-color-brandText); font: var(--ax-type-t7); font-weight: 600; white-space: nowrap; }
+.axs-pan .axs-hrs .vs { display: flex; flex-direction: column; }
+.axs-pan .axs-hrs .v { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); white-space: nowrap; line-height: 26px; }
+/* TIME EVENT 카드 · 테두리 O25 · 세 줄 = 주황 점 목록(둘째 줄 내어쓰기) */
+.axs-pan .axs-pbf { display: flex; flex-direction: column; gap: var(--ax-space-12); border: 1px solid #FFD8C1; }
+.axs-pan .axs-pbf .h { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ax-space-8); }
+.axs-pan .axs-pbf .h b { font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
+@media (max-width: 374px) { .axs-pan .axs-pbf { padding: var(--ax-space-20); } .axs-pan .axs-pbf .h { gap: 6px; } .axs-pan .axs-pbf .h b { font: var(--ax-type-t6-strong); } }   /* 360 · 간판 + 이름 + 칩 한 줄 */
+.axs-pan .axs-pbl { display: flex; flex-direction: column; gap: var(--ax-space-4); margin: 0; padding: 0; list-style: none; }
+.axs-pan .axs-pbl li { position: relative; padding-left: calc(var(--axs-dot) + var(--axs-dot-gap)); font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; }
+.axs-pan .axs-pbl li::before { content: ""; position: absolute; left: 0; top: var(--axs-dot-top); width: var(--axs-dot); height: var(--axs-dot); border-radius: 50%; background: var(--ax-color-brand); }
+.axs-pan .axs-pbl b { font-weight: 600; color: var(--ax-color-ink); }
+.axs-pan .axs-pbfm { min-height: var(--ax-touch-size); margin: calc(var(--ax-space-8) * -1) 0; }
+.axs-pan .axs-pbfs { display: flex; flex-direction: column; gap: var(--ax-space-12); }
+.axs-pan .axs-pbfs .axs-evpic { margin-top: 0; }
+/* 지도 카드 · 그림 위 투명 단추(구역 시트 · 계단) · 글자는 그림(큰글씨 배율 없음) */
+.axs-pan .axs-f1map { padding: 10px var(--ax-space-8) 14px; }
+.axs-pan .axs-f1map .mw { position: relative; }
+.axs-pan .axs-f1map .mp { display: block; width: 100%; height: auto; }
+.axs-pan .axs-f1map text { font-family: var(--ax-font); font-weight: 700; fill: var(--ax-color-ink); }
+.axs-pan .axs-f1map text.sm { font-weight: 600; fill: var(--ax-color-body); }
+.axs-pan .axs-f1map .mb { position: absolute; margin: 0; padding: 0; border: 0; border-radius: 6px; background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.axs-pan .axs-f1map .mb:active { background: rgba(25, 31, 40, 0.06); }
+.axs-pan .axs-f1map .mb:focus-visible { outline: 2px solid var(--ax-color-ink); outline-offset: 1px; }
+.axs-pan .axs-f1map .lgd { display: flex; flex-wrap: wrap; gap: var(--ax-space-4) 14px; margin: 10px var(--ax-space-4) 0; font: var(--ax-type-caption); color: var(--ax-color-body); }
+.axs-pan .axs-f1map .lgd span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.axs-pan .axs-f1map .lgd svg { flex: none; width: 16px; height: 16px; }
+/* 구역 표 · 줄 = 1행 간판 + 스탬프 칸 · 2행 하는 일 · 큰글씨 = 스탬프 칸이 하는 일 아래 */
+.axs-pan .axs-f1tb { padding: var(--ax-space-4) var(--ax-space-20); }
+.axs-pan .axs-f1tb .zth { display: flex; justify-content: space-between; gap: var(--ax-space-12); padding: 14px 0 var(--ax-space-8); border-bottom: 1px solid #CBD0D6; font: var(--ax-type-caption); color: var(--ax-color-muted); }
+.axs-pan .axs-f1tb .zr { display: grid; grid-template-columns: auto minmax(0, 1fr) 16px; grid-template-areas: "zsg bn cv" "ztx ztx cv"; column-gap: var(--ax-space-12); row-gap: 6px; align-items: center; width: 100%; padding: 14px 0; border: 0; border-bottom: 1px solid var(--ax-color-divider); background: transparent; color: var(--ax-color-ink); font-family: inherit; text-align: left; cursor: pointer; }
+.axs-pan .axs-f1tb .zr:last-child { border-bottom: 0; }
+.axs-pan .axs-f1tb .zsg { grid-area: zsg; display: flex; align-items: center; min-width: 0; }
+.axs-pan .axs-f1tb .ztx { grid-area: ztx; min-width: 0; font: var(--ax-type-t6); color: var(--ax-color-ink); word-break: keep-all; }
+.axs-pan .axs-f1tb .bn { grid-area: bn; justify-self: end; display: flex; align-items: center; gap: 6px; min-width: 0; }
+.axs-pan .axs-f1tb .bn svg { flex: none; width: 20px; height: 20px; }
+.axs-pan .axs-f1tb .bn .t { font: var(--ax-type-t7); font-weight: 600; color: var(--ax-color-ink); white-space: nowrap; }
+.axs-pan .axs-f1tb .bn.on .t { color: var(--ax-color-brandText); }
+.axs-pan .axs-f1tb .cv { grid-area: cv; line-height: 0; color: var(--ax-color-disabled); }
+.axs-pan .axs-f1tb .cv .axs-chev { width: 16px; height: 16px; }
+.axs-pan .axs-f1tb .stl { display: inline-flex; align-items: center; gap: 6px; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+.axs-pan .axs-f1tb .stl svg { flex: none; width: 22px; height: 22px; color: var(--ax-color-body); }
+.fs-big .axs-pan .axs-f1tb .zr { grid-template-columns: minmax(0, 1fr) 16px; grid-template-areas: "zsg cv" "ztx cv" "bn cv"; }
+.fs-big .axs-pan .axs-f1tb .bn { justify-self: start; }
+.fs-big .axs-pan .axs-f1tb .bn:empty { display: none; }
+.fs-big .axs-pan .axs-f1tb .zth span + span { display: none; }
+/* 영상 보기 접기(홈 axs-sfd 부품) · 영상 줄 = 썸네일 16:9 · 오른쪽 아래 길이 · 제목 · 회색 한 줄 · 셰브론 */
+.axs-pan .axs-vfd { margin-top: calc(var(--ax-space-8) * -1); }
+.axs-pan .axs-vfd .axs-sfdb i { font-style: normal; font-weight: 500; color: var(--ax-color-muted); }
+.axs-pan .axs-vids { padding: var(--ax-space-4) var(--ax-space-20); }
+.axs-pan .axs-vids .vr { display: grid; grid-template-columns: 112px minmax(0, 1fr) 16px; gap: var(--ax-space-12); align-items: center; width: 100%; padding: 14px 0; border: 0; border-bottom: 1px solid var(--ax-color-divider); background: transparent; color: var(--ax-color-ink); font-family: inherit; text-align: left; cursor: pointer; }
+.axs-pan .axs-vids .vr:last-child { border-bottom: 0; }
+.axs-pan .axs-vids .vr:disabled { cursor: default; }
+.axs-pan .axs-vids .vr:disabled .tb { background: var(--ax-color-divider); }   /* 「준비 중」 줄 = 회색 · 누를 수 없음(D15) */
+.axs-pan .axs-vids .vr:disabled .tb .pl { opacity: 0.6; color: var(--ax-color-disabled); }
+.axs-pan .axs-vids .vr:disabled .x b { color: var(--ax-color-muted); }
+.axs-pan .axs-vids .tb { position: relative; display: block; width: 112px; aspect-ratio: 16 / 9; overflow: hidden; border-radius: var(--ax-radius-12); background: #2B313A; }
+.axs-pan .axs-vids .tb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.axs-pan .axs-vids .tb .pl { position: absolute; left: 50%; top: 50%; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; margin: -14px 0 0 -14px; border-radius: 50%; background: rgba(255, 255, 255, 0.92); color: var(--ax-color-ink); }
+.axs-pan .axs-vids .tb .pl svg { width: 16px; height: 16px; margin-left: 2px; }
+.axs-pan .axs-vids .tb em { position: absolute; right: 6px; bottom: 6px; padding: 0 5px; border-radius: 4px; background: rgba(25, 31, 40, 0.8); color: #FFFFFF; font: 600 11px/16px var(--ax-font); font-style: normal; }
+.axs-pan .axs-vids .x { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.axs-pan .axs-vids .x b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); word-break: keep-all; }
+.axs-pan .axs-vids .x span { font: var(--ax-type-t7); color: var(--ax-color-muted); word-break: keep-all; text-wrap: balance; }
+.axs-pan .axs-vids .cv { line-height: 0; color: var(--ax-color-disabled); }
+.axs-pan .axs-vids .cv .axs-chev { width: 16px; height: 16px; }
+.fs-big .axs-pan .axs-vids .vr { grid-template-columns: 96px minmax(0, 1fr) 16px; }
+.fs-big .axs-pan .axs-vids .tb { width: 96px; }
+/* 17F · 18F 칸 시간표로 가는 한 줄 · EVENT 부스 시트 한 줄 */
+.axs-pan .axs-tlnk { min-height: var(--ax-touch-size); margin: calc(var(--ax-space-8) * -1) 0; color: var(--ax-color-body); }
+.axs-pan .axs-evb .k { margin: 0; font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; }
+.axs-pan .axs-evb .axs-evpic { margin-top: 0; }

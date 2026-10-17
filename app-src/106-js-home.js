@@ -120,7 +120,7 @@ function myScheduleHtml() {
   if (!rows.length) {
     return head + '<div class="axs-rows">' + schedNowRow() +
       (all0 ? rcHtml({ cls: "", onclick: "mySched()", link: true, left: rcIcon(App.ICONS.guide_time), title: "남은 일정 없음", sub: "지난 일정은 나의 일정에서" }) + ap
-        : ap || rcHtml({ cls: "", onclick: "progApplyGo()", link: true, left: rcIcon(App.ICONS.guide), title: "신청한 프로그램 없음", sub: "프로그램 › 참여하기" })) + "</div>";   /* v5.85 = 프로그램 › 신청하기 칸 */
+        : ap || rcHtml({ cls: "", onclick: "progApplyGo()", link: true, left: rcIcon(App.ICONS.guide), title: "신청한 프로그램 없음", sub: "프로그램 › " + progApplyNm() })) + "</div>";   /* v5.85 = 프로그램 › 신청하기 칸 · v7.67 (사용자 261017 D1) 칸 이름 「17F · 18F」(옛 「참여하기」) */
   }
   /* v4.13 (사용자 결정 260922) 카드 안 스크롤(창 안의 창) 폐지 · 3개만 · 4개 이상이면 목록 바로 아래 전폭 버튼 「일정 더보기 +N」(숨은 개수) → 나의 참여 › 내 일정 · 3개 이하면 버튼 없음 */
   var more = Math.max(0, rows.length - SCHED_VIEW);

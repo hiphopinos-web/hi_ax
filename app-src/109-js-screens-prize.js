@@ -238,7 +238,7 @@ var PZ_SEC = [
    k = 위 작은 라벨(주황) · aria = 읽어 주기 이름 · rows = [아이콘(PZ_ICO), 굵은 한 줄(할 일), 옅은 한 줄(덧붙임 · 없으면 빈 값)] */
 function needBoxHtml(k, aria, rows) {
   return '<div class="axs-pz-need" role="group" aria-label="' + esc(aria) + '"><p class="k" aria-hidden="true">' + esc(k) + "</p><ul>" + rows.map(function (r) {
-    return '<li><span class="i" aria-hidden="true">' + (PZ_ICO[r[0]] || "") + '</span><span class="x"><b>' + segHtml(esc(r[1])) + "</b>" + (r[2] ? "<span>" + segHtml(esc(r[2])) + "</span>" : "") + "</span></li>";
+    return '<li><span class="i" aria-hidden="true">' + (PZ_ICO[r[0]] || "") + '</span><span class="x"><b>' + (r[3] || segHtml(esc(r[1]))) + "</b>" + (r[2] ? "<span>" + segHtml(esc(r[2])) + "</span>" : "") + "</span></li>";
   }).join("") + "</ul></div>";
 }
 /* 경품 시트 구역의 받으려면 줄 그대로(강연 상세 · 팝업이 같은 줄을 쓴다 · 문구가 한 곳) */

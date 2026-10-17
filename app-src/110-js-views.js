@@ -21,6 +21,7 @@ var Views = {
     return '<div class="ax-stack">' +
       homeActHtml() +   /* v7.57 할 일 카드(포토부스 호출 › 설문 · 선착순 참여상(15:00부터 설문이 위) › 옷 사이즈 › 추첨 체크인 · 2장 넘으면 참여상부터 뺌) */
       billboardHtml() +
+      pbfHomeHtml() +   /* v7.67 (사용자 261017) 광고판 바로 아래 · 스탬프 위 한 줄 「1F 선착순 이벤트 중 · 자세히 보기 ›」 · 10/26 08:30~17:00 에만 · 누르면 선착순 시트 */
       tourHeroHtml() +
       betaBannerHtml() +
       '<section class="axs-sec axs-railgo" onclick="if (!event.target.closest(\'.mk, .sect span\')) App.tab(\'exp\')">' + myCouponHtml() + "</section>" + stFoldHtml() +   /* v7.65 레일 아래 접기 단추(stFoldHtml) · 레일 칸(누르면 스탬프 탭 · 누를 때 어두워짐) 밖 형제 · 단추 · 펼친 판을 눌러도 레일 칸이 어두워지거나 스탬프 탭으로 가지 않는다 */

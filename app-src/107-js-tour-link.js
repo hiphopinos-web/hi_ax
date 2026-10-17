@@ -343,15 +343,40 @@ window.addEventListener("pagehide", function () { tlogClose(true); });
      → [영상 보기]가 확인 창 없이 그 고정 주소를 새 창으로 연다(외부 영상 주소는 웹배포용/interview/index.html 의 VIDEO_URL 한 줄 · 여기서는 poster 만 썸네일로 쓴다) */
 var IV_VIDEO = { src: "assets/interview/sample.mp4", poster: "assets/interview/sample.webp", loop: true, page: "" };
 var IV_PLAY_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6.8v10.4a.8.8 0 0 0 1.2.7l8.3-5.2a.8.8 0 0 0 0-1.4l-8.3-5.2A.8.8 0 0 0 9 6.8z" fill="currentColor"/></svg>';
-function progIvHtml() {
-  return '<section class="ax-card axs-ivc" aria-labelledby="ivTtl"><h3 class="ax-card-title" id="ivTtl">AI 활용 현장 인터뷰</h3>' +
-    '<p class="k">현장 직원이 업무에 AI를 쓴 이야기</p>' +
-    '<button type="button" class="axs-ivth" onclick="ivAsk(this)" aria-label="AI 활용 현장 인터뷰 영상 보기"><img src="' + esc(IV_VIDEO.poster) + '" alt="" width="1280" height="720" decoding="async"><span class="pl">' + IV_PLAY_SVG + "</span></button>" +
-    '<button type="button" class="ax-button" onclick="ivAsk(this)">영상 보기</button></section>';
+/* v7.67 (사용자 확정 261017 D9 · D14) 1F 칸 맨 아래 「영상 보기」 묶음 · 닫힘 기본 접기(홈 「스탬프 모으는 방법」과 같은 부품 axs-sfd · 열림 0.3초 · 닫힘 0.18초 · 동작 줄이기 즉시)
+   영상 표 VIDS 한 곳(제목 · 한 줄 · 길이 · 영상 v = IV_VIDEO 와 같은 모양 src · poster · loop · page) · 파일이 들어오면 v 한 줄만 채운다
+   VIDS_HIDE = 파일(src · page) 없는 줄 숨김 스위치(사용자 결정 261017 D15 = false · 「준비 중」 꺼진 줄) · 단추 숫자 = 보이는 줄 수(「영상 보기 3」) · 보일 줄이 없으면 묶음째 없음
+   옛 v7.05 큰 썸네일 + [영상 보기] 카드(axs-ivc · axs-ivth)는 이 묶음 줄로 바뀌었다 · 재생은 그대로(ivAsk 소리 확인 창 → ivPlay 전체 화면 · page 면 새 창) */
+var VIDS_HIDE = false;   /* 사용자 결정 261017 D15 = 숨기지 않고 「준비 중」(누를 수 없음 · 회색) · true = 파일 없는 줄 숨김 */
+var VIDS = [
+  { t: "AI 활용 현장 인터뷰", s: "현장 직원이 업무에 AI를 쓴 이야기", len: "", v: IV_VIDEO },
+  { t: "HiDI Q", s: "AX PLAY", len: "", v: { src: "", poster: "", loop: false, page: "" } },
+  { t: "Hi-Helper", s: "AX PLAY", len: "", v: { src: "", poster: "", loop: false, page: "" } }
+];
+var VFOLD = { open: false };
+function vidOk(x) { return !!(x && x.v && (x.v.src || x.v.page)); }
+function vidRowHtml(x, i) {
+  var ok = vidOk(x), th = '<span class="tb">' + (ok && x.v.poster ? '<img src="' + esc(x.v.poster) + '" alt="" width="1280" height="720" loading="lazy" decoding="async">' : "") + '<span class="pl">' + IV_PLAY_SVG + "</span>" + (x.len ? "<em>" + esc(x.len) + "</em>" : "") + "</span>";
+  return '<button type="button" class="vr"' + (ok ? ' onclick="ivAsk(this, ' + i + ')" aria-label="' + esc(x.t) + ' 영상 보기"' : " disabled") + ">" + th +
+    '<span class="x"><b>' + esc(x.t) + "</b><span>" + esc(ok ? x.s : x.s + " · 준비 중") + "</span></span>" + (ok ? '<span class="cv">' + CHEV_SVG + "</span>" : "") + "</button>";
 }
-var IVP = { on: false, el: null, v: null, y: 0, from: null, fs: false, t: 0 };
-function ivAsk(b) {
-  if (IV_VIDEO.page) { try { window.open(IV_VIDEO.page, "_blank", "noopener"); } catch (e) { location.href = IV_VIDEO.page; } return; }
+function progIvHtml() {
+  var rs = VIDS.map(function (x, i) { return [x, i]; }).filter(function (r) { return vidOk(r[0]) || !VIDS_HIDE; }), n = rs.length, o = VFOLD.open;
+  if (!rs.length) return "";
+  return '<div class="axs-sfd axs-vfd' + (o ? " open" : "") + '">' +
+    '<button type="button" class="axs-sfdb" id="vFoldBtn" aria-expanded="' + o + '" aria-controls="vFoldBody" onclick="vFoldTog(this)"><span>영상 보기 <i>' + n + "</i></span>" + CHEV_SVG + "</button>" +
+    '<div class="axs-sfdp" id="vFoldBody"><div class="axs-sfdi"><div class="axs-sfdc"><section class="ax-card axs-vids" aria-label="영상 보기">' + rs.map(function (r) { return vidRowHtml(r[0], r[1]); }).join("") + "</section></div></div></div></div>";
+}
+function vFoldTog(b) {
+  VFOLD.open = !VFOLD.open;
+  var w = b.closest(".axs-sfd"); if (w) w.classList.toggle("open", VFOLD.open);
+  b.setAttribute("aria-expanded", String(VFOLD.open));
+}
+var IVP = { on: false, el: null, v: null, y: 0, from: null, fs: false, t: 0, vd: null, vt: "" };
+function ivAsk(b, i) {   /* v7.67 i = 영상 표(VIDS) 줄 · 없으면 첫 줄(IV_VIDEO) */
+  var x = VIDS[i || 0] || VIDS[0], V = x.v || IV_VIDEO;
+  if (V.page) { try { window.open(V.page, "_blank", "noopener"); } catch (e) { location.href = V.page; } return; }
+  IVP.vd = V; IVP.vt = x.t;
   IVP.from = b || null;
   modalOpen('<div class="ax-stack-tight axs-gap12">' +
     '<button type="button" class="ax-button" onclick="ivPlay(true)">소리 켜고 보기</button>' +
@@ -371,11 +396,11 @@ function ivPlay(snd) {
   var ios = ivIOS(), w = document.createElement("div");
   IVP.on = true; IVP.fs = false; IVP.y = window.scrollY || 0; IVP.t = Date.now();
   w.id = "ivPlayer"; w.className = AXM.rm() ? "rm" : "";
-  w.setAttribute("role", "dialog"); w.setAttribute("aria-modal", "true"); w.setAttribute("aria-label", "AI 활용 현장 인터뷰 영상"); w.tabIndex = -1;
+  w.setAttribute("role", "dialog"); w.setAttribute("aria-modal", "true"); w.setAttribute("aria-label", (IVP.vt || "AI 활용 현장 인터뷰") + " 영상"); w.tabIndex = -1;
   w.innerHTML = '<div class="ivp-st"><video class="ivp-v" preload="auto" controls controlslist="nodownload nofullscreen noremoteplayback" disablepictureinpicture' + (ios ? "" : " playsinline") + "></video>" +
     '<button type="button" class="ivp-x" aria-label="닫기">' + X_SVG + "</button>" + (snd ? "" : ivSndHtml()) + "</div>";
   var v = w.querySelector("video");
-  v.poster = IV_VIDEO.poster; v.loop = !!IV_VIDEO.loop; v.muted = !snd; v.defaultMuted = !snd; v.src = IV_VIDEO.src;
+  var V = IVP.vd || IV_VIDEO; v.poster = V.poster || ""; v.loop = !!V.loop; v.muted = !snd; v.defaultMuted = !snd; v.src = V.src;
   IVP.el = w; IVP.v = v;
   document.body.appendChild(w);
   document.documentElement.classList.add("ivp-lock");

@@ -798,6 +798,11 @@
   .axs-sfd.open .axs-sfdi { opacity: 1; transform: none; transition: opacity var(--ax-motion-in) var(--ax-motion-ease-fade), transform var(--ax-motion-in) var(--ax-motion-ease); }
   .axs-sfdc { padding: var(--ax-space-4) 0 var(--ax-space-8); }
   @media (prefers-reduced-motion: reduce) { .axs-sfdb .axs-chev, .axs-sfd.open .axs-sfdb .axs-chev, .axs-sfdp, .axs-sfd.open .axs-sfdp, .axs-sfdi, .axs-sfd.open .axs-sfdi { transition: none; } }
+  /* v7.67 (사용자 261017) 홈 광고판 바로 아래 한 줄 「1F 선착순 이벤트 중 · 자세히 보기 ›」(pbfHomeHtml · 10/26 08:30~17:00) · 흰 면 한 줄 · 누르면 선착순 시트 */
+  .axs-pbfh { display: flex; align-items: center; gap: var(--ax-space-8); width: 100%; min-height: var(--ax-touch-size); margin-top: calc(var(--ax-space-8) * -1); padding: var(--ax-space-12) var(--ax-space-16); border: 0; border-radius: var(--ax-radius-16); background: var(--ax-color-surface); color: var(--ax-color-body); font: var(--ax-type-t6); font-family: inherit; text-align: left; cursor: pointer; }
+  .axs-pbfh .t { flex: 1 1 auto; min-width: 0; word-break: keep-all; }
+  .axs-pbfh b { font-weight: 600; color: var(--ax-color-ink); }
+  .axs-pbfh .axs-chev { flex: none; width: 18px; height: 18px; color: var(--ax-color-muted); }
   /* 261008 지금 현장 스태프 입력 시트 · 저장됨 · 재는 중 띠 · 스캔 화면 「줄」 */
   .cn-now { margin: 0; font: var(--ax-type-t6); color: var(--ax-color-body); }
   .cn-now b { font-weight: 600; color: var(--ax-color-ink); }
