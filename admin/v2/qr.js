@@ -3,7 +3,7 @@
  * 그림 = 이 화면이 서버 코드로 바로 그린다(../qrcode.js · admin/ 자리 그대로 · 선수 화면과 같이 씀) · 장식 없는 일반 QR · 검정 정사각 · 흰 바탕 · ECC Q · 조용한 영역 4칸
  * 카드마다 QR 그림 · 담긴 주소 · PNG(2048 · 아래 글자) · QR만 PNG · 찍힌 수(계단 = stair_stats 지점별 누적 · 오늘 · 17F = qr_stats att 오늘 · 10F = att_stats)
  * 묶음 ZIP = 지금 콘솔과 같은 무압축 ZIP(외부 도구 없음) · 그림 파일은 공개 저장소 · 메신저에 올리지 않는다(코드가 퍼지면 현장에 오지 않고도 적립) */
-var QV_BASE="https://hiphopinos-web.github.io/hi_ax/", QV_PX=2048, QV_CACHE={}, QV_ZIP={ busy:false };
+var QV_BASE="https://hiax.app/", QV_PX=2048, QV_CACHE={}, QV_ZIP={ busy:false };
 var QV_LEC=[["att_l1_in","l1","in","파트너사 강연 · AWS · 입장 QR","17F 입장 출석"],["att_l1_out","l1","out","파트너사 강연 · AWS · 끝 QR","17F 끝 출석"],["att_l2_in","l2","in","파트너사 강연 · MS · 입장 QR","17F 입장 출석"],["att_l2_out","l2","out","파트너사 강연 · MS · 끝 QR","17F 끝 출석"]];
 var QV_PL={ fld:"컨퍼런스룸", ta:"01 HEART", tb:"06 HEART", aws:"08 HEART", ms1:"07 HEART", ms2:"07 HEART" };
 var QV_GRP=[["app idea","1 · 앱 · 아이디어 한 줄","출력용 · 서버 코드 없음","앱아이디어"],["stair","2 · 계단실 · 층별","방화문 앞 · 층마다 1세트 · 양쪽 계단실에 같은 장","계단실"],["lec","3 · 17F 강의장 출석","오후 AWS · MS 입장 · 끝(PPT)","17F출석"],["lec10","4 · 10F 실습 세션 출석","A~E 입장 · 종료 · 스탬프 없음","10F출석"]];
