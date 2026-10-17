@@ -2,14 +2,15 @@
  * 게임 노트북 2대(자리 1 · 2)의 판 진행을 서버 소켓(tv 방)으로 받아 같은 엔진 그리기(../../assets/rain-engine.js 의 rgDraw)로 다시 그린다.
  * 프로토콜 = 디자인 시안/사이니지 명세/타자왕_실시간송출_프로토콜_261017.md 4절 · 운영 = 디자인 시안/사이니지/운영 안내.md 「타자왕 실시간 송출」
  *
- * 주소: tv/typing/?live=1 (+ &mode=auto|1|2|split · &seat=1|2 · &o=land|port · &test=1 · &delay=600)
+ * 주소: tv/typing/?live=1 (+ &mode=auto|1|2|split · &seat=1|2 · &o=land|port · &test=1 · &delay=200)
  *   mode auto(기본) = 한 자리면 그 판을 크게 · 두 자리면 좌우(세로 TV 는 위아래) 분할 · 1 = 늘 한 판(두 자리면 나중에 시작한 판) · 2 · split = 늘 분할(빈 자리는 「대기」)
- *   seat = 그 자리만 따라간다(TV 두 대가 자리 하나씩 맡을 때) · o = 방향 고정(안 붙이면 화면 비율) · test = 테스트 사번 판(리허설)도 보인다 · delay = 재생 지연 ms(200~2000)
+ *   seat = 그 자리만 따라간다(TV 두 대가 자리 하나씩 맡을 때) · o = 방향 고정(안 붙이면 화면 비율) · test = 테스트 사번 판(리허설)도 보인다 · delay = 사건 없는 진행의 재생 지연 ms(100~2000)
  *   ws = 소켓 주소 바꾸기(ws://127.0.0.1 · ws://localhost · wss://*.workers.dev 만) · 없으면 서버 주소(../../assets/server.js · &srv=)에서 만든다 · &demo=1 이면 ws 를 줄 때만 붙는다
  * 화면: 아무도 안 함 = 기존 광고 루프(typing.js) 그대로 · 판이 오면 광고 루프를 멈추고 중계 · 판 끝 = 결과(「N위 진입!」) 6초 → 두 자리 모두 끝나면 순위 장면부터 광고 루프
  *   끊김 = 자리마다 마지막 진행 뒤 15초 · 소켓이 끊긴 채 15초 · 「over」 뒤 15초 안에 결과가 없으면 조용히 내린다(오류 글자 없음) · QR 없음 · 사번 · 실명 없음(닉네임만)
  * 그리기 = 자리마다 엔진 상태(RG) 한 벌 · 그릴 때만 전역 RG 를 바꿔 끼우고 rgDraw 를 부른 뒤 되돌린다 · 판정 코드는 없다(받은 값을 그린다)
- * 보간 = 받은 진행을 약 0.6초 늦게 재생 · 단어는 id 로 맞추고 p 를 f(바닥까지 ms)로 이어 움직인다 · 새 진행이 오면 어긋난 만큼을 0.18초에 걸쳐 녹인다
+ * 보간 = 사건 없는 진행은 약 0.2초 늦게 · 사건(ev 1 또는 직전 진행과 맞힘 · 목숨 · 점수 · 단계 · 단어 · 입력 · 장면이 다름)은 받는 즉시 그린다(261017 지연 개선 · 옛 0.6초)
+ *   단어 위치는 그 진행 이후 지금 시각까지 f(바닥까지 ms)로 앞질러 그린다(외삽 · hu = 목숨을 잃은 뒤 느려진 남은 ms) · 새 진행이 오면 어긋난 만큼을 0.18초에 걸쳐 녹인다
  * 서버 호출 추가 없음 · 순위(지금 N위)는 광고 루프가 30초마다 받는 type_rank TOP 10 과 비교 · 판 끝 결과는 화면의 TOP 10 에만 넣는다(다음 폴링이 정본으로 바로잡는다) */
 (function () {
   "use strict";
@@ -24,7 +25,8 @@
   var MODE = Q.mode === "1" ? 1 : (Q.mode === "2" || Q.mode === "split") ? 2 : 0;
   var ONLY = Q.seat === "1" ? 1 : Q.seat === "2" ? 2 : 0;
   var TEST = Q.test === "1";
-  var DELAY = Math.max(200, Math.min(2000, parseInt(Q.delay, 10) || 600));
+  var DELAY = Math.max(100, Math.min(2000, parseInt(Q.delay, 10) || 200));   /* 261017 지연 개선 · 0.6 → 0.2초 · 사건은 기다리지 않는다 */
+  var HURT_SLOW = typeof RAIN_SITE === "object" && RAIN_SITE && RAIN_SITE.hurtSlow > 0 ? RAIN_SITE.hurtSlow : 0.3;
   var DROP_MS = 15000, RESULT_MS = 6000, OVER_MS = 15000, MAX_LAG = 1500;
   var body = document.body;
   function $(id) { return document.getElementById(id); }
@@ -132,10 +134,18 @@
       var q = Number(it.q); if (!(q > S.q)) return;
       S.q = q; S.recv = now();
       if (it.nick) S.nick = clip(it.nick, 16);
+      it._rx = performance.now(); it._ev = !!it.ev || evLike(it, S.fr.length ? S.fr[S.fr.length - 1] : null);
       S.fr.push(it); if (S.fr.length > 16) S.fr.shift();
       if (it.x === "over" && !S.over) S.over = now();
       if (it.x === "quit") { done(it.g); SEATS[n] = null; }
     });
+  }
+  /* 사건 · 직전에 받은 진행과 그림이 달라지는 값(옛 Hub 는 ev 를 버리므로 화면이 스스로도 본다) */
+  function wIds(F) { var a = []; (F.w || []).forEach(function (w) { a.push(w[0]); }); return a.join(","); }
+  function evLike(F, P) {
+    if (!P) return true;
+    return F.ht !== P.ht || F.lv !== P.lv || F.sc !== P.sc || F.st !== P.st || F.cd !== P.cd || F.pz !== P.pz || F.x !== P.x || F.inp !== P.inp ||
+      (F.bn ? F.bn.ph + "|" + F.bn.ty : "") !== (P.bn ? P.bn.ph + "|" + P.bn.ty : "") || wIds(F) !== wIds(P);
   }
   function onEnd(m) {
     if (G8.test(m.g || "")) done(m.g);
@@ -231,12 +241,16 @@
   function tagW(ctx, L, text) { var k = L.tf + "|" + text; if (BW[k] == null) { ctx.font = rtFont(L.tf); BW[k] = Math.ceil(ctx.measureText(text).width) + L.padX * 2; } return BW[k]; }
   function pick(S, T) {
     var fr = S.fr, F = null;
-    for (var i = fr.length - 1; i >= 0; i--) if (fr[i].hs <= T) { F = fr[i]; break; }
+    for (var i = fr.length - 1; i >= 0; i--) if (fr[i].hs <= T || fr[i]._ev) { F = fr[i]; break; }   /* 사건은 받는 즉시 · 한 번 고른 진행보다 앞의 것으로 돌아가지 않는다(사건 · 지난 시각은 계속 고를 수 있다) */
     if (!F && fr.length && fr[0].hs > T + 3000) F = fr[fr.length - 1];   /* 시계가 크게 어긋났을 때만 · 보통은 첫 진행이 재생 시각에 닿을 때까지 기다린다 */
     return F;
   }
   function running(F) { return !!F && !F.pz && !F.bn && !(F.cd > 0) && !F.x; }
-  function wordP(w, F, T) { var dt = running(F) ? Math.max(0, Math.min(MAX_LAG, T - F.hs)) : 0; return (Number(w[3]) + dt / Math.max(300, Number(w[4])) * 1000) / 1000; }
+  function wordP(w, F, T) {   /* 외삽 · 그 진행(Hub 가 받은 시각) 뒤 지금까지 · 목숨을 잃은 뒤 느려진 동안(hu)은 그 배속 */
+    var dt = running(F) ? Math.max(0, Math.min(MAX_LAG, T - F.hs)) : 0, hu = Number(F.hu) || 0;
+    if (hu > 0) dt = Math.min(dt, hu) * HURT_SLOW + Math.max(0, dt - hu);
+    return (Number(w[3]) + dt / Math.max(300, Number(w[4])) * 1000) / 1000;
+  }
 
   /* 새 진행으로 넘어갈 때 · 효과(터짐 · 놓침 · 단계 · 카운트다운 · 보너스 단계)와 보간 이음새 */
   function step(S, u, F, P, T, pnow) {
@@ -313,15 +327,15 @@
   var LAT = [];
 
   /* 그 자리 한 프레임 · 단어 위치 · 시계 · 효과 줄이기 */
-  function tickSeat(S, u, T, dt, pnow) {
+  function tickSeat(S, u, T, Tx, dt, pnow) {   /* T = 사건 없는 진행을 고르는 시각(지연) · Tx = 지금 시각(앞질러 그리기 · 보너스 시계) */
     var r = S.rg, L = u.L, F = pick(S, T);
-    if (F && F !== S.cur) step(S, u, F, S.cur, T, pnow);
+    if (F && F !== S.cur) { step(S, u, F, S.cur, Tx, pnow); S.nd = 1; }
     F = S.cur;
     var words = [], k = Math.exp(-dt / 0.18);
     if (F && !F.bn) for (var id in S.wm) {
       var o = S.wm[id];
       o.corr *= k;
-      var p = Math.max(0, Math.min(1, wordP(o.w, F, T) + o.corr));
+      var p = Math.max(0, Math.min(1, wordP(o.w, F, Tx) + o.corr));
       if (!o.bw) o.bw = tagW(u.ctx, L, o.text);
       o.x = Math.round(Math.max(8, Math.min(L.W - 8 - o.bw, o.xm / 1000 * L.W)));
       if (o.c && o.y0 == null) o.y0 = r.cloud ? rgClY0(L, pnow) : L.top;
@@ -331,9 +345,9 @@
     }
     r.words = words;
     if (r.bonus && S.bns && F) {   /* 단계 시계 · 받은 단계가 시작된 때부터 */
-      var b = S.bns, e = Math.max(0, (T - b.phAt) / 1000);
+      var b = S.bns, e = Math.max(0, (Tx - b.phAt) / 1000);
       b.t = Math.max(0, (DUR[b.ph] || 0) - e);
-      if (b.ph === "type") { var et = Math.max(0, (T - b.typeAt) / 1000); b.left = Math.max(0, b.lim - et); b.go = Math.max(0, RAIN_CLOUD.go - et); }
+      if (b.ph === "type") { var et = Math.max(0, (Tx - b.typeAt) / 1000); b.left = Math.max(0, b.lim - et); b.go = Math.max(0, RAIN_CLOUD.go - et); }
       else if (b.ph === "intro" || b.ph === "count" || b.ph === "wout") b.left = b.lim;
     }
     rgFx(dt);
@@ -452,9 +466,10 @@
   }
 
   /* ── 한 프레임 ── */
-  var LAST = 0, FPS = { n: 0, t0: 0, v: 0 };
+  var LAST = 0, FPS = { n: 0, t0: 0, v: 0 }, DRAW = [], DRAW_EV = [], COST = [];
   function frame(ms) {
     requestAnimationFrame(frame);
+    var c0 = performance.now();
     var dt = LAST ? Math.min(0.1, (ms - LAST) / 1000) : 0.016; LAST = ms;
     FPS.n++; if (ms - FPS.t0 >= 1000) { FPS.v = FPS.n * 1000 / (ms - FPS.t0); FPS.n = 0; FPS.t0 = ms; }
     var t = now();
@@ -469,7 +484,7 @@
     if (!list.length) { liveOn(false); return; }
     liveOn(true);
     layout(list);
-    var T = t + OFF - DELAY, keep = window.RG;
+    var Tx = t + OFF, T = Tx - DELAY, keep = window.RG;
     VIEW.ui.forEach(function (u) {
       var S = SEATS[u.n];
       u.e.classList.toggle("empty", !S);
@@ -477,14 +492,17 @@
       S.rg.L = u.L; S.rg.dpr = u.dpr;
       window.RG = S.rg;
       try {
-        tickSeat(S, u, S.end ? Infinity : T, dt, ms);
+        tickSeat(S, u, S.end ? Infinity : T, S.end ? Infinity : Tx, dt, ms);
         if (S.end) S.rg.ending = null;   /* 결과 카드가 덮는다 · 판 안 TIME UP · GAME OVER 는 걷는다 */
         if (S.cur) rgDraw(u.ctx, ms);
         else { u.ctx.setTransform(1, 0, 0, 1, 0, 0); u.ctx.fillStyle = RT_PAL.night; u.ctx.fillRect(0, 0, u.cv.width, u.cv.height); }
+        if (S.nd && S.cur && S.cur._rx) { var dw = performance.now() - S.cur._rx; DRAW.push(dw); if (S.cur._ev) DRAW_EV.push(dw); if (DRAW.length > 6000) { DRAW.splice(0, 2000); DRAW_EV.splice(0, Math.min(DRAW_EV.length, 2000)); } }   /* 점검 · 소켓 받음 → 그 진행을 그린 때 */
+        S.nd = 0;
       } catch (e) { if (window.console) console.error(e); }
       finally { window.RG = keep; }
       hud(S, u, dt);
     });
+    COST.push(performance.now() - c0); if (COST.length > 6000) COST.splice(0, 2000);
   }
 
   /* ── 점검 · 시험(헤드리스)용 · 화면에는 아무것도 더하지 않는다 ── */
@@ -493,7 +511,8 @@
     seats: SEATS, ws: WS, q: Q, delay: DELAY,
     off: function () { return OFF; }, fps: function () { return FPS.v; }, on: function () { return ON; },
     lat: function () { return { n: LAT.length, p50: pct(LAT, 0.5), p95: pct(LAT, 0.95), max: pct(LAT, 1) }; },
-    latReset: function () { LAT.length = 0; },
+    latReset: function () { LAT.length = 0; DRAW.length = 0; DRAW_EV.length = 0; COST.length = 0; },
+    draw: function () { function s(a) { return { n: a.length, p50: pct(a, 0.5), p95: pct(a, 0.95), max: pct(a, 1) }; } return { all: s(DRAW), ev: s(DRAW_EV), cost: s(COST) }; },
     feed: function (m) { if (m && m.t === "tv") { if (m.k === "live") onLive(m); else if (m.k === "type_start") onStart(m); else if (m.k === "type_end") onEnd(m); else if (m.k === "type_stop") onStop(m); else if (m.k === "live_seats") onSeats(m); } }
   };
 
