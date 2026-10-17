@@ -105,7 +105,7 @@ XG.pickAll=function(id, on){ var g=XG.reg[id], root=XG.root(g); if(!root) return
 XG.addBy=function(id){ var g=XG.reg[id]; if(g&&g.o.onAdd&&!g.busy) g.o.onAdd(g); };
 /* 줄 거절 이유(3_서버 계약 3-6 · 줄마다 why) */
 var XG_CXWHY={ param:"사번 형식이 맞지 않습니다", notfound:"명단에 없습니다", err:"서버 오류로 처리하지 못했습니다", same:"이미 취소된 줄입니다", state:"그 사이 상태가 바뀌었습니다",
-  done:"체크인 · 완료한 상담이 있어 뺄 수 없습니다", sup:"슈퍼관리자(맨 앞 사번)는 뺄 수 없습니다", self:"지금 이 콘솔을 쓰는 본인은 뺄 수 없습니다", fixed:"고정 시험 사번은 풀 수 없습니다",
+  done:"체크인 · 완료한 상담이 있어 뺄 수 없습니다", sup:"슈퍼관리자(맨 앞 사번)는 뺄 수 없습니다", "super":"슈퍼관리자만 뺍니다", self:"지금 이 콘솔을 쓰는 본인은 뺄 수 없습니다", fixed:"고정 시험 사번은 풀 수 없습니다",
   none:"아직 사이즈를 고르지 않았습니다", hum:"가습기 대상이라 옷 사이즈가 없습니다", got:"이미 옷을 받았습니다", have:"그 사이 다시 들어왔습니다", taken:"그 자리가 찼습니다", dup:"진행 중인 다른 줄이 있습니다", sold:"그 사이즈가 남지 않았습니다" };
 function xgCxWhy(x){ return (XG_CXWHY[x.why]||x.why||"처리하지 못했습니다")+(x.cur?" · 지금 "+x.cur:""); }
 XG.cxAsk=function(id){

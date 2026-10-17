@@ -47,7 +47,7 @@ function call(action, params, ms){
     clearTimeout(timer); var res; try{ res=JSON.parse(t); }catch(e){ res={ ok:false, reason:"network" }; }
     NET.push({ t:Date.now(), ms:Date.now()-t0, ok:!(res&&res.ok===false&&(res.reason==="busy"||res.err)) }); if(NET.length>60) NET.shift();
     try{ whoLearn(res, action); }catch(e){}
-    if(res&&res.ok===false&&res.reason==="auth"&&action!=="admin_check"){ lock("관리코드가 바뀌었거나 명단에서 빠졌습니다. 다시 입력합니다."); }
+    if(res&&res.ok===false&&res.reason==="auth"&&action!=="admin_check"&&action!=="adm_pw_set"&&action!=="adm_pw_info"){ lock("입장이 끊겼습니다 · 코드 · 비밀번호가 바뀌었거나 명단에서 빠짐 · 다시 들어옵니다."); }
     return res||{ ok:false, reason:"network" };
   }).catch(function(){ clearTimeout(timer); NET.push({ t:Date.now(), ms:Date.now()-t0, ok:false }); return { ok:false, reason:to?"timeout":"network" }; });
 }
@@ -60,7 +60,8 @@ function why(r){
     full:"정원이 찼습니다", drawn:"이미 추첨했습니다", same:"지금과 같습니다", have:"이미 들어 있습니다", used:"이미 썼습니다", window:"처리할 수 있는 시간이 아닙니다", late:"마감 시각이 지났습니다", early:"아직 시작 전입니다",
     max:"최대 수를 넘었습니다", self:"지금 이 콘솔을 쓰는 본인은 처리하지 않습니다", "super":"슈퍼관리자만 합니다", kind:"이 종류는 처리하지 않습니다", empty:"비어 있습니다", none:"대상이 없습니다", "long":"글자 수가 너무 깁니다",
     changed:"다른 곳에서 먼저 고쳤습니다 · 다시 받은 뒤 합니다", stale:"그 사이 기록이 바뀌었습니다 · 다시 받은 뒤 합니다", notlast:"그 뒤에 또 바뀌어 되돌리지 못합니다", sold:"그 사이즈가 남지 않았습니다", got:"이미 받았습니다",
-    noros:"명부에 없는 사번입니다", nostamp:"서버 기록에 이 스탬프가 없습니다", noid:"처리할 수 없는 항목입니다", test:"시험 사번입니다", ccwait:"대기 줄에서 처리합니다", nolock:"먼저 대상을 확정합니다", nodraw:"아직 추첨 전입니다" };
+    noros:"명부에 없는 사번입니다", nostamp:"서버 기록에 이 스탬프가 없습니다", noid:"처리할 수 없는 항목입니다", test:"시험 사번입니다", ccwait:"대기 줄에서 처리합니다", nolock:"먼저 대상을 확정합니다", nodraw:"아직 추첨 전입니다",
+    pwonly:"이 콘솔은 사번 + 개인 비밀번호로 들어옵니다", pwrule:"비밀번호 규칙에 맞지 않습니다", nopw:"개인 비밀번호로 들어온 뒤 켭니다", codeexp:"설정 코드가 만료됐습니다 · 다시 발급" };
   if(r.err==="unknown action") return "이 서버는 아직 이 기능을 모릅니다";
   return m[r.reason]||r.msg||r.reason||r.err||"처리하지 못했습니다";
 }
@@ -106,34 +107,20 @@ setInterval(function(){ load(false); },5000);
 document.addEventListener("visibilitychange",function(){ if(!document.hidden) load(false); });
 
 /* ── 4. 로그인 · 잠금 ── */
-function lock(msg){ setTok(""); S.me=null; el("lock").hidden=false; el("lockErr").textContent=msg||""; if(aemp()) el("aemp").value=aemp(); setTimeout(function(){ el(aemp()?"key":"aemp").focus(); },30); }
-function unlock(){
-  var e=normE(el("aemp").value), v=el("key").value.trim();
-  if(!e){ el("lockErr").textContent="사번을 넣습니다."; el("aemp").focus(); return; }
-  if(!v){ el("lockErr").textContent="관리코드를 넣습니다."; el("key").focus(); return; }
-  el("lockErr").textContent="확인 중";
-  call("admin_check",{ key:v, aemp:e, asc:"c", tok:"" },25000).then(function(r){
-    el("key").value="";
-    if(r&&r.ok&&r.role==="admin"){ setAemp(e); setTok(r.tok||""); S.me={ emp:r.emp||e, name:r.name||"" }; el("lock").hidden=true; el("lockErr").textContent=""; start(); }
-    else if(r&&r.ok&&r.role==="grade") el("lockErr").textContent="등급코드입니다. 이 콘솔은 관리코드로 들어옵니다.";
-    else if(r&&r.reason==="locked") el("lockErr").textContent="여러 번 틀려 잠겼습니다. 잠시 뒤 다시 합니다.";
-    else if(r&&(r.reason==="network"||r.reason==="timeout")) el("lockErr").textContent="서버에 연결하지 못했습니다.";
-    else el("lockErr").textContent="명단에 없는 사번이거나 관리코드가 맞지 않습니다.";
-  });
-}
+/* 261017 입장 화면 · 들어가기 · 비밀번호 정하기 · 바꾸기는 auth.js(lockUI · unlock · pwDetect · pwChangeAsk) · 옛 서버면 사번 + 관리코드 그대로 */
+function lock(msg){ setTok(""); S.me=null; PWM.set=null; el("lock").hidden=false; lockUI(msg); }
 function boot(){
   whoHook();
-  el("aemp").addEventListener("keydown",function(e){ if(e.key==="Enter"){ if(el("key").value) unlock(); else el("key").focus(); } });
-  el("key").addEventListener("keydown",function(e){ if(e.key==="Enter") unlock(); });
-  el("lockGo").onclick=unlock;
   el("envTx").textContent=envName();
   routeFromHash();
-  if(!tok()){ lock(""); return; }
-  call("adm_me",{}).then(function(r){
-    if(r&&r.ok&&r.role==="admin"){ S.me={ emp:r.emp||aemp(), name:r.name||"" }; start(); }
-    else if(r&&r.err==="unknown action"){ S.me={ emp:aemp() }; start(); }
-    else if(r&&(r.reason==="network"||r.reason==="timeout")){ S.me={ emp:aemp() }; start(); }
-    else lock("다시 들어옵니다.");
+  pwDetect(function(){
+    if(!tok()){ lock(""); return; }
+    call("adm_me",{}).then(function(r){
+      if(r&&r.ok&&r.role==="admin"){ S.me=meOf(r,aemp()); start(); }
+      else if(r&&r.err==="unknown action"){ S.me={ emp:aemp() }; start(); }
+      else if(r&&(r.reason==="network"||r.reason==="timeout")){ S.me={ emp:aemp() }; start(); }
+      else lock("다시 들어옵니다.");
+    });
   });
 }
 function start(){ el("lock").hidden=true; render(); load(true); }

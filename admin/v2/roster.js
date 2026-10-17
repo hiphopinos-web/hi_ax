@@ -51,44 +51,81 @@ function dnyClearAsk(){
   sc.paint=function(vb){ if(ppSub()!=="deny") return p0(vb); dnyTop(); gridPaint("deny","dny","접속 거부 기록",function(d){ return d.rows||[]; }); };
 })();
 
-/* ── 관리자 명단 ── */
-var ADR_SC={ c:["콘솔 입장 명단","이 콘솔에 사번 + 관리코드로 들어오는 사람"], a:["앱 스태프 폰 권한","앱에서 스태프 화면(스캔 · 현장 부여)을 여는 사람"] };
-var ADR_WHY={ emp:"사번 모양이 아닙니다", self:"맨 앞 사번(슈퍼관리자)은 뺄 수 없습니다", max:"명단은 200명까지입니다", param:"입력값을 확인합니다" };
+/* ── 관리자 명단 ── 261017 콘솔 개인 비밀번호(사용자 확정) · 비밀번호 열(설정함 · 설정 코드 대기 · 코드 만료 · 없음 · 잠김) · 설정 코드 발급 · 초기화(adm_pw_issue · 한 번만 보이는 창 · 복사) ·
+ *   콘솔 입장 명단의 추가 · 선택 삭제 · 발급 · 초기화와 스태프 코드 바꾸기는 슈퍼관리자(adm_roster.top)에게만 보이고 서버도 슈퍼관리자만 받는다 · 앱 스태프 명단은 콘솔 사람 그대로
+ *   스태프 코드 칸(setting.js scPaint)은 오른쪽 「앱 스태프 폰 권한」 아래로 옮김(P5) */
+var ADR_SC={ c:["콘솔 입장 명단","이 콘솔에 사번 + 개인 비밀번호로 들어오는 사람 · 추가 · 설정 코드 · 초기화 · 삭제는 슈퍼관리자"], a:["앱 스태프 폰 권한","앱에서 스태프 화면(스캔 · 현장 부여)을 여는 사람"] };
+var ADR_WHY={ emp:"사번 모양이 아닙니다", self:"맨 앞 사번(슈퍼관리자)은 뺄 수 없습니다", max:"명단은 200명까지입니다", param:"입력값을 확인합니다", "super":"슈퍼관리자만 합니다", notfound:"콘솔 입장 명단에 없는 사번입니다" };
+var ADR_PW={ set:["설정함","ok"], code:["설정 코드 대기",""], expired:["코드 만료","warn"], none:["없음","off"] };
+function adrTop(){ var d=S.data.admr; return !!((d&&d.ok&&d.top)||(S.me&&S.me.top)); }
+function adrRows(sc){ var d=S.data.admr; return d&&d.ok?((d[sc]||{}).rows||[]):[]; }
+function adrPwTx(r){ if(r.pw==null) return ""; var t=(ADR_PW[r.pw]||ADR_PW.none)[0]; if(r.lock>0) t+=" · 잠김 "+Math.ceil(r.lock/60)+"분"; if(r.pw==="code"&&r.exp) t+=" · "+fmtD(r.exp)+" 까지"; return t; }
+function adrPwTag(r){ if(r.pw==null) return '<span class="cap">서버 갱신 뒤</span>'; var a=ADR_PW[r.pw]||ADR_PW.none; return tag(a[0],a[1])+(r.lock>0?" "+tag("잠김 "+Math.ceil(r.lock/60)+"분","warn"):"")+(r.pw==="code"&&r.exp?' <span class="cap">'+esc(fmtD(r.exp))+' 까지</span>':''); }
 function adrGrid(sc){
-  return gridOf("adr_"+sc,{ file:ADR_SC[sc][0], key:function(r){ return r.emp; }, sort:{ k:"name", d:1 }, src:{ a:"adm_roster", p:{}, pick:function(res){ return (res[sc]||{}).rows||[]; } }, h:360, empty:"명단이 비어 있습니다", onRow:function(k){ pcOpen(k, MG["adr_"+sc]); },
-    select:1, onAdd:function(){ paOpen(adrSp(sc)); },
-    cancel:{ kind:sc==="c"?"admin":"staff", part:sc==="c"?null:function(){ return "app"; }, what:ADR_SC[sc][0], sub:"빼는 즉시 이 사람의 "+(sc==="c"?"콘솔":"앱 스태프 화면")+" 로그인이 끊김 · 맨 앞 사번 · 본인은 서버가 막음", after:function(){ reload(["admr"]); } },
-    cols:[{ k:"name", t:"이름", w:120, tags:function(r){ return r.sup?" "+tag("고정"):""; } },{ k:"emp", t:"사번", w:80 },{ k:"dept", t:"부서", w:120 },{ k:"acct", t:"앱 가입", w:64, v:function(r){ return r.acct?"가입":"명부만"; } }] });
+  var top=adrTop(), may=sc==="a"||top;
+  var o={ file:ADR_SC[sc][0], key:function(r){ return r.emp; }, sort:{ k:"name", d:1 }, src:{ a:"adm_roster", p:{}, pick:function(res){ return (res[sc]||{}).rows||[]; } }, h:360, empty:"명단이 비어 있습니다", onRow:function(k){ pcOpen(k, MG["adr_"+sc]); },
+    cols:[{ k:"name", t:"이름", w:120, tags:function(r){ return r.sup?" "+tag("고정"):""; } },{ k:"emp", t:"사번", w:80 },{ k:"dept", t:"부서", w:120 },{ k:"acct", t:"앱 가입", w:64, v:function(r){ return r.acct?"가입":"명부만"; } }] };
+  if(sc==="c"){
+    o.cols.push({ k:"pw", t:"비밀번호", w:170, v:adrPwTx, f:adrPwTag });
+    o.cols.push({ k:"_a", t:"", w:96, act:function(r){ return adrTop()&&r.pw!=null?'<button class="btn sm" type="button" onclick="adrIssueAsk(\''+jq(r.emp)+'\')">'+(r.pw==="set"||r.pw==="code"?"초기화":"설정 코드")+'</button>':""; } });
+  }
+  if(may){
+    o.select=1; o.onAdd=function(){ paOpen(adrSp(sc)); };
+    o.cancel={ kind:sc==="c"?"admin":"staff", part:sc==="c"?null:function(){ return "app"; }, what:ADR_SC[sc][0], sub:"빼는 즉시 이 사람의 "+(sc==="c"?"콘솔":"앱 스태프 화면")+" 로그인이 끊김 · 맨 앞 사번 · 본인은 서버가 막음", after:function(){ reload(["admr"]); } };
+  }
+  var g=gridOf("adr_"+sc,o); g._top=may; return g;
+}
+/* 슈퍼관리자 여부가 명단 응답 뒤에 확정되면 표 틀(선택 칸 · 추가 단추)을 다시 만든다 */
+function adrSync(sc){ var g=MG["adr_"+sc], may=sc==="a"||adrTop(); if(g&&g._top!==may){ delete MG["adr_"+sc]; delete XG.reg["adr_"+sc]; var ph=el("mg_adr_"+sc); if(ph) ph.innerHTML=""; adrGrid(sc); } }
+function adrCapTx(sc){ var d=S.data.admr, L=d&&d.ok?d[sc]||{}:null; return L?' <span class="cap">'+(L.set?n0((L.rows||[]).length)+"명 · 적용 중":sc==="c"?"저장 전 · 맨 앞 사번만 들어옴":"저장 전 · 코드만 맞으면 열림")+'</span>':''; }
+function adrPwBand(){
+  var d=S.data.admr; if(PWM.mode!=="pw"||!d||!d.ok) return "";
+  return band(d.pwon?"info":"warn", d.pwon?"개인 비밀번호 입장 ON · 콘솔은 사번 + 개인 비밀번호로만 들어옵니다 · 관리코드는 백업 · 점검 도구만":"개인 비밀번호 입장 OFF · 지금은 관리코드 · 개인 비밀번호 둘 다 들어옵니다 · 각자 설정 코드로 비밀번호를 먼저 정하는 기간 · 켜기 = 설정 「콘솔_개인비밀번호」(슈퍼관리자 · 개인 비밀번호로 들어온 뒤)");
 }
 function adrCard(sc){
-  var d=S.data.admr, L=d&&d.ok?d[sc]||{}:null;
-  return '<div class="card"><h2>'+esc(ADR_SC[sc][0])+(L?' <span class="cap">'+(L.set?n0((L.rows||[]).length)+"명 · 적용 중":sc==="c"?"저장 전 · 맨 앞 사번만 들어옴":"저장 전 · 코드만 맞으면 열림")+'</span>':'')+'</h2><p class="cap">'+esc(ADR_SC[sc][1])+'</p>'+
+  return '<div class="card"><h2 id="adrH_'+sc+'">'+esc(ADR_SC[sc][0])+adrCapTx(sc)+'</h2><p class="cap">'+esc(ADR_SC[sc][1])+'</p>'+(sc==="c"?'<div id="adrPwB" class="mt4">'+adrPwBand()+'</div>':'')+
     '<div id="mg_adr_'+sc+'" class="mt"></div></div>';
 }
-function adrRows(sc){ var d=S.data.admr; return d&&d.ok?((d[sc]||{}).rows||[]):[]; }
 function adrNm(sc, e){ return personLine(adrRows(sc).filter(function(x){ return x.emp===e; })[0]||{ emp:e }); }
 function adrSet(sc, op, emps){ return call("adm_roster_set",{ sc:sc, op:op, emps:emps }).then(function(r){ if(r&&r.ok&&r.list&&S.data.admr&&S.data.admr.ok){ S.data.admr[sc]=r.list; paint(); } return r; }); }
-/* 「추가」 창(edit.js paOpen) · 명부 찾기 → 넣기 · 처음 저장이면 경고 한 줄 · 되돌리기 = 반대 동작 */
+/* 「추가」 창(edit.js paOpen) · 명부 찾기 → 넣기 · 처음 저장이면 경고 한 줄 · 되돌리기 = 반대 동작 · 콘솔 명단이면 이어서 설정 코드 발급을 묻는다 */
 function adrSp(sc){
   var nm=ADR_SC[sc][0];
-  return { t:nm+" 추가", cap:"명부에서 찾기 → 넣기 · "+(sc==="c"?"관리코드와 함께 이 콘솔에 들어옴":"로그인하면 스태프 화면이 열림"),
+  return { t:nm+" 추가", cap:"명부에서 찾기 → 넣기 · "+(sc==="c"?(PWM.mode==="pw"?"넣은 뒤 설정 코드를 발급해 전달합니다":"관리코드와 함께 이 콘솔에 들어옴"):"로그인하면 스태프 화면이 열림"),
     have:function(e){ return adrRows(sc).some(function(x){ return normE(x.emp)===e; })?"이미 명단에 있습니다":""; },
     note:function(){ var L=(S.data.admr&&S.data.admr[sc])||{}; return L.set?"":band("warn","처음 넣는 순간부터 이 명단대로 들어옵니다 · 명단 밖 사람은 "+(sc==="c"?"콘솔":"앱 스태프 화면")+"에 못 들어옴"); },
     run:function(p){ return adrSet(sc,"add",normE(p.emp)); }, fail:function(r){ return r&&ADR_WHY[r.reason]||""; },
-    done:function(r){ var dn=r.done||[]; reload(["admr"]); toast(dn.length?"넣었습니다 · "+dn.join(", ")+(r.started?" · 이 명단 적용 시작":""):"이미 명단에 있습니다", dn.length?{ undo:function(){ adrSet(sc,"del",dn.join(",")).then(function(x){ toast(x&&x.ok?"되돌렸습니다 · "+dn.join(", "):"되돌리지 못했습니다 · "+(ADR_WHY[(x||{}).reason]||why(x)),{ bad:!(x&&x.ok) }); }); } }:{}); } };
+    done:function(r){ var dn=r.done||[]; reload(["admr"]); toast(dn.length?"넣었습니다 · "+dn.join(", ")+(r.started?" · 이 명단 적용 시작":""):"이미 명단에 있습니다", dn.length?{ undo:function(){ adrSet(sc,"del",dn.join(",")).then(function(x){ toast(x&&x.ok?"되돌렸습니다 · "+dn.join(", "):"되돌리지 못했습니다 · "+(ADR_WHY[(x||{}).reason]||why(x)),{ bad:!(x&&x.ok) }); }); } }:{});
+      if(sc==="c"&&dn.length===1&&PWM.mode==="pw") setTimeout(function(){ adrIssueAsk(dn[0]); },300); } };
+}
+/* 설정 코드 발급 · 초기화(슈퍼관리자 · 확인 창 · 활동 기록 adm_pw) · 성공 = 코드를 한 번만 보이는 창(복사) */
+function adrIssueAsk(emp){
+  var r=adrRows("c").filter(function(x){ return x.emp===emp; })[0]||{ emp:emp }, has=r.pw==="set"||r.pw==="code";
+  confirmBox({ t:has?"비밀번호를 초기화할까요?":"설정 코드를 발급할까요?", who:personLine(r), sub:has?"지금 비밀번호와 열려 있는 콘솔 입장이 바로 끊김 · 새 설정 코드(6자리 · 24시간 · 한 번만 보임)":"설정 코드(6자리 · 24시간 · 한 번만 보임) · 그 사람이 「설정 코드로 처음 입장」에서 비밀번호를 정합니다",
+    ok:has?"초기화":"설정 코드 발급", danger:has,
+    run:function(){ return call("adm_pw_issue",{ emp:emp },25000); }, fail:function(x){ return x&&ADR_WHY[x.reason]||""; },
+    done:function(x){ reload(["admr"]); adrCodeShow(x, r); } });
+}
+function adrCodeShow(x, r){
+  var code=String(x.code||"").replace(/\D/g,"").slice(0,6);
+  confirmBox({ t:"설정 코드 · 한 번만 보입니다", who:personLine(r), sub:"만료 "+fmtD(x.exp)+" · 본인에게 직접 전달 · 창을 닫으면 다시 볼 수 없음(필요하면 다시 발급)",
+    body:'<div class="pw-code">'+esc(code)+'</div><div class="btns"><button class="btn" type="button" onclick="copyTx(\''+code+'\',\'설정 코드를 복사했습니다\')">복사</button></div><p class="cap mt4">받은 사람 : 콘솔 입장 화면 「설정 코드로 처음 입장」 → 사번 + 이 코드 → 비밀번호 정하기</p>',
+    ok:"확인", run:function(){ return Promise.resolve({ ok:true }); }, done:function(){} });
 }
 (function(){
   var sc=SCREENS.log, n0_=sc.need, m0=sc.mount, p0=sc.paint;
   sc.need=function(){ return lgSub()==="adm"?[{ k:"admr", a:"adm_roster", ttl:30000 }]:n0_(); };
   sc.mount=function(vb){
     if(lgSub()!=="adm") return m0(vb);
-    el("phCap").textContent="콘솔에 들어오는 사람 · 앱 스태프 화면을 여는 사람 · 추가 · 선택 삭제 · 되돌리기";
+    el("phCap").textContent="콘솔에 들어오는 사람 · 앱 스태프 화면을 여는 사람 · 추가 · 선택 삭제 · 설정 코드 · 초기화 · 스태프 코드";
     adrGrid("c"); adrGrid("a");
-    vb.innerHTML=chipsH(LG_SUBS,"adm")+'<div class="grid g2 s1" id="adrB">'+adrCard("c")+adrCard("a")+'</div><p class="cap mt">스태프 옷 명단은 사람 › 명단 올리기 · 스태프 폰 코드는 기록 · 설정 › 스태프 코드 · 관리코드 · 등급코드 바꾸기는 대화로</p>';
+    vb.innerHTML=chipsH(LG_SUBS,"adm")+'<div class="grid g2 s1" id="adrB">'+adrCard("c")+'<div class="col">'+adrCard("a")+'<div class="card" id="scB"></div></div></div><p class="cap mt">스태프 옷 명단은 사람 › 명단 올리기 · 관리코드 · 등급코드 바꾸기는 대화로 · 비밀번호를 잊은 사람은 슈퍼관리자가 「초기화」</p>';
   };
   sc.paint=function(vb){
     if(lgSub()!=="adm") return p0(vb);
-    ["c","a"].forEach(function(k){ var h=el("adrB"); if(!h) return; var cap=h.children[k==="c"?0:1].querySelector("h2"); if(cap&&S.data.admr&&S.data.admr.ok){ var L=S.data.admr[k]||{}; cap.innerHTML=esc(ADR_SC[k][0])+' <span class="cap">'+(L.set?n0((L.rows||[]).length)+"명 · 적용 중":k==="c"?"저장 전 · 맨 앞 사번만 들어옴":"저장 전 · 코드만 맞으면 열림")+'</span>'; }
+    ["c","a"].forEach(function(k){ adrSync(k); var cap=el("adrH_"+k); if(cap&&S.data.admr&&S.data.admr.ok) cap.innerHTML=esc(ADR_SC[k][0])+adrCapTx(k);
       gridPaint("adr_"+k,"admr","관리자 명단",function(d){ return (d[k]||{}).rows||[]; }); });
+    var pb=el("adrPwB"); if(pb){ var h=adrPwBand(); if(pb._h!==h){ pb._h=h; pb.innerHTML=h; } }
+    scPaint();
   };
 })();

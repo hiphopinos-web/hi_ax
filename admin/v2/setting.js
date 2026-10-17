@@ -4,7 +4,7 @@
  * 급한 단추 3개 = 룰렛 소진 안내(roulette_out · 되돌리기 토스트) · 푸시 정지(push_cfg · 알림 탭과 같은 함수) · 앱 접속 범위(og_scope_set · 확인 창)
  * 서버 상태 = now_board · 이 콘솔의 최근 호출(NET) · 화면 주소 = 추첨 · 타자왕 TV · 타자왕 체험(열기 · 복사) · 261016 체크인 창구 · 대기판 걷음 · 261017 스탬프 월 걷음(사이니지 폐기)
  * 스태프 코드 = adm_roster.staffCode(설정됨 · 비어 있음만 · 값은 받지도 그리지도 않음) · 바꾸기 · 비우기 = adm_code_set(POST · 확인 창) · 운영 설정 76개 「바꾸기」는 넣지 않는다(결정 · 대화로 처리) */
-var LG_SUBS=[["log","활동 기록"],["urgent","급한 단추"],["srv","서버 상태"],["urls","화면 주소"],["qr","현장 QR"],["code","스태프 코드"]];
+var LG_SUBS=[["log","활동 기록"],["urgent","급한 단추"],["srv","서버 상태"],["urls","화면 주소"],["qr","현장 QR"]];   /* 261017 「스태프 코드」 칩은 관리자 명단 화면 오른쪽(앱 스태프 폰 권한 아래)으로 옮김 · scPaint 는 그대로(roster.js 가 부른다) */
 var LOG_CAT=[["all","전체",null],["p","사람",function(r){ return r.cat==="p"; }],["r","명단",function(r){ return r.cat==="r"; }],["s","스탬프 · 경품",function(r){ return r.cat==="s"; }],["n","알림",function(r){ return r.cat==="n"; }],["c","설정",function(r){ return r.cat==="c"; }],["x","스캔",function(r){ return r.cat==="x"; }],["ck","체크인존",function(r){ return r.k==="ck_gate"; }],["u","되돌릴 수 있음",function(r){ return !!(r.undo&&r.undo.ok&&!r.undo.done&&!LG_DONE[r.ref]); }],["f","실패",function(r){ return /^x:/.test(r.res||""); }]];
 var BYK_N={ "콘솔":"콘솔", "스태프":"스태프 폰", "기기":"코드 기기", "서버":"서버 자동" };
 var GEN_UNDO={ roll_undo:"명단 넣기 · 빼기 되돌리기", resv_set:"라운지 상담 상태 되돌리기", cchat_status:"커피챗 상태 되돌리기", stamp_revoke:"담당자 스탬프 취소", inv_undo:"교환 기록 되돌리기", pre10_undo:"10F 묶음 넣기 되돌리기",
@@ -17,10 +17,10 @@ var SCR_URLS=[["추첨 화면","17F 대형 스크린 · 원격 모드","../../dr
 function lgSub(){ return subsOf(LG_SUBS,"log"); }
 SCREENS.log={
   title:"기록 · 설정", desc:"",
-  need:function(){ var s=lgSub(); return s==="log"?[{ k:"alog", a:"act_log", p:{ n:200 }, ttl:30000 }]:s==="urgent"?[{ k:"ogs", a:"og_scope_state", ttl:30000 },{ k:"pst", a:"push_stats", ttl:30000 }]:s==="code"?[{ k:"admr", a:"adm_roster", ttl:30000 }]:s==="srv"?[{ k:"pst", a:"push_stats", ttl:60000 }]:s==="qr"?[{ k:"qal", a:"att_list", ttl:300000 },{ k:"qst", a:"stair_list", ttl:300000 },{ k:"qss", a:"stair_stats", ttl:60000 },{ k:"qqs", a:"qr_stats", ttl:60000 },{ k:"qa10", a:"att_stats", p:{ who:"1" }, ttl:60000 }]:[]; },
+  need:function(){ var s=lgSub(); return s==="log"?[{ k:"alog", a:"act_log", p:{ n:200 }, ttl:30000 }]:s==="urgent"?[{ k:"ogs", a:"og_scope_state", ttl:30000 },{ k:"pst", a:"push_stats", ttl:30000 }]:s==="srv"?[{ k:"pst", a:"push_stats", ttl:60000 }]:s==="qr"?[{ k:"qal", a:"att_list", ttl:300000 },{ k:"qst", a:"stair_list", ttl:300000 },{ k:"qss", a:"stair_stats", ttl:60000 },{ k:"qqs", a:"qr_stats", ttl:60000 },{ k:"qa10", a:"att_stats", p:{ who:"1" }, ttl:60000 }]:[]; },
   mount:function(vb){
     var s=lgSub();
-    el("phCap").textContent={ qr:"현장에 붙는 QR · 묶음별 그림 · 담긴 주소 · PNG · 찍힌 수", log:"오늘 누가 무엇을 했는지 · 줄을 누르면 상세 · 되돌리기", urgent:"룰렛 소진 안내 · 푸시 정지 · 앱 접속 범위 · 모두 확인 창 또는 되돌리기", srv:"서버 · 이 콘솔의 연결", urls:"현장 화면 주소 · 열기 · 복사", code:"스태프 폰을 여는 공용 코드 · 값은 보이지 않음" }[s];
+    el("phCap").textContent={ qr:"현장에 붙는 QR · 묶음별 그림 · 담긴 주소 · PNG · 찍힌 수", log:"오늘 누가 무엇을 했는지 · 줄을 누르면 상세 · 되돌리기", urgent:"룰렛 소진 안내 · 푸시 정지 · 앱 접속 범위 · 모두 확인 창 또는 되돌리기", srv:"서버 · 이 콘솔의 연결", urls:"현장 화면 주소 · 열기 · 복사" }[s];
     var h=chipsH(LG_SUBS,s);
     if(s==="log"){
       gridOf("alog",{ file:"활동 기록", key:function(r){ return r.ref; }, sort:{ k:"t", d:-1 }, chips:LOG_CAT, onRow:function(k){ lgOpen(k); },
@@ -34,14 +34,13 @@ SCREENS.log={
     if(s==="urgent"){ vb.innerHTML=h+'<div class="grid g2"><div class="col"><div class="card" id="urR"></div><div class="card" id="urP"></div></div><div class="card" id="ogC"></div></div>'; return; }
     if(s==="srv"){ vb.innerHTML=h+'<div class="grid g2"><div class="card" id="svA"></div><div class="card" id="svB"></div></div>'; return; }
     if(s==="urls"){ vb.innerHTML=h+'<div class="card"><table class="tb"><thead><tr><th>화면</th><th>어디</th><th>주소</th><th></th></tr></thead><tbody>'+SCR_URLS.map(function(x,i){ var u=scrUrl(x[2]); return '<tr><td><b>'+esc(x[0])+'</b></td><td class="cap">'+esc(x[1])+'</td><td class="cap ur-u">'+esc(u)+'</td><td class="n"><span class="btns ur-b"><a class="btn sm" href="'+esc(u)+'" target="_blank" rel="noopener">열기</a><button class="btn sm" type="button" onclick="copyTx(scrUrl(SCR_URLS['+i+'][2]),\'주소를 복사했습니다\')">복사</button></span></td></tr>'; }).join("")+'</tbody></table><p class="cap mt">추첨 화면은 화면에서 관리코드를 한 번 넣습니다 · 추첨 진행은 무대 › 행운권 추첨</p><p class="cap">노트북은 주소로 한 번 열면 자리 저장 · 바꾸기 F2 관리 › 송출 자리</p><p class="cap">노트북마다 실행 아이콘(현장 실행/타자왕 노트북1.bat · 2.bat · 3.bat)을 두 번 누르면 게임 창과 TV 송출 창이 함께 열립니다</p></div>'; return; }
-    vb.innerHTML=h+'<div class="card" id="scB"></div>';
+    vb.innerHTML=h;
   },
   paint:function(){ var s=lgSub();
     if(s==="log"){ lgKpi(); gridPaint("alog","alog","활동 기록",function(d){ return d.rows||[]; }); if(DRW.k&&DRW.k.indexOf("alog:")===0) lgOpen(DRW.k.slice(5)); return; }
     if(s==="urgent"){ urPaint(); ogPaint(); return; }
     if(s==="srv") return svPaint();
     if(s==="qr") return qrPaint();
-    if(s==="code") return scPaint();
   }
 };
 function scrUrl(p){ try{ return new URL(p, location.href).href; }catch(e){ return p; } }
@@ -112,14 +111,16 @@ function svPaint(){
   var kv=function(rows){ return '<dl class="cc-kv sv-kv">'+rows.map(function(x){ return '<dt>'+esc(x[0])+'</dt><dd>'+x[1]+'</dd>'; }).join("")+'</dl>'; };
   a.innerHTML='<h2>서버</h2>'+kv([["환경",tag(envName(),envName()==="운영"?"":"off")],["주소",'<span class="cap">'+esc(String(BE).replace(/^https?:\/\//,"").replace(/\/exec$/,""))+'</span>'],["연결",S.err.nb?tag("연결 실패","bad"):ok?tag("정상","ok"):tag("연결 중","off")],["읽기 전용",ok?(nb.ro?tag("켜짐","warn"):tag("꺼짐","off")):"-"],["서버 시각",esc(ok?nb.t:"-")],["앱 접속 범위",esc(ok&&nb.og?(nb.og.sc||"")+(nb.og.ph?" · "+(OG_PH[nb.og.ph]||nb.og.ph):""):"-")],["앱 새로 받기 간격",ok&&nb.poll?n0(nb.poll)+"초":"-"]])+
     '<p class="cap mt">백업 · 시점 복구 · 읽기 전용 스위치는 서버 담당(대화로)</p>';
-  b.innerHTML='<h2>이 콘솔 · 푸시</h2>'+kv([["최근 호출",n0(recent.length)+"번 · 평균 "+n0(ms)+"ms"],["실패",bad?tag(bad+"번","warn"):tag("없음","ok")],["들어온 사람",esc(((S.me&&S.me.name)||"")+" "+((S.me&&S.me.emp)||aemp()))],["푸시",st?(st.on?tag("켜짐","ok"):tag("전체 정지","bad"))+(st.err?" "+tag("발송기 오류","bad"):""):"-"],["구독 기기",st?n0(st.subs)+"대 · "+n0(st.emps)+"명":"-"],["가입 · 명부",ok&&nb.people?n0(nb.people.acct)+"명 · 명부 "+n0(nb.people.roster)+"명":"-"]])+
-    '<div class="btns mt"><button class="btn" type="button" onclick="refreshAll()">다시 받기</button></div>';
+  b.innerHTML='<h2>이 콘솔 · 푸시</h2>'+kv([["최근 호출",n0(recent.length)+"번 · 평균 "+n0(ms)+"ms"],["실패",bad?tag(bad+"번","warn"):tag("없음","ok")],["들어온 사람",esc(((S.me&&S.me.name)||"")+" "+((S.me&&S.me.emp)||aemp()))+(S.me&&S.me.pw?" "+tag("개인 비밀번호","ok"):PWM.mode==="pw"?" "+tag("관리코드","off"):"")+(S.me&&S.me.top?" "+tag("슈퍼관리자",""):"")],["푸시",st?(st.on?tag("켜짐","ok"):tag("전체 정지","bad"))+(st.err?" "+tag("발송기 오류","bad"):""):"-"],["구독 기기",st?n0(st.subs)+"대 · "+n0(st.emps)+"명":"-"],["가입 · 명부",ok&&nb.people?n0(nb.people.acct)+"명 · 명부 "+n0(nb.people.roster)+"명":"-"]])+
+    '<div class="btns mt"><button class="btn" type="button" onclick="refreshAll()">다시 받기</button>'+(PWM.mode==="pw"?'<button class="btn" type="button" onclick="pwChangeAsk()">비밀번호 바꾸기</button>':'')+'</div>'+
+    (PWM.mode==="pw"&&!(S.me&&S.me.pw)?'<p class="cap mt4">비밀번호 바꾸기는 개인 비밀번호로 들어온 입장에서 합니다</p>':'');
 }
 /* ── 스태프 코드 ── */
 function scPaint(){
   var b=el("scB"); if(!b) return; var d=S.data.admr, on=d&&d.ok?d.staffCode:null;
   var gt=dataGate("admr","스태프 코드"); if(gt){ b.innerHTML='<h2>스태프 코드</h2>'+gt; return; }
   if(on==null){ b.innerHTML='<h2>스태프 코드</h2>'+band("info","이 서버는 아직 스태프 코드를 모릅니다"); return; }
+  if(!adrTop()){ b.innerHTML='<h2>스태프 코드 '+(on?tag("설정됨","ok"):tag("비어 있음","off"))+'</h2><p class="cap">앱 스태프 명단에 있는 사번이 스태프 폰(스캔 · 현장 부여)을 여는 코드 · 콘솔은 열지 못함</p><p class="cap mt4">바꾸기 · 비우기는 슈퍼관리자가 합니다</p>'; return; }   /* 261017 P5 슈퍼관리자만 */
   if(!el("sc1")) b.innerHTML='<h2>스태프 코드 <span id="scTag"></span></h2><p class="cap">앱 스태프 명단에 있는 사번이 스태프 폰(스캔 · 현장 부여)을 여는 코드 · 콘솔은 열지 못함 · 바꾸면 기존 스태프 폰은 코드를 다시 묻습니다</p><p class="cap mt4" id="scS"></p>'+
     '<div class="nt-row mt"><label class="up-f">새 코드<input class="xg-q" id="sc1" type="password" inputmode="numeric" autocomplete="new-password" maxlength="16" oninput="scIn(this)"></label><label class="up-f">한 번 더<input class="xg-q" id="sc2" type="password" inputmode="numeric" autocomplete="new-password" maxlength="16" oninput="scIn(this)"></label></div>'+
     '<p class="cap mt4" id="scH">숫자 6~16자리</p><div class="btns mt"><button class="btn pri" type="button" onclick="scGo()">스태프 코드 바꾸기</button><span id="scX"></span></div>';

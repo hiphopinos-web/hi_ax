@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <title>AXF CONTROL</title>
-<link rel="stylesheet" href="v2.css?v=26101790">
+<link rel="stylesheet" href="v2.css?v=26101810">
 <link rel="stylesheet" href="meet.css?v=26101710">
 <link rel="stylesheet" href="usage.css?v=26101730">
 <link rel="stylesheet" href="drill.css?v=26101795">
@@ -29,10 +29,8 @@
   <div class="card">
     <h1>AXF CONTROL</h1>
     <p class="cap">AX Festival 2026 운영 콘솔</p>
-    <label>사번<input id="aemp" inputmode="text" autocomplete="username" autocapitalize="characters"></label>
-    <label>관리코드<input id="key" type="password" autocomplete="current-password"></label>
-    <button class="btn pri big" type="button" id="lockGo">들어가기</button>
-    <div class="err" id="lockErr" role="alert"></div>
+    <!-- 261017 입장 칸은 auth.js lockUI 가 그린다 · 사번 + 개인 비밀번호(설정 코드로 처음 입장) · 옛 서버면 사번 + 관리코드 -->
+    <div id="lockBody"><div class="err" id="lockErr" role="alert"></div></div>
   </div>
 </div>
 <div class="dlg-bg" id="dlg" hidden><div class="dlg" id="dlgCard" role="dialog" aria-modal="true" aria-labelledby="dlgT"></div></div>
@@ -40,8 +38,9 @@
 <div class="toasts" id="toasts" aria-live="polite"></div>
 <script src="../../assets/server.js"></script>
 <script src="../qrcode.js"></script>
-<script src="core.js?v=26101710"></script>
-<script src="table.js?v=26101760"></script>
+<script src="core.js?v=26101810"></script>
+<script src="auth.js?v=26101810"></script>
+<script src="table.js?v=26101810"></script>
 <script src="more.js?v=2610171"></script>
 <script src="usage.js?v=26101795"></script>
 <script src="sofar.js?v=26101795"></script>
@@ -59,13 +58,13 @@
 <script src="rank.js?v=26101760"></script>
 <script src="stage.js?v=26101730"></script>
 <script src="notify.js?v=26101710"></script>
-<script src="setting.js?v=26101732"></script>
+<script src="setting.js?v=26101810"></script>
 <script src="stock.js?v=26101710"></script>
 <script src="qr.js?v=2610173"></script>
 <script src="idea.js?v=26101795"></script>
 <script src="sched.js?v=2610174"></script>
 <script src="survey.js?v=26101795"></script>
-<script src="roster.js?v=26101710"></script>
+<script src="roster.js?v=26101810"></script>
 <script src="drawset.js?v=26101710"></script>
 <script src="edit.js?v=26101710"></script>
 <script src="cfgview.js?v=2610174"></script>
