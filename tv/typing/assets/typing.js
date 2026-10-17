@@ -605,9 +605,9 @@
       }
       rect(c, n.x - 4, n.y - 4, n.w + 8, n.h + 8, "#000"); rect(c, n.x, n.y, n.w, n.h, "#FF7E31"); txBox(c, no, no.textContent, "v");
     });
-    var nb = sxy(a.querySelector(".ntb")), sc = sxy(a.querySelector(".ntb .scr")), qv = sxy(a.querySelector(".ntb svg")), u = qv.w / 21, f = sxy(a.querySelector(".ntb .fd"));
+    var nb = sxy(a.querySelector(".ntb")), sc = sxy(a.querySelector(".ntb .scr")), qe = a.querySelector(".ntb svg"), qv = qe ? sxy(qe) : null, u = qv ? qv.w / 21 : 0, f = sxy(a.querySelector(".ntb .fd"));
     rect(c, nb.x - 30, nb.y + nb.h + 20, nb.w + 60, 20, "#E3B884"); rect(c, nb.x - 8, nb.y - 8, nb.w + 16, nb.h + 16, "#E3B884"); rect(c, nb.x, nb.y, nb.w, nb.h, "#1B1712"); rect(c, sc.x, sc.y, sc.w, sc.h, "#F3E7D8");
-    c.fillStyle = "#000"; QRM.forEach(function (q) { c.fillRect(qv.x + q[0] * u, qv.y + q[1] * u, u * 1.02, u * 1.02); });
+    c.fillStyle = "#000"; if (qv) QRM.forEach(function (q) {   /* ?live=1 = QR 그림 없음(261017) */ c.fillRect(qv.x + q[0] * u, qv.y + q[1] * u, u * 1.02, u * 1.02); });
     [[0, 0, 32, 8], [0, 0, 8, 32], [f.w - 32, 0, 32, 8], [f.w - 8, 0, 8, 32], [0, f.h - 8, 32, 8], [0, f.h - 32, 8, 32], [f.w - 32, f.h - 8, 32, 8], [f.w - 8, f.h - 32, 8, 32]].forEach(function (q) { rect(c, f.x + q[0], f.y + q[1], q[2], q[3], "#FF7E31"); });
     var ky = a.querySelector(".key"), k = sxy(ky);
     rect(c, k.x - 6, k.y + 10, k.w + 12, k.h + 12, "#7A3E1C"); rect(c, k.x - 6, k.y - 6, k.w + 12, k.h + 12, "#000"); rect(c, k.x, k.y, k.w, k.h, "#F3E7D8");

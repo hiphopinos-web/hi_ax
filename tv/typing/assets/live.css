@@ -69,3 +69,13 @@ body.lvOn #stage, body.lvOn #net, body.lvOn #demoMark { visibility: hidden; }
 .lvIdle span { font-family: var(--pre); font-weight: 700; font-size: 44px; color: var(--dim); }
 .lvSeat.empty > div { display: none; }
 .lvSeat.empty > .lvIdle { display: flex; }
+
+/* 세로 1자리(o=port · mode=1 · seat=N · 261017) · 큰 글씨 몇 개만 · 「1P」 칸이 이 화면의 강조색 채움 하나 */
+.lvSeat.p1 .lvTag { width: 256px; height: 168px; padding: 0; text-align: center; font-size: 150px; line-height: 168px; box-shadow: 0 0 0 6px var(--ink), 10px 10px 0 6px var(--ink); }
+.lvSeat.p1 .lvSc { text-shadow: 8px 8px 0 var(--ink); }
+.lvSeat.p1 .lvRk span { font-size: 64px; }
+.lvSeat.p1 .lvRes { gap: 24px; }
+.lvSeat.p1 .lvRes b { font-size: 160px; line-height: 176px; }
+.lvSeat.p1 .lvRes em { font-size: 80px; line-height: 92px; }
+.lvSeat.p1 .lvRes small { font-size: 52px; line-height: 64px; }
+.lvTry { position: absolute; text-align: center; font-family: var(--pre); font-weight: 700; font-size: 40px; line-height: 48px; color: var(--tan2); white-space: nowrap; }   /* 「1P」 아래 · n번째 도전(tn) · 칸이 없으면 비어 있다 */

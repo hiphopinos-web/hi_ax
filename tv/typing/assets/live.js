@@ -23,7 +23,8 @@
   if (!ENG) return;   /* 엔진이 없으면 광고 루프만 */
 
   var MODE = Q.mode === "1" ? 1 : (Q.mode === "2" || Q.mode === "split") ? 2 : 0;
-  var ONLY = Q.seat === "1" ? 1 : Q.seat === "2" ? 2 : 0;
+  var ONLY = /^[123]$/.test(Q.seat || "") ? Number(Q.seat) : 0;   /* 261017 예비 노트북 3(seat=3) */
+  var NS = [1, 2, 3];
   var TEST = Q.test === "1";
   var DELAY = Math.max(100, Math.min(2000, parseInt(Q.delay, 10) || 200));   /* 261017 지연 개선 · 0.6 → 0.2초 · 사건은 기다리지 않는다 */
   var HURT_SLOW = typeof RAIN_SITE === "object" && RAIN_SITE && RAIN_SITE.hurtSlow > 0 ? RAIN_SITE.hurtSlow : 0.3;
@@ -35,19 +36,21 @@
   function now() { return Date.now(); }
 
   /* ── 겉모습 · 스타일 한 장(assets/live.css) ── */
-  var css = document.createElement("link"); css.rel = "stylesheet"; css.href = "assets/live.css?v=261017"; document.head.appendChild(css);
+  var css = document.createElement("link"); css.rel = "stylesheet"; css.href = "assets/live.css?v=261017b"; document.head.appendChild(css);
   var LV = document.createElement("div"); LV.id = "lv"; LV.setAttribute("aria-hidden", "true");
   LV.innerHTML = '<div id="lvSt"><div id="lvHead"><b>AX 타자왕 · 1F</b><span><i></i>LIVE</span></div><div id="lvLine"></div></div>';
   body.appendChild(LV);
   var ST = $("lvSt"), HEAD = $("lvHead"), LINE = $("lvLine");
 
-  /* 배치 · 논리 좌표(가로 1920×1080 · 세로 1080×1920) · bd = 게임판 [x, y, 판 폭, 판 높이](틀 10 · 입력칸 ih 는 판 아래) */
+  /* 배치 · 논리 좌표(가로 1920×1080 · 세로 1080×1920) · bd = 게임판 [x, y, 판 폭, 판 높이, 엔진 폭](틀 10 · 입력칸 ih 는 판 아래)
+   엔진 폭 = 그 폭으로 엔진 배치(rgLayout)를 짜고 판 폭까지 그대로 키운다(늘리지 않는다 · 단어 · 캐릭터가 노트북 판과 같은 비율로 커진다) · 없으면 판 폭 그대로 */
   var LAY = {
     land1: { W: 1920, H: 1080, head: true, seats: [{ x: 0, y: 0, w: 1920, h: 1080, bd: [96, 150, 760, 792], ih: 80, tag: [970, 150], nick: [970, 214, 860, 100, 84], scl: [970, 344], sc: [970, 384, 176], rk: [970, 580, 64, 120], life: [970, 744, 48], stg: [1830, 744, 48], race: [970, 836, 860, 62] }] },
     land2: { W: 1920, H: 1080, head: false, line: [956, 0, 8, 1080], seats: [
       { x: 0, y: 0, w: 956, h: 1080, bd: [148, 298, 660, 640], ih: 64, tag: [48, 40], nick: [212, 30, 696, 72, 60, 1], sc: [48, 118, 112], rk: [908, 128, 44, 80, "r"], life: [48, 250, 32], stg: [908, 250, 36] },
       { x: 964, y: 0, w: 956, h: 1080, bd: [148, 298, 660, 640], ih: 64, tag: [48, 40], nick: [212, 30, 696, 72, 60, 1], sc: [48, 118, 112], rk: [908, 128, 44, 80, "r"], life: [48, 250, 32], stg: [908, 250, 36] }] },
-    port1: { W: 1080, H: 1920, head: true, seats: [{ x: 0, y: 0, w: 1080, h: 1920, bd: [110, 600, 860, 1090], ih: 80, tag: [64, 150], nick: [64, 214, 952, 96, 80], sc: [64, 330, 160], rk: [1016, 346, 56, 104, "r"], life: [64, 520, 44], stg: [1016, 520, 44] }] },
+    /* 261017 세로 1자리(스탠바이미 한 대 = 노트북 한 대 · &mode=1&seat=N&o=port) · 위 = 「1P」 · 닉네임 · 점수 · 목숨 · 단계 / 가운데 = 게임판(폭 거의 전부 · 노트북 판과 비슷한 비율) / 아래 = 입력 줄 · 「지금 N위」 */
+    port1: { W: 1080, H: 1920, head: false, seats: [{ x: 0, y: 0, w: 1080, h: 1920, p1: 1, bd: [60, 380, 960, 1190, 640], ih: 104, tag: [52, 40], try: [52, 232, 256], nick: [336, 50, 688, 84, 64], sc: [336, 140, 128], rk: [540, 1734, 64, 132, "c"], life: [56, 300, 44], stg: [1024, 298, 48] }] },
     port2: { W: 1080, H: 1920, head: false, line: [0, 956, 1080, 8], seats: [
       { x: 0, y: 0, w: 1080, h: 956, bd: [450, 34, 580, 790], ih: 64, tag: [48, 48], nick: [48, 116, 360, 64, 48], sc: [48, 200, 96], rk: [48, 340, 40, 72], life: [48, 470, 30], stg: [48, 530, 36, "l"] },
       { x: 0, y: 964, w: 1080, h: 956, bd: [450, 34, 580, 790], ih: 64, tag: [48, 48], nick: [48, 116, 360, 64, 48], sc: [48, 200, 96], rk: [48, 340, 40, 72], life: [48, 470, 30], stg: [48, 530, 36, "l"] }] }
@@ -62,15 +65,17 @@
     e.className = "lvSeat"; e.style.left = P.x + "px"; e.style.top = P.y + "px"; e.style.width = P.w + "px"; e.style.height = P.h + "px";
     var h = '<div class="lvTag"></div><div class="lvNick"></div>' + (P.scl ? '<div class="lvScl">점수</div>' : "") + '<div class="lvSc">0</div><div class="lvRk"></div>' +
       '<div class="lvLife">' + [0, 1, 2, 3, 4].map(function () { return '<i class="on">' + HS + "</i>"; }).join("") + '</div><div class="lvStg"></div>' + (P.race ? '<div class="lvRace"></div>' : "") +
-      '<div class="lvBd"><canvas></canvas><div class="lvIn"><span></span><i></i></div><div class="lvPz">일시정지</div><div class="lvRes"><b></b><em></em><small></small></div></div><div class="lvIdle"><b></b><span>대기</span></div>';
+      (P.p1 ? '<div class="lvTry"></div>' : "") + '<div class="lvBd"><canvas></canvas><div class="lvIn"><span></span><i></i></div><div class="lvPz">일시정지</div><div class="lvRes"><b></b><em></em><small></small></div></div><div class="lvIdle"><b></b><span>대기</span></div>';
     e.innerHTML = h;
     ST.appendChild(e);
     function q(c) { return e.querySelector(c); }
-    u.e = e; u.tag = q(".lvTag"); u.nick = q(".lvNick"); u.scl = q(".lvScl"); u.sc = q(".lvSc"); u.rk = q(".lvRk"); u.life = q(".lvLife"); u.stg = q(".lvStg"); u.race = q(".lvRace");
+    u.e = e; u.try = q(".lvTry"); u.tag = q(".lvTag"); u.nick = q(".lvNick"); u.scl = q(".lvScl"); u.sc = q(".lvSc"); u.rk = q(".lvRk"); u.life = q(".lvLife"); u.stg = q(".lvStg"); u.race = q(".lvRace");
     u.bd = q(".lvBd"); u.cv = q("canvas"); u.ctx = u.cv.getContext("2d"); u.inp = q(".lvIn span"); u.pz = q(".lvPz"); u.res = q(".lvRes"); u.idle = q(".lvIdle");
-    function at(el, a, fs) { if (!el || !a) return; el.style.top = a[1] + "px"; if (a[a.length - 1] === "r") { el.style.right = (P.w - a[0]) + "px"; el.style.textAlign = "right"; } else el.style.left = a[0] + "px"; if (fs) el.style.fontSize = fs + "px"; }
-    at(u.tag, P.tag); u.tag.textContent = n + "번 자리";
+    function at(el, a, fs) { if (!el || !a) return; el.style.top = a[1] + "px"; if (a[a.length - 1] === "c") { el.style.left = "0px"; el.style.width = P.w + "px"; el.style.textAlign = "center"; } else if (a[a.length - 1] === "r") { el.style.right = (P.w - a[0]) + "px"; el.style.textAlign = "right"; } else el.style.left = a[0] + "px"; if (fs) el.style.fontSize = fs + "px"; }
+    u.p1 = !!P.p1;
+    at(u.tag, P.tag); u.tag.textContent = u.p1 ? n + "P" : n + "번 자리";
     at(u.nick, P.nick, P.nick[4]); u.nick.style.width = P.nick[2] + "px"; u.nick.style.height = P.nick[3] + "px"; u.nick.style.lineHeight = P.nick[3] + "px";
+    if (u.try) { at(u.try, P.try); u.try.style.width = P.try[2] + "px"; }
     if (u.scl) at(u.scl, P.scl);
     at(u.sc, P.sc, P.sc[2]); u.sc.style.lineHeight = P.sc[2] + "px";
     at(u.rk, P.rk); u.rk.style.fontSize = P.rk[2] + "px"; u.rk.style.setProperty("--big", P.rk[3] + "px");
@@ -82,9 +87,10 @@
     var ib = u.e.querySelector(".lvIn"); ib.style.top = (10 + b[3] + 6) + "px"; ib.style.height = P.ih + "px"; ib.style.width = b[2] + "px"; ib.style.fontSize = Math.round(P.ih * 0.5) + "px";
     u.idle.style.left = (b[0] - 10) + "px"; u.idle.style.top = (b[1] - 10) + "px"; u.idle.style.width = (b[2] + 20) + "px"; u.idle.style.height = (b[3] + 6 + P.ih + 20) + "px";
     u.idle.querySelector("b").textContent = n + "번 자리";
-    u.L = rgLayout(b[2], b[3], true, false);
+    var lw = b[4] || b[2]; u.zs = b[2] / lw; u.L = rgLayout(lw, Math.round(b[3] / u.zs), true, false);
     u.c = {};   /* 값 기억 · 바뀔 때만 DOM 을 고친다 */
     e.classList.toggle("one", !!one);
+    e.classList.toggle("p1", u.p1);
     return u;
   }
   function nickFit(u) {   /* 분할 · 닉네임은 자리 이름표 바로 오른쪽(이름표 폭은 글꼴에 따라 다르다) */
@@ -94,7 +100,7 @@
   function set(u, k, v, fn) { if (u.c[k] === v) return false; u.c[k] = v; fn(v); return true; }
 
   /* ── 자리 상태 ── */
-  var SEATS = { 1: null, 2: null }, DONE = {}, DONE_Q = [], ANY_END = false;
+  var SEATS = { 1: null, 2: null, 3: null }, DONE = {}, DONE_Q = [], ANY_END = false;
   function mkRG() {
     var r = {}; for (var k in RG) if (Object.prototype.hasOwnProperty.call(RG, k)) r[k] = RG[k];
     r.on = true; r.mode = "site"; r.big = true; r.words = []; r.ghost = []; r.parts = []; r.pops = []; r.lives = 5; r.lives0 = 5; r.score = 0; r.hits = 0; r.combo = 0; r.stage = 1;
@@ -104,10 +110,14 @@
     return r;
   }
   function seatNew(n, m) {
-    return { n: n, g: m.g, nick: clip(m.nick || "도전자", 16), test: m.test ? 1 : 0, best0: Number(m.best0) || 0, rank0: m.rank0 == null ? null : Number(m.rank0), total: Number(m.total) || 0,
+    return { n: n, g: m.g, nick: clip(m.nick || "도전자", 16), test: m.test ? 1 : 0, tn: tryNo(m), best0: Number(m.best0) || 0, rank0: m.rank0 == null ? null : Number(m.rank0), total: Number(m.total) || 0,
       fr: [], q: -1, recv: now(), start: now(), cur: null, wm: {}, rg: mkRG(), scD: 0, cloudNo: 0, bns: null, over: 0, end: null, endAt: 0, lives0: 0, rkPrev: 0, lat: [], hub: [] };
   }
-  function seatOk(n, test) { return (n === 1 || n === 2) && (!ONLY || ONLY === n) && (!test || TEST); }
+  function tryNo(m) {   /* 261017 n번째 도전(tn 1~9 · tm 최대 기회) · 옛 앱은 칸이 없다 = 0(「1P」만) */
+    var t = Number(m && m.tn), x = Number(m && m.tm);
+    return t >= 1 && t <= 9 && t === Math.floor(t) && (!(x >= 1) || t <= x) ? t : 0;
+  }
+  function seatOk(n, test) { return (n === 1 || n === 2 || n === 3) && (!ONLY || ONLY === n) && (!test || TEST); }
   function done(g) { if (DONE[g]) return; DONE[g] = 1; DONE_Q.push(g); if (DONE_Q.length > 64) delete DONE[DONE_Q.shift()]; }
   var G8 = /^[0-9a-f]{8}$/;
 
@@ -119,7 +129,7 @@
       var S = SEATS[n]; if (S && S.g === s.g) { S.recv = now(); return; }
       SEATS[n] = seatNew(n, s);
     });
-    [1, 2].forEach(function (n) { var S = SEATS[n]; if (S && !S.end && !seen[n]) SEATS[n] = null; });   /* 끊긴 동안 끝난 판 · 결과 보이는 중이면 둔다 */
+    NS.forEach(function (n) { var S = SEATS[n]; if (S && !S.end && !seen[n]) SEATS[n] = null; });   /* 끊긴 동안 끝난 판 · 결과 보이는 중이면 둔다 */
   }
   function onStart(m) {
     var n = Number(m.seat); if (!seatOk(n, m.test) || !G8.test(m.g || "") || DONE[m.g]) return;
@@ -134,6 +144,7 @@
       var q = Number(it.q); if (!(q > S.q)) return;
       S.q = q; S.recv = now();
       if (it.nick) S.nick = clip(it.nick, 16);
+      if (tryNo(it)) S.tn = tryNo(it);
       it._rx = performance.now(); it._ev = !!it.ev || evLike(it, S.fr.length ? S.fr[S.fr.length - 1] : null);
       S.fr.push(it); if (S.fr.length > 16) S.fr.shift();
       if (it.x === "over" && !S.over) S.over = now();
@@ -365,15 +376,19 @@
   /* HUD · 닉네임 · 점수(올라가며) · 지금 N위 · 목숨 · 단계 · 추월 줄 · 입력 · 결과 */
   function hud(S, u, dt) {
     var F = S.cur, r = S.rg;
-    set(u, "nick", S.nick, function (v) { u.nick.textContent = v; });
-    set(u, "test", S.test, function (v) { u.tag.textContent = u.n + "번 자리" + (v ? " · 리허설" : ""); nickFit(u); });
+    set(u, "nick", S.nick, function (v) {
+      u.nick.textContent = v;
+      if (u.p1) { var f = u.P.nick[4]; u.nick.style.fontSize = f + "px"; while (f > 40 && u.nick.scrollWidth > u.nick.clientWidth + 1) { f -= 6; u.nick.style.fontSize = f + "px"; } }   /* 세로 1자리 · 긴 닉네임은 글자를 줄여 한 줄에 */
+    });
+    if (u.try) set(u, "tn", S.tn || 0, function (v) { u.try.textContent = v ? v + "번째 도전" : ""; });
+    if (!u.p1) set(u, "test", S.test, function (v) { u.tag.textContent = u.n + "번 자리" + (v ? " · 리허설" : ""); nickFit(u); });
     var sc = F ? Number(F.sc) || 0 : 0;
     S.scD = sc < S.scD ? sc : S.scD + (sc - S.scD) * Math.min(1, dt * 7); if (sc - S.scD < 1) S.scD = sc;
     set(u, "sc", Math.round(S.scD), function (v) { u.sc.textContent = fmt(v); });
     var lr = liveRank(S, sc), rt = "", rk = 0;
     if (S.end) rt = "";
     else if (F && F.x === "over") rt = "<span>결과 집계 중</span>";
-    else if (lr) {
+    else if (lr && sc > 0) {   /* 261017 0점이면 순위를 띄우지 않는다 */
       rk = lr.r;
       if (rk <= 10) rt = "지금 <b>" + rk + "위</b>";
       else rt = "<span>TOP 10까지 " + fmt(lr.l[9].score - sc + 1) + "점</span>";
@@ -382,7 +397,7 @@
     if (rk) S.rkPrev = rk;
     var lv = F ? Number(F.lv) : 5, hit = r.heartHit > 0 ? 1 : 0;
     set(u, "lv", lv + "|" + hit, function () { Array.prototype.forEach.call(u.life.children, function (h, i) { h.className = i < lv ? "on" : i === lv && hit ? "hit" : ""; h.style.display = i < Math.max(5, S.lives0) ? "" : "none"; }); });
-    set(u, "stg", F ? "단계 " + (Number(F.st) || 1) : "", function (v) { u.stg.textContent = v; });
+    set(u, "stg", F ? (u.p1 && S.test ? "리허설 · " : "") + "단계 " + (Number(F.st) || 1) : "", function (v) { u.stg.textContent = v; });
     if (u.race) set(u, "race", raceHtml(S, lr, sc), function (v) { u.race.innerHTML = v; });
     var typing = F && !F.bn && !F.x && !(F.cd > 0) ? clip(F.inp, 24) : "";
     set(u, "inp", typing, function (v) { u.inp.textContent = v; });
@@ -409,22 +424,23 @@
     if (m.test) return ["리허설 판", sc, "순위에 넣지 않음", 0];
     if (m.pb && rank && rank <= 10 && (!prev || rank < prev)) return [rank + "위 진입!", sc, "최고 기록", 1];
     if (m.pb && rank && rank <= 10) return [rank + "위", sc, "최고 기록", 1];
-    if (m.pb && rank) return ["최고 기록", sc, rank + "위", 0];
-    return [sc, rank ? "최고 기록 " + fmt(m.best) + "점 · " + rank + "위" : "", "", 0];
+    var best = Number(m.best) || 0;   /* 261017 10위 밖 = 점수를 크게 · 순위 숫자는 10위 안만 */
+    if (m.pb) return [sc, "최고 기록", "", 0];
+    return [sc, best ? "최고 기록 " + fmt(best) + "점" + (rank && rank <= 10 ? " · " + rank + "위" : "") : "", "", 0];
   }
 
   /* ── 화면 맞추기 · 방향 · 배치 ── */
   var VIEW = { key: "", lay: null, ui: [], K: 1, ori: "" };
   function ori() { return Q.o === "port" ? "port" : Q.o === "land" ? "land" : (window.innerHeight > window.innerWidth * 1.05 ? "port" : "land"); }
   function shown() {   /* 화면에 올릴 자리 [n, ...] · 분할이면 [1, 2] */
-    var a = [1, 2].filter(function (n) { return !!SEATS[n]; });
+    var a = NS.filter(function (n) { return !!SEATS[n]; });
     if (!a.length) return [];
-    if (MODE === 2 && !ONLY) return [1, 2];
-    if (a.length === 1 || MODE === 1 || ONLY) {
-      if (a.length === 1) return a;
-      return [SEATS[1].start >= SEATS[2].start ? 1 : 2];
-    }
-    return [1, 2];
+    if (MODE === 2 && !ONLY) return a.indexOf(3) < 0 ? [1, 2] : a.length > 1 ? late(a, 2) : (a[0] === 3 ? [1, 3] : [a[0], 3]);
+    if (a.length === 1 || MODE === 1 || ONLY) return a.length === 1 ? a : late(a, 1);
+    return late(a, 2);
+  }
+  function late(a, k) {   /* 나중에 시작한 자리 k 개 · 자리 번호 순 */
+    return a.slice().sort(function (x, y) { return SEATS[y].start - SEATS[x].start; }).slice(0, k).sort();
   }
   function layout(list) {
     var o = ori(), key = o + list.join("") + "|" + window.innerWidth + "x" + window.innerHeight;
@@ -441,10 +457,10 @@
     var dpr = Math.min(2, Math.max(1, VIEW.K * (window.devicePixelRatio || 1)));
     VIEW.ui = list.map(function (n, i) {
       var u = uiMake(lay.seats[i], n, list.length === 1);
-      u.dpr = dpr; u.cv.width = Math.round(lay.seats[i].bd[2] * dpr); u.cv.height = Math.round(lay.seats[i].bd[3] * dpr);
+      u.dpr = dpr * u.zs; u.cv.width = Math.round(lay.seats[i].bd[2] * dpr); u.cv.height = Math.round(lay.seats[i].bd[3] * dpr);
       return u;
     });
-    [1, 2].forEach(function (n) { var S = SEATS[n]; if (S) { S.wm = {}; S.cur = null; S.bns = null; S.rg.cloud = null; S.rg.bonus = null; S.rg.parts = []; S.rg.pops = []; } });   /* 판 크기가 바뀌면 다음 진행부터 다시 맞춘다 */
+    NS.forEach(function (n) { var S = SEATS[n]; if (S) { S.wm = {}; S.cur = null; S.bns = null; S.rg.cloud = null; S.rg.bonus = null; S.rg.parts = []; S.rg.pops = []; } });   /* 판 크기가 바뀌면 다음 진행부터 다시 맞춘다 */
   }
 
   /* ── 켜기 · 끄기 · 광고 루프 멈춤 ── */
@@ -473,7 +489,7 @@
     var dt = LAST ? Math.min(0.1, (ms - LAST) / 1000) : 0.016; LAST = ms;
     FPS.n++; if (ms - FPS.t0 >= 1000) { FPS.v = FPS.n * 1000 / (ms - FPS.t0); FPS.n = 0; FPS.t0 = ms; }
     var t = now();
-    [1, 2].forEach(function (n) {   /* 내리기 · 15초 규칙 · 결과 6초 */
+    NS.forEach(function (n) {   /* 내리기 · 15초 규칙 · 결과 6초 */
       var S = SEATS[n]; if (!S) return;
       if (S.end) { if (t - S.endAt > RESULT_MS) SEATS[n] = null; return; }
       if (S.over && t - S.over > OVER_MS) { done(S.g); SEATS[n] = null; return; }
