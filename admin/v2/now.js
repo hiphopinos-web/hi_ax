@@ -40,9 +40,9 @@ var STN={ ok:"정상", warn:"주의", bad:"위험" };
 var NB_KIND=[["lg","최초 로그인"],["qz","AX 퀴즈"],["p4","미니 게임"],["p5","아이디어 한 줄"],["p2","AX PLAY"],["st","계단 이용"],["p3","17F 강연(2개)"],["p3h","17F 강연 한쪽(1개)"],["p10","10F 실습(2개)"],["p10h","10F 실습 한쪽(1개)"],["ln","AX 라운지 완료(2개)"],["cc","18F 커피챗 완료(1개)"],["sv","설문 참여"]];
 function nbKinds(kinds){ var m={}; kinds.forEach(function(k){ m[k.id]=k; }); return NB_KIND.map(function(x){ var k=m[x[0]]; return { id:x[0], n:x[1], c:k?k.c:null }; }); }
 SCREENS.now={
-  title:"지금", desc:"이상 신호 · 지금 단계 · 접속 · 스탬프 · 경품 · 스태프 요청",
-  need:function(){ return [{ k:"rst", a:"roll_stat", ttl:60000 },{ k:"sreqo", a:"sreq_list", p:{ st:"open", n:20 }, ttl:15000 },{ k:"inv", a:"inv_state", ttl:60000 },{ k:"kss", a:"kit_size_state", ttl:60000 }]; },
-  mount:function(vb){ vb.innerHTML='<div id="nwChips" class="chips"></div><div id="nwErr"></div><div class="grid g4 mb" id="nwSig"></div><div class="grid g32"><div class="col" id="nwL"></div><div class="col" id="nwR"></div></div>'; },
+  title:"지금", desc:"앱 사용 · 이상 신호 · 지금 단계 · 스탬프 · 경품 · 스태프 요청",
+  need:function(){ return [usNeed(),{ k:"rst", a:"roll_stat", ttl:60000 },{ k:"sreqo", a:"sreq_list", p:{ st:"open", n:20 }, ttl:15000 },{ k:"inv", a:"inv_state", ttl:60000 },{ k:"kss", a:"kit_size_state", ttl:60000 }]; },
+  mount:function(vb){ vb.innerHTML='<div id="nwChips" class="chips"></div><div id="nwErr"></div><div id="nwUseA"></div><div class="grid g4 mb" id="nwSig"></div><div id="nwUseB"></div><div class="grid g32"><div class="col" id="nwL"></div><div class="col" id="nwR"></div></div>'; },
   paint:function(){
     var b=S.data.nb, g=dataGate("nb","진행판");
     if(g){ el("nwSig").innerHTML=g; return; }
@@ -57,23 +57,15 @@ SCREENS.now={
     el("nwErr").innerHTML=errTop("nb")+(ph.off?band("info","행사일이 아니라 지금 단계가 없습니다 · 준비 순서로 보여 줍니다"):"");
     var old=!!S.err.nb;
     el("nwSig").innerHTML=nowSignals().map(function(x){ return kpi({ l:x.l, v:x.v, u:x.u, st:x.st, stt:STN[x.st], s:x.s, go:x.go, old:old }); }).join("");
-    var C={ acc:nwAcc(b), stamp:nwStamp(b), focus:nwFocus(b, ph), prize:nwPrize(b), req:nwReq() };
-    var L=ph.id==="ck"?["acc","stamp"]:ph.id==="after"?["stamp","acc"]:["acc","stamp"];
+    /* 261017 앱 사용 · 당일 08:00~17:30 = 이상 신호 아래 · 그 밖 = 맨 위(D6) · 옛 접속 카드는 앱 사용 아래 한 줄로 합침 */
+    var ub=usBelow(); el(ub?"nwUseA":"nwUseB").innerHTML=""; el(ub?"nwUseB":"nwUseA").innerHTML=nwUsage(b); usAreaDraw();
+    var C={ stamp:nwStamp(b), focus:nwFocus(b, ph), prize:nwPrize(b), req:nwReq() };
+    var L=["stamp"];
     var R=ph.id==="after"||ph.id==="close"?["focus","prize","req"]:["focus","req","prize"];
     el("nwL").innerHTML=L.map(function(k){ return C[k]; }).join("");
     el("nwR").innerHTML=R.map(function(k){ return C[k]; }).join("");
   }
 };
-function nwAcc(b){
-  var r=S.data.rst, ok=r&&r.ok, p=b.people||{}, att=b.att||{};
-  var cell=function(l,v,of){ return '<div><div class="cap">'+esc(l)+'</div><div class="v">'+v+(of!=null?'<small> / '+esc(of)+'</small>':'<small> 명</small>')+'</div></div>'; };
-  return '<div class="card'+(S.err.nb?" stale":"")+'"><h2>접속 <span class="cap">오늘 · 시험 사번 제외</span></h2><div class="mini">'+
-    cell("오늘 접속", n0(p.today))+
-    (p.todayPre!=null?cell("사전 신청자 접속", n0(p.todayPre), n0(p.pre)):cell("사전 신청자 가입", ok?n0(r.pre10&&r.pre10.acct):"-", ok?n0(r.pre10&&r.pre10.n):"-"))+
-    (p.todayStaff!=null?cell("스태프 접속", n0(p.todayStaff), n0(p.staff)):cell("스태프 가입", ok?n0(r.staff&&r.staff.acct):"-", ok?n0(r.staff&&r.staff.n):"-"))+
-    cell("PIN 대기", n0(b.pw))+'</div>'+
-    '<div class="cap mt">가입 '+n0(p.acct)+' · 아이디어 '+n0(b.idea&&b.idea.n)+' · 17F 출석 '+n0(num(att.l1&&att.l1.in)+num(att.l2&&att.l2.in))+' · 설문 '+n0(b.survey)+' · 구독 '+n0(b.push&&b.push.subs)+'대</div></div>';
-}
 function nwStamp(b){
   var st=b.st||{}, d=st.d||[], tot=d.reduce(function(a,x){ return a+num(x); },0)||1, mx=Math.max.apply(null,[1].concat(d.map(num)));
   var kinds=st.kind&&st.kind.length?nbKinds(st.kind):null, body, miss=kinds?kinds.filter(function(k){ return k.c==null; }):[];   /* 서버 계약 3-1 st.kind = [{ id, n 이름, c 사람 수 }] */
@@ -98,7 +90,7 @@ function nwPrize(b){
 }
 function nwReq(){
   var d=S.data.sreqo, rows=d&&d.ok?(d.rows||[]).filter(function(r){ return r.st==="open"; }):null, n=S.data.nb&&S.data.nb.sreq?num(S.data.nb.sreq.open):0;
-  var body=rows==null?(dataGate("sreqo","스태프 요청")||skel()):rows.length?rows.slice(0,5).map(function(r){ return rowH(SREQ_K[r.kind]||r.kind, [r.emp||r.name?personLine(r):"",r.spot,r.byName||r.by,ago(r.t)].filter(Boolean).join(" · "),'<button class="btn sm pri" type="button" onclick="reqDone(\''+jq(r.id)+'\',\'처리\')">처리</button>'); }).join("")+(rows.length>5?'<div class="cap mt">외 '+(rows.length-5)+'건 · 처리함에서</div>':''):emptyH("열린 요청이 없습니다");
+  var body=rows==null?(dataGate("sreqo","스태프 요청")||skel()):rows.length?rows.slice(0,5).map(function(r){ return rowH(SREQ_K[r.kind]||r.kind, [r.emp||r.name?personLine(r):"",r.spot,r.byName||r.by,ago(r.t)].filter(Boolean).join(" · "),'<button class="btn sm pri" type="button" onclick="nwReqAsk(\''+jq(r.id)+'\',\'처리\')">처리</button>'); }).join("")+(rows.length>5?'<div class="cap mt">외 '+(rows.length-5)+'건 · 처리함에서</div>':''):emptyH("열린 요청이 없습니다");
   return '<div class="card"><h2>스태프 요청 '+(n?tag(n+"건 열림","warn"):tag("0건","off"))+'<span class="r"><button class="btn sm" type="button" onclick="go(\'inbox\',\'req\')">처리함</button></span></h2>'+body+'</div>';
 }
 function nwFocus(b, ph){
@@ -135,13 +127,19 @@ function nwFocus(b, ph){
       '<div class="mt fx-w"><button class="btn sm pri" type="button" onclick="go(\'stage\',\'draw\')">추첨 진행판</button><button class="btn sm" type="button" onclick="go(\'stage\',\'ik\')">아이디어왕</button><button class="btn sm" type="button" onclick="go(\'stage\',\'lk7\')">7등 굿즈</button></div>';
   } else { t="행사 후 · 발송 대상";
     var d=(b.st||{}).d||[];
-    h=rowH("6개 달성(참여상 대상)","추첨 · 다음 날 발송",'<span class="big">'+n0(d[6])+'<small> 명</small></span>')+
+    h=rowH("6개 달성","선착순 참여상 · 달성순 1~200 · 당일 1F 주차장 체크인존 10:30~17:00 지급 · 못 받은 사람은 발송",'<span class="big">'+n0(d[6])+'<small> 명</small></span>')+
       rowH("행운권 가진 사람","",'<span class="big">'+n0(b.st&&b.st.holders)+'<small> 명</small></span>')+
       rowH("선착순 가습기 지급","미수령 · 지방 근무자 발송은 기록 · 설정에서",'<span class="big">'+n0(b.fcfs&&b.fcfs.got)+'<small> 명</small></span>');
   }
   return '<div class="card"><h2>'+esc(t)+' <span class="cap">지금 단계</span></h2>'+h+'</div>';
 }
-/* 스태프 요청 닫기 · L1(확인 창 없음) */
+/* 261017 지금 탭의 「처리」도 처리함과 같은 확인 창(reqAsk 모양 · 이 탭은 sreqo 목록) */
+function nwReqAsk(id, res){
+  var d=S.data.sreqo, r=d&&d.rows?d.rows.filter(function(x){ return String(x.id)===String(id); })[0]:null; if(!r) return;
+  confirmBox({ t:"요청을 「"+res+"」로 닫을까요?", who:(SREQ_K[r.kind]||r.kind||"요청")+(r.name||r.emp?" · "+(r.name||r.emp):"")+(r.spot?" · "+r.spot:""), sub:"보낸 스태프 "+(r.byName||r.by||"-")+" · 닫으면 다시 열지 않음", ok:res+"로 닫기", danger:res==="거절",
+    run:function(){ return Promise.resolve({ ok:true }); }, done:function(){ reqDone(id, res); } });
+}
+/* 스태프 요청 닫기 · 확인 창(reqAsk · nwReqAsk) 뒤에 부른다 */
 function reqDone(id, res){
   call("sreq_done",{ id:id, res:res, memo:"" }).then(function(r){
     if(r&&r.ok){ toast("요청을 닫았습니다 · "+res); var d=S.data.sreqo; if(d&&d.rows) d.rows=d.rows.filter(function(x){ return x.id!==id; }); var e=S.data.sreq; if(e&&e.rows) e.rows.forEach(function(x){ if(x.id===id){ x.st="done"; x.res=res; } }); if(S.data.nb&&S.data.nb.sreq) S.data.nb.sreq.open=Math.max(0,num(S.data.nb.sreq.open)-1); paint(); reload(["sreqo","sreq"]); }
