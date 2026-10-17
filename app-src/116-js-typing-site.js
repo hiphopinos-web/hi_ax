@@ -17,6 +17,7 @@ function rgTopHtml() {
   return '<div class="rg-hud">' +
     (side ? "" : '<span class="rg-sc"><small>점수</small><b id="rgHudSc">0</b></span>') +
     '<span class="rg-tm" id="rgHudTm">0.0초</span>' +
+    (RG.mode === "site" && TSF.info ? '<span class="rg-try">도전 ' + tsfTry().n + "/" + tsfTry().max + "</span>" : "") +   /* 261017 1F 셀프 · 몇 번째 도전 / 이 사람 최대 기회 */
     (side ? "" : '<span class="rg-ht" id="rgHudHt">' + hearts + "</span>") +
     (RG.mode === "site" ? "" : sndBtnHtml(false) +
     '<button class="rg-ib rgp-x" type="button" data-on="계속" data-off="멈춤" aria-label="일시정지" onpointerdown="event.preventDefault()" onclick="gsPauseToggle()">멈춤</button>') + "</div>";
@@ -198,7 +199,7 @@ function tybHtml(r) {
     (TYB_REST.on && TYB_REST.nm ? '<p class="tyb-pzn">4~10위 · ' + esc(TYB_REST.nm) + "</p>" : "") +
     '<p class="tyb-ft" id="tybFt">' + tybFtHtml(r) + "</p></section>";
 }
-function tybFtHtml(r) { return "1인 " + ((r && r.tries) || 3) + "회 · 최고 " + (r && r.unit !== "pts" ? "기록" : "점수") + " · 동점은 정확도<br>17:00 마감 · 1~10위 Closing Speech에서 순위 발표"; }
+function tybFtHtml(r) { return "스탬프 1개 = 1회 · 최대 " + ((r && r.tries) || 3) + "회<br>최고 " + (r && r.unit !== "pts" ? "기록" : "점수") + " · 동점은 정확도<br>17:00 마감 · 1~10위 Closing Speech에서 순위 발표"; }   /* 261017 스탬프 1개 = 1회 */
 /* 받은 순위를 판에 · 줄은 data-k(닉네임 + 같은 이름 몇 번째)로 이어 붙여 옮긴다 · 처음 그린 판(TYB.keys 없음)은 표시만 */
 function tybApply(r) {
   var host = el("tybIn"); if (!host || !r) return;
@@ -357,8 +358,17 @@ function tsfDev() {
   if (!/^[a-z0-9]{6,16}$/.test(d)) { d = ""; for (var i = 0; i < 10; i++) d += "abcdefghijkmnpqrstuvwxyz23456789".charAt(Math.floor(Math.random() * 32)); S.put("self_dev", d); }
   return d;
 }
-function tsfLimit() { return (TSF.info && TSF.info.limit) || (TSF.cfg && TSF.cfg.tries) || (TSF.top && TSF.top.tries) || 3; }
-function tsfLimitMsg(r) { return "오늘 도전 " + ((r && r.limit) || tsfLimit()) + "회를 모두 쓰셨어요"; }
+function tsfLimit() { var i = TSF.info; return (i && (i.cap || i.limit)) || (TSF.cfg && TSF.cfg.tries) || (TSF.top && TSF.top.tries) || 3; }   /* 261017 규칙 문구의 상한(설정 타자셀프_횟수) · 새 서버 = info.cap · 옛 서버 = info.limit(그때는 상한) */
+/* 261017 (사용자 결정 · 「1인 3회」 대체) 도전 기회 = 스탬프 1개당 1회 · 최대 N회 · 규칙 문구 한 곳(노트북 · 앱 순위 · 폰 연결 · HIGH SCORE · TV 줄) */
+function typeTryTxt(n) { return "스탬프 1개 = 1회 · 최대 " + (n || 3) + "회"; }
+/* 기회를 다 썼을 때 · 새 서버(stamps · cap)에서 스탬프가 상한보다 적으면 { t, s } · 상한을 다 썼거나 옛 서버(stamps 없음)면 null(예전 문구) */
+function typeMore(r) { var c = (r && r.cap) || 3; return r && typeof r.stamps === "number" && !r.test && r.stamps < c ? { t: "스탬프를 더 모으면 한 번 더 도전", s: "지금 스탬프 " + r.stamps + "개 · " + typeTryTxt(c) } : null; }
+function tsfLimitMsg(r) { var m = typeMore(r); return m ? m.t : "오늘 도전 " + ((r && r.limit) || tsfLimit()) + "회를 모두 쓰셨어요"; }
+function tsfLimitSub(r, d) { var m = typeMore(r); return m ? m.s : d; }
+/* 261017 몇 번째 도전(n) · 이번 판 뒤 남은 기회(after) · 이 사람 최대 기회(max = 새 서버 limit = min(스탬프, 상한) · 옛 서버 limit = 상한) · 모든 화면이 이 셈 하나 · 테스트 사번 = 늘 1번째 */
+function tsfTry(i) { i = i || TSF.info || {}; var lim = Number(i.limit) || tsfLimit(), left = Math.max(0, Number(i.left) || 0); return { n: i.test ? 1 : Math.max(1, Math.min(lim, lim - left + 1)), after: Math.max(0, left - 1), max: lim }; }
+/* 스탬프 때문에 기회가 상한보다 적을 때만 · 「스탬프 2개 = 최대 2회 · 스탬프 3개 = 3회」(옛 서버 = 빈칸) */
+function tsfStampLine(i) { i = i || TSF.info || {}; var c = i.cap || 3; return typeof i.stamps === "number" && !i.test && i.limit < c ? "스탬프 " + i.stamps + "개 = 최대 " + i.limit + "회 · 스탬프 " + c + "개 = " + c + "회" : ""; }
 function typePts(v) { return Number(v || 0).toLocaleString() + "점"; }   /* v5.12 1F 타자왕(site) 기록 = 점수 · 앱(app)은 그대로 typeSec */
 function tsfDbg(k, v) {   /* v5.61 시험 훅 · 주소에 ?tsfdbg=1 일 때만 window.__tsf 에 쌓는다(운영 화면에는 영향 없음) */
   if (!TSF.dbg) return;
@@ -455,7 +465,7 @@ function tsfAdmin() {
     " · 송출 " + (tvlSeat() ? "자리 " + tvlSeat() + (TVL.st === "ok" ? " 연결됨" : "") : "끔") + "</p>" +   /* 261017 실시간 송출 자리 */
     '<button type="button" class="ax-button" onclick="tsfOffGo()">셀프 모드 끄기</button>' +
     '<button type="button" class="ax-button ax-button-weak" onclick="tsfSndGo()">효과음 ' + (on ? "끄기" : "켜기") + "</button>" +
-    (tsfStaff() ? '<button type="button" class="ax-button ax-button-weak" onclick="tsfSeatGo()">송출 ' + ["자리 1로", "자리 2로", "끄기"][tvlSeat()] + "</button>" : "") +
+    (tsfStaff() ? '<button type="button" class="ax-button ax-button-weak" onclick="tsfSeatGo()">송출 ' + ["자리 1로", "자리 2로", "자리 3으로", "끄기"][tvlSeat()] + "</button>" : "") +
     (TSF_CAM ? '<button type="button" class="ax-button ax-button-weak" onclick="tsfStaffView()">카메라 전체 보기(20초)</button>' : "") +
     '<button type="button" class="ax-button ax-button-weak" onclick="modalClose()">닫기</button></div>', "스태프 전용");
   setTimeout(function () { var n = el("tsfOffCode"); if (n) n.focus(); }, 60);
@@ -771,7 +781,7 @@ function tsfCheckRes(r, via) {
   TSF.busy = false; TSF.retry = 0;
   if (!r || !r.ok) { tsfErr(TSF_WHY[r && r.reason] || "확인하지 못했어요 · QR을 다시 찍어 주세요"); sfx("rgmiss"); return; }
   if (!r.inWin) { tsfErr(TSF_WHY.window, (r.win || []).join(" · ")); sfx("rgmiss"); return; }
-  if (r.left <= 0) { tsfErr(tsfLimitMsg(r), "순위는 오른쪽 화면에서", 6); sfx("rgmiss"); return; }
+  if (r.left <= 0) { tsfErr(tsfLimitMsg(r), tsfLimitSub(r, "순위는 오른쪽 화면에서"), 6); sfx("rgmiss"); return; }   /* 261017 스탬프가 상한보다 적으면 「스탬프를 더 모으면 한 번 더 도전」 · 지금 스탬프 n개 */
   TSF.emp = r.emp; TSF.info = r; TSF.nick = r.nick || ""; TSF.via = via || "";
   tsfRacePull();
   tsfPh("join"); sfx("rgjoin");
@@ -879,11 +889,11 @@ function tsfLeftHtml() {
   var ph = TSF.ph, i = TSF.info;
   if ((ph === "join" || ph === "ready" || ph === "nick") && i) {
     return '<section class="tsf-p tsf-who"><p class="tsf-k">PLAYER</p><p class="tsf-big o">' + esc(TSF.nick || "닉네임 정하는 중") + "</p>" +
-      "<p>남은 도전 " + i.left + "회 / " + i.limit + "회</p>" + (i.best ? "<p>내 최고 " + typePts(i.best) + "</p>" : "<p>첫 도전</p>") + "</section>" +
+      '<p class="tsf-try">' + tsfTry(i).n + "번째 도전</p><p>이번 판 뒤 남은 기회 " + tsfTry(i).after + "회</p>" + (tsfStampLine(i) ? '<p class="tsf-stl">' + tsfStampLine(i).split(" · ").join('</p><p class="tsf-stl">') + "</p>" : "") + (i.best ? "<p>내 최고 " + typePts(i.best) + "</p>" : "<p>첫 도전</p>") + "</section>" +
       '<section class="tsf-p tsf-rule">' + (ph === "nick" ? "<p>Enter 저장</p><p>Esc 처음으로</p>" : '<p class="tsf-hint go">SPACE 시작</p><p>Tab 닉네임 바꾸기</p><p>Esc 처음으로</p>') + "</section>";
   }
   /* 261007(사용자 「오른쪽 순위표 10등까지 · 일부 정보는 왼쪽으로」) 오른쪽 점수 설명을 왼쪽으로 · 방법 · 점수 두 묶음 · 엔터 없이 한 줄 */
-  var rule = '<section class="tsf-p tsf-rule"><p class="tsf-rh">방법</p><p>맞게 치면 엔터 없이 터져요</p><p>목숨 ' + RAIN_LIVES + "개를 다 잃으면 끝</p><p>1인 " + tsfLimit() + "회 · 최고 점수로 순위</p><p>17:00 마감 · 1~10위<br>Closing Speech에서 순위 발표</p></section>" +
+  var rule = '<section class="tsf-p tsf-rule"><p class="tsf-rh">방법</p><p>맞게 치면 엔터 없이 터져요</p><p>목숨 ' + RAIN_LIVES + "개를 다 잃으면 끝</p><p>" + typeTryTxt(tsfLimit()) + "</p><p>최고 점수로 순위</p><p>17:00 마감 · 1~10위<br>Closing Speech에서 순위 발표</p></section>" +
     '<section class="tsf-p tsf-rule"><p class="tsf-rh">점수</p><p>글자 × 10 × 콤보(최대 3배)</p><p>구름이 비면 보너스 스테이지</p><p>빠르고 정확할수록 보너스</p><p>180초 버티면 목숨 × ' + RAIN_LIFE_BONUS + "</p></section>";   /* 줄마다 한 줄에 들어가게 짧게(1920 · 1366 · 24 · 16px) */
   if (ph === "result" && !tsfClosed()) return '<section class="tsf-p"><p class="tsf-k">다음 도전자</p><p class="tsf-go">SPACE = 새 QR</p><p class="tsf-hint" id="tsfCount">' + Math.round(TSF_RES_MS / 1000) + "초 뒤 처음 화면</p></section>";   /* 261007 처음 화면 = 광고 · SPACE = 곧바로 QR */
   return rule;
@@ -908,7 +918,7 @@ var TSF_HOOK = "당신의 <em>프롬프팅 속도</em>를 보여 주세요";   /
 function tsfGuideHtml() {
   var cl = tsfClosed(), ce = TSF.cam.err;
   if (cl) return '<div class="tsf-gd"><p class="tsf-chip">' + (cl.next ? "준비 중" : "오늘 마감") + '</p><p class="tsf-h">' + (cl.next ? "<span><em>" + esc(cl.next) + "</em>에</span><span>" + (cl.first ? "시작해요" : "다시 열려요") + "</span>" : "<span>오늘 도전은</span><span>끝났어요</span>") + "</p>" +
-    '<p class="tsf-gs">' + (cl.next ? "1인 " + tsfLimit() + "회 · 최고 점수로 순위" : "1~10위는 17:00 Closing Speech에서 순위 발표") + "</p></div>";
+    '<p class="tsf-gs">' + (cl.next ? typeTryTxt(tsfLimit()) + " · 최고 점수로 순위" : "1~10위는 17:00 Closing Speech에서 순위 발표") + "</p></div>";
   if (!TSF_CAM) return '<div class="tsf-gd tsf-gq"><p class="tsf-hk">' + TSF_HOOK + '</p><div class="tsf-lqr tsf-qbig" id="tsfLqr"></div>' +
     '<div class="tsf-tm" id="tsfTm" role="presentation"><i style="width:' + tsfWakePct() + '%"></i></div>' +   /* 261007 남은 시간 막대(60초 · 키 · 누름 = 다시 가득) */
     '<p class="tsf-h"><span>폰 카메라로 찍어 주세요</span></p><p class="tsf-gs s">앱이 있으면 앱의 QR 버튼으로</p><p class="tsf-lh" id="tsfLh" role="status" hidden>폰에서 로그인하는 중</p>' + tsfStepsHtml(true) + "</div>";
@@ -920,7 +930,7 @@ function tsfGuideHtml() {
 }
 function tsfStepsHtml(q) {   /* q = 261006 새 진입(QR 찍기 · 규칙은 왼쪽 판) */
   return '<div class="tsf-steps"><p><b>1</b><span>' + (q ? "QR 찍기" : "QR을 노트북에") + '</span></p><p><b>2</b><span><kbd class="tsf-key">SPACE</kbd>로 시작</span></p><p><b>3</b><span>떨어지는 단어 입력</span></p></div>' +
-    (q ? "" : '<p class="tsf-foot">1인 ' + tsfLimit() + "회 · 최고 점수로 순위 · 17:00 마감 · 1~10위 Closing Speech에서 순위 발표</p>");
+    (q ? "" : '<p class="tsf-foot">' + typeTryTxt(tsfLimit()) + " · 최고 점수로 순위 · 17:00 마감 · 1~10위 Closing Speech에서 순위 발표</p>");
 }
 /* 가운데 판 위 DOM · 대기 안내(attract) · 닉네임 칸(nick) · 결과(result) · 나머지는 캔버스(tsfPrevDraw) */
 /* 261007 광고(ph "ad") · QR 없음 · 카드 넷이 7초씩 돈다 · 맨 아래 「키보드를 눌러 시작」(늘 · 크게) · 시간 밖이면 그 줄 = 시간 안내 · 카드만 갈아 끼운다(tsfAdTick)
@@ -936,14 +946,14 @@ function tsfAdCard(k) {
   }
   if (k === "top") {
     var t = (TSF.top && TSF.top.top) || [], a = t[0];
-    if (!a) return '<p class="tsf-adk">현장 1위</p><p class="tsf-adh">첫 기록의<br><em>주인공</em>이 되어 보세요</p><p class="tsf-ads">1인 ' + tsfLimit() + "회 · 최고 점수로 순위</p>";
+    if (!a) return '<p class="tsf-adk">현장 1위</p><p class="tsf-adh">첫 기록의<br><em>주인공</em>이 되어 보세요</p><p class="tsf-ads">' + typeTryTxt(tsfLimit()) + " · 최고 점수로 순위</p>";
     return '<p class="tsf-adk">지금 1위</p><p class="tsf-adn1">' + esc(a.name) + '</p><p class="tsf-adsc">' + typePts(a.score) + "</p>" +
       (t[1] ? '<p class="tsf-ads">2위 ' + esc(t[1].name) + " · " + typePts(t[1].score) + (t[2] ? "<br>3위 " + esc(t[2].name) + " · " + typePts(t[2].score) : "") + "</p>" : "") +
       '<p class="tsf-adh s">이 점수를 <em>넘어</em> 보세요</p>';
   }
   if (k === "how") return '<p class="tsf-adk">참여 방법</p><div class="tsf-adw">' +
     '<p><b>1</b><span><kbd class="tsf-key">아무 키</kbd>누르기</span></p><p><b>2</b><span>폰으로 QR 찍기</span></p><p><b>3</b><span>노트북에서 <kbd class="tsf-key">SPACE</kbd>시작</span></p></div>' +
-    '<p class="tsf-ads">앱 로그인 한 번이면 끝 · 1인 ' + tsfLimit() + "회</p>";
+    '<p class="tsf-ads">앱 로그인 한 번이면 끝 · ' + typeTryTxt(tsfLimit()) + "</p>";
   return '<p class="tsf-adk">1F 타자왕</p><p class="tsf-adh">당신의<br><em>프롬프팅 속도</em>를<br>보여 주세요</p><p class="tsf-ads">떨어지는 단어를 쳐서 없애요</p>';   /* hook · TSF_HOOK 과 같은 말 */
 }
 function tsfAdGo() {
@@ -1032,7 +1042,7 @@ function tsfPrevDraw() {
     var n = rtDotsN("PLAYER JOIN"), lit = !rm ? Math.floor(Math.min(1, el2 / 0.5) * n) : n;
     rtDots(ctx, "PLAYER JOIN", cx, y, dh, RAIN_PAL.o100, { align: "center", line: RAIN_PAL.ink, lit: lit });
     line("확인됐어요 · " + (TSF.nick ? TSF.nick + "님" : "새 도전자"), y + dh + 56, 32, RT_PAL.cream);
-    line("남은 도전 " + TSF.info.left + "회 · " + (TSF.info.best ? "내 최고 " + typePts(TSF.info.best) : "첫 도전"), y + dh + 104, 16, RT_PAL.tan2);
+    line(tsfTry().n + "번째 도전 · 이번 판 뒤 남은 기회 " + tsfTry().after + "회", y + dh + 104, 16, RT_PAL.tan2);   /* 261017 몇 번째 도전 */
   } else if (ph === "ready") {   /* 준비 화면 · QR 만으로는 시작하지 않는다(261003) · v5.30 규칙 세 줄 · v5.61 큰 SPACE 키 */
     veil(0.96);
     tsfReadyDraw(ctx, w, h, blink);
@@ -1051,7 +1061,7 @@ function tsfGuideMask(ctx, cv, w) {
   ctx.fillStyle = g; ctx.fillRect(0, y1, w, fade);
 }
 /* v5.30(261003 사용자 피드백) 준비 화면 · 도전자 · 규칙 세 줄(그림 + 제목 + 조건) · v5.61 큰 SPACE 키 그림 + 「누르면 시작」 · 60초 방치면 처음으로(마지막 5초 숫자)
-   ① 구름에서 내리는 단어를 쳐서 없앤다 · 바닥에 닿으면 목숨 -1 ② 구름이 다 비면 보너스 스테이지 · 문장을 따라 친다 ③ 점수 = 단어 + 콤보 + 보너스 · 1인 n회 · 최고 점수로 순위
+   ① 구름에서 내리는 단어를 쳐서 없앤다 · 바닥에 닿으면 목숨 -1 ② 구름이 다 비면 보너스 스테이지 · 문장을 따라 친다 ③ 점수 = 단어 + 콤보 + 보너스 · 스탬프 1개 = 1회(최대 n회) · 최고 점수로 순위
    그림 = 16 × 14 칸 도트(구름과 비 · 문장 판과 커서 · 별) · 글자는 16 · 32 만 · 판 높이가 낮으면(720 미만) 간격만 줄인다 */
 var TSF_ICON = {
   rain: ["....kkkk........", "...kcccckkkk....", ".kkcggggcccck...", "kccggggggggggk..", "kgggggggggggggk.", ".kkkkkkkkkkkkk..", "..d...d...d.....", "...d...d...d....", "..d...d...d.....", "................", ".kkkkkkkkkkkk...", ".kttttttttttk...", ".ktbbtbbtbbtk...", ".kkkkkkkkkkkk..."],
@@ -1078,18 +1088,21 @@ function tsfReadyDraw(ctx, w, h, blink) {
   var rows = [
     ["rain", "단어 치기", ["내리는 단어를 맞게 치면 엔터 없이 터져요", "바닥에 닿으면 목숨 -1 · 목숨 " + (RAIN_LIVES || 5) + "개"]],   /* 261007 엔터 없이(rgAutoOn · site) */
     ["line", "보너스 스테이지", ["구름이 다 비면 문장을 따라 쳐요", "다 맞으면 엔터 없이 끝 · 빠를수록 보너스"]],
-    ["star", "점수 · 순위", ["단어 + 콤보 + 보너스 스테이지", "1인 " + tsfLimit() + "회 · 최고 점수로 순위"]]
+    ["star", "점수 · 순위", ["단어 + 콤보 + 보너스 스테이지", typeTryTxt(tsfLimit()) + " · 최고 점수로 순위"]]
   ];
   var u = cmp ? 3 : 4, iw = 16 * u, px = 14, pw = w - 2 * px, pad = cmp ? 12 : 16, tx = px + pad + iw + 18, tw = px + pw - pad - tx, hl = cmp ? 34 : 40, dl = cmp ? 20 : 24, gap = cmp ? 8 : 14;
   ctx.font = rtFont(16);
   rows.forEach(function (r) { var ls = []; r[2].forEach(function (t) { rgWrap(ctx, t, tw).forEach(function (x) { ls.push(x); }); }); r.ls = ls; r.h = Math.max(14 * u, hl + ls.length * dl); });
   var ph = 2 * pad + 8 + rows.reduce(function (a, r) { return a + r.h; }, 0) + gap * (rows.length - 1);
   var kh = cmp ? 84 : 112, kw = Math.min(w - 64, cmp ? 380 : 460), kd = cmp ? 34 : 44;
-  var tot = 32 + 30 + (cmp ? 18 : 28) + kh + (cmp ? 14 : 20) + 32 + (cmp ? 16 : 26) + ph + (cmp ? 16 : 24) + 16 + 30;
+  var T = tsfTry(i), sl = tsfStampLine(i), th = 92 + (sl ? 24 : 0);   /* 261017 몇 번째 도전(크게) · 이번 판 뒤 남은 기회 · 스탬프 줄(기회가 상한보다 적을 때만) */
+  var tot = 32 + th + (cmp ? 18 : 28) + kh + (cmp ? 14 : 20) + 32 + (cmp ? 16 : 26) + ph + (cmp ? 16 : 24) + 16 + 30;
   y = Math.max(cmp ? 70 : 96, Math.round((h - tot) / 2) + 16);
   line(TSF.nick || "새 도전자", y, 32, RT_PAL.cream);
-  line("남은 도전 " + (i.left != null ? i.left : tsfLimit()) + "회 · " + (i.best ? "내 최고 " + typePts(i.best) : "첫 도전"), y + 30, 16, RT_PAL.tan2);
-  y += 30 + (cmp ? 18 : 28);
+  line(T.n + "번째 도전", y + 52, 48, RAIN_PAL.o100);
+  line("이번 판 뒤 남은 기회 " + T.after + "회 · " + (i.best ? "내 최고 " + typePts(i.best) : "첫 도전"), y + 92, 16, RT_PAL.tan2);
+  if (sl) line(sl, y + 116, 16, RT_PAL.tan2);
+  y += th + (cmp ? 18 : 28);
   tsfKeyDraw(ctx, cx - kw / 2, y, kw, kh, "SPACE", kd);
   y += kh + (cmp ? 14 : 20);
   line("누르면 시작", y + 16, 32, blink ? RAIN_PAL.o100 : RAIN_PAL.deep);
@@ -1180,14 +1193,15 @@ function tsfGo() {
   TSF.ph = "play"; TSF.res = null; TSF.sub = null; TSF.send = ""; TSF.ticket = ""; tsfDbg("ph", "play"); tsfLinkDrop(); tsfScanShow(false);
   var lv = tvlNew();   /* 261017 실시간 송출 · 이 판 번호표(응답이 늦게 와도 다른 판에 붙지 않게) · seat 없으면 null(보내지 않는다) */
   admCall({ action: "type_self_start", key: tsfKey(), tok: tsfTok(), emp: TSF.emp, dev: tsfDev(), seat: lv.seat || null }, function (r) {
-    if (r && r.ok) { TSF.ticket = r.ticket || ""; tvlBegin(lv, r.live); return; }
+    if (r && r.ok) { TSF.ticket = r.ticket || ""; if (r.tn > 0) { TVL.tn = r.tn; TVL.tm = r.limit || TVL.tm; } tvlBegin(lv, r.live); return; }   /* 261017 새 서버 = 이번 판 몇 번째 도전(tn) · 이 사람 최대 기회 */
     if (r && ["limit", "unknown", "window", "auth", "param", "locked", "dup"].indexOf(r.reason) >= 0) {
       if (RG.on && RG.mode === "site") rgStop();
-      tsfErr(r.reason === "limit" ? tsfLimitMsg(r) : TSF_WHY[r.reason] || "시작하지 못했어요");
+      if (r.reason === "limit") tsfErr(tsfLimitMsg(r), tsfLimitSub(r, "")); else tsfErr(TSF_WHY[r.reason] || "시작하지 못했어요");
       App.render();
     }
   }, function () {});   /* 응답이 없으면 그대로 한다 · 제출 때 서버가 남은 횟수로 다시 본다 */
-  rgStart("site", { wait: false, bonus: true, race: TSF.race });
+  var T = tsfTry(); TVL.tn = T.n; TVL.tm = T.max;   /* 261017 송출 tn · tm(시작 응답 전 값 · 응답이 오면 서버 값) */
+  rgStart("site", { wait: false, bonus: true, race: TSF.race, cdSub: T.n + "번째 도전" });   /* 261017 첫 카운트다운에 한 번 크게(엔진 RG.cdSub) */
 }
 /* rgEndFinal(site) 이 부른다 */
 function tsfDone(res) {
@@ -1202,13 +1216,13 @@ function tsfSend() {
   TSF.send = "sending"; TSF.why = "";
   var paint = function () { if (App.current === "type_site" && TSF.ph === "result") tsfPaint(); };
   admCall({ action: "type_self_submit", key: tsfKey(), tok: tsfTok(), emp: TSF.emp, ticket: TSF.ticket, score: r.score, hits: r.hits, combo: r.combo, acc: r.acc, g: TVL.sub || null }, function (x) {   /* 261017 g = 송출 판 번호(다시 보내기도 같은 g · 없으면 싣지 않는다) */
-    if (x && x.ok) { TSF.send = "ok"; TSF.sub = x; if (x.top) { TSF.top = { ok: true, top: x.top, me: x.me, tries: x.limit }; TSF.topT = Date.now(); } if (x.pb) setTimeout(function () { sfx("best"); }, 250); }   /* v4.50(260925) 테스트 사번도 실제로 저장되어 dry 가 없다 */
+    if (x && x.ok) { TSF.send = "ok"; TSF.sub = x; if (x.top) { TSF.top = { ok: true, top: x.top, me: x.me, tries: x.cap || x.limit }; TSF.topT = Date.now(); } if (x.pb) setTimeout(function () { sfx("best"); }, 250); }   /* v4.50(260925) 테스트 사번도 실제로 저장되어 dry 가 없다 */
     else { TSF.send = "fail"; TSF.why = (x && x.reason) || ""; }
     TSF.resAt = performance.now(); paint();
   }, function () { TSF.send = "fail"; TSF.why = "net"; TSF.resAt = performance.now(); paint(); });
 }
 /* ── 261017 (사용자 결정 · 데이터 중계) 1F 타자왕 실시간 송출 · 게임 노트북 「보내기」(②단계) · 프로토콜 = 디자인 시안/사이니지 명세/타자왕_실시간송출_프로토콜_261017.md 1 · 2 · 3절
-   자리 = 이 노트북 저장 self_seat(1 | 2 · 0 = 끔 · 기본 끔) · 주소에 seat=1 · seat=2 · seat=0(#self&seat=1 · ?seat=2)을 붙여 한 번 열면 저장(다음부터 주소 없이) · 스태프 「관리」(F2 · 관리코드)에서 바꾼다
+   자리 = 이 노트북 저장 self_seat(1 | 2 | 3(261017 예비 노트북 · 보통 TV 없음) · 0 = 끔 · 기본 끔) · 주소에 seat=1 · seat=2 · seat=0(#self&seat=1 · ?seat=2)을 붙여 한 번 열면 저장(다음부터 주소 없이) · 스태프 「관리」(F2 · 관리코드)에서 바꾼다
    스태프가 관리코드로 켠 노트북만(체험 PC 는 자리를 보내지 않는다) · 시작(type_self_start + seat) 응답에 live(판 번호 g)가 와야만 소켓을 연다
    옛 서버(live 없음) = 소켓 · 진행 모두 없음 · 인사 답 ok 에 w 1 이 없으면(옛 Hub) 곧바로 닫고 이 화면에서는 다시 열지 않는다
    판 동안 0.25초마다 tl 한 건(판 상태는 읽기만 · 판정 · 점수 · 입력 경로는 그대로) · 판 끝 x over · 중간 그만둠 x quit · 제출(type_self_submit)에 g · 다시 보내기도 같은 g
@@ -1217,12 +1231,12 @@ function tsfSend() {
    소켓은 셀프 화면에 있는 동안 열어 둔다 · 끊기면 1 · 2 · 4 · 8 · 15초(+0~1초) 뒤 다시(와이파이 복귀 online = 곧바로) · 끊긴 동안 진행은 버린다(쌓지 않는다) · 핑 평소 25초 · 판 동안 5초(4초 안에 답 없으면 떼고 다시)
    모든 보내기는 try 로 감싸 실패해도 게임에 닿지 않는다 · 사번 · 실명 · 닉네임 · 표(ticket)는 싣지 않는다 */
 var TVL = { ws: null, st: "off", gen: 0, g: "", sub: "", q: 0, t: null, rt: null, pt: null, fails: 0, cap: false, no: false, ids: null, nid: 0, prev: {}, sc0: 0, ht0: 0, el: 0, pong: 0, pingAt: 0, url: false, sent: 0,
-  raf: 0, last: 0, sig: "", inp: "", evp: false, ring: [], evN: 0 };
+  raf: 0, last: 0, sig: "", inp: "", evp: false, ring: [], evN: 0, tn: 0, tm: 0 };
 var TVL_MS = 250, TVL_EV_GAP = 50, TVL_INP_GAP = 120, TVL_CAP = 55, TVL_BACK = [1000, 2000, 4000, 8000, 15000];   /* v7.60 0.5 → 0.25초 · 사건 곧바로 · 5초 55건 */
-function tvlSeat() { try { var v = Number(S.get("self_seat", 0)); return tsfStaff() && (v === 1 || v === 2) ? v : 0; } catch (e) { return 0; } }
+function tvlSeat() { try { var v = Number(S.get("self_seat", 0)); return tsfStaff() && (v === 1 || v === 2 || v === 3) ? v : 0; } catch (e) { return 0; } }   /* 261017 3 = 예비 노트북 */
 function tvlUrlSeat() {   /* 주소 값은 이 페이지에서 한 번만 읽는다(스태프가 「관리」에서 바꾼 값을 다시 그리기가 덮지 않게) */
   if (TVL.url) return; TVL.url = true;
-  try { var m = /[?&#]seat=([0-2])(?![0-9])/.exec(location.search + "&" + location.hash.replace(/^#/, "")); if (m) S.put("self_seat", Number(m[1])); } catch (e) {}
+  try { var m = /[?&#]seat=([0-3])(?![0-9])/.exec(location.search + "&" + location.hash.replace(/^#/, "")); if (m) S.put("self_seat", Number(m[1])); } catch (e) {}
 }
 function tvlDev() { return "tvs" + tsfDev() + tvlSeat(); }
 function tvlNew() { TVL.gen++; TVL.sub = ""; try { tvlEnd("quit"); } catch (e) {} return { gen: TVL.gen, seat: tvlSeat() }; }
@@ -1325,7 +1339,7 @@ function tvlFrame(x) {
   var inp = ""; try { inp = String(rgInVal() || "").slice(0, 24); } catch (e) {}
   var b = RG.bonus, bn = b ? { t: String(b.text || "").slice(0, 80), ty: String(b.typed || "").slice(0, 80), ph: String(b.ph || "").slice(0, 8) } : null;
   var f = { t: "tl", g: TVL.g, q: 0, at: Date.now(), el: TVL.el, sc: tvlN(RG.score, 0, 60000), ht: tvlN(RG.hits, 0, 400), lv: tvlN(RG.lives, 0, 9), cb: tvlN(RG.combo, 0, 999), st: tvlN(RG.stage, 0, 20),
-    cd: RG.cd > 0 ? tvlN(Math.ceil(RG.cd), 0, 9) : 0, pz: RG.paused ? 1 : 0, inp: inp, w: w, hw: hw, bn: bn, x: x || "" };
+    cd: RG.cd > 0 ? tvlN(Math.ceil(RG.cd), 0, 9) : 0, pz: RG.paused ? 1 : 0, inp: inp, w: w, hw: hw, bn: bn, x: x || "", tn: tvlN(TVL.tn, 0, 9), tm: tvlN(TVL.tm, 0, 9) };   /* 261017 tn = 몇 번째 도전 · tm = 이 사람 최대 기회(옛 Hub 는 버린다) */
   if (RG.hurt > 0 && !RG.paused) f.hu = tvlN(RG.hurt * 1000, 0, 5000);   /* v7.60 목숨을 잃은 뒤 느려진 남은 ms(송출 화면 앞질러 그리기) */
   return f;
 }
@@ -1402,10 +1416,10 @@ function tvlDrop() {
 }
 /* 와이파이가 돌아오면 기다리던 다시 붙기를 곧바로 */
 window.addEventListener("online", function () { try { if (TVL.rt && TVL.cap && !TVL.no) { clearTimeout(TVL.rt); TVL.rt = null; TVL.fails = 0; tvlOpen(); } } catch (e) {} });
-/* 스태프 「관리」 · 자리 끔 → 1 → 2 → 끔 */
+/* 스태프 「관리」 · 자리 끔 → 1 → 2 → 3(261017 예비 노트북) → 끔 */
 function tsfSeatGo(ok) {
   if (ok !== true && !tsfCodeOk(tsfSeatGo)) return;
-  var v = (tvlSeat() + 1) % 3;
+  var v = (tvlSeat() + 1) % 4;   /* 261017 끔 → 1 → 2 → 3 → 끔 */
   S.put("self_seat", v);
   if (!v) tvlOff(); else if (TVL.ws) { tvlOff(); tvlOpen(); }   /* 자리를 바꾸면 기기 이름이 바뀐다 · 새 이름으로 다시 */
   modalClose();
@@ -1415,7 +1429,7 @@ function tsfResHtml() {
   /* v4.50(260925) 테스트 사번도 실제로 저장되어 dry 가 없다 · TSF.emp 가 테스트 사번이면 줄 끝에만 표시 */
   var rank = TSF.send === "sending" ? "기록 저장 중" : TSF.send === "ok" ? (x.pb ? "신기록!" : "내 최고 " + typePts(x.best || 0)) + (x.me ? " · 현장 " + x.me.rank + "위" : "") + (TEST_EMP.indexOf(TSF.emp) >= 0 ? " · 테스트 사번" : "") :
     "저장하지 못했어요 · " + (TSF.why === "net" ? "서버 응답 없음" : TSF.why === "limit" ? "도전 횟수를 넘었어요" : TSF_WHY[TSF.why] || TSF.why);
-  var left = TSF.send === "ok" ? (x.left > 0 ? "남은 도전 " + x.left + "회 · 다시 하려면 QR 찍기" : "도전 " + lim + "회를 모두 쓰셨어요 · 고마워요") : "";
+  var more = typeMore(x), left = TSF.send === "ok" ? (x.left > 0 ? "남은 기회 " + x.left + "회 · 다시 하려면 QR 찍기" : more ? more.t + " · 지금 스탬프 " + x.stamps + "개" : "도전 " + lim + "회를 모두 쓰셨어요 · 고마워요") : "";   /* 261017 스탬프 기회 */
   var cap = r.why === "cap";
   return rtGoHtml({ title: cap ? "TIME UP" : "GAME OVER", sub: "AX 단어 소나기 · " + (TSF.nick || "익명 참가자"),
     line: cap ? "180초를 버텼어요 · 목숨 보너스" : "단어 " + (RG.lives0 || RAIN_LIVES) + "개를 놓쳤어요",
@@ -1550,7 +1564,7 @@ function hsHtml() {
     (r && !top.length ? '<p class="hs-empty">첫 기록을 기다리고 있어요</p>' : "") +
     '<div class="hs-list">' + rows + "</div>" +
     '<div class="hs-foot">' + (u ? '<img class="hs-bot" src="' + u + '" alt="">' : '<span class="hs-bot">' + BOT_SVG + "</span>") +
-    "<p>1인 " + tries + "회 · 최고 점수 1개로 순위<br>17:00 마감 · 1~10위 Closing Speech에서 순위 발표</p></div>" +
+    "<p>스탬프 1개 = 1회 · 최대 " + tries + "회 · 최고 점수 1개로 순위<br>17:00 마감 · 1~10위 Closing Speech에서 순위 발표</p></div>" +
     '<p class="hs-prz">1등 기계식 키보드 · 2등 마우스 · 3등 기계식 키보드<br>4~10등 데스크 매트</p></div></div>';   /* v5.09 (261003 사용자 확정) 새 경품 짧은 이름 · v5.06 바닥 경품 한 줄 · 가격 없음 · v5.05 결선 없음 · 1~3위 */
 }
 

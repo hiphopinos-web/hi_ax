@@ -587,6 +587,7 @@ function rgStart(mode, opt) {
   RG.lives = RG.lives0; RG.score = 0; RG.hits = 0; RG.tries = 0;
   RG.combo = 0; RG.maxCombo = 0; RG.stage = 1; RG.spawnT = 0.3; RG.shake = 0; RG.banner = null; RG.shot = null; RG.res = null; RG.ending = null; RG.heartHit = 0;
   RG.mas = { x: 90, tx: 90, hop: 0, set: false };
+  RG.cdSub = typeof opt.cdSub === "string" ? opt.cdSub.slice(0, 20) : "";   /* 261017 첫 카운트다운 숫자 아래 한 줄(1F 셀프 「2번째 도전」 · 대전 · 옛 화면 = 빈칸) */
   RG.cd = opt.cd != null ? opt.cd : 3; RG.cdQ = 0; RG.cdAt = 0; RG.goT = 0; RG.goAt = 0; RG.t0 = 0;   /* 261012 3.2 → 3 · 3 · 2 · 1 각 1초 · 대전은 서버 값(opt.cd) */ RG.on = true; RG.last = performance.now(); RG.L = null; RG.hud = "";
   RG.paused = false; RG.composing = false; RG.pendingEnter = false; RG.typed = ""; RG.lastHit = null; RG.latT = 0; RG.tip = false;
   RG.bonusOn = !!opt.bonus && RG.mode === "site"; RG.bonus = null; RG.bns = 0; RG.bnsN = 0; RG.bnsBag = null; RG.capBns = 0; RG.inMax = 12;   /* v5.12 1F 타자왕 */
@@ -891,6 +892,7 @@ function rgCdDraw(ctx, L, now) {
   ctx.fillStyle = "rgba(255,255,255,0.55)"; ctx.fillRect(0, 0, L.W, L.floor);
   ctx.restore();
   rgBnsPop(ctx, L.W / 2, Math.round(L.floor * 0.42), String(n), RG.cdAt ? Math.min(1, (now - RG.cdAt) / 1000) : 0, L.big ? 128 : 64);
+  if (RG.cdSub) { ctx.save(); ctx.textAlign = "center"; ctx.textBaseline = "middle"; rtText(ctx, RG.cdSub, L.W / 2, Math.round(L.floor * 0.42) + (L.big ? 120 : 64), L.big ? 48 : 32, RAIN_PAL.ink, RAIN_PAL.w); ctx.restore(); }   /* 261017 몇 번째 도전 · 카운트다운 동안 한 번 크게 */
 }
 /* 떨어지는 단어 한 개 · 게임과 시작 화면 미리보기가 같이 쓴다 · on = 지금 치고 있는 단어 · danger = 바닥선 가까이 · tv = 친 앞부분 */
 function rgWordDraw(ctx, L, x, y, bw, text, on, danger, tv) {
