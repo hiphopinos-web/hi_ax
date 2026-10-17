@@ -2,9 +2,9 @@
  * 칩 = 체크인존(지급 현황) · 스태프 요청 · PIN 분실. 한 건씩 처리하고 처리한 줄만 고친다.
  * 261016 밤 AX 라운지 · 커피챗 칩은 미팅 탭(meet.js)으로 옮김 · 이 파일에는 라운지 명단 부품(명단 올리기 · 명단 표 · 상태 바꾸기)만 남긴다
  * 승인 · 체크인 · 선정 = L2(확인 창, PIN 없음) · 요청 닫기 · 잘못된 PIN 요청 닫기 = L1(바로 · 토스트)
- * 261016 체크인존 = 스태프 폰 한 번 찍기(ck_gate · 키트 · 스태프 옷 · 선착순 참여상) · 창구 A~D · 번호표 · 창구 대기는 걷음(서버 ck_ticket · ck_next 는 쓰지 않음)
+ * 261017 체크인존 = 사전 신청자 + 스태프 명단 한 판 · 체크인 = 스태프 폰 「체크인존」 스캔(ck_gate) · 참여상 = 별도 칩(ckzone.js) · 창구 · 번호표는 걷음
  * 261016 콘솔 동작에는 PIN 을 묻지 않는다(「PIN 분실」은 참가자 앱 PIN 요청 처리) */
-var IB_SUBS=[["ck","체크인존",null],["req","스태프 요청",""],["pw","PIN 분실",""]];
+var IB_SUBS=[["ck","체크인존",null],["fx","참여상",null],["req","스태프 요청",""],["pw","PIN 분실",""]];   /* 261017 참여상(선착순 1~200)을 체크인존에서 뺌(K4) */
 var RV_ON=["신청","승인","체크인"];
 var RV_CLS={ "신청":"req", "승인":"okc", "체크인":"in", "완료":"done", "노쇼":"no" };
 var RV_TAG={ "신청":"warn", "승인":"", "체크인":"", "완료":"ok", "노쇼":"bad", "취소":"off" };
@@ -12,20 +12,23 @@ function ibSub(){ var s=S.sub.inbox; return IB_SUBS.some(function(x){ return x[0
 SCREENS.inbox={
   title:"처리함", desc:"",
   need:function(){ var s=ibSub();
-    return s==="ck"?[{ k:"inv", a:"inv_state", ttl:30000 },{ k:"ckg", a:"scan_log", p:{ act:"ck_gate", n:300 }, ttl:15000 },{ k:"ckf", a:"fcfs_list", p:{ st:"수령", page:1 }, ttl:15000 },{ k:"cno", a:"ck_no_state", ttl:30000 },{ k:"cnl", a:"ck_no_list", ttl:60000 }]:s==="req"?[{ k:"sreq", a:"sreq_list", p:{ st:"all", n:100 }, ttl:15000 }]:[{ k:"pwl", a:"pw_req_list", ttl:30000 }]; },
+    if(s==="fx") return [{ k:"fx1", a:"fcfs_list", p:{ page:1 }, ttl:15000 },{ k:"fx2", a:"fcfs_list", p:{ page:2 }, ttl:15000 }];
+    return s==="ck"?[{ k:"ckz", a:"ck_zone", ttl:15000 },{ k:"inv", a:"inv_state", ttl:30000 },{ k:"cno", a:"ck_no_state", ttl:30000 },{ k:"cnl", a:"ck_no_list", ttl:60000 }]:s==="req"?[{ k:"sreq", a:"sreq_list", p:{ st:"all", n:100 }, ttl:15000 }]:[{ k:"pwl", a:"pw_req_list", ttl:30000 }]; },
   mount:function(vb){
     var s=ibSub();
-    el("phCap").textContent={ ck:"1F 체크인존 · 키트 · 스태프 옷 · 참여상 지급", req:"스태프 폰 「운영자에게 요청」", pw:"앱 로그인 「PIN 을 잊었어요」 요청" }[s];
+    el("phCap").textContent={ ck:"1F 체크인존 · 사전 신청자 · 스태프 · 누가 왔고 누가 안 왔나", fx:"6개 선착순 참여상 · 달성 순번 1~200", req:"스태프 폰 「운영자에게 요청」", pw:"앱 로그인 「PIN 을 잊었어요」 요청" }[s];
     vb.innerHTML='<div class="chips" id="ibChips" role="tablist" aria-label="처리함"></div><div id="ibB"></div>';
     var b=el("ibB");
-    if(s==="ck") b.innerHTML='<div id="ckTop"></div><div class="grid g4" id="ckK"></div><div class="card mt"><h2>최근 지급 명단 <span class="cap">체크인존에서 찍은 사람 · 줄을 누르면 한 사람 카드</span></h2><div id="ckL"></div></div>'+ckExtraHtml();
+    if(s==="ck") b.innerHTML='<div class="card"><h2>체크인존 명단 <span class="cap">사전 신청자 + 스태프 · 줄을 누르면 한 사람 카드</span></h2><div id="ckzTop"></div><div id="ckzL"></div></div>'+
+      '<details class="memo card mt"><summary>번호 매기기 · 사이즈 교환 · 명단 밖 지급</summary>'+ckExtraHtml()+'</details>';   /* 261017 체크인존 = 명단 한 판(ckzone.js) */
+    else if(s==="fx") b.innerHTML='<div class="card"><h2>참여상 선착순 <span class="cap">스탬프 6개 달성 순</span></h2><div id="fxTop"></div><div id="fxL"></div></div>';
     else if(s==="req") b.innerHTML='<div class="card"><h2>스태프 요청</h2><div id="rqList"></div></div>';
     else b.innerHTML='<div class="card"><h2>PIN 분실 요청 <span class="cap">본인 확인(사원증) 뒤 초기화</span></h2><div id="pwList"></div></div>';
   },
   paint:function(){
     var b=S.data.nb, s=ibSub(), c=b&&b.ok?{ req:num(b.sreq&&b.sreq.open), pw:num(b.pw) }:{};
     el("ibChips").innerHTML=IB_SUBS.map(function(x){ return '<button type="button" role="tab" aria-selected="'+(x[0]===s)+'" class="chip'+(x[0]===s?" on":"")+'" onclick="goSub(\''+x[0]+'\')">'+esc(x[1])+(x[2]===null?"":' <span class="c">'+(x[2]?x[2]+" ":"")+(c[x[0]]!=null?n0(c[x[0]]):"-")+'</span>')+'</button>'; }).join("");
-    ({ ck:function(){ ckPaint(); ckExtraPaint(); }, req:rqPaint, pw:pwPaint })[s]();
+    ({ ck:function(){ ckzPaint(); ckExtraPaint(); }, fx:fxPaint, req:rqPaint, pw:pwPaint })[s]();
   }
 };
 
@@ -89,41 +92,7 @@ function rvUndo(id, cur, back){
 
 /* ── 커피챗 · cchat.js 부품 · 화면 = 미팅 탭(meet.js) ── */
 
-/* ── 체크인존 지급 현황 · ck_gate(스태프 폰 한 번 찍기) ──
- * 숫자 = inv_state kit(givenPre 키트 · givenStaff 스태프 옷 · givenOut 명단 밖 · chk 체크인 기록) · now_board fcfs(참여상 지급 · 남음)
- * 명단 = scan_log act ck_gate(오늘 · 사람마다 마지막 찍은 시각) + inv_list k1 · hum(곳 gate · 무엇을 받았나) + fcfs_list 수령(참여상 · 달성 순번) */
-var CKG={ g:null };
-function ckGive(){ var m={}, put=function(L,id){ if(!L||L==="busy"||!L.ok) return; (L.rows||[]).forEach(function(r){ if(r.place!=="gate"||r.v||!r.emp) return; var o=m[r.emp]||(m[r.emp]={});
-    if(id==="hum"&&r.k==="give") o.kit="가습기 대체"; else if(r.k==="give") o.kit=/^스태프 의류/.test(r.why||"")?"스태프 옷":"키트"; else if(r.k==="chk"&&!o.kit) o.kit="명단 밖"; }); };
-  put(IV.list.k1,"k1"); put(IV.list.hum,"hum"); return m; }
-function ckRows(){
-  var d=S.data.ckg; if(!d||!d.ok) return null;
-  var gv=ckGive(), f=S.data.ckf, fx={}, by={}, out=[];
-  if(f&&f.ok) (f.rows||[]).forEach(function(r){ fx[normE(r.emp)]=r; });
-  (d.rows||[]).forEach(function(r){ var e=normE(r.emp); if(!e) return; var o=by[e]; if(!o){ o=by[e]={ emp:e, name:r.name||"", t:r.t, by:r.byName||r.by||"", n:0 }; out.push(o); } o.n++; if(r.t>o.t){ o.t=r.t; o.by=r.byName||r.by||""; } });
-  out.forEach(function(o){ var k=gv[o.emp], x=fx[o.emp]; o.kit=k&&k.kit||""; o.fx=x?x.rk:0; o.fxAt=x?x.gotAt:""; });
-  return out;
-}
-function ckPaint(){
-  var iv=S.data.inv, kit=iv&&iv.ok?iv.kit||{}:null, b=S.data.nb, fx=b&&b.ok?b.fcfs||{}:{}, d=S.data.ckg;
-  ivListLoad("k1"); ivListLoad("hum");
-  el("ckTop").innerHTML=errTop("inv")+errTop("ckg");
-  var ppl=d&&d.ok?ckRows():null;
-  el("ckK").innerHTML=kit?kpi({ l:"키트 지급", v:n0(kit.givenPre), u:"명", s:"사전 신청 "+n0(kit.pre)+"명 중" })+
-    kpi({ l:"스태프 옷 지급", v:kit.givenStaff==null?"-":n0(kit.givenStaff), u:kit.givenStaff==null?"":"명", s:kit.givenStaff==null?"서버 갱신 뒤":"스태프 의류 명단" })+
-    kpi({ l:"참여상 지급", v:n0(fx.got), u:"명", s:"남음 "+n0(fx.left)+" / "+n0(fx.cap)+" · 17:00 마감"+(fx.on?"":" · 꺼짐") })+
-    kpi({ l:"찍은 사람", v:ppl?n0(ppl.length):"-", u:"명", s:"명단 밖 "+n0(kit.givenOut)+" · 체크인 기록 "+n0(kit.chk)+"명" }):'<div style="grid-column:1/-1">'+(dataGate("inv","체크인존 지급")||skel())+'</div>';
-  if(!CKG.g) CKG.g=XG.make({ id:"ckgate", file:"체크인존 지급 명단", key:function(r){ return r.emp; }, sort:{ k:"t", d:-1 },
-    chips:[["all","전체",null],["kit","키트",function(r){ return r.kit==="키트"||r.kit==="가습기 대체"; }],["staff","스태프 옷",function(r){ return r.kit==="스태프 옷"; }],["fx","참여상",function(r){ return !!r.fxAt; }],["out","명단 밖",function(r){ return r.kit==="명단 밖"||!r.kit; }]],
-    cols:[{ k:"t", t:"마지막 찍음", type:"date", w:100 },{ k:"emp", t:"사번", w:84 },{ k:"name", t:"이름", w:90 },
-      { k:"kit", t:"키트 · 옷", w:110, v:function(r){ return r.kit||"없음"; }, f:function(r){ return r.kit==="명단 밖"||!r.kit?tag(r.kit||"없음","off"):tag(r.kit,"ok"); } },
-      { k:"fx", t:"참여상", w:120, v:function(r){ return r.fxAt?"받음 · "+r.fx+"번째":""; }, f:function(r){ return r.fxAt?tag("받음 "+hm(r.fxAt),"ok")+' <span class="cap">'+n0(r.fx)+'번째</span>':'<span class="cap">-</span>'; } },
-      { k:"n", t:"찍은 수", type:"num", w:70 },{ k:"by", t:"스태프", w:100 }],
-    src:{ a:"scan_log", p:{ act:"ck_gate", n:300 }, pick:function(){ return ckRows()||[]; } }, empty:"아직 체크인존에서 찍은 사람이 없습니다", h:420, onRow:function(k){ pcOpen(k, CKG.g); } });
-  var gt=dataGate("ckg","체크인존 명단"); CKG.g.gate=gt||"";
-  XG.set(CKG.g, gt?null:ppl, el("ckL"));
-}
-
+/* 261017 체크인존 지급 현황(ckPaint · ck_gate 찍은 명단 · 참여상 수령)은 명단 한 판(ckzone.js)으로 바뀜 · 옷 수령 체크 없음(사용자 261017) */
 /* ── 스태프 요청 · 명단 표 ── */
 var RQ={ g:null };
 function rqPaint(){

@@ -10,6 +10,7 @@
  *   o.select = 맨 왼쪽 선택 칸(머리 칸 = 보이는 줄 전체) · o.onAdd() = 표 위 오른쪽 「추가」(엑셀 다운로드 옆)
  *   o.cancel = { kind | kind() · keys(rows) 서버 열쇠(기본 사번) · what 명단 이름 · sub 영향 한 줄 · opts() 확인 창 추가 html · part() · after(res) 다시 읽기 }
  *   「선택 n명 삭제」 = 확인 창 → list_rows_cancel(취소 처리 · 기록 남음) → 못 한 줄은 이유 표 · 토스트 「되돌리기」 = roll_undo(batch)
+ * o.rowCls(r) = 줄 class(261017 · 예 dim)
  * 열 정의 c = { k 키 · t 머리 글자 · w 너비 · type(num | date | text) · v(row) 값 · f(row) 화면 html · x(row) 엑셀 값 · act(row) 단추 html(엑셀 제외) · sort:false } */
 var XLSX_URL="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js", EXJS_URL="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js";
 var XG={ reg:{}, MAXROWS:500, CXMAX:200 };
@@ -67,7 +68,8 @@ XG.paint=function(g){
   if(o.select){ var vk={}; shown.forEach(function(r){ vk[xgKey(g,r)]=1; }); Object.keys(g.pick).forEach(function(k){ if(!vk[k]) delete g.pick[k]; }); }   /* 선택 = 보이는 줄 안에서만(구분 · 검색을 바꾸면 안 보이는 줄은 풀림) */
   cnt.innerHTML='<b>'+n0(v.length)+'</b>건'+(v.length!==all.length?' / 전체 '+n0(all.length):'');
   body.innerHTML=shown.length?shown.map(function(r){ var k=o.key?o.key(r):"", on=g.sel!=null&&k===g.sel, pk=o.select&&g.pick[xgKey(g,r)];
-    return '<tr'+(on||pk?' class="'+(on?"sel":"")+(pk?" pk":"")+'"':'')+(o.select?' data-xk="'+esc(xgKey(g,r))+'"':'')+(o.onRow?' data-k="'+esc(k)+'" tabindex="0" onclick="XG.rowBy(this,event)" onkeydown="XG.rowKey(this,event)"':'')+'>'+(o.select?'<td class="ck"><label class="xg-ckl"><input type="checkbox"'+(pk?" checked":"")+' aria-label="'+esc(xgWho(r)+" 선택")+'" onchange="XG.pickEl(this)"></label></td>':'')+cols.map(function(c){ var cls=c.act?"a":c.type==="num"?"n":c.type==="date"?"d":"";
+    var rc=o.rowCls?o.rowCls(r):"";   /* 261017 줄 꾸밈(체크인존 · 온 사람 흐리게) */
+    return '<tr'+(on||pk||rc?' class="'+[on?"sel":"",pk?"pk":"",rc].filter(Boolean).join(" ")+'"':'')+(o.select?' data-xk="'+esc(xgKey(g,r))+'"':'')+(o.onRow?' data-k="'+esc(k)+'" tabindex="0" onclick="XG.rowBy(this,event)" onkeydown="XG.rowKey(this,event)"':'')+'>'+(o.select?'<td class="ck"><label class="xg-ckl"><input type="checkbox"'+(pk?" checked":"")+' aria-label="'+esc(xgWho(r)+" 선택")+'" onchange="XG.pickEl(this)"></label></td>':'')+cols.map(function(c){ var cls=c.act?"a":c.type==="num"?"n":c.type==="date"?"d":"";
       var h=c.act?c.act(r):c.f?c.f(r):esc(xgText(c,r)); return '<td class="'+cls+'" title="'+esc(c.act?"":xgText(c,r))+'">'+h+'</td>'; }).join("")+'</tr>'; }).join("")
     :"";
   xgActs(g);

@@ -217,6 +217,11 @@ table.tb{width:100%;border-collapse:collapse;font-size:13px}
 .xg-t td.a{text-align:right;overflow:visible}
 .xg-t tbody tr:hover td{background:#FAFBFC}
 .xg-t tr.sel td{background:var(--navy05)}
+.xg-t tr.dim td{color:var(--tx3)}
+.xg-t tr.dim td b{font-weight:600}
+.ckz-bar{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;margin-bottom:10px}
+.ckz-bar .sp{flex:1}
+.ckz-bar .chips{margin:0}
 .xg-t tr[data-k]{cursor:pointer}
 .xg-t tr[data-k]:focus-visible td{box-shadow:inset 0 0 0 2px var(--navy)}
 /* 처리함 › 커피챗(cchat.js) · 명단 전체 폭 + 오른쪽 상세 서랍 360 */
