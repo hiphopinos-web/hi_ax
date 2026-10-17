@@ -1,6 +1,6 @@
 /* AXF CONTROL v2 · 미팅 탭 (261016 밤 · 디자인 시안/커피챗 콘솔 기획 · 목업 · 서버 계약 · 사용자 D1~D10 권장안 · AI 는 하지 않음)
  * 칩 2개 = 18F 커피챗(시간표 · 명단 · 아이디어) · 1F AX 라운지(시간표 · 명단) · 오른쪽 「당일 모드」
- * 커피챗 시간표 = 행사 전에는 이 기기의 초안(localStorage) → 「반영」 때 cchat_set · cchat_status 대기 · meet_order_set(순번) · 당일 모드 = 놓는 즉시(확인 창 · D2)
+ * 커피챗 시간표 = 행사 전에는 이 기기의 초안(localStorage) → 「저장」 때 cchat_set · cchat_status 대기(draft=1 · 알림 전) · meet_order_set(순번) → 「알림 보내기」 cchat_notify(261017 저장 · 알림 분리) · 당일 모드 = 놓는 즉시(확인 창 · D2)
  * 라운지 시간표 = lng_board · 놓는 즉시 resv_move(확인 창 · 참가자 알림 없음) · 쉬는 칸(설정 라운지_쉬는칸 · 없으면 12:00 · 12:30)은 그리지 않는다
  * 메모 · 순번 = meet_note_list · meet_note_set · meet_order_set · 서버가 모르는 액션이면 메모 칸을 숨기고 순번은 이 기기에만 둔다
  * 회차 · 테이블 = cfg_list 커피챗_회차 · 커피챗_회차정원(cchat.js ccCfg) · 라운지 칸 = lng_board(start · step · seats) · 없으면 설계값
@@ -78,7 +78,7 @@ SCREENS.meet={
     return a; },
   mount:function(vb){
     var s=mtSub();
-    el("phCap").textContent=s.p==="cc"?"18F 커피챗 · 1:1 20분 · 신청 순서대로 놓고 반영하면 선정 알림":"1F AX 라운지 · 1:1 상담 · 사전 명단 · 놓으면 바로 반영(알림 없음)";
+    el("phCap").textContent=s.p==="cc"?"18F 커피챗 · 1:1 20분 · 신청 순서대로 놓기 · 저장 뒤 알림 보내기":"1F AX 라운지 · 1:1 상담 · 사전 명단 · 놓으면 바로 반영(알림 없음)";
     vb.innerHTML='<div class="mtg'+(MT.pick?" picking":"")+'" id="mtgR"><div class="mtg-hd" id="mtgHd"></div><div id="mtgB"></div></div>';
     var b=el("mtgB");
     if(s.v==="list"){ if(s.p==="cc") b.innerHTML='<div class="card"><div id="mtgL"></div></div>'; else lgShell(b); }
@@ -126,6 +126,7 @@ function mtCard(M, x, no){
     var pl=x.pref?String(x.pref).split(",").map(hm).filter(Boolean):[], rr=k?mtKp(k)[0]:"";
     tags.push(pl.length?(rr&&pl.indexOf(rr)<0?tag("희망 밖","warn"):tag(pl.join(" · "),"off")):tag("언제든","off"));
     if(st==="대기"&&x.overAt) tags.push(tag("미선정 알림","off"));
+    if(x.pend) tags.push(tag(x.pend.st==="매칭"?"알림 다시 필요":"알림 전","warn"));
   }
   var stt0=mtTagSt(M.p, x); if(stt0) tags.unshift(stt0);
   if(MT.day&&k){
@@ -157,8 +158,9 @@ function mtBoardH(p){
   } else if(cc){
     var n=M.chg.length, od=mtOrdChanged(), cn=mtChgN(M);
     if(M.conf.length) h+='<div class="mtg-bar draft"><b>다른 곳에서 바뀜 '+M.conf.length+'명</b><span class="cap">'+esc(M.conf.map(function(e){ var r=M.by[e]; return r?(r.name||r.emp):e; }).join(", "))+' · 이 사람들은 서버 칸으로 보입니다</span><span class="sp"></span><button class="btn sm" type="button" onclick="mtConfDrop()">초안에서 빼기</button></div>';
-    h+=n||od?'<div class="mtg-bar draft"><b>초안 바뀜 '+(n+(od?1:0))+'건</b><span class="cap">'+(n?"선정 "+cn.add+" · 시간 바뀜 "+cn.mv+" · 칸에서 뺌 "+cn.out:"")+(n&&od?" · ":"")+(od?"대기 줄 순서":"")+' · 이 기기에만 있음 · 반영하면 참가자에게 선정 알림</span><span class="sp"></span><button class="btn sm" type="button" onclick="mtUndoAsk()">되돌리기</button><button class="btn sm pri" type="button" onclick="mtApplyAsk()">반영 '+(n+(od?1:0))+'건'+(cn.add+cn.mv?' · 선정 알림 보내기':'')+'</button></div>'
+    h+=n||od?'<div class="mtg-bar draft"><b>초안 바뀜 '+(n+(od?1:0))+'건</b><span class="cap">'+(n?"선정 "+cn.add+" · 시간 바뀜 "+cn.mv+" · 칸에서 뺌 "+cn.out:"")+(n&&od?" · ":"")+(od?"대기 줄 순서":"")+' · 저장 안 됨 · 이 기기에만 있음</span><span class="sp"></span><button class="btn sm" type="button" onclick="mtUndoAsk()">되돌리기</button><button class="btn sm pri" type="button" onclick="mtApplyAsk()">저장 '+(n+(od?1:0))+'건</button></div>'
       :'<div class="mtg-bar"><span class="cap">초안 바뀜 없음 · 서버와 같음'+(MT.ordD&&!mtNoteOk("cc")?" · 대기 줄 순서는 이 기기에만":"")+'</span></div>';
+    h+=ccPubBar();
   }
   if(MT.fail&&MT.fail.length) h+=band("warn","<b>못 한 "+MT.fail.length+"명</b> · "+esc(MT.fail.map(function(f){ return f.nm+" "+f.why; }).join(" · ")),'<button class="btn sm" type="button" onclick="MT.fail=null;paint()">닫기</button>');
   if(MT.pick) h+=band("info","<b>"+esc(mtPickName())+"</b> · 놓을 칸을 누릅니다 · Esc 로 그만",'<button class="btn sm" type="button" onclick="mtPickOff()">그만</button>');
@@ -212,11 +214,11 @@ function mtAuto(){
     var pl=r.pref?String(r.pref).split(",").map(hm).filter(function(t){ return M.cf.rounds.indexOf(t)>=0; }):[]; if(!pl.length) pl=M.cf.rounds; pl=pl.slice().sort();
     for(var i=0;i<pl.length;i++) for(var j=0;j<M.tables.length;j++){ var k=pl[i]+":"+M.tables[j]; if(!used[k]){ used[k]=1; mtOvSet(r,k); n++; return; } }
   });
-  mtSave(); paint(); toast(n?"대기 줄 순서대로 "+n+"명을 고른 시간 안의 빈 칸에 놓았습니다 · 반영 전 초안":"고른 시간에 빈 칸이 없습니다");
+  mtSave(); paint(); toast(n?"대기 줄 순서대로 "+n+"명을 고른 시간 안의 빈 칸에 놓았습니다 · 저장 전 초안":"고른 시간에 빈 칸이 없습니다");
 }
 function mtUndoAsk(){
   var M=mtCcM(), n=M.chg.length+(mtOrdChanged()?1:0);
-  confirmBox({ t:"초안을 버릴까요?", who:"초안 바뀜 "+n+"건", sub:"서버에 반영된 칸 · 순서로 돌아갑니다 · 참가자에게 가는 것 없음", ok:"초안 버리기", danger:1,
+  confirmBox({ t:"초안을 버릴까요?", who:"초안 바뀜 "+n+"건", sub:"서버에 저장된 칸 · 순서로 돌아갑니다 · 참가자에게 가는 것 없음", ok:"초안 버리기", danger:1,
     run:function(){ return { ok:true }; }, done:function(){ MT.ov={}; MT.ord=[]; MT.ordD=0; mtSave(); paint(); toast("초안을 버렸습니다"); } });
 }
 function mtConfDrop(){ var M=mtCcM(); M.conf.forEach(function(e){ delete MT.ov[e]; }); mtSave(); paint(); toast("다른 곳에서 바뀐 "+M.conf.length+"명을 초안에서 뺐습니다"); }
@@ -225,21 +227,36 @@ function mtChgN(M){ var c={ add:0, mv:0, out:0 }; M.chg.forEach(function(x){ if(
 function mtApplyAsk(){
   var M=mtCcM(), cn=mtChgN(M), add=cn.add, mv=cn.mv, out=cn.out, od=mtOrdChanged();
   if(!M.chg.length&&!od) return;
-  confirmBox({ t:"초안 "+(M.chg.length+(od?1:0))+"건을 반영할까요?", who:"선정 "+add+"명 · 시간 바뀜 "+mv+"명 · 칸에서 뺌 "+out+"명", sub:"참가자 앱 알림 "+(add+mv)+"건(선정 · 시간 바뀜)"+(out?" · 칸에서 뺌 "+out+"명은 대기 줄로 · 안 보낸 선정 알림은 거둠":"")+(od?" · 대기 줄 순서 저장":""), ok:add+mv?"반영 · 알림 보내기":"반영",
-    run:function(){ return mtCcRun(M.chg.map(function(c){ return { e:c.e, to:c.to }; })).then(function(res){ return (od?mtOrdSave():Promise.resolve(null)).then(function(){ return res; }); }); },
+  confirmBox({ t:"초안 "+(M.chg.length+(od?1:0))+"건을 저장할까요?", who:"선정 "+add+"명 · 시간 바뀜 "+mv+"명 · 칸에서 뺌 "+out+"명", sub:"참가자 앱에는 알림 보내기 전까지 보이지 않음 · 알림 없음"+(od?" · 대기 줄 순서 저장":""), ok:"저장",
+    run:function(){ return mtCcRun(M.chg.map(function(c){ return { e:c.e, to:c.to }; }), 1).then(function(res){ return (od?mtOrdSave():Promise.resolve(null)).then(function(){ return res; }); }); },
     done:function(res){ MT.fail=res.fail.length?res.fail:null; paint(); reload(["cc","nb","mnc"]);
-      toast("반영했습니다 · "+res.done+"명"+(res.fail.length?" · 못 함 "+res.fail.length+"명":"")+(res.full?" · 정원 넘침 경고 "+res.full+"건":""),{ bad:res.fail.length?1:0 }); } });
+      toast("저장했습니다 · "+res.done+"명 · 알림 전"+(res.fail.length?" · 못 함 "+res.fail.length+"명":"")+(res.full?" · 정원 넘침 경고 "+res.full+"건":""),{ bad:res.fail.length?1:0 }); } });
+}
+/* 261017 저장 · 알림 분리(사용자 「저장과 알림은 분리가 맞다」) · 서버 pend = 저장했지만 알리기 전(앱이 보는 상태) · 칸 하나에 상태 띠 */
+function ccPubN(){ var c={ add:0, mv:0, out:0, n:0, re:0 }; ccRows().forEach(function(r){ var p=r.pend; if(!p) return; c.n++; if(p.st==="매칭") c.re++;
+  if(r.status==="매칭") { if(p.st==="매칭") c.mv++; else c.add++; } else if(p.st==="매칭") c.out++; }); return c; }
+function ccPubBar(){
+  var d=S.data.cc, pb=d&&d.pub||{}, c=ccPubN();
+  if(c.n) return '<div class="mtg-bar draft"><b>'+(c.re?"알림 다시 필요 "+c.re+"명":"저장됨 · 알림 전 "+c.n+"명")+'</b><span class="cap">선정 '+c.add+' · 시간 바뀜 '+c.mv+' · 뺌 '+c.out+(pb.savedAt?' · 저장 '+esc(String(pb.savedAt).slice(5,16).replace("-","/")):'')+'</span><span class="sp"></span><button class="btn sm pri" type="button" onclick="ccNotifyAsk()">알림 보내기 '+c.n+'명</button></div>';
+  return pb.notAt?'<div class="mtg-bar"><span class="cap">알림 보냄 · '+esc(String(pb.notAt).slice(5,16).replace("-","/"))+' · 알릴 사람 없음</span></div>':'';
+}
+function ccNotifyAsk(){
+  var c=ccPubN(); if(!c.n) return;
+  confirmBox({ t:"알림을 보낼까요?", who:"알릴 사람 "+c.n+"명 · 시간 바뀐 사람 "+c.mv+"명 · 뺀 사람 "+c.out+"명", sub:"선정 "+c.add+"명 · 시간 바뀜 "+c.mv+"명 = 앱에 공개 · 푸시 / 뺀 사람 = 앱에서 선정이 사라짐", ok:"알림 보내기",
+    run:function(){ return call("cchat_notify",{}); },
+    done:function(r){ paint(); reload(["cc","nb"]); toast("알림을 보냈습니다 · "+n0(r&&r.n)+"명"); } });
 }
 /* 서버에 차례로 · 빼기 먼저 · 자리 있는 칸부터 · 칸이 차서(3명) 물린 경우는 그 칸에서 나갈 사람 하나를 잠시 대기로 돌린 뒤 놓는다
  * 261017 한 칸 최대 3명 · 서버가 4명째를 seat 로 거절하면 「한 칸 최대 3명」으로 보인다 */
-function mtCcRun(items){
+function mtCcRun(items, draft){
   var st={}, at={}, cur={}, emp={}, nmOf={}, res={ ok:true, done:0, fail:[], full:0 };
   var put=function(k,e){ (at[k]=at[k]||[]).push(e); }, take=function(k,e){ if(at[k]) at[k]=at[k].filter(function(x){ return x!==e; }); };
   var room=function(k,e){ var a=at[k]||[]; return a.indexOf(e)>=0||a.length<CC_SEAT_MAX; };
   ccRows().forEach(function(r){ if(r.status==="취소") return; var e=jq(r.emp); st[e]=r.status; emp[e]=r.emp; nmOf[e]=r.name||r.emp; var k=mtSrvK(r); if(k){ put(k,e); cur[e]=k; } });
   var pend=items.filter(function(it){ return !!st[it.e]; }).sort(function(a,b){ return (a.to?1:0)-(b.to?1:0); });
   var one=function(e, to){ var ks=to?mtKp(to):null;
-    return (to?call("cchat_set",{ emp:emp[e], round:ks[0], table:ks[1], from:st[e] }):call("cchat_status",{ emp:emp[e], status:"대기", from:st[e] })).then(function(x){
+    var dq=draft?{ draft:"1" }:{};   /* 261017 저장(알림 전) */
+    return (to?call("cchat_set",Object.assign({ emp:emp[e], round:ks[0], table:ks[1], from:st[e] },dq)):call("cchat_status",Object.assign({ emp:emp[e], status:"대기", from:st[e] },dq))).then(function(x){
       if(x&&x.ok){ if(cur[e]) take(cur[e],e); if(to){ put(to,e); cur[e]=to; st[e]="매칭"; } else { delete cur[e]; st[e]="대기"; } if(x.warn==="full") res.full++; return true; }
       return x||{ ok:false, reason:"network" }; }); };
   var fail=function(it, x){ res.fail.push({ e:it.e, nm:nmOf[it.e]||it.e, why:x&&x.reason==="seat"?CC_SEAT_TX+" · 그 칸이 찼음":x&&x.reason==="state"?"이미 "+(x.cur||"다른 상태"):why(x) }); };
