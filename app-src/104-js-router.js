@@ -1,6 +1,6 @@
 /* ════════════════ 카운터 ════════════════ */
 var tick = 0;
-setInterval(function () { tick++; if (App.current === "home") App.render(); }, 4000);
+setInterval(function () { tick++; if (App.current === "home" && !PTR_DOWN && Date.now() - PTR_T > 600) App.render(); }, 4000);   /* v7.65 누르는 중 · 손을 뗀 뒤 0.6초 안(클릭이 오기 전)은 건너뜀 · 단추가 새로 그려져 누름이 사라지던 것(홈 접기 단추 연타 시험) · 다음 4초에 그린다 */
 /* 백엔드 연결 · GAS_URL 이 채워져 있으면 서버 모드로 전환하고 월 집계를 주기적으로 받는다 */
 BE.on = !!GAS_URL;
 if (BE.on) pollNext(beJit());   /* v4.57 첫 sync 0~5초 뒤 · 이후 pollNext 가 30초씩(실패 시 늘림) · stats 60초 폴링은 없앴다(앱은 stats 에서 월 숫자만 쓰고 sync 가 같은 값을 준다 · 요청 3분의 1 절감) */
@@ -184,6 +184,7 @@ var App = {
     else if (!isBack && this.PARENT[v] && prev && prev !== v && SIGNAGE.indexOf(prev) < 0 && !this.isAnc(v, prev)) {
       if (this.PARENT[v] === prev) delete this.from[v]; else this.from[v] = prev;
     }
+    if (v === "home" && this.current !== "home" && typeof STFOLD !== "undefined") STFOLD.open = false;   /* v7.65 홈 스탬프 접기 단추 = 홈에 새로 오면 닫힘(사용자 261017 「닫힌 게 기본값」) */
     this.current = v;
     if (typeof fgTick === "function") fgTick(false);   /* v7.61 A1 화면 그룹이 바뀌면 지난 구간을 닫는다 */
     detHist(v, isBack, dPrev);   /* v5.69 시트에서 시트로 = 앞 내용을 기억(뒤로 = 앞 내용) */
@@ -286,6 +287,7 @@ var App = {
     /* v4.08 아래 고정 버튼(axs-fix)이 있는 화면 = 결정·제출 화면 · 하단 메뉴를 숨기고 버튼 높이만큼 비운다 */
     var fixB = !!el("view").querySelector(".axs-fix.ax-bottom");
     if (fixB) { el("view").dataset.fix = "1"; nav.style.display = "none"; } else delete el("view").dataset.fix;
+    if (ae && ae.id === "stFoldBtn" && !aeId && el("stFoldBtn")) { try { el("stFoldBtn").focus({ preventScroll: true }); } catch (e) {} }   /* v7.65 홈 4초 다시 그리기 · 접기 단추 초점 유지(키보드 · 읽기 프로그램) */
     if (aeId) { var aeN = el(aeId); if (aeN) { try { aeN.focus({ preventScroll: true }); if (aeSel) aeN.setSelectionRange(aeSel[0], aeSel[1]); } catch (e) {} } }   /* 다시 그려도 입력 중인 칸과 커서를 되돌린다 */
     if (v === "scan_q") { if (SCQ.tab === "scan") setTimeout(scanQStart, 80); else if (!QRM.timer) qrMineOn(); }   /* v5.23 카메라는 스캔 탭에서만 · 내 QR 탭은 6초 동기화 */
     if (v === "stair" && STR.mode === "start") stairTickOn();
@@ -343,7 +345,7 @@ window.addEventListener("axf-store", function () {
   App.render();
 });
 /* v4.25 입력 중 다시 그리기 보류 · #view 안 글 입력칸(체크·라디오·범위 막대 제외)에 포커스가 있으면 true */
-var RENDER_HELD = false, PTR_DOWN = false;
+var RENDER_HELD = false, PTR_DOWN = false, PTR_T = 0;   /* v7.65 PTR_T = 마지막 누름 · 뗌 시각(홈 4초 다시 그리기가 피한다) */
 function typingNow() {
   var a = document.activeElement;
   return !!(a && /^(INPUT|TEXTAREA)$/.test(a.tagName) && !/^(checkbox|radio|range|button|submit)$/i.test(a.type || "") && el("view") && el("view").contains(a));
@@ -358,6 +360,7 @@ function renderHeldFlush() {
 document.addEventListener("focusout", function () { if (RENDER_HELD) setTimeout(renderHeldFlush, 350); }, true);
 document.addEventListener("pointerdown", function () { PTR_DOWN = true; }, true);
 ["pointerup", "pointercancel"].forEach(function (t) { document.addEventListener(t, function () { PTR_DOWN = false; }, true); });
+["pointerdown", "pointerup", "pointercancel"].forEach(function (t) { document.addEventListener(t, function () { PTR_T = Date.now(); }, true); });   /* v7.65 홈 4초 다시 그리기가 피하는 시각 */
 
 /* v4.06 스캔 링크(#s= · #q=) · 히스토리 트랩(replaceState)보다 먼저 꺼내 주소에서 지운다 · 처리는 로그인 뒤 scanLinkRun (3단계 절) */
 var SCANLINK_KEY = "axf_pending_scan", SCANLINK = { mem: null };

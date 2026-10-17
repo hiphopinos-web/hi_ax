@@ -23,7 +23,7 @@ var Views = {
       billboardHtml() +
       tourHeroHtml() +
       betaBannerHtml() +
-      '<section class="axs-sec axs-railgo" onclick="if (!event.target.closest(\'.mk, .sect span\')) App.tab(\'exp\')">' + myCouponHtml() + "</section>" +
+      '<section class="axs-sec axs-railgo" onclick="if (!event.target.closest(\'.mk, .sect span\')) App.tab(\'exp\')">' + myCouponHtml() + "</section>" + stFoldHtml() +   /* v7.65 레일 아래 접기 단추(stFoldHtml) · 레일 칸(누르면 스탬프 탭 · 누를 때 어두워짐) 밖 형제 · 단추 · 펼친 판을 눌러도 레일 칸이 어두워지거나 스탬프 탭으로 가지 않는다 */
       cnHomeHtml() +
       "</div>";
   },
@@ -64,7 +64,7 @@ var Views = {
     return '<div class="ax-stack axs-stpv">' + testBar +
       '<section class="axs-sec">' + railHtml(n, glow, null, false) + "</section>" +
       '<section class="axs-sec"><div class="sect"><b>스탬프 모으는 방법</b><span>' + STAMPS.length + "가지 중 " + STAMP_DENOM + "개까지</span></div>" +   /* v7.57 (사용자 261017 S5 · S6) 6개를 다 모은 뒤 바뀌던 머리 문구 지움(「6 / 6」과 같은 말) · 오른쪽 = 늘 「8가지 중 6개까지」 */
-      stpBoardHtml(st, full) +   /* 261013 오후 (사용자 확정) 하루 흐름 4단계 · 단계 제목 아래 줄 · 사전등록 체크인 줄은 1단계 아래(대상자만) */
+      stpBoardHtml(st, full) +   /* v7.65 홈 접기 단추(stpBoardMine)도 같은 함수 · 같은 값 · 261013 오후 (사용자 확정) 하루 흐름 4단계 · 단계 제목 아래 줄 · 사전등록 체크인 줄은 1단계 아래(대상자만) */
       scanQNote() + '<button type="button" class="lnk sub axs-stfgo" onclick="staffStampOpen()">' + lnkChev("담당자 적립") + "</button></section></div>";   /* v6.83 (접근성 B-3 · B-6) p → button · 눌림 높이 44 · 키보드 */   /* v4.91 1F 타자왕(스탬프 아님)은 프로그램 탭 「상시 운영」로 옮겼다 */
   },
   /* v4.84 옛 「현장에서 / 앱에서」 체험 화면은 지웠다 · 아래 exp_g(체험 안내) · 스캔 · 결과 · 계단은 그대로 */

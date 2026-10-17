@@ -786,6 +786,18 @@
   #view[data-v="home"] .axs-railgo .sect span[role="button"]::after { content: ""; position: absolute; inset: -6px -8px; }   /* v6.83 (접근성 B-3) 「바로가기」 눌림 32 → 44 · 투명 */
   #view[data-v="home"] .axs-railgo .rail { padding: var(--ax-space-12) var(--ax-space-20); }
   #view[data-v="home"] .axs-railgo .axs-pzgo { min-height: 44px; margin-top: var(--ax-space-8); padding-top: var(--ax-space-4); padding-bottom: var(--ax-space-4); }
+  /* v7.65 (사용자 261017) 홈 스탬프 아래 접기 단추 「스탬프 모으는 방법」 · 펼치면 스탬프 탭과 같은 판(stpBoardMine)
+     높이 = grid-template-rows 0fr → 1fr · 안쪽 = 흐려짐 + 떠오름 6px · 열림 0.3초 이동 곡선 · 닫힘 0.18초 닫힘 곡선(--ax-motion-* · mobile-popup-motion) · 셰브론 회전 같은 시간 · 동작 줄이기 = 즉시 */
+  .axs-sfd { display: flex; flex-direction: column; margin-top: calc(var(--ax-space-20) * -1); }   /* 레일 칸 밖 형제 · 홈 칸 사이 24 → 레일과 4(옛 레일 칸 안 간격) */
+  .axs-sfdb { display: flex; align-items: center; justify-content: center; gap: var(--ax-space-4); width: 100%; min-height: var(--ax-touch-size); padding: 0 var(--ax-space-16); border: 0; background: transparent; color: var(--ax-color-body); font: var(--ax-type-t6-strong); cursor: pointer; }
+  .axs-sfdb .axs-chev { flex: none; width: 18px; height: 18px; color: var(--ax-color-muted); transform: rotate(90deg); transition: transform var(--ax-motion-out) var(--ax-motion-ease-exit); }
+  .axs-sfd.open .axs-sfdb .axs-chev { transform: rotate(-90deg); transition: transform var(--ax-motion-in) var(--ax-motion-ease); }
+  .axs-sfdp { display: grid; grid-template-rows: 0fr; visibility: hidden; transition: grid-template-rows var(--ax-motion-out) var(--ax-motion-ease-exit), visibility 0s linear var(--ax-motion-out); }
+  .axs-sfd.open .axs-sfdp { grid-template-rows: 1fr; visibility: visible; transition: grid-template-rows var(--ax-motion-in) var(--ax-motion-ease), visibility 0s; }
+  .axs-sfdi { min-height: 0; overflow: hidden; opacity: 0; transform: translateY(calc(var(--ax-motion-rise) * -1)); transition: opacity var(--ax-motion-out) var(--ax-motion-ease-fade), transform var(--ax-motion-out) var(--ax-motion-ease-exit); }
+  .axs-sfd.open .axs-sfdi { opacity: 1; transform: none; transition: opacity var(--ax-motion-in) var(--ax-motion-ease-fade), transform var(--ax-motion-in) var(--ax-motion-ease); }
+  .axs-sfdc { padding: var(--ax-space-4) 0 var(--ax-space-8); }
+  @media (prefers-reduced-motion: reduce) { .axs-sfdb .axs-chev, .axs-sfd.open .axs-sfdb .axs-chev, .axs-sfdp, .axs-sfd.open .axs-sfdp, .axs-sfdi, .axs-sfd.open .axs-sfdi { transition: none; } }
   /* 261008 지금 현장 스태프 입력 시트 · 저장됨 · 재는 중 띠 · 스캔 화면 「줄」 */
   .cn-now { margin: 0; font: var(--ax-type-t6); color: var(--ax-color-body); }
   .cn-now b { font-weight: 600; color: var(--ax-color-ink); }

@@ -14,7 +14,7 @@
     8: 'AX LAB 간판', 9: 'DAP · 데이터 분석 프로젝트', 10: 'History · 2024~2025 우수 과제', 11: 'Project · 2026 DAP 프로젝트 1', 12: 'Project · 2026 DAP 프로젝트 2', 13: '내 업무 고민도 DAP가 될 수 있어요 · 아이디어 QR',
     14: 'AX in Action · 현장의 AX', 15: '현장 인터뷰 영상 TV 자리', 16: 'Sales AX · 강북이', 17: 'AI 컨설팅 도우미', 18: 'Claims AX · 하이핑거',
     19: '(삭제 · AX LOUNGE 간판)', 20: '(삭제 · AX Lounge 판)', 21: '(삭제 · 상담 3단계)',
-    22: 'AX PLAY 간판', 23: 'HiDI', 24: 'HiDI-Q · Introduce', 25: 'HiDI-Q · Tips', 26: 'HiDI-Q · Tips 이어서', 27: 'HiDI-Q · Feedback',
+    22: 'AX PLAY 간판', 23: 'HiDI', 24: 'HiDI Q · Introduce', 25: 'HiDI Q · Tips', 26: 'HiDI Q · Tips 이어서', 27: 'HiDI Q · Feedback',
     28: 'Hi-Helper', 29: 'Hi-Helper · Introduce', 30: 'Hi-Helper · Tips', 31: 'Hi-Helper · Check Point', 32: 'Hi-Helper · Feedback',
     33: 'EVENT 간판', 34: 'AX Festival 2026 (왼쪽)', 35: 'AX Festival 2026 (오른쪽)', 36: 'AI 포토부스', 37: '룰렛 이벤트', 38: '룰렛 휠 자리', 39: 'AX 타자왕',
     40: '사전등록자 체크인존 현수막', 41: '출입구 안내 배너', 42: '층별 안내 배너', 43: '키노트 안내 배너', 44: '세션 강의장 안내 배너', 45: '층별 안내 배너', 46: 'ME to WE 포스터', 47: '사전등록자 체크인 배너', 48: 'AX 타자왕 배너'
@@ -73,7 +73,7 @@
     { id: 'action', name: 'AX in Action', fl: '1F', signPg: 0, where: '정문으로 들어와 오른쪽 · 유리벽 앞 첫 줄 · 간판 없음',
       rows: [{ a: [24.77, 0.55], r: [-1, 0], n: [0, 1], pages: [14, 15, 16, 17, 18], tv: [1] }] },
     { id: 'play', name: 'AX PLAY', fl: '1F', signPg: 22, where: '정문으로 들어와 왼쪽 · 유리벽 앞 두 줄(HiDI Q · Hi-Helper)',
-      rows: [{ a: [14.74, 0.55], r: [-1, 0], n: [0, 1], pages: [23, 24, 25, 26, 27], tv: [0], desk: 4, sign: 0, label: 'HiDI-Q' },
+      rows: [{ a: [14.74, 0.55], r: [-1, 0], n: [0, 1], pages: [23, 24, 25, 26, 27], tv: [0], desk: 4, sign: 0, label: 'HiDI Q' },
              { a: [7.51, 0.55], r: [-1, 0], n: [0, 1], pages: [28, 29, 30, 31, 32], tv: [0], desk: 4, label: 'Hi-Helper' }] },
     { id: 'event', name: 'EVENT', fl: '1F', signPg: 33, where: '정문으로 들어와 왼쪽 끝 벽 · 타자왕 · 포토부스 · 룰렛 순', extra: [48],
       rows: [{ a: [0.55, 1.97], r: [0, 1], n: [1, 0], pages: [39], desk: 1, label: 'AX 타자왕' },   /* 261008 수정본 9쪽 · 앞 인포메이션 데스크 1(노트북 자리) */

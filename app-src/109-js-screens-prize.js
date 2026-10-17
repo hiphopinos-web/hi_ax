@@ -572,6 +572,7 @@ function stpCellHtml(s, i, got, half) {
 }
 /* 261013 오후 (사용자 확정) 스탬프 탭 판 = 참여자의 하루 흐름 4단계(STAMP_STAGES) · 단계 제목 「n단계 · 이름」 + 옆 짧은 말 · 줄 번호 = STAMPS 순서 1~8 · 옛 서버(stv 1)는 한 목록 그대로 */
 /* 261014 클로즈 베타(betaFree) = 마무리(설문) 단계 옆 말 「14:30부터」 → 「언제든」 */
+function stpBoardMine() { return stpBoardHtml(S.get("stamps", []), stampCount() >= STAMP_DENOM); }   /* v7.65 스탬프 탭 · 홈 접기 단추가 같이 쓴다(내 스탬프 · 6개면 남은 줄 흐리게) */
 function stpBoardHtml(st, full) {
   if (!stampV2()) return '<div class="axs-stps">' + STAMPS.map(function (s, i) { return stpRowHtml(s, i, st, full); }).join("") + "</div>";
   return STAMP_STAGES.map(function (g, n) {
