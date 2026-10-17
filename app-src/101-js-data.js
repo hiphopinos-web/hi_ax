@@ -140,6 +140,7 @@ var STAMP_ICONS = {
 var STAMP_DENOM = 6;            /* 개수 상한 · 화면 분모 · 레일 헤더 · 완료 팝 */
 var RAFFLE_MAX = 3;             /* 응모권 최대 */
 var REWARD_CAP = STAMP_DENOM;   /* 보상 계산 상한 = 개수 상한 */
+var PRE_MAX = 4;                /* v7.57 행사 전(10/26 전) 적립 상한 · 서버 PRE_MAX 와 같은 값(짝) · 스탬프 탭 「다음 보상 한 줄」 「행사 전 4개 완료」 */
 /* 서버가 준 stamps 배열에는 정의 밖 id(구 p6·p8, 계단 p9 등)가 남아 있을 수 있다.
    stampGot = 받은 종류 수(기록 그대로 · 최대 8) · stampCount = 화면·보상의 개수(최대 6) · 표시·보상 계산은 전부 stampCount 로 센다. */
 /* v5.68 (사용자 확정 261005) 프로그램 참여 = 2개 · 서버 stampCnt_ 와 같은 셈 · p3 = 2개 · p3h(17F 입장이나 끝 한쪽만) = 1개 · 둘 다면 2개

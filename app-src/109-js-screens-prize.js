@@ -384,7 +384,7 @@ function fcfsRailTxt() {
   var f = fcfsMy(), st = f ? f.st : "";
   if (st === "void") return null;
   if (st === "done") return "받음";
-  if (f && f.st === "got" && f.rk > 0) return f.rk + "번" + (fcfsLate() ? " · 발송" : "");   /* v7.47 (레드팀 B3) 17:00 지급 마감 뒤 미수령 = 「N번 · 발송」 */   /* 261016 (사용자) 달성순 · 행운권 자리 옆 「선착순 N번」 · 남은 수 · 마감 시각보다 먼저(번호가 있으면 받을 사람) */
+  if (f && f.st === "got" && f.rk > 0) return f.rk + "번";   /* v7.57 (사용자 261017 S4) 17:00 지급 마감 뒤 미수령 = 칩 「N번」 + 다음 보상 한 줄 「행사 뒤 발송 · 17:00 지급 마감」(옛 v7.47 「N번 · 발송」) */   /* 261016 (사용자) 달성순 · 행운권 자리 옆 「선착순 N번」 · 남은 수 · 마감 시각보다 먼저(번호가 있으면 받을 사람) */
   if (st === "full" || st === "out" || st === "closed" || x.left === 0 || fcfsLate()) return "마감";   /* 261016 201번째부터(full) = 「선착순 마감」만 */   /* v5.98 ready = 「남은 N」 주황(fcfsRailHtml) · 「수령 자격」 없음 */
   return x.left > 0 ? "남은 " + x.left : "";   /* v5.97 (사용자 261006 밤 「210 / 210 헷갈림」) 남은 수만 */
 }
@@ -413,7 +413,7 @@ function fcfsGotOpen(again) {
     go: "sheetClose(true); qrPanelOpen('mine')", goLbl: "내 QR 보여주기", keep: "닫기", keepWeak: true, keepLast: true });   /* 261007 그날 시작 전 6개 = 「선착순 참여상 · 10:30부터 받을 수 있어요」 */
 }
 /* 홈 나의 일정 맨 위 한 줄 · 수령 전(got)만 · 받음 · 취소 · 마감이면 없음 · [정렬 분, onclick, 뱃지, 제목, 보조 줄, 뱃지 상태] */
-function fcfsGotRow() { var f = fcfsMy(), rk = f && f.st === "got" && f.rk > 0 ? f.rk : 0, ln = fcfsLeftN(); return fcfsReady(f) ? [-3, "fcfsGotOpen(true)", "참여상", "선착순 참여상", rk ? rk + "번 · " + fcfsAt("1F 주차장 체크인존") : fcfsAt("1F 주차장 체크인존") + (ln ? " · 남은 " + ln : ""), "act"] : null; }   /* 261016 「선착순 참여상 · N번 · 1F 주차장 체크인존」 */   /* v5.98 ready 만 · 소진(out)이면 사라진다 */
+function fcfsGotRow() { var f = fcfsMy(), rk = f && f.st === "got" && f.rk > 0 ? f.rk : 0, ln = fcfsLeftN(); return fcfsReady(f) ? [-3, "fcfsGotOpen(true)", "참여상", "선착순 참여상", rk ? rk + "번 · " + (fcfsLate() ? "행사 뒤 발송" : fcfsAt("1F 주차장 체크인존")) : fcfsAt("1F 주차장 체크인존") + (ln ? " · 남은 " + ln : ""), "act"] : null; }   /* v7.57 17:00 지급 마감 뒤 = 「N번 · 행사 뒤 발송」(홈 할 일 카드) */   /* 261016 「선착순 참여상 · N번 · 1F 주차장 체크인존」 */   /* v5.98 ready 만 · 소진(out)이면 사라진다 */
 /* 261017 (사용자 확정 「럭키드로우에 대한 푸시 · 당첨자 안내 모두 걷어 내」) 럭키드로우 당첨 시트 · 본인 확인(draw_ack) · 홈 당첨 줄 · 현장 부재로 다시 추첨 표시 · 7등 당첨 안내 걷음 · 되살리기 = 루트 「정리 기록.md」 */
 /* 261014 선착순 참여상 요약 팝업도 경품 시트의 선착순 구역으로 바로(옛 받으려면 상자 + 경품 한 줄 + 닫기 · 자격이 없어졌을 때 수령 안내 시트(fcfsGotOpen)의 되돌림 길) */
 function fcfsInfoOpen() { prizeGo("fin"); }
@@ -445,6 +445,36 @@ function stampGoalText(n) {
   if (f && (f.st === "out" || f.st === "full" || f.st === "closed")) return STAMP_DENOM + "개 모두 모았어요 · 선착순 참여상은 마감";
   return STAMP_DENOM + "개 모두 모았어요 · 행운권 " + RAFFLE_MAX + "장";
 }
+/* ═══ v7.57 (사용자 261017 S1 · S3 · S4 · R1 · H5 · 시안 `디자인 시안/스탬프탭_다음보상_261016/A.html`) 「다음 보상 한 줄」 = 레일 라벨 바로 아래 · 그림(다음 칸과 같은 그림 · 무채색) + 굵은 줄(숫자만 주황) + 옅은 줄
+   스탬프 탭 = 굵은 줄 + 옅은 줄 · 홈 = 굵은 줄만(같은 문장 · 선착순 번호는 홈 할 일 카드 한 곳) · 6개 캡션(「6개 모두 모았어요」 · fcfsCapWhere)을 대신한다
+   행운권 발급 마감(서버 sync my.rafclosed · 17:00 · 클로즈 베타 없음) 뒤 6개 전 = 「행운권 17:00 발급 마감」 */
+function rafClosed() { return S.get("rafc", 0) === 1 && !(typeof betaFree === "function" && betaFree()); }
+function stampNextInfo(n) {
+  n = Math.min(STAMP_DENOM, Math.max(0, n || 0));
+  var pre = typeof evPreDay === "function" && evPreDay();
+  if (pre && n < PRE_MAX) return n < 3 ? { ico: "wheel", num: (3 - n) + "개", main: " 더 모으면 룰렛 1회", sub: "행사 전 " + PRE_MAX + "개까지" }
+    : { ico: "ticket", num: "1개", main: " 더 모으면 행운권 " + raffleTickets(n + 1) + "장", sub: "행사 전 " + PRE_MAX + "개까지" };
+  if (pre && n === PRE_MAX) return { ico: "time", num: "", main: "행사 전 " + PRE_MAX + "개 완료", sub: "나머지는 10/26 현장에서" };
+  if (n < STAMP_DENOM) {
+    if (rafClosed()) return { ico: "ticket", num: "", main: "행운권 17:00 발급 마감", sub: "" };
+    if (n < 3 && !S.get("roulette_out", false)) return { ico: "wheel", num: (3 - n) + "개", main: " 더 모으면 룰렛 1회", sub: "" };
+    return { ico: "ticket", num: (n < 3 ? 4 - n : 1) + "개", main: " 더 모으면 행운권 " + raffleTickets(Math.max(4, n + 1)) + "장", sub: n === STAMP_DENOM - 1 && fcfsOpen() ? "선착순 참여상도 함께" : "" };   /* 룰렛 소진 · 마감이면 다음 = 행운권 1장 */
+  }
+  var f = fcfsMy(), x = fxGet(), cut = String((x && x.cut) || "17:00");
+  if (f && (f.st === "got" || f.st === "ready")) {
+    if (fcfsLate()) return { ico: "box", num: "", main: "행사 뒤 발송", sub: cut + " 지급 마감" };
+    var st = fcfsStartHm();
+    return { ico: "qr", num: "", main: "1F 주차장 체크인존", sub: (st ? st + "~" + cut : cut + "까지") + " · 내 QR 제시" };
+  }
+  return { ico: "ticket", num: "", main: "17F Closing Speech 때|행운권 추첨", sub: lkCond() ? "16:40부터 17F 입구 QR 체크인" : "" };
+}
+function stampNextHtml(n, home) {   /* 굵은 줄 「|」 = 줄을 넘길 때 나누는 구 경계(한 줄에 들어가면 한 줄) */
+  var g = stampNextInfo(n);
+  if (home && (g.ico === "qr" || g.ico === "box")) return "";   /* v7.57 (사용자 확정 261017 H5 「나」) 6개 · 선착순 받기 전 = 홈 한 줄 없음 · 번호와 장소는 홈 맨 위 할 일 카드 한 곳 */
+  var ic = g.ico === "wheel" || g.ico === "ticket" ? RAIL_ICO[g.ico] : g.ico === "time" ? App.ICONS.guide_time : PZ_ICO[g.ico];
+  return '<div class="axs-rnx' + (home ? " home" : "") + '"><span class="ic" aria-hidden="true">' + ic + '</span><div class="tx"><p class="l1">' +
+    (g.num ? '<b class="num">' + g.num + "</b>" : "") + g.main.split("|").map(function (t) { return '<span class="axs-nwr">' + esc(t) + "</span>"; }).join(" ") + "</p>" + (!home && g.sub ? '<p class="l2">' + segHtml(esc(g.sub)) + "</p>" : "") + "</div></div>";
+}
 
 /* ── v4.84 스탬프 탭(exp) 행 · 번호 · 이름 · 수단 칩 + 한 줄 · 오른쪽 행동 하나 · AX 퀴즈 · 미니 게임은 종목 타일 ── */
 function expStamp(id) {
@@ -473,13 +503,13 @@ function stpLineHtml(mode, meta) {
 function stpMeta(s, got) {
   if (s.id === "lg") return "";
   if (got && (s.id === "qz" || s.id === "p4" || s.id === "p3")) return "스탬프 받음";   /* v5.16 받은 뒤 = 상태 한 마디 + 오른쪽 「다시 하기」 · 261013 오후 프로그램 참여(묶음 2개)도 */
-  if (s.id === "qz") return QZ_NEED <= 1 ? qzLenTxt() : QZ_NEED + "종 완주 · " + Math.min(QZ_NEED, qzDone()) + " / " + QZ_NEED;
-  if (s.id === "p4") return (stampV2() ? "3종 완주 · " : "서로 다른 3종목 · ") + Math.min(MG_NEED, mgDone()) + " / " + MG_NEED;
-  if (s.id === "p2") return "1F · 체험 2종";   /* 이름(HiDI-Q · Hi-Helper)은 구역 줄 · 체험 안내 화면에 */
-  if (s.id === "p5") return got ? (ideaP5cc() ? "커피챗 신청으로 받음" : "1분 · AX LAB QR로도") : "아이디어 한 줄 쓰기 또는 커피챗 신청";   /* v7.39 (사용자 261016 계획서 0-2-3) 출처를 판에서 · 앱 · 부스로 받았으면 지금 그대로 */
-  if (s.id === "p3") return progUnits() === 1 ? "2개 중 1개 · 하나 더" : "";   /* v7.39 「최대 2개」 = 아래 목록 끝 줄 「합쳐 2개까지」 */   /* v5.68 17F 입장이나 끝 한쪽만 받은 상태 · 261013 오후 묶음(아래 세 줄 목록 stpProgListHtml) · 261013 밤 (사용자 확정) 활동마다 개수는 목록에 · 묶음 최대 2 한 줄 */
-  if (s.id === "st") { var sst = stairState(); return sst.leg ? "진행 중 · " + sst.leg.fl + "F 시작" : stairLine(sst); }
-  if (s.id === "sv") return stampV2() ? "1~2분" : SURVEY.open + "부터 · 1~2분";   /* 261013 오후 14:30 은 4단계 제목에 */
+  if (s.id === "qz") return QZ_NEED <= 1 ? "한 판 · 약 2분" : QZ_NEED + "종 완주 · " + Math.min(QZ_NEED, qzDone()) + " / " + QZ_NEED;
+  if (s.id === "p4") return stampV2() ? "세 게임 한 판씩" : "서로 다른 3종목 · " + Math.min(MG_NEED, mgDone()) + " / " + MG_NEED;   /* v7.57 (사용자 261017 S6) 진행은 아래 타일(완료)이 보여 준다 */
+  if (s.id === "p2") return "1F · 둘 중 하나 체험";   /* v7.57 S6 · 조건 = HiDI-Q 또는 Hi-Helper 하나(STAMP_P2.desc) */   /* 이름(HiDI-Q · Hi-Helper)은 구역 줄 · 체험 안내 화면에 */
+  if (s.id === "p5") return got ? (ideaP5cc() ? "커피챗 신청으로 받음" : "1분 · AX LAB QR로도") : "한 줄 쓰기 또는 커피챗 신청";   /* v7.57 S6 제목 반복 덜기 */   /* v7.39 (사용자 261016 계획서 0-2-3) 출처를 판에서 · 앱 · 부스로 받았으면 지금 그대로 */
+  if (s.id === "p3") return progUnits() === 1 ? "2개 중 1개 · 하나 더" : "합쳐 2개까지";   /* v7.57 S6 목록 끝 줄을 위로 */   /* v7.39 「최대 2개」 = 아래 목록 끝 줄 「합쳐 2개까지」 */   /* v5.68 17F 입장이나 끝 한쪽만 받은 상태 · 261013 오후 묶음(아래 세 줄 목록 stpProgListHtml) · 261013 밤 (사용자 확정) 활동마다 개수는 목록에 · 묶음 최대 2 한 줄 */
+  if (s.id === "st") { var sst = stairState(), sl = stairLine(sst); return sst.leg ? "진행 중 · " + sst.leg.fl + "F 시작" : /한 개 층 이상$/.test(sl) ? "방화문 QR · 출발층과 도착층" : sl; }   /* v7.57 S6 할 일(두 번 찍기)이 보이게 · 누적 · 이동 문구는 그대로 */
+  if (s.id === "sv") return stampV2() ? "약 2분" : SURVEY.open + "부터 · 약 2분";   /* v7.57 S6 퀴즈와 같은 형식 */   /* 261013 오후 14:30 은 4단계 제목에 */
   return s.where || "";
 }
 /* 오른쪽 행동 [글, onclick] · onclick 이 없으면 글만(완료 · 열리는 시각) */
@@ -504,8 +534,8 @@ function stpProgListHtml() {
   var c = S.get("cchat", null), r = typeof loungeMine === "function" ? loungeMine() : null, tm = function (t) { return ' <span class="axs-nwr">(' + esc(t) + ")</span>"; };
   var st0 = S.get("stamps", []), ten = (typeof tenMine === "function" && tenMine()) || st0.indexOf("p10") >= 0 || st0.indexOf("p10h") >= 0;   /* 261016 (사용자) 10F 실습 = 사전 신청자(10F 명단 · tenMine)에게만 · 받은 p10 · p10h */
   var rows = ["17F 오후 강연 시작 · 종료 출석체크 시 각 1개"].concat(ten ? ["10F 실습 시작 · 종료 출석체크 시 각 1개"] : [])
-    .concat(r || st0.indexOf("ln") >= 0 ? ["1F AX 라운지 참석 2" + (r && r.status === "approved" && r.slot ? tm(resvRng(r)) : "")] : [])
-    .concat(["18F 커피챗 상담 1" + (c && c.status === "matched" && c.round && !S.get("cchat_att", false) ? tm(c.round + " 선정") : ""), "합쳐 2개까지"]);
+    .concat(r || st0.indexOf("ln") >= 0 ? ["1F AX 라운지 참석" + (r && r.status === "approved" && r.slot ? tm(resvRng(r)) : "")] : [])
+    .concat(["18F 커피챗 참석" + (c && c.status === "matched" && c.round && !S.get("cchat_att", false) ? tm(c.round + " 선정") : "")]);   /* v7.57 (사용자 261017 S6) 개수 지움(라운지 = 「AX 라운지」 이름 규칙 261007 「상담 뺌」 그대로) · 「합쳐 2개까지」는 줄 설명(stpMeta p3)으로 올림 · 17F · 10F 줄은 S2 그대로 */
   return '<ul class="axs-stpl">' + rows.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
 }
 function stpRowHtml(s, i, st, full) {

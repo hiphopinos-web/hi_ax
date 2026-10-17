@@ -277,7 +277,7 @@ function spNext() {
   /* v4.44 (사용자 260925 · 레드팀 토론) 모든 개수에 다음 보상 한 줄 · 1 · 2개째 = 룰렛까지 남은 수(새 팝업 없음) · 4개째부터 = 무엇을 받는지 그대로
      v4.58 6개를 넘긴 적립(7·8번째)은 개수 · 보상이 그대로라 「6개 모두 모았어요」 */
   var hint = stampGot() > STAMP_DENOM ? STAMP_DENOM + "개 모두 모았어요" : n === 1 || n === 2 ? "룰렛까지 " + (3 - n) + "개" : n === 3 ? "룰렛 1회 열림" :
-    n >= 4 ? "행운권 " + raffleTickets(n) + "장 · 번호 발급" : "";
+    n >= 4 ? (rafClosed() && raffleNums().length < raffleTickets(n) ? "행운권 17:00 발급 마감" : "행운권 " + raffleTickets(n) + "장 · 번호 발급") : "";   /* v7.57 (사용자 261017 R1) 마감 뒤 새 행운권 없음 */
   var fr = el("frame").getBoundingClientRect(), fw = Math.min(fr.width || innerWidth, innerWidth);
   var S0 = Math.round(Math.min(320, fw * 0.6)), cx = Math.round(fr.width ? fr.left + fr.width / 2 : innerWidth / 2), cy = Math.round(innerHeight * 0.4);
   var d = document.createElement("div");
@@ -375,6 +375,7 @@ function spFinish(cur) {
     if (b) { b.classList.remove("sp-dot"); void b.offsetWidth; b.classList.add("sp-dot"); setTimeout(function () { b.classList.remove("sp-dot"); }, 1000); }
   }
   if (SPOP.cur === cur) SPOP.cur = null;
+  if (!SPOP.q.length && !SPOP.cur && !cur.op && cur.sd && cur.sd.id !== "lg" && !el("lgx") && typeof a2sWant === "function") a2sWant();   /* v7.57 바로가기 설치 시트 1회차 = 스탬프 받음 팝이 닫힌 뒤(최초 로그인 장면 도장 제외 · 이어지는 행운권 상자 등 안내가 다 끝난 뒤) */
   if (SPOP.q.length && !SPOP.cur) setTimeout(spNext, 150);
   else if (NOTICE.q.length) { clearTimeout(NOTICE.t); NOTICE.t = setTimeout(noticePump, 250); }   /* v3.53 팝 → 팝업 */
 }
@@ -448,9 +449,9 @@ function railHtml(n, glow, dispN, home) {
     '<div class="hd"><span class="nm">스탬프 보상</span><span class="cnt"><span id="ppCnt">' + shown + "</span><small> / " + STAMP_DENOM + "</small></span></div>" +
     '<div class="rb"><i style="width:' + railPos(n).toFixed(1) + '%"></i>' + mk + "</div>" +
     '<div class="lbls' + (fx6 ? " fx6" : "") + '">' + lb + fx6 + "</div>" +
-    (out0 ? '<p class="cap">' + (roulCut() ? "룰렛 " + roulCutHm() + " 마감" : "룰렛 소진") + "</p>" : dispN >= STAMP_DENOM ? '<p class="cap">' + segHtml(STAMP_DENOM + "개 모두 모았어요" + (home ? fcfsCapTxt() : fcfsCapWhere())) + "</p>" : "") +   /* v6.69 두 줄이면 「 · 」 자리에서 */
-    (home ? fcfsLeftHtml(dispN) : "") +   /* v5.90 선착순 참여상 남은 수량 한 줄(홈 · 스탬프 탭 같은 레일) */
-    raffleNumsHtml(n) + prizeGoHtml() +   /* v5.08 경품 보기 입구(홈 · 스탬프 탭 같은 레일) */
+    stampNextHtml(dispN, home) +   /* v7.57 (사용자 261017 S1 · H5) 다음 보상 한 줄 · 옛 6개 캡션(다 모았다는 말 + 선착순 캡션)을 대신한다 · 홈 = 굵은 줄만 */
+    (home ? "" : (out0 ? '<p class="cap">' + (roulCut() ? "룰렛 " + roulCutHm() + " 마감" : "룰렛 소진") + "</p>" : "") +   /* 룰렛 소진 · 마감 작은 줄은 스탬프 탭 그대로 */
+      raffleNumsHtml(n) + prizeGoHtml()) +   /* v7.57 (사용자 261016 홈 = 막대 + 다음 보상 한 줄) 홈은 행운권 번호 칩 · 경품 보기 · 선착순 남은 수량 줄 없음 · 스탬프 탭 · 나의 보상 그대로 */
     "</div>";
 }
 /* v3.31c 내 응모 번호 · 응모권 1장 이상일 때만 · 서버 번호가 아직 없으면 「발급 중」 회색 (v3.12 모달과 같은 규칙) */
@@ -459,6 +460,11 @@ function raffleNumsHtml(n) {
   var t = raffleTickets(Math.min(REWARD_CAP, n));
   if (!t) return "";
   var nums = raffleNums(), chips = "", op = rfxOpened(t);
+  if (rafClosed() && nums.length < t) {   /* v7.57 (사용자 261017 R1) 17:00 발급 마감 뒤 = 받은 번호만 · 못 받은 칸은 비움 · 「발급 중」 · 「새 번호 확인」 대신 한 줄 「17:00 발급 마감」 */
+    for (var j = 0; j < RAFFLE_MAX; j++) chips += j < nums.length ? tktHtml("no", nums[j]) : '<span class="gap"></span>';
+    var cl = n >= STAMP_DENOM ? '<p class="cap rafx">17:00 발급 마감</p>' : "";   /* 6개 전은 다음 보상 한 줄이 「행운권 17:00 발급 마감」을 말한다(두 번 쓰지 않음) */
+    return nums.length || cl ? '<div class="rnum"><p class="lb">내 행운권 번호</p>' + (nums.length ? '<div class="tkts">' + chips + "</div>" : "") + cl + "</div>" : "";
+  }
   for (var i = 0; i < RAFFLE_MAX; i++) chips += i >= t ? '<span class="gap"></span>' : i >= op ? tktHtml("new", "새 번호<br>확인", "event.stopPropagation(); rfxReopen()") :   /* v4.44 상자를 열기 전에는 번호를 먼저 보여 주지 않는다 */
     i < nums.length ? tktHtml("no", nums[i]) : tktHtml("wait", "발급 중");
   return '<div class="rnum"><p class="lb">내 행운권 번호</p><div class="tkts">' + chips + "</div></div>";
@@ -506,6 +512,7 @@ function rfxHtml(o) {
 /* 레일 · 추첨 안내의 「새 번호 확인」 · 아직 안 연 응모권 상자를 다시 연다(열면 바로 꺼낸다) */
 function rfxReopen() {
   var t = raffleTickets(Math.min(REWARD_CAP, stampCount())); if (!t) return;
+  if (rafClosed() && raffleNums().length < t) { App.render(); return; }   /* v7.57 (R1) 마감 뒤 = 상자 없음(번호 꺼내는 중이 남지 않게) */
   modalOpen(rfxHtml({ raffle: t }), esc(rfxTitle(t)));   /* v4.49 여기서도 직접 연다 */
 }
 /* 누르는 즉시 연다(서버를 기다리지 않는다) · 안 연 번호(op+1 ~ t)를 모두 꺼낸다 · 아직 없으면 숫자가 굴러가다 도착하는 순간 멈춘다 · 8초 넘으면 「발급 중」 */

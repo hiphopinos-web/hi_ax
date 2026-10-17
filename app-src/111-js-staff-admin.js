@@ -357,8 +357,9 @@ function cnBody(k) {
   var foot = '<div class="cn-row"><span>' + esc(who) + "</span>" +
     (ut ? '<button type="button"' + dis + ' onclick="cnUndo(\'' + k + '\')">되돌리기</button>' : '<button type="button"' + dis + ' onclick="cnAuto(\'' + k + '\')">자동으로</button>') + "</div>";
   if (k === "h") {
+    var hv = sx && sx.lv ? Math.max(1, Math.min(5, Number(sx.lv) || 1)) : 1;   /* v7.57 (사용자 261017 H4) 선택 표시 = 지금 값 · 제보 없으면 「여유」 */
     return head + '<div class="cn-lv" role="group" aria-label="17F 대강당 자리">' + [1, 2, 3, 4, 5].map(function (v) {
-      return '<button type="button" class="cn-lv' + v + '"' + dis + ' onclick="cnSend(\'h\', ' + v + ')"><b>' + CN_HLV[v] + "</b><span>" + CN_HSTD[v] + "</span></button>";
+      return '<button type="button" class="cn-lv' + v + '"' + dis + ' aria-pressed="' + (v === hv) + '" onclick="cnSend(\'h\', ' + v + ')"><b>' + CN_HLV[v] + "</b><span>" + CN_HSTD[v] + "</span></button>";
     }).join("") + "</div>" + foot;
   }
   var md = cnMode(), seg = '<div class="axs-seg cn-seg" role="tablist" aria-label="제보 방식">' + [["lv", "혼잡도"], ["n", "대기 인원"]].map(function (t) {
@@ -366,8 +367,9 @@ function cnBody(k) {
   }).join("") + "</div>";
   var pad, nmLb = k === "a" ? "기다리는 사람" : "줄 인원";
   if (md === "lv") {
+    var dv = sx && sx.d && sx.lv ? sx.lv : !sx || x.cls === " none" ? "ok" : x.cls === " jam" ? "jam" : x.cls === " pred" ? "mid" : "ok";   /* v7.57 (사용자 261017 H4) 기본 선택값 「여유」 · 값이 있으면 그 단계 */
     pad = '<div class="cn-lv cn-dlv" role="group" aria-label="' + CN_NM[k] + ' 혼잡도">' + CN_DLV.map(function (d) {
-      return '<button type="button" class="' + d[2] + '"' + dis + ' onclick="cnSendLv(\'' + k + '\', \'' + d[0] + '\')"><b>' + d[1] + "</b></button>";
+      return '<button type="button" class="' + d[2] + '"' + dis + ' aria-pressed="' + (d[0] === dv) + '" onclick="cnSendLv(\'' + k + '\', \'' + d[0] + '\')"><b>' + d[1] + "</b></button>";
     }).join("") + "</div>";
   } else {
     var nv = CNS.nv[k] != null ? CNS.nv[k] : sx && sx.s === "s" && !sx.d && sx.q != null ? Number(sx.q) : 0;

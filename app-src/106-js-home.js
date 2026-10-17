@@ -180,7 +180,7 @@ var CN_K = [["r", "1F 룰렛"], ["p", "1F 포토부스"], ["a", "1F AX PLAY"], [
 var CN_HLV = ["", "여유", "보통", "붐빔", "거의 만석", "만석"];
 var CN_HCLS = ["", " ok", " ok ok2", " busy", " jam", " full"];   /* 261008 신호등 색 · 여유 = 초록 빈 점 · 보통 = 초록 반쯤 · 붐빔 = 호박 반쯤 · 거의 만석 · 만석 = 빨강 꽉 찬 점(만석은 글자 굵게) · v6.48 색은 점에만 */
 function cnGet() { var c = crowdGet(); return c && c.n && typeof c.n === "object" ? c.n : null; }
-function cnShow() { var n = cnGet(); return !(n && n.on === 0); }   /* 261008 (사용자 「시간 조건 해제 · 혼잡도 전부」) 날짜 조건 없음 · 언제나 보인다 · 서버 혼잡_표시 OFF(n.on 0)만 숨김 */
+function cnShow() { var n = cnGet(); return !(n && n.on === 0); }   /* v7.57 (사용자 261017 H4) 참가자 · 스태프 모두 늘(날짜 · 값 조건 없음 · 레드팀 「당일 + 값 있을 때만」 안 채택) · 서버 혼잡_표시 OFF 는 비상 스위치로 그대로 */   /* 261008 (사용자 「시간 조건 해제 · 혼잡도 전부」) 날짜 조건 없음 · 언제나 보인다 · 서버 혼잡_표시 OFF(n.on 0)만 숨김 */
 function cnTest() { return typeof testEmp === "function" && testEmp() === true; }   /* 261008 테스트 사번 = 네 칸을 무작위 시험값으로(아래 cnRand) */
 function cnStaff() { return typeof staffBtn === "function" && staffBtn() === true; }
 function cnSub(k, x) {
@@ -194,7 +194,7 @@ function cnSub(k, x) {
 /* 칸 하나 · { cls, st, sub, at } · 값 없음 = 「정보 없음」 */
 function cnCell(k, src) {
   var n = src || cnGet(), x = n && n[k] && typeof n[k] === "object" ? n[k] : null;
-  if (!x) return { cls: " none", st: "정보 없음", sub: "", at: 0 };
+  if (!x) return { cls: " none", st: "", sub: "", at: 0 };   /* v7.57 (사용자 261017 H4) 제보 값이 없는 칸 = 값 자리를 비운다(옛 「정보 없음」 알약) */
   if (k === "h") { var lv = Math.max(1, Math.min(5, Number(x.lv) || 1)); return { cls: CN_HCLS[lv], st: CN_HLV[lv], sub: cnSub(k, x), at: Number(x.at) || 0 }; }
   return { cls: x.lv === "jam" ? " jam" : x.lv === "mid" ? " pred" : " ok", st: x.lv === "jam" ? "혼잡" : x.lv === "mid" ? "보통" : "여유", sub: cnSub(k, x), at: Number(x.at) || 0 };
 }
@@ -218,8 +218,8 @@ function crowdStripHtml() {
     '<div class="cstrip2 cn4">' + cells.map(function (x) {
       var fm = /^(\d+)F (.+)$/.exec(x.nm), al = fm ? fm[1] + "층 " + fm[2] : x.nm;   /* 읽는 이름 「1층 룰렛」 */
       /* v6.83 (사용자 261009 묶음 8 · 권장안) 층 = 홈 「나의 일정」 장소 줄과 같은 형식(위치 핀 PIN_SVG + 「1F」 · .pl 같은 값) · 이름 줄 오른쪽 끝 · 점 글자 층 표기(261008)는 이 칸에서 뺐다 · 칸 높이 그대로 */
-      var one = x.k !== "h" && x.sub, inner = '<p class="nm"><span class="ax-sr-only">' + al + ", </span>" + '<span class="cn-nm" aria-hidden="true">' + (fm ? fm[2] : x.nm) + "</span>" + (fm ? '<span class="pl" aria-hidden="true">' + PIN_SVG + "<span>" + fm[1] + "F</span></span>" : "") + "</p>" + '<p class="pr"><span class="pill"><i class="lamp" aria-hidden="true"></i>' + x.st + "</span>" + (one ? '<span class="tx">' + esc(x.sub.replace(/^대기 /, "")) + "</span>" : "") + "</p>" + (st && dot.indexOf(x.k) >= 0 ? '<i class="cn-dot" aria-hidden="true"></i>' : "");   /* 261009 v6.81 둘째 줄 = 상태 알약(점 + 상태 단어) + 1F 세 칸만 옆에 대기 글자 · 17F · 정보 없음은 알약만(기준 시각은 섹션 머리 한 곳) */
-      return st ? '<button type="button" class="cc' + x.cls + '" onclick="cnSheet(\'' + x.k + '\')" aria-label="' + al + ", " + x.st + (x.sub ? " · " + esc(x.sub) : "") + ' · 제보">' + inner + "</button>"
+      var one = x.k !== "h" && x.sub, inner = '<p class="nm"><span class="ax-sr-only">' + al + ", </span>" + '<span class="cn-nm" aria-hidden="true">' + (fm ? fm[2] : x.nm) + "</span>" + (fm ? '<span class="pl" aria-hidden="true">' + PIN_SVG + "<span>" + fm[1] + "F</span></span>" : "") + "</p>" + '<p class="pr">' + (x.st ? '<span class="pill"><i class="lamp" aria-hidden="true"></i>' + x.st + "</span>" : '<span class="ax-sr-only">제보 없음</span>') + (one ? '<span class="tx">' + esc(x.sub.replace(/^대기 /, "")) + "</span>" : "") + "</p>" + (st && dot.indexOf(x.k) >= 0 ? '<i class="cn-dot" aria-hidden="true"></i>' : "");   /* 261009 v6.81 둘째 줄 = 상태 알약(점 + 상태 단어) + 1F 세 칸만 옆에 대기 글자 · 17F · 정보 없음은 알약만(기준 시각은 섹션 머리 한 곳) */
+      return st ? '<button type="button" class="cc' + x.cls + '" onclick="cnSheet(\'' + x.k + '\')" aria-label="' + al + ", " + (x.st || "제보 없음") + (x.sub ? " · " + esc(x.sub) : "") + ' · 제보">' + inner + "</button>"
         : '<div class="cc' + x.cls + '">' + inner + "</div>";
     }).join("") + "</div>";
 }
@@ -259,4 +259,57 @@ function a2cLater() {
   if (!c || (typeof AXM !== "undefined" && AXM.rm())) { App.render(); return; }
   c.classList.add("a2c-out");
   setTimeout(function () { App.render(); }, typeof AXM !== "undefined" ? AXM.OUT : 180);
+}
+/* ═══ v7.57 (사용자 확정 261016 · 261017 H3 · 기획 문서/홈 재설계_레드팀_261016.md 2절 · 4절 O5) 홈 할 일 카드 = 홈 맨 위 · 있을 때만 · 최대 2장 ═══
+   순서 = 포토부스 호출 › 참가자 설문 · 선착순 참여상(15:00부터 설문이 위 · 그 전엔 참여상이 위) › 옷 사이즈 카드 › 추첨 체크인(행운권 참석 조건 ON 일 때만)
+   2장이 넘으면 선착순 참여상부터 뺀다(H3) · 그다음은 뒤쪽부터 · 설문 카드 = 행사 당일 설문 열림(14:30) 뒤 · 안 낸 사람
+   옛 「나의 일정」 섹션(myScheduleHtml · 지금 · 다음 · 내 일정 카드 · 커피챗 신청 줄)은 홈에서 부르지 않는다(나의 참여 › 나의 일정) */
+var HOME_ACT_MAX = 2;
+function homeActRow(r) { return '<div class="axs-rows">' + rcHtml({ cls: " my", onclick: r[1], link: true, left: tokBadge(esc(r[2]), r[5]), title: esc(r[3]), sub: esc(r[4]), place: r[6] }) + "</div>"; }
+function homeActList() {
+  var L = [], hm = hmNow(), live = evPhase() === "live";
+  myItems(false).forEach(function (x) { if (x.call) L.push(["call", homeActRow([x.min, x.go, x.badge, x.title, x.sub, !x.photo && isBlack("call") ? "act" : "mine", x.place])]); });   /* 포토부스 호출(서버 my.queue call) */
+  var sv = live && !surveyDone() && !surveyLock() && hm >= t2m(SURVEY.open) ? ["sv", homeActRow([-1, "App.go('survey')", "설문", "참가자 설문", "약 2분 · 스탬프 1개", "mine"])] : null;
+  var fg = fcfsGotRow(), fc = fg ? ["fcfs", homeActRow(fg)] : null;
+  (hm >= t2m("15:00") ? [sv, fc] : [fc, sv]).forEach(function (x) { if (x) L.push(x); });   /* H3 15:00 경계 */
+  var kt = kitCardHtml(); if (kt) L.push(["kit", kt]);
+  var dc = drawCardHtml(); if (dc) L.push(["draw", dc]);
+  if (L.length > HOME_ACT_MAX) L = L.filter(function (x) { return x[0] !== "fcfs"; });   /* H3 2장이 넘으면 참여상부터 */
+  return L.slice(0, HOME_ACT_MAX);
+}
+function homeActHtml() { return homeActList().map(function (x) { return x[1]; }).join(""); }
+
+/* ═══ v7.57 (사용자 확정 261016 · 261017 H1 · H2 「권장안」 · 기획 문서/홈 재설계_261016.md 5-4) 바로가기 설치 시트 「QR 없이 바로 열기」 ═══
+   홈 카드(a2cHtml)를 걷고 시트로 · 문구는 홈 카드 그대로 · 기록 = 이 브라우저 axf_a2hs_sheet { n, day }(STORE_DEVICE · 로그아웃해도 남는다)
+   1회차 = 이 브라우저에서 한 번도 안 본 사람(n 0 · H1) · 결과(스탬프 받음 팝 · QR 스캔 결과 화면)가 닫힌 뒤 · 다른 안내가 다 끝난 뒤(안내 줄 noticeBusy · 맨 뒤)
+           최초 로그인 장면(lgx)의 도장 팝 · 로그인 직후 · 홈 도착만으로는 띄우지 않는다(261006)
+   2회차 = 행사일(10/26)에 이 브라우저에서 처음 그린 홈 0.5초 뒤 · 첫 시트를 못 본 사람(n 0)에게도(H2) · 오늘 이미 봤으면 없음 · 보면 n 2 = 끝
+   보이는 조건 = 서버 연결 · 로그인 · 홈 화면 앱 아님 · 설치됨 · 설치 중 아님 · 데모 · TV · 캡처 주소 아님 · 테스트 계정도 같음
+   주 버튼 = a2hsOpen()(크롬 설치 창 또는 기기별 안내) · 인앱 = 「방법 보기」 · 「나중에」 · 끌어 닫기 · 뒷배경 · 뒤로 = 같은 일(보인 순간 기록) */
+var LS_INSTALL = "axf_a2hs_sheet", A2S = { q: false, day: "" };
+function a2sGet() { try { var o = JSON.parse(localStorage.getItem(LS_INSTALL) || "null"); return o && typeof o === "object" ? o : {}; } catch (e) { return {}; } }
+function a2sPut(n) { try { localStorage.setItem(LS_INSTALL, JSON.stringify({ n: n, day: nxDate() })); } catch (e) {} }
+function a2sBase() { return !!(BE.on && !visitSkip() && !isStandalone() && !A2HS.inst && !A2HS.pending && (S.get("user", {}) || {}).empId); }
+function a2sHold() { return NOTICE.q.some(function (x) { return x.k !== "a2s" && x.k !== "a2s2"; }) || !!(SPOP.cur || SPOP.q.length); }
+function a2sWant() {
+  if (A2S.q || !a2sBase() || (Number(a2sGet().n) || 0) > 0) return;
+  A2S.q = true;
+  notice({ key: "a2s", run: function () { A2S.q = false; a2sShow(1); }, hold: a2sHold });
+}
+function a2sDay() {
+  if (!nxDay() || A2S.day === nxDate()) return;
+  A2S.day = nxDate();
+  var o = a2sGet();
+  if ((Number(o.n) || 0) >= 2 || o.day === nxDate() || !a2sBase()) return;
+  setTimeout(function () { notice({ key: "a2s2", run: function () { a2sShow(2); }, hold: a2sHold }); }, 500);
+}
+function a2sShow(k) {
+  if (!a2sBase()) return;
+  var o = a2sGet(), n = Number(o.n) || 0;
+  if (k === 1 ? n > 0 : n >= 2 || o.day === nxDate()) return;
+  a2sPut(k === 1 ? 1 : 2);
+  var ia = isInApp();
+  sheetOpen({ id: "a2s", title: "QR 없이 바로 열기", body: '<div class="axs-a2s">' + (ia ? '<p class="b">지금은 ' + a2hsInAppName() + '</p><p class="s">메뉴에서 &ldquo;다른 브라우저로 열기&rdquo; 뒤 설치</p>'
+      : '<p class="b">홈 화면에 AX Festival 아이콘을 만들어요</p><p class="s"><ax-seg>행사가 끝나면 바로가기는 삭제하세요</ax-seg></p>') + "</div>",
+    go: "sheetClose(true); a2hsOpen()", goLbl: ia ? "방법 보기" : a2hsWord(), keep: "나중에", keepWeak: true, keepLast: true });
 }

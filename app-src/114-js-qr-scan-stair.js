@@ -151,6 +151,7 @@ var SR_WHY = {
 function srShow(o) {
   SR = Object.assign({ st: "", id: "", name: "", why: "", open: "", test: false, stair: false, n: 0, at: "" }, o);
   if (App.current === "scan_res") App.render(); else App.go("scan_res");
+  if (typeof a2sWant === "function") a2sWant();   /* v7.57 바로가기 설치 시트 1회차 = 이 결과 화면을 나온 뒤(안내 줄이 scan_res 동안 기다린다) */
 }
 function stampTitle(id) { var s = stampDef(id); return s ? s.title : id === "p3h" || id === "p10" || id === "p10h" ? "프로그램 참여" : id; }   /* 261013 오후 묶음 cc · ln 도 · 261016 17F 한쪽(p3h) · 10F(p10 · p10h) = 프로그램 참여 */
 function srDupPopup(id, name, at, test) {

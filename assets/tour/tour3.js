@@ -2920,7 +2920,7 @@
     _p.copy(gd.m.position); _p.y = 1.72; _p.project(camera);   /* 전파(머리 위 1.0~1.5m)가 보이게 그 위에 */
     if (_p.z > 1) { b.hidden = true; return; }
     var hy0 = _ia.copy(gd.m.position); hy0.y = 1.2; hy0.project(camera); var yHead = (1 - hy0.y) / 2 * $('stage').clientHeight;   /* v7.54 가까이 서면 1.72m 점이 머리에서 멀리 떠 뒤쪽 다른 스태프 말풍선처럼 보였다(라운지 · 룰렛 스태프가 한 줄) · 말풍선 꼬리 = 머리(1.2m) 위 64px 안 */
-    if (b.getAttribute('data-z') !== gd.id) { b.setAttribute('data-z', gd.id); $('gbubT').textContent = gd.text; var go = b.querySelector('.go'); go.textContent = gd.go; go.hidden = !gd.go || !gd.stamp; }   /* v5.54 구역 스태프 = 한마디만(「자세히 보기」는 아래 단추 하나) · 계단 「스탬프 받기」만 알약 */
+    if (b.getAttribute('data-z') !== gd.id) { b.setAttribute('data-z', gd.id); $('gbubT').textContent = gd.text; var go = b.querySelector('.go'); go.textContent = gd.go; go.hidden = !gd.go || !(gd.stamp || bubLook(gd)); }   /* v7.57 (사용자 261017 「자세히 보기 위치가 이상」) 구역 스태프 = 말풍선 안 오른쪽 「자세히 보기」(옛 v5.54 = 떨어진 단추 하나 · v7.54 말풍선을 머리 위 64px 로 내린 뒤 판 위 · 오른쪽 아래 단추와 따로 놀았다) · 화면의 자세히 보기는 그대로 하나 */   /* v5.54 구역 스태프 = 한마디만(「자세히 보기」는 아래 단추 하나) · 계단 「스탬프 받기」만 알약 */
     b.hidden = false;
     var W = $('stage').clientWidth, H = $('stage').clientHeight, bw = b.offsetWidth || 220, x = clamp((_p.x + 1) / 2 * W, bw / 2 + 8, W - bw / 2 - 8), y = Math.max((1 - _p.y) / 2 * H, yHead - 64, b.offsetHeight + 8);
     var lk = $('look'); if (lk && !lk.hidden) { var lt = lk.offsetTop, ll = lk.offsetLeft, lw = lk.offsetWidth; if (y + 7 > lt - 6 && y - b.offsetHeight < lt + lk.offsetHeight && x + bw / 2 > ll - 4 && x - bw / 2 < ll + lw + 4) y = Math.max(b.offsetHeight + 8, lt - 13); }   /* v5.54 자세히 보기 단추와 겹치면 단추 위로 · v5.58 단추가 어디든 */
@@ -3177,6 +3177,7 @@
     var t = lookPick(), key = t ? (t.kind === 'pg' ? 'p' : 'z') + t.pg : '';
     LOOK.t = t;
     if (!t) { if (!b.hidden) b.hidden = true; LOOK.key = ''; LOOK.still = 0; lookFrame(null); return; }
+    if (t.kind === 'zone') { if (!b.hidden) b.hidden = true; LOOK.key = key; lookFrame(t.f, true); return; }   /* v7.57 스태프 구역 = 말풍선 안 「자세히 보기」가 맡는다(떨어진 단추 없음 · Enter · 말풍선 누름 = doLook 그대로) */
     var walk = G.moveV > 0.2 || G.mode === 'auto' || !!G.air;
     if (walk) LOOK.still = 0; else if (!LOOK.still) LOOK.still = now;
     var calm = !walk && now - LOOK.still > 250;
@@ -3398,6 +3399,7 @@
     return best;
   }
   /* 261008 (1층 수정본 · AX 라운지 판 · 간판 삭제) 판 없는 구역 = 앱 구역 상세(호스트 zoneGo · 둘러보기를 닫고 열며 「3D로 돌아가기」로 이 자리) · 시험판(호스트 없음) = 할 일 없음 */
+  function bubLook(gd) { if (!gd || !gd.go || gd.stamp || gd.spot === 'typing') return false; var z = D.Z(gd.zone); return !!(z && z.rows.length && (D.viewPages(z).length || zoneGoable(z))); }   /* v7.57 말풍선 안 「자세히 보기」 = lookPick 구역 갈래와 같은 조건 */
   function zoneGoable(z) { var h = HOST(); return !!(z && h && h.zoneGo && !D.viewPages(z).length); }
   function zoneOut(z) { if (!zoneGoable(z) || G.anim || G.sheetOpen || G.sheetFx) return; var h = HOST(); try { h.zoneGo(z.id); } catch (e) {} }
   function enterPanel(z, pg) {
@@ -4690,7 +4692,7 @@
       if (PH.on) { if ((e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') && !$('pola').hidden) { e.preventDefault(); phClose(); } return; }   /* v5.67 사진 찍기 연출 = 키 막음 · 팝업 = Enter · Space · Esc 로 닫기 */
       if (e.key === 'Enter' && !e.repeat && !$('shot').hidden && !/BUTTON|A|INPUT/.test((e.target && e.target.tagName) || '')) { e.preventDefault(); doShot(); return; }   /* v5.67 사진 찍기 */
       if (e.key === 'Enter' && !e.repeat && !$('spg').hidden && !/BUTTON|A|INPUT/.test((e.target && e.target.tagName) || '')) { e.preventDefault(); doSpin(); return; }   /* v6.91 룰렛 돌리기 */
-      if (e.key === 'Enter' && !e.repeat && !$('look').hidden && !/BUTTON|A|INPUT/.test((e.target && e.target.tagName) || '')) { e.preventDefault(); doLook(); return; }   /* v5.54 자세히 보기 */
+      if (e.key === 'Enter' && !e.repeat && (!$('look').hidden || (LOOK.t && LOOK.t.kind === 'zone')) && !/BUTTON|A|INPUT/.test((e.target && e.target.tagName) || '')) { e.preventDefault(); doLook(); return; }   /* v5.54 자세히 보기 · v7.57 스태프 구역 = 말풍선 안 알약(떨어진 단추 없음)도 Enter */
       if (KMOVE[code]) { keys[code] = KMOVE[code]; G.stick = keyStick(); setKnob(G.stick.x, G.stick.y, true); G.moved = true; G.path = null; G.tapAct = null; if (G.mode === 'auto') { G.mode = 'free'; G.goal = null; $('dest').hidden = true; } G.need = true; e.preventDefault(); return; }
       var act = KRH[code] || (e.key === ' ' && !/BUTTON/.test((e.target && e.target.tagName) || '') ? 'jump' : null);
       if (act) {
@@ -5668,5 +5670,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v7.54', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v7.57', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();

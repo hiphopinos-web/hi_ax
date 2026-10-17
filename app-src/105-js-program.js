@@ -325,6 +325,7 @@ function zoneExHtml(z) {
 }
 /* v5.65 18F = AX 커피챗 하나(「라운지」 표기 없음) · 1F AX LOUNGE 와 같은 구역 상세(zone_d) 틀 · 한 줄 = 질문 3줄(q) · 시간은 매칭 후 앱에서 안내(운영 시간 확정 문서 없음)
    상태 · 주 버튼 = zoneLive cchat(옛 프로그램 탭 18F 줄 ccSub · 옛 상세 progDetail 신청 전 분기를 옮겼다) · 신청한 뒤 「내 신청」 = 프로그램 상세(sess_d · 매칭 · 취소) */
+var CCHAT_TTL = "AI로 바꾸고 싶은 내 업무를 멘토와 이야기하기";   /* v7.57 (사용자 261017 C1) 커피챗 상세 화면 제목(구역 상세 · 내 커피챗) · 목록 한 줄(kor)은 그대로 */
 var FLOOR18 = [
   { id: "cchat", grp: "", sign: "AX COFFEE CHAT", hdr: "AX 커피챗", kor: "AI로 바꾸고 싶은 내 업무를 1:1로 이야기하는 곳", fact: "", st: "",   /* v7.52 (사용자 확정 261016 미팅 개편) 1:1 · 20분 · TABLE A · B · 옛 「비슷한 고민을 여럿이 모여 나누는 곳」 */   /* v5.94 (사용자 결정 261006) 커피챗은 스탬프 없음 */
     q: ["내 업무에 AI를 쓸 수 있을까?", "내 업무 중 무엇부터 바꿀까?", "어떻게 시작하지?"],
@@ -539,7 +540,7 @@ function zoneSheet() {
     '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + (z.lead ? [z.lead] : []).concat(z.todo).map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" + zoneCaseHtml(z) + zoneExHtml(z) +
     (kv ? '<hr class="axs-rule">' + kv : "") + (L.need ? needBoxHtml("선착순 받으려면", "선착순 받으려면", L.need) : "") +   /* v7.54 EVENT 선착순 상자 */
     (ev && EV_TYP_PROMO ? typPromoHtml("go") : "") + zonePicHtml(z);   /* v5.96 (사용자 261006 밤 「여기에 타자왕 광고는 없애줘」) EVENT 구역 상세 = 홍보 칸 없음 · 스위치 EV_TYP_PROMO */
-  return { cls: "axs-pan", name: zoneSign(z.sign, "lg"), chips: zoneChip(L.chip), title: esc(z.kor), seal: seal ? pill : "", body: body,   /* v5.79 머리 이름 = 구역 간판 하나(현장 부스 사인과 같은 글자 · 한국어 이름을 따로 두지 않는다) · 상태 칩 · 한국어 한 줄 · 도장 = 본문 첫 줄 */
+  return { cls: "axs-pan", name: zoneSign(z.sign, "lg"), chips: zoneChip(L.chip), title: esc(z.id === "cchat" ? CCHAT_TTL : z.kor), seal: seal ? pill : "", body: body,   /* v5.79 머리 이름 = 구역 간판 하나(현장 부스 사인과 같은 글자 · 한국어 이름을 따로 두지 않는다) · 상태 칩 · 한국어 한 줄 · 도장 = 본문 첫 줄 */
     foot: b ? progBtn(esc(b[0]), b[1], "", b[2] || "", !!b[3]) : "" };
 }
 function progOpen(id) { PROG.sid = id; App.go("sess_d"); }
@@ -692,7 +693,7 @@ function progDetail(s) {
     /* v7.39 (사용자 261016 계획서 0-2-3) 내 커피챗 = 상태 넷(선정 전 · 선정 · 마감 · 완료) · 같은 자리(칩 · 사실 표 · 아래 상자 · 단추)
        미선정 = 「마감」 · 고른 시간이 지났다는 사실로(「선정되지 않았어요」 대신 · 소외 없음 톤) · 상담 내용은 아이디어 한 줄로 남는다 */
     var c = S.get("cchat", null) || {}, sv = S.get("cchat_srv", null) || {}, cst = cchatSt(), pf = ccPrefTxt(sv.pref || c.pref), rd = c.round ? "10월 26일 " + c.round + "~" + hm2(t2m(c.round) + CC_DUR) : "";
-    D.cat = "AX 커피챗"; D.title = "비슷한 고민을 나누고 다음 한 걸음 찾기";   /* v4.13 인원 · 부서 · 소요 시간 표기 삭제(사용자 260922) */
+    D.cat = "AX 커피챗"; D.title = CCHAT_TTL;   /* v7.57 (사용자 261017 C1) 옛 「비슷한 고민을 나누고 다음 한 걸음 찾기」 */   /* v4.13 인원 · 부서 · 소요 시간 표기 삭제(사용자 260922) */
     if (!cst) { D.sg = ""; D.st = ""; D.help = ""; D.btn = progBtn("AX 커피챗 안내 보기", "zoneOpen('cchat')"); return D; }   /* 신청 전은 구역 상세(라우터) · 신청이 막 지워진 화면을 다시 그릴 때 */
     var cx = progBtn("신청 취소하기", "progCancelOpen(\'cchat\')", "axs-btn-danger", "cxBtn"), memo = String(sv.text || c.text || "");
     var tb = "18F" + (c.table ? " · TABLE " + c.table : "");

@@ -459,6 +459,7 @@ function checkRewards() {
   if (t > S.get("raffle_seen", 0)) {
     if (S.get("raffle_opened", null) === null) S.set("raffle_opened", S.get("raffle_seen", 0));   /* v4.44 이 버전 전에 이미 안내한 응모권은 연 것으로 친다 */
     S.set("raffle_seen", t);
+    if (rafClosed() && raffleNums().length < t) { S.set("raffle_opened", t); return; }   /* v7.57 (사용자 261017 R1) 17:00 발급 마감 뒤 새 행운권 = 상자 · 「번호 꺼내는 중」 없음 · 레일 한 줄 「17:00 발급 마감」 */
     if (BE.on && !testEmp() && raffleNums().length < t) beSync();   /* v4.43 새 번호를 미리 받아 둔다 · 스탬프 연출이 도는 동안 도착해 상자를 열면 바로 보인다 */
     notice({ key: "rw:raffle", raffle: t, title: rfxTitle(t), body: "행운권 발급 · 17:00 Closing Speech 추첨", go: "rewards", focus: "raffle", goLbl: "나의 보상에서 보기" });   /* v4.42 raffle = 보물상자 팝업(rfxHtml) */
   }

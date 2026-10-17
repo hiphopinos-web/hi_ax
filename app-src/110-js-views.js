@@ -15,16 +15,16 @@ var Views = {
      인사는 헤더 · 공지 카드 한 장(흐르는 띠 대신, 1단계 것 유지) → 포토부스 호출 → 광고판 → 스탬프 레일 → 나의 일정(지금·다음 + 내 항목).
      1단계 H01(진행 중 카드 · 시간표 · 체험 찾기)의 homeNowHtml 은 남겨 둔다(다른 곳에서 부르지 않는다). */
   home: function () {
+    /* ═══ v7.57 (사용자 확정 261016 · 261017 · 기획 문서/홈 재설계_레드팀_261016.md) 홈 = [할 일 카드 · 있을 때만 · 최대 2장] › 광고판 › 행사 둘러보기 › 스탬프(막대 + 다음 보상 한 줄) › 지금 현장(늘)
+       「나의 일정」 · 「지금 · 다음」 · 커피챗 신청 줄 · 설치 카드(a2cHtml)는 홈에서 뺐다(나의 참여 · 프로그램 탭 · 바로가기 설치 시트 a2sOpen) · 「곧 시작」 카드 없음 ═══ */
+    a2sDay();   /* v7.57 행사일 아침 바로가기 설치 시트(하루 한 번 · 홈이 그려진 뒤 0.5초) */
     return '<div class="ax-stack">' +
-      kitCardHtml() +   /* 261015 (사용자 확정) 홈 맨 위 고정 순서 = 옷 사이즈 카드(있는 사람만) > 광고판 > 행사 둘러보기 · 어떤 계정 상태에서도 같다 · 그 밖의 카드(베타 배너 · 체크인 번호표 · 추첨 체크인 · 스탬프 · 지금 현장 · 나의 일정)는 이 세 칸 아래 · 옛 tourHomeHtml 자리(나의 일정 아래, 둘러보기를 한 번 연 뒤)는 없앴다 */
+      homeActHtml() +   /* v7.57 할 일 카드(포토부스 호출 › 설문 · 선착순 참여상(15:00부터 설문이 위) › 옷 사이즈 › 추첨 체크인 · 2장 넘으면 참여상부터 뺌) */
       billboardHtml() +
-      tourHeroHtml() +   /* 261008 「다음 할 일」 카드(v6.13) 삭제(사용자 「둘러보기 고정 · 다음 할 일 삭제」) · v5.46 행사 전 1층 둘러보기 큰 카드 · 광고판 바로 아래 · 스탬프 위(광고판 자리는 그대로 · design.md A-5) · v5.83 둘러보기를 처음 열기 전(tour_seen 없음)에는 당일에도 여기 */
-      a2cHtml() +   /* 261016 「QR 없이 바로 열기」 · 고정 세 칸 바로 아래 · 설치되면 · 「나중에」 두 번이면 없음 */
-      betaBannerHtml() +   /* v4.55 클로즈 베타 배너 · 맨 위 흰 줄 · 값 없으면 빈 문자열 */
-      drawCardHtml() +   /* v4.84 Outro 추첨 체크인(16:40~17:25 · 체크인 전만) · 광고판 위 조건부 자리 · v5.83 접속 방법 질문 카드 삭제 · 261006 kitCardHtml = 키트 사이즈(키트명단 사번만 · 서버 my.kit · 고르는 기간 · 자동 배정 · 라운지 초과 안내) */
+      tourHeroHtml() +
+      betaBannerHtml() +
       '<section class="axs-sec axs-railgo" onclick="if (!event.target.closest(\'.mk, .sect span\')) App.tab(\'exp\')">' + myCouponHtml() + "</section>" +
-      cnHomeHtml() +   /* 261008 「지금 현장」 2×2 · 스탬프 블록 바로 아래(사용자 261008 「스탬프가 첫 화면에 · 스탬프 아래까지는 허용」) · 날짜 조건 없음(261008) · 옛 맨 아래 「혼잡 제보」 칸은 걷었다 */   /* v4.84 레일 면을 누르면 스탬프 탭 · 마커는 v4.02 대로 룰렛·응모 안내 */
-      '<section class="axs-sec">' + myScheduleHtml() + "</section>" +
+      cnHomeHtml() +
       "</div>";
   },
 
@@ -63,7 +63,7 @@ var Views = {
     var full = n >= STAMP_DENOM;
     return '<div class="ax-stack axs-stpv">' + testBar +
       '<section class="axs-sec">' + railHtml(n, glow, null, false) + "</section>" +
-      '<section class="axs-sec"><div class="sect"><b>스탬프 ' + STAMPS.length + "종</b><span>" + (full ? STAMP_DENOM + "개 모두 모았어요" : STAMP_DENOM + "개까지 인정") + "</span></div>" +
+      '<section class="axs-sec"><div class="sect"><b>스탬프 모으는 방법</b><span>' + STAMPS.length + "가지 중 " + STAMP_DENOM + "개까지</span></div>" +   /* v7.57 (사용자 261017 S5 · S6) 6개를 다 모은 뒤 바뀌던 머리 문구 지움(「6 / 6」과 같은 말) · 오른쪽 = 늘 「8가지 중 6개까지」 */
       stpBoardHtml(st, full) +   /* 261013 오후 (사용자 확정) 하루 흐름 4단계 · 단계 제목 아래 줄 · 사전등록 체크인 줄은 1단계 아래(대상자만) */
       scanQNote() + '<button type="button" class="lnk sub axs-stfgo" onclick="staffStampOpen()">' + lnkChev("담당자 적립") + "</button></section></div>";   /* v6.83 (접근성 B-3 · B-6) p → button · 눌림 높이 44 · 키보드 */   /* v4.91 1F 타자왕(스탬프 아님)은 프로그램 탭 「상시 운영」로 옮겼다 */
   },
