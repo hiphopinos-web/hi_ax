@@ -1516,6 +1516,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-flg .axs-tt { gap: var(--ax-space-12); }
   .axs-flg .axs-tt .rc { --rc-h: 56px; }
   .axs-flg .axs-tt .rc .bd { padding: 6px 0; }
+  .axs-flg .axs-tt .rc .tr { flex-wrap: wrap; row-gap: 2px; }   /* v7.78 폭이 모자라면 「내 세션」 칩이 제목 아래 줄로 */
   .axs-flg .axs-tt .rc .rh .tt { white-space: normal; overflow: visible; text-overflow: clip; }   /* 큰 글씨에서 제목이 넘치면 말줄임 대신 「 · 」 자리에서 둘째 줄로 */
   /* v5.21 시간표 = 점 노드 흐름 한 줄(사용자 261003 · 설계 「시간표 흐름/설계.md」 안 A · design.md A-5 5-10) · 시각 | 노드 + 레일 | 카드
      노드 3상태(지남 O50 작은 점 · 지금 O100 큰 점 + O25 고리 하나 · 앞 = 속 빈 점) · 같이 진행 중인 다른 줄(on) = O100 작은 점

@@ -162,6 +162,13 @@ var FLOOR_GD = {
   17: { hdr: "17F 대강당", sub: "신청 없이 자유 참석" },   /* v5.96 출석 QR 은 오후 AWS · MS 상세에서만 */
   10: { hdr: "10F 실습형 세션", sub: "사전 신청자 참여 · 5개 세션" }
 };
+/* v7.78 (사용자 261017) 10F 목록 카드 제목 덩어리 = 한 글자 앞 덩어리(A · B · E)는 다음 덩어리와 묶어 한 줄(「A · 컨퍼런스룸」 · 「E · 1회차」) · 나머지는 「· 」로 시작하는 덩어리 단위로만 꺾임 */
+function floorSessTtl(s) {
+  var p = (s.ttl.replace(/^세션\s*/, "") + " · " + sessPlace(s).replace(/^10F\s*·?\s*/, "")).split(" · "), out = [], i = 0;
+  if (p.length > 1 && p[0].length <= 1) { out.push(p[0] + " · " + p[1]); i = 2; } else { out.push(p[0]); i = 1; }
+  for (; i < p.length; i++) out.push("· " + p[i]);
+  return out.map(function (t) { return '<span class="axs-nwr">' + esc(t) + "</span>"; }).join(" ");
+}
 function floorGuideHtml() {
   var f = PROG.floor, g = FLOOR_GD[f];
   if (!g) return '<div class="ax-stack">' + botHtml("층 안내를 찾을 수 없어요") + '<button type="button" class="ax-button ax-button-weak" onclick="App.tab(\'guide\')">프로그램 보기</button></div>';
@@ -169,7 +176,7 @@ function floorGuideHtml() {
   if (f === 17) body = '<div class="axs-fl">' + progFlowHtml(17) + "</div>";
   else body = '<div class="axs-tt">' + SESSIONS.filter(function (s) { return s.fl === 10; }).map(function (s, i) {
     var tp = s.tm.split("~"), mi = !!sessMine(s.id);
-    return progTTRow("f" + i, { t0: tp[0], t1: tp[1], tok: mi ? "mine" : "", cls: mi ? " my" : "", titleHtml: pbfNw(esc(s.ttl.replace(/^세션\s*/, "") + " · " + sessPlace(s).replace(/^10F\s*·?\s*/, ""))), badge: mi ? '<span class="axs-chip ok">내 세션</span>' : "", sub: s.sub, go: "sessOpen('" + s.id + "')" });
+    return progTTRow("f" + i, { t0: tp[0], t1: tp[1], tok: mi ? "mine" : "", cls: mi ? " my" : "", titleHtml: floorSessTtl(s), badge: mi ? '<span class="axs-chip ok">내 세션</span>' : "", sub: s.sub, go: "sessOpen('" + s.id + "')" });
   }).join("") + "</div>";
   return '<div class="ax-stack axs-flg"><p class="ax-description">' + esc(g.sub) + "</p>" + body + tourFloorBackHtml() + "</div>";   /* 층 이름은 헤더(FLOOR_GD hdr) · 판 문법(axs-bar)은 쓰지 않는다 */
 }
