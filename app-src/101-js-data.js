@@ -61,7 +61,7 @@ var DotGlyph = (function () {
 /* v3.52 · 10F 실습형 세션 입장도 p3 로 셀지 · 서버 P3_INCLUDE_10F 와 함께 바꾼다 (기본 끔) */
 var P3_INCLUDE_10F = false;
 /* v4.83 (261001 사용자 확정 · 앱 개편 1묶음) p2 = AX PLAY · 체험 뒤 스태프가 내 QR 을 찍는다(부스 QR 은 보관 · 스태프 모드 목적 타일 「AX PLAY」) · 옛 · 새 체계 둘 다 이 정의를 쓴다 */
-var STAMP_P2 = { id: "p2", title: "AX PLAY", short: "AX PLAY", desc: "1F AX PLAY에서 HiDI-Q 또는 Hi-Helper 체험", where: "1F · 스태프 인증", site: 1, staff: 1, tap: "qrPanelOpen('mine')", cta: "내 QR 보여주기", note: "체험 후 스태프가 내 QR을 스캔" };
+var STAMP_P2 = { id: "p2", title: "AX PLAY", short: "AX PLAY", desc: "1F AX PLAY에서 HiDI Q 또는 Hi-Helper 체험", where: "1F · 스태프 인증", site: 1, staff: 1, tap: "qrPanelOpen('mine')", cta: "내 QR 보여주기", note: "체험 후 스태프가 내 QR을 스캔" };
 /* v4.83 옛 8종(서버 sync 에 stv 가 없는 옛 서버와 붙었을 때만 쓴다 · 운영 서버 배포 전 호환) */
 var STAMPS_V1 = [
   { id: "p1", title: "1F 전시", short: "1F 전시", desc: "전시존 끝 QR 입간판 스캔", where: "약 5분", site: 1, tap: "qrScanOpen()", cta: "QR 스캔" },
@@ -316,7 +316,7 @@ var SV_OPT = {
 var SV_PROGS = [
   { id: "q2_1", fl: "1F", nm: "AX VISION", sub: "현대해상 AX 로드맵", q: "현대해상 AX 로드맵 소개는 어떠셨나요?" },
   { id: "q2_2", fl: "1F", nm: "AX LAB", sub: "동료들이 만든 데이터분석 과제", q: "동료들이 만든 데이터분석 과제는 어떠셨나요?" },
-  { id: "q2_3", fl: "1F", nm: "AX PLAY", sub: "Hi-Helper, HiDI-Q", q: "Hi-Helper, HiDI-Q 체험은 어떠셨나요?", pre: "p2" },
+  { id: "q2_3", fl: "1F", nm: "AX PLAY", sub: "Hi-Helper, HiDI Q", q: "Hi-Helper, HiDI Q 체험은 어떠셨나요?", pre: "p2" },
   { id: "q2_4", fl: "1F", nm: "EVENT", sub: "포토부스, 룰렛, 타자왕", q: "포토부스, 룰렛, 타자왕은 어떠셨나요?" },
   { id: "q2_5", fl: "1F", nm: "AX 라운지", sub: "1:1 DAP 과제 상담", q: "AX 라운지 1:1 DAP 과제 상담은 어떠셨나요?", pre: "ln" },
   { id: "q2_6", fl: "17F", nm: "Agentic AI 시대 일하는 방식의 변화", sub: "AWS", q: "Agentic AI 시대 일하는 방식의 변화 세션은 어떠셨나요?", att: "l1" },
@@ -333,7 +333,7 @@ var SURVEY_Q = [
 ].concat(SV_PROGS.map(function (p) { return { id: p.id, type: "single", o: "use", q: p.q, prog: p.id }; })).concat([
   { id: "i_und", type: "info", t: "이해도", q: "다음은 1F에서 소개한 기술지원부문 과제들에 대한 이해도를 묻는 조사입니다." },
   { id: "q3_1", type: "single", o: "know", q: "귀하는 현대해상의 AX 3개년 로드맵에 대해 알고 계신가요?" },
-  { id: "q3_2", type: "single", o: "plan", q: "귀하는 현대해상의 Hi-Helper와 HiDI-Q를 업무에 사용할 계획이 있으신가요?" },
+  { id: "q3_2", type: "single", o: "plan", q: "귀하는 현대해상의 Hi-Helper와 HiDI Q를 업무에 사용할 계획이 있으신가요?" },
   { id: "q3_3", type: "single", o: "know", q: "데이터분석프로젝트(DAP)에 대해 알고 계신가요?" },
   { id: "q4", type: "text", optional: true, max: 300, ph: "비워도 제출됩니다", q: "오늘 행사에서 가장 인상 깊었던 점이나 개선했으면 하는 점을 자유롭게 남겨주세요." }
 ]);

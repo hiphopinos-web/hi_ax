@@ -103,7 +103,7 @@
   .axs-pan.qz .qz-card { display: flex; flex-direction: column; gap: var(--ax-space-16); padding: var(--ax-space-20); border-radius: var(--ax-radius-24); background: var(--ax-color-surface); }
   .axs-pan.qz .qz-top { display: flex; align-items: center; justify-content: space-between; gap: var(--ax-space-8); }
     .axs-pan.qz .qz-stm { margin: 0; }
-  .axs-pan.qz .qz-stm b { word-break: keep-all; }
+  .axs-pan.qz .qz-stm b { word-break: keep-all; text-wrap: balance; }   /* v7.64 문장 마지막 줄 한두 글자 막기(「입력해도 / 된다」) */
   .axs-pan.qz .qz-gen { display: inline-flex; align-items: center; min-height: 28px; padding: 0 10px; border-radius: 4px; background: var(--ax-color-canvas); color: var(--ax-color-body); font: var(--ax-type-t7); font-weight: 600; }
   .axs-pan.qz .qz-ans { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ax-space-12); }
   .axs-pan.qz .qz-ab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 80px; padding: 8px; border: 2px solid var(--ax-color-ink); border-radius: var(--ax-radius-16); background: var(--ax-color-surface); color: var(--ax-color-ink); font: var(--ax-type-t6-strong); font-family: inherit; cursor: pointer; }

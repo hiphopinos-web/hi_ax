@@ -14,17 +14,25 @@ var QZ_CARD_OLD = { per: [5, 4, 1], key: 1, pt: 100 }, QZ_CARDS = [QZ_CARD, QZ_C
 function qzCardOf(n) { for (var i = 0; i < QZ_CARDS.length; i++) { var P = QZ_CARDS[i].per; if (P[0] + P[1] + P[2] === n) return QZ_CARDS[i]; } return null; }
 function qzSizeNew() { var c = OXS.card; return c && typeof c === "object" && !(Array.isArray(c.sizes) && c.sizes.indexOf(5) >= 0) ? 10 : 5; }   /* 응답 전(undefined) · 새 서버 = 5 · card 는 있는데 sizes 가 없는 옛 서버 = 10 */
 /* v4.98 문제 은행 판 번호(서버 OX_BANK_REV · ox_start card.bank) · QZ_NEW = 이 판에서 새로 넣은 O/X · 옛 서버는 모르는 id 로 거절하므로 서버가 bank 2 이상이라고 알려 줄 때만 낸다(oxOffList · 앱을 먼저 올려도 안전) */
-var QZ_BANK = 2, QZ_NEW = ["F83", "F84", "F85"];
+/* v7.64 (261017 게임 콘텐츠 교체) bank 4 = 리플릿 AX CHECK LIST S31 ~ S39 · AX VISION R31 ~ R49 · 순서형 K04 ~ K06 · 옛 서버(bank 3)면 남은 12문항 · K01 ~ K03 으로 판을 만든다 */
+var QZ_BANK = 4, QZ_NEW = ["S31", "S32", "S33", "S34", "S35", "S36", "S37", "S38", "S39", "R31", "R32", "R33", "R34", "R35", "R36", "R37", "R38", "R39", "R40", "R41", "R42", "R43", "R44", "R45", "R46", "R47", "R48", "R49", "K04", "K05", "K06"];
 function oxNewOk() { return !!(OXS.card && OXS.card.bank >= QZ_BANK); }
 /* 핵심 순서형 · 서버 OX_KEYQ 와 id · 난이도 · 짝 그룹 · 조각 수가 같다(검사 141절) · 조각 = order 는 pairs 의 오른쪽 · sentence 는 words · 미끼(pool)는 지금 없다(D 는 서버 형식에만 남긴다)
-   g = 같은 판에 내지 않는 O/X 짝 그룹(로드맵 키워드 · 목표 · 슬로건 문항이 정답을 미리 알려 주지 않게) */
+   g = 같은 판에 내지 않는 O/X 짝 그룹(로드맵 키워드 · 목표 · 슬로건 문항이 정답을 미리 알려 주지 않게)
+   v7.64 K03 조각 「업무 영역별 AI Agent」(붙임 원문) · K04 Data Business Company 역할 · K05 로드맵 목표 · K06 AX 의 뜻 · 문구 끝 「놓으세요」 */
 var QZ_KEYQ = [
-  { id: "K01", lv: 1, h: "vision.2026", g: ["r26", "r27", "r28"], kind: "order", q: "AX 로드맵 연도별 키워드를 순서대로 놓아 보세요",
+  { id: "K01", lv: 1, h: "vision.2026", g: ["r26", "r27", "r28"], kind: "order", q: "AX 로드맵 연도별 키워드를 순서대로 놓으세요",
     pairs: [["2026", "공감과 참여"], ["2027", "확산과 체화"], ["2028", "혁신과 연결"]], pool: [], e: "AX 필요성을 체감하고, 현업 경험을 넓혀, 비즈니스 모델 혁신으로 잇는다." },
-  { id: "K02", lv: 1, h: "vision.metowe", g: ["slg"], kind: "sentence", q: "슬로건 「ME to WE :」 다음 문장을 순서대로 놓아 보세요", lead: "ME to WE :",
+  { id: "K02", lv: 1, h: "vision.metowe", g: ["slg"], kind: "sentence", q: "슬로건 「ME to WE :」 다음 문장을 순서대로 놓으세요", lead: "ME to WE :",
     words: ["나의", "경험을", "우리의", "가능성으로"], pool: [], e: "나의 경험이 모여 우리의 큰 가능성이 된다." },
-  { id: "K03", lv: 2, h: "vision.2026", g: ["r26", "r27", "r28"], kind: "order", q: "AX 로드맵 연도별 대표 목표를 순서대로 놓아 보세요",
-    pairs: [["2026", "사내 LLM 도입"], ["2027", "업무 영역별 Agent"], ["2028", "1인 1 AI Agent"]], pool: [], e: "사내 LLM에서 시작해 업무별 Agent를 거쳐 1인 1 AI Agent로 간다." }
+  { id: "K03", lv: 2, h: "vision.2026", g: ["r26", "r27", "r28"], kind: "order", q: "AX 로드맵 연도별 대표 내용을 순서대로 놓으세요",
+    pairs: [["2026", "사내 LLM 도입"], ["2027", "업무 영역별 AI Agent"], ["2028", "1인 1 AI Agent"]], pool: [], e: "사내 LLM에서 시작해 업무별 Agent를 거쳐 1인 1 AI Agent로 간다." },
+  { id: "K04", lv: 2, h: "vision.dbc", g: ["dbc", "dd", "dai", "dag"], kind: "order", q: "Human · Data · AI · Agent의 역할을 순서대로 놓으세요",
+    pairs: [["Human", "목표 · 결과 판단"], ["Data", "판단 근거 제공"], ["AI", "정보 분석 · 답 찾기"], ["Agent", "도구 · 작업 연결"]], pool: [], e: "사람을 중심으로 데이터와 AI, AI Agent를 연결한다." },
+  { id: "K05", lv: 2, h: "vision.2026", g: ["r26", "r27", "r28"], kind: "order", q: "AX 로드맵 연도별 목표를 순서대로 놓으세요",
+    pairs: [["2026", "AX 필요성 체감"], ["2027", "현업 AX 경험의 가속화"], ["2028", "비즈니스 모델 혁신 달성"]], pool: [], e: "공감과 참여, 확산과 체화, 혁신과 연결 단계의 목표다." },
+  { id: "K06", lv: 1, h: "vision.metowe", g: ["ax", "axd"], kind: "sentence", q: "AX의 뜻을 순서대로 놓으세요", lead: "AX는",
+    words: ["AI를", "활용해", "일하는", "방식을", "바꿔가는", "과정"], pool: [], e: "AX는 AI Transformation의 약자다." }
 ];
 /* 서버가 판 퀴즈를 아는가 · ox_start 응답에 card 가 있으면 새 서버 · 없으면 옛 서버(false) → 유리다리 O/X 로 물러선다 · 받기 전(undefined)은 판 퀴즈
    그래서 앱을 서버보다 먼저 올려도 된다(옛 서버에서는 예전 화면 그대로 · 판 퀴즈로 이미 다 푼 판은 qz_pend 로 기다렸다가 새 서버에 보낸다) */
@@ -39,13 +47,14 @@ var QZ_PANEL = {
   "lab.dap": ["", "DAP"], "lab.history": ["", "History"], "lab.project": ["", "Project"], "lab.idea": ["", "아이디어 QR"],
   "action.intro": ["", "AX in Action"], "action.sales": ["", "Sales AX"], "action.consult": ["", "AI 컨설팅 도우미"], "action.claims": ["", "Claims AX"],
   /* 261008 1층 수정본 · AX 라운지 판 · 간판 삭제(데스크만) = lounge.intro · lounge.steps 힌트 걷음(문항은 「AX 상식」 칩으로 유지 · 구현 계획 결정 6) */
-  "play.hq.hidi": ["HiDI-Q", "HiDI"], "play.hq.intro": ["HiDI-Q", "Introduce"], "play.hq.tips": ["HiDI-Q", "Tips"], "play.hq.feedback": ["HiDI-Q", "Feedback"],
+  "play.hq.hidi": ["HiDI Q", "HiDI"], "play.hq.intro": ["HiDI Q", "Introduce"], "play.hq.tips": ["HiDI Q", "Tips"], "play.hq.feedback": ["HiDI Q", "Feedback"],   /* v7.64 표기 HiDI Q(사용자 261017 D2) */
   "play.hh.helper": ["Hi-Helper", "Hi-Helper"], "play.hh.intro": ["Hi-Helper", "Introduce"], "play.hh.tips": ["Hi-Helper", "Tips"], "play.hh.check": ["Hi-Helper", "Check Point."], "play.hh.feedback": ["Hi-Helper", "Feedback"],
   "event.photo": ["", "AI 포토부스"], "event.roulette": ["", "룰렛 이벤트"], "event.typing": ["", "타자왕 게임"], "event.typingking": ["", "AX 타자왕"]
 };
 /* 구역 간판이 현장에 없는 구역 · 힌트에 옆 판 기준 한 줄(1층 부스 최종 정리 1장 · 판 14~18 · AX LAB 판 08~13 다음) */
 var QZ_NOSIGN = { action: "구역 간판이 없어요 · AX LAB 판 바로 다음, 「AX in Action」 제목 판부터예요" };
 var QZ_GEN = "AX 상식";   /* 판 근거가 없는 문항(A 13 · 힌트 없음)의 회색 칩 */
+var QZ_LEAF = { ids: ["S31", "S32", "S33", "S34", "S35", "S36", "S37", "S38", "S39"], chip: "리플릿 AX CHECK LIST" };   /* v7.64 (사용자 261017 D4) CHECK LIST 문항 = 구성원에게 나눠 주는 리플릿 문구 · 회색 칩 글자만 다르다 */
 var QZ = { tapBad: -1, tapAt: 0, sending: false };
 /* 문항 하나 · id → { id, lv, q, a(O/X 정답 · 순서형은 ''), e, h, z(구역 id), key(순서형 정의) } */
 function qzItem(id) {
@@ -59,7 +68,7 @@ function qzZone(z) { return z ? zoneById(z) : null; }
 /* 구역 칩 · K1 axs-sign 그대로(오렌지 면 + 흰 굵은 글자 · 사용자 확정 261002) · 판 근거가 없으면 회색 「AX 상식」 */
 function qzChip(it, big) {
   var zz = it.h ? qzZone(it.z) : null;   /* 261008 힌트 판이 없는 문항(A · 라운지 F74) = 「AX 상식」 · 구역 z 는 출제 섞기용으로 남는다 */
-  if (!zz) return '<span class="qz-gen">' + QZ_GEN + "</span>";
+  if (!zz) return '<span class="qz-gen">' + (QZ_LEAF.ids.indexOf(it.id) >= 0 ? QZ_LEAF.chip : QZ_GEN) + "</span>";
   return zoneSign(zz.sign, big ? "lg" : "");
 }
 /* 출처 한 줄 「AX PLAY › HiDI-Q › Introduce 판」 · 줄이 없는 구역은 두 마디 */
@@ -86,6 +95,15 @@ function qzSave(r) { S.set("qz_run", r); }
 function qzPick(n) {
   var CD = qzCardOf(n || qzSizeNew()) || QZ_CARD, P = CD.per, off = oxOffList(), seen = S.get("ox_seen", []) || [], used = {}, grp = {};
   var kseen = S.get("qz_kseen", []) || [], keys = QZ_KEYQ.filter(function (k) { return off.indexOf(k.id) < 0; });
+  /* v7.64 순서형을 고르면 그 짝 그룹 때문에 보통 · 어려움 칸을 못 채우는 경우(옛 서버 · 은행이 줄었을 때 · 끈 문항이 많을 때) 그 순서형은 건너뛴다 · 아래 난이도로 채운 판은 서버 per 판정에 걸린다 */
+  var fitK = keys.filter(function (k) {
+    return [2, 3].every(function (lv) {
+      var gs = {}, n = 0;
+      OX_BANK.forEach(function (x) { if (x.lv !== lv || off.indexOf(x.id) >= 0 || (x.g && k.g.indexOf(x.g) >= 0)) return; if (!x.g) n++; else if (!gs[x.g]) { gs[x.g] = 1; n++; } });
+      return n >= P[lv - 1] - (k.lv === lv ? 1 : 0);
+    });
+  });
+  if (fitK.length) keys = fitK;
   var key = null;
   if (CD.key > 0 && keys.length) {
     var fresh = keys.filter(function (k) { return kseen.indexOf(k.id) < 0; });
@@ -208,6 +226,7 @@ function qzTap(p) {
   if (!k || r.see >= 0) return;
   var n = qzPieces(k).length, want = qzFilled(r.k) + 1, c = p > 0 ? String(p) : "D";
   if (r.k.length >= 24) return;
+  if (p !== want && r.k.length + 1 + (n - want + 1) > 24) { QZ.tapBad = p; QZ.tapAt = Date.now(); sfx("ttuk"); App.render(); return; }   /* v7.64 6조각(K06) · 틀린 누름이 쌓여도 남은 조각을 24자(서버 형식) 안에서 끝까지 채울 수 있게 더 적지 않는다(이미 오답) */
   r.k += c;
   if (p === want) { QZ.tapBad = -1; sfx("tok"); }
   else { QZ.tapBad = p; QZ.tapAt = Date.now(); sfx("ttuk"); }
@@ -365,10 +384,10 @@ function qzHubHtml() {
   var chip = r ? '<span class="axs-chip">이어 풀기 ' + a + " / " + N + "</span>" : done ? '<span class="axs-chip ok">완주 · 내 최고 ' + best[0] + " / " + best[1] + "</span>" : '<span class="axs-chip off">시작 전</span>';
   var seg = r ? '<div class="qz-seg" aria-hidden="true">' + r.q.map(function (id, k) { return "<i" + (r.a[k] != null ? ' class="on"' : "") + "></i>"; }).join("") + "</div>" : "";
   return '<div class="ax-stack axs-pan qz">' +
-    '<section class="qz-card qz-hub"><div class="qz-top"><div class="ax-stack-tight"><h2 class="ax-section-title">AX 퀴즈</h2><p class="ax-meta">' + segHtml("1층 부스 내용 " + N + "문제 · 모두 답하면 완주") + "</p></div>" +
+    '<section class="qz-card qz-hub"><div class="qz-top"><div class="ax-stack-tight"><h2 class="ax-section-title">AX 퀴즈</h2><p class="ax-meta">' + segHtml(N + "문제 · 모두 답하면 완주") + "</p></div>" +
     (stampV2() ? '<span class="qz-smkr">' + stampMkHtml("qz", "AX 퀴즈") + "</span>" : "") + "</div>" + '<p class="qz-stl">' + chip + "</p>" + seg +
     '<button type="button" class="ax-button" onclick="qzStart(' + (r ? "false" : "true") + ')">' + (r ? "이어 풀기" : done ? "한 판 더" : "AX 퀴즈 시작") + "</button></section>" +
-    '<p class="ax-meta">순위 없음 · 시간 제한 없음 · 힌트는 1층 판에</p></div>';
+    '<p class="ax-meta">순위 없음 · 시간 제한 없음</p></div>';   /* v7.64 부스 문항을 걷어 「1층 부스 내용」 「힌트는 1층 판에」를 뺐다(VISION 문항 힌트 단추는 그대로) */
 }
 /* 힌트 시트 · 구역 간판(크게) · 줄 › 판 · 6구역 칩(그 구역 강조) · 이 구역에서 받는 스탬프 · 「이 구역 보기」(구역 상세) · 「문제로 돌아가기」 */
 function qzHint(id) {

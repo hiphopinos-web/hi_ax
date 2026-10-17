@@ -3889,7 +3889,7 @@
   var STAMP_DEF = {
     qz: { title: 'AX 퀴즈', desc: '5문제 · 모두 답하면 완주', cta: 'AX 퀴즈 풀기' },
     p5: { title: '아이디어 한 줄', desc: '아이디어 1건 제출', cta: '아이디어 쓰기' },
-    p2: { title: 'AX PLAY', desc: '1F AX PLAY에서 HiDI-Q 또는 Hi-Helper 체험', cta: '내 QR 보여주기' },
+    p2: { title: 'AX PLAY', desc: '1F AX PLAY에서 HiDI Q 또는 Hi-Helper 체험', cta: '내 QR 보여주기' },
     p3: { title: '프로그램 참여', desc: '17F 오후 강연(AWS · MS) 시작 · 종료 출석체크 시 각 1개', cta: '17F 강연 보기' },   /* v5.96 앱 STAMPS p3 과 같게(사용자 261006 「프로그램 참여 = 17F 오후 AWS · MS 강연 입장 1 + 끝 1」 · 옛 「AX 라운지 신청」 버튼 폐기) · 블록 자리(BLK_AT lounge)는 결정 대기라 그대로 */
     p4: { title: '미니 게임', desc: 'AX 팡 · 점프 · 테트리스 3종 · 종목마다 한 판', cta: '미니 게임 하기' },
     st: { title: '계단 이용', desc: '엘리베이터가 혼잡하면 오늘 하루는 계단을 이용해 보세요', cta: '계단 안내' }

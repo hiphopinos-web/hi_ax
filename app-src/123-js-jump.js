@@ -14,40 +14,41 @@ var JP_ITEM_EVERY = 15, JP_ITEM_SEC = 5;   /* 아이템 · 15초마다 하나 ·
    v4.92 (261001 사용자 승인 · 앱 개편 4묶음) 1층 부스 판 기준 30문장 · 정본 「기억력 문제 은행 v3.json」 jump = 「QA/문제 은행 확정안 v1.json」 jump · dom = 1층 구역
    v4.00 (사용자 요청 260919) 흘러가는 배경 → 공중에 뜬 글자 블록(2단 점프 미션) · 들이받으면 글자가 흩어지며 점수 보너스 · 결과 화면에 획득 목록
    블록 = 바닥에서 80~110 높이(1단 점프 머리 최고 75 · 2단 점프 113) · 앞뒤 장애물과 떨어뜨려 회피와 동시에 요구하지 않는다
-   v6.11 (사용자 261007 「AX 상식이 너무 허접하고 주어가 빠진 것들이 많아」) 30문장 전부 다시 씀 · 모든 문장에 주어 · 한 문장 = 사실 하나 · 근거 = 1층 판(assets/tour/tour-boards.js) · id · 난이도 배분(14 · 11 · 5) 그대로 · 정본 「QA/문제 은행 확정안 v1.json」 jump 도 같이 */
+   v6.11 (사용자 261007 「AX 상식이 너무 허접하고 주어가 빠진 것들이 많아」) 30문장 전부 다시 씀 · 모든 문장에 주어 · 한 문장 = 사실 하나 · 근거 = 1층 판(assets/tour/tour-boards.js) · id · 난이도 배분(14 · 11 · 5) 그대로 · 정본 「QA/문제 은행 확정안 v1.json」 jump 도 같이
+   v7.64 (261017 사용자 게임 콘텐츠 교체 D1 ~ D6) 부스 문장을 걷고 AX VISION · 리플릿 AX CHECK LIST(dom check) 문장으로 · AI 일반 팁 jp12 · jp13 은 남김(D3) · id · 난이도 배분 그대로(계단 동행이 id 로 빌려 쓴다) */
 var JP_BG_MAX = 21, JP_BG_FIRST = 7, JP_BG_EVERY = 10;
 var JP_FACT = { w: 104, h: 30, lo: 80 };   /* v4.02 블록 점수는 올림픽 규칙 jump.fact(기본 100 · v4.00 의 임시 +150 폐지) */
 var JP_FACTS = [
   { id: "jp01", lv: 1, dom: "vision", text: "AX는 AI로 일하는 방식을 바꿔요" },
   { id: "jp02", lv: 1, dom: "vision", text: "사람은 목표를 정하고 결과를 판단해요" },
   { id: "jp03", lv: 1, dom: "vision", text: "2026년 로드맵은 공감과 참여예요" },
-  { id: "jp04", lv: 1, dom: "lab", text: "아이디어 한 줄은 QR로 남겨요" },
+  { id: "jp04", lv: 1, dom: "vision", text: "AI는 정보를 분석하고 답을 찾아요" },
   { id: "jp05", lv: 1, dom: "vision", text: "2027년 로드맵은 확산과 체화예요" },
   { id: "jp06", lv: 1, dom: "vision", text: "2028년 로드맵은 혁신과 연결이에요" },
-  { id: "jp07", lv: 1, dom: "lab", text: "DAP는 데이터로 업무 문제를 풀어요" },
-  { id: "jp08", lv: 1, dom: "lab", text: "DAP는 코딩을 몰라도 지원해요" },
-  { id: "jp09", lv: 1, dom: "lab", text: "내 업무 고민도 DAP 과제가 돼요" },
-  { id: "jp10", lv: 1, dom: "action", text: "하이핑거는 보상 직원이 만든 앱이에요" },
-  { id: "jp11", lv: 1, dom: "play", text: "HiDI-Q에는 문서를 5개까지 올려요" },
-  { id: "jp12", lv: 1, dom: "play", text: "HiDI-Q에는 필요한 장만 올려요" },
-  { id: "jp13", lv: 1, dom: "play", text: "HiDI-Q에는 질문을 하나씩 해요" },
-  { id: "jp14", lv: 1, dom: "lounge", text: "AX 라운지에서는 업무 고민을 상담해요" },
-  { id: "jp15", lv: 2, dom: "vision", text: "2027년 목표는 업무별 Agent예요" },
+  { id: "jp07", lv: 1, dom: "check", text: "고객 개인정보는 AI에 입력하지 않아요" },
+  { id: "jp08", lv: 1, dom: "check", text: "사내 기밀정보는 AI에 입력하지 않아요" },
+  { id: "jp09", lv: 1, dom: "check", text: "이름과 연락처는 고객 개인정보예요" },
+  { id: "jp10", lv: 1, dom: "check", text: "정보 유출 의심은 즉시 신고해요" },
+  { id: "jp11", lv: 1, dom: "vision", text: "HiDI Q는 대화하듯 답해 줘요" },
+  { id: "jp12", lv: 1, dom: "play", text: "HiDI Q에는 필요한 장만 올려요" },
+  { id: "jp13", lv: 1, dom: "play", text: "HiDI Q에는 질문을 하나씩 해요" },
+  { id: "jp14", lv: 1, dom: "vision", text: "사내 LLM은 2026년에 도입해요" },
+  { id: "jp15", lv: 2, dom: "vision", text: "2027년엔 업무별 Agent가 생겨요" },
   { id: "jp16", lv: 2, dom: "vision", text: "Agent는 도구와 작업을 연결해요" },
   { id: "jp17", lv: 2, dom: "vision", text: "데이터는 판단에 필요한 근거가 돼요" },
-  { id: "jp18", lv: 2, dom: "action", text: "강북이는 예상 시상금을 알려 줘요" },
-  { id: "jp19", lv: 2, dom: "play", text: "HiDI-Q는 올린 문서로 답해요" },
-  { id: "jp20", lv: 2, dom: "play", text: "HiDI-Q는 원본 양식대로 번역해요" },
-  { id: "jp21", lv: 2, dom: "play", text: "HiDI-Q는 보고서 초안도 써 줘요" },
-  { id: "jp22", lv: 2, dom: "play", text: "하이헬퍼는 1분 안에 설계를 추천해요" },
-  { id: "jp23", lv: 2, dom: "play", text: "하이헬퍼는 피보험자 동의 후에 추천해요" },
-  { id: "jp24", lv: 2, dom: "play", text: "하이헬퍼는 태아보험도 설계해요" },
-  { id: "jp25", lv: 2, dom: "lounge", text: "AX 라운지는 실행 방법까지 정해요" },
-  { id: "jp26", lv: 3, dom: "play", text: "신상품은 하이헬퍼 반영이 늦어요" },
-  { id: "jp27", lv: 3, dom: "action", text: "AI 컨설팅 도우미는 화법을 알려 줘요" },
-  { id: "jp28", lv: 3, dom: "action", text: "하이핑거는 통화녹취도 분석해요" },
-  { id: "jp29", lv: 3, dom: "vision", text: "법률 Agent는 근거와 함께 답해요" },
-  { id: "jp30", lv: 3, dom: "vision", text: "의료심사 Agent는 심사를 도와요" }
+  { id: "jp18", lv: 2, dom: "vision", text: "AX 필요성 체감은 2026년 목표예요" },
+  { id: "jp19", lv: 2, dom: "vision", text: "비즈니스 모델은 2028년에 혁신해요" },
+  { id: "jp20", lv: 2, dom: "vision", text: "생성형 AI는 2026년에 오픈해요" },
+  { id: "jp21", lv: 2, dom: "vision", text: "HiDI Q에는 문서를 올리고 물어봐요" },
+  { id: "jp22", lv: 2, dom: "check", text: "개인정보는 AI 사용 전에 확인해요" },
+  { id: "jp23", lv: 2, dom: "check", text: "유출 신고는 정보보호파트로 해요" },
+  { id: "jp24", lv: 2, dom: "vision", text: "데이터와 AI의 중심은 사람이에요" },
+  { id: "jp25", lv: 2, dom: "vision", text: "현업 AX 경험은 2027년에 가속돼요" },
+  { id: "jp26", lv: 3, dom: "vision", text: "업무마다 전담 Agent가 생겨요" },
+  { id: "jp27", lv: 3, dom: "vision", text: "언더라이팅에도 전담 Agent가 생겨요" },
+  { id: "jp28", lv: 3, dom: "vision", text: "각자가 Agent를 스스로 만들어요" },
+  { id: "jp29", lv: 3, dom: "check", text: "CHECK LIST는 미리 점검해요" },
+  { id: "jp30", lv: 3, dom: "vision", text: "Agent를 만드는 플랫폼이 생겨요" }
 ];
 var JP_FACT_W = [50, 40, 10];   /* v4.30 난이도 가중 · 쉬움 50 · 보통 40 · 어려움 10 (사용자 확정 260924) */
 /* 한 판에 나올 문장 순서 · 한 줄마다 난이도를 가중 무작위로 고르고(쉬움 50 · 보통 40 · 어려움 10), 그 난이도에서 아직 안 나온 문장을 무작위로 ·

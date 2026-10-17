@@ -72,7 +72,7 @@
       rows: [{ a: [30.4, 0.55], r: [-1, 0], n: [0, 1], pages: [9, 10, 11, 12, 13], tv: [0], sign: 0 }] },   /* 261008 수정본 5쪽 · 55인치 TV 1 = 판 9(DAP) 앞 */
     { id: 'action', name: 'AX in Action', fl: '1F', signPg: 0, where: '정문으로 들어와 오른쪽 · 유리벽 앞 첫 줄 · 간판 없음',
       rows: [{ a: [24.77, 0.55], r: [-1, 0], n: [0, 1], pages: [14, 15, 16, 17, 18], tv: [1] }] },
-    { id: 'play', name: 'AX PLAY', fl: '1F', signPg: 22, where: '정문으로 들어와 왼쪽 · 유리벽 앞 두 줄(HiDI-Q · Hi-Helper)',
+    { id: 'play', name: 'AX PLAY', fl: '1F', signPg: 22, where: '정문으로 들어와 왼쪽 · 유리벽 앞 두 줄(HiDI Q · Hi-Helper)',
       rows: [{ a: [14.74, 0.55], r: [-1, 0], n: [0, 1], pages: [23, 24, 25, 26, 27], tv: [0], desk: 4, sign: 0, label: 'HiDI-Q' },
              { a: [7.51, 0.55], r: [-1, 0], n: [0, 1], pages: [28, 29, 30, 31, 32], tv: [0], desk: 4, label: 'Hi-Helper' }] },
     { id: 'event', name: 'EVENT', fl: '1F', signPg: 33, where: '정문으로 들어와 왼쪽 끝 벽 · 타자왕 · 포토부스 · 룰렛 순', extra: [48],

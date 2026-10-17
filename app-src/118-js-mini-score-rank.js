@@ -51,7 +51,9 @@ var OLY_RULE = {
    h 힌트 코드(구역.줄.판 · 기억력 문제 은행 v3.json hint_codes · 판이 갈리거나 판 근거가 없으면 빈 값 · 지금 화면은 쓰지 않는다) ·
    rv 검수 통과(0 이면 문장 옆 「(예시)」 · 지금 은행은 모두 1) · 답이 틀린 문항은 서버 설정 OX_OFF 로 뺀다 · 옛 86문제에서 빠진 73개(A 31 · S 21 · R 21)는 서버 OX_KEY_OLD 가 옛 기록 채점에만 쓴다
    v4.98 (261002 사용자 결정 · 「QA/문제 은행 품질 감사 v1.md」 5-2 · 5-3) 95 → 49문제 · 49개 뺌(서버 OX_KEY_OLD 로 · 채점만) · 문구 7곳 고침(A30 문장 · 해설 6) · 새 F83 ~ F85(QZ_NEW · 서버 bank 2 이상일 때만 낸다)
-   v5.00 (261002 사용자 요구 · 한 판 5문항) 49 → 29문제(쉬움 12 · 보통 12 · 어려움 5 · O 15 / X 14 · 1층 판 23 + AX 상식 6) · 뺀 20(A03 A10 A19 A27 F07 F11 F13 F15 F26 F29 F38 F43 F46 F47 F51 F54 F56 F67 F69 F80)은 서버 OX_KEY_OLD(채점만) · 정본 json _meta.ox_v3 */
+   v5.00 (261002 사용자 요구 · 한 판 5문항) 49 → 29문제(쉬움 12 · 보통 12 · 어려움 5 · O 15 / X 14 · 1층 판 23 + AX 상식 6) · 뺀 20(A03 A10 A19 A27 F07 F11 F13 F15 F26 F29 F38 F43 F46 F47 F51 F54 F56 F67 F69 F80)은 서버 OX_KEY_OLD(채점만) · 정본 json _meta.ox_v3
+   v7.64 (261017 사용자 게임 콘텐츠 교체 · 「기획 문서/게임 콘텐츠 교체안_261017.md」 D1 ~ D6) 29 → 40문제 = AI 일반 9(A 6 · F50 · F55 · F68 · D3 남김) + 리플릿 AX CHECK LIST 9(S31 ~ S39 · c 1 · 힌트 없음 · 칩 「리플릿 AX CHECK LIST」 D4) + AX VISION 22(F02 · F10 · F20 · R31 ~ R49)
+     뺀 1층 부스 17(F18 F21 F22 F28 F30 F31 F52 F57 F64 F65 F66 F71 F72 F74 F83 F84 F85)은 서버 OX_KEY_OLD(채점만) · 새 28 · K04 ~ K06 은 서버 bank 4 이상에서만(QZ_NEW) */
 var OX_BANK = [
   { id: "A02", c: 1, lv: 1, q: "AI가 자신 있게 말하면 사실이다", a: "X", e: "틀린 내용도 자신 있게 말할 수 있어 따로 확인한다.", g: "conf", rv: 1, h: "" },
   { id: "A05", c: 1, lv: 1, q: "읽을 사람을 알려 주면 답이 나아진다", a: "O", e: "누구에게 무엇을 위해 쓰는지 알면 맞춤 답을 준다.", g: "ctxq", rv: 1, h: "" },
@@ -59,29 +61,40 @@ var OX_BANK = [
   { id: "A28", c: 1, lv: 2, q: "AI가 알려 준 출처는 모두 실제로 있다", a: "X", e: "없는 논문이나 링크를 지어낼 때도 있어 확인한다.", g: "cite", rv: 1, h: "" },
   { id: "A29", c: 1, lv: 2, q: "AI가 요약하면 빠지는 내용이 없다", a: "X", e: "중요한 내용을 빼먹을 수 있어 원문과 대조한다.", g: "", rv: 1, h: "" },
   { id: "A30", c: 1, lv: 2, q: "근거 자료를 주면 엉뚱한 답이 줄어든다", a: "O", e: "「이 자료만 보고 답해 줘」처럼 범위를 정해 준다.", g: "", rv: 1, h: "" },
-  { id: "F02", c: 4, lv: 1, q: "AX의 X는 Experience를 뜻한다", a: "X", e: "AX는 AI Transformation의 약자다.", g: "ax", rv: 1, z: "vision", h: "vision.metowe" },
-  { id: "F10", c: 4, lv: 2, q: "목표를 정하고 결과를 판단하는 쪽은 AI다", a: "X", e: "목표를 정하고 결과를 판단하는 쪽은 사람이다.", g: "dbc", rv: 1, z: "vision", h: "vision.dbc" },
-  { id: "F18", c: 4, lv: 3, q: "의료심사 Agent는 심사 정보 확인을 돕는다", a: "O", e: "진단서 등 의료 서류에서 심사 정보를 확인하게 돕는다.", g: "agt", rv: 1, z: "vision", h: "vision.2027" },
-  { id: "F20", c: 4, lv: 3, q: "1인 1 AI Agent는 IT 부서만 만든다", a: "X", e: "각자 자기 업무에 필요한 Agent를 스스로 만든다.", g: "r28", rv: 1, z: "vision", h: "vision.2028" },
-  { id: "F21", c: 4, lv: 3, q: "1인 1 Agent는 쌓인 데이터를 학습한다", a: "O", e: "2026~2027년 데이터를 학습해 업무를 잘 아는 AI가 된다.", g: "r28b", rv: 1, z: "vision", h: "vision.2028" },
-  { id: "F22", c: 4, lv: 3, q: "지금의 DAP는 나만의 Agent의 첫걸음이다", a: "O", e: "지금 참여하는 DAP가 2028년 나만의 Agent로 이어진다.", g: "r28c", rv: 1, z: "vision", h: "vision.2028" },
-  { id: "F28", c: 4, lv: 1, q: "DAP에 지원하려면 코딩을 할 줄 알아야 한다", a: "X", e: "코딩과 데이터를 몰라도 누구나 지원할 수 있다.", g: "dapc", rv: 1, z: "lab", h: "lab.idea" },
-  { id: "F30", c: 4, lv: 1, q: "내 업무 고민도 DAP가 될 수 있다", a: "O", e: "반복 업무, 자료 찾기, 예측 같은 고민이 과제가 된다.", g: "dapm", rv: 1, z: "lab", h: "lab.idea" },
-  { id: "F31", c: 4, lv: 1, q: "AX LAB QR로 아이디어 한 줄을 쓸 수 있다", a: "O", e: "QR을 찍어 한 줄을 쓰면 스탬프도 받는다.", g: "idea", rv: 1, z: "lab", h: "lab.idea" },
   { id: "F50", c: 4, lv: 1, q: "결과물은 「정리해줘」처럼 짧게 시키는 게 좋다", a: "X", e: "A4 1장, 존댓말처럼 형태를 구체적으로 알려 준다.", g: "tipf", rv: 1, z: "play", h: "play.hq.tips" },
-  { id: "F52", c: 4, lv: 1, q: "HiDI-Q에는 문서를 5개까지 올릴 수 있다", a: "O", e: "최대 5개까지 올리고 그 내용으로 질문한다.", g: "hq5", rv: 1, z: "play", h: "play.hq.intro" },
   { id: "F55", c: 4, lv: 1, q: "문서는 아무거나 통째로 올리는 게 좋다", a: "X", e: "필요한 자료의 필요한 부분만 올린다.", g: "tipu", rv: 1, z: "play", h: "play.hq.tips" },
-  { id: "F57", c: 4, lv: 1, q: "Hi-Helper는 설계를 1분 안에 추천한다", a: "O", e: "계약 빅데이터를 바탕으로 1분 안에 추천한다.", g: "hh1", rv: 1, z: "play", h: "play.hh.helper" },
-  { id: "F64", c: 4, lv: 2, q: "HiDI-Q는 번역해도 원본 양식을 유지한다", a: "O", e: "양식 그대로 번역해 옮겨 적을 필요가 없다.", g: "hqt", rv: 1, z: "play", h: "play.hq.intro" },
-  { id: "F65", c: 4, lv: 2, q: "HiDI-Q에는 암호화된 문서를 올릴 수 없다", a: "X", e: "암호화된 문서를 그대로 올리고 내려받을 수 있다.", g: "hqs", rv: 1, z: "play", h: "play.hq.intro" },
-  { id: "F66", c: 4, lv: 2, q: "HiDI-Q로 보고서 초안을 받아 볼 수 있다", a: "O", e: "Word, Excel, PPT 기반 보고서 초안을 받는다.", g: "hqr", rv: 1, z: "play", h: "play.hq.intro" },
   { id: "F68", c: 4, lv: 2, q: "질문은 한꺼번에 여러 개 묻는 게 좋다", a: "X", e: "질문은 하나씩 나누어 한다.", g: "tipq", rv: 1, z: "play", h: "play.hq.tips" },
-  { id: "F71", c: 4, lv: 2, q: "태아보험 설계는 출산예정일만 넣으면 된다", a: "O", e: "임신 주수별 필수 담보를 담아 설계한다.", g: "hhf", rv: 1, z: "play", h: "play.hh.intro" },
-  { id: "F72", c: 4, lv: 3, q: "Hi-Helper는 신상품도 바로 추천에 반영한다", a: "X", e: "신상품과 신담보는 반영까지 시간이 걸린다.", g: "hhn", rv: 1, z: "play", h: "play.hh.check" },
-  { id: "F74", c: 4, lv: 1, q: "AX 라운지는 업무 고민을 이야기하는 곳이다", a: "O", e: "바꾸고 싶은 업무와 반복되는 불편을 이야기한다.", g: "lg", rv: 1, z: "lounge", h: "" },   /* 261008 1층 수정본 · AX 라운지 판(20 · 21) 삭제 = 힌트 판 없음 → 「AX 상식」 칩(구현 계획 결정 6 · 문항 유지) */
-  { id: "F83", c: 4, lv: 1, q: "in Action 앱은 외부 업체가 만들어 줬다", a: "X", e: "현장 구성원이 AI와 데이터로 직접 만들었다.", g: "ia", rv: 1, z: "action", h: "action.intro" },
-  { id: "F84", c: 4, lv: 2, q: "AI컨설팅 도우미는 판매 화법을 알려 준다", a: "O", e: "상품의 강점을 판매 화법으로 제공하는 앱이다.", g: "ap", rv: 1, z: "action", h: "action.consult" },
-  { id: "F85", c: 4, lv: 2, q: "Hi-Helper는 추천 설계안을 하나만 준다", a: "X", e: "추천 설계안 TOP1~3을 비교해 볼 수 있다.", g: "hhr", rv: 1, z: "play", h: "play.hh.tips" }
+  { id: "S31", c: 1, lv: 1, q: "AI 사용 전 개인정보가 없는지 확인한다", a: "O", e: "AI 사용 시 개인정보, 사내 기밀 정보가 없는지 확인한다.", g: "cdo", rv: 1, h: "" },
+  { id: "S32", c: 1, lv: 1, q: "고객 이름과 연락처는 AI에 입력해도 된다", a: "X", e: "고객 개인정보(이름, 연락처 등)는 입력하지 않는다.", g: "cpi", rv: 1, h: "" },
+  { id: "S33", c: 1, lv: 1, q: "경영전략 자료는 AI에 입력해도 된다", a: "X", e: "사내 기밀정보(경영전략, 인사정보 등)는 입력하지 않는다.", g: "csec", rv: 1, h: "" },
+  { id: "S34", c: 1, lv: 1, q: "정보 유출이 의심되면 즉시 신고한다", a: "O", e: "의심되면 즉시 정보보호파트로 신고한다.", g: "crep", rv: 1, h: "" },
+  { id: "S35", c: 1, lv: 2, q: "정보 유출 신고는 정보보호파트로 한다", a: "O", e: "유출이 의심되면 즉시 정보보호파트로 신고한다.", g: "crep", rv: 1, h: "" },
+  { id: "S36", c: 1, lv: 2, q: "인사정보는 사내 기밀정보가 아니다", a: "X", e: "경영전략, 인사정보 등이 사내 기밀정보다.", g: "csec", rv: 1, h: "" },
+  { id: "S37", c: 1, lv: 2, q: "연락처는 고객 개인정보가 아니다", a: "X", e: "이름, 연락처 등이 고객 개인정보다.", g: "cpi", rv: 1, h: "" },
+  { id: "S38", c: 1, lv: 3, q: "CHECK LIST의 DO는 확인과 신고다", a: "O", e: "개인정보 · 기밀 정보 확인하기, 유출 의심 시 신고하기.", g: "clist", rv: 1, h: "" },
+  { id: "S39", c: 1, lv: 3, q: "AI에 넣지 않을 정보는 고객 개인정보뿐이다", a: "X", e: "사내 기밀정보(경영전략, 인사정보 등)도 입력하지 않는다.", g: "clist", rv: 1, h: "" },
+  { id: "F02", c: 4, lv: 1, q: "AX의 X는 Experience를 뜻한다", a: "X", e: "AX는 AI Transformation의 약자다.", g: "ax", rv: 1, z: "vision", h: "vision.metowe" },
+  { id: "R31", c: 4, lv: 1, q: "AX는 AI로 일하는 방식을 바꿔가는 과정이다", a: "O", e: "AI를 활용해 일하는 방식을 바꿔가는 과정을 말한다.", g: "axd", rv: 1, z: "vision", h: "vision.metowe" },
+  { id: "R32", c: 4, lv: 1, q: "작은 경험들이 모여 우리의 큰 가능성이 된다", a: "O", e: "나의 작은 경험들이 모여 현대해상의 변화를 만든다.", g: "exp", rv: 1, z: "vision", h: "vision.metowe" },
+  { id: "R33", c: 4, lv: 1, q: "사람을 중심으로 데이터와 AI를 연결한다", a: "O", e: "사람을 중심으로 데이터와 AI, AI Agent를 연결한다.", g: "dctr", rv: 1, z: "vision", h: "vision.dbc" },
+  { id: "R34", c: 4, lv: 2, q: "데이터와 AI를 중심으로 사람을 연결한다", a: "X", e: "중심은 사람이다. 사람을 중심으로 데이터와 AI를 연결한다.", g: "dctr", rv: 1, z: "vision", h: "vision.dbc" },
+  { id: "F10", c: 4, lv: 2, q: "목표를 정하고 결과를 판단하는 쪽은 AI다", a: "X", e: "목표를 정하고 결과를 판단하는 쪽은 사람이다.", g: "dbc", rv: 1, z: "vision", h: "vision.dbc" },
+  { id: "R35", c: 4, lv: 1, q: "Data는 판단에 필요한 근거를 제공한다", a: "O", e: "Data Business Company에서 Data가 맡는 역할이다.", g: "dd", rv: 1, z: "vision", h: "vision.dbc" },
+  { id: "R36", c: 4, lv: 1, q: "AI는 정보를 분석하고 답을 찾는다", a: "O", e: "AI가 맡는 역할이다. 목표와 결과 판단은 사람이 한다.", g: "dai", rv: 1, z: "vision", h: "vision.dbc" },
+  { id: "R37", c: 4, lv: 2, q: "Agent는 판단에 필요한 근거를 제공한다", a: "X", e: "근거 제공은 Data, Agent는 도구와 작업을 연결한다.", g: "dag", rv: 1, z: "vision", h: "vision.dbc" },
+  { id: "R38", c: 4, lv: 2, q: "Agent는 목표에 맞춰 도구와 작업을 연결한다", a: "O", e: "Data Business Company에서 Agent가 맡는 역할이다.", g: "dag", rv: 1, z: "vision", h: "vision.dbc" },
+  { id: "R39", c: 4, lv: 1, q: "2026년 로드맵 단계는 공감과 참여다", a: "O", e: "2026 공감과 참여, 2027 확산과 체화, 2028 혁신과 연결.", g: "r26", rv: 1, z: "vision", h: "vision.2026" },
+  { id: "R40", c: 4, lv: 1, q: "2027년 로드맵 단계는 혁신과 연결이다", a: "X", e: "2027년은 확산과 체화, 혁신과 연결은 2028년이다.", g: "r27", rv: 1, z: "vision", h: "vision.2027" },
+  { id: "R41", c: 4, lv: 1, q: "사내 LLM 도입은 2028년 내용이다", a: "X", e: "사내 LLM 도입 및 생성형 AI 서비스 오픈은 2026년 내용이다.", g: "r26", rv: 1, z: "vision", h: "vision.2026" },
+  { id: "R42", c: 4, lv: 2, q: "2026년 목표는 비즈니스 모델 혁신 달성이다", a: "X", e: "2026년 목표는 AX 필요성 체감이다.", g: "r26", rv: 1, z: "vision", h: "vision.2026" },
+  { id: "R43", c: 4, lv: 2, q: "2027년 목표는 현업 AX 경험의 가속화다", a: "O", e: "2027 확산과 체화 단계의 목표다.", g: "r27", rv: 1, z: "vision", h: "vision.2027" },
+  { id: "R44", c: 4, lv: 2, q: "2028년 목표는 비즈니스 모델 혁신 달성이다", a: "O", e: "2028 혁신과 연결 단계의 목표다.", g: "r28", rv: 1, z: "vision", h: "vision.2028" },
+  { id: "R45", c: 4, lv: 2, q: "HiDI Q는 문서를 올리고 물으면 답해 준다", a: "O", e: "문서를 올리고 물어보면 대화하듯 답해 준다.", g: "hq", rv: 1, z: "vision", h: "vision.2026" },
+  { id: "R46", c: 4, lv: 2, q: "전담 Agent는 영업 업무에만 만든다", a: "X", e: "영업 · 보상 · 언더라이팅 등 각 업무에 만든다.", g: "r27d", rv: 1, z: "vision", h: "vision.2027" },
+  { id: "R47", c: 4, lv: 2, q: "2028년엔 각자 Agent를 스스로 만든다", a: "O", e: "각자 업무에 필요한 Agent를 스스로 만드는 플랫폼을 구축한다.", g: "r28d", rv: 1, z: "vision", h: "vision.2028" },
+  { id: "R48", c: 4, lv: 3, q: "업무 영역별 Agent 구축은 2028년 내용이다", a: "X", e: "2027년 내용이다. 2028년은 전사 1인 1 AI Agent 구축.", g: "r27", rv: 1, z: "vision", h: "vision.2027" },
+  { id: "R49", c: 4, lv: 3, q: "2027년엔 업무마다 전담 Agent를 만든다", a: "O", e: "영업 · 보상 · 언더라이팅 등 각 업무에 전담 Agent를 생성한다.", g: "r27d", rv: 1, z: "vision", h: "vision.2027" },
+  { id: "F20", c: 4, lv: 3, q: "1인 1 AI Agent는 IT 부서만 만든다", a: "X", e: "각자 자기 업무에 필요한 Agent를 스스로 만든다.", g: "r28", rv: 1, z: "vision", h: "vision.2028" }
 ];
 var OX_KEY = {};   /* id: [난이도, 정답, 짝, 검수, 문장] · 서버 OX_KEY 와 같은 모양(채점 식을 글자 그대로 같게 쓰려고) */
 OX_BANK.forEach(function (x) { OX_KEY[x.id] = [x.lv, x.a, x.g, x.rv, x.q]; });

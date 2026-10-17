@@ -105,7 +105,7 @@ var TOUR_HOST = {
   },
   acts: function (id) {
     var go = function (v) { return function () { App.go(v); }; };
-    if (id === "vision" || id === "action") return [{ lbl: "AX 퀴즈 풀기", run: go("quiz") }];
+    if (id === "vision") return [{ lbl: "AX 퀴즈 풀기", run: go("quiz") }];   /* v7.64 퀴즈에서 AX in Action 문항을 걷음 */
     if (id === "lab") return ideaGateOff() ? [] : [{ lbl: "아이디어 한 줄 쓰기", run: go("ideas") }];   /* v5.90 사전 오픈 OFF · 행사 전 = 숨김 */
     if (id === "play") return [{ lbl: "체험 안내 보기", run: go("booth") }];
     if (id === "lounge") { var L = zoneLive(zoneById("lounge")); return [{ lbl: L.btn ? L.btn[0] : "AX 라운지 안내", run: function () { if (L.btn) progOpen("dap"); else zoneOpen("lounge"); } }]; }   /* v7.39 (사용자 261016 계획서 3-3) 사전 신청자 = 「내 상담」 · 그 밖 = 「AX 라운지 안내」 */
