@@ -50,14 +50,16 @@ function nkSetAsk(emp){
     done:function(r){ pcAfter(); toast("닉네임을 "+NK_OP.set+" · "+(r.was||"없음")+" → "+r.nick,{ undo:function(){ nkGo(emp, was?"set":"clear", was); } }); } });
 }
 function nkOpAsk(emp, op){
-  var cur=pcNick()||{}, nm=cur.nick||"";
-  var T={ clear:["닉네임을 지울까요?","순위판에 「익명 참가자」로 보임 · 같은 닉네임으로 되돌릴 수 있음","지우기"], hide:["닉네임을 숨길까요?","순위판에 「이름 숨김」으로 보임","숨기기"], show:["닉네임 숨김을 풀까요?","순위판에 닉네임이 다시 보임","숨김 풀기"] }[op];
+  var cur=pcNick()||{}, nm=cur.nick||"", hid=!!cur.hidden;   /* 261017 지우기는 숨김도 풀므로 되돌릴 때 숨김까지 다시 */
+  var T={ clear:["닉네임을 지울까요?","순위판에 「익명 참가자」로 보임 · 같은 닉네임으로 되돌릴 수 있음"+(hid?"(숨김 그대로)":""),"지우기"], hide:["닉네임을 숨길까요?","순위판에 「이름 숨김」으로 보임","숨기기"], show:["닉네임 숨김을 풀까요?","순위판에 닉네임이 다시 보임","숨김 풀기"] }[op];
   confirmBox({ t:T[0], who:pcWho(emp), sub:"닉네임 "+nm+" · "+T[1], ok:T[2], danger:op==="clear",
     run:function(){ return call("usr_nick",{ emp:emp, op:op }); },
     fail:function(r){ return r&&NK_WHY[r.reason]||""; },
-    done:function(){ pcAfter(); toast("닉네임을 "+NK_OP[op]+" · "+nm,{ undo:function(){ nkGo(emp, op==="clear"?"set":op==="hide"?"show":"hide", nm); } }); } });
+    done:function(){ pcAfter(); toast("닉네임을 "+NK_OP[op]+" · "+nm,{ undo:function(){ nkGo(emp, op==="clear"?"set":op==="hide"?"show":"hide", nm, op==="clear"&&hid); } }); } });
 }
-function nkGo(emp, op, nick){ call("usr_nick",op==="set"?{ emp:emp, op:op, nick:nick }:{ emp:emp, op:op }).then(function(r){ pcAfter(); toast(r&&r.ok?"되돌렸습니다 · 닉네임 "+(r.nick||"없음"):"되돌리지 못했습니다 · "+(r&&NK_WHY[r.reason]||why(r)),{ bad:!(r&&r.ok) }); }); }
+function nkGo(emp, op, nick, rehide){ call("usr_nick",op==="set"?{ emp:emp, op:op, nick:nick }:{ emp:emp, op:op }).then(function(r){
+  var fin=function(r2){ pcAfter(); toast(r&&r.ok?"되돌렸습니다 · 닉네임 "+(r.nick||"없음")+(rehide?(r2&&r2.ok?" · 숨김":" · 숨김은 다시 못 함"):""):"되돌리지 못했습니다 · "+(r&&NK_WHY[r.reason]||why(r)),{ bad:!(r&&r.ok)||(rehide&&!(r2&&r2.ok)) }); };
+  if(r&&r.ok&&rehide&&!r.hidden) call("usr_nick",{ emp:emp, op:"hide" }).then(fin); else fin(null); }); }
 /* ── 초기화 ── */
 function pcResetHtml(d){
   return pcSec("초기화", '<div class="row"><div class="t"><b>이 사람을 처음 상태로</b><span style="display:block">스탬프 · 행운권 · 게임 · 닉네임 · 출석 · 신청 · PIN 을 지움 · 되돌릴 수 없음</span><span style="display:block">'+esc(RS_DAY)+'</span></div><button class="btn dng" type="button" onclick="pcResetAsk(\''+jq(d.emp)+'\')">초기화</button></div>');

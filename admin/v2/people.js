@@ -211,7 +211,7 @@ function stRevokeAsk(emp, id){
     x=x||{};
     if(!x.ok){ toast("취소할 수 없습니다 · "+(ST_NO[x.reason]||why(x)),{ bad:1, ms:5000 }); if(x.reason==="nostamp") pcLoad(); return; }
     confirmBox({ t:"스탬프를 취소할까요?", who:pcWho(emp), sub:stName(id)+" · 개수 "+num(x.n)+" → "+num(x.nAfter)+" · 행운권 "+n0(x.tickets||0)+"장 그대로 · 룰렛 "+(x.roulette?"사용함":"안 씀"),
-      body:'<p class="cap">기록을 지우지 않고 「담당자 취소」 줄을 남깁니다. 같은 행동으로 다시 받을 수 있습니다.</p>', ok:"취소 처리", danger:true,
+      body:'<p class="cap">기록을 지우지 않고 「담당자 취소」 줄을 남깁니다. '+(GRANT_IDS.indexOf(id)>=0?'7초 안 토스트에서 되돌리기 · 그 뒤에는 「부여」로 다시 줌.':'되돌리기 없음 · 콘솔에서 다시 줄 수 없는 항목입니다.')+'</p>', ok:"취소 처리", danger:true,
       run:function(){ return call("stamp_revoke",{ emp:emp, id:id }); },
       fail:function(r){ return r&&ST_NO[r.reason]||""; },
       done:function(){ pcAfter(); toast("취소했습니다 · "+emp+" · "+stName(id), GRANT_IDS.indexOf(id)>=0?{ undo:function(){ stGrantGo(emp, id); } }:{}); } });

@@ -15,7 +15,7 @@ function dwsPaint(){
   var b=el("dwsB"); if(!b) return; var gt=dataGate("draw","추첨 설정"); if(gt){ b.innerHTML=gt; return; }
   var d=S.data.draw, av=d.att!=null?String(d.att).toUpperCase():null, ac=dwsCfg("행운권_참석조건");
   if(!el("dwsCode")){
-    b.innerHTML='<div class="grid g2"><div class="card"><h2>추첨 코드 · 체크인 시간</h2><p class="cap">17F 입구 인쇄물 QR 과 같아야 함</p>'+
+    b.innerHTML='<div class="grid g2 s1"><div class="card"><h2>추첨 코드 · 체크인 시간</h2><p class="cap">17F 입구 인쇄물 QR 과 같아야 함</p>'+
       '<div class="nt-row"><label class="nt-f up-f">추첨 코드<input class="xg-q nt-in n" id="dwsCode" autocomplete="off" spellcheck="false" placeholder="AXD + 6자"></label>'+
       '<label class="nt-f up-f">체크인 시간<input class="xg-q nt-in n" id="dwsWin" placeholder="16:40-17:25"></label>'+
       '<label class="nt-f up-f">날짜(비우면 매일)<input class="xg-q nt-in n" id="dwsDay" placeholder="2026-10-26"></label></div>'+
@@ -23,7 +23,7 @@ function dwsPaint(){
       '<div class="col"><div class="card" id="dwsCl"></div><div class="card" id="dwsAt"></div></div></div>';
     dwsFill(1);
   }
-  el("dwsNote").innerHTML=(d.code?"":"<b>코드가 비어 있어 체크인을 받지 않습니다.</b> ")+"시간 · 날짜 검사 "+esc(dwsWin(d))+" · 기준 "+esc(fmtD(d.t));
+  el("dwsNote").innerHTML=(d.code?"":"<b>코드가 비어 있어 체크인을 받지 않습니다.</b> ")+"시간 · 날짜 검사 "+esc(dwsWin(d))+' · <span style="white-space:nowrap">기준 '+esc(fmtD(d.t))+'</span>';
   el("dwsCl").innerHTML='<h2>17F 입구 체크인</h2>'+('closed' in d?'<div class="row"><div class="t"><b>'+(d.closed?"체크인 마감":"체크인 받는 중")+'</b><span>체크인 '+n0(d["in"])+'명 · 행운권 있음 '+n0(d.withT)+'</span></div>'+(d.closed?tag("마감","warn"):tag("받는 중","ok"))+'<button class="btn'+(d.closed?"":" dng")+'" type="button" onclick="dwsClose('+(d.closed?0:1)+')">'+(d.closed?"다시 열기":"체크인 마감")+'</button></div>':laterH("체크인 마감"));
   el("dwsAt").innerHTML='<h2>행운권 참석조건</h2><div class="row"><div class="t"><b>'+(av==null?"서버 갱신 뒤":av==="OFF"?"OFF · 번호 전체가 풀":"ON · 17F 입구 체크인한 사람만")+'</b><span>무대 추첨 풀 · 바꾸기는 대화로</span></div>'+(av==null?"":tag(av,av==="OFF"?"":"warn"))+'</div>'+(ac?'<p class="cap mt4">운영 설정 「행운권_참석조건」 = '+esc(String(ac.v))+'</p>':'');
 }

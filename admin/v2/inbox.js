@@ -131,18 +131,25 @@ function rqPaint(){
     chips:[["open","열림",function(r){ return r.st==="open"; }],["done","닫힘",function(r){ return r.st!=="open"; }],["all","전체",null]],
     cols:[{ k:"t", t:"요청 시각", type:"date", w:96 },{ k:"kind", t:"종류", w:120, v:function(r){ return SREQ_K[r.kind]||r.kind; } },{ k:"name", t:"대상", w:100, v:function(r){ return r.name||r.emp||""; } },{ k:"spot", t:"자리", w:90 },{ k:"byName", t:"보낸 스태프", w:100, v:function(r){ return r.byName||r.by||""; } },{ k:"note", t:"메모", w:150 },
       { k:"res", t:"결과", w:70, v:function(r){ return r.st==="open"?"열림":r.res||"닫힘"; }, f:function(r){ return r.st==="open"?tag("열림","warn"):tag(r.res||"닫힘","off"); } },
-      { t:"", w:200, act:function(r){ if(r.st!=="open") return '<span class="cap">'+esc(fmtD(r.doneAt))+' '+esc(r.doneByName||"")+'</span>'; var i=jq(r.id); return '<button class="btn sm pri" type="button" onclick="reqDone(\''+i+'\',\'처리\')">처리</button> <button class="btn sm" type="button" onclick="reqDone(\''+i+'\',\'안내\')">안내</button> <button class="btn sm dng" type="button" onclick="reqDone(\''+i+'\',\'거절\')">거절</button>'; } }],
+      { t:"", w:200, act:function(r){ if(r.st!=="open") return '<span class="cap">'+esc(fmtD(r.doneAt))+' '+esc(r.doneByName||"")+'</span>'; var i=jq(r.id); return '<button class="btn sm pri" type="button" onclick="reqAsk(\''+i+'\',\'처리\')">처리</button> <button class="btn sm" type="button" onclick="reqAsk(\''+i+'\',\'안내\')">안내</button> <button class="btn sm dng" type="button" onclick="reqAsk(\''+i+'\',\'거절\')">거절</button>'; } }],
     src:{ a:"sreq_list", p:{ st:"all", n:100 }, pick:function(r){ return r.rows; } }, empty:"열린 요청이 없습니다", h:480 });
   var gt=dataGate("sreq","스태프 요청"); RQ.g.gate=gt||""; XG.set(RQ.g, gt?null:(S.data.sreq.rows||[]), el("rqList"));
 }
 
+/* 261017 스태프 요청 닫기 = 확인 창 뒤(처리 · 안내 · 거절 · 다시 열기 없음) · 닫는 함수는 지금 탭과 같은 reqDone */
+function reqAsk(id, res){
+  var d=S.data.sreq, r=d&&d.rows?d.rows.filter(function(x){ return String(x.id)===String(id); })[0]:null; if(!r) return;
+  confirmBox({ t:"요청을 「"+res+"」로 닫을까요?", who:(SREQ_K[r.kind]||r.kind||"요청")+(r.name||r.emp?" · "+(r.name||r.emp):"")+(r.spot?" · "+r.spot:""), sub:"보낸 스태프 "+(r.byName||r.by||"-")+" · 닫으면 다시 열지 않음", ok:res+"로 닫기", danger:res==="거절",
+    run:function(){ return Promise.resolve({ ok:true }); }, done:function(){ reqDone(id, res); } });
+}
+function pwBy(s){ var a=[]; String(s||"").split(/\s*·\s*/).forEach(function(x){ if(x&&a.indexOf(x)<0) a.push(x); }); return a.join(" · "); }   /* 261017 옛 줄 「콘솔 990901 · 콘솔 990901」 한 번만 */
 /* ── PIN 분실 · 명단 표 ── */
 var PW={ g:null };
 function pwPaint(){
   if(!PW.g) PW.g=XG.make({ id:"pw", file:"PIN 분실 요청", whoCheck:1, key:function(r){ return String(r.row); }, sort:{ k:"ts", d:-1 },
     chips:[["w","기다림",function(r){ return r.status==="대기"; }],["d","처리함",function(r){ return r.status!=="대기"; }],["all","전체",null]],
     cols:[{ k:"ts", t:"요청 시각", type:"date", w:100 },{ k:"name", t:"이름", w:110 },{ k:"emp", t:"사번", w:90 },{ k:"status", t:"상태", w:80, f:function(r){ return tag(r.status, r.status==="대기"?"warn":"off"); } },{ k:"pwSet", t:"PIN 있음", w:80, v:function(r){ return r.pwSet?"있음":r.joined?"없음":"가입 전"; } },{ k:"doneAt", t:"처리 시각", type:"date", w:100 },
-      { t:"", w:250, act:function(r){ if(r.status!=="대기") return '<span class="cap">'+esc(r.by||"")+'</span>'; return '<button class="btn sm pri" type="button" onclick="pwDo('+num(r.row)+')">PIN 초기화하고 처리</button> <button class="btn sm" type="button" onclick="pwCancel('+num(r.row)+')">잘못된 요청</button>'; } }],
+      { t:"", w:250, act:function(r){ if(r.status!=="대기") return '<span class="cap">'+esc(pwBy(r.by))+'</span>'; return '<button class="btn sm pri" type="button" onclick="pwDo('+num(r.row)+')">PIN 초기화하고 처리</button> <button class="btn sm" type="button" onclick="pwCancel('+num(r.row)+')">잘못된 요청</button>'; } }],
     src:{ a:"pw_req_list", p:{} }, empty:"요청이 없습니다", h:420 });
   var gt=dataGate("pwl","PIN 분실 요청"); PW.g.gate=gt||""; XG.set(PW.g, gt?null:(S.data.pwl.rows||[]), el("pwList"));
 }
@@ -150,10 +157,10 @@ function pwRow(row){ var d=S.data.pwl; return d&&d.rows?d.rows.filter(function(x
 function pwDo(row){
   var r=pwRow(row); if(!r) return;
   confirmBox({ t:"PIN 을 초기화할까요?", who:personLine(r), sub:"본인 확인 뒤 · 다음 로그인에 넣는 4자리가 새 PIN · 되돌릴 수 없음", ok:"초기화하고 처리", danger:true,
-    run:function(pp){ return call("pw_req_done",Object.assign({ row:row, by:"콘솔 "+((S.me&&S.me.emp)||aemp()) },pp)); },
+    run:function(pp){ return call("pw_req_done",Object.assign({ row:row },pp)); },   /* 처리자 = 서버가 로그인 사번으로 적음(by 를 보내면 두 번 적힘) */
     done:function(){ r.status="처리"; pwPaint(); reload(["pwl","pwc","nb"]); toast("PIN 을 초기화했습니다 · "+(r.name||r.emp)); } });
 }
 function pwCancel(row){
   var r=pwRow(row); if(!r) return;
-  call("pw_req_cancel",{ row:row, by:"콘솔 "+((S.me&&S.me.emp)||aemp()) }).then(function(x){ if(x&&x.ok){ r.status="취소"; pwPaint(); reload(["pwl","pwc"]); toast("요청을 닫았습니다 · PIN 은 그대로"); } else toast("닫지 못했습니다 · "+why(x),{ bad:1 }); });
+  call("pw_req_cancel",{ row:row }).then(function(x){ if(x&&x.ok){ r.status="취소"; pwPaint(); reload(["pwl","pwc"]); toast("요청을 닫았습니다 · PIN 은 그대로"); } else toast("닫지 못했습니다 · "+why(x),{ bad:1 }); });
 }

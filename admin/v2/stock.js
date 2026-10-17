@@ -59,7 +59,12 @@ function ivAdjAsk(id){
     focus:"ivAc", ok:"맞추기", danger:true, gate:function(){ var v=String((el("ivAc")||{}).value||""); return v!==""&&!!IV.why; },
     run:function(){ var m=String(el("ivAm").value||"").trim(); return call("inv_adjust",{ id:id, cnt:String(Number(el("ivAc").value)), why:IV.why, memo:m.length>=2?m:"현장 실사" }); },
     fail:function(r){ return "맞추지 못했습니다 · "+ivWhy(r); },
-    done:function(r){ toast("맞췄습니다 · "+(r.n||it.n)+" "+n0(r.before)+" → "+n0(r.after)); ivAfter(id); } });
+    done:function(r){ var w=IV.why; toast("맞췄습니다 · "+(r.n||it.n)+" "+n0(r.before)+" → "+n0(r.after),r.delta?{ undo:function(){ ivAdjUndo(id, r, w); } }:{}); ivAfter(id); } });
+}
+/* 261017 맞추기 되돌리기(토스트 7초) = 같은 inv_adjust 로 맞추기 전 남은 수로 · 서버 새 액션 없음 · 원장에 「맞추기 되돌림」 줄이 하나 더 남음 */
+function ivAdjUndo(id, r, w){
+  call("inv_adjust",{ id:id, cnt:String(num(r.before)), why:w||"기타", memo:"맞추기 되돌림("+num(r.after)+" → "+num(r.before)+")" }).then(function(x){
+    if(x&&x.ok){ toast("되돌렸습니다 · "+(x.n||id)+" "+n0(x.before)+" → "+n0(x.after)); ivAfter(id); } else toast("되돌리지 못했습니다 · "+ivWhy(x),{ bad:1 }); });
 }
 function ivAdjDiff(left){ var i=el("ivAc"), o=el("ivAd"); if(!i||!o) return; var v=i.value; if(v===""){ o.textContent="-"; return; } var n=Number(v), d=n-left; o.textContent=n0(left)+" → "+n0(n)+" · 차이 "+(d>0?"+":"")+n0(d); }
 function ivWhyPick(b){ var on=b.getAttribute("aria-pressed")==="true"; Array.prototype.forEach.call(el("ivWy").children,function(x){ x.classList.remove("on"); x.setAttribute("aria-pressed","false"); }); if(!on){ b.classList.add("on"); b.setAttribute("aria-pressed","true"); IV.why=b.textContent; } else IV.why=""; gateUpd(); }

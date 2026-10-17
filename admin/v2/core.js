@@ -53,7 +53,14 @@ function call(action, params, ms){
 }
 function why(r){
   r=r||{}; var m={ network:"서버에 연결하지 못했습니다", timeout:"응답이 늦습니다", auth:"관리코드가 맞지 않습니다", spin:"서버 갱신 전입니다 · 서버가 바뀐 뒤 됩니다",
-    pinwho:"사번으로 다시 들어온 뒤 합니다", post:"POST 로 보내야 합니다", state:"다른 사람이 먼저 처리했습니다", taken:"그 시간에 이미 다른 신청이 있습니다", dup:"같은 사람의 다른 신청이 있습니다", notfound:"찾지 못했습니다", param:"입력값을 확인합니다", ro:"읽기 전용 상태입니다", busy:"서버가 바쁩니다 · 잠시 뒤", locked:"잠겨 있습니다" };
+    pinwho:"사번으로 다시 들어온 뒤 합니다", post:"POST 로 보내야 합니다", state:"다른 사람이 먼저 처리했습니다", taken:"그 시간에 이미 다른 신청이 있습니다", dup:"같은 사람의 다른 신청이 있습니다", notfound:"찾지 못했습니다", param:"입력값을 확인합니다", ro:"읽기 전용 상태입니다", busy:"서버가 바쁩니다 · 잠시 뒤", locked:"잠겨 있습니다",
+    preday:"10/26 행사 당일부터 줍니다 · 행사 전 적립은 로그인 · AX 퀴즈 · 미니 게임 · 아이디어 한 줄", eventday:"10/26 행사 당일에 합니다", seat:"그 자리가 찼습니다",
+    notable:"배정 칸(테이블)이 없습니다 · 시간표에서 칸에 놓습니다", round:"설정에 없는 회차입니다", already:"이미 처리했습니다", "in":"이미 입장 처리한 사람입니다", cat:"이 종류는 처리하지 않습니다",
+    expired:"다른 날 처리한 묶음입니다", done:"이미 되돌렸습니다", rows:"한 번에 넣을 수 있는 수를 넘었습니다", closed:"마감했습니다", confirm:"확인 문구가 맞지 않습니다", word:"확인 문구가 맞지 않습니다",
+    full:"정원이 찼습니다", drawn:"이미 추첨했습니다", same:"지금과 같습니다", have:"이미 들어 있습니다", used:"이미 썼습니다", window:"처리할 수 있는 시간이 아닙니다", late:"마감 시각이 지났습니다", early:"아직 시작 전입니다",
+    max:"최대 수를 넘었습니다", self:"지금 이 콘솔을 쓰는 본인은 처리하지 않습니다", "super":"슈퍼관리자만 합니다", kind:"이 종류는 처리하지 않습니다", empty:"비어 있습니다", none:"대상이 없습니다", "long":"글자 수가 너무 깁니다",
+    changed:"다른 곳에서 먼저 고쳤습니다 · 다시 받은 뒤 합니다", stale:"그 사이 기록이 바뀌었습니다 · 다시 받은 뒤 합니다", notlast:"그 뒤에 또 바뀌어 되돌리지 못합니다", sold:"그 사이즈가 남지 않았습니다", got:"이미 받았습니다",
+    noros:"명부에 없는 사번입니다", nostamp:"서버 기록에 이 스탬프가 없습니다", noid:"처리할 수 없는 항목입니다", test:"시험 사번입니다", ccwait:"대기 줄에서 처리합니다", nolock:"먼저 대상을 확정합니다", nodraw:"아직 추첨 전입니다" };
   if(r.err==="unknown action") return "이 서버는 아직 이 기능을 모릅니다";
   return m[r.reason]||r.msg||r.reason||r.err||"처리하지 못했습니다";
 }
@@ -135,7 +142,10 @@ function start(){ el("lock").hidden=true; render(); load(true); }
  * o = { t 제목(동사형 질문) · who 대상 한 줄 · sub 영향 한 줄 · body 추가 html · ok 단추 이름 · danger · gate() 단추 조건(확인 문구 등)
  *       run() → Promise(res) · done(res) · fail(res) → 창에 이유 } */
 var DLG={ o:null, busy:false, ret:null };
+var DLG_BACK=["app","drw","toasts"];   /* 261017 확인 창이 열리면 뒤(본문 · 서랍 · 토스트) 전부 누르지 못함 */
+function dlgBack(on){ DLG_BACK.forEach(function(id){ var x=el(id); if(x) x.inert=!!on; }); }
 function confirmBox(o){
+  if(DLG.o&&DLG.busy) return;   /* 261017 처리 중인 창 위에 새 창을 덮지 않는다(두 번 눌림) */
   DLG.o=o; DLG.busy=false; DLG.ret=document.activeElement;
   var bg=el("dlg");
   el("dlgCard").innerHTML='<h3 id="dlgT">'+esc(o.t)+'</h3>'+
@@ -144,7 +154,7 @@ function confirmBox(o){
     '<div class="acts"><button class="btn" type="button" id="dlgNo">닫기</button><button class="btn '+(o.danger?"dng fill":"pri")+'" type="button" id="dlgOk">'+esc(o.ok)+'</button></div>';
   el("dlgNo").onclick=dlgClose; el("dlgOk").onclick=dlgGo;
   bg.hidden=false; requestAnimationFrame(function(){ bg.classList.add("on"); });
-  el("app").inert=true;
+  dlgBack(true); el("dlgCard").removeAttribute("aria-busy");
   gateUpd();
   setTimeout(function(){ var f=o.focus&&el(o.focus); (f||el(o.danger?"dlgNo":"dlgOk")).focus(); },40);
 }
@@ -152,9 +162,9 @@ function gateUpd(){ var ok=el("dlgOk"); if(!ok||!DLG.o) return; var g=!DLG.o.gat
 function dlgGo(){
   var o=DLG.o; if(!o||DLG.busy) return;
   if(!gateUpd()) return;
-  DLG.busy=true; var ok=el("dlgOk"), lab=ok.textContent; ok.textContent="처리 중"; ok.setAttribute("aria-disabled","true");
+  DLG.busy=true; var ok=el("dlgOk"), no=el("dlgNo"), card=el("dlgCard"), lab=ok.textContent; ok.textContent="처리 중"; ok.setAttribute("aria-disabled","true"); no.setAttribute("aria-disabled","true"); card.setAttribute("aria-busy","true");
   var fin=function(res){
-    DLG.busy=false;
+    DLG.busy=false; no.removeAttribute("aria-disabled"); card.removeAttribute("aria-busy");
     if(res&&res.ok){ var d=o.done; dlgClose(true); d&&d(res); return; }
     ok.textContent=lab;
     el("dlgErr").textContent=(o.fail?o.fail(res):"")||("처리하지 못했습니다 · "+why(res)); gateUpd();
@@ -163,7 +173,7 @@ function dlgGo(){
 }
 function dlgClose(force){
   if(DLG.busy&&force!==true) return;
-  var bg=el("dlg"); bg.classList.remove("on"); DLG.o=null; el("app").inert=false;
+  var bg=el("dlg"); bg.classList.remove("on"); DLG.o=null; dlgBack(false);
   setTimeout(function(){ if(!bg.classList.contains("on")){ bg.hidden=true; el("dlgCard").innerHTML=""; } },180);
   var r=DLG.ret; DLG.ret=null; if(r&&r.focus&&document.body.contains(r)) r.focus();
 }

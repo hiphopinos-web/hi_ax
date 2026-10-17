@@ -43,6 +43,11 @@
 .mtg-sl .em{flex:1;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--tx3)}
 .mtg-sl.fill{border-style:solid;border-color:transparent}
 .mtg.picking .mtg-sl:not(.fill){border-color:var(--navy);background:var(--soft)}
+/* 261017 커피챗 한 칸 최대 3명 · 카드가 칸 안에서 위아래로 쌓임(겹치지 않음) · 아래 「n/3」 */
+.mtg-sl{flex-direction:column;gap:4px}
+.mtg-sl>.mtg-pc{flex:none}   /* 카드는 제 높이 · 같은 회차 옆 칸이 3명이어도 늘어나지 않음 */
+.mtg-sl .mtg-n{align-self:flex-end;font-size:12px;font-weight:600;color:var(--tx3);font-variant-numeric:tabular-nums;padding:0 4px}
+.mtg.picking .mtg-sl.fill:not(.full){border-style:dashed;border-color:var(--navy)}
 .mtg-tm.cur{background:var(--or-bg)}
 .mtg-tm.cur b{color:var(--or)}
 .mtg-sl.cur{border:2px solid var(--or)}

@@ -84,7 +84,7 @@ function adrSp(sc){
     if(lgSub()!=="adm") return m0(vb);
     el("phCap").textContent="콘솔에 들어오는 사람 · 앱 스태프 화면을 여는 사람 · 추가 · 선택 삭제 · 되돌리기";
     adrGrid("c"); adrGrid("a");
-    vb.innerHTML=chipsH(LG_SUBS,"adm")+'<div class="grid g2" id="adrB">'+adrCard("c")+adrCard("a")+'</div><p class="cap mt">스태프 옷 명단은 사람 › 명단 올리기 · 스태프 폰 코드는 기록 · 설정 › 스태프 코드 · 관리코드 · 등급코드 바꾸기는 대화로</p>';
+    vb.innerHTML=chipsH(LG_SUBS,"adm")+'<div class="grid g2 s1" id="adrB">'+adrCard("c")+adrCard("a")+'</div><p class="cap mt">스태프 옷 명단은 사람 › 명단 올리기 · 스태프 폰 코드는 기록 · 설정 › 스태프 코드 · 관리코드 · 등급코드 바꾸기는 대화로</p>';
   };
   sc.paint=function(vb){
     if(lgSub()!=="adm") return p0(vb);

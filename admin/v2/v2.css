@@ -1,10 +1,10 @@
 /* AXF CONTROL v2 · 공통 모양 (261016 콘솔 재구축 화면 1단계 · 목업 디자인 시안/콘솔 재구축/목업.html 기준)
- * 색 = 네이비 하나 + 상태 3색(정상 · 주의 · 위험) · 오렌지 없음 · 글자 28/22/16/14/13/12 · 숫자 tabular-nums */
+ * 색 = 네이비 하나 + 상태 3색(정상 · 주의 · 위험) · 주의 = 주황 계열(261017 갈색 #8A5A12 폐기 · 글자 #B84A00 · 흰 바탕 5.2:1) · 글자 28/22/16/14/13/12 · 숫자 tabular-nums */
 :root{
   --bg:#F2F4F7; --sf:#FFFFFF; --soft:#F9FAFB; --line:#E5E7EB; --line2:#EFF0F3; --line3:#D1D5DB;
   --tx:#14171F; --tx2:#4B5060; --tx3:#6B7080;
   --navy:#00205B; --navy1:#DFE3EF; --navy05:#EEF0F7; --navy-dk:#00163F;
-  --ok:#1E7B4F; --ok-bg:#EAF5EF; --ok-ln:#CFE6D9; --warn:#8A5A12; --warn-bg:#FFF6E3; --warn-ln:#F3DFB3; --bad:#A63A34; --bad-bg:#FBF0EF; --bad-ln:#EFD3D0;
+  --ok:#1E7B4F; --ok-bg:#EAF5EF; --ok-ln:#CFE6D9; --warn:#B84A00; --warn-bg:#FFF3EA; --warn-ln:#FFD6B8; --bad:#A63A34; --bad-bg:#FBF0EF; --bad-ln:#EFD3D0;
   --r:12px; --r-s:8px; --top:48px; --tabs:56px;
   --ease:cubic-bezier(.2,.8,.2,1); --t-in:220ms; --t-out:160ms;
 }
@@ -364,6 +364,10 @@ details.memo summary{cursor:pointer;font-weight:600;min-height:32px;display:flex
 .cc-drawer .btns>.btn,#lgSide .btns>.btn{flex:1 1 auto}
 .cc-drawer .btns>.btn:first-child:nth-last-child(3){flex-basis:100%}
 @media (min-width:1280px){ body.drw-on .main{margin-right:360px} body.drw-on.drw-wide .main{margin-right:480px} }
+/* 261017 1024 등 가로 태블릿(901~1279) · 서랍이 표를 덮지 않게 본문을 줄여 나란히 · 넓은 서랍은 400 */
+@media (min-width:901px) and (max-width:1279px){ body.drw-on .main{margin-right:360px} body.drw-on.drw-wide .main{margin-right:400px} .cc-drawer.wide{width:400px} .cc-drawer.wide .pc-st{grid-template-columns:repeat(3,minmax(0,1fr))} }
+/* 261017 좁은 폭(600 이하) · 두 칸 카드를 한 열로(추첨 설정 · 관리자 명단) */
+@media (max-width:600px){ .g2.s1{grid-template-columns:minmax(0,1fr)} }
 /* 한 사람 카드 · 07 프로그램 참여 한 칸 */
 .pc-pg{grid-column:1/-1;gap:4px}
 .pc-pgh{display:flex;align-items:baseline;gap:8px}

@@ -1,10 +1,10 @@
 /* AXF CONTROL v2 · 명단 한 사람씩 넣기 · 빼기 · 고치기 (261016 4단계 · 사용자 「이 화면에서 대상자를 삭제하거나 넣거나 하는 버튼이나 관리가 있어야 하는데 없어」)
  * 표 위 오른쪽 「추가」 창(261016 저녁 · 맨 위 「한 사람 넣기」 카드 대신) = 명부 찾기(og_gate_find by name · 이름 · 사번 20명) → 고르기 → 넣기 · 「선택 n명 삭제」 = table.js(list_rows_cancel)
- *   10F 사전 신청 = pre10_row_set(emp · sid · from · confirm 명단수정 · role 운영진) · 정원(A 63 · B 32 · C 28 · D 20 · E 20 · 20)을 넘으면 경고만
+ *   10F 사전 신청 = pre10_row_set(emp · sid · from · confirm 명단수정 · role 운영진) · 정원(A 63 · B 32 · C 28 · D 28 · E 20 · 20)을 넘으면 경고만(261017 D 20 → 28)
  *   접속 허용 = roll_apply(list gate) · 스태프 = roll_apply(staff_app · staff_wear) · 되돌리기 = roll_undo(묶음)
  * 줄을 누르면 한 사람 카드 · 카드 「명단」 칸에서 세션 바꾸기 · 빼기 · 넣기(pcRoll · pcP10) · 10F 되돌리기 = pre10_undo(마지막 한 건 · 확인 문구 명단되돌리기)
  * 카드 「경품」 칸 선착순 가습기 = fcfs_add(수동 지급) · fcfs_undo(수령 되돌리기) · fcfs_void(자격 취소 · dry 먼저) · 사유 2자 이상 · 261016 PIN 없음 */
-var P10_CAP={ fld:63, ta:32, tb:28, aws:20, ms1:20, ms2:20 }, P10_IDS=["fld","ta","tb","aws","ms1","ms2"];
+var P10_CAP={ fld:63, ta:32, tb:28, aws:28, ms1:20, ms2:20 }, P10_IDS=["fld","ta","tb","aws","ms1","ms2"];
 var P10_W={ set:"명단수정", del:"명단삭제", undo:"명단되돌리기" };
 var P10_WHY={ noros:"명부에 없는 사번입니다", state:"그 사이 다른 사람이 바꿨습니다 · 새로 받은 뒤 다시", same:"지금 세션과 같습니다", notin:"이미 명단에 없습니다", notlast:"그 뒤에 명단이 또 바뀌어 되돌리지 못합니다", already:"이미 되돌렸습니다" };
 var RL_N={ gate:"접속 허용 명단", staff_app:"스태프 폰 권한", staff_wear:"스태프 옷 명단", test:"시험 사번" };
@@ -70,17 +70,20 @@ function paRoll(k){
     opts:k==="staff"?function(){ return '<div class="nt-f" style="display:flex;gap:16px;flex-wrap:wrap"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox"'+(PA.app?" checked":"")+' onchange="PA.app=this.checked;paPaint()">폰 권한(스캔 · 현장 부여)</label><label style="display:flex;gap:8px;align-items:center"><input type="checkbox"'+(PA.wear?" checked":"")+' onchange="PA.wear=this.checked;paPaint()">스태프 옷</label></div>'; }:null,
     block:function(){ return k==="staff"&&!PA.app&&!PA.wear; },
     run:function(p){ var e=normE(p.emp), lists=k==="staff"?[PA.app?"staff_app":"",PA.wear?"staff_wear":""].filter(Boolean):[k];
-      return Promise.all(lists.map(function(l){ return call("roll_apply",{ list:l, op:"add", emps:e, rid:rid() }); })).then(function(a){ var ok=a.filter(function(x){ return x&&x.ok; }); return ok.length?{ ok:true, a:a }:a[0]; }); },
+      return Promise.all(lists.map(function(l){ return call("roll_apply",{ list:l, op:"add", emps:e, rid:rid() }); })).then(function(a){ var ok=a.filter(function(x){ return x&&x.ok; }); return ok.length?{ ok:true, a:a, lists:lists }:a[0]; }); },
     fail:function(r){ return r&&r.reason==="noros"?"명부에 없는 사번입니다":""; },
     done:function(r, p){ paAfter(); var e=normE(p.emp), bs=r.a.filter(function(x){ return x&&x.ok&&x.batch; }).map(function(x){ return x.batch; }), n=r.a.filter(function(x){ return x&&x.ok&&(x.done||[]).length; }).length;
+      var bad=(r.lists||[]).filter(function(l,i){ return !(r.a[i]&&r.a[i].ok); });   /* 261017 폰 권한 · 옷 둘 중 하나만 실패 = 경고 */
+      if(bad.length){ toast((n?"일부만 넣었습니다 · "+(p.name||e)+" · ":"")+bad.map(function(l){ var x=r.a[r.lists.indexOf(l)]; return RL_N[l]+" 못 넣음("+(x&&x.reason==="noros"?"명부에 없는 사번":why(x))+")"; }).join(" · "),{ bad:1, ms:7000 });
+        if(bs.length) setTimeout(function(){ toast("넣은 쪽 되돌리기 · "+(p.name||e),{ undo:function(){ bs.forEach(function(b){ rollBack(b); }); } }); },400); return; }
       toast(n?"넣었습니다 · "+(p.name||e):r.a.some(function(x){ return x&&(x.noros||[]).length; })?"명부에 없는 사번이라 넣지 못했습니다":"이미 명단에 있습니다 · "+(p.name||e), bs.length?{ undo:function(){ bs.forEach(function(b){ rollBack(b); }); } }:{}); } };
 }
 PA_SP.gate=function(){ return paRoll("gate"); }; PA_SP.staff=function(){ return paRoll("staff"); }; PA_SP.test=function(){ return paRoll("test"); };
 /* 사람 명단 선택 삭제(list_rows_cancel kind = 화면 이름 · 스태프는 폰 권한 · 옷 고르기) */
-var PP_CX={ gate:["접속 허용 명단","클로즈 베타 동안 다음 쓰기부터 앱이 거절 · 메모 · 넣은 시각은 되돌리면 그대로"], staff:["스태프 명단","폰 권한 · 스태프 옷 명단에서 빠짐 · 옷 신청번호는 남음"],
+var PP_CX={ gate:["접속 허용 명단","클로즈 베타 동안 다음 쓰기부터 앱이 거절 · 메모 · 넣은 시각은 되돌리면 그대로 · 본인 사번은 빼지 않음"], staff:["스태프 명단","폰 권한 · 스태프 옷 명단에서 빠짐 · 옷 신청번호는 남음"],
   pre10:["10F 사전 신청 명단","세션 · 키트 · 끝 QR 자격이 같이 빠짐 · 키트 받은 사람은 설정대로"], test:["시험 사번","시험 사번 지정이 풀림 · 기록은 그대로"] };
 function ppCx(s){
-  return { kind:s, what:PP_CX[s][0], sub:PP_CX[s][1], after:paAfter,
+  return { kind:s, what:PP_CX[s][0], sub:PP_CX[s][1], after:paAfter, noSelf:s==="gate"?"본인 사번은 접속 허용 명단에서 빼지 않습니다":"",
     opts:s==="staff"?function(){ PA.part=""; return '<div class="nt-f"><div class="nt-l">무엇을 뺄까요</div><div class="chips" role="radiogroup" aria-label="뺄 것" id="cxPart">'+[["","폰 권한 · 옷 둘 다"],["app","폰 권한만"],["wear","옷만"]].map(function(x){ return '<button type="button" role="radio" aria-checked="'+(x[0]==="")+'" class="chip'+(x[0]===""?" on":"")+'" onclick="cxPart(this,\''+x[0]+'\')">'+esc(x[1])+'</button>'; }).join("")+'</div></div>'; }:null,
     part:s==="staff"?function(){ return PA.part||""; }:null };
 }
@@ -98,6 +101,7 @@ function pcListsHtml(d){
 }
 function pcRoll(list, op, emp){
   var nm=RL_N[list];
+  if(list==="gate"&&op==="del"&&normE(emp)===normE(aemp())){ toast("본인 사번은 접속 허용 명단에서 빼지 않습니다",{ bad:1 }); return; }   /* 261017 슈퍼관리자 본인 빼기 막음 */
   confirmBox({ t:op==="add"?nm+"에 넣을까요?":nm+"에서 뺄까요?", who:pcNm()+" · 사번 "+emp,
     sub:op==="add"?(list==="gate"?"클로즈 베타 · 사전 신청자까지 범위에서 바로 로그인":list==="staff_app"?"로그인하면 스태프 화면":"스태프 옷 대상"):(list==="gate"?"클로즈 베타 동안 다음 쓰기부터 앱이 거절":list==="staff_app"?"그 폰의 스태프 화면이 다음 요청부터 멈춤":"고른 사이즈가 풀림")+" · 되돌리기 7초 · 활동 기록에서 그날 안",
     ok:op==="add"?"넣기":"빼기", danger:op!=="add",

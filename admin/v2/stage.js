@@ -16,7 +16,7 @@ SCREENS.stage={
     return [{ k:"lk", a:"lk7_state", ttl:20000 },{ k:"inv", a:"inv_state", ttl:60000 }]; },
   mount:function(vb){
     var s=sgSub();
-    el("phCap").textContent={ draw:"17F Outro 행운권 1~6등 · 진행은 무대 노트북(Space) · 이 판은 보기", rec:"추첨 화면이 보낸 당첨 · 부재(3 · 2 · 1등만) · 취소 · 실명은 상품 전달용", ik:"아이디어왕 1등 1 · 2등 1 · 3등 3 · AI 구독권", type:"1F 현장 타자왕 1~10위 · 1~3위 시상", lk7:"7등 랜덤 굿즈 · 17:00 잔여 → 대상 확정 → 추첨(한 번) → 사내 우편" }[s];
+    el("phCap").textContent={ draw:"17F Closing Speech 행운권 1~6등 · 진행은 무대 노트북(Space) · 이 판은 보기", rec:"추첨 화면이 보낸 당첨 · 부재(3 · 2 · 1등만) · 취소 · 실명은 상품 전달용", ik:"아이디어왕 1등 1 · 2등 1 · 3등 3 · AI 구독권", type:"1F 현장 타자왕 1~10위 · 1~3위 시상", lk7:"7등 랜덤 굿즈 · 17:00 잔여 → 대상 확정 → 추첨(한 번) → 사내 우편" }[s];
     var h=chipsH(SG_SUBS,s)+(stageDim()?band("info","16:00 전입니다 · 리허설 때 눌러 보며 확인합니다"):"");
     if(s==="draw"){ vb.innerHTML=h+'<div id="dcRoot">'+skel()+'</div>'; DC.sig=""; dcStart(); return; }
     if(s==="rec"){
@@ -202,7 +202,7 @@ function ikPaint(){
   el("ikCh").innerHTML=["lounge_pre","lounge_day","chat"].map(function(k){ return '<button type="button" class="chip'+(IK.ch===k?" on":"")+'" aria-pressed="'+(IK.ch===k)+'" onclick="ikCh(\''+k+'\')">'+esc(IK_CH[k])+' <span class="c">'+n0(C[k])+'</span></button>'; }).join("");
   el("ikLate").innerHTML='<label class="up-ck" style="margin:0"><input type="checkbox"'+(IK.late?" checked":"")+' onchange="ikLate(this.checked)"> 마감 뒤 접수도</label>';
   gridOf("ikl",{ file:"아이디어왕 후보", key:function(r){ return r.emp; }, sort:{ k:"at", d:1 }, onRow:function(k){ ikOpen(k); },
-    cols:[{ k:"at", t:"시각", type:"date", w:90 },{ k:"name", t:"이름", w:100 },{ k:"emp", t:"사번", w:90 },{ k:"text", t:"아이디어", w:380 },{ k:"st", t:"상태", w:110, v:function(r){ var p=ikPickOf(r.emp); return (r.late?"마감 뒤 ":"")+(p?p.rk+"등 선정":""); } }],
+    cols:[{ k:"at", t:"시각", type:"date", w:110 },{ k:"name", t:"이름", w:100 },{ k:"emp", t:"사번", w:90 },{ k:"text", t:"아이디어", w:380 },{ k:"st", t:"상태", w:110, v:function(r){ var p=ikPickOf(r.emp); return (r.late?"마감 뒤 ":"")+(p?p.rk+"등 선정":""); } }],
     empty:"이 경로의 후보가 없습니다", h:440 });
   gridPaint("ikl","ikl","아이디어왕 후보",function(x){ return x.rows||[]; });
 }
@@ -218,7 +218,7 @@ function ikOpen(emp){
 function ikPickAsk(emp){
   var d=S.data.ik||{}, r=ikRow(emp)||{ emp:emp }, prz=ikPrz(d), picks=d.picks||[];
   var opts=prz.map(function(z){ var left=Math.max(0,(Number(z.n)||0)-picks.filter(function(p){ return Number(p.rk)===Number(z.rk); }).length); return '<option value="'+z.rk+'"'+(left?"":" disabled")+'>'+z.rk+'등 · AI 구독권 '+z.mo+'개월 · 남은 자리 '+left+'</option>'; }).join("");
-  confirmBox({ t:"아이디어왕으로 선정할까요?", who:personLine({ emp:emp, name:r.name, dept:r.dept }), sub:(IK_CH[r.ch]||IK_CH[IK.ch])+" · Outro 에서 사회자가 이름을 읽음 · 7초 안 되돌리기",
+  confirmBox({ t:"아이디어왕으로 선정할까요?", who:personLine({ emp:emp, name:r.name, dept:r.dept }), sub:(IK_CH[r.ch]||IK_CH[IK.ch])+" · Closing Speech 에서 사회자가 이름을 읽음 · 7초 안 되돌리기",
     body:'<label class="fld">등수<select class="in" id="ikRk" onchange="gateUpd()"><option value="">고릅니다</option>'+opts+'</select></label><label class="fld">선정 사유(필수)<input class="in" id="ikWhy" maxlength="80" autocomplete="off" oninput="gateUpd()" placeholder="예: 보상 서류 자동 분류 · 바로 적용 가능"></label>'+
       (r.late?'<label class="up-ck mt"><input type="checkbox" id="ikAck" onchange="gateUpd()"> 마감 뒤 접수 · 그래도 선정합니다</label>':''),
     focus:"ikRk", ok:"선정", gate:function(){ var k=el("ikRk"), w=el("ikWhy"), a=el("ikAck"); return !!(k&&k.value)&&String((w||{}).value||"").trim().length>=2&&(!r.late||!!(a&&a.checked)); },
@@ -271,11 +271,11 @@ function lkLockAsk(){
 function lkDrawAsk(){
   var d=S.data.lk||{}, qty=lkQty(d), tot=lkTotal(d), N=d.lock?num(d.lock.n):0;
   if(!(d.ph==="lock"&&!d.stale&&lkRemDone(d))){ toast(!lkRemDone(d)?"17:00 룰렛 잔여를 먼저 저장합니다":"먼저 대상을 확정합니다"); return; }
-  confirmBox({ t:"7등 랜덤 굿즈 추첨을 실행할까요?", who:"대상 "+n0(N)+"명 · 당첨 "+n0(Math.min(N,qty))+"명", sub:"한 번 실행하면 되돌릴 수 없음 · 시드 · 풀 해시가 남고 재현 검증으로 다시 계산 · 결과는 참가자 앱 보상에 반영",
+  confirmBox({ t:"7등 랜덤 굿즈 추첨을 실행할까요?", who:"대상 "+n0(N)+"명 · 당첨 "+n0(Math.min(N,qty))+"명", sub:"되돌릴 수 없음 · 당첨자에게 앱 알림 · 재현 검증으로 다시 계산",
     body:(tot<qty?band("warn","남은 경품 "+n0(tot)+"개 · 당첨 "+n0(qty)+"명보다 적습니다"):"")+'<label class="fld">확인 문구 「추첨」을 넣습니다<input class="in" id="lkW" autocomplete="off" oninput="gateUpd()"></label>',
     focus:"lkW", ok:"추첨 실행", danger:true, gate:function(){ var i=el("lkW"); return !!i&&i.value.trim()==="추첨"; },
     run:function(){ return call("lk7_draw",{ ack:"1" }); }, fail:function(r){ return r&&PZ_WHY2[r.reason]||""; },
-    done:function(r){ reload(["lk"]); toast("추첨했습니다 · 당첨 "+n0(r.drawn&&r.drawn.W)+"명",{ ms:5000 }); } });
+    done:function(r){ reload(["lk"]); toast("추첨했습니다 · 당첨 "+n0(r.drawn&&r.drawn.W)+"명"+(r.push!=null?" · 알림 "+n0(r.push)+"명":""),{ ms:5000 }); } });
 }
 function lkVerify(){ call("lk7_verify",{}).then(function(r){ LK.ver=r||{ ok:false }; paint(); toast(r&&r.ok&&r.same?"재현 결과가 같습니다":"재현 결과를 확인합니다"); }); }
 function lkVoidAsk(){

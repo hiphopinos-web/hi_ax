@@ -107,10 +107,12 @@ var XG_CXWHY={ param:"사번 형식이 맞지 않습니다", notfound:"명단에
 function xgCxWhy(x){ return (XG_CXWHY[x.why]||x.why||"처리하지 못했습니다")+(x.cur?" · 지금 "+x.cur:""); }
 XG.cxAsk=function(id){
   var g=XG.reg[id], o=g.o, c=o.cancel; if(!c||g.busy) return; var rows=xgPicked(g), n=rows.length; if(!n) return;
+  var me=normE(aemp()), selfR=c.noSelf&&me?rows.filter(function(r){ return normE(r.emp)===me; }):[];   /* 261017 본인 사번은 빼지 않음(접속 허용) */
+  if(selfR.length){ rows=rows.filter(function(r){ return normE(r.emp)!==me; }); n=rows.length; if(!n){ toast(c.noSelf,{ bad:1 }); return; } }
   if(n>XG.CXMAX){ toast("한 번에 "+XG.CXMAX+"명까지 삭제합니다 · 지금 "+n0(n)+"명 선택",{ bad:1, ms:4000 }); return; }
   var nm=rows.slice(0,3).map(xgWho).join(", ")+(n>3?" 외 "+n0(n-3)+"명":"");
   confirmBox({ t:"선택한 "+n0(n)+(o.unit||"명")+"을 삭제할까요?", who:(c.what||o.file||"명단")+" · "+nm, sub:c.sub||"", ok:"선택 삭제", danger:true, gate:c.gate,
-    body:(c.opts?c.opts(rows):"")+'<p class="cap mt4">취소로 남고 활동 기록에서 되돌릴 수 있음</p>',
+    body:(c.opts?c.opts(rows):"")+(selfR.length?band("warn",esc(c.noSelf)+" · 선택에서 뺐습니다"):"")+'<p class="cap mt4">취소로 남고 활동 기록에서 되돌릴 수 있음</p>',
     run:function(){
       var kind=typeof c.kind==="function"?c.kind(rows):c.kind, keys=c.keys?c.keys(rows,kind):rows.map(function(r){ return r.emp; }), p={ kind:kind, keys:keys.join(","), rid:"x"+Date.now().toString(36)+Math.random().toString(36).slice(2,6) };
       if(c.part){ var pt=c.part(); if(pt) p.part=pt; }
@@ -133,7 +135,7 @@ function xgCxDone(g, r){
 }
 XG.undo=function(id, batch){
   var g=XG.reg[id], c=g&&g.o.cancel;
-  call("roll_undo",{ batch:batch }).then(function(x){ var d=x&&x.ok?(Array.isArray(x.done)?x.done.length:num(x.done)):0, sk=(x&&x.skip||[]).length+(x&&x.fail||[]).length;
+  call("roll_undo",{ batch:batch }).then(function(x){ var d=x&&x.ok?(Array.isArray(x.done)?x.done.length:num(x.done)):0, sk=(x&&x.skip||[]).length;   /* 261017 skip 과 fail 은 같은 줄 · 한 번만 센다 */
     if(c&&c.after) c.after(x);
     toast(x&&x.ok?"되돌렸습니다 · "+n0(d)+(g.o.unit||"명")+(sk?" · 건너뜀 "+sk:""):"되돌리지 못했습니다 · "+(x&&x.reason==="expired"?"다른 날 처리한 묶음입니다":x&&x.reason==="done"?"이미 되돌렸습니다":why(x)),{ bad:!(x&&x.ok) }); });
 };

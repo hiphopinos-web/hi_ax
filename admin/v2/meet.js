@@ -5,10 +5,13 @@
  * 메모 · 순번 = meet_note_list · meet_note_set · meet_order_set · 서버가 모르는 액션이면 메모 칸을 숨기고 순번은 이 기기에만 둔다
  * 회차 · 테이블 = cfg_list 커피챗_회차 · 커피챗_회차정원(cchat.js ccCfg) · 라운지 칸 = lng_board(start · step · seats) · 없으면 설계값
  * 끌어다 놓기 = 마우스(6px 움직이면) · 터치(길게 누르기 · 보조) · 키보드(카드에서 Space = 고르기 → 칸에서 Enter) · 사람 상세 「옮기기」도 같은 고르기
- * 노쇼(커피챗) = staff_mark noshow + cchat_status 취소(why 노쇼) · 칸이 빈다 · 되돌리기 7초 */
-var MT_REST_DEF=["12:00","12:30"];
+ * 노쇼(커피챗) = cchat_status 취소(why 노쇼) 한 번 · 서버가 노쇼 표시 · 칸 비움 · 알림 거둠을 함께 · 되돌리기 7초(261017)
+ * 261017 커피챗 한 칸(회차 × 테이블) = 최대 3명(사용자 「비슷한 주제면 2~3명」) · 칸 안에서 카드가 위아래로 쌓임 · 4명째는 놓지 않음 · 서버도 4명째를 seat 로 거절
+ * 왔음 · 종료 단추 = 누르는 동안 그 사람 단추 잠금(MT.qb) */
+var MT_REST_DEF=["12:00","12:30"], CC_SEAT_MAX=3, CC_SEAT_TX="한 칸 최대 "+CC_SEAT_MAX+"명입니다";
+function mtAt(M, k){ var x=M.at[k]; return M.p==="cc"?(x||[]):x?[x]:[]; }   /* 칸에 놓인 사람들(커피챗 = 배열 · 라운지 = 한 명) */
 var MT={ ov:lsGet("axf_v2_meet_ov",{})||{}, ord:lsGet("axf_v2_meet_ord",[])||[], ordD:lsGet("axf_v2_meet_ordd",0)?1:0, day:lsGet("axf_v2_meet_day",0)?1:0,
-  pick:null, past:0, ns:{}, log:{}, fail:null, det:null, qno:{}, nowT:null, memo:null, jd:0 };
+  pick:null, past:0, ns:{}, log:{}, fail:null, det:null, qno:{}, nowT:null, memo:null, jd:0, qb:{} };
 var MTD=null;
 function mtSave(){ lsSet("axf_v2_meet_ov",MT.ov); lsSet("axf_v2_meet_ord",MT.ord); lsSet("axf_v2_meet_ordd",MT.ordD); }
 function mtSub(){ var a=String(S.sub.meet||"cc").split("-"), p=a[0]==="ln"?"ln":"cc", v=a[1]||"board";
@@ -34,8 +37,8 @@ function mtCcM(){
     if(o){ if(o.base!==s||["대기","매칭"].indexOf(r.status)<0) conf.push(e); else { k=o.to; if(k!==s) chg.push({ e:e, r:r, from:s, to:k }); } }
     r._k=k; r._s=s;
     if(!k){ q.push(r); return; }
-    var ks=mtKp(k); if(cf.rounds.indexOf(ks[0])<0||cf.tables.indexOf(ks[1])<0||at[k]){ out.push(r); return; }
-    at[k]=r;
+    var ks=mtKp(k); if(cf.rounds.indexOf(ks[0])<0||cf.tables.indexOf(ks[1])<0||(at[k]&&at[k].length>=CC_SEAT_MAX)){ out.push(r); return; }
+    (at[k]=at[k]||[]).push(r);
   });
   var so=function(r){ var n=mtNote("cc", r.emp); return n&&num(n.ord)?num(n.ord):1e9; };
   q.sort(function(a,b){
@@ -129,7 +132,8 @@ function mtCard(M, x, no){
     var r0=mins(mtKp(k)[0]), nm=mtNowMin();
     if(!inn&&!done&&!ns&&nm>=r0+5&&nm<r0+M.len) tags.unshift(tag("늦음","warn"));
     if(ns) sc=" st-no"; else if(done) sc=" st-dn";
-    if(!done&&!ns) acts='<div class="acts"><button type="button" data-a="in" aria-pressed="'+inn+'" class="'+(inn?"on":"")+'">왔음</button><button type="button" data-a="ns">노쇼</button><button type="button" data-a="dn">종료</button></div>';
+    var qb=mtQb(M.p, key)?' aria-disabled="true" aria-busy="true"':'';
+    if(!done&&!ns) acts='<div class="acts"><button type="button" data-a="in" aria-pressed="'+inn+'" class="'+(inn?"on":"")+'"'+qb+'>'+(qb?"처리 중":"왔음")+'</button><button type="button" data-a="ns"'+qb+'>노쇼</button><button type="button" data-a="dn"'+qb+'>종료</button></div>';
   }
   var chg=cc&&!MT.day&&k!==x._s;
   var memo=mtNote(M.p, x.emp), md=memo&&memo.memo?'<i class="md" title="메모 있음" aria-label="메모 있음"></i>':"";
@@ -147,13 +151,13 @@ function mtBoardH(p){
   var nxt=MT.day?live.filter(function(r){ return mins(r.t)>(curR?mins(curR.t):nm); })[0]:null;
   var lab=function(t){ return (cc?"테이블 ":"미팅룸 ")+t; };
   if(MT.day){
-    var who=function(r,t){ if(!r) return "-"; var x=M.at[r.t+":"+t]; return x?personTwo(x):"빈 칸"; };
+    var who=function(r,t){ if(!r) return "-"; var xs=mtAt(M, r.t+":"+t); return xs.length?xs.map(personTwo).join(" · "):"빈 칸"; };
     h+='<div class="mtg-now"><div class="cur"><h3>'+(curR?'지금 <em class="n">'+curR.t+'</em> 회차':'지금 진행 중인 회차 없음')+'</h3><div class="rw">'+(curR?M.tables.map(function(t){ return '<div><small>'+lab(t)+'</small><span>'+who(curR,t)+'</span></div>'; }).join(""):'')+'</div></div>'+
       '<div><h3>'+(nxt?'다음 <span class="n">'+nxt.t+'</span> 회차':'다음 회차 없음')+'</h3><div class="rw">'+(nxt?M.tables.map(function(t){ return '<div><small>'+lab(t)+'</small><span>'+who(nxt,t)+'</span></div>'; }).join(""):'')+'</div></div></div>';
   } else if(cc){
-    var n=M.chg.length, od=mtOrdChanged();
+    var n=M.chg.length, od=mtOrdChanged(), cn=mtChgN(M);
     if(M.conf.length) h+='<div class="mtg-bar draft"><b>다른 곳에서 바뀜 '+M.conf.length+'명</b><span class="cap">'+esc(M.conf.map(function(e){ var r=M.by[e]; return r?(r.name||r.emp):e; }).join(", "))+' · 이 사람들은 서버 칸으로 보입니다</span><span class="sp"></span><button class="btn sm" type="button" onclick="mtConfDrop()">초안에서 빼기</button></div>';
-    h+=n||od?'<div class="mtg-bar draft"><b>초안 바뀜 '+(n+(od?1:0))+'건</b><span class="cap">'+(n?"칸 "+n+"명":"")+(n&&od?" · ":"")+(od?"대기 줄 순서":"")+' · 이 기기에만 있음 · 반영하면 참가자에게 선정 알림</span><span class="sp"></span><button class="btn sm" type="button" onclick="mtUndoAsk()">되돌리기</button><button class="btn sm pri" type="button" onclick="mtApplyAsk()">반영 · 선정 알림 보내기</button></div>'
+    h+=n||od?'<div class="mtg-bar draft"><b>초안 바뀜 '+(n+(od?1:0))+'건</b><span class="cap">'+(n?"선정 "+cn.add+" · 시간 바뀜 "+cn.mv+" · 칸에서 뺌 "+cn.out:"")+(n&&od?" · ":"")+(od?"대기 줄 순서":"")+' · 이 기기에만 있음 · 반영하면 참가자에게 선정 알림</span><span class="sp"></span><button class="btn sm" type="button" onclick="mtUndoAsk()">되돌리기</button><button class="btn sm pri" type="button" onclick="mtApplyAsk()">반영 '+(n+(od?1:0))+'건'+(cn.add+cn.mv?' · 선정 알림 보내기':'')+'</button></div>'
       :'<div class="mtg-bar"><span class="cap">초안 바뀜 없음 · 서버와 같음'+(MT.ordD&&!mtNoteOk("cc")?" · 대기 줄 순서는 이 기기에만":"")+'</span></div>';
   }
   if(MT.fail&&MT.fail.length) h+=band("warn","<b>못 한 "+MT.fail.length+"명</b> · "+esc(MT.fail.map(function(f){ return f.nm+" "+f.why; }).join(" · ")),'<button class="btn sm" type="button" onclick="MT.fail=null;paint()">닫기</button>');
@@ -179,8 +183,8 @@ function mtBoardH(p){
     if(past&&!MT.past){ if(!foldDone){ foldDone=true; h+='<button type="button" class="mtg-fold" onclick="MT.past=1;paint()">지난 회차 '+pastN+'개 접힘 · 펼치기</button>'; } return; }
     var cl=(cur?" cur":"")+(past?" past":"");
     h+='<div class="mtg-tm'+cl+'"><b>'+r.t+'</b><span>~'+r.to+'</span></div>';
-    M.tables.forEach(function(t){ var key=r.t+":"+t, x=M.at[key];
-      h+='<div class="mtg-sl'+(x?" fill":"")+cl+'" data-drop="'+key+'"'+(x?'':' tabindex="0" aria-label="'+r.t+' '+lab(t)+' 빈 칸"')+'>'+(x?mtCard(M, x, 0):'<span class="em">빈 칸</span>')+'</div>'; });
+    M.tables.forEach(function(t){ var key=r.t+":"+t, xs=mtAt(M, key), n=xs.length, room=cc?n<CC_SEAT_MAX:!n;
+      h+='<div class="mtg-sl'+(n?" fill":"")+(n>1?" multi":"")+(cc&&!room?" full":"")+cl+'" data-drop="'+key+'"'+(room?' tabindex="0" aria-label="'+r.t+' '+lab(t)+(n?" · "+n+"명 · 더 놓을 수 있음":" 빈 칸")+'"':'')+'>'+(n?xs.map(function(x){ return mtCard(M, x, 0); }).join("")+(cc&&n>1?'<span class="mtg-n">'+n+'/'+CC_SEAT_MAX+'</span>':''):'<span class="em">빈 칸</span>')+'</div>'; });
   });
   flushGap();
   if(MT.day&&MT.past&&pastN) h+='<button type="button" class="mtg-fold" onclick="MT.past=0;paint()">지난 회차 접기</button>';
@@ -197,12 +201,7 @@ function mtCcDraftDrop(e, to, before){
   var from=r._k, qs=M.q.map(function(x){ return jq(x.emp); });
   if(to==="q"){ mtOvSet(r,""); qs=qs.filter(function(x){ return x!==e; }); var at=before?qs.indexOf(before):-1; if(at<0) qs.push(e); else qs.splice(at,0,e); MT.ord=qs; MT.ordD=1; mtSave(); paint(); return; }
   if(from===to) return;
-  var o=M.at[to];
-  if(o){ var oe=jq(o.emp);
-    if(o.status!=="대기"&&o.status!=="매칭"){ toast("그 칸 사람은 이미 왔음 · 끝입니다",{ bad:1 }); return; }
-    if(M.conf.indexOf(oe)>=0){ toast("그 칸 사람은 다른 곳에서 바뀌었습니다",{ bad:1 }); return; }
-    mtOvSet(o, from||"");
-    if(!from){ var i=qs.indexOf(e); if(i>=0) qs.splice(i,1,oe); else qs.unshift(oe); MT.ord=qs; MT.ordD=1; } }
+  if(mtAt(M, to).length>=CC_SEAT_MAX){ toast(CC_SEAT_TX+" · 다른 칸에 놓습니다",{ bad:1 }); return; }
   mtOvSet(r, to); mtSave(); paint();
 }
 /* 자동 배정 · 대기 줄 순서대로 · 그 사람이 고른 시간 중 가장 이른 빈 칸(테이블 A 먼저) · 고른 시간이 없으면 모든 회차 · 놓인 사람은 그대로 · 미선정 알림 받은 사람은 건너뜀 */
@@ -221,30 +220,34 @@ function mtUndoAsk(){
     run:function(){ return { ok:true }; }, done:function(){ MT.ov={}; MT.ord=[]; MT.ordD=0; mtSave(); paint(); toast("초안을 버렸습니다"); } });
 }
 function mtConfDrop(){ var M=mtCcM(); M.conf.forEach(function(e){ delete MT.ov[e]; }); mtSave(); paint(); toast("다른 곳에서 바뀐 "+M.conf.length+"명을 초안에서 뺐습니다"); }
+/* 261017 반영 건수 = 선정 + 시간 바뀜 + 칸에서 뺌(대기로) · 알림은 선정 · 시간 바뀜만(칸에서 뺌은 아직 안 보낸 선정 알림을 거둠) */
+function mtChgN(M){ var c={ add:0, mv:0, out:0 }; M.chg.forEach(function(x){ if(!x.from) c.add++; else if(!x.to) c.out++; else c.mv++; }); return c; }
 function mtApplyAsk(){
-  var M=mtCcM(), add=0, mv=0, out=0, od=mtOrdChanged();
-  M.chg.forEach(function(c){ if(!c.from) add++; else if(!c.to) out++; else mv++; });
+  var M=mtCcM(), cn=mtChgN(M), add=cn.add, mv=cn.mv, out=cn.out, od=mtOrdChanged();
   if(!M.chg.length&&!od) return;
-  confirmBox({ t:"초안을 반영할까요?", who:"선정 "+add+"명 · 시간 바뀜 "+mv+"명 · 칸에서 뺌 "+out+"명", sub:"참가자 앱 알림 "+(add+mv)+"건(선정 · 시간 바뀜)"+(od?" · 대기 줄 순서 저장":""), ok:"반영 · 알림 보내기",
+  confirmBox({ t:"초안 "+(M.chg.length+(od?1:0))+"건을 반영할까요?", who:"선정 "+add+"명 · 시간 바뀜 "+mv+"명 · 칸에서 뺌 "+out+"명", sub:"참가자 앱 알림 "+(add+mv)+"건(선정 · 시간 바뀜)"+(out?" · 칸에서 뺌 "+out+"명은 대기 줄로 · 안 보낸 선정 알림은 거둠":"")+(od?" · 대기 줄 순서 저장":""), ok:add+mv?"반영 · 알림 보내기":"반영",
     run:function(){ return mtCcRun(M.chg.map(function(c){ return { e:c.e, to:c.to }; })).then(function(res){ return (od?mtOrdSave():Promise.resolve(null)).then(function(){ return res; }); }); },
     done:function(res){ MT.fail=res.fail.length?res.fail:null; paint(); reload(["cc","nb","mnc"]);
       toast("반영했습니다 · "+res.done+"명"+(res.fail.length?" · 못 함 "+res.fail.length+"명":"")+(res.full?" · 정원 넘침 경고 "+res.full+"건":""),{ bad:res.fail.length?1:0 }); } });
 }
-/* 서버에 차례로 · 빼기 먼저 · 빈 칸부터 · 맞바꾸기(칸이 서로 물린 경우)는 한 사람을 잠시 대기로 돌린 뒤 놓는다(서버가 같은 칸 두 사람을 거절해도 됨 · S7) */
+/* 서버에 차례로 · 빼기 먼저 · 자리 있는 칸부터 · 칸이 차서(3명) 물린 경우는 그 칸에서 나갈 사람 하나를 잠시 대기로 돌린 뒤 놓는다
+ * 261017 한 칸 최대 3명 · 서버가 4명째를 seat 로 거절하면 「한 칸 최대 3명」으로 보인다 */
 function mtCcRun(items){
   var st={}, at={}, cur={}, emp={}, nmOf={}, res={ ok:true, done:0, fail:[], full:0 };
-  ccRows().forEach(function(r){ if(r.status==="취소") return; var e=jq(r.emp); st[e]=r.status; emp[e]=r.emp; nmOf[e]=r.name||r.emp; var k=mtSrvK(r); if(k){ at[k]=e; cur[e]=k; } });
+  var put=function(k,e){ (at[k]=at[k]||[]).push(e); }, take=function(k,e){ if(at[k]) at[k]=at[k].filter(function(x){ return x!==e; }); };
+  var room=function(k,e){ var a=at[k]||[]; return a.indexOf(e)>=0||a.length<CC_SEAT_MAX; };
+  ccRows().forEach(function(r){ if(r.status==="취소") return; var e=jq(r.emp); st[e]=r.status; emp[e]=r.emp; nmOf[e]=r.name||r.emp; var k=mtSrvK(r); if(k){ put(k,e); cur[e]=k; } });
   var pend=items.filter(function(it){ return !!st[it.e]; }).sort(function(a,b){ return (a.to?1:0)-(b.to?1:0); });
   var one=function(e, to){ var ks=to?mtKp(to):null;
     return (to?call("cchat_set",{ emp:emp[e], round:ks[0], table:ks[1], from:st[e] }):call("cchat_status",{ emp:emp[e], status:"대기", from:st[e] })).then(function(x){
-      if(x&&x.ok){ if(cur[e]&&at[cur[e]]===e) delete at[cur[e]]; if(to){ at[to]=e; cur[e]=to; st[e]="매칭"; } else { delete cur[e]; st[e]="대기"; } if(x.warn==="full") res.full++; return true; }
+      if(x&&x.ok){ if(cur[e]) take(cur[e],e); if(to){ put(to,e); cur[e]=to; st[e]="매칭"; } else { delete cur[e]; st[e]="대기"; } if(x.warn==="full") res.full++; return true; }
       return x||{ ok:false, reason:"network" }; }); };
-  var fail=function(it, x){ res.fail.push({ e:it.e, nm:nmOf[it.e]||it.e, why:x&&x.reason==="seat"?"그 칸에 다른 사람이 있음":x&&x.reason==="state"?"이미 "+(x.cur||"다른 상태"):why(x) }); };
+  var fail=function(it, x){ res.fail.push({ e:it.e, nm:nmOf[it.e]||it.e, why:x&&x.reason==="seat"?CC_SEAT_TX+" · 그 칸이 찼음":x&&x.reason==="state"?"이미 "+(x.cur||"다른 상태"):why(x) }); };
   var step=function(){
     if(!pend.length) return Promise.resolve(res);
-    var i=-1; for(var j=0;j<pend.length;j++){ var it=pend[j]; if(!it.to||!at[it.to]||at[it.to]===it.e){ i=j; break; } }
-    if(i<0){ var it0=pend[0], oc=at[it0.to];
-      if(!pend.some(function(x){ return x.e===oc; })){ pend.shift(); fail(it0,{ ok:false, reason:"seat" }); return step(); }
+    var i=-1; for(var j=0;j<pend.length;j++){ var it=pend[j]; if(!it.to||room(it.to,it.e)){ i=j; break; } }
+    if(i<0){ var it0=pend[0], oc=(at[it0.to]||[]).filter(function(e){ return pend.some(function(x){ return x.e===e; }); })[0];
+      if(!oc){ pend.shift(); fail(it0,{ ok:false, reason:"seat" }); return step(); }
       return one(oc,"").then(function(x){ if(x!==true){ pend.shift(); fail(it0,x); } return step(); }); }
     var it1=pend.splice(i,1)[0];
     if(it1.to===(cur[it1.e]||"")&&!(it1.to===""&&st[it1.e]==="매칭")){ res.done++; delete MT.ov[it1.e]; return step(); }
@@ -272,10 +275,10 @@ function mtCcDayDrop(e, to){
   if(r.status!=="대기"&&r.status!=="매칭"){ toast("왔음 · 끝 처리한 사람은 옮기지 않습니다",{ bad:1 }); return; }
   if(to==="q"){ if(from) ccSet(e,"대기"); return; }
   if(from===to) return;
-  var o=M.at[to], ks=mtKp(to);
-  if(o&&o.status!=="매칭"){ toast("그 칸 사람은 이미 왔음 · 끝입니다",{ bad:1 }); return; }
-  var items=[{ e:e, to:to }]; if(o) items.push({ e:jq(o.emp), to:from||"" });
-  confirmBox({ t:"바로 반영할까요?", who:personLine(r)+" → "+ks[0]+" · 테이블 "+ks[1], sub:"참가자 앱에 선정 알림"+(o?" · "+personLine(o)+" → "+(from?mtKp(from).join(" · 테이블 "):"대기 줄"):""), ok:"반영 · 알림 보내기",
+  var ks=mtKp(to), os=mtAt(M, to);
+  if(os.length>=CC_SEAT_MAX){ toast(CC_SEAT_TX+" · 다른 칸에 놓습니다",{ bad:1 }); return; }
+  var items=[{ e:e, to:to }];
+  confirmBox({ t:"바로 반영할까요?", who:personLine(r)+" → "+ks[0]+" · 테이블 "+ks[1], sub:"참가자 앱에 선정 알림"+(os.length?" · 같은 칸 "+(os.length+1)+"명("+os.map(function(o){ return o.name||o.emp; }).join(", ")+" 함께)":""), ok:"반영 · 알림 보내기",
     run:function(){ return mtCcRun(items).then(function(res){ return res.fail.length?{ ok:false, msg:res.fail.map(function(f){ return f.nm+" "+f.why; }).join(" · ") }:res; }); },
     done:function(){ paint(); reload(["cc","nb"]); toast("반영했습니다 · "+(r.name||r.emp)+" "+ks[0]+" "+ks[1]); } });
 }
@@ -304,21 +307,28 @@ function mtPickOff(){ MT.pick=null; paint(); }
 function mtMoveStart(p, k){ drwClose(); var s=mtSub(); if(s.v!=="board"||s.p!==p){ MT.pick=null; goSub(p); } mtPickOn(p, k); }
 
 /* ── 8. 당일 단추(왔음 · 노쇼 · 종료) · 바로 · 되돌리기 7초 · 노쇼만 확인 창 ── */
-function mtQuick(pr, okMsg, undo, after){ pr.then(function(x){ if(x&&x.ok){ after&&after(x); paint(); mtDetRe(); toast(okMsg(x),{ undo:undo }); } else toast("처리하지 못했습니다 · "+(x&&x.reason==="state"?"이미 "+(x.cur||"다른 상태"):why(x)),{ bad:1 }); }); }
+/* 261017 두 번 눌림 막기 · 왔음 · 종료는 응답이 올 때까지 그 사람 단추 잠금(MT.qb · 카드 · 서랍 모두) */
+function mtQb(p, k){ return !!MT.qb[p+":"+k]; }
+function mtQbSet(p, k, on){ var id=p+":"+k; if(on) MT.qb[id]=1; else delete MT.qb[id]; var b=el("mtgB"); if(b) b._h=""; paint(); mtDetRe(); }
+function mtQuick(pr, okMsg, undo, after, lk){ pr.then(function(x){ if(lk) delete MT.qb[lk]; var b=el("mtgB"); if(b) b._h="";
+  if(x&&x.ok){ after&&after(x); paint(); mtDetRe(); toast(okMsg(x),{ undo:undo }); } else { paint(); mtDetRe(); toast("처리하지 못했습니다 · "+(x&&x.reason==="state"?"이미 "+(x.cur||"다른 상태"):why(x)),{ bad:1 }); } }); }
 function mtAct(p, k, a){
+  if(mtQb(p, k)) return;
+  var lk=p+":"+k, go=function(pr){ mtQbSet(p, k, 1); return pr; };
   if(p==="cc"){
     var r=ccRow(k); if(!r) return; var s=r.status, e=jq(r.emp);
     var set=function(to, from){ return call("cchat_status",{ emp:r.emp, status:to, from:from }); };
     var back=function(to, from){ return function(){ set(to, from).then(function(x){ if(x&&x.ok){ r.status=to; paint(); } toast(x&&x.ok?"되돌렸습니다":"되돌리지 못했습니다 · "+why(x),{ bad:!(x&&x.ok) }); reload(["cc"]); }); }; };
     if(a==="in"){ if(s!=="매칭"&&s!=="참석") return; var to=s==="참석"?"매칭":"참석";
-      mtQuick(set(to, s), function(){ return (r.name||r.emp)+" · "+(to==="참석"?"왔음 · 출석만":"왔음 취소"); }, back(s, to), function(){ r.status=to; reload(["cc"]); }); }
+      mtQuick(go(set(to, s)), function(){ return (r.name||r.emp)+" · "+(to==="참석"?"왔음 · 출석만":"왔음 취소"); }, back(s, to), function(){ r.status=to; reload(["cc"]); }, lk); }
     else if(a==="dn"){ if(s!=="매칭"&&s!=="참석") return;
-      mtQuick(set("완료", s), function(){ return (r.name||r.emp)+" · 끝 · 프로그램 참여 1개"; }, back(s, "완료"), function(){ r.status="완료"; reload(["cc"]); }); }
+      mtQuick(go(set("완료", s)), function(){ return (r.name||r.emp)+" · 끝 · 프로그램 참여 1개"; }, back(s, "완료"), function(){ r.status="완료"; reload(["cc"]); }, lk); }
     else if(a==="ns"){ if(s!=="매칭") return;
       confirmBox({ t:"노쇼로 처리할까요?", who:personLine(r)+" · "+hm(r.round)+" · 테이블 "+(r.table||""), sub:"칸이 빕니다 · 대기 줄에서 다음 사람을 끌어 놓습니다 · 스탬프 없음", ok:"노쇼", danger:1,
-        run:function(){ return call("staff_mark",{ prog:"cchat", emp:r.emp, mark:"noshow" }).then(function(){ return call("cchat_status",{ emp:r.emp, status:"취소", from:"매칭", why:"노쇼" }); }); },
+        run:function(){ return call("cchat_status",{ emp:r.emp, status:"취소", from:"매칭", why:"노쇼" }); },
+        fail:function(x){ return x&&x.reason==="state"?"이미 "+(x.cur||"다른 상태")+" · 다시 받습니다":""; },
         done:function(){ MT.ns[e]=1; r.status="취소"; paint(); mtDetRe(); reload(["cc","nb"]);
-          toast((r.name||r.emp)+" · 노쇼 · 칸 비움",{ undo:function(){ set("매칭","취소").then(function(x){ if(x&&x.ok){ delete MT.ns[e]; r.status="매칭"; call("staff_mark",{ prog:"cchat", emp:r.emp, mark:"clear" }); paint(); } toast(x&&x.ok?"되돌렸습니다 · 다시 배정":"되돌리지 못했습니다 · "+why(x),{ bad:!(x&&x.ok) }); reload(["cc"]); }); } }); } });
+          toast((r.name||r.emp)+" · 노쇼 · 칸 비움",{ undo:function(){ set("매칭","취소").then(function(x){ if(x&&x.ok){ delete MT.ns[e]; r.status="매칭"; paint(); } toast(x&&x.ok?"되돌렸습니다 · 다시 배정":"되돌리지 못했습니다 · "+(x&&x.reason==="seat"?CC_SEAT_TX+" · 그 칸이 찼음":why(x)),{ bad:!(x&&x.ok) }); reload(["cc"]); }); } }); } });
     }
     return;
   }
@@ -326,9 +336,9 @@ function mtAct(p, k, a){
   var rs=function(to, from){ return call("resv_set",{ id:x.id, status:to, from:from }); };
   var bk=function(to, from){ return function(){ rs(to, from).then(function(y){ if(y&&y.ok){ x.st=to; paint(); } toast(y&&y.ok?"되돌렸습니다":"되돌리지 못했습니다 · "+why(y),{ bad:!(y&&y.ok) }); reload(["lgb","resv"]); }); }; };
   if(a==="in"){ if(RV_ON.indexOf(s2)<0) return; var t2=s2==="체크인"?"승인":"체크인";
-    mtQuick(rs(t2, s2), function(){ return (x.name||x.emp)+" · "+(t2==="체크인"?"왔음 · 출석만":"왔음 취소"); }, bk(s2, t2), function(){ x.st=t2; reload(["lgb","resv"]); }); }
+    mtQuick(go(rs(t2, s2)), function(){ return (x.name||x.emp)+" · "+(t2==="체크인"?"왔음 · 출석만":"왔음 취소"); }, bk(s2, t2), function(){ x.st=t2; reload(["lgb","resv"]); }, lk); }
   else if(a==="dn"){ if(RV_ON.indexOf(s2)<0) return;
-    mtQuick(rs("완료", s2), function(){ return (x.name||x.emp)+" · 끝 · 프로그램 참여 2개"; }, bk(s2, "완료"), function(){ x.st="완료"; reload(["lgb","resv","nb"]); }); }
+    mtQuick(go(rs("완료", s2)), function(){ return (x.name||x.emp)+" · 끝 · 프로그램 참여 2개"; }, bk(s2, "완료"), function(){ x.st="완료"; reload(["lgb","resv","nb"]); }, lk); }
   else if(a==="ns"){ if(RV_ON.indexOf(s2)<0) return;
     confirmBox({ t:"노쇼로 처리할까요?", who:personLine(x)+" · "+(x._k?mtKp(x._k).join(" · 미팅룸 "):""), sub:"자리는 그대로 · 스탬프 없음", ok:"노쇼", danger:1,
       run:function(){ return rs("노쇼", s2); }, done:function(){ x.st="노쇼"; paint(); mtDetRe(); reload(["lgb","resv","nb"]); toast((x.name||x.emp)+" · 노쇼",{ undo:bk(s2,"노쇼") }); } }); }
@@ -359,7 +369,7 @@ function mtDetRe(first){
   if(nOk) h+='<div class="fld">운영자 메모 <span class="cap">참가자에게 보이지 않음 · 500자</span></div><textarea class="mtg-memo" id="mtMemo" maxlength="500" aria-label="운영자 메모">'+esc(MT.memo!=null?MT.memo:(n&&n.memo||""))+'</textarea>'+
     '<div class="btns mt"><span class="cap" style="flex:1;align-self:center">'+(n&&n.at?esc((n.by||"")+" · "+fmtD(n.at)+" 저장"):"")+'</span><button class="btn sm pri" type="button" id="mtMemoGo" onclick="mtMemoSave()">메모 저장</button></div>';
   /* 단추 */
-  var b=[], e=jq(cc?x.emp:D.k), act=function(a,lab,cls){ return '<button class="btn '+(cls||"")+'" type="button" onclick="mtAct(\''+D.p+'\',\''+e+'\',\''+a+'\')">'+lab+'</button>'; };
+  var b=[], e=jq(cc?x.emp:D.k), qb=mtQb(D.p, cc?e:D.k), act=function(a,lab,cls){ return '<button class="btn '+(cls||"")+'" type="button"'+(qb?' aria-disabled="true"':'')+' onclick="mtAct(\''+D.p+'\',\''+e+'\',\''+a+'\')">'+lab+'</button>'; };
   if(cc){
     if(st==="대기"||st==="매칭") b.push('<button class="btn" type="button" onclick="mtMoveStart(\'cc\',\''+e+'\')">옮기기</button>');
     if(st==="매칭"&&MT.day){ b.push(act("in","왔음")); b.push(act("dn","종료")); b.push(act("ns","노쇼","dng")); }

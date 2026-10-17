@@ -5,10 +5,13 @@
  * 서버 상태 = now_board · 이 콘솔의 최근 호출(NET) · 화면 주소 = 추첨 · 타자왕 TV · 스탬프 월(열기 · 복사) · 261016 체크인 창구 · 대기판 걷음
  * 스태프 코드 = adm_roster.staffCode(설정됨 · 비어 있음만 · 값은 받지도 그리지도 않음) · 바꾸기 · 비우기 = adm_code_set(POST · 확인 창) · 운영 설정 76개 「바꾸기」는 넣지 않는다(결정 · 대화로 처리) */
 var LG_SUBS=[["log","활동 기록"],["urgent","급한 단추"],["srv","서버 상태"],["urls","화면 주소"],["qr","현장 QR"],["code","스태프 코드"]];
-var LOG_CAT=[["all","전체",null],["p","사람",function(r){ return r.cat==="p"; }],["r","명단",function(r){ return r.cat==="r"; }],["s","스탬프 · 경품",function(r){ return r.cat==="s"; }],["n","알림",function(r){ return r.cat==="n"; }],["c","설정",function(r){ return r.cat==="c"; }],["x","스캔",function(r){ return r.cat==="x"; }],["ck","체크인존",function(r){ return r.k==="ck_gate"; }],["u","되돌릴 수 있음",function(r){ return !!(r.undo&&r.undo.ok&&!r.undo.done); }],["f","실패",function(r){ return /^x:/.test(r.res||""); }]];
+var LOG_CAT=[["all","전체",null],["p","사람",function(r){ return r.cat==="p"; }],["r","명단",function(r){ return r.cat==="r"; }],["s","스탬프 · 경품",function(r){ return r.cat==="s"; }],["n","알림",function(r){ return r.cat==="n"; }],["c","설정",function(r){ return r.cat==="c"; }],["x","스캔",function(r){ return r.cat==="x"; }],["ck","체크인존",function(r){ return r.k==="ck_gate"; }],["u","되돌릴 수 있음",function(r){ return !!(r.undo&&r.undo.ok&&!r.undo.done&&!LG_DONE[r.ref]); }],["f","실패",function(r){ return /^x:/.test(r.res||""); }]];
 var BYK_N={ "콘솔":"콘솔", "스태프":"스태프 폰", "기기":"코드 기기", "서버":"서버 자동" };
-var GEN_UNDO={ roll_undo:"명단 넣기 · 빼기 되돌리기", resv_set:"라운지 상담 상태 되돌리기", cchat_status:"커피챗 상태 되돌리기", stamp_revoke:"담당자 스탬프 취소", inv_undo:"교환 기록 되돌리기", pre10_undo:"10F 묶음 넣기 되돌리기" };
-var GEN_NOTE={ roll_undo:"그 뒤에 따로 바뀐 사람은 건너뜀", resv_set:"참가자 앱에 바로 반영 · 승인으로 되돌리면 승인 알림이 다시 나갈 수 있음", cchat_status:"참가자 앱에 바로 반영", stamp_revoke:"룰렛 · 행운권 · 선착순과 엮이면 서버가 막음", inv_undo:"원장에 되돌림 한 줄이 남음(지우지 않음)", pre10_undo:"그 뒤에 10F 명단이 또 바뀌었으면 되돌리지 못함" };
+var GEN_UNDO={ roll_undo:"명단 넣기 · 빼기 되돌리기", resv_set:"라운지 상담 상태 되돌리기", cchat_status:"커피챗 상태 되돌리기", stamp_revoke:"담당자 스탬프 취소", inv_undo:"교환 기록 되돌리기", pre10_undo:"10F 묶음 넣기 되돌리기",
+  list_rows_cancel:"커피챗 넣음 취소", lng_pre_row_add:"라운지 명단에 다시 넣기", lng_pre_row_del:"라운지 명단에서 빼기" };   /* 261017 서버 act_log 가 주는 되돌리기 3종 */
+var GEN_NOTE={ roll_undo:"그 뒤에 따로 바뀐 사람은 건너뜀", resv_set:"참가자 앱에 바로 반영 · 승인으로 되돌리면 승인 알림이 다시 나갈 수 있음", cchat_status:"참가자 앱에 바로 반영", stamp_revoke:"룰렛 · 행운권 · 선착순과 엮이면 서버가 막음", inv_undo:"원장에 되돌림 한 줄이 남음(지우지 않음)", pre10_undo:"그 뒤에 10F 명단이 또 바뀌었으면 되돌리지 못함",
+  list_rows_cancel:"대기 상태일 때만 · 상태 = 취소 · 활동 기록에서 다시 되돌릴 수 있음", lng_pre_row_add:"넣었던 시간 · 미팅룸으로 · 그 자리가 찼으면 서버가 막음", lng_pre_row_del:"체크인 · 완료 전일 때만 · 상담 줄은 취소로 남음" };
+var LG_DONE={};   /* 261017 이 콘솔에서 되돌린 줄(ref → 시각) · 서버가 다시 줄 때까지 단추 숨김 */
 var SCR_URLS=[["추첨 화면","17F 대형 스크린 · 원격 모드","../../draw/?remote=1"],["타자왕 TV","1F 타자왕 순위판","../../tv/typing/"],["스탬프 월","1F 스탠바이미","../../wall/"],["타자왕 체험","1F 현장 노트북","../../typing/"]];
 function lgSub(){ return subsOf(LG_SUBS,"log"); }
 SCREENS.log={
@@ -43,17 +46,17 @@ SCREENS.log={
 function scrUrl(p){ try{ return new URL(p, location.href).href; }catch(e){ return p; } }
 /* ── 활동 기록 ── */
 function lgWhat(r){ if(r.cnt) return (r.list==="gate"?"접속 허용 명단":r.list==="staff_app"?"앱 스태프 명단":r.list==="staff_wear"?"스태프 의류 명단":"명단")+(r.op==="add"?"에 넣음":"에서 뺌")+" · "+r.cnt+"명"; return String(r.x||"").replace(/상담석/g,"미팅룸"); }   /* 261016 밤 라운지 상담석 = 미팅룸(서버 운영로그 글자는 그대로 · 화면만) */
-function lgUndoTx(r){ var u=r.undo; if(!u) return ""; if(u.done) return u.done+" 되돌림"; if(u.a==="roulette_undo") return ""; if(u.ok) return GEN_UNDO[u.a]?"가능":""; return u.cur?"지금 "+u.cur:"오늘만 · 지남"; }
+function lgUndoTx(r){ var u=r.undo; if(!u) return ""; if(u.done) return u.done+" 되돌림"; if(LG_DONE[r.ref]) return LG_DONE[r.ref]+" 되돌림"; if(u.a==="roulette_undo") return ""; if(u.ok) return GEN_UNDO[u.a]?"가능":""; return u.cur?"지금 "+u.cur:"오늘만 · 지남"; }
 function lgKpi(){ var d=S.data.alog, b=el("lgK"); if(!b) return; if(!d||!d.ok){ b.innerHTML=""; return; } var c=d.cnt||{};
   b.innerHTML=kpi({ l:"오늘 기록", v:n0(c.all), u:"건", s:"스캔 "+n0(c.x)+"건 포함" })+kpi({ l:"되돌릴 수 있는 묶음", v:n0(d.undo), u:"묶음", s:"명단 넣기 · 빼기" })+kpi({ l:"실패", v:n0(d.fail), u:"건", st:num(d.fail)?"warn":"", s:"스캔 거절 등" })+kpi({ l:"실패한 콘솔 쓰기", v:n0(d.wfailN||0), u:"건", st:num(d.wfailN)?"warn":"", s:"서버가 거절한 처리" }); }
 function lgRow(ref){ var d=S.data.alog; return d&&d.ok?(d.rows||[]).filter(function(x){ return x.ref===ref; })[0]:null; }
 function lgOpen(ref){
   var r=lgRow(ref); if(!r){ drwClose(); return; }
-  var u=r.undo, ok=u&&u.ok&&!u.done&&GEN_UNDO[u.a];
+  var u=r.undo, dn=u&&(u.done||LG_DONE[r.ref]), ok=u&&u.ok&&!dn&&GEN_UNDO[u.a];
   var body='<dl class="cc-kv"><dt>시각</dt><dd>'+esc(r.t)+'</dd><dt>누가</dt><dd>'+esc((r.byName||r.by||"기록 없음")+" · "+(BYK_N[r.byK]||""))+'</dd><dt>어디서</dt><dd>'+esc((r.src==="scan"?"스태프 폰 스캔":r.src==="stamp"?"참여 기록":"운영로그")+" · "+(r.k||""))+'</dd><dt>무엇</dt><dd>'+esc(lgWhat(r))+'</dd>'+
     (r.emp&&!r.cnt?'<dt>누구에게</dt><dd>'+esc(personLine(r))+'</dd>':'')+'<dt>결과</dt><dd>'+(/^x:/.test(r.res||"")?tag("실패 · "+r.res.slice(2),"bad"):r.res==="dup"?tag("이미 받음","warn"):tag("성공","ok"))+'</dd></dl>'+
     (r.cnt&&(r.names||[]).length?'<div class="cc-fld">대상 '+r.cnt+'명'+(r.cnt>40?" 중 40명":"")+'</div><div class="fx-w mt4">'+r.names.map(function(n,i){ var e=(r.emps||[])[i]; return '<span class="pchip">'+esc(e?personLine({ emp:e, name:n }):n)+'</span>'; }).join("")+'</div>':'')+
-    (ok?'<div class="mt"><button class="btn pri big" type="button" onclick="lgUndoAsk(\''+jq(r.ref)+'\')">되돌리기 · '+esc(u.lbl||GEN_UNDO[u.a])+'</button><p class="cap mt4">'+esc(GEN_NOTE[u.a]||"")+' · 되돌린 일도 기록에 새 줄로 남음</p></div>':u&&u.done?'<p class="cap mt">'+esc(u.done)+' 되돌림</p>':u&&u.a==="roulette_undo"?'<div class="mt"><button class="btn dng big" type="button" onclick="rlUndoAsk(\''+jq(u.emp)+'\')">룰렛 사용 취소</button><p class="cap mt4">룰렛 타일로 잘못 찍었을 때 · 사유가 기록에 남음</p></div>':'')+
+    (ok?'<div class="mt"><button class="btn pri big" type="button" onclick="lgUndoAsk(\''+jq(r.ref)+'\')">되돌리기 · '+esc(u.lbl||GEN_UNDO[u.a])+'</button><p class="cap mt4">'+esc(GEN_NOTE[u.a]||"")+' · 되돌린 일도 기록에 새 줄로 남음</p></div>':dn?'<p class="cap mt">'+esc(dn)+' 되돌림</p>':u&&u.a==="roulette_undo"?'<div class="mt"><button class="btn dng big" type="button" onclick="rlUndoAsk(\''+jq(u.emp)+'\')">룰렛 사용 취소</button><p class="cap mt4">룰렛 타일로 잘못 찍었을 때 · 사유가 기록에 남음</p></div>':'')+
     (r.emp&&!r.cnt?'<div class="mt"><button class="btn big" type="button" onclick="pcOpen(\''+jq(r.emp)+'\')">한 사람 카드 열기</button></div>':'');
   drwOpen("alog:"+ref, drwHead((r.verb||"기록")+" · "+(r.cnt?r.cnt+"명":r.emp||r.name?personLine(r):r.k||""), fmtD(r.t))+body+'</div>', { g:MG.alog, label:"활동 기록 상세" });
 }
@@ -63,7 +66,7 @@ function lgUndoAsk(ref){
   confirmBox({ t:(u.lbl||GEN_UNDO[a])+"를 할까요?", who:(r.cnt?r.cnt+"명":r.emp||r.name?personLine(r):"")+" · "+lgWhat(r), sub:"처음 처리 "+fmtD(r.t)+" · "+(r.byName||r.by||"-")+" · "+(GEN_NOTE[a]||""), ok:"되돌리기", danger:a==="stamp_revoke",
     run:function(){ return call(a,p); },
     fail:function(x){ return x&&({ state:"그 사이 상태가 바뀌었습니다", roulette:"룰렛을 이미 돌렸습니다", tickets:"행운권이 이미 나갔습니다", fcfs:"선착순 가습기를 받았습니다", notlast:"그 뒤에 10F 명단이 또 바뀌었습니다" })[x.reason]||""; },
-    done:function(x){ reload(["alog","nb"]); ppStale(); toast("되돌렸습니다 · "+(u.lbl||GEN_UNDO[a])+(x&&x.done!=null&&a==="roll_undo"?" · "+n0(x.done)+"명"+((x.skip||[]).length?" · 건너뜀 "+x.skip.length:""):"")); } });
+    done:function(x){ LG_DONE[r.ref]=hm(String(S.srvT||""))||"방금"; if(u.a==="roll_undo"){ var d0=S.data.alog; ((d0&&d0.rows)||[]).forEach(function(y){ if(y.undo&&y.undo.a==="roll_undo"&&y.undo.b===u.b) LG_DONE[y.ref]=LG_DONE[r.ref]; }); } if(DRW.k==="alog:"+r.ref) lgOpen(r.ref); reload(["alog","nb"]); ppStale(); toast("되돌렸습니다 · "+(u.lbl||GEN_UNDO[a])+(x&&x.done!=null&&a==="roll_undo"?" · "+n0(x.done)+"명"+((x.skip||[]).length?" · 건너뜀 "+x.skip.length:""):"")); } });
 }
 /* ── 급한 단추 ── */
 function urPaint(){
