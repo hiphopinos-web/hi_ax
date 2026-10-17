@@ -210,7 +210,7 @@ function progFlowItems(onlyFl) {
   var tm = tenMine();
   if (tm) { var tp = tm.tm.split("~"); mine.push({ k: "ten", pid: tm.id, a: t2m(tp[0]), b: t2m(tp[1]), t0: tp[0], t1: tp[1], ttl: tm.ttl, sub: tm.sub, fl: 10, pl: sessPlace(tm).replace(/^\d+F\s*·?\s*/, ""), go: "progOpen('" + tm.id + "')", chip: "내 세션", mine: true }); if (ATT10_UI && attMineK(tm.id, "out")) mine[mine.length - 1].chip = "출석"; }   /* v5.71 끝 QR 출석 = 17F 와 같은 칩 「출석」 */
   var r = myResv();
-  if (r && r.slot && FL_DAP_OK.indexOf(r.status) >= 0) { var ra = t2m(r.slot); mine.push({ k: "dap", pid: "dap", a: ra, b: ra + resvMin(r), t0: r.slot, t1: hm2(ra + resvMin(r)), ttl: "AX 라운지", sub: "", fl: 1, pl: "AX 라운지", go: "progOpen('dap')", chip: RESV_ST[r.status] || "사전 신청", mine: true }); }
+  if (r && r.slot && FL_DAP_OK.indexOf(r.status) >= 0) { var ra = t2m(r.slot); mine.push({ k: "dap", pid: "dap", a: ra, b: ra + resvMin(r), t0: r.slot, t1: hm2(ra + resvMin(r)), ttl: "AX 라운지", sub: "", fl: 1, pl: "AX 라운지", go: "progOpen('dap')", chip: RESV_ST[r.status] || "승인 완료", mine: true }); }
   var c = S.get("cchat", null);
   if (c && c.status === "matched" && c.round) { var ca = t2m(c.round); mine.push({ k: "cchat", pid: "cchat", a: ca, b: ca + 20, t0: c.round, t1: hm2(ca + 20), ttl: "AX 커피챗", sub: "", fl: 18, pl: c.table ? "TABLE " + c.table : "", go: "progOpen('cchat')", chip: "선정", mine: true }); }   /* v6.07 매칭됨 → 선정 */
   /* v5.74 (사용자 261006 「13:30부터 여기에는 17층 강의가 있어야 사람들이 보고 참여할 수 있을 듯」) 개인 일정은 공용 일정 줄을 빼지 않는다(옛 v5.22 rep = 10F 세션이 겹치는 17F 오후 강연 줄을 지웠다 · 10F 명단에 든 사람 화면에서 17F 가 사라진 원인)
@@ -476,7 +476,7 @@ function zoneLive(z) {
     var r = loungeMine(), dn = r && r.status === "done", rg = resvRng(r), rc = resvConf();
     o.tm = rc.start + "~" + rc.end;
     o.fact = r ? (dn ? "상담 완료" : (rg || "시간 안내 예정") + " · 내 상담") : o.tm + " · 사전 신청자 상담";
-    o.chip = r ? (dn ? ["완료", "ok"] : [RESV_ST[r.status] || "사전 신청", ""]) : null;
+    o.chip = r ? (dn ? ["완료", "ok"] : [RESV_ST[r.status] || "승인 완료", ""]) : null;
     o.kv = r ? [["내 상담", dn ? "상담 완료" : rg || "시간 안내 예정"], ["장소", resvPlace(r)]] : [["참여", "사전 신청자 상담"], ["장소", "1F AX 라운지"]];
     o.btn = r ? ["내 상담", "progOpen('dap')"] : null;
   } else if (z.id === "cchat") {
@@ -740,7 +740,7 @@ function evBoothHtml() {
     sec("타자왕", needBoxHtml("도전하려면", "타자왕 도전하려면", pzNeedRows("type")) + '<button type="button" class="ax-link axs-plain axs-self" onclick="typeSiteRankGo()">' + lnkChev("타자왕 순위 보기") + "</button>");
 }
 function progOpen(id) { PROG.sid = id; App.go("sess_d"); }
-var RESV_ST = { requested: "승인 대기", booked: "승인 대기", approved: "사전 신청", checked: "상담 중", done: "상담 완료" };   /* v7.39 (사용자 261016 계획서 3-2) 승인 = 사전 명단 줄 · 칩 「사전 신청」(옛 「승인 완료」) */
+var RESV_ST = { requested: "승인 대기", booked: "승인 대기", approved: "승인 완료", checked: "상담 중", done: "상담 완료" };   /* v7.39 (사용자 261016 계획서 3-2) 승인 = 사전 명단 줄 · 칩 「사전 신청」 → v7.76 (사용자 261017) 「승인 완료」로 번복(v7.39 이전과 같은 말 · 칩 · 상세 · 내 일정 줄 · 라운지 줄이 한 원천) */
 /* 내 것인가 (헤더 제목 「신청 관리」 · M03) */
 function progMine(id) {
   if (id === "dap") { var r = myResv(); return !!(r && RESV_HOLD.indexOf(r.status) >= 0); }
@@ -751,7 +751,7 @@ function progMine(id) {
 function progState(s) {
   if (s.kind === "open") return attUi(s.id) && attStLbl(s.id) ? [attStLbl(s.id), "ok"] : [s.id === "expo" ? "자유 입장" : "자유 참석", ""];   /* v5.68 입장 · 끝 둘 다 = 출석 완료 · 하나만 = 입장 출석 | 끝 출석 */   /* v4.26 17F 는 출석하면 「출석 완료」 · v4.38 강연 = 「자유 참석」(시간표 딱지와 같은 말) · 전시 = 「자유 입장」 */
   if (s.kind === "info") return ATT10_UI && sessMine(s.id) && attMineK(s.id, "out") ? ["출석 완료", "ok"] : sessMine(s.id) ? ["사전 신청 완료", "ok"] : ["사전 신청자 참여", ""];   /* v5.60 T3 · v5.71 끝 QR 출석 = 출석 완료 */
-  if (s.id === "dap") { var r = loungeMine(); return r ? [RESV_ST[r.status] || "사전 신청", "ok"] : ["사전 신청자 상담", ""]; }   /* v7.39 사전 신청제 · 앱 신청 없음 */
+  if (s.id === "dap") { var r = loungeMine(); return r ? [RESV_ST[r.status] || "승인 완료", "ok"] : ["사전 신청자 상담", ""]; }   /* v7.39 사전 신청제 · 앱 신청 없음 */
   if (s.id === "cchat") { var cs = cchatState(); return !cs ? ["신청 마감", "off"] : !cs.mine ? ["신청할 수 있어요", ""] : [cs.chip, cs.cc || "ok"]; }   /* v7.39 네 상태 */
   return ["", ""];
 }
@@ -868,7 +868,7 @@ function progDetail(s) {
     var r = myResv(), live = r && RESV_HOLD.indexOf(r.status) >= 0, rg = resvRng(r);
     D.cat = "AX 라운지"; D.title = "내년 DAP 과제 상담"; D.who = "데이터사이언스파트"; D.av = "DS"; D.whoSub = live && r.slot ? "1:1 · " + resvDur(r) : "1:1 상담";
     if (live) {
-      D.st = RESV_ST[r.status] || "사전 신청"; D.stc = "ok";
+      D.st = RESV_ST[r.status] || "승인 완료"; D.stc = "ok";
       D.kv = [["일시", rg ? "10월 26일 " + rg : "10월 26일 · 시간 안내 예정"], ["장소", resvPlace(r)], ["진행", r.status === "checked" ? "상담 진행 중" : r.status === "done" ? "상담 완료" : "시작 5분 전 도착"]];
       D.secT = r.status === "done" ? "상담을 마쳤어요" : "사전 신청한 상담이에요";
       D.secB = r.status === "checked" ? "업무 설명 → 병목 → 개선방안 순서로 진행돼요." : r.status === "done" ? "아래 코드를 AX 라운지 데스크에 보여 주고 사은품을 받으세요." : "";
