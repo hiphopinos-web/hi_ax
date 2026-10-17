@@ -1211,11 +1211,14 @@ function tsfSend() {
    자리 = 이 노트북 저장 self_seat(1 | 2 · 0 = 끔 · 기본 끔) · 주소에 seat=1 · seat=2 · seat=0(#self&seat=1 · ?seat=2)을 붙여 한 번 열면 저장(다음부터 주소 없이) · 스태프 「관리」(F2 · 관리코드)에서 바꾼다
    스태프가 관리코드로 켠 노트북만(체험 PC 는 자리를 보내지 않는다) · 시작(type_self_start + seat) 응답에 live(판 번호 g)가 와야만 소켓을 연다
    옛 서버(live 없음) = 소켓 · 진행 모두 없음 · 인사 답 ok 에 w 1 이 없으면(옛 Hub) 곧바로 닫고 이 화면에서는 다시 열지 않는다
-   판 동안 0.5초마다 tl 한 건(판 상태는 읽기만 · 판정 · 점수 · 입력 경로는 그대로) · 판 끝 x over · 중간 그만둠 x quit · 제출(type_self_submit)에 g · 다시 보내기도 같은 g
+   판 동안 0.25초마다 tl 한 건(판 상태는 읽기만 · 판정 · 점수 · 입력 경로는 그대로) · 판 끝 x over · 중간 그만둠 x quit · 제출(type_self_submit)에 g · 다시 보내기도 같은 g
+   v7.60 (261017 지연 개선) 화면 한 장(rAF)마다 판 상태를 읽기만 해서 사건(새 단어 · 맞힘 · 놓침 · 점수 · 목숨 · 단계 · 카운트다운 · 일시정지 · 문장 장면 bn)이 생기면 다음 0.25초를 기다리지 않고 곧바로 한 건(ev 1 · 간격 50ms 이상)
+     입력 글자가 바뀌면 0.12초 간격으로 · 목숨을 잃은 뒤 느려진 남은 시간 hu(ms) · 스스로 5초 55건 아래(옛 Hub 5초 60건 한도 안) · 옛 Hub 는 ev · hu 를 버리고 그대로 묶는다
    소켓은 셀프 화면에 있는 동안 열어 둔다 · 끊기면 1 · 2 · 4 · 8 · 15초(+0~1초) 뒤 다시(와이파이 복귀 online = 곧바로) · 끊긴 동안 진행은 버린다(쌓지 않는다) · 핑 평소 25초 · 판 동안 5초(4초 안에 답 없으면 떼고 다시)
    모든 보내기는 try 로 감싸 실패해도 게임에 닿지 않는다 · 사번 · 실명 · 닉네임 · 표(ticket)는 싣지 않는다 */
-var TVL = { ws: null, st: "off", gen: 0, g: "", sub: "", q: 0, t: null, rt: null, pt: null, fails: 0, cap: false, no: false, ids: null, nid: 0, prev: {}, sc0: 0, ht0: 0, el: 0, pong: 0, pingAt: 0, url: false, sent: 0 };
-var TVL_MS = 500, TVL_BACK = [1000, 2000, 4000, 8000, 15000];
+var TVL = { ws: null, st: "off", gen: 0, g: "", sub: "", q: 0, t: null, rt: null, pt: null, fails: 0, cap: false, no: false, ids: null, nid: 0, prev: {}, sc0: 0, ht0: 0, el: 0, pong: 0, pingAt: 0, url: false, sent: 0,
+  raf: 0, last: 0, sig: "", inp: "", evp: false, ring: [], evN: 0 };
+var TVL_MS = 250, TVL_EV_GAP = 50, TVL_INP_GAP = 120, TVL_CAP = 55, TVL_BACK = [1000, 2000, 4000, 8000, 15000];   /* v7.60 0.5 → 0.25초 · 사건 곧바로 · 5초 55건 */
 function tvlSeat() { try { var v = Number(S.get("self_seat", 0)); return tsfStaff() && (v === 1 || v === 2) ? v : 0; } catch (e) { return 0; } }
 function tvlUrlSeat() {   /* 주소 값은 이 페이지에서 한 번만 읽는다(스태프가 「관리」에서 바꾼 값을 다시 그리기가 덮지 않게) */
   if (TVL.url) return; TVL.url = true;
@@ -1231,26 +1234,63 @@ function tvlBegin(lv, g) {
     if (!RG.on || RG.mode !== "site" || TSF.ph !== "play" || tvlSeat() !== lv.seat) return;
     TVL.cap = true; TVL.no = false;
     TVL.g = g; TVL.q = 0; TVL.ids = typeof WeakMap === "function" ? new WeakMap() : null; TVL.nid = 0; TVL.prev = {}; TVL.sc0 = RG.score || 0; TVL.ht0 = RG.hits || 0; TVL.el = 0;
+    TVL.last = 0; TVL.sig = ""; TVL.inp = ""; TVL.evp = false;
     tvlOpen();
     if (!TVL.t) TVL.t = setInterval(tvlTick, TVL_MS);
+    if (!TVL.raf && typeof requestAnimationFrame === "function") TVL.raf = requestAnimationFrame(tvlWatch);
     tsfDbg("tvl", "begin");
   } catch (e) {}
 }
+/* 시계(0.25초) · 판이 끝났으면 quit · 화면 한 장이 오래 안 그려질 때(가려짐)도 0.25초마다 한 건 */
 function tvlTick() {
   try {
     if (!TVL.g) { clearInterval(TVL.t); TVL.t = null; return; }
     if (!RG.on || RG.mode !== "site" || App.current !== "type_site") { tvlEnd("quit"); return; }
-    tvlSend(tvlFrame(""));
+    if (performance.now() - TVL.last >= TVL_MS - 30) tvlPush(false);
   } catch (e) {}
+}
+/* v7.60 화면 한 장마다 · 판 상태를 읽기만 · 사건 = 곧바로(50ms 간격) · 입력 글자 = 0.12초 간격 · 아니면 0.25초마다 */
+function tvlSig() {
+  var b = RG.bonus, ws = RG.words || [], top = ws.length ? ws[ws.length - 1] : null;
+  return [RG.hits || 0, RG.lives || 0, RG.stage || 0, RG.score || 0, ws.length, top ? String(top.text || "") : "", RG.cd > 0 ? Math.ceil(RG.cd) : 0, RG.paused ? 1 : 0, b ? String(b.ph || "") + (b.typed === b.text ? "=" : "") : "", RG.ending ? 1 : 0].join("|");
+}
+function tvlWatch() {
+  TVL.raf = 0;
+  try {
+    if (!TVL.g || !RG.on || RG.mode !== "site") return;
+    TVL.raf = requestAnimationFrame(tvlWatch);
+    var sig = tvlSig(), inp = "";
+    try { inp = RG.bonus ? String(RG.bonus.typed || "") : String(rgInVal() || ""); } catch (e) {}
+    if (sig !== TVL.sig) { TVL.sig = sig; TVL.evp = true; }
+    var gap = performance.now() - TVL.last;
+    if (TVL.evp && gap >= TVL_EV_GAP) tvlPush(true);
+    else if (inp !== TVL.inp && gap >= TVL_INP_GAP) tvlPush(false);
+    else if (gap >= TVL_MS) tvlPush(false);
+  } catch (e) {}
+}
+/* 한 건 보내기 · 5초 55건을 넘으면 이번 것은 건너뛴다(사건은 다음 장면에 다시) */
+function tvlPush(ev) {
+  var now = performance.now(), r = TVL.ring;
+  if (!TVL.ws || TVL.st !== "ok") { TVL.last = now; return false; }   /* 끊긴 동안은 판 상태를 읽지도 않는다(쌓지 않는다) */
+  while (r.length && now - r[0] > 5000) r.shift();
+  if (r.length >= TVL_CAP) return false;
+  var f = tvlFrame("");
+  if (ev) f.ev = 1;
+  TVL.last = now;
+  if (!tvlSend(f)) return false;
+  r.push(now); TVL.evp = false; TVL.inp = f.inp; if (ev) TVL.evN++;
+  try { TVL.sig = tvlSig(); } catch (e) {}
+  return true;
 }
 /* 판 끝(over) · 그만둠(quit) 한 건 · 판 번호를 비운다 · 같은 판에 두 번 보내지 않는다 */
 function tvlEnd(x) {
   try {
     if (!TVL.g) return;
-    var f = null; try { f = tvlFrame(x); } catch (e) {}
+    var f = null; try { f = tvlFrame(x); f.ev = 1; } catch (e) {}
     if (f && tvlSend(f)) tsfDbg("tvl", "x " + x);
   } catch (e) {}
   TVL.g = ""; if (TVL.t) { clearInterval(TVL.t); TVL.t = null; }
+  try { if (TVL.raf) { cancelAnimationFrame(TVL.raf); TVL.raf = 0; } } catch (e) {}
 }
 /* 화면을 떠남 · 셀프 모드 끔 · 자리 끔 = 판이 돌고 있으면 quit 한 건 · 소켓 · 시계 정리 */
 function tvlOff() {
@@ -1284,8 +1324,10 @@ function tvlFrame(x) {
   TVL.prev = cur; TVL.ht0 = RG.hits || 0; TVL.sc0 = RG.score || 0;
   var inp = ""; try { inp = String(rgInVal() || "").slice(0, 24); } catch (e) {}
   var b = RG.bonus, bn = b ? { t: String(b.text || "").slice(0, 80), ty: String(b.typed || "").slice(0, 80), ph: String(b.ph || "").slice(0, 8) } : null;
-  return { t: "tl", g: TVL.g, q: 0, at: Date.now(), el: TVL.el, sc: tvlN(RG.score, 0, 60000), ht: tvlN(RG.hits, 0, 400), lv: tvlN(RG.lives, 0, 9), cb: tvlN(RG.combo, 0, 999), st: tvlN(RG.stage, 0, 20),
+  var f = { t: "tl", g: TVL.g, q: 0, at: Date.now(), el: TVL.el, sc: tvlN(RG.score, 0, 60000), ht: tvlN(RG.hits, 0, 400), lv: tvlN(RG.lives, 0, 9), cb: tvlN(RG.combo, 0, 999), st: tvlN(RG.stage, 0, 20),
     cd: RG.cd > 0 ? tvlN(Math.ceil(RG.cd), 0, 9) : 0, pz: RG.paused ? 1 : 0, inp: inp, w: w, hw: hw, bn: bn, x: x || "" };
+  if (RG.hurt > 0 && !RG.paused) f.hu = tvlN(RG.hurt * 1000, 0, 5000);   /* v7.60 목숨을 잃은 뒤 느려진 남은 ms(송출 화면 앞질러 그리기) */
+  return f;
 }
 /* 연결이 살아 있을 때만 · 아니면 버린다 · 망이 느려 쌓이면(8KB · 진행 열 건 안팎) 버린다 */
 function tvlSend(f) {
