@@ -435,6 +435,11 @@
   .myqr-nm span { margin-left: 8px; font: var(--ax-type-t6-strong); color: var(--ax-color-muted); }
   .myqr-no { margin-top: 4px; text-align: center; font: var(--ax-type-t6-strong); color: var(--ax-color-muted); }   /* 261015 체크인 번호(가나다순 고정) */
   .myqr-no b { margin-left: 4px; font: var(--ax-type-t5-strong); color: var(--ax-color-brand); }
+  /* 261017 나의 QR 두 줄(사전 신청자 · 스태프 표시 + 이름 / 사번 소속) · 덩어리(myqr-w)는 가르지 않는다 · 번호만 주황 */
+  .myqr-nm .myqr-w { margin-left: 0; font: inherit; color: inherit; white-space: nowrap; }
+  .myqr-nm .myqr-r b { font: inherit; color: var(--ax-color-brand); }
+  .myqr-id { margin-top: 4px; text-align: center; font: var(--ax-type-t6-strong); color: var(--ax-color-muted); }
+  .myqr-id .myqr-w { white-space: nowrap; }
   .myqr-hint { margin-top: 8px; text-align: center; font: var(--ax-type-t7); color: var(--ax-color-muted); }
   .myqr-hint b { font-weight: 600; color: var(--ax-color-ink); }
   .qstate { margin-top: 12px; border: 1.5px solid var(--line); border-radius: 14px; overflow: hidden; }
@@ -1970,7 +1975,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .oly-sum { display: flex; flex-direction: row; justify-content: space-between; align-items: center; gap: var(--ax-space-12); margin: 0 0 var(--ax-space-12); padding: var(--ax-space-20) var(--ax-space-24); border-radius: var(--ax-radius-24); background: var(--ax-color-surface); color: var(--ax-color-ink); text-align: left; }
   .oly-sum > div { min-width: 0; }
   .oly-sum > div > .ax-meta { white-space: nowrap; }   /* v4.95 「내 미니 게임 총점」 한 줄 */
-  /* 게임 화면(시작 · 결과 · 기억력 판) 여백 = 앱 공통 좌우 24 · 하단 메뉴가 없어 아래는 16(v4.10 · 32 는 경로 줄이 생긴 뒤 390×844 에서 42px 스크롤을 남겼다, 사용자 제보 260922) */
+  /* 게임 화면(시작 · 결과) 여백 = 앱 공통 좌우 24 · 하단 메뉴가 없어 아래는 16(v4.10 · 32 는 경로 줄이 생긴 뒤 390×844 에서 42px 스크롤을 남겼다, 사용자 제보 260922) */
   /* v4.10 min-height 0 · #view 공통 규칙의 min-height 는 헤더 64px 고정값 기준이라, 경로 줄로 헤더가 실제로 더 커지면(약 106px) 그 차만큼 뷰가 과하게 늘어나 있지도 않은 스크롤이 생겼다. 게임 화면은 내용만큼만 차지해도 된다(#frame 배경이 어차피 100dvh 를 채운다) */
   #view[data-v^="game_"] { padding: var(--ax-space-24) var(--ax-page-inset) calc(var(--ax-space-16) + env(safe-area-inset-bottom)); min-height: 0; }
   .oly-sum-n { margin: var(--ax-space-4) 0 0; font: var(--ax-type-t2); color: var(--ax-color-ink); font-variant-numeric: tabular-nums; }
@@ -2000,13 +2005,13 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .oly-pd-no { font: var(--ax-type-t5-strong); color: var(--ax-color-muted); }
   .oly-pos { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-brandText); }
   .oly-card .ax-button { margin: 0; }
-  /* 기억력 · 판 위 HUD 줄(점수 · 라운드 · 오답) = 흰 카드 토큰 (검정 무대는 게임판이라 그대로) */
+  /* 판 위 HUD 줄(점수 · 라운드 · 오답) = 흰 카드 토큰 (검정 무대는 게임판이라 그대로) */
   .game-hud { gap: var(--ax-space-8); margin: 0; }
   .game-hud .hud { border-radius: var(--ax-radius-16); padding: var(--ax-space-8); background: var(--ax-color-surface); }
   .game-hud .hud .v { font: var(--ax-type-t4); color: var(--ax-color-ink); }
   .game-hud .hud .l { margin: 0; font: var(--ax-type-caption); color: var(--ax-color-muted); }
   .gmsg { min-height: 18px; margin: 0; font: var(--ax-type-t7); color: var(--ax-color-body); }
-  /* 주황 면 위 흰 글자 정리 · 기억력 채운 칸(누르면 빠진다) · 완성 팝 · 타일 순번 = 짙은 글자 */
+  /* 주황 면 위 흰 글자 정리 · 채운 칸(누르면 빠진다) · 완성 팝 · 타일 순번 = 짙은 글자 */
   /* ═══ v4.08 결정·제출 화면 통일 · 전체 화면 · 하단 메뉴 숨김 · 아래 고정 주 버튼 + 약한 버튼 · 키보드 위로 올림(--kb) ═══ */
   #view[data-fix="1"][data-v] { padding-bottom: calc(208px + env(safe-area-inset-bottom) + var(--kb, 0px)); }
   .axs-fix.ax-bottom { bottom: var(--kb, 0px); }
@@ -2109,6 +2114,9 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #view[data-v="exp"] .sect span { font: var(--ax-type-t7); color: var(--ax-color-muted); cursor: default; }
   #view[data-v="exp"] .lnk.sub { margin: 0 var(--ax-space-4); font: var(--ax-type-t7); color: var(--ax-color-muted); cursor: pointer; }
   #view[data-v="exp"] .axs-stfgo { display: flex; align-items: center; width: fit-content; min-height: 44px; margin: -12px var(--ax-space-4); padding: 0; border: 0; background: none; text-align: left; }   /* v6.83 (접근성 B-3 · B-6) 「담당자 적립」 p → button · 눌림 높이 20 → 44 · 위아래 -12px 로 글자 자리 그대로 */
+  #view[data-v="exp"] .axs-stplk { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--ax-space-16); }   /* 261017 맨 아래 한 줄 · 게임 순위 › · 담당자 적립 › */
+  #view[data-v="exp"] .axs-stplk .axs-stfgo { margin: 0 var(--ax-space-4); }
+  #view[data-v="exp"] .axs-rkgo { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); cursor: pointer; }
   #view[data-v="exp"] .nt { margin: 0 var(--ax-space-4); font: var(--ax-type-t7); color: var(--ax-color-body); }
   .axs-nx { gap: var(--ax-space-16); }
   .axs-nx-c { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ax-space-4) var(--ax-space-12); margin: 0; font: var(--ax-type-t7); color: var(--ax-color-muted); }

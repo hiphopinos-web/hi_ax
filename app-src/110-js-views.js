@@ -66,7 +66,8 @@ var Views = {
       '<section class="axs-sec">' + railHtml(n, glow, null, false) + "</section>" +
       '<section class="axs-sec"><div class="sect"><b>스탬프 모으는 방법</b><span>' + STAMPS.length + "가지 중 " + STAMP_DENOM + "개까지</span></div>" +   /* v7.57 (사용자 261017 S5 · S6) 6개를 다 모은 뒤 바뀌던 머리 문구 지움(「6 / 6」과 같은 말) · 오른쪽 = 늘 「8가지 중 6개까지」 */
       stpBoardHtml(st, full) +   /* v7.65 홈 접기 단추(stpBoardMine)도 같은 함수 · 같은 값 · 261013 오후 (사용자 확정) 하루 흐름 4단계 · 단계 제목 아래 줄 · 사전등록 체크인 줄은 1단계 아래(대상자만) */
-      scanQNote() + '<button type="button" class="lnk sub axs-stfgo" onclick="staffStampOpen()">' + lnkChev("담당자 적립") + "</button></section></div>";   /* v6.83 (접근성 B-3 · B-6) p → button · 눌림 높이 44 · 키보드 */   /* v4.91 1F 타자왕(스탬프 아님)은 프로그램 탭 「상시 운영」로 옮겼다 */
+      scanQNote() + '<div class="axs-stplk"><button type="button" class="lnk axs-stfgo axs-rkgo" onclick="App.go(\'oly_rank\')">' + lnkChev("게임 순위") + "</button>" +   /* 261017 (사용자) 스탬프 탭 → 미니 게임 순위(oly_rank · 뒤로 = 스탬프 탭) */
+      '<button type="button" class="lnk sub axs-stfgo" onclick="staffStampOpen()">' + lnkChev("담당자 적립") + "</button></div></section></div>";   /* v6.83 (접근성 B-3 · B-6) p → button · 눌림 높이 44 · 키보드 */   /* v4.91 1F 타자왕(스탬프 아님)은 프로그램 탭 「상시 운영」로 옮겼다 */
   },
   /* v4.84 옛 「현장에서 / 앱에서」 체험 화면은 지웠다 · 아래 exp_g(체험 안내) · 스캔 · 결과 · 계단은 그대로 */
 
@@ -80,7 +81,7 @@ var Views = {
   games: function () {
     return '<div class="oly-hub">' + olyHubHtml() + "</div>";
   },
-  /* v4.83 (261001 사용자 수정) AX 퀴즈 · 게임 허브와 따로 · O/X · 기억력 */
+  /* v4.83 (261001 사용자 수정) AX 퀴즈 · 게임 허브와 따로 */
   quiz: function () {
     return '<div class="oly-hub">' + (qzLive() ? qzHubHtml() : quizHubHtml()) + "</div>";   /* v4.96 판 퀴즈 목록(한 행) */
   },

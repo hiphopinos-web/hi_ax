@@ -487,7 +487,7 @@ function expStamp(id) {
 var CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2 8.8-9.4"/></svg>';
 /* 종목 타일 · 완료 = 연주황 「O/X 완료」 · 남음 = 흰 면 · 누르면 그 종목 시작 화면 */
 function stpTilesHtml(keys) {
-  var me = olyMe(), q = keys === OLY_QUIZ_KEYS;   /* AX 퀴즈 타일은 이름 그대로(v4.92 AX 퀴즈 한 판 · 옛 O/X 퀴즈 · 기억력 퀴즈 두 타일) */
+  var me = olyMe(), q = keys === OLY_QUIZ_KEYS;   /* AX 퀴즈 타일은 이름 그대로(v4.92 AX 퀴즈 한 판) */
   return '<div class="axs-tiles">' + olyKeysEvents(keys).map(function (e) {
     var d = !!me.ev[e.key];
     return '<button type="button" class="axs-tile' + (d ? " done" : "") + '" onclick="App.go(\'' + e.view + '\')">' + esc(q ? e.name : e.short) + (d ? " 완료" : "") + "</button>";

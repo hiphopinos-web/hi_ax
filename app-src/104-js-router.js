@@ -156,7 +156,6 @@ var App = {
     if (v === "my_sched") { SCHED.tab = "mine"; v = "guide_time"; }
     if (v === "game_ox") v = "quiz";   /* v4.96 유리다리 휴면 → 정리 #10(261005) 지움 · 옛 링크 · 타일 · 다음 스탬프는 판 퀴즈 목록으로 */
     if (v === "quiz_play" && !qzLive()) v = "quiz";   /* 옛 서버(판 퀴즈를 모름)면 유리다리 목록 */
-    if (v === "game_word") v = "quiz";   /* 정리 #1(261005) 기억력 퀴즈를 지웠다 · 옛 링크는 AX 퀴즈로 */
     if (v === "game_type") v = "games";   /* 정리 #4(261005) 앱(폰) 단어 소나기를 지웠다 · 옛 링크는 미니 게임으로 */
     if (v === "wq_list" || v === "wq_play") v = "exp";   /* 정리 #5(261005) 전시 QR 퀴즈를 지웠다 · 옛 링크는 스탬프 탭으로 */
     if (v === "floor1") { PROG.seg = "always"; PROG.scroll = 0; PROG.anchor = "zone1f"; v = "guide"; }
@@ -242,7 +241,8 @@ var App = {
         gear + "</div>" +
         (v === "home"
           ? '<div class="axs-hgr"><span class="ax-meta">' + FESTIVAL.name + " · " + FESTIVAL.date.replace(/^2026\.\s*/, "") + " · " + FESTIVAL.place + "</span>" +   /* v5.10 헤더가 앱 이름이 되어 행사명은 홈 첫 줄에(시간은 프로그램 탭) */
-            '<h1 class="axs-hbig">' + (hu.name && ckNoMy() ? '<span style="white-space:nowrap">' + esc(hu.name) + "님(" + esc(ckNoMy()) + "),</span> <span style=\"white-space:nowrap\">오늘 <b>하루의 코스</b></span></h1></div>" : (hu.name ? esc(hu.name) + "님, " : "") + "오늘 <b>하루의 코스</b></h1></div>")
+            '<h1 class="axs-hbig">' + (hu.name && ckzSno(ckzMy()) ? '<span style="white-space:nowrap">' + esc(hu.name) + "(" + esc(ckzSno(ckzMy())) + ")님</span> <span style=\"white-space:nowrap\">안녕하세요</span></h1></div>" :   /* 261017 (사용자 확정) 스태프 번호가 있으면 「이름(S1)님 안녕하세요」 · 사전 신청자는 아래 세션 번호 그대로 */
+              hu.name && ckHiNo() ? '<span style="white-space:nowrap">' + esc(hu.name) + "님(" + esc(ckHiNo()) + "),</span> <span style=\"white-space:nowrap\">오늘 <b>하루의 코스</b></span></h1></div>" : (hu.name ? esc(hu.name) + "님, " : "") + "오늘 <b>하루의 코스</b></h1></div>")
           : '<h1 class="axs-hroot">' + esc(this.title(v)) + "</h1>");   /* v6.83 (접근성 B-5) 화면 이름 = 제목 태그(모양은 그대로) */
     } else {
       tb.innerHTML = '<div class="axs-hrow"><button type="button" class="axs-back" onclick="App.back()" aria-label="뒤로">' + BACK_SVG + "</button>" +

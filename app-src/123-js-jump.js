@@ -10,7 +10,7 @@
    30초부터 더 어렵게(JP_HARD · jpSpeed · jpGapPx · jpGapSec · jpNewP) · 처음 30초는 그대로 · 사람 반응 봇(200~300ms) 같은 18판 중앙 67.9초 → 55.1초 · 만점 4판 → 0판 · 완벽 봇은 그대로 만점(풀 수 있는 판). */
 var JP_W = 180, JP_H = 240, JP_GY = 196, JP_PX = 30, JP_HEARTS = 3, JP_G = 820, JP_JV = 300, JP_JV2 = 245, JP_INV = 1.0;
 var JP_ITEM_EVERY = 15, JP_ITEM_SEC = 5;   /* 아이템 · 15초마다 하나 · 5초 동안 */
-/* v3.98 AI 상식 문장 · v4.30 (사용자 확정 260924) 기억력 은행에서 빌려 쓰지 않고 점프 전용 JP_FACTS(O/X 참 명제 결) · JP_BG_MAX 자 이하만
+/* v3.98 AI 상식 문장 · v4.30 (사용자 확정 260924) 퀴즈 은행에서 빌려 쓰지 않고 점프 전용 JP_FACTS(O/X 참 명제 결) · JP_BG_MAX 자 이하만
    v4.92 (261001 사용자 승인 · 앱 개편 4묶음) 1층 부스 판 기준 30문장 · 정본 「기억력 문제 은행 v3.json」 jump = 「QA/문제 은행 확정안 v1.json」 jump · dom = 1층 구역
    v4.00 (사용자 요청 260919) 흘러가는 배경 → 공중에 뜬 글자 블록(2단 점프 미션) · 들이받으면 글자가 흩어지며 점수 보너스 · 결과 화면에 획득 목록
    블록 = 바닥에서 80~110 높이(1단 점프 머리 최고 75 · 2단 점프 113) · 앞뒤 장애물과 떨어뜨려 회피와 동시에 요구하지 않는다
@@ -129,7 +129,7 @@ function jpStart() {
     bg: jpBgLines(), bgI: 0, bgNext: JP_BG_FIRST, fact: null, facts: [], duck: false, press: null, bag: null, lastSp: "", tip: jpTipHtml(gsTutTake("jump")), say: null, tutSeen: {}, pz: 0 };
   JP.warm = GS.first === "jump" ? JP_WARM_SEC : 0; GS.first = "";   /* v5.41 첫 판만 연습 구간 · 표시는 한 번 쓰고 지운다(다시 하기 = 연습 없음) */
   /* v4.22 첫 안내(카운트다운 동안) · 다른 네 게임과 같은 gsTutTake · v4.00 에 시작 직후 조작 안내 상자를 걷고 장애물 직전 안내만 남긴 뒤,
-     v4.08 에 첫 안내 훅을 팡·테트리스·기억력에만 달아서 점프는 첫 장애물이 올 때까지(카운트다운 뒤 약 2초) 아무 안내가 없었다(사용자 신고 260923)
+     v4.08 에 첫 안내 훅을 팡·테트리스에만 달아서 점프는 첫 장애물이 올 때까지(카운트다운 뒤 약 2초) 아무 안내가 없었다(사용자 신고 260923)
      v4.28 (사용자 260924 「첫 안내가 상단에 나와서 잘 이해가 안 된다 · 장애물 안내와 같은 형태 · 같은 위치로」) 점프만 첫 안내를 장애물 안내 칸(jtHint · jpHintNow)에 띄운다 ·
      오버레이 위쪽 공용 안내(gsTip)는 점프에서 쓰지 않는다(중복 금지) · 매 판(v4.24 무제한 그대로) · 다른 네 게임의 카운트다운 안내는 그대로 */
   gsOverlayOpen({ key: "jump", title: "ME to WE 점프", cw: JP_W, ch: JP_H, canvasId: "jpCv", noGesture: true,

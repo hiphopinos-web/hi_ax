@@ -263,6 +263,18 @@ function kitGetTxt(k) { return kitStaff(k) ? KIT_GET_ST : KIT_GET; }
  * 261016 (사용자) 세션별 번호 「A-1」 글자 그대로 · 옛 서버 숫자 번호 = 「n번」 */
 function ckNoVal(v) { v = String(v == null ? "" : v).trim(); if (/^[A-E]-\d{1,4}$/.test(v)) return v; var n = Math.floor(Number(v) || 0); return n > 0 ? String(n) : ""; }
 function ckNoMy() { var v = ckNoVal(S.get("ckno", "")); return /^\d+$/.test(v) ? v + "번" : v; }
+/* 261017 (사용자 확정) 체크인존 명단(사전 신청자 · 스태프 약 270명)만 서버 sync my.ckz { pre, no, stf, sno, nm, dept } · 그 밖 사람 · 옛 서버 = null
+ * 인사 = 스태프 번호가 있으면 「이름(S1)님 안녕하세요」(「-」 뺌) · 없으면 세션 번호(ckNoMy) 그대로
+ * 나의 QR 1줄 = 「사전 신청자(E-3) 이름」 · 「스태프(S1) 이름」 · 겸직 「사전 신청자(E-3) 이름 · 스태프」 · 일반 직원 = 이름만 · 2줄 = 「사번 소속」(일반 직원에게 명단 밖이라는 표시 없음) */
+function ckzVal(v) {
+  if (!v || typeof v !== "object") return null;
+  var sn = String(v.sno == null ? "" : v.sno).trim(), o = { pre: v.pre ? 1 : 0, no: ckNoVal(v.no), stf: v.stf ? 1 : 0, sno: /^S-?\d{1,4}$/.test(sn) ? sn : "", nm: String(v.nm || "").trim(), dept: String(v.dept || "").trim() };
+  return o.pre || o.stf ? o : null;
+}
+function ckzMy() { return ckzVal(S.get("ckz", null)); }
+function ckzSno(z) { return z && z.stf && z.sno ? z.sno.replace("-", "") : ""; }
+function ckzNo(z) { return z && z.pre ? (z.no ? (/^\d+$/.test(z.no) ? z.no + "번" : z.no) : ckNoMy()) : ""; }
+function ckHiNo() { return ckzNo(ckzMy()) || ckNoMy(); }   /* 홈 인사 세션 번호 · my.ckz 의 no 먼저 · 없으면 옛 my.ckno */
 function kitCardHtml() {
   var k = kitMy();
   if (!k) return "";

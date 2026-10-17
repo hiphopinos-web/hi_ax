@@ -417,7 +417,7 @@ function qzPendFlush() {
     if (r.ok) { if (OLY.board) OLY.board.me = r.me; else OLY.board = { me: r.me }; qzStampCheck(r.qz || null); }
   }, function () {});
 }
-/* v4.83 (261001 사용자 수정) AX 퀴즈 · 게임 허브 밖의 별도 활동(1층 부스 내용을 배우는 퀴즈) · O/X · 기억력 두 행 · 순위판 · 총점 없음 · 내 최고와 완주만
+/* v4.83 (261001 사용자 수정) AX 퀴즈 · 게임 허브 밖의 별도 활동(1층 부스 내용을 배우는 퀴즈) · 순위판 · 총점 없음 · 내 최고와 완주만
    스탬프 2(qz) 는 두 종목 모두 한 판 · 옛 서버(stv 없음)에는 qz 스탬프가 없어 도장 줄을 그리지 않는다 */
 function quizHubHtml() {
   olyPull();

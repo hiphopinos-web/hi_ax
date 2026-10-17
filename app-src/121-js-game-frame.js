@@ -447,7 +447,7 @@ function gspTick(now) {
   GSP.raf = requestAnimationFrame(gspTick);
 }
 document.addEventListener("visibilitychange", gspKick);
-/* 스크롤 없이 한 화면 · 미리보기 높이로 맞춘다(360 → 넘친 만큼 줄임 · 최소 140) · 글자 판(기억력·O/X)은 상자 안에 맞춰 줄인다 */
+/* 스크롤 없이 한 화면 · 미리보기 높이로 맞춘다(360 → 넘친 만큼 줄임 · 최소 140) · 글자 판(O/X)은 상자 안에 맞춰 줄인다 */
 function gspFit() {
   var box = el("gsPrev"); if (!box) return;
   var cv = box.querySelector("canvas"), d = box.querySelector(".gsp-dom"), W = box.clientWidth - 24, h = 360;

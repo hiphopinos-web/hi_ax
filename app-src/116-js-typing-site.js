@@ -255,7 +255,7 @@ function gameClear(flagKey) {
   /* 260909: 미니게임 별도 칸 폐지 · 04 미니게임으로 통합
      v4.63 (사용자 확정 260929) 판이 끝났다고 04 를 주지 않는다 · 서로 다른 3종목을 한 판씩 끝내야 한다(올림픽 제출 olySubmit → mgStampCheck · 서버 game_submit 이 판정) */
 }
-/* v4.63 미니게임 스탬프(p4) = 서로 다른 미니게임 3종목 · 종목 = AX 올림픽 다섯 종목(팡 · 점프 · 테트리스 · 기억력 · O/X)
+/* v4.63 미니게임 스탬프(p4) = 서로 다른 미니게임 3종목 · 종목 = 미니 게임(팡 · 점프 · 테트리스)
    한 종목 = 기록을 제출한 판(olySubmit · 팡은 완주 · O/X 는 한 줄 이상) · 같은 종목 여러 판 = 1종목 · 라이브 퀴즈 폐기 · 타자(1F)는 종목이 아니다
    서버 계정 = 서버가 game_submit 응답(p4)으로 알려 줄 때만 적립 · 테스트 계정 · 서버 없음 = 이 기기 종목 수로 */
 var MG_NEED = 3;
@@ -265,8 +265,8 @@ function mgStampCheck(srv) {
   if (srv) { if (srv.got) awardStamp("p4"); return; }
   if (mgDone() >= MG_NEED) awardStamp("p4");
 }
-/* v4.83 AX 퀴즈 스탬프(qz) = O/X · 기억력 두 종목 모두 한 판 · 서버 game_submit 응답 qz 로 적립(없으면 이 기기 종목 수) · 옛 서버에는 qz 가 없다 */
-var QZ_NEED = 1;   /* v4.92 (261001 저녁 사용자 확정) AX 퀴즈 = O/X 한 판 완주 · 옛 2종(O/X · 기억력) 폐지 */
+/* v4.83 AX 퀴즈 스탬프(qz) = 퀴즈 한 판 · 서버 game_submit 응답 qz 로 적립(없으면 이 기기 종목 수) · 옛 서버에는 qz 가 없다 */
+var QZ_NEED = 1;   /* v4.92 (261001 저녁 사용자 확정) AX 퀴즈 = 한 판 완주 */
 function qzDone() { var me = olyMe(); return OLY_QUIZ_KEYS.filter(function (k) { return !!me.ev[k]; }).length; }
 function qzStampCheck(srv) {
   if (!stampV2()) return;

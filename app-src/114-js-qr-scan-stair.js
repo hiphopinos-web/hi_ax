@@ -1058,10 +1058,19 @@ function qrPanelHtml(inner) {
   var u = S.get("user", {}) || {}, txt = myQrText();
   var h = !txt ?
     '<p class="myqr-hint">사번으로 입장하면 내 QR이 발급됩니다.</p>' :
-    '<div class="myqr">' + myQrSvg(216) + "</div>" +
-    '<p class="myqr-nm">' + esc(u.name || "") + "<span>" + esc(u.empId || "") + "</span></p>" +
-    (ckNoMy() ? '<p class="myqr-no">체크인 번호 <b>' + esc(ckNoMy()) + "</b></p>" : "");   /* 261015 체크인 번호(가나다순 고정 · 번호가 있을 때만) · 261016 세션별 「A-1」 */
+    '<div class="myqr">' + myQrSvg(216) + "</div>" + myQrWhoHtml(u);
   return inner ? h : '<div id="qrPanel">' + h + "</div>";
+}
+/* 261017 (사용자 확정) 나의 QR 두 줄 · 1줄 = 「사전 신청자(E-3) 이름」 · 「스태프(S1) 이름」 · 겸직 「사전 신청자(E-3) 이름 · 스태프」 · 일반 직원 = 이름만 · 2줄 = 「사번 소속」
+   덩어리마다 줄을 가르지 않고(nowrap) 넘치면 「 · 」 자리에서 다음 줄이 「· 」로 시작 · 번호만 주황
+   my.ckz 가 없는 옛 서버에서 세션 번호(ckno)만 받은 사람은 예전처럼 「체크인 번호」 줄 */
+function myQrWhoHtml(u) {
+  var z = ckzMy(), nm = (z && z.nm) || u.name || "", no = ckzNo(z), sn = ckzSno(z), dept = (z && z.dept) || u.dept || "";
+  var role = !z ? "" : z.pre ? "사전 신청자" + (no ? "(<b>" + esc(no) + "</b>)" : "") : "스태프" + (sn ? "(<b>" + esc(sn) + "</b>)" : "");
+  var dp = String(dept).split(/\s*·\s*/).filter(Boolean).map(function (x, i) { return '<span class="myqr-w">' + (i ? "· " : "") + esc(x) + "</span>"; }).join(" ");
+  return '<p class="myqr-nm">' + (role ? '<span class="myqr-w myqr-r">' + role + "</span> " : "") + '<span class="myqr-w">' + esc(nm) + "</span>" + (z && z.pre && z.stf ? ' <span class="myqr-w">· 스태프</span>' : "") + "</p>" +
+    '<p class="myqr-id"><span class="myqr-w">' + esc(u.empId || "") + "</span>" + (dp ? " " + dp : "") + "</p>" +
+    (!z && ckNoMy() ? '<p class="myqr-no">체크인 번호 <b>' + esc(ckNoMy()) + "</b></p>" : "");   /* 261015 체크인 번호(가나다순 고정 · 번호가 있을 때만) · 261016 세션별 「A-1」 · 261017 ckz 가 있으면 1줄에 */
 }
 
 /* ── 카메라 (참가자 모달 · 운영자 화면 공용) ── */

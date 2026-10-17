@@ -1,7 +1,7 @@
 /* ════════════════ v4.02 AX 올림픽 점수 체계 v2 (사용자 확정 260919 · 설계 정본 「AX 올림픽 점수 체계 v2.md」) ════════════════
-   종목 점수 = 게임 화면에 보이는 행동 점수 그대로 · 종목 최고 한 판 · 종목 상한 3,000 · 종합 = 다섯 종목 최고 점수의 합(만점 15,000 · v4.09 AI O/X 편입).
+   종목 점수 = 게임 화면에 보이는 행동 점수 그대로 · 종목 최고 한 판 · 종목 상한 3,000 · 종합 = 미니 게임 세 종목 최고 점수의 합(만점 9,000).
    AX 팡 = 80칸 완주 시간 환산(1000 × (기준 초 / 완주 초)^지수) · 점프 = 장애물 40 · 코인 5 · AI 상식 100 ·
-   테트리스 = 블록 10(60개까지) · 줄 50(30줄까지, 그 뒤 10) · 동시 삭제 보너스 · 기억력 = 칸마다 속도 등급 · 오답 −50 · 무오답 라운드 +40.
+   테트리스 = 블록 10(60개까지) · 줄 50(30줄까지, 그 뒤 10) · 동시 삭제 보너스.
    계수는 서버 설정 「올림픽_점수」가 정본 · oly_board 응답의 rule 을 받아 쓴다 · 받기 전에는 아래 OLY_RULE(서버 기본값과 같은 값 · 검사 60절이 대조).
    제출 = 구성 요소(parts) + 점수 · 서버가 같은 식으로 다시 계산해 다르면 거부(mismatch) · 옛 기록(g1·g2 · v4.12 전 O/X g3)은 집계 제외 · 제출 버전 g4(v4.12) · 로컬 최고는 oly2_best_<종목>.
    명예 순위만(경품 없음) · 부문 통계·부문 메달 없음 · 공개 순위는 닉네임 · 1~3위 표식 = 월계수(A안 · 48px 미만으로 쓰지 않는다). */
@@ -11,15 +11,14 @@ var OLY_EVENTS = [
   { key: "pang", name: "AX 팡", short: "팡", view: "game_pang", best: "oly2_best_pang" },
   { key: "jump", name: "ME to WE 점프", short: "점프", view: "game_jump", best: "oly2_best_jump" },
   { key: "tetris", name: "테트리스", short: "테트리스", view: "game_tetris", best: "oly2_best_tetris" },
-  { key: "word", name: "기억력 퀴즈", short: "기억력", view: "quiz", best: "oly2_best_word" },
   { key: "ox", name: "AX 퀴즈", short: "AX 퀴즈", view: "game_ox", best: "oly2_best_ox" }
 ];
 /* v4.83 (261001 사용자 확정 · 앱 개편 1묶음) 미니 게임 = 팡 · 점프 · 테트리스 · 종합 = 세 종목 최고 한 판 합(만점 9,000) · 종합 자격 = 세 종목 모두 1판 이상
-   AX 퀴즈 = O/X · 기억력 · 게임으로 묶지 않는다(사용자 수정 261001) · 순위 · 점수판에 넣지 않는다(내 최고 기록만) · 점수 식 · 서버 재계산은 그대로
+   AX 퀴즈 = 판 퀴즈 · 게임으로 묶지 않는다(사용자 수정 261001) · 순위 · 점수판에 넣지 않는다(내 최고 기록만) · 점수 식 · 서버 재계산은 그대로
    종합 종목은 서버가 알려 준다(oly_board oev · 새 서버) · 받은 순위판이 옛 서버 것이면 다섯 종목(옛 서버 숫자 그대로) · 아직 못 받았으면 지금 체계 판 */
-/* v4.92 (261001 저녁 사용자 확정) AX 퀴즈 = O/X 한 판 · 정리 #1(261005) 기억력 퀴즈 게임은 지웠다(옛 기록 집계 · OLY_EVENTS.word 는 옛 서버 호환으로 남김)
-   OLY_QUIZ_KEYS = 스탬프 판정 · 퀴즈 목록 · OLY_NOT_MINI = 미니 게임 · 순위에서 빼는 종목(기억력도 계속 뺀다) */
-var OLY_MINI_KEYS = ["pang", "jump", "tetris"], OLY_QUIZ_KEYS = ["ox"], OLY_NOT_MINI = ["ox", "word"];
+/* v4.92 (261001 저녁 사용자 확정) AX 퀴즈 = 판 퀴즈 한 판 · 261017 옛 퀴즈 종목 흔적(종목 · 점수식 · 결과 표)은 다 지웠다(사용자 「다 없애줘」)
+   OLY_QUIZ_KEYS = 스탬프 판정 · 퀴즈 목록 · OLY_NOT_MINI = 미니 게임 · 순위에서 빼는 종목 */
+var OLY_MINI_KEYS = ["pang", "jump", "tetris"], OLY_QUIZ_KEYS = ["ox"], OLY_NOT_MINI = ["ox"];
 function olyIsQuiz(key) { return OLY_NOT_MINI.indexOf(key) >= 0; }
 function olyAllKeys() { return OLY_EVENTS.map(function (e) { return e.key; }); }
 function olyOvKeys(src) {
@@ -29,7 +28,7 @@ function olyOvKeys(src) {
   return stampV2() ? OLY_MINI_KEYS : olyAllKeys();
 }
 function olyOvEvents(src) { var k = olyOvKeys(src); return OLY_EVENTS.filter(function (e) { return k.indexOf(e.key) >= 0; }); }
-function olyKeysEvents(keys) { return keys.map(function (k) { return olyEv(k); }); }
+function olyKeysEvents(keys) { return keys.map(function (k) { return olyEv(k); }).filter(Boolean); }   /* 261017 서버가 앱이 모르는 종목을 보내도 건너뛴다 */
 /* 이름 · 미니 게임 세 종목이면 「미니 게임」 · 옛 서버 다섯 종목이면 예전 이름 「AX 올림픽」 */
 function olyOvName(src) { return olyOvKeys(src).length === OLY_MINI_KEYS.length ? "미니 게임" : "AX 올림픽"; }
 function olyOvSum(src) { return olyOvKeys(src).length === OLY_MINI_KEYS.length ? "팡 · 점프 · 테트리스" : "다섯 종목"; }
@@ -39,7 +38,6 @@ var OLY_RULE = {
   pang: { goal: 80, base: 27, pow: 0.87, pauseMax: 3 },
   jump: { obs: 40, coin: 5, fact: 100, pauseMax: 3 },
   tetris: { block: 10, blockMax: 60, line: 50, lineFull: 30, lineAfter: 10, multi: [0, 0, 20, 60, 120], pauseMax: 3 },
-  word: { tiers: [[50, 200], [80, 130], [120, 90], [200, 60]], base: 30, clean: 40, wrong: 50 },
   /* v4.30 출제 비율 쉬움 6 · 보통 5 · 어려움 1(마지막 · 사용자 확정 260924) · 재보정 어려움 기본 50 → 55 · 오답·낙하 −80 → −120 (「올림픽 보정/ox_v430_sim.js」 · 다섯 종목 균형 유지)
      v4.14 유리다리 12줄(사용자 확정 260922 · 보정 「올림픽 보정/ox_bridge_sim.js」) · rowT = 줄 시간 첫 줄 → 마지막 줄(1/100초 · 두 번째 값이 속도 상한 · 평균 5초) · lead = 여유 줄(1/100줄) [시작, 떨어진 뒤·최소, 최대] */
   ox: { sec: 6000, per: [6, 5, 1], lives: 3, base: [40, 45, 55], pen: 120, hasty: 60, speed: 20, full: 100, limit: 400, combo: 6, comboMax: 5,
@@ -103,7 +101,7 @@ var OLY_MEDAL = ["", "금메달", "은메달", "동메달"];
 var OLY = { board: null, t: 0 };
 function olyRule() {
   var r = OLY.board && OLY.board.rule;
-  return r && r.cap > 0 && r.pang && r.jump && r.tetris && r.word && r.word.tiers && r.word.tiers.length === 4 && r.tetris.multi && r.tetris.multi.length === 5 &&
+  return r && r.cap > 0 && r.pang && r.jump && r.tetris && r.tetris.multi && r.tetris.multi.length === 5 &&
     r.ox && r.ox.sec > 0 && r.ox.base && r.ox.base.length === 3 && r.ox.per && r.ox.per.length === 3 && r.ox.lives > 0 && r.ox.rowT && r.ox.rowT.length === 2 && r.ox.lead && r.ox.lead.length === 3 ? r : OLY_RULE;
 }
 function olyCap() { return olyRule().cap; }
@@ -123,9 +121,6 @@ function olyScore(game, p, rule) {
     var ln = n("lines");
     s = Math.min(n("blk"), R.blockMax) * R.block + Math.min(ln, R.lineFull) * R.line + Math.max(0, ln - R.lineFull) * R.lineAfter +
       n("c2") * R.multi[2] + n("c3") * R.multi[3] + n("c4") * R.multi[4];
-  } else if (game === "word") {
-    for (i = 0; i < R.tiers.length; i++) s += n("j" + i) * R.tiers[i][1];
-    s += n("j" + R.tiers.length) * R.base + n("cl") * R.clean - n("wr") * R.wrong;
   } else if (game === "ox") {
     s = qzIsCard(p && p.ql) ? qzTally(p.ql).pts : oxTally(p && p.ql, R, oxGold(p && p.tk)).pts;   /* v4.96 판 퀴즈(정답 × 100) · 유리다리 */
   }
@@ -186,7 +181,6 @@ function olyRuleLine(key) {
   if (key === "pang") return R.goal + "칸 완주가 빠를수록 점수 · " + R.base + "초 = 1,000점 · 종목 최대 " + cap;
   if (key === "jump") return "넘은 장애물 " + R.obs + " · 코인 " + R.coin + " · AX 상식 " + R.fact + " · 종목 최대 " + cap;
   if (key === "tetris") return "블록 " + R.block + "점(" + R.blockMax + "개까지) · 줄 " + R.line + "점 · 한 번에 여러 줄 보너스";   /* v4.28 「시간은 점수가 아니에요」 설명 문장은 결과 접힘의 참고 기록 표가 대신한다 */
-  if (key === "word") return "빨리 맞힐수록 칸 점수가 커요 · 오답 −" + R.wrong + " · 오답 없는 라운드 +" + R.clean;
   if (key === "ox") return "정답 " + R.base[0] + "~" + R.base[2] + " · 빠르면 +" + R.speed + " · " + R.feverAt + "연속마다 피버 ×" + R.feverMul + " · 황금 발판 ×" + R.goldMul + " · 도착 +" + R.arrive + " · 오답·떨어짐 −" + R.pen;
   return "";
 }
@@ -301,7 +295,7 @@ function olyEvPos(key, v) {
   var t = olyPosText(v);
   return olyEv(key).short + " " + v.rank + "위" + (t ? " · " + t : "");
 }
-/* 종합 한 줄 · 「종합 12위 · 동메달까지 1,150점」 · 자격 전이면 「종합 순위까지 2종목 · 테트리스 · 기억력」 */
+/* 종합 한 줄 · 「종합 12위 · 동메달까지 1,150점」 · 자격 전이면 「종합 순위까지 2종목 · 점프 · 테트리스」 */
 function olyOverallPos(me) {
   if (me.left) return "남은 종목 · " + olyOvEvents().filter(function (e) { return !me.ev[e.key]; }).map(function (e) { return e.short; }).join(" · ");
   if (testEmp()) return "내 기록 · 테스트라 순위에 들어가지 않아요";   /* v4.16 테스트 계정은 서버에 쓰지 않아 순위 계산이 안 된다(가짜 순위 대신 안내) */
@@ -325,12 +319,6 @@ function olyRowsFor(key, p) {
     add("지운 줄", l1, l1 + "줄 × " + R.line, l1 * R.line);
     add((R.lineFull + 1) + "번째 줄부터", l2, l2 + "줄 × " + R.lineAfter, l2 * R.lineAfter);
     [2, 3, 4].forEach(function (k) { add(k + "줄 한 번에", n("c" + k), n("c" + k) + "번 × " + R.multi[k], n("c" + k) * R.multi[k]); });
-  } else if (key === "word") {
-    ["번개", "빠름", "좋음", "보통"].forEach(function (nm, i) { var t = R.tiers[i]; add(nm, n("j" + i), n("j" + i) + "칸 × " + t[1], n("j" + i) * t[1], t[0] / 100 + "초 안"); });
-    add("느림", n("j4"), n("j4") + "칸 × " + R.base, n("j4") * R.base);
-    add("틀린 뒤 맞힌 칸", n("jx"), n("jx") + "칸 × 0", 0);
-    add("오답 없는 라운드", n("cl"), n("cl") + "번 × " + R.clean, n("cl") * R.clean);
-    add("오답", n("wr"), n("wr") + "번 × −" + R.wrong, -n("wr") * R.wrong);
   } else if (key === "ox") {
     [1, 2, 3].forEach(function (d) { add(d + "단계 정답", n("c" + d), n("c" + d) + "개 × " + R.base[d - 1], n("c" + d) * R.base[d - 1]); });
     add("빠른 답", n("sp"), "1초 안 +" + R.speed, n("sp"));
@@ -344,13 +332,12 @@ function olyRowsFor(key, p) {
   return rows.filter(function (r) { return r.c > 0; });
 }
 function olyBreakHtml(key, p, score) {
-  var raw = key === "word" ? olyScoreRaw(p) : key === "ox" ? oxTally(p.ql, olyRule().ox, oxGold(p.tk)).pts : 0;
+  var raw = key === "ox" ? oxTally(p.ql, olyRule().ox, oxGold(p.tk)).pts : 0;
   return '<table class="oly-brk">' + olyRowsFor(key, p).map(function (r) {
     return "<tr><th>" + esc(r.l) + (r.note ? "<small>" + esc(r.note) + "</small>" : "") + "</th><td>" + esc(r.d) + '</td><td class="n">' + (r.v < 0 ? "−" + olyFmt(-r.v) : olyFmt(r.v)) + "</td></tr>";
   }).join("") +
     '<tr class="sum"><th>합계</th><td>' + (raw < 0 ? "최저 0 · " : "") + "종목 최대 " + olyFmt(olyCap()) + '</td><td class="n">' + olyFmt(score) + "</td></tr></table>";   /* v4.28 설명 문장 대신 짧은 값 */
 }
-function olyScoreRaw(p) { var R = olyRule().word, s = 0; R.tiers.forEach(function (t, i) { s += (Number(p["j" + i]) || 0) * t[1]; }); return s + (Number(p.j4) || 0) * R.base + (Number(p.cl) || 0) * R.clean - (Number(p.wr) || 0) * R.wrong; }
 /* v4.28 결과 둘째 줄 · 이번 판이 내 최고를 넘었으면 「신기록!」 · 아니면 「내 최고 N점」(이 기기 최고와 서버 최고 중 큰 쪽) */
 function olyResCmp(key) {
   var v = olyMe().ev[key], last = OLY.last && OLY.last.key === key ? OLY.last : null, best = v ? v.best : 0;
@@ -377,7 +364,7 @@ function olyResMeFill(key) {
   var m = el("olyResLw"), v = olyMe().ev[key];
   if (m) m.innerHTML = v && v.medal ? olyLw(v.medal, 64) : "";
 }
-/* 결과 화면 본문 (게임 결과 카드 안) · o = { key, parts, score, deco(점수 옆 장식 · 기억력 별), ref(참고 기록 [[이름, 값]]), extra(참고 기록 아래 HTML · O/X 칭호) }
+/* 결과 화면 본문 (게임 결과 카드 안) · o = { key, parts, score, deco(점수 옆 장식), ref(참고 기록 [[이름, 값]]), extra(참고 기록 아래 HTML · O/X 칭호) }
    v4.28 보이는 것 = 점수 · 내 최고 비교 · AX 올림픽 진행 세 줄 · 나머지 = 「점수 계산 보기」 접힘(점수 구성 표 · 참고 기록 · 점수 규칙 · 내 위치) */
 function olyResultBody(o) {
   var v = olyMe().ev[o.key];

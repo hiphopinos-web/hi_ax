@@ -120,7 +120,7 @@
     box-shadow: var(--rt-line), inset 0 0 0 3px var(--rt-wood), inset 0 0 0 5px var(--rt-tan); }
   .rt .gs-say-b::before { display: none; }
   .rt .gs-say-b small { font-family: var(--rt-font); font-size: var(--rt-f16); line-height: var(--rt-l16); color: var(--rt-tan2); }
-  /* ── 기억력 · 상태창 · 문장 판 · 나무 이름표 타일 ── */
+  /* ── 상태창 · 문장 판 · 나무 이름표 타일 ── */
   .rt .game-hud { margin: 3px 3px 12px; padding: 6px; gap: 6px; background: var(--rt-wood); box-shadow: var(--rt-line); }
   .rt .game-hud .hud { border-radius: 0; background: var(--rt-bark); }
   .rt .game-hud .hud .v { font-family: var(--rt-font); font-size: var(--rt-f24); font-weight: 400; line-height: var(--rt-l24); color: var(--rt-white); }
