@@ -129,7 +129,7 @@ var Views = {
       '<p class="tytv-t">' + (oly ? olyOvSum() + " 최고 점수 합계 · " + olyFmt(olyMax()) + "점 만점" : oly2 ? olyOvEvents().map(function (e) { return e.short; }).join(" · ") : "현장 타자왕전 상위 5") + "</p>" +
       '<div class="tytv-seg"><span class="' + (site ? "on" : "") + '">현장 타자 5</span><span class="' + (oly ? "on" : "") + '">' + (olyOvName() === "미니 게임" ? "미니 게임" : "올림픽") + ' 종합</span><span class="' + (oly2 ? "on" : "") + '">' + (olyOvName() === "미니 게임" ? "미니 게임" : "올림픽") + " 종목별</span></div>" +
       (oly ? olyTvPodium() : oly2 ? olyTvEvents() : '<div class="tytv-list five">' + tyTvRows(r, 5) + "</div>") +
-      '<p class="tytv-foot">' + (oly || oly2 ? "종목마다 최고 한 판 · 종목 최대 " + olyFmt(olyCap()) + "점 · 명예 순위" : "운영 " + esc(winTxt) + " · 1인 " + ((TYTV.site && TYTV.site.tries) || 3) + "회 · 최고 기록 · 17:00 마감 · 1~3위 Closing Speech 시상") + "</p></div>";   /* v4.16 가짜 닉네임 표기 삭제 · TV 는 항상 실서버 값 */
+      '<p class="tytv-foot">' + (oly || oly2 ? "종목마다 최고 한 판 · 종목 최대 " + olyFmt(olyCap()) + "점 · 명예 순위" : "운영 " + esc(winTxt) + " · 1인 " + ((TYTV.site && TYTV.site.tries) || 3) + "회 · 최고 기록 · 17:00 마감 · 1~10위 Closing Speech에서 순위 발표") + "</p></div>";   /* v4.16 가짜 닉네임 표기 삭제 · TV 는 항상 실서버 값 */
   },
   type_award: function () {
     if (S.get("tyaw_tab", "type") === "oly" && S.get("admin_authed", false)) return olyAwardHtml();
@@ -148,7 +148,7 @@ var Views = {
         return '<div class="tytv-row' + (x.rank <= 3 ? " top" : "") + '"><span class="no">' + x.rank + '</span><span class="nm">' + esc(x.nick || "익명 참가자") +
           (hide ? "" : '<small>' + esc(x.name || "") + (x.dept ? " · " + esc(x.dept) : "") + "</small>") + '</span><span class="sc">' + typePts(x.score) + "<small>정확도 " + x.acc + "%</small></span></div>";   /* v5.12 1F 타자왕 = 점수 */
       }).join("") : '<p style="padding:24px 4px;opacity:0.7">' + (d ? "아직 현장 기록이 없습니다" : "불러오는 중") + "</p>") + "</div>" +
-      '<p class="tytv-foot">동점은 정확도, 그다음 먼저 기록한 쪽 · 1~3위 시상 · 운영 ' + esc(((d && d.win) || []).join(" · ")) + "</p></div>";
+      '<p class="tytv-foot">동점은 정확도, 그다음 먼저 기록한 쪽 · 1~10위 Closing Speech에서 순위 발표 · 운영 ' + esc(((d && d.win) || []).join(" · ")) + "</p></div>";
   },
 
   /* v4.84 옛 스탬프 화면(passport · 아코디언 카드) = 스탬프 탭(exp) 별칭 · App.go 가 exp 로 돌린다(옛 해시 · 알림 · onclick 호환) · 직접 렌더 대비 */
