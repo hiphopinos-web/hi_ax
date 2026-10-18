@@ -492,7 +492,7 @@ function zoneLive(z) {
     o.btn = st ? ["내 커피챗", "progOpen('cchat')"] : ov ? ["오늘 커피챗은 끝났어요", "", "", true] : cl ? ["신청 마감", "", "", true] : cw ? [cw, "", "ccApplyBtn", true] : ["커피챗 신청하기", "ccApplyGo()", "ccApplyBtn"];
   } else if (z.id === "event") {
     o.kv = [["운영 시간", F1_HOURS]];
-    o.need = pbfNeedRows();   /* v7.67 (사용자 261017) 문구 원천 PB_FCFS · 옛 「1F EVENT 포토부스 앞 · 소진 시까지」 「오전 · 커피 50잔」 「14:00 · 쿠키 세트 50세트 · 커피 50잔」 */
+    o.needHtml = pbfBoxHtml();   /* v7.85 언제? 어떻게? 상자 · v7.67 (사용자 261017) 문구 원천 PB_FCFS · 옛 「1F EVENT 포토부스 앞 · 소진 시까지」 「오전 · 커피 50잔」 「14:00 · 쿠키 세트 50세트 · 커피 50잔」 */
   } else if (z.id === "welcome") {
     /* v7.67 (사용자 261017 D5) 내 상태 = 스탬프 탭 레일 캡션과 같은 값(fcfsCapTxt · 선착순 N번 · 선착순 마감 · 수령 완료) · 지급 시작 10:30 은 글자(서버 값 없음) · 마감 = 서버 fx.cut */
     var fxc = fxGet();   /* 내 상태 한 줄 = 시트 머리 아래(f1Cell welcome · 표 스탬프 칸과 같은 글) */
@@ -510,7 +510,8 @@ function pbfCardOn() { return appNow() < PBF_END; }
 function pbfLive() { if (!pbfDay()) return false; var m = hmNow(); return m >= t2m(PB_FCFS[0][0]) && m < t2m("17:00"); }
 function pbfChip() { return '<span class="axs-chip">' + (pbfDay() ? "오늘" : "10/26") + "</span>"; }
 function pbfSign(lg) { return zoneSign("TIME EVENT", "tev" + (lg ? " lg" : "")); }
-function pbfNeedRows() { return [["cam", "포토부스 사진 촬영 후 받기", "소진 시 종료"], ["coffee", pbfTxt(0), "", pbfNw(esc(pbfTxt(0)))], ["time", pbfTxt(1), "", pbfNw(esc(pbfTxt(1)))]]; }   /* r[3] = 굵은 줄 HTML(「 · 」 자리에서만 꺾임 · 목록 모양 없음 · needBoxHtml) */
+/* v7.85 (사용자 261018 「여기도 언제 어떻게 형태로」) EVENT 시트 · 구역 상세의 옅은 주황 상자 = TIME EVENT 카드와 같은 「언제?」 「어떻게?」 라벨 줄(pbfRowsHtml) · 아이콘 줄 · 상자 제목 「선착순 받으려면」 없음 · 옛 pbfNeedRows(카메라 · 컵 · 시계 줄) */
+function pbfBoxHtml() { return '<div class="axs-pz-need axs-pbfn" role="group" aria-label="AI 포토부스 선착순">' + pbfRowsHtml() + "</div>"; }
 /* v7.75 (사용자 261017) 질문 라벨 줄 「언제?」(PB_FCFS 두 줄) · 「어떻게?」(PB_FCFS_HOW) · 라벨 = 정보 줄 알약(운영 시간 hrsHtml 과 같은 .pl · 같은 너비) · 값 시작선 한 열(격자)
    선착순 시트 · 1F 칸 TIME EVENT 카드가 같이 쓴다 · 옛 주황 점 세 줄(axs-pbl) */
 function pbfRowsHtml() {
@@ -518,7 +519,16 @@ function pbfRowsHtml() {
   return '<div class="axs-pbq">' + row("언제?", PB_FCFS.map(function (r) { return pbfNw("<b>" + esc(r[0]) + " ~</b> : " + esc(r[1])); })) + row("어떻게?", [pbfNw(esc(PB_FCFS_HOW))]) + "</div>";
 }
 /* 줄 안 「 · 」 조각 = 줄바꿈 없는 덩어리 · 넘치면 「 · 」 자리에서 꺾여 둘째 줄이 「· 」로 시작(주황 점 목록 줄 안이라 segHtml 목록 모양을 쓰지 않는다 · 점 두 개 방지) */
-function pbfNw(h) { return String(h).split(" · ").map(function (t, i) { return '<span class="axs-nwr">' + (i ? "· " : "") + t + "</span>"; }).join(" ");
+/* v7.85 (사용자 261018) 「 · 」 조각 = 한 덩어리(axs-pbsg · 안 들어가면 통째로 다음 줄 · 「· 」 시작) · 조각 하나가 한 줄보다 길 때만 그 안 「, 」 뒤 · 괄호 묶음 앞에서 꺾임(괄호는 통째로) · 한 줄에 들어가면 한 줄 */
+function pbfNw(h) {
+  var nw = function (x) { return '<span class="axs-nwr">' + x + "</span>"; };
+  return String(h).split(" · ").map(function (t, i) {
+    var cs = t.split(", ");
+    return '<span class="axs-pbsg">' + cs.map(function (u, j) {
+      var m = /^(.*?)(\([^()]*\))$/.exec(u), tail = j < cs.length - 1 ? "," : "", lead = i && !j ? "· " : "";
+      return m && m[1] ? nw(lead + m[1]) + "<wbr>" + nw(m[2] + tail) : nw(lead + u + tail);
+    }).join(" ") + "</span>";
+  }).join(" ");
 }
 function pbfOpen() { zoneOpen("pbf"); }
 function pbfCardHtml() {
@@ -531,20 +541,51 @@ function pbfHomeHtml() {
   if (!pbfLive()) return "";
   return '<button type="button" class="axs-pbfh" onclick="pbfOpen()"><span class="t"><b>1F 선착순 이벤트 중</b> · 자세히 보기</span>' + CHEV_SVG + "</button>";
 }
-/* v7.71 (사용자 261017) 선착순 시트 첫 진입 = 아래 메뉴 「프로그램」을 누르는 순간(다른 탭에서 올 때 · navTap) · 옛 v7.67 = 1F 칸에 들어올 때(progAlwaysHtml) · 1F 칸 진입에서는 뜨지 않는다
-   조건(옛 그대로) = 10/26 17:00 전(pbfCardOn) · 하루 한 번(기기 키 pbf_seen · 날짜 · 닫아도 그날은 다시 안 뜸) · 다른 시트 · 확인 창 · 영상 · 둘러보기 위에는 띄우지 않음 */
-function pbfDayKey() { var d = appNow(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
+/* v7.85 (사용자 261018 「프로그램 탭을 누르고 타임 이벤트 광고창이 뜨는 타이밍이 자연스럽지 않아」) 옛 v7.71 = 탭을 누르고 0.45초 뒤 선착순 시트가 화면을 덮음 · 하루 한 번
+   지금 = 아래 메뉴 위 알림 한 줄(#pbfNote · 탭 내용을 덮지 않음 · 누르면 같은 선착순 시트 · X = 닫기)
+   뜨는 때 = 다른 탭에서 아래 메뉴 「프로그램」으로 와서(navTap) 2초 넘게 머물고 스크롤 · 누름이 1.2초 멈춘 뒤 · 화면에 TIME EVENT 카드가 보이면 띄우지 않음
+     다른 시트 · 확인 창 · 안내 팝업 · 스탬프 팝 · 영상 · 둘러보기가 열려 있으면 닫힐 때까지 기다림 · 다른 탭으로 가면 그만
+   횟수 = 단계마다 한 번(행사 전 「pre」 한 번 · 10/26 당일 「day」 한 번 · 기기 키 pbf_seen · 뜬 순간 본 것으로) · 10/26 17:00 뒤 없음(pbfCardOn)
+   사라짐 = X · 누름(시트로) · 10초 · 다른 탭 · 다른 시트가 열림 · 움직임 = 토스트와 같은 떠오름(6px · 0.3초) · 사라짐 0.18초 · 동작 줄이기 = 바로 */
+var PBN = { t: 0, at: 0, act: 0, ph: "", on: 0, h: 0 }, PBN_DWELL = 2000, PBN_IDLE = 1200, PBN_STAY = 10000;
+function pbfPhase() { return !pbfCardOn() ? "" : pbfDay() ? "day" : "pre"; }
 function pbfAutoSoon() {
-  if (!pbfCardOn() || S.get("pbf_seen", "") === pbfDayKey()) return;
-  setTimeout(function () {
-    var k = pbfDayKey();
-    if (App.current !== "guide" || detShown() || document.hidden || !pbfCardOn() || S.get("pbf_seen", "") === k) return;
-    if (el("axsSheet") || el("modal") ||(typeof IVP !== "undefined" && IVP.on) || (typeof tourInvHold === "function" && tourInvHold())) return;
-    S.set("pbf_seen", k); pbfOpen();
-  }, 450);
+  var ph = pbfPhase(); if (!ph || S.get("pbf_seen", "") === ph || PBN.on) return;
+  PBN.ph = ph; PBN.at = PBN.act = Date.now();
+  clearInterval(PBN.t); PBN.t = setInterval(pbfNoteTick, 250);
 }
-/* 아래 메뉴 누름 · 프로그램 탭을 다른 탭에서 눌렀을 때만 선착순 시트(같은 탭 안에서 다시 누름 · 상세 시트에서 돌아옴 · 홈 링크 · 딥링크는 아님) */
-function navTap(t) { var was = App.tabOf(App.current); App.tab(t); if (t === "guide" && was !== "guide") pbfAutoSoon(); }
+function pbfNoteBusy() {
+  return detShown() || !!(el("axsSheet") || el("modal") || el("spop") || NOTICE.cur || SPOP.cur || (typeof IVP !== "undefined" && IVP.on) || (typeof tourInvHold === "function" && tourInvHold()));
+}
+function pbfCardSeen() { var c = document.querySelector("#view .axs-pbf"); if (!c) return false; var r = c.getBoundingClientRect(); return r.bottom > 80 && r.top < window.innerHeight - 120; }
+function pbfNoteTick() {
+  var n = Date.now(), here = App.tabOf(App.current) === "guide";
+  if (PBN.on) { if (!here || pbfNoteBusy() || n - PBN.on > PBN_STAY) pbfNoteHide(); return; }
+  if (!here || pbfPhase() !== PBN.ph || S.get("pbf_seen", "") === PBN.ph) { clearInterval(PBN.t); PBN.t = 0; return; }
+  if (n - PBN.at < PBN_DWELL || n - PBN.act < PBN_IDLE || document.hidden || pbfNoteBusy()) return;
+  if (pbfCardSeen()) { clearInterval(PBN.t); PBN.t = 0; return; }   /* 카드를 보고 있음 · 이번 진입은 그만(본 것으로 치지 않음) */
+  S.set("pbf_seen", PBN.ph); pbfNoteShow();
+}
+function pbfNoteShow() {
+  var o = el("pbfNote"); if (o) o.remove();
+  var d = document.createElement("div");
+  d.id = "pbfNote"; d.className = "axs-pan pbf-note"; d.setAttribute("role", "status");
+  d.innerHTML = '<button type="button" class="b" onclick="pbfNoteGo()"><span class="h">' + pbfSign() + pbfChip() + '</span><span class="t"><b>1층 포토부스 선착순 이벤트</b>' + CHEV_SVG + "</span></button>" +
+    '<button type="button" class="x" onclick="pbfNoteHide()" aria-label="닫기">' + X_SVG + "</button>";
+  el("frame").appendChild(d);
+  PBN.on = Date.now();
+  if (AXM.rm()) d.classList.add("show"); else { void d.offsetWidth; requestAnimationFrame(function () { d.classList.add("show"); }); }
+}
+function pbfNoteHide() {
+  var d = el("pbfNote"); PBN.on = 0; clearInterval(PBN.t); PBN.t = 0; clearTimeout(PBN.h);
+  if (!d) return;
+  d.id = ""; d.classList.remove("show");
+  if (AXM.rm()) d.remove(); else PBN.h = setTimeout(function () { d.remove(); }, AXM.OUT + 40);
+}
+function pbfNoteGo() { pbfNoteHide(); pbfOpen(); }
+["scroll", "touchstart", "pointerdown", "wheel", "keydown"].forEach(function (k) { document.addEventListener(k, function () { PBN.act = Date.now(); }, { capture: true, passive: true }); });
+/* 아래 메뉴 누름 · 프로그램 탭을 다른 탭에서 눌렀을 때만 알림 기다림 시작(같은 탭 안에서 다시 누름 · 상세 시트에서 돌아옴 · 홈 링크 · 딥링크는 아님) · 다른 탭을 누르면 떠 있던 알림은 바로 사라짐 */
+function navTap(t) { var was = App.tabOf(App.current); App.tab(t); if (t !== "guide") { if (PBN.on) pbfNoteHide(); } else if (was !== "guide") pbfAutoSoon(); }
 /* 시트 본문 · 세 줄 → 쿠키 세트 사진 → EVENT 시트로 가는 한 줄 */
 function pbfSheet() {
   /* v7.75 (사용자 261017) 제목 「1층 포토부스 선착순 이벤트」 · 「10/26」(당일 「오늘」) 알약 = 제목 끝에 붙음(마지막 낱말과 한 덩어리 · 넘치면 제목이 꺾여도 알약은 끝 낱말과 같이) · 옛 칩 줄 + 제목 「선착순 이벤트」 */
@@ -708,7 +749,7 @@ function zoneDetailHtml() {
   return '<div class="ax-stack axs-pan"><div class="axs-zdt' + (seal ? " axs-sthost" : "") + '">' + (seal ? pill : "") + zoneSign(z.sign, "lg") +
     '<p class="axs-bar stm">' + esc(z.stm) + "</p>" + (cr ? '<div class="cr">' + cr + "</div>" : "") +
     '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + z.todo.map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" + zoneCaseHtml(z) + zoneExHtml(z) +
-    (L.kv ? '<hr class="axs-rule"><dl class="axs-kv' + (ev ? " ev" : "") + '">' + L.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + segHtml(esc(r[1])) + "</dd>"; }).join("") + "</dl>" : "") + (L.need ? needBoxHtml("선착순 받으려면", "선착순 받으려면", L.need) : "") +
+    (L.kv ? '<hr class="axs-rule"><dl class="axs-kv' + (ev ? " ev" : "") + '">' + L.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + segHtml(esc(r[1])) + "</dd>"; }).join("") + "</dl>" : "") + (L.needHtml || (L.need ? needBoxHtml("선착순 받으려면", "선착순 받으려면", L.need) : "")) +
     "</div>" + (ev && EV_TYP_PROMO ? typPromoHtml("go") : "") + zonePicHtml(z) + (L.btn ? '<button type="button" class="ax-button" onclick="' + L.btn[1] + '">' + esc(L.btn[0]) + "</button>" : "") + "</div>";   /* v5.60 E (사용자 261004 「모형에서 보기 굳이 없어도 될 버튼 · 여기서 길 잃는 수석님 많을 듯」) 구역 상세의 「모형에서 보기」 삭제 · 둘러보기 입구 = 상시 운영 맨 위 카드 · 홈 줄 */
 }
 /* ═══ v5.69 구역 상세 시트(detPaint · 라우트 zone_d) · 1F 6구역 + 18F AX 커피챗 · v5.65 통일 구역 상세(zonePairHtml)의 순서 그대로 · 판 문법 경계 = 시트(pan)
@@ -726,7 +767,7 @@ function zoneSheet() {
     ev ? (meta ? '<div class="cr">' + meta + "</div>" : "") + (kv ? '<hr class="axs-rule">' + kv : "") + evBoothHtml() :   /* v7.67 (사용자 261017) EVENT = 부스별 안내(포토부스 · 룰렛 · 타자왕) · 옛 하는 일 3줄 · 선착순 상자 · 쿠키 사진 한 줄 */
     (meta ? '<div class="cr">' + meta + "</div>" : "") +
     '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + (z.lead ? [z.lead] : []).concat(z.todo).map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" + zoneCaseHtml(z.id === "lab" ? zoneById("action") : z) + zoneExHtml(z) +   /* v7.67 (D4) AX LAB 시트 = AX in Action 사례 3개 */
-    (kv ? '<hr class="axs-rule">' + kv : "") + (L.need ? needBoxHtml("선착순 받으려면", "선착순 받으려면", L.need) : "") +
+    (kv ? '<hr class="axs-rule">' + kv : "") + (L.needHtml || (L.need ? needBoxHtml("선착순 받으려면", "선착순 받으려면", L.need) : "")) +
     (ev && EV_TYP_PROMO ? typPromoHtml("go") : "") + zonePicHtml(z);   /* v5.96 (사용자 261006 밤 「여기에 타자왕 광고는 없애줘」) EVENT 구역 상세 = 홍보 칸 없음 · 스위치 EV_TYP_PROMO */
   return { cls: "axs-pan", name: zoneSign(z.sign, "lg"), chips: zoneChip(L.chip), title: esc(z.id === "cchat" ? CCHAT_TTL : z.kor), seal: seal ? pill : "", body: body,   /* v5.79 머리 이름 = 구역 간판 하나(현장 부스 사인과 같은 글자 · 한국어 이름을 따로 두지 않는다) · 상태 칩 · 한국어 한 줄 · 도장 = 본문 첫 줄 */
     foot: b ? progBtn(esc(b[0]), b[1], "", b[2] || "", !!b[3]) : "" };
@@ -735,7 +776,7 @@ function zoneSheet() {
    타자왕 = 스탬프 1개당 1회 · 최대 3회 · 17:00 마감 · 1~10위 Closing Speech에서 순위 발표 · 옛 1F 칸 EVENT 안 「1F 타자왕 순위」 줄 = 여기 「타자왕 순위 보기」 */
 function evBoothHtml() {
   var sec = function (h, inner) { return '<section class="axs-dsec axs-evb"><h3>' + h + "</h3>" + inner + "</section>"; };
-  return sec("AI 포토부스", '<p class="k">ME to WE 프레임 사진을 찍어요</p>' + needBoxHtml("선착순 받으려면", "AI 포토부스 선착순 받으려면", pbfNeedRows()) + evPicHtml()) +
+  return sec("AI 포토부스", '<p class="k">ME to WE 프레임 사진을 찍어요</p>' + pbfBoxHtml() + evPicHtml()) +
     sec("룰렛", needBoxHtml("받으려면", "룰렛 받으려면", pzNeedRows("roulette"))) +
     sec("타자왕", needBoxHtml("도전하려면", "타자왕 도전하려면", pzNeedRows("type")) + '<button type="button" class="ax-link axs-plain axs-self" onclick="typeSiteRankGo()">' + lnkChev("타자왕 순위 보기") + "</button>");
 }

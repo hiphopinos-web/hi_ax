@@ -209,6 +209,7 @@
 .axs-pan .axs-pbq .vs { display: flex; flex-direction: column; min-width: 0; }
 .axs-pan .axs-pbq .v { font: var(--ax-type-t6); line-height: 26px; color: var(--ax-color-body); word-break: keep-all; }
 .axs-pan .axs-pbq b { font-weight: 600; color: var(--ax-color-ink); }
+.axs-pan .axs-pbfn .axs-pbq b { font: inherit; font-weight: 600; }   /* v7.85 EVENT 시트 옅은 주황 상자(.axs-pz-need) 안 = 카드와 같은 글자(상자의 굵은 줄 b 크기 t5 를 따르지 않음) */
 @media (max-width: 374px) { .fs-big .axs-pan .axs-pbq { grid-template-columns: minmax(0, 1fr); gap: var(--ax-space-4); } .fs-big .axs-pan .axs-pbq .pl { justify-self: start; min-width: 5.6em; } .fs-big .axs-pan .axs-pbq .r + .r .pl { margin-top: var(--ax-space-8); } }   /* 360 큰글씨 = 라벨 위 · 값 아래(값 칸 넓게 · 넘침 0) · 두 라벨 같은 너비 */
 .axs-pan .axs-pbtt .axs-chip { min-height: 24px; margin-left: 2px; padding: 0 var(--ax-space-8); vertical-align: 0.2em; }   /* v7.75 선착순 시트 제목 끝 「10/26」 알약 · 제목 글자 가운데 높이 */
 .axs-pan .axs-pbfm { min-height: var(--ax-touch-size); margin: calc(var(--ax-space-8) * -1) 0; }
@@ -264,7 +265,7 @@
 .axs-pan .axs-bar.hb > b, .axs-pan .axs-bar.hb > span { grid-column: 1; min-width: 0; }
 .axs-pan .axs-bar.hb > .axs-hrs { grid-column: 2; grid-row: 1; flex-wrap: nowrap; align-items: center; gap: var(--ax-space-8); margin: 0; }
 /* v7.74 EVENT 사진 줄 굵은 글 안 「 · 」 묶음(pbfNw)은 굵은 글 그대로(옆 회색 작은 글 규칙이 닿지 않게) */
-.axs-pan .axs-evpic b .axs-nwr { font: inherit; color: inherit; }
+.axs-pan .axs-evpic b .axs-nwr, .axs-pan .axs-evpic b .axs-pbsg { font: inherit; color: inherit; }   /* v7.85 조각 덩어리(axs-pbsg)도 굵은 줄 글자 그대로 */
 /* 영상 보기 접기(홈 axs-sfd 부품) · 영상 줄 = 썸네일 16:9 · 오른쪽 아래 길이 · 제목 · 회색 한 줄 · 셰브론 */
 .axs-pan .axs-vfd { margin-top: calc(var(--ax-space-8) * -1); }
 .axs-pan .axs-vfd .axs-sfdb i { font-style: normal; font-weight: 500; color: var(--ax-color-muted); }

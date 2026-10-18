@@ -423,6 +423,18 @@
   #toast { position: fixed; left: 50%; bottom: 104px; transform: translateX(-50%) translateY(var(--ax-motion-rise)); z-index: 90; background: var(--hi); color: #fff; font-size: calc(14.5px * var(--fs)); font-weight: 700; padding: 12px 20px; border-radius: 12px; opacity: 0; pointer-events: none; transition: opacity var(--ax-motion-out) var(--ax-motion-ease-fade), transform var(--ax-motion-out) var(--ax-motion-ease-fade); box-sizing: border-box; width: max-content; max-width: calc(100% - 32px); text-align: center; }   /* v6.83 (묶음 17) 폭 = 글 길이(max-content) · 화면 양옆 16px 까지(옛 max-width 88% 만 = left 50% 에서 남은 폭으로 줄어 긴 글이 3~4줄) */
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); transition-duration: var(--ax-motion-in); }   /* 261009 모션 통일 · 나타남 = 떠오름(6px · 0.3초) · 사라짐 = 흐려짐 0.18초 */
   @media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
+  /* v7.85 (사용자 261018) 프로그램 탭 선착순 알림 한 줄(#pbfNote · 105 pbfNoteShow) · 아래 메뉴 위 = 토스트 자리(104px) · 폭 = 5초 줄(cn-undo)과 같음 · 흰 면 + TIME EVENT 카드 테두리 · 움직임 = 토스트와 같은 떠오름 · 사라짐 */
+  .pbf-note { position: fixed; left: 50%; bottom: 104px; z-index: 88; display: flex; align-items: flex-start; box-sizing: border-box; width: min(420px, calc(100% - 32px)); border: 1px solid #FFD8C1; border-radius: var(--ax-radius-16); background: var(--ax-color-surface); box-shadow: 0 6px 20px rgba(25, 31, 40, 0.12); opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(var(--ax-motion-rise)); transition: opacity var(--ax-motion-out) var(--ax-motion-ease-fade), transform var(--ax-motion-out) var(--ax-motion-ease-fade); }
+  .pbf-note.show { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); transition-duration: var(--ax-motion-in); }
+  .pbf-note .b { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: var(--ax-space-12) 0 var(--ax-space-12) var(--ax-space-16); border: 0; background: none; font-family: inherit; text-align: left; cursor: pointer; }
+  .pbf-note .h { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ax-space-8); }
+  .pbf-note .h .axs-chip { min-height: 24px; padding: 0 var(--ax-space-8); }
+  .pbf-note .t { display: flex; align-items: center; gap: var(--ax-space-4); }
+  .pbf-note .t b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); word-break: keep-all; }
+  .pbf-note .t .axs-chev { flex: none; width: 18px; height: 18px; color: var(--ax-color-muted); }
+  .pbf-note .x { flex: none; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin: var(--ax-space-4) var(--ax-space-4) 0 0; padding: 0; border: 0; background: none; color: var(--ax-color-muted); cursor: pointer; }
+  .pbf-note .x svg { width: 20px; height: 20px; }
+  @media (prefers-reduced-motion: reduce) { .pbf-note { transition: none; } }
 
   /* ── 프로그램 탭 = 신청 전용 (v47 층별 안내 폐기) · 세션 카드 ── */
   /* 양방향 QR (260830) · 스캔/내 QR 토글, 개인 QR 카드, 대기 상태 줄 */
@@ -2165,6 +2177,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-stpl { list-style: none; margin: 0; padding: 0; font: var(--ax-type-t7); color: var(--ax-color-muted); }
   /* v7.54 .axs-stpl 점 = 공용 목록 점 부품(주황 둥근 점 · 글자 보조 회색 13px 그대로 · 옛 「·」 글자) */
   .axs-nwr { white-space: nowrap; }
+  .axs-pbsg { display: inline-block; max-width: 100%; }   /* v7.85 선착순 문구 「 · 」 조각 한 덩어리(105 pbfNw) · 안 들어가면 조각째 다음 줄 · 조각이 한 줄보다 길 때만 안에서 꺾임 */
   /* v5.68 프로그램 참여 = 스탬프 2개 · 제목 옆 「×2」 알약 · 17F 한쪽만(p3h) = 번호 칸 아래 절반 주황 「1/2」 */
   /* v6.83 (사용자 261009 묶음 12 「스탬프 픽토그램 × 2」) 주황 알약(점 둘 + 「스탬프 2개」 · v6.56) → 하단 탭 스탬프 그림(#nav-stamp 그대로) + 「×2」 · 면 없음 · 무채색(받은 줄 = muted) · 한 덩어리(좁으면 통째로 다음 줄) */
   .axs-stpb { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: var(--ax-space-4); }
