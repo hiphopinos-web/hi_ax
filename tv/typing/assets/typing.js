@@ -1,6 +1,6 @@
 /* 1F 타자왕 TV 광고 루프 · 스탠바이미 세로 TV (261004 재구성 · 사용자 「타자왕 광고 여기서 진행해」 · 같은 날 「너무 정신 없다 · 적정한 속도」 · 순위 게임처럼 공개)
  * 운영 안내 = 디자인 시안/사이니지/운영 안내.md
- * 장면(초) = 광고 18 · 상품 5 · 순위 17 = 40 · 행사일(2026-10-26) 17:00(한국 시간) 뒤 = 최종 순위 17 · 상품 5 = 22 · 화면 위 「AX 타자왕 · 1F」는 늘 그 자리
+ * 장면(초) = 광고 22.65(문장 치기 장면이 문장 길이를 따라 정해져 18 → 22.65 · 261018 v7.83 보너스 문장 약 40자) · 상품 5 · 순위 17 = 44.65 · 행사일(2026-10-26) 17:00(한국 시간) 뒤 = 최종 순위 17 · 상품 5 = 22 · 화면 위 「AX 타자왕 · 1F」는 늘 그 자리
  *   루프 끝 무너짐(261004 사용자 「광고가 끝나고 새 광고로 넘어가는 시점에서 무너지면서」) = 루프 마지막 장면(순위 · 마감 뒤 상품 · promo 상품)의 마지막 1.4초 ·
  *     글자 · 줄이 도트 조각(72×36)으로 부서져 산성비처럼 위에서부터 쏟아진다 · 빈 바탕은 그대로 · 잠깐 비었다가 다음 루프 · 상품 → 순위는 그냥 바뀐다 · promo 마감 뒤(상품만 반복)는 무너짐 없음
  *   가상 이름 채우기(261004 사용자 「10위까지 일단은 가상의 이름으로」) = 실제 기록이 10명보다 적으면 빈 자리를 가상 닉네임으로 · 화면에서만(서버 · 시트에 안 씀) ·
@@ -156,7 +156,18 @@
   /* 몽타주 시각표(몽타주 시작 기준 초) · 실제 게임 전환 길이(RAIN_TRANS wipe 0.6 · title 1.6 · RAIN_CLOUD clear 1.4)에 가깝게 · 컷 세 개 */
   var MT = { clear: 4.2, win: 5.2, title: 5.7, wout: 7.2, type: 7.7, typed: 7.85, typeEnd: 10.0, res: 10.3, bin: 11.6, end: 11.6 };   /* 261004 PERFECT 뒤 = 와르르(옛 bin 도트 전환 0.6초 대신) */
   var T_HOOK = 2.6, T_ACT = ENG ? T_HOOK + MT.end : 6;   /* 엔진이 없으면 몽타주 없이 후킹 · 행동 */
-  (function actAt() { var a = document.querySelectorAll("#act [data-off]"); for (var i = 0; i < a.length; i++) a[i].setAttribute("data-at", (T_ACT + +a[i].getAttribute("data-off")).toFixed(2)); })();
+  var ACT_LEN = 3.8;   /* 행동 장면 길이 · 광고 = 후킹 + 몽타주 + 이것 */
+  function actAt() { var a = document.querySelectorAll("#act [data-off]"); for (var i = 0; i < a.length; i++) a[i].setAttribute("data-at", (T_ACT + +a[i].getAttribute("data-off")).toFixed(2)); }
+  actAt();
+  /* 261018 v7.83 보너스 문장 약 40자(두 줄) · 문장 치기 장면 길이 = 친 키 수 ÷ 7.5(분당 450타) · 하한 2.15초(옛 고정값) · 상한 7초(40자를 다 보여 주려면 450타로는 12초라 광고가 늘어진다 → 지금 문장은 전부 상한이 걸린다) ·
+     장면이 길어진 만큼 MT 뒤쪽 · 행동 장면 시작(T_ACT) · 광고 길이(DUR.ad)가 문장마다 따라 바뀐다 · 줄바꿈 자리(br)는 엔진 rgBnsLines 가 그린다 */
+  var TYPE_RATE = 7.5, TYPE_MIN = 2.15, TYPE_MAX = 7.0;
+  function monTiming(ln) {
+    if (!ENG) return;
+    var d = Math.max(TYPE_MIN, Math.min(TYPE_MAX, keys(ln.s).length / TYPE_RATE));
+    MT.typed = MT.type + 0.15; MT.typeEnd = MT.typed + d; MT.res = MT.typeEnd + 0.3; MT.bin = MT.end = MT.res + 1.1;
+    T_ACT = T_HOOK + MT.end; DUR.ad = T_ACT + ACT_LEN; actAt();
+  }
 
   function tpInit(host, lines, o) {   /* 글자 하나 = <i> · 줄 = <p> · o = 줄마다 주황 글자 번호 */
     var h = "", ch = [];
@@ -245,6 +256,7 @@
     RG.L = BL;
     RG.mas = { x: BW / 2, tx: BW / 2, hop: 0, set: true };
     var LNS = RAIN_BONUS_LINES.filter(function (x) { return x && x.s && x.w && x.w.length; }), ln = LNS[k % LNS.length];
+    monTiming(ln);
     var pool = rgPool().filter(function (w) { return ln.w.indexOf(w) < 0; }), pk = function (i) { return pool.length ? pool[(k * 7 + i * 11) % pool.length] : ln.w[i % ln.w.length]; };
     var wk = function (i) { return ln.w[i % ln.w.length]; }, txt = [wk(0), pk(0), wk(1), pk(1), wk(2)];
     /* 실제 게임에 가까운 속도 · 단어 하나 약 0.9초에 쳐서 터뜨린다 · 낙하 5초(현장 1단계 7.2초의 구름 아래 출발분) · 판에 단어 네 개 남짓 */
