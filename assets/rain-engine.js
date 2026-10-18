@@ -42,6 +42,7 @@
      「문장을 먼저 읽어 두세요」 32 · 카운트다운 팡(rgBnsPop · rgBnsShake · GO 0.6초 보이기) · 아래 칸 = 판 높이에 맞춤 · 판정 · 점수 · 시간 그대로
    261012 사용자 직접 지적 세 가지 · ① 빠르기 = 단계 · 램프로만 오른다(rgGapWait · rgJit · 구름 단어 거리 맞춤 · 프레임 0.1초) · 느려지는 때는 목숨을 잃은 직후뿐 ·
      ② 보너스 들어가기 = 안내 「잠시 후에 문장이 나타납니다. 빠르게 따라 치세요.」 → 3 · 2 · 1 → 「시작!」과 함께 문장 · 입력(미리 읽기 없앰) · ③ 3 · 2 · 1 = 판 가운데 큰 숫자 · 테두리 번쩍(rgBnsFlash) · 박자음 rgcd · rgstart
+   261018 v7.84 (사용자 「권장대로」) 보너스 안내 3.5초 동안 문장 미리 보기(261012 · 261018 오전 「숨김」 대체) · 3 · 2 · 1 = 문장 아래 칸(「시작!」 자리) · 좁은 판 = 세 줄(은행 b3 · 글자 20px 아래로 줄이지 않음 · rgBnsFit)
    261012 후속(사용자 실제 화면 「3 · 2 · 1 과 동시에 시작!」) · 첫 카운트다운이 3.2초를 3 · 2 · 1(0.2초) · GO(1초)로 나눠 1 과 GO 가 붙어 보였다 · 이제 3 · 2 · 1 각 1초 → 판 시작 = 「시작!」 팡(rgCdNum · rgCdDraw · RG.goT)
    ══════════════════════════════════════════════════════════════════════════ */
 
@@ -1105,6 +1106,34 @@ function rgBnsLines(ctx, text, maxW) {
   }
   return best || rgWrap(ctx, text, maxW);
 }
+/* 261018 v7.84 세 줄(사용자 「권장대로」 · 좁은 노트북 화면에서 글자를 16px 로 줄이던 것 대체) · 은행의 두 자리(b3 · 둘 다 띄어쓰기일 때만) · 없으면 세 줄 폭이 가장 고른 어절 경계(쉼표 바로 뒤를 먼저) */
+var RAIN_BNS_MIN = 20;   /* 보너스 문장 · 따라 쓰기 글자 하한 px */
+function rgBnsB3(text) { for (var i = 0; i < RAIN_BONUS_LINES.length; i++) { var x = RAIN_BONUS_LINES[i]; if (x && x.s === text) { var a = x.b3; return a && a.length === 2 && a[0] > 0 && a[1] > a[0] && text.charAt(a[0]) === " " && text.charAt(a[1]) === " " ? a : null; } } return null; }
+function rgBnsTri(ctx, text) {
+  text = String(text);
+  var a = rgBnsB3(text), sp = [], best = null, bs = Infinity;
+  if (a) return [text.slice(0, a[0]), text.slice(a[0] + 1, a[1]), text.slice(a[1] + 1)];
+  for (var i = text.indexOf(" "); i > 0; i = text.indexOf(" ", i + 1)) sp.push(i);
+  for (var p = 0; p < sp.length; p++) for (var q = p + 1; q < sp.length; q++) {
+    var l = [text.slice(0, sp[p]), text.slice(sp[p] + 1, sp[q]), text.slice(sp[q] + 1)];
+    if (!l[1] || !l[2]) continue;
+    var m = Math.max(ctx.measureText(l[0]).width, ctx.measureText(l[1]).width, ctx.measureText(l[2]).width) * (1 - (l[0].slice(-1) === "," ? 0.1 : 0) - (l[1].slice(-1) === "," ? 0.1 : 0));
+    if (m < bs) { bs = m; best = l; }
+  }
+  return best;
+}
+/* 문장 줄 맞추기 · fp0 로 한 줄 · 두 줄(rgBnsLines)이 되면 그대로 · 아니면 세 줄(rgBnsTri) · 세 줄이 fp0 로 넘치면 넘치지 않는 가장 큰 글자(최소 RAIN_BNS_MIN) · 돌려준 글자로 ctx.font 를 맞춰 둔다 */
+function rgBnsFit(ctx, text, maxW, fp0) {
+  ctx.font = rtFont(fp0);
+  var two = rgBnsLines(ctx, text, maxW), tri = two.length > 2 ? rgBnsTri(ctx, text) : null, fp = fp0;
+  if (!tri) return { fp: fp0, lines: two };
+  var wd = function () { return Math.max(ctx.measureText(tri[0]).width, ctx.measureText(tri[1]).width, ctx.measureText(tri[2]).width); }, w = wd();
+  if (w > maxW) {
+    fp = Math.max(RAIN_BNS_MIN, Math.floor(fp0 * maxW / w)); ctx.font = rtFont(fp);
+    while (fp > RAIN_BNS_MIN && wd() > maxW) { fp--; ctx.font = rtFont(fp); }
+  }
+  return { fp: fp, lines: tri };
+}
 /* v4.51 게임판 틀 · 셋 중 유일한 전체 높이 · 양옆 판(나무 이중 테두리)보다 한 단계 강하게 · 바깥 먹 3 → O100 4 → 안 먹 3(= RAIN_FRAME)
    위 모서리는 계단(rtStep) · 아래는 캔버스 끝까지 열어 둔다(입력칸 틀이 같은 세 겹으로 이어 받는다 · 화면 쪽 CSS) */
 function rgFrameDraw(ctx, L) {
@@ -1239,29 +1268,30 @@ function rgSideHearts(ctx, right, cy, k) {
    s = 구름이 걷히면 나오는 문장 · w = 그 문장의 핵심 단어 3~5개(2~6자 · 공백 없음 · 문장 안에 그대로 있다) · 이 단어들이 그 구름의 비로 내린다(단어로 한 번 · 문장으로 또 한 번)
    근거 = 슬로건 국문 · 3개년 로드맵(공감과 참여 → 확산과 체화 → 혁신과 연결) · 기획 철학(체감 → 상상 → 발굴 → 연결 · 내 업무에 적용할 마음) · 1층 판(DAP · 현장의 AX · 하이디큐 · 하이헬퍼 · AX Lounge · 1인 1 AI Agent) */
 var RAIN_BONUS_LINES = [
-  { s: "나의 경험을 우리의 가능성으로, 현대해상의 변화를 함께 만들어갑니다", br: 17, w: ["경험", "우리", "가능성", "변화"] },
-  { s: "공감과 참여에서 확산과 체화로, 그리고 혁신과 연결로 나아가는 여정", br: 17, w: ["공감", "참여", "확산", "체화", "여정"] },
-  { s: "공감과 참여의 해, 사내 생성형 서비스를 오픈하고 필요성을 체감합니다", br: 17, w: ["공감", "참여", "생성형", "필요성", "체감"] },
-  { s: "확산과 체화의 해, 업무 영역별 에이전트를 구축하고 경험을 가속화합니다", br: 17, w: ["확산", "체화", "영역별", "구축", "가속화"] },
-  { s: "혁신과 연결의 해, 각자 필요한 에이전트로 비즈니스 모델 혁신 달성", br: 17, w: ["혁신", "연결", "각자", "비즈니스", "달성"] },
-  { s: "인공지능을 활용해 우리가 일하는 방식을 조금씩 바꿔가는 과정을 말합니다", br: 21, w: ["활용", "일하는", "방식", "과정"] },
-  { s: "업무에서 발견한 나의 작은 경험들이 모여 우리의 큰 가능성으로 이어집니다", br: 19, w: ["업무", "발견", "경험", "가능성"] },
-  { s: "사람을 중심으로 데이터와 에이전트를 연결해 더 나은 판단과 실행을 돕습니다", br: 19, w: ["사람", "중심", "데이터", "연결", "실행"] },
-  { s: "더 나은 판단과 실행을 돕는 업무 환경, 데이터로 판단하고 일하는 회사", br: 22, w: ["판단", "실행", "환경", "데이터", "회사"] },
-  { s: "목표를 정하고 결과를 판단하는 사람, 판단에 필요한 근거를 제공하는 데이터", br: 20, w: ["목표", "결과", "사람", "근거", "제공"] },
-  { s: "판단에 필요한 근거를 주는 데이터와 정보를 분석하고 답을 찾는 인공지능", br: 19, w: ["판단", "근거", "데이터", "분석"] },
-  { s: "목표에 맞춰 도구와 작업을 연결하는 에이전트가 일하는 방식을 바꿉니다", br: 19, w: ["목표", "도구", "작업", "연결", "에이전트"] },
-  { s: "문서를 올리고 물어보면 대화하듯 답해주는 사내 생성형 서비스 하이디큐", br: 17, w: ["문서", "올리고", "대화", "서비스", "하이디큐"] },
-  { s: "영업과 보상, 언더라이팅 등 각 업무에 전담 에이전트를 하나씩 만들어갑니다", br: 21, w: ["영업", "보상", "언더라이팅", "전담", "에이전트"] },
-  { s: "전사 구성원 모두가 각자 업무에 필요한 에이전트를 스스로 만드는 플랫폼", br: 21, w: ["각자", "에이전트", "스스로", "플랫폼", "전사"] },
-  { s: "업무에 활용하기 전에 개인정보와 사내 기밀정보가 없는지 먼저 확인하기", br: 17, w: ["활용", "개인정보", "기밀정보", "확인"] },
-  { s: "이름과 연락처 같은 고객 개인정보는 어떤 경우에도 대화창에 입력하지 않기", br: 19, w: ["이름", "연락처", "고객", "개인정보", "입력"] },
-  { s: "경영전략과 인사정보 같은 기밀정보는 어떤 경우에도 대화창에 입력하지 않기", br: 19, w: ["경영전략", "인사정보", "기밀정보", "입력"] },
-  { s: "정보 유출이 의심되면 망설이지 말고 즉시 정보보호파트로 연락해 신고하기", br: 19, w: ["유출", "의심", "즉시", "신고"] },
-  { s: "업무에 활용하기 전에는 체크리스트의 항목을 사전에 하나씩 꼼꼼하게 점검하기", br: 19, w: ["업무", "활용", "항목", "사전", "점검"] }
+  { s: "나의 경험을 우리의 가능성으로, 현대해상의 변화를 함께 만들어갑니다", br: 17, b3: [17, 27], w: ["경험", "우리", "가능성", "변화"] },
+  { s: "공감과 참여에서 확산과 체화로, 그리고 혁신과 연결로 나아가는 여정", br: 17, b3: [8, 21], w: ["공감", "참여", "확산", "체화", "여정"] },
+  { s: "공감과 참여의 해, 사내 생성형 서비스를 오픈하고 필요성을 체감합니다", br: 17, b3: [10, 22], w: ["공감", "참여", "생성형", "필요성", "체감"] },
+  { s: "확산과 체화의 해, 업무 영역별 에이전트를 구축하고 경험을 가속화합니다", br: 17, b3: [10, 23], w: ["확산", "체화", "영역별", "구축", "가속화"] },
+  { s: "혁신과 연결의 해, 각자 필요한 에이전트로 비즈니스 모델 혁신 달성", br: 17, b3: [10, 23], w: ["혁신", "연결", "각자", "비즈니스", "달성"] },
+  { s: "인공지능을 활용해 우리가 일하는 방식을 조금씩 바꿔가는 과정을 말합니다", br: 21, b3: [9, 25], w: ["활용", "일하는", "방식", "과정"] },
+  { s: "업무에서 발견한 나의 작은 경험들이 모여 우리의 큰 가능성으로 이어집니다", br: 19, b3: [8, 22], w: ["업무", "발견", "경험", "가능성"] },
+  { s: "사람을 중심으로 데이터와 에이전트를 연결해 더 나은 판단과 실행을 돕습니다", br: 19, b3: [8, 23], w: ["사람", "중심", "데이터", "연결", "실행"] },
+  { s: "더 나은 판단과 실행을 돕는 업무 환경, 데이터로 판단하고 일하는 회사", br: 22, b3: [15, 27], w: ["판단", "실행", "환경", "데이터", "회사"] },
+  { s: "목표를 정하고 결과를 판단하는 사람, 판단에 필요한 근거를 제공하는 데이터", br: 20, b3: [11, 28], w: ["목표", "결과", "사람", "근거", "제공"] },
+  { s: "판단에 필요한 근거를 주는 데이터와 정보를 분석하고 답을 찾는 인공지능", br: 19, b3: [14, 28], w: ["판단", "근거", "데이터", "분석"] },
+  { s: "목표에 맞춰 도구와 작업을 연결하는 에이전트가 일하는 방식을 바꿉니다", br: 19, b3: [14, 25], w: ["목표", "도구", "작업", "연결", "에이전트"] },
+  { s: "문서를 올리고 물어보면 대화하듯 답해주는 사내 생성형 서비스 하이디큐", br: 17, b3: [12, 22], w: ["문서", "올리고", "대화", "서비스", "하이디큐"] },
+  { s: "영업과 보상, 언더라이팅 등 각 업무에 전담 에이전트를 하나씩 만들어갑니다", br: 21, b3: [15, 30], w: ["영업", "보상", "언더라이팅", "전담", "에이전트"] },
+  { s: "전사 구성원 모두가 각자 업무에 필요한 에이전트를 스스로 만드는 플랫폼", br: 21, b3: [13, 27], w: ["각자", "에이전트", "스스로", "플랫폼", "전사"] },
+  { s: "업무에 활용하기 전에 개인정보와 사내 기밀정보가 없는지 먼저 확인하기", br: 17, b3: [11, 26], w: ["활용", "개인정보", "기밀정보", "확인"] },
+  { s: "이름과 연락처 같은 고객 개인정보는 어떤 경우에도 대화창에 입력하지 않기", br: 19, b3: [13, 27], w: ["이름", "연락처", "고객", "개인정보", "입력"] },
+  { s: "경영전략과 인사정보 같은 기밀정보는 어떤 경우에도 대화창에 입력하지 않기", br: 19, b3: [13, 27], w: ["경영전략", "인사정보", "기밀정보", "입력"] },
+  { s: "정보 유출이 의심되면 망설이지 말고 즉시 정보보호파트로 연락해 신고하기", br: 19, b3: [11, 22], w: ["유출", "의심", "즉시", "신고"] },
+  { s: "업무에 활용하기 전에는 체크리스트의 항목을 사전에 하나씩 꼼꼼하게 점검하기", br: 19, b3: [12, 27], w: ["업무", "활용", "항목", "사전", "점검"] }
 ];
 /* v7.83 (261018 사용자 「연출 효과에 비해 너무 빨리 끝난다」) 문장 길이 약 두 배 · 20문장 · 36~44자(평균 약 41) · 원천 = AX VISION · 리플릿 AX CHECK LIST(기획 문서/게임 콘텐츠 원천_AX VISION · CHECK LIST_261017.md) · 슬로건 · 로드맵 세 단계 포함 ·
-   숫자 · 영문 · 가운뎃점 0(현장 자판으로 치기 어렵다) · 쉼표는 된다 · 핵심 단어 = 단어 은행(RAIN_WORDS)에 있는 말 · br = 두 줄로 나누는 띄어쓰기 자리(쉼표 · 구 경계 · 앞줄 글자 수) · 화면 = rgBnsLines */
+   숫자 · 영문 · 가운뎃점 0(현장 자판으로 치기 어렵다) · 쉼표는 된다 · 핵심 단어 = 단어 은행(RAIN_WORDS)에 있는 말 · br = 두 줄로 나누는 띄어쓰기 자리(쉼표 · 구 경계 · 앞줄 글자 수) · 화면 = rgBnsLines
+   v7.84 (261018 사용자 「권장대로」) b3 = 세 줄로 나누는 띄어쓰기 두 자리(쉼표 · 구 경계 · 1366 × 768 · 1280 × 720 같은 좁은 판) · 화면 = rgBnsFit(두 줄이 32px 로 안 들어갈 때만 · 글자는 20px 아래로 줄이지 않는다) */
 /* v7.64 (261017 게임 콘텐츠 교체) 문장 16 = 슬로건 · 로드맵 두 문장 유지(D1) + AX VISION · 리플릿 AX CHECK LIST 문장 13 · 12~20자 · 숫자 · 영문 0 */
 var RAIN_BONUS = { pt: 75, max: 3000, k: 1.2, add: 6, floor: 0.1, tick: 0.25, intro: 3.5, show: 2.4, inMax: 80 };   /* 261018 v7.83 문장 약 40자(사용자 결정 A안) · 시작값 = 글자 수 × 75(옛 × 150 대체) · 최대 3,000 그대로(max · 40자 넘어도 3,000) · 1.2n + 6초 · 바닥 10% · × 정확도 · 한 판 1번 그대로 · 안내 2.2 → 3.5초 · 입력 상한 40 → 80 · 최대 3,000 + 목숨 보너스 2,500 = 5,500 ≤ 서버 TYPE_PTS_BONUS 15,000(서버 수정 없음) */   /* 261017 줄어드는 숫자(사용자 확정 D3) · 시작값 = 글자 수(띄어쓰기 포함) × pt · 제한 시간 = 글자 수 × k + add 초 · 숫자는 그 시간에 걸쳐 일정하게 줄고 시작값의 floor 에서 멈춘다 ·
    완성(자동) · Enter 순간 숫자가 멈추고 점수 = 멈춘 숫자 × 맞은 글자 ÷ 글자 수 · 문장 그대로면 PERFECT 표시(점수 추가 없음) · 20자 최대 3,000 + 목숨 보너스 2,500 ≤ 서버 TYPE_PTS_BONUS 15,000 · tick = 틱 소리 간격 초(25% 아래는 절반) · 옛 ch · perfect · sec(글자 × 40 + 600 + 남은 초 × 50) 폐기 */   /* v5.26(사용자 261003 「권장대로」) 비구름으로 문장이 한 판 1~3번으로 줄어 20 · 300 · 30 → 40 · 600 · 50 · 문장 하나 최대 = 20자 × 40 + 600 + 21초 × 50 = 2,450 · 3번 7,350 + 목숨 보너스 2,500 = 9,850 ≤ 서버 TYPE_PTS_BONUS 15,000 */   /* v5.24 intro 2.2 → 2.6(문장 먼저 읽기) · 그 뒤 카운트다운 RAIN_CLOUD.count */
@@ -1269,8 +1299,9 @@ var RAIN_BONUS = { pt: 75, max: 3000, k: 1.2, add: 6, floor: 0.1, tick: 0.25, in
    max = 한 판 최대 구름 수 · clear = 구름이 걷히는 연출 초 · count = 문장 입력 전 카운트다운 초 · 첫 구름 약 35~40초(1~3단계 · 간격 2.2~1.6초) · 보통 판 1~2번 */
 var RAIN_CLOUD = { n: [14, 16, 16], key: 2, gap: 0, max: 1, clear: 1.4, count: 3, go: 0.8 };   /* 261017 보너스 한 판 1번(사용자 확정 D4) · max 3 → 1 · 그 뒤 구름 없이 비만 · gap 15 → 0(2번 이상으로 되돌리면 복귀 즉시 다음 구름) */   /* 261012 go 0.6 → 0.8(「시작!」 팡 · 보이기만) · go = 카운트다운 뒤 GO 를 보이는 초(261003 부터 입력은 GO 와 함께 열린다 · 보이기만) · 261007 0.3 → 0.6(GO 팡 · 시간 · 점수 영향 없음) */
 /* 261012 보너스 들어가기(사용자 「문장을 미리 보여 주고 읽게 하는 것을 없앤다」) · 안내(문구 = 사용자 그대로) → 3 · 2 · 1 → 「시작!」 → 그때 문장이 나오고 입력이 열린다 · intro 2.6 → 2.2(읽을 문장이 없어 안내만)
-   IN · OUT = 전역 움직임 규격(mobile-popup-motion) 들어옴 300ms · 나감 180ms · 6px 떠오름 · ease · 동작 줄이기 = 바로 */
-var RAIN_BNS_GUIDE = ["잠시 후에 문장이 나타납니다.", "빠르게 따라 치세요."];
+   IN · OUT = 전역 움직임 규격(mobile-popup-motion) 들어옴 300ms · 나감 180ms · 6px 떠오름 · ease · 동작 줄이기 = 바로
+   261018 v7.84 (사용자 「권장대로」) 안내 3.5초 동안 문장을 미리 보여 준다 · 안내 = 문장 아래 칸 「빠르게 따라 치세요.」 하나(옛 첫 줄 「잠시 후에 문장이 나타납니다.」는 문장이 이미 보여 뺐다) · 입력 · 줄어드는 숫자는 그대로 「시작!」부터 */
+var RAIN_BNS_GUIDE = ["빠르게 따라 치세요."];
 var RAIN_BNS_GO = "시작!";
 var RAIN_BNS_IN = 0.3, RAIN_BNS_OUT = 0.18;
 /* CSS ease = cubic-bezier(.25, .1, .25, 1) · x 에서 y 를 찾는다(뉴턴 몇 번) */
@@ -1381,7 +1412,7 @@ function rgBonusTick(dt, now) {
   if (b.ph === "clear") { if (b.t <= 0) { b.ph = "win"; b.t = T.wipe; } return; }
   if (b.ph === "win") { if (b.t <= 0) { b.ph = "title"; b.t = T.title; rgSfx("rgjoin"); } return; }
   if (b.ph === "title") { if (b.t <= 0) { b.ph = "wout"; b.t = T.wipe; } return; }
-  if (b.ph === "wout") { if (b.t <= 0) { b.ph = "intro"; b.t = RAIN_BONUS.intro; if (inp) inp.placeholder = "잠시 후에 문장이 나타납니다"; } return; }   /* 261012 문장은 아직 보이지 않는다 */
+  if (b.ph === "wout") { if (b.t <= 0) { b.ph = "intro"; b.t = RAIN_BONUS.intro; if (inp) inp.placeholder = "시작!과 함께 입력이 열려요"; } return; }   /* 261018 v7.84 문장은 안내부터 보인다 · 입력은 「시작!」부터 */
   if (b.ph === "intro") { if (b.t <= 0) { b.ph = "count"; b.t = RAIN_CLOUD.count; rgSfx("rgcd", 3); rgBnsShake(); rgLock(true); rgRefocus(inp); } return; }   /* 261017 놓았다 다시 잡기 = 문장이 나오기 3초 전 한 번(한글 자판이 「시작!」 전에 다시 붙는다) */   /* 261012 박자음 = rgcd(숫자마다 한 음씩 높게) · 소리를 끈 기기는 조용하다 */
   if (b.ph === "count") {
     if (b.t <= 0) { b.ph = "type"; b.typed = ""; b.go = RAIN_CLOUD.go; b.tk = RAIN_BONUS.tick; RG.bnsGoTs = now; RG.bnsEat = false; RG.kd = 0; if (inp && inp.value) rgClearInput(); RG.pendingEnter = false; rgKeyLog("go", null); if (inp) inp.placeholder = "다 맞게 치면 엔터 없이 끝나요"; rgSfx("rgstart"); rgBnsShake(); }   /* 261017 「시작!」 = 값만 비운다(놓았다 다시 잡지 않는다) · 시각(RG.bnsGoTs) 앞에 눌린 키만 RAIN_BNS_GUARD 초 안에서 버린다(rgBlk) */   /* 261003 GO 가 보이는 순간 입력을 열고 시간을 잰다 · 카운트다운 중 누르던 키는 열린 뒤 RAIN_BNS_GUARD 초만 한 번 버린다(옛 GO 0.3초 막기 · 연타마다 늘던 막기 폐기) */
@@ -1563,9 +1594,10 @@ function rgBonusDraw(ctx, L, now) {
   (b.keys || []).forEach(function (w) { var i = b.text.indexOf(w); if (i >= 0) for (var j = 0; j < w.length; j++) km[i + j] = 1; });
   ctx.save();
   ctx.font = rtFont(fp);
-  var lines = rgBnsLines(ctx, b.text, pw - 16 * s - 8);   /* 261018 v7.83 두 줄 · 안 되면 판을 게임판 폭까지 넓히고 · 그래도 안 되면(1366 × 768 같은 좁은 노트북 화면) 글자 32 → 16(도트 글꼴이 또렷한 크기만 · 1920 × 1080 은 32 두 줄) */
+  var lines = rgBnsLines(ctx, b.text, pw - 16 * s - 8);   /* 261018 v7.83 두 줄 · 안 되면 판을 게임판 폭까지 넓힌다(1920 × 1080 은 32 두 줄) */
   if (lines.length > 2 && pw < L.W - 2 * s) { pw = L.W - 2 * s; px = Math.round(L.W / 2 - pw / 2); lines = rgBnsLines(ctx, b.text, pw - 16 * s - 8); }
-  if (lines.length > 2 && big) { fp = 16; ctx.font = rtFont(fp); lines = rgBnsLines(ctx, b.text, pw - 16 * s - 8); }
+  if (lines.length > 2 && big) { var ft = rgBnsFit(ctx, b.text, pw - 16 * s - 8, fp); fp = ft.fp; lines = ft.lines; ctx.font = rtFont(fp); }   /* 261018 v7.84 그래도 안 되면(1366 × 768 · 1280 × 720 같은 좁은 노트북 화면) 세 줄 · 은행의 b3 자리 · 글자 32px(넘치면 20px 까지만 줄인다 · 옛 16px 두 줄 대체) */
+  b.fp = fp; b.nl = lines.length;   /* 시험 · 확인용(그리는 글자 · 줄 수) */
   var lh = Math.round(fp * 1.5), rg = big ? 12 : 8, th = big ? 40 : 26, nb = big ? 80 : 44, npx = big ? 64 : 32;   /* 261017 nb = 줄어드는 숫자 칸(시간 막대 자리를 문장 위로) */
   /* 261007 아래 칸(lpH) = 판 높이에 맞춘다 · 넉넉하면 104(노트북 96px 팡) · 좁으면(1366 · 125% 등) 줄 간격부터 줄이고 64(64px 팡)까지 · 판이 땅(L.ground · 챗봇이 서는 줄)을 넘지 않게 */
   var avail = (L.ground || L.floor) - 12, room = avail - 8, base = function () { return 8 * s + th + 14 + nb + lines.length * (2 * lh + rg) + 6 + 12 + 8 * s; }, lpMin = big ? 64 : 40;
@@ -1579,9 +1611,12 @@ function rgBonusDraw(ctx, L, now) {
   ctx.textAlign = "right"; ctx.textBaseline = "middle";
   if (RAIN_CLOUD.max > 1) rtText(ctx, b.no + "/" + RAIN_CLOUD.max, px + pw - 6 * s, cy, 16, RT_PAL.tan, null);   /* 261017 한 판 1번이면 번호 없이 */
   cy += th / 2 + 14;
-  var areaTop0 = cy, numCy = Math.round(cy + nb / 2);
+  var numCy = Math.round(cy + nb / 2);
   cy += nb;
   var pre = b.ph === "wout" || b.ph === "intro" || b.ph === "count", typed = pre ? "" : String(b.typed || ""), cur = b.ph === "type", blink = rgReduced() || Math.floor(now / 400) % 2 === 0;
+  var hide = b.ph === "wout";   /* 261018 v7.84 문장 · 숫자 = 안내(intro)부터 보인다(사용자 「권장대로」 · 261012 「「시작!」과 함께 처음」 대체) · 판이 열리는 동안(wout)만 없다 */
+  if (b.ph === "intro" || b.ph === "count") b.seen = 1;   /* 안내 때 이미 들어온 문장은 「시작!」 때 다시 들어오지 않는다(송출 화면 몽타주처럼 안내 없이 「시작!」부터면 그때 들어온다) */
+  var ein = rgReduced() ? 1 : b.ph === "intro" ? rgEase(Math.min(1, (RAIN_BONUS.intro - b.t) / RAIN_BNS_IN)) : cur && !b.seen ? rgEase(Math.min(1, (b.lim - b.left) / RAIN_BNS_IN)) : 1;
   var text = b.text, A = rgBnsAlign(typed, text), hit = {}, sw = ctx.measureText(" ").width;
   A.at.forEach(function (a) { if (a.ok) hit[a.j] = 1; });
   /* 문장 줄 · 줄마다 시작 자리(st) · 줄을 나눈 띄어쓰기는 앞줄 끝에 붙인다 */
@@ -1595,21 +1630,20 @@ function rgBonusDraw(ctx, L, now) {
   var bad = function (x, y, w, tc) { ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(Math.round(x), Math.round(y - fp * 0.62), Math.max(8, Math.ceil(w)), Math.round(fp * 1.24)); if (tc && tc !== " ") rtText(ctx, tc, x + Math.max(0, (w - ctx.measureText(tc).width) / 2), y, fp, RT_PAL.night, null); };
   var inL = px + 2 * s, inR = px + pw - 2 * s;
   ctx.textAlign = "left";
-  /* 261012 문장은 「시작!」과 함께 처음 나온다(사용자 「미리 보여 주고 읽게 하는 것을 없앤다」) · 그 전(wout · intro · count)에는 문장 줄을 그리지 않는다 ·
+  /* 261018 v7.84 문장은 안내(intro)와 함께 나온다(옛 261012 「시작!」과 함께 · 사용자 「권장대로」로 대체) · 입력 · 줄어드는 숫자는 그대로 「시작!」부터 ·
      나올 때 = 들어옴 300ms · 6px 떠오름 · ease(전역 규격 mobile-popup-motion) · 동작 줄이기 = 바로 */
-  var areaTop = areaTop0, areaBot = py + ph - 6 * s, areaMid = Math.round((areaTop + areaBot) / 2);
   var nL = lines.length;
-  /* 261017 줄어드는 숫자(사용자 확정 D3) · 문장 위 · 「시작!」과 함께 나온다(문장과 같은 들어옴) · 숫자 = 지금 받을 수 있는 보너스(rgBonusVal) · 완성 · Enter 순간 멈춘다(b.v) ·
+  /* 261017 줄어드는 숫자(사용자 확정 D3) · 문장 위 · 문장과 같이 들어온다 · 숫자 = 지금 받을 수 있는 보너스(rgBonusVal) · 안내 · 카운트다운 동안은 시작값 그대로(남은 시간은 「시작!」부터 준다) · 완성 · Enter 순간 멈춘다(b.v) ·
      색 = 남은 시간 50% 이상 O100 · 25% 이상 O60 · 그 아래 deep · 도트 글꼴 16의 배수(64 · 48 · 32) */
-  if (!pre) {
-    var nv = rgBonusVal(b), nf = b.lim > 0 ? b.left / b.lim : 0, ncol = nf >= 0.5 ? RAIN_PAL.o100 : nf >= 0.25 ? RAIN_PAL.o60 : RAIN_PAL.deep, nin = cur && !rgReduced() ? rgEase(Math.min(1, (b.lim - b.left) / RAIN_BNS_IN)) : 1;
-    ctx.save(); ctx.globalAlpha = nin; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    rtText(ctx, nv.toLocaleString("en-US"), L.W / 2, numCy + Math.round(6 * (1 - nin)), npx, ncol, RAIN_PAL.ink);
+  if (!hide) {
+    var nv = rgBonusVal(b), nf = b.lim > 0 ? b.left / b.lim : 0, ncol = nf >= 0.5 ? RAIN_PAL.o100 : nf >= 0.25 ? RAIN_PAL.o60 : RAIN_PAL.deep;
+    ctx.save(); ctx.globalAlpha = ein; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    rtText(ctx, nv.toLocaleString("en-US"), L.W / 2, numCy + Math.round(6 * (1 - ein)), npx, ncol, RAIN_PAL.ink);
     ctx.restore();
   }
   ctx.save();
-  if (pre) lines = [];
-  else if (cur && !rgReduced()) { var ein = rgEase(Math.min(1, (b.lim - b.left) / RAIN_BNS_IN)); ctx.globalAlpha = ein; ctx.translate(0, Math.round(6 * (1 - ein))); }
+  if (hide) lines = [];
+  else if (ein < 1) { ctx.globalAlpha = ein; ctx.translate(0, Math.round(6 * (1 - ein))); }
   lines.forEach(function (ln, li) {
     ctx.font = rtFont(fp);
     var lw = ctx.measureText(ln).width, x0 = Math.round(L.W / 2 - lw / 2), x = x0, y1 = cy + lh / 2, y2 = cy + lh + lh / 2, k = st[li];
@@ -1619,7 +1653,7 @@ function rgBonusDraw(ctx, L, now) {
     ctx.fillStyle = RT_PAL.wood; ctx.fillRect(x0 - 10, Math.round(cy + 2 * lh - 4), bw, 2);
     for (var i = 0; i < ln.length; i++, k++) {   /* 문장 줄 */
       var ch = ln.charAt(i), w = ctx.measureText(ch).width, col = RT_PAL.cream;
-      if (pre) col = km[k] ? RAIN_PAL.o60 : RT_PAL.cream;
+      if (pre) col = km[k] ? RAIN_PAL.o60 : RT_PAL.cream;   /* 261018 v7.84 안내 동안 = 비로 내린 핵심 단어를 옅은 주황으로 짚는다(v5.24 미리 보기 그대로) · 「시작!」부터 같은 글자색 */
       else if (hit[k]) col = RT_PAL.tan;   /* 맞게 친 자리는 한 톤 내려 남은 곳이 보이게 */
       else if (cur && k === A.next) col = RAIN_PAL.o100;
       if (ch !== " ") rtText(ctx, ch, x, y1, fp, col, null);
@@ -1642,26 +1676,23 @@ function rgBonusDraw(ctx, L, now) {
     cy += 2 * lh + rg;
   });
   ctx.restore();
-  if (pre) cy += nL * (2 * lh + rg);
+  if (hide) cy += nL * (2 * lh + rg);
   /* 결과 · 261017 시간 막대 없음(숫자가 곧 남은 시간 · 문장 위) */
   cy += 2 + 12;
   var lp = big ? 32 : 16, zc = Math.round(cy + lpH / 2);
   ctx.textAlign = "center";
-  var cdPx = Math.max(32, Math.min(big ? 128 : 64, Math.floor((areaBot - areaTop) * 0.62 / 16) * 16));   /* 261012 3 · 2 · 1 = 판 가운데 큰 숫자(노트북 128 · 좁은 판 64 · 도트 글꼴 16의 배수) */
-  if (b.ph === "intro" || b.ph === "count") {   /* 261012 안내(사용자 문구 그대로) · 들어옴 300ms 6px 떠오름 · 카운트다운이 시작되면 180ms 에 걷힌다 */
+  if (b.ph === "intro" || b.ph === "count") {   /* 261012 안내(사용자 문구) · 261018 v7.84 문장 아래 칸(「시작!」 자리) · 들어옴 300ms 6px 떠오름 · 카운트다운이 시작되면 180ms 에 걷힌다 */
     var gi = b.ph === "intro" ? rgEase(Math.min(1, (RAIN_BONUS.intro - b.t) / RAIN_BNS_IN)) : 1 - Math.min(1, (RAIN_CLOUD.count - b.t) / RAIN_BNS_OUT), gy = 0;
     if (rgReduced()) gi = b.ph === "intro" ? 1 : 0;
     else if (b.ph === "intro") gy = Math.round(6 * (1 - gi));
     if (gi > 0) {
       ctx.save(); ctx.globalAlpha = gi;
-      var gl = Math.round(lp * 1.5);
-      rtText(ctx, RAIN_BNS_GUIDE[0], L.W / 2, areaMid - gl / 2 + gy, lp, RT_PAL.cream, null);
-      rtText(ctx, RAIN_BNS_GUIDE[1], L.W / 2, areaMid + gl / 2 + gy, lp, RAIN_PAL.o100, RAIN_PAL.ink);
-      rtText(ctx, "다 맞게 치면 엔터 없이 끝나요", L.W / 2, areaBot - (big ? 18 : 12) + gy, 16, RT_PAL.tan2, null);
+      rtText(ctx, RAIN_BNS_GUIDE[0], L.W / 2, zc - (big ? 10 : 6) + gy, lp, RAIN_PAL.o100, RAIN_PAL.ink);
+      rtText(ctx, "다 맞게 치면 엔터 없이 끝나요", L.W / 2, zc + (big ? 22 : 14) + gy, 16, RT_PAL.tan2, null);
       ctx.restore();
     }
   }
-  if (b.ph === "count") { var cn = Math.max(1, Math.ceil(b.t)), ce = Math.ceil(b.t) - b.t; rgBnsFlash(ctx, px, py, pw, ph, s, ce); rgBnsPop(ctx, L.W / 2, areaMid, String(cn), ce, cdPx); }   /* 261007 3 · 2 · 1 팡 · 한 숫자 = 1초 · 이 동안 입력칸은 막혀 있다 · 261012 판 가운데 · 크게 · 테두리 번쩍 */
+  if (b.ph === "count") { var cn = Math.max(1, Math.ceil(b.t)), ce = Math.ceil(b.t) - b.t; rgBnsFlash(ctx, px, py, pw, ph, s, ce); rgBnsPop(ctx, L.W / 2, zc, String(cn), ce, popPx); }   /* 261007 3 · 2 · 1 팡 · 한 숫자 = 1초 · 이 동안 입력칸은 막혀 있다 · 테두리 번쩍 · 261018 v7.84 문장 아래 칸(「시작!」과 같은 자리 · 같은 크기 · 문장을 가리지 않는다 · 옛 판 가운데 128px) */
   else if (b.ph === "type" && b.go > 0) { var ge = (RAIN_CLOUD.go - b.go) / RAIN_CLOUD.go; rgBnsFlash(ctx, px, py, pw, ph, s, ge * RAIN_CLOUD.go); rgBnsPop(ctx, L.W / 2, zc, RAIN_BNS_GO, ge * 0.85, popPx, true); }   /* 261012 「시작!」 = 문장 아래 칸 · 문장을 가리지 않는다 */
   else if (b.ph === "type") {   /* 261007 문장이 다 맞으면 엔터 없이 바로 채점(rgLive · rgAutoOn) · 틀린 채로 끝내려면 Enter */
     rtText(ctx, "다 맞으면 엔터 없이 끝", L.W / 2, zc - (big ? 14 : 9), 16, RT_PAL.cream, null);
