@@ -422,7 +422,7 @@ function apply17Html(id) {
 /* 261016 (사용자) 묶음 출처 글 · 10F 실습은 사전 신청자(applyTenShow)에게만 · 받으려면 상자 · 칸 맨 아래 줄이 같이 쓴다 */
 function progSrcTxt() { return "17F 강연 · " + (applyTenShow() ? "10F 실습 · " : "") + "라운지 · 커피챗"; }
 function progApplyNm() { return applyTenShow() ? "10 · 17 · 18F" : "17 · 18F"; }   /* v7.69 (사용자 261017) F 반복 빼기 · 옛 「10F · 17F · 18F」 · v7.67 셋째 칸 이름(칸 단추 · 칸 aria · 홈 경로 줄) */
-function applySumRows() { return ["프로그램 참여 스탬프는 합쳐 2개까지", progSrcTxt().replace(/ · /g, ", ")]; }   /* v7.54 (사용자 261016 「점 통일은 권장대로」 D7) 늘 두 줄 목록(.segfix) · 옛 한 문장 「프로그램 참여 스탬프는 17F 강연 · … 합쳐 2개까지」 */   /* v7.39 (사용자 261016 계획서 0-2-4) 칸 맨 아래 회색 한 줄 · 합계 오해 방지 */
+function applySumRows() { return ["프로그램 참여 스탬프는 최대 2개까지", progSrcTxt().replace(/ · /g, ", ")]; }   /* v7.54 (사용자 261016 「점 통일은 권장대로」 D7) 늘 두 줄 목록(.segfix) · 옛 한 문장 「프로그램 참여 스탬프는 17F 강연 · … 합쳐 2개까지」 */   /* v7.39 (사용자 261016 계획서 0-2-4) 칸 맨 아래 회색 한 줄 · 합계 오해 방지 */
 /* v7.67 (사용자 확정 261017 D1 · D2 · D8) 17F · 18F 칸 = 정보 줄 「운영 시간 · 18F 13:00~16:00」 → 머리 「17F 대강당 / 신청 없이 자유 참석」 → AWS · MS 카드 → 「오전 강연 · Closing Speech는 시간표 ›」 → 머리 「18F / AX 커피챗」 → 커피챗 카드 → 회색 두 줄 → 10F 줄
    카드 · 문구는 옛 「참여하기」 칸 그대로 · 머리(axs-bar)를 쓰려고 칸 그릇에 판 경계(axs-pan) · 커피챗 카드가 없으면(하루가 끝남) 18F 머리도 없음 */
 function progApplyTabHtml() {

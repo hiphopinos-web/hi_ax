@@ -247,10 +247,11 @@
 .axs-pan #zone1f > .axs-f1d { flex: 1 1 auto; display: flex; flex-direction: column; }
 .axs-pan #zone1f > .axs-f1d > .in { flex: 1 1 auto; display: flex; flex-direction: column; }   /* v7.99 (사용자 261018) 세로 가운데 배치 없앰 · 간판 줄 + 하는 일 = 위 맞춤 · 스탬프 칸(보조 줄) = 칸 바닥(아래 여백 = 위 여백 10) */
 .axs-pan #zone1f > .axs-f1d { padding-bottom: 10px; }
-.axs-pan #zone1f > .axs-f1d .zr { flex: 1 1 auto; grid-template-rows: auto minmax(0, 1fr); }
-.axs-pan #zone1f > .axs-f1d .ztx { align-self: start; }
-.axs-pan #zone1f > .axs-f1d .bn { align-self: end; }
-.fs-big .axs-pan #zone1f > .axs-f1d .zr { grid-template-rows: auto auto minmax(0, 1fr); }
+/* v8.00 (사용자 261018 삼성 인앱 브라우저처럼 위에 주소 막대가 있으면 화면이 짧아져 바닥 오른쪽 스탬프 칸이 아래 메뉴에 잘렸다) 스탬프 칸(보조 줄) = 바닥 · 오른쪽에서 빼서 하는 일 줄 바로 다음 · 왼쪽 정렬(하는 일 줄과 같은 시작선) · 사이 = 한 줄 띄움(하는 일 글자 한 줄 = 투명 줄 ::after · 큰글씨도 같이 커짐) · 구역은 위 맞춤 · 큰글씨 = 간판 줄 / 하는 일 / 스탬프 칸 세 줄 그대로 */
+.axs-pan #zone1f > .axs-f1d .zr { flex: 0 0 auto; grid-template-areas: "zsg zgo" "ztx ztx" "bn bn"; }
+.axs-pan #zone1f > .axs-f1d .zr.nb { grid-template-areas: "zsg zgo" "ztx ztx"; }
+.axs-pan #zone1f > .axs-f1d .zr:not(.nb) .ztx::after { content: "\00a0"; display: block; }
+.axs-pan #zone1f > .axs-f1d .bn { justify-self: start; margin-top: -6px; }
 .axs-pan .axs-f1d .zr { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "zsg zgo" "ztx bn"; column-gap: var(--ax-space-12); row-gap: 6px; align-items: center; }
 .axs-pan .axs-f1d .zsg { grid-area: zsg; display: flex; align-items: center; min-width: 0; min-height: 26px; }
 .axs-pan .axs-f1d .ztx { grid-area: ztx; min-width: 0; font: var(--ax-type-t6); color: var(--ax-color-ink); word-break: keep-all; }
