@@ -238,9 +238,10 @@ function stampOverlay(id, op) {
 /* 목표 · 스탬프 탭 = 그 카드의 도장 칸 · 홈 = 방금 채워진 레일 자리(1·2 틱, 3~6 마커 · 6개를 넘긴 적립은 개수 칸) · 그 외 = 하단 탭바 「스탬프」 아이콘 · 탭바가 없으면 오른쪽 위 */
 function spTarget(id) {
   var v = App.current, t = null, kind = "";
-  if (v === "exp") {   /* v4.84 스탬프 탭 = 그 행의 번호 칸 */
+  if (v === "exp" && STGET.open) {   /* v4.84 스탬프 탭 = 그 행의 번호 칸 · v7.92 ③ 이 접혀 있으면 아래 레일 자리(홈과 같은 목표) */
     t = document.querySelector('#view [data-stp="' + (id === STAMP_HALF || id === "cc" || id === "ln" || id === "p10" || id === "p10h" ? "p3" : id) + '"] .axs-stpn'); if (t) kind = "card";   /* v5.68 p3h = 프로그램 참여 줄 · 261013 오후 커피챗 · 라운지도 */
-  } else if (v === "home") {
+  }
+  if (!t && (v === "home" || v === "exp")) {
     var rail = document.querySelector("#view .rail"), n = stampGot();
     if (rail) {
       if (n >= 1 && n <= 2) t = rail.querySelectorAll(".tick")[n - 1];

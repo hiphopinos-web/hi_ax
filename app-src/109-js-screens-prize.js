@@ -478,11 +478,93 @@ function stampNextHtml(n, home) {   /* 굵은 줄 「|」 = 줄을 넘길 때 �
 
 /* ── v4.84 스탬프 탭(exp) 행 · 번호 · 이름 · 수단 칩 + 한 줄 · 오른쪽 행동 하나 · AX 퀴즈 · 미니 게임은 종목 타일 ── */
 function expStamp(id) {
+  STGET.open = true; S.put("stget_open", true);   /* v7.92 (사용자 확정 261018) 특정 스탬프로 들어오면 ③ 스탬프 획득하기 자동 펼침 */
   App.tab("exp");
   setTimeout(function () {
     var r = document.querySelector('#view [data-stp="' + id + '"]');
     if (r) AXM.scrollTo(r, { block: "center" });   /* 261009 부드럽게 + 도착 떠오름 */
   }, 60);
+}
+/* ── v7.92 (사용자 확정 261018) 스탬프 탭 ① 광고 영상 · ③ 스탬프 획득하기 접기 ──
+   영상 = assets/reel/stamp_reel.mp4(1080 정사각 · 60초 · H.264 + AAC) · 포스터 = 342판 webp(칸 배경 + video poster) · 큰글씨도 같은 영상
+   무음 자동 반복 · 오른쪽 위 스피커 단추(누른 그 탭 안에서 muted 해제라 아이폰도 · 저장하지 않음 · 스탬프 탭을 떠나면 다시 무음 · 앱을 열 때마다 무음)
+   받기 = 칸이 화면에 들어올 때 src(그 전엔 포스터만) · 화면 밖 · 탭 숨김 · 다른 탭 = 멈춤 · 돌아오면 이어 재생
+   play() 거부(아이폰 저전력 등 NotAllowedError) = 포스터 그대로 · 다시 조르지 않는다(스피커를 누르면 다시) · 동작 줄이기 = 자동 재생 없음(스피커를 누르면 그때 소리와 함께)
+   video 노드는 하나(REEL.v) · 다시 그릴 때마다 App.render 같은 작업 안에서 새 칸(reelSlot)으로 옮긴다(떼었다 같은 작업 안에 붙이면 멈추지 않는다 · 4초 다시 그리기에 처음부터 받지 않게)
+   영상(스피커 밖)을 누르면 ③ 펼침 + 그 머리로 부드럽게 · 서비스 워커는 페이지 이동만 가로챈다(sw.js · mp4 Range 요청 = 네트워크 그대로 · 미리 캐시 없음) */
+var REEL = { src: "assets/reel/stamp_reel.mp4", poster: "assets/reel/stamp_reel_poster_342.webp", v: null, io: null, vis: false, snd: false, deny: false,
+  alt: "스탬프 보상 안내 영상. 스탬프 6개 모으기. 3개 룰렛, 4개부터 행운권, 6개 가습기. 스탬프 3개 모으면 룰렛 1번. 룰렛 경품은 텀블러, 커피와 키캡 키링, 컵받침, 판스티커, 볼펜. 스탬프 4개는 행운권 1장, 경품 추첨 번호. 스탬프 4개부터 행운권 최대 3장, 5개 2장, 6개 3장. 행운권 추첨 경품은 아이패드, 신라호텔 뷔페 식사권, 음식물 처리기, 에어팟, 종아리 마사지기, 백화점 상품권. 선착순 참여상, 6개면 가습기, 먼저 6개 모은 200명. 스탬프 획득하기, 폰으로 참여는 최초 로그인, AX 퀴즈, 미니 게임, 아이디어 한 줄. 현장 참여는 1층 체험하기, 계단 오르기, 강연 듣기, 설문 응답. 아래에서 바로 시작." };
+var STGET = { open: S.get("stget_open", false) === true };
+function reelHtml() {
+  return '<div class="axs-reel" id="reelSlot" role="group" aria-label="스탬프 보상 안내 영상">' +
+    '<p class="axs-reel-sr" id="reelAlt">' + esc(REEL.alt) + "</p>" +
+    '<button type="button" class="axs-reel-go" onclick="reelGo()" aria-label="스탬프 획득하기 펼치기" aria-describedby="reelAlt"></button>' +
+    '<button type="button" class="axs-reel-snd' + (REEL.snd ? " on" : "") + '" onclick="reelSnd()" aria-label="영상 소리" aria-pressed="' + REEL.snd + '">' + sndIcon(REEL.snd) + "</button></div>";
+}
+function reelEl() {
+  if (REEL.v) return REEL.v;
+  var v = document.createElement("video");
+  v.className = "axs-reel-v";
+  v.muted = true; v.defaultMuted = true; v.setAttribute("muted", "");
+  v.playsInline = true; v.setAttribute("playsinline", ""); v.setAttribute("webkit-playsinline", "");
+  v.loop = true; v.preload = "none"; v.poster = REEL.poster;
+  v.setAttribute("aria-hidden", "true"); v.setAttribute("tabindex", "-1");
+  v.setAttribute("disablepictureinpicture", ""); v.setAttribute("disableremoteplayback", "");
+  REEL.v = v;
+  return v;
+}
+function reelSrc() { var v = reelEl(); if (!v.getAttribute("src")) { v.preload = "auto"; v.src = REEL.src; } }
+function reelMount(ae) {
+  var slot = el("reelSlot");
+  if (ae && ae.id === "stGetBtn" && el("stGetBtn") && document.activeElement !== el("stGetBtn")) { try { el("stGetBtn").focus({ preventScroll: true }); } catch (e) {} }   /* 다시 그려도 「스탬프 획득하기」 단추 초점 유지 */
+  if (!slot) {   /* 스탬프 탭이 아님 = 멈춤 · 다음에 오면 무음부터 */
+    if (REEL.io) REEL.io.disconnect();
+    REEL.vis = false;
+    if (REEL.v) { REEL.v.pause(); REEL.snd = false; REEL.v.muted = true; }
+    return;
+  }
+  var v = reelEl();
+  if (v.parentNode !== slot) slot.insertBefore(v, slot.firstChild);
+  if (!("IntersectionObserver" in window)) { REEL.vis = true; reelSync(); return; }
+  if (!REEL.io) REEL.io = new IntersectionObserver(function (es) { var e = es[es.length - 1]; REEL.vis = e.isIntersecting && e.intersectionRatio >= 0.25; reelSync(); }, { threshold: [0, 0.25, 0.5] });
+  REEL.io.disconnect(); REEL.io.observe(slot);
+  reelSync();
+}
+function reelSync() {
+  var v = REEL.v; if (!v || !el("reelSlot")) return;
+  var want = REEL.vis && !document.hidden && App.current === "exp" && (REEL.snd || (!AXM.rm() && !REEL.deny));
+  if (!want) { if (!v.paused) v.pause(); return; }
+  reelSrc();
+  if (!v.paused) return;
+  var p = v.play();
+  if (p && p.catch) p.catch(function (e) { if (e && e.name === "NotAllowedError") { REEL.deny = true; if (REEL.snd) { REEL.snd = false; v.muted = true; reelSndPaint(); } } });   /* 거부 = 포스터 그대로 · AbortError(바로 멈춤)는 다음에 다시 */
+}
+function reelSnd() {
+  var v = reelEl();
+  REEL.snd = !REEL.snd; v.muted = !REEL.snd;
+  reelSndPaint();
+  if (!REEL.snd) { reelSync(); return; }
+  REEL.deny = false; reelSrc();   /* 누른 그 탭 안에서 play() · 아이폰도 소리 */
+  var p = v.play();
+  if (p && p.catch) p.catch(function () { REEL.snd = false; v.muted = true; reelSndPaint(); });
+}
+function reelSndPaint() {
+  var b = document.querySelector("#reelSlot .axs-reel-snd"); if (!b) return;
+  b.classList.toggle("on", REEL.snd); b.setAttribute("aria-pressed", String(REEL.snd)); b.innerHTML = sndIcon(REEL.snd);
+}
+document.addEventListener("visibilitychange", function () { reelSync(); });
+function stGetSet(o) {
+  STGET.open = o; S.put("stget_open", o);   /* 조용한 저장(다시 그리지 않음) */
+  var b = el("stGetBtn"), w = b && b.closest(".axs-sfd");
+  if (w) w.classList.toggle("open", o);
+  if (b) b.setAttribute("aria-expanded", String(o));
+}
+function stGetTog() { stGetSet(!STGET.open); }
+function reelGo() {   /* 영상을 누르면 ③ 펼침 + 그 머리로 부드럽게(동작 줄이기 = 바로) · 접혀 있었으면 펼침(0.3초)이 끝난 뒤 이동(접힌 높이로는 아래 끝에 막혀 머리까지 못 간다) */
+  var was = STGET.open, rm = AXM.rm();
+  stGetSet(true);
+  var go = function () { var s = el("stpGet"); if (s && App.current === "exp") AXM.scrollTo(s, { block: "start", rise: false }); };
+  if (was || rm) go(); else setTimeout(go, AXM.IN + 20);
 }
 var CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2 8.8-9.4"/></svg>';
 /* 종목 타일 · 완료 = 연주황 「O/X 완료」 · 남음 = 흰 면 · 누르면 그 종목 시작 화면 */

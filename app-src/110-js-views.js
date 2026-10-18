@@ -62,10 +62,13 @@ var Views = {
     var testBar = !testMode() ? "" :
       '<p class="scap" style="margin:0 2px 8px">테스트 ' + (BE.on ? "계정" : "모드") + ' · 스탬프는 이 기기에만 기록됩니다 · <span style="cursor:pointer;text-decoration:underline" onclick="testStampReset()">스탬프 초기화</span> · <span style="cursor:pointer;text-decoration:underline" onclick="testMineShuffle()">테스트 · 나의 일정 다시 섞기</span> · <span style="cursor:pointer;text-decoration:underline" onclick="ttOpen()">시각 바꿔 보기</span></p>';
     var full = n >= STAMP_DENOM;
+    var sgo = STGET.open;   /* v7.92 (사용자 확정 261018) ③ 접힌 채 시작 · 마지막 펼침 상태 기억(stget_open) · 다른 화면에서 특정 스탬프로 오면(expStamp) · 광고 영상을 누르면 펼침 */
     return '<div class="ax-stack axs-stpv">' + testBar +
+      '<section class="axs-sec">' + reelHtml() + "</section>" +   /* v7.92 (사용자 확정 261018) ① 광고 영상 · 6개 달성 뒤 · 행사 종료 뒤에도 늘 */
       '<section class="axs-sec">' + railHtml(n, glow, null, false) + "</section>" +
-      '<section class="axs-sec"><div class="sect"><b>스탬프 모으는 방법</b><span>' + STAMPS.length + "가지 중 " + STAMP_DENOM + "개까지</span></div>" +   /* v7.57 (사용자 261017 S5 · S6) 6개를 다 모은 뒤 바뀌던 머리 문구 지움(「6 / 6」과 같은 말) · 오른쪽 = 늘 「8가지 중 6개까지」 */
-      stpBoardHtml(st, full) +   /* v7.65 홈 접기 단추(stpBoardMine)도 같은 함수 · 같은 값 · 261013 오후 (사용자 확정) 하루 흐름 4단계 · 단계 제목 아래 줄 · 사전등록 체크인 줄은 1단계 아래(대상자만) */
+      '<section class="axs-sec axs-stget" id="stpGet"><div class="axs-sfd axs-sgfd' + (sgo ? " open" : "") + '">' +
+      '<button type="button" class="axs-sfdb axs-sgb" id="stGetBtn" aria-expanded="' + sgo + '" aria-controls="stGetBody" onclick="stGetTog()"><b>스탬프 획득하기</b><span>' + STAMPS.length + "가지 중 " + STAMP_DENOM + "개까지</span>" + CHEV_SVG + "</button>" +   /* v7.92 머리 = 「스탬프 획득하기」(옛 「스탬프 모으는 방법」 · 광고 영상 끝 문구와 같게) · v7.57 (사용자 261017 S5 · S6) 오른쪽 = 늘 「8가지 중 6개까지」 */
+      '<div class="axs-sfdp" id="stGetBody"><div class="axs-sfdi"><div class="axs-sfdc">' + stpBoardHtml(st, full) + "</div></div></div></div>" +   /* v7.65 홈 접기 단추(stpBoardMine)도 같은 함수 · 같은 값 · 261013 오후 (사용자 확정) 하루 흐름 4단계 · 단계 제목 아래 줄 · 사전등록 체크인 줄은 1단계 아래(대상자만) */
       scanQNote() + '<div class="axs-stplk"><button type="button" class="lnk axs-stfgo axs-rkgo" onclick="App.go(\'oly_rank\')">' + lnkChev("게임 순위") + "</button>" +   /* 261017 (사용자) 스탬프 탭 → 미니 게임 순위(oly_rank · 뒤로 = 스탬프 탭) */
       '<button type="button" class="lnk sub axs-stfgo" onclick="staffStampOpen()">' + lnkChev("담당자 적립") + "</button></div></section></div>";   /* v6.83 (접근성 B-3 · B-6) p → button · 눌림 높이 44 · 키보드 */   /* v4.91 1F 타자왕(스탬프 아님)은 프로그램 탭 「상시 운영」로 옮겼다 */
   },

@@ -2138,6 +2138,21 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-fix.ax-bottom .ax-button:disabled { background: var(--ax-color-divider); color: var(--ax-color-muted); }   /* v6.83 (접근성 C-2) 흰 면 + 연회색 글자는 단추로 안 보였다 · 회색 면 + 보조 글자 */
   /* ═══ v4.84 (261001 앱 개편 2묶음) 홈 다음 스탬프 · 스탬프 탭 한 목록 · 프로그램 탭 메뉴 · 10F 세션 줄 · 1F 부스 6구역 (토큰만 · hex 없음) ═══ */
   #view[data-v="exp"] .axs-sec { display: flex; flex-direction: column; gap: var(--ax-space-12); }
+  /* v7.92 (사용자 확정 261018) ① 광고 영상 = 정사각 · 카드 모서리 24 · 흰 면(포스터가 칸 배경) · 스피커 단추 오른쪽 위(눌림 44 · 켬 = 연주황 면 + 주황 글자) · 영상 누름 = 덮개 단추(axs-reel-go)
+     ③ 스탬프 획득하기 = 홈 접기 부품(axs-sfd) · 머리 = 구획 제목 모양(t4 · 오른쪽 t7 회색 · 셰브론) · 움직임은 부품 그대로(0.3초 · 0.18초 · 동작 줄이기 즉시) */
+  .axs-reel { position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: var(--ax-radius-24); overflow: hidden; isolation: isolate; transform: translateZ(0); background: var(--ax-color-surface) url("assets/reel/stamp_reel_poster_342.webp") center / cover no-repeat; }
+  .axs-reel-v { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; background: transparent; }
+  .axs-reel-go { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; border-radius: inherit; background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .axs-reel-go:focus-visible { outline: 3px solid var(--ax-color-ink); outline-offset: -3px; }
+  .axs-reel-snd { position: absolute; z-index: 2; top: var(--ax-space-8); right: var(--ax-space-8); display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: var(--ax-radius-999); background: var(--ax-color-canvas); color: var(--ax-color-body); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .axs-reel-snd svg { display: block; width: 22px; height: 22px; }
+  .axs-reel-snd.on { background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); }
+  .axs-reel-sr { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  #view[data-v="exp"] .axs-stget { scroll-margin-top: calc(var(--stick, 0px) + var(--ax-space-12)); }
+  #view[data-v="exp"] .axs-sgfd { margin: 0; }
+  #view[data-v="exp"] .axs-sgb { justify-content: flex-start; gap: var(--ax-space-8); padding: 0; text-align: left; }
+  #view[data-v="exp"] .axs-sgb b { font: var(--ax-type-t4); color: var(--ax-color-ink); }
+  #view[data-v="exp"] .axs-sgb span { margin-left: auto; font: var(--ax-type-t7); color: var(--ax-color-muted); white-space: nowrap; }
   #view[data-v="exp"] .sect { margin: 0; align-items: center; }
   #view[data-v="exp"] .sect b { font: var(--ax-type-t4); color: var(--ax-color-ink); }   /* v5.66 (디자인 감사 261005 D4) 옛 15.5px 800 · 12.5px 700 → 토큰(홈 .sect 와 같은 제목 크기) */
   #view[data-v="exp"] .sect span { font: var(--ax-type-t7); color: var(--ax-color-muted); cursor: default; }

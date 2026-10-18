@@ -298,6 +298,7 @@ var App = {
     if (typeof SPOP !== "undefined" && SPOP.cur && !SPOP.cur.done) { var spT = spTgt(SPOP.cur); if (spT.el) spT.el.classList.add("sp-wait"); }   /* v3.49 재렌더돼도 안착 전 자리는 비어 보이게 */
     kvMountAll();
     typPromoMount();   /* v5.31 타자왕 홍보 칸 · 화면에 보일 때 src */
+    reelMount(ae);   /* v7.92 스탬프 탭 광고 영상 · 같은 작업 안에서 video 노드를 새 칸으로 옮긴다(떼었다 붙여도 재생이 끊기지 않는다) · 다른 화면이면 멈춤 · 접기 단추 초점 되돌림 */
     updateLed();
     if (typeof trfSync === "function") trfSync();   /* v5.67 둘러보기 복귀 떠 있는 단추 */
     zoomSync();   /* v6.83 QR 스캔(카메라) 탭에 들어가고 나올 때 */
