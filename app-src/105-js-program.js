@@ -719,7 +719,7 @@ function progAlwaysHtml() {
   var pc = pbfCardHtml();
   return '<section class="axs-zsec" id="zone1f">' + barHrsHtml("로비 맵", "", F1_HOURS) + f1MapHtml() + f1DescHtml() + "</section>" +   /* v7.74 (사용자 261017) 운영 시간 = 「로비 맵」 머리 줄 오른쪽 · 옛 칸 맨 위 정보 줄 */
     (pc ? '<section class="axs-zsec" id="zonePbf"><div class="axs-sfd axs-pfd' + (PFOLD.open ? " open" : "") + '">' +   /* v7.98 (사용자 261018) 「선착순 이벤트」 = 접힌 채 시작 · 머리 줄 전체가 접기 단추(영상 보기와 같은 부품 axs-sfd · 같은 움직임) */
-      '<button type="button" class="axs-sfdb axs-pfb" id="pFoldBtn" aria-expanded="' + PFOLD.open + '" aria-controls="pFoldBody" onclick="pFoldTog(this)"><b>선착순 이벤트</b>' + CHEV_SVG + "</button>" +
+      '<button type="button" class="axs-sfdb axs-pfb" id="pFoldBtn" aria-expanded="' + PFOLD.open + '" aria-controls="pFoldBody" onclick="pFoldTog(this)"><b>선착순 이벤트</b>' + lnkChev("자세히 보기") + "</button>" +
       '<div class="axs-sfdp" id="pFoldBody"><div class="axs-sfdi"><div class="axs-sfdc">' + pc + "</div></div></div></div></section>" : "");
 }
 var PFOLD = { open: false };   /* 영상 보기(VFOLD)와 같은 기억 · 다른 화면에서 오거나 상시 운영 칸에 새로 오면 접힘 */

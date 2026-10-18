@@ -280,9 +280,12 @@
 /* v7.98 (사용자 261018) 「선착순 이벤트」 접기 = 머리 줄 전체가 단추(구획 제목 모양 · 영상 보기와 같은 접기 부품 axs-sfd) · 접힌 채 시작 · 단추 높이 44는 위아래 음수 여백으로 제목 줄 높이(30) 그대로 */
 .axs-pan .axs-pfb { justify-content: space-between; gap: var(--ax-space-8); margin: calc((30px - var(--ax-touch-size)) / 2 + var(--ax-space-4)) 0; padding: 0 var(--ax-space-4) 0 2px; text-align: left; }
 .axs-pan .axs-pfb b { padding: 1px 0 1px 10px; border-left: 3px solid var(--ax-color-ink); font: var(--ax-type-t4); color: var(--ax-color-ink); }
-.axs-pan .axs-pfd .axs-sfdc { padding-top: 0; }
+.axs-pan .axs-pfd .axs-sfdc, .axs-pan .axs-vfd .axs-sfdc { padding-top: 0; }
+/* v8.03 (사용자 261018) 두 접기(선착순 이벤트 · 영상 보기) 오른쪽 = 「자세히 보기」 + 화살표(펼치면 화살표만 뒤집힘 · 글자 그대로) · 글자 = 로비 맵 설명 칸 「자세히 보기 ›」(.zgo)와 같은 크기 · 색 */
+.axs-pan .axs-pfb .axs-lk { font: var(--ax-type-t6-strong); color: var(--ax-color-body); white-space: nowrap; }
+.axs-pan .axs-pfb .axs-lk .axs-chev { width: 16px; height: 16px; color: var(--ax-color-body); }
 /* 영상 보기 접기(홈 axs-sfd 부품) · 영상 줄 = 썸네일 16:9 · 오른쪽 아래 길이 · 제목 · 회색 한 줄 · 셰브론 */
-.axs-pan .axs-vfd { margin-top: calc(var(--ax-space-8) * -1); }
+.axs-pan .axs-vfd { margin-top: 0; }   /* v8.03 머리 줄 위 구획 제목(axs-bar)이 없어져 당김(-8) 없앰 */
 .axs-pan .axs-vfd .axs-sfdb i { font-style: normal; font-weight: 500; color: var(--ax-color-muted); }
 .axs-pan .axs-vids { padding: var(--ax-space-4) var(--ax-space-20); }
 .axs-pan .axs-vids .vr { display: grid; grid-template-columns: 112px minmax(0, 1fr) 16px; gap: var(--ax-space-12); align-items: center; width: 100%; padding: 14px 0; border: 0; border-bottom: 1px solid var(--ax-color-divider); background: transparent; color: var(--ax-color-ink); font-family: inherit; text-align: left; cursor: pointer; }

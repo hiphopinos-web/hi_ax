@@ -369,8 +369,8 @@ function vidRowHtml(x, i) {
 function progIvHtml() {
   var rs = VIDS.map(function (x, i) { return [x, i]; }).filter(function (r) { return vidOk(r[0]) || !VIDS_HIDE; }), n = rs.length, o = VFOLD.open;
   if (!rs.length) return "";
-  return '<section class="axs-zsec" id="zoneVid"><div class="axs-bar"><b>영상 보기</b></div><div class="axs-sfd axs-vfd' + (o ? " open" : "") + '">' +   /* v7.71 (사용자 261017) 머리 줄 「영상 보기」 · 접힘 단추는 이름 대신 개수(머리와 이름이 겹치지 않게) */
-    '<button type="button" class="axs-sfdb" id="vFoldBtn" aria-expanded="' + o + '" aria-controls="vFoldBody" onclick="vFoldTog(this)"><span>' + n + "개 보기</span>" + CHEV_SVG + "</button>" +
+  return '<section class="axs-zsec" id="zoneVid"><div class="axs-sfd axs-vfd' + (o ? " open" : "") + '">' +   /* v7.71 (사용자 261017) 머리 줄 「영상 보기」 · 접힘 단추는 이름 대신 개수(머리와 이름이 겹치지 않게) */
+    '<button type="button" class="axs-sfdb axs-pfb" id="vFoldBtn" aria-expanded="' + o + '" aria-controls="vFoldBody" onclick="vFoldTog(this)"><b>영상 보기</b>' + lnkChev("자세히 보기") + "</button>" +   /* v8.03 (사용자 261018) 가운데 「n개 보기」 단추 없앰 · 머리 줄 오른쪽 「자세히 보기 ⌄」(선착순 이벤트와 같은 부품 axs-pfb) */
     '<div class="axs-sfdp" id="vFoldBody"><div class="axs-sfdi"><div class="axs-sfdc"><section class="ax-card axs-vids" aria-label="영상 보기">' + rs.map(function (r) { return vidRowHtml(r[0], r[1]); }).join("") + "</section></div></div></div></div></section>";
 }
 function vFoldTog(b) {
