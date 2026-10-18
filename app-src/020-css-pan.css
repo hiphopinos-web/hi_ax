@@ -242,6 +242,10 @@
 @media (prefers-reduced-motion: reduce) { .axs-pan .axs-f1map .hl, .axs-pan .axs-f1map .hl.on { transition: none; } }
 /* 설명 칸 = 1행 간판 + 스탬프 칸 · 2행 하는 일 · 3행 「자세히 보기 ›」 · 내용 바뀜 = 떠오름(AXM.rise) · 큰글씨 = 스탬프 칸이 하는 일 아래 · 옛 구역 표(axs-f1tb) 대체 */
 .axs-pan .axs-f1d { padding: 10px var(--ax-space-20) var(--ax-space-4); }   /* v7.75 (사용자 261017 iPhone SE 375×667) 위아래 여백 16/8 → 10/4 */
+/* v7.98 (사용자 261018 「설명 칸이 낮아 몰입이 안 된다」) 로비 맵 머리 줄을 화면 위(--stick + 12)에 맞추면 설명 칸 아래끝이 아래 메뉴 바로 위(8)에 오는 높이 · 구역 전체 최소 높이 = 화면 높이 - 위 고정부 - 12 - 아래 메뉴 - 8 · 큰 폰은 480 에서 멈춤(설명 칸 약 190) · 지도 크기는 그대로, 남는 높이를 설명 칸이 가져가고 내용은 가운데 · 내용이 더 길면 칸이 늘어남(최소 높이) */
+.axs-pan #zone1f { min-height: min(calc(100vh - var(--stick, 104px) - 12px - var(--ax-nav-height) - env(safe-area-inset-bottom) - 8px), 480px); min-height: min(calc(100dvh - var(--stick, 104px) - 12px - var(--ax-nav-height) - env(safe-area-inset-bottom) - 8px), 480px); }
+.axs-pan #zone1f > .axs-f1d { flex: 1 1 auto; display: flex; flex-direction: column; }
+.axs-pan #zone1f > .axs-f1d > .in { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; }
 .axs-pan .axs-f1d .zr { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "zsg zgo" "ztx bn"; column-gap: var(--ax-space-12); row-gap: 6px; align-items: center; }
 .axs-pan .axs-f1d .zsg { grid-area: zsg; display: flex; align-items: center; min-width: 0; min-height: 26px; }
 .axs-pan .axs-f1d .ztx { grid-area: ztx; min-width: 0; font: var(--ax-type-t6); color: var(--ax-color-ink); word-break: keep-all; }
@@ -266,6 +270,10 @@
 .axs-pan .axs-bar.hb > .axs-hrs { grid-column: 2; grid-row: 1; flex-wrap: nowrap; align-items: center; gap: var(--ax-space-8); margin: 0; }
 /* v7.74 EVENT 사진 줄 굵은 글 안 「 · 」 묶음(pbfNw)은 굵은 글 그대로(옆 회색 작은 글 규칙이 닿지 않게) */
 .axs-pan .axs-evpic b .axs-nwr, .axs-pan .axs-evpic b .axs-pbsg { font: inherit; color: inherit; }   /* v7.85 조각 덩어리(axs-pbsg)도 굵은 줄 글자 그대로 */
+/* v7.98 (사용자 261018) 「선착순 이벤트」 접기 = 머리 줄 전체가 단추(구획 제목 모양 · 영상 보기와 같은 접기 부품 axs-sfd) · 접힌 채 시작 · 단추 높이 44는 위아래 음수 여백으로 제목 줄 높이(30) 그대로 */
+.axs-pan .axs-pfb { justify-content: space-between; gap: var(--ax-space-8); margin: calc((30px - var(--ax-touch-size)) / 2 + var(--ax-space-4)) 0; padding: 0 var(--ax-space-4) 0 2px; text-align: left; }
+.axs-pan .axs-pfb b { padding: 1px 0 1px 10px; border-left: 3px solid var(--ax-color-ink); font: var(--ax-type-t4); color: var(--ax-color-ink); }
+.axs-pan .axs-pfd .axs-sfdc { padding-top: 0; }
 /* 영상 보기 접기(홈 axs-sfd 부품) · 영상 줄 = 썸네일 16:9 · 오른쪽 아래 길이 · 제목 · 회색 한 줄 · 셰브론 */
 .axs-pan .axs-vfd { margin-top: calc(var(--ax-space-8) * -1); }
 .axs-pan .axs-vfd .axs-sfdb i { font-style: normal; font-weight: 500; color: var(--ax-color-muted); }

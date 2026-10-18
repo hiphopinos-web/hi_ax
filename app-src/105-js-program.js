@@ -152,7 +152,7 @@ function progTm(tm) { return String(tm || "").replace(/\s*[~–-]\s*/, "~"); }  
 /* v5.85 (사용자 261006) 세 칸 [시간표 | 상시 운영 | 신청하기] · PROG.seg = time · always · apply · 처음은 시간표 */
 function progSegOf(g) { return g === "always" || g === "apply" ? g : "time"; }
 function progSeg(g, b) {   /* 261009 b = 누른 칸 · 기준 모션(AXM.seg)으로 칸 바꾸기 · b 없이 부르면(다른 화면에서) 바로 */
-  var go = function () { if (progSegOf(g) === "always" && PROG.seg !== "always") { VFOLD.open = false; F1SEL.z = ""; } PROG.seg = progSegOf(g); PROG.scroll = 0; App.render(); if (PROG.seg === "time") progFlowScroll(); };   /* v7.67 1F 칸에 새로 오면 영상 묶음 닫힘 · v7.69 지도 고른 구역 = 첫 구역 */
+  var go = function () { if (progSegOf(g) === "always" && PROG.seg !== "always") { VFOLD.open = false; PFOLD.open = false; F1SEL.z = ""; } PROG.seg = progSegOf(g); PROG.scroll = 0; App.render(); if (PROG.seg === "time") progFlowScroll(); };   /* v7.67 1F 칸에 새로 오면 영상 묶음 닫힘 · v7.69 지도 고른 구역 = 첫 구역 */
   if (b) { AXM.seg(b, go, { top: true, ok: function () { return App.current === "guide"; } }); return; }
   window.scrollTo(0, 0); go();
 }
@@ -717,7 +717,15 @@ function hrsHtml(v) { return '<div class="axs-hrs"><span class="pl">운영 시�
 function progAlwaysHtml() {
   var pc = pbfCardHtml();
   return '<section class="axs-zsec" id="zone1f">' + barHrsHtml("로비 맵", "", F1_HOURS) + f1MapHtml() + f1DescHtml() + "</section>" +   /* v7.74 (사용자 261017) 운영 시간 = 「로비 맵」 머리 줄 오른쪽 · 옛 칸 맨 위 정보 줄 */
-    (pc ? '<section class="axs-zsec" id="zonePbf"><div class="axs-bar"><b>선착순 이벤트</b></div>' + pc + "</section>" : "");
+    (pc ? '<section class="axs-zsec" id="zonePbf"><div class="axs-sfd axs-pfd' + (PFOLD.open ? " open" : "") + '">' +   /* v7.98 (사용자 261018) 「선착순 이벤트」 = 접힌 채 시작 · 머리 줄 전체가 접기 단추(영상 보기와 같은 부품 axs-sfd · 같은 움직임) */
+      '<button type="button" class="axs-sfdb axs-pfb" id="pFoldBtn" aria-expanded="' + PFOLD.open + '" aria-controls="pFoldBody" onclick="pFoldTog(this)"><b>선착순 이벤트</b>' + CHEV_SVG + "</button>" +
+      '<div class="axs-sfdp" id="pFoldBody"><div class="axs-sfdi"><div class="axs-sfdc">' + pc + "</div></div></div></div></section>" : "");
+}
+var PFOLD = { open: false };   /* 영상 보기(VFOLD)와 같은 기억 · 다른 화면에서 오거나 상시 운영 칸에 새로 오면 접힘 */
+function pFoldTog(b) {
+  PFOLD.open = !PFOLD.open;
+  var w = b.closest(".axs-sfd"); if (w) w.classList.toggle("open", PFOLD.open);
+  b.setAttribute("aria-expanded", String(PFOLD.open));
 }
 /* 구역 상세 · 간판 칩(v4.94 포인트 크기) → 부제 한 줄 → 보조 줄(운영 시간 · 룰렛 · 스탬프 없음) → 얇은 ink 줄 → 하는 일(주황 점) → (사실 표) → 행동 버튼 하나(있을 때만) · 뒤로 = 프로그램
    v4.99 스탬프 도장 = 카드 오른쪽 위(강연 상세 sess_d 와 같은 axs-sthost · stampTagHtml) */
