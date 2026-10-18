@@ -2141,7 +2141,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   /* v7.92 (사용자 확정 261018) ① 광고 영상 = 정사각 · 카드 모서리 24 · 흰 면(포스터가 칸 배경) · 영상 누름 = 덮개 단추(axs-reel-go)
      v7.93 스피커 단추 = 오른쪽 아래 구석(오른쪽 위는 8초 뒤 작은 스탬프 판 6번째 칸을 가렸다) · 보이는 원 32(반투명 흰 면 · 옅은 그림자 · 구석에서 8 안쪽) · 눌림 44 · 영상 내용은 1080 기준 y 928(342 기준 약 294)까지라 그 아래 띠 · 켬 = 연주황 원 + 주황 아이콘
      ③ 스탬프 획득하기 = 홈 접기 부품(axs-sfd) · 머리 = 구획 제목 모양(t4 · 오른쪽 t7 회색 · 셰브론) · 움직임은 부품 그대로(0.3초 · 0.18초 · 동작 줄이기 즉시) */
-  .axs-reel { position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: var(--ax-radius-24); overflow: hidden; isolation: isolate; transform: translateZ(0); background: var(--ax-color-surface) url("assets/reel/stamp_reel_v13_poster_342.webp") center / cover no-repeat; }
+  .axs-reel { position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: var(--ax-radius-24); overflow: hidden; isolation: isolate; transform: translateZ(0); background: var(--ax-color-surface) url("assets/reel/stamp_reel_v14_poster_342.webp") center / cover no-repeat; }
   .axs-reel-v { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; background: transparent; }
   .axs-reel-go { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; border-radius: inherit; background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .axs-reel-go:focus-visible { outline: 3px solid var(--ax-color-ink); outline-offset: -3px; }
