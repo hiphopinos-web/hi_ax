@@ -701,6 +701,7 @@ function modalOpen(html, title) {
   sheetDrag(d, function () { return d.querySelector(".mcard"); }, { close: function () { if (el("modal") === d) modalClose(); } });   /* v5.69 끌어 닫기 = 상세 시트와 같은 손(뒷배경 탭과 같은 닫기) */
 }
 function modalClose(now) {
+  if (typeof REEL !== "undefined" && REEL.pop) reelPopGone();   /* v7.94 광고 영상 팝업 · 멈춤 · src 정리 · 스크롤 잠금 풀기 */
   STAFFK = ""; STAFFE = ""; STAFFT = "";   /* 담당자 코드 · 사번 · 토큰을 화면과 함께 버린다 */ var m = document.getElementById("modal"); if (m) { if (now === true) m.remove(); else AXM.close(m); }   /* 261009 닫힘 = 0.18초 아래로(now = 바로 · 새 팝업으로 바꿀 때) */
   if (typeof QRM !== "undefined" && QRM.timer && !(App.current === "scan_q" && SCQ.tab === "mine")) { qrMineOff(); QRM.msg = ""; }   /* v4.06 내 QR 동기화(v4.71 6초)는 패널이 열려 있는 동안만 · v5.23 내 QR 탭 위에 뜬 다른 창이 닫혀도 계속 */
   if (NOTICE.cur) NOTICE.cur = null;   /* v3.53 팝업이든 다른 모달이든 닫히면 다음 팝업 */

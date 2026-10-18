@@ -585,7 +585,7 @@ function pbfNoteHide() {
 function pbfNoteGo() { pbfNoteHide(); pbfOpen(); }
 ["scroll", "touchstart", "pointerdown", "wheel", "keydown"].forEach(function (k) { document.addEventListener(k, function () { PBN.act = Date.now(); }, { capture: true, passive: true }); });
 /* 아래 메뉴 누름 · 프로그램 탭을 다른 탭에서 눌렀을 때만 알림 기다림 시작(같은 탭 안에서 다시 누름 · 상세 시트에서 돌아옴 · 홈 링크 · 딥링크는 아님) · 다른 탭을 누르면 떠 있던 알림은 바로 사라짐 */
-function navTap(t) { var was = App.tabOf(App.current); App.tab(t); if (t !== "guide") { if (PBN.on) pbfNoteHide(); } else if (was !== "guide") pbfAutoSoon(); }
+function navTap(t) { var was = App.tabOf(App.current), pbn = PBN.on || (t === "exp" && pbfNoteBusy()); App.tab(t); if (t !== "guide") { if (PBN.on) pbfNoteHide(); } else if (was !== "guide") pbfAutoSoon(); if (t === "exp") setTimeout(function () { reelPopMaybe(pbn); }, 40); }   /* v7.94 스탬프 탭을 누르면 광고 영상 팝업(누른 순간 선착순 알림 · 다른 팝업 · 시트 · 도장 팝이 떠 있었거나 그 화면이 그린 도장 팝이 먼저면 건너뜀) */
 /* 시트 본문 · 세 줄 → 쿠키 세트 사진 → EVENT 시트로 가는 한 줄 */
 function pbfSheet() {
   /* v7.75 (사용자 261017) 제목 「1층 포토부스 선착순 이벤트」 · 「10/26」(당일 「오늘」) 알약 = 제목 끝에 붙음(마지막 낱말과 한 덩어리 · 넘치면 제목이 꺾여도 알약은 끝 낱말과 같이) · 옛 칩 줄 + 제목 「선착순 이벤트」 */

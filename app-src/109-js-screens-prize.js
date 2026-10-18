@@ -486,15 +486,15 @@ function expStamp(id) {
   }, 60);
 }
 /* ── v7.92 (사용자 확정 261018) 스탬프 탭 ① 광고 영상 · ③ 스탬프 획득하기 접기 ──
-   영상 = assets/reel/stamp_reel.mp4(1080 정사각 · 60초 · H.264 + AAC) · 포스터 = 342판 webp(칸 배경 + video poster) · 큰글씨도 같은 영상
+   영상 = assets/reel/stamp_reel_v11.mp4(v7.94 「가습기 무드등」 판 · 캐시 때문에 새 이름 · 1080 정사각 · 60초 · H.264 + AAC) · 포스터 = 342판 webp(칸 배경 + video poster) · 큰글씨도 같은 영상
    무음 자동 반복 · 오른쪽 위 스피커 단추(누른 그 탭 안에서 muted 해제라 아이폰도 · 저장하지 않음 · 스탬프 탭을 떠나면 다시 무음 · 앱을 열 때마다 무음)
    받기 = 칸이 화면에 들어올 때 src(그 전엔 포스터만) · 화면 밖 · 탭 숨김 · 다른 탭 = 멈춤 · 돌아오면 이어 재생
    play() 거부(아이폰 저전력 등 NotAllowedError) = 포스터 그대로 · 다시 조르지 않는다(스피커를 누르면 다시) · 동작 줄이기 = 자동 재생 없음(스피커를 누르면 그때 소리와 함께)
    video 노드는 하나(REEL.v) · 다시 그릴 때마다 App.render 같은 작업 안에서 새 칸(reelSlot)으로 옮긴다(떼었다 같은 작업 안에 붙이면 멈추지 않는다 · 4초 다시 그리기에 처음부터 받지 않게)
    영상(스피커 밖)을 누르면 ③ 펼침 + 그 머리로 부드럽게 · 서비스 워커는 페이지 이동만 가로챈다(sw.js · mp4 Range 요청 = 네트워크 그대로 · 미리 캐시 없음) */
-var REEL = { src: "assets/reel/stamp_reel.mp4", poster: "assets/reel/stamp_reel_poster_342.webp", v: null, io: null, vis: false, snd: false, deny: false,
-  alt: "스탬프 보상 안내 영상. 스탬프 6개 모으기. 3개 룰렛, 4개부터 행운권, 6개 가습기. 스탬프 3개 모으면 룰렛 1번. 룰렛 경품은 텀블러, 커피와 키캡 키링, 컵받침, 판스티커, 볼펜. 스탬프 4개는 행운권 1장, 경품 추첨 번호. 스탬프 4개부터 행운권 최대 3장, 5개 2장, 6개 3장. 행운권 추첨 경품은 아이패드, 신라호텔 뷔페 식사권, 음식물 처리기, 에어팟, 종아리 마사지기, 백화점 상품권. 선착순 참여상, 6개면 가습기, 먼저 6개 모은 200명. 스탬프 획득하기, 폰으로 참여는 최초 로그인, AX 퀴즈, 미니 게임, 아이디어 한 줄. 현장 참여는 1층 체험하기, 계단 오르기, 강연 듣기, 설문 응답. 아래에서 바로 시작." };
-var STGET = { open: S.get("stget_open", false) === true };
+var REEL = { src: "assets/reel/stamp_reel_v11.mp4", poster: "assets/reel/stamp_reel_v11_poster_342.webp", v: null, io: null, vis: false, snd: false, deny: false, pop: false,
+  alt: "스탬프 보상 안내 영상. 스탬프 6개 모으기. 3개 룰렛, 4개부터 행운권, 6개 가습기 무드등. 스탬프 3개 모으면 룰렛 1번. 룰렛 경품은 텀블러, 커피와 키캡 키링, 컵받침, 판스티커, 볼펜. 스탬프 4개는 행운권 1장, 경품 추첨 번호. 스탬프 4개부터 행운권 최대 3장, 5개 2장, 6개 3장. 행운권 추첨 경품은 아이패드, 신라호텔 뷔페 식사권, 음식물 처리기, 에어팟, 종아리 마사지기, 백화점 상품권. 선착순 참여상, 6개면 가습기 무드등, 먼저 6개 모은 200명. 스탬프 획득하기, 폰으로 참여는 최초 로그인, AX 퀴즈, 미니 게임, 아이디어 한 줄. 현장 참여는 1층 체험하기, 계단 오르기, 강연 듣기, 설문 응답. 아래에서 바로 시작." };
+var STGET = { open: S.get("stget_open", true) !== false };   /* v7.94 기본 = 펼침 · 사용자가 접으면 그 상태 기억 */
 function reelHtml() {
   return '<div class="axs-reel" id="reelSlot" role="group" aria-label="스탬프 보상 안내 영상">' +
     '<p class="axs-reel-sr" id="reelAlt">' + esc(REEL.alt) + "</p>" +
@@ -514,8 +514,38 @@ function reelEl() {
   return v;
 }
 function reelSrc() { var v = reelEl(); if (!v.getAttribute("src")) { v.preload = "auto"; v.src = REEL.src; } }
+/* ── v7.94 (사용자 261018 「스탬프탭 누르면 광고창 팝업이 뜨고, 오늘 하루 보지 않기를 누르면 더 보지 않는 형태로 하자」) 광고 영상 = 팝업(#modal 바텀 시트 · mobile-popup-motion 규격 = AXM.open · close) ──
+   뜨는 때 = 하단 탭 「스탬프」를 누를 때(navTap) · 「오늘 하루 보지 않기」 = 이 기기에서 그날(서울 날짜 reel_skip) 안 뜸 · X · 뒷배경 · 끌어 닫기 = 다음에 탭을 누르면 다시
+   안 뜨는 때 = 특정 스탬프로 들어옴(expStamp · App.tab · navTap 아님) · 다른 팝업 · 시트 · 도장 팝 · 영상 · 선착순 알림(pbfNoteBusy · PBN) · 최초 로그인 장면 · 게임 판
+   영상 = 팝업이 열리면 보일 때 src · 닫으면 멈춤 + src 정리 · 열린 동안 뒤 화면 스크롤 잠금(html.reel-lock) · 영상(스피커 밖) 누름 = 닫고 ③ 펼침 + 이동 */
+function reelDay() { var d = new Date(appNow().getTime() + 9 * 3600000); return d.getUTCFullYear() + "-" + (d.getUTCMonth() + 1) + "-" + d.getUTCDate(); }
+function reelPopMaybe(pbn) {
+  if (App.current !== "exp" || pbn || REEL.pop) return false;
+  if (S.get("reel_skip", "") === reelDay()) return false;
+  if (pbfNoteBusy() || el("lgx") || el("rgPlay") || document.documentElement.classList.contains("ivp-lock")) return false;
+  reelPopOpen();
+  return true;
+}
+function reelPopOpen() {
+  modalOpen('<div class="axs-reelp">' + reelHtml() + '<button type="button" class="axs-reel-skip" onclick="reelPopSkip()">오늘 하루 보지 않기</button></div>');
+  var m = el("modal"); if (!m) return;
+  m.classList.add("axs-reelm");
+  var c = m.querySelector(".mcard"); c.classList.remove("axs-tall"); c.setAttribute("aria-label", "스탬프 보상 안내 영상");
+  REEL.pop = true; document.documentElement.classList.add("reel-lock");
+  reelMount();
+}
+function reelPopSkip() { S.put("reel_skip", reelDay()); modalClose(); }   /* 조용한 저장 · 기기 설정(STORE_DEVICE) */
+function reelPopGone() {   /* modalClose 가 부른다(X · 뒷배경 · 끌어 닫기 · 다른 팝업으로 바뀜) */
+  REEL.pop = false; document.documentElement.classList.remove("reel-lock");
+  if (REEL.io) REEL.io.disconnect();
+  REEL.vis = false; REEL.snd = false;
+  var v = REEL.v; if (!v) return;
+  v.pause(); v.muted = true;
+  if (v.getAttribute("src")) { v.removeAttribute("src"); v.preload = "none"; try { v.load(); } catch (e) {} }   /* 받은 영상 정리(메모리) · 다음에 열면 다시 붙인다 */
+}
 function reelMount(ae) {
   var slot = el("reelSlot");
+  if (slot && !REEL.pop) slot = null;   /* v7.94 닫히는 중인 팝업의 칸 = 없는 것으로(다시 재생하지 않게) */
   if (ae && ae.id === "stGetBtn" && el("stGetBtn") && document.activeElement !== el("stGetBtn")) { try { el("stGetBtn").focus({ preventScroll: true }); } catch (e) {} }   /* 다시 그려도 「스탬프 획득하기」 단추 초점 유지 */
   if (!slot) {   /* 스탬프 탭이 아님 = 멈춤 · 다음에 오면 무음부터 */
     if (REEL.io) REEL.io.disconnect();
@@ -560,8 +590,9 @@ function stGetSet(o) {
   if (b) b.setAttribute("aria-expanded", String(o));
 }
 function stGetTog() { stGetSet(!STGET.open); }
-function reelGo() {   /* 영상을 누르면 ③ 펼침 + 그 머리로 부드럽게(동작 줄이기 = 바로) · 접혀 있었으면 펼침(0.3초)이 끝난 뒤 이동(접힌 높이로는 아래 끝에 막혀 머리까지 못 간다) */
+function reelGo() {   /* 영상을 누르면 (v7.94 팝업 닫고) ③ 펼침 + 그 머리로 부드럽게(동작 줄이기 = 바로) · 접혀 있었으면 펼침(0.3초)이 끝난 뒤 이동(접힌 높이로는 아래 끝에 막혀 머리까지 못 간다) */
   var was = STGET.open, rm = AXM.rm();
+  if (REEL.pop) modalClose();
   stGetSet(true);
   var go = function () { var s = el("stpGet"); if (s && App.current === "exp") AXM.scrollTo(s, { block: "start", rise: false }); };
   if (was || rm) go(); else setTimeout(go, AXM.IN + 20);

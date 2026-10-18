@@ -2141,7 +2141,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   /* v7.92 (사용자 확정 261018) ① 광고 영상 = 정사각 · 카드 모서리 24 · 흰 면(포스터가 칸 배경) · 영상 누름 = 덮개 단추(axs-reel-go)
      v7.93 스피커 단추 = 오른쪽 아래 구석(오른쪽 위는 8초 뒤 작은 스탬프 판 6번째 칸을 가렸다) · 보이는 원 32(반투명 흰 면 · 옅은 그림자 · 구석에서 8 안쪽) · 눌림 44 · 영상 내용은 1080 기준 y 928(342 기준 약 294)까지라 그 아래 띠 · 켬 = 연주황 원 + 주황 아이콘
      ③ 스탬프 획득하기 = 홈 접기 부품(axs-sfd) · 머리 = 구획 제목 모양(t4 · 오른쪽 t7 회색 · 셰브론) · 움직임은 부품 그대로(0.3초 · 0.18초 · 동작 줄이기 즉시) */
-  .axs-reel { position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: var(--ax-radius-24); overflow: hidden; isolation: isolate; transform: translateZ(0); background: var(--ax-color-surface) url("assets/reel/stamp_reel_poster_342.webp") center / cover no-repeat; }
+  .axs-reel { position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: var(--ax-radius-24); overflow: hidden; isolation: isolate; transform: translateZ(0); background: var(--ax-color-surface) url("assets/reel/stamp_reel_v11_poster_342.webp") center / cover no-repeat; }
   .axs-reel-v { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; background: transparent; }
   .axs-reel-go { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; border-radius: inherit; background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .axs-reel-go:focus-visible { outline: 3px solid var(--ax-color-ink); outline-offset: -3px; }
@@ -2153,6 +2153,12 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-reel-snd:focus-visible { outline: none; }
   .axs-reel-snd:focus-visible::before { box-shadow: 0 0 0 2px var(--ax-color-ink); }
   .axs-reel-sr { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  /* v7.94 (사용자 261018) 광고 영상 팝업 = #modal 바텀 시트(올라옴 0.3초 · 닫힘 0.18초 · 동작 줄이기 즉시 · AXM) · 영상 = 시트 폭(390 기준 342) 정사각 · 흰 시트 위 테두리 1px · 아래 「오늘 하루 보지 않기」(눌림 44) · 열린 동안 뒤 화면 스크롤 잠금 */
+  html.reel-lock, html.reel-lock body { overflow: hidden; overscroll-behavior: none; }
+  #modal.axs-reelm .mcard { padding-bottom: max(var(--ax-space-12), env(safe-area-inset-bottom)); overscroll-behavior: contain; }
+  .axs-reelp { display: flex; flex-direction: column; gap: var(--ax-space-8); }
+  .axs-reelm .axs-reel::after { content: ""; position: absolute; inset: 0; z-index: 3; border-radius: inherit; box-shadow: inset 0 0 0 1px var(--ax-color-divider); pointer-events: none; }
+  .axs-reel-skip { align-self: center; min-height: 44px; padding: 0 var(--ax-space-16); border: 0; border-radius: var(--ax-radius-12); background: transparent; color: var(--ax-color-body); font: var(--ax-type-t6-strong); cursor: pointer; }
   #view[data-v="exp"] .axs-stget { scroll-margin-top: calc(var(--stick, 0px) + var(--ax-space-12)); }
   #view[data-v="exp"] .axs-sgfd { margin: 0; }
   #view[data-v="exp"] .axs-sgb { justify-content: flex-start; gap: var(--ax-space-8); padding: 0; text-align: left; }

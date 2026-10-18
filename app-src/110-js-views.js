@@ -62,9 +62,8 @@ var Views = {
     var testBar = !testMode() ? "" :
       '<p class="scap" style="margin:0 2px 8px">테스트 ' + (BE.on ? "계정" : "모드") + ' · 스탬프는 이 기기에만 기록됩니다 · <span style="cursor:pointer;text-decoration:underline" onclick="testStampReset()">스탬프 초기화</span> · <span style="cursor:pointer;text-decoration:underline" onclick="testMineShuffle()">테스트 · 나의 일정 다시 섞기</span> · <span style="cursor:pointer;text-decoration:underline" onclick="ttOpen()">시각 바꿔 보기</span></p>';
     var full = n >= STAMP_DENOM;
-    var sgo = STGET.open;   /* v7.92 (사용자 확정 261018) ③ 접힌 채 시작 · 마지막 펼침 상태 기억(stget_open) · 다른 화면에서 특정 스탬프로 오면(expStamp) · 광고 영상을 누르면 펼침 */
-    return '<div class="ax-stack axs-stpv">' + testBar +
-      '<section class="axs-sec">' + reelHtml() + "</section>" +   /* v7.92 (사용자 확정 261018) ① 광고 영상 · 6개 달성 뒤 · 행사 종료 뒤에도 늘 */
+    var sgo = STGET.open;   /* v7.94 (사용자 261018) ③ 펼친 채 시작(광고 칸이 빠져 첫 화면이 비었다) · 사용자가 접은 상태 기억(stget_open) · 특정 스탬프로 오면(expStamp) · 광고 영상을 누르면 펼침 */
+    return '<div class="ax-stack axs-stpv">' + testBar +   /* v7.94 (사용자 261018 「고정칸으로 하니 너무 다른 것들이 어렵다」) 광고 영상 칸 = 하단 탭 「스탬프」를 누를 때 팝업(reelPopMaybe · navTap) · 본문 = ② 현황 › ③ 스탬프 획득하기 */
       '<section class="axs-sec">' + railHtml(n, glow, null, false) + "</section>" +
       '<section class="axs-sec axs-stget" id="stpGet"><div class="axs-sfd axs-sgfd' + (sgo ? " open" : "") + '">' +
       '<button type="button" class="axs-sfdb axs-sgb" id="stGetBtn" aria-expanded="' + sgo + '" aria-controls="stGetBody" onclick="stGetTog()"><b>스탬프 획득하기</b><span>' + STAMPS.length + "가지 중 " + STAMP_DENOM + "개까지</span>" + CHEV_SVG + "</button>" +   /* v7.92 머리 = 「스탬프 획득하기」(옛 「스탬프 모으는 방법」 · 광고 영상 끝 문구와 같게) · v7.57 (사용자 261017 S5 · S6) 오른쪽 = 늘 「8가지 중 6개까지」 */
