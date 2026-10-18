@@ -594,10 +594,9 @@ function pbfSheet() {
 }
 /* ── 1F 칸 지도 · 표의 스탬프 칸 · 받기 전 회색 · 받은 뒤 주황(D10 · 스탬프 탭과 같은 판정 S stamps) · 아이콘 = 시안 그대로(도장 · 룰렛 · 메달 · 계단) ── */
 var F1C = { on: "#FF7F32", off: "#9AA3AE" };
-function f1Seal(on, n) {
-  var c = on ? F1C.on : F1C.off;
-  return '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="' + (on ? "#FFEBE0" : "#FFFFFF") + '" stroke="' + c + '" stroke-width="1.6"/><circle cx="12" cy="12" r="7.6" fill="none" stroke="' + c + '" stroke-width=".8"/>' +
-    (on ? '<path d="M8.2 12.3l2.6 2.5 5-5.4" fill="none" stroke="' + c + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' : '<text x="12" y="15.6" text-anchor="middle" font-size="10" font-weight="700" fill="' + c + '">' + (n || 1) + "</text>") + "</svg>";
+function f1Seal(on) {   /* v8.04 (사용자 261019) 동전(원 + 안쪽 원 + 숫자 · 체크) → 스탬프 탭 도장 stampSealSvg 그대로(가운데 비움) · 받기 전 회색 #B0B8C1 = 스탬프 탭 도장 회색(--ax-color-disabled) · 받은 뒤 주황 · 24 칸으로 줄여 담는다(지도 mk 가 바깥 svg 를 벗겨 24 기준으로 키운다) · 작은 크기라 선만 굵게(3 → 4.6 · 1.2 → 2.4) + 흰 바닥(주황 구역 위에서도 보이게 · 받은 뒤는 연주황) */
+  var g = stampSealSvg(100, on ? F1C.on : "#B0B8C1", "").replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/, "").replace(/stroke-width="3"/g, 'stroke-width="4.6"').replace(/stroke-width="1.2"/g, 'stroke-width="2.4"');
+  return '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11.4" fill="' + (on ? "#FFEBE0" : "#FFFFFF") + '"/><g transform="scale(.24)">' + g + "</g></svg>";
 }
 function f1Roul(on) {
   var c = on ? F1C.on : F1C.off, s = "";
@@ -616,7 +615,7 @@ function f1LnOn() { return !!loungeMine(); }   /* D3 라운지 스탬프 칸 = �
 function f1Cell(id) {
   if (id === "welcome") { var fc = fcfsCapTxt().replace(/^ · /, ""); return [f1Medal(!!fc && !/마감/.test(fc)), fc || "6개면 선착순 참여상", !!fc && !/마감/.test(fc)]; }
   if (id === "event") { var ro = f1RoulOn(); return [f1Roul(ro), ro ? "룰렛 1회 사용 가능" : "3개면 룰렛 1회", ro]; }
-  if (id === "lounge") { if (!f1LnOn()) return null; var lg = f1Got("ln"); return [f1Seal(lg, 2), lg ? "받음" : "상담 종료 때 2개", lg]; }
+  if (id === "lounge") { if (!f1LnOn()) return null; var lg = f1Got("ln"); return [f1Seal(lg), lg ? "받음" : "상담 종료 때 2개", lg]; }
   var st = { lab: "p5", play: "p2", stair: "st" }[id]; if (!st) return null;
   var g = f1Got(st); return [f1Seal(g), g ? "받음" : "스탬프 1개", g];
 }
