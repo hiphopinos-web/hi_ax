@@ -635,7 +635,7 @@ function zoneRowHtml(id) {
 var F1SEL = { z: "" };
 function f1SelId() { return F1_TB.indexOf(F1SEL.z) >= 0 ? F1SEL.z : F1_TB[0]; }
 function f1DescHtml() {
-  return '<section class="ax-card axs-f1d" aria-label="고른 구역"><div class="in" id="f1Desc" aria-live="polite">' + zoneRowHtml(f1SelId()) + "</div></section>";
+  return '<section class="ax-card axs-f1d" aria-label="고른 구역"><div class="in"><div id="f1Desc" aria-live="polite">' + zoneRowHtml(f1SelId()) + '</div><div class="f1gh" aria-hidden="true">' + F1_TB.map(function (id) { return zoneRowHtml(id); }).join("") + "</div></div></section>";   /* v8.02 (사용자 261018) 칸 높이 = 구역 여섯 칸 중 가장 긴 것이 딱 들어가는 높이로 고정(구역을 바꿔도 안 튐) · 안 보이는 복사본(.f1gh)을 같은 칸에 겹쳐 가장 큰 것이 높이를 정한다(글자 크기 · 큰글씨 따라 저절로) */
 }
 /* 지도 구역 누름 = 그 칸 주황(.hl 흐려짐 · 앱 공용 곡선 · 시간) + 설명 칸 내용만 바꿈(떠오름 AXM.rise · 동작 줄이기 = 즉시) · 다시 그리지 않는다 */
 function f1Pick(id) {
