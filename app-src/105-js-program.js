@@ -665,9 +665,10 @@ function f1MapSvg() {
   var tri = function (x, y, d) { var p = { d: [[-11, -7], [11, -7], [0, 7]], u: [[-11, 7], [11, 7], [0, -7]], l: [[7, -11], [7, 11], [-7, 0]] }[d]; return '<path d="M' + p.map(function (v) { return (x + v[0]) + " " + (y + v[1]); }).join("L") + 'Z" fill="#4E5968"/>'; };
   var mk = function (x, y, svg, s) { return '<g transform="translate(' + (x - s / 2) + " " + (y - s / 2) + ") scale(" + (s / 24) + ')">' + svg.replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/, "") + "</g>"; };
   var wall = 'fill="none" stroke="#9AA3AE" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"', c = function (id) { return f1Cell(id) || [""]; };
-  var IN = [T(151, 93, 36, zoneById("lounge").sign) + (f1LnOn() ? mk(252, 52, c("lounge")[0], 30) : ""), T(81, 214, 33, "EVENT") + mk(81, 268, c("event")[0], 44),
-    T(263, 347, 36, "AX PLAY") + mk(176, 318, c("play")[0], 30), T(500, 347, 36, "AX LAB") + mk(412, 318, c("lab")[0], 30),
-    '<text x="663" y="275" font-size="31" text-anchor="middle" transform="rotate(-90 663 275)" dy="11">AX VISION</text>',
+  /* v7.99 (사용자 261018) 부스 이름 글자 한 단계 작게(36 → 32 · 33 → 29 · 31 → 28 = 약 11%) · 머리 「로비 맵」보다 작게(위계) */
+  var IN = [T(151, 93, 32, zoneById("lounge").sign) + (f1LnOn() ? mk(252, 52, c("lounge")[0], 30) : ""), T(81, 214, 29, "EVENT") + mk(81, 268, c("event")[0], 44),
+    T(263, 347, 32, "AX PLAY") + mk(176, 318, c("play")[0], 30), T(500, 347, 32, "AX LAB") + mk(412, 318, c("lab")[0], 30),
+    '<text x="663" y="275" font-size="28" text-anchor="middle" transform="rotate(-90 663 275)" dy="10">AX VISION</text>',
     mk(320, 92, f1Stair("#4E5968"), 34) + mk(320, 56, c("stair")[0], 26), mk(556, 98, f1Stair("#4E5968"), 34) + mk(556, 62, c("stair")[0], 26)];
   var G = function (b, i) { var st = b[0] === "stair"; return '<g class="zg" data-i="' + i + '">' + (st ? "" : B(b)) + H(b) + IN[i] + (st ? "" : CV(b)) + "</g>"; };
   return '<svg class="mp" viewBox="0 0 ' + F1_MAP_W + " " + F1_MAP_H + '" aria-hidden="true">' +

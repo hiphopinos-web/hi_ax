@@ -245,7 +245,12 @@
 /* v7.98 (사용자 261018 「설명 칸이 낮아 몰입이 안 된다」) 로비 맵 머리 줄을 화면 위(--stick + 12)에 맞추면 설명 칸 아래끝이 아래 메뉴 바로 위(8)에 오는 높이 · 구역 전체 최소 높이 = 화면 높이 - 위 고정부 - 12 - 아래 메뉴 - 8 · 큰 폰은 480 에서 멈춤(설명 칸 약 190) · 지도 크기는 그대로, 남는 높이를 설명 칸이 가져가고 내용은 가운데 · 내용이 더 길면 칸이 늘어남(최소 높이) */
 .axs-pan #zone1f { min-height: min(calc(100vh - var(--stick, 104px) - 12px - var(--ax-nav-height) - env(safe-area-inset-bottom) - 8px), 480px); min-height: min(calc(100dvh - var(--stick, 104px) - 12px - var(--ax-nav-height) - env(safe-area-inset-bottom) - 8px), 480px); }
 .axs-pan #zone1f > .axs-f1d { flex: 1 1 auto; display: flex; flex-direction: column; }
-.axs-pan #zone1f > .axs-f1d > .in { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; }
+.axs-pan #zone1f > .axs-f1d > .in { flex: 1 1 auto; display: flex; flex-direction: column; }   /* v7.99 (사용자 261018) 세로 가운데 배치 없앰 · 간판 줄 + 하는 일 = 위 맞춤 · 스탬프 칸(보조 줄) = 칸 바닥(아래 여백 = 위 여백 10) */
+.axs-pan #zone1f > .axs-f1d { padding-bottom: 10px; }
+.axs-pan #zone1f > .axs-f1d .zr { flex: 1 1 auto; grid-template-rows: auto minmax(0, 1fr); }
+.axs-pan #zone1f > .axs-f1d .ztx { align-self: start; }
+.axs-pan #zone1f > .axs-f1d .bn { align-self: end; }
+.fs-big .axs-pan #zone1f > .axs-f1d .zr { grid-template-rows: auto auto minmax(0, 1fr); }
 .axs-pan .axs-f1d .zr { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "zsg zgo" "ztx bn"; column-gap: var(--ax-space-12); row-gap: 6px; align-items: center; }
 .axs-pan .axs-f1d .zsg { grid-area: zsg; display: flex; align-items: center; min-width: 0; min-height: 26px; }
 .axs-pan .axs-f1d .ztx { grid-area: ztx; min-width: 0; font: var(--ax-type-t6); color: var(--ax-color-ink); word-break: keep-all; }
@@ -263,7 +268,7 @@
 .fs-big .axs-pan .axs-f1d .bn:empty { display: none; }
 /* v7.71 (사용자 261017) 지도 아래 각주 한 줄 「* 주차장 체크인존(선착순 참여상 수령)」 · 누르면 WELCOME 시트 · 한 줄(괄호 묶음은 가르지 않음)
    v7.74 (사용자 261017 「회색 말고 검정으로 조금 강조」) 작은 글씨(caption) 그대로 · 본문 진한 글자(ink) · 600 · 옛 회색(muted) · 범례 줄이 빠져 지도 바로 아래 */
-.axs-pan .axs-f1map .fn { display: block; margin: 0 var(--ax-space-4); padding: 4px 0 6px; border: 0; background: transparent; font: var(--ax-type-caption); font-weight: 600; color: var(--ax-color-ink); text-align: left; white-space: nowrap; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.axs-pan .axs-f1map .fn { display: block; margin: -8px var(--ax-space-4) 0; padding: 4px 0 6px; border: 0; background: transparent; font: var(--ax-type-caption); font-weight: 600; color: var(--ax-color-ink); text-align: left; white-space: nowrap; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 /* v7.74 (사용자 261017) 구획 머리 줄 오른쪽 운영 시간(barHrsHtml · 1F 로비 맵 · 10F · 18F) · 제목 줄과 같은 줄 · 알약 + 값 한 줄 · 옛 칸 맨 위 정보 줄 */
 .axs-pan .axs-bar.hb { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--ax-space-8); row-gap: 2px; align-items: center; }
 .axs-pan .axs-bar.hb > b, .axs-pan .axs-bar.hb > span { grid-column: 1; min-width: 0; }
