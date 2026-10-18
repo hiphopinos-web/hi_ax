@@ -411,7 +411,7 @@ function applyCchatHtml() {
 function applyTenShow() { return !!tenMine() || testMode(); }
 function applyTenHtml() {
   if (!applyTenShow()) return "";
-  return '<div class="axs-rows">' + rcHtml({ cls: "", onclick: "progTenGo()", link: true, left: rcIcon(App.ICONS.guide), title: "실습형 세션", sub: "<ax-seg>사전 신청자</ax-seg><ax-seg>시작 · 종료 출석체크 시&nbsp;각&nbsp;1개</ax-seg>" }).replace('<div class="rc', '<div data-apply="ten" class="rc').replace('<span class="sb">', '<span class="sb segfix">') + "</div>";   /* v7.54 두 줄 목록(공용 점 부품 · 옛 글자 「· 」 + <br>) */
+  return applyCardHtml({ k: "ten", nm: "실습형 세션", fl: 10, kor: "5개 세션 중 1개", kv: [["시간", F10_HOURS], ["참여", "사전 신청자"], ["스탬프", ["시작 출석체크 시 1개 부여", "종료 출석체크 시 1개 부여"]]], seal: stampTagHtml("p3", 2), tap: "progTenGo()", more: "progTenGo()" });   /* v7.95 (사용자 261018 「10층 세션 안내를 아래 17층 세션처럼」) 10F 입구 = 17F 강연 카드(apply17Html)와 같은 부품 · 옛 흰 줄 카드(rcHtml 아이콘 + 점 두 줄 + ›) 대체 · 시간 = 운영 시간 알약 값(F10_HOURS) · 누르면 10F 세션 목록(progTenGo) */
 }
 /* 261013 오후 (사용자) 참여하기 칸 맨 위 = 17F 오후 파트너 강연 두 장(자유 참석 · 신청 버튼 없음 · 누르면 강연 상세 · 도장 ×2) · 표기 = 시간표(SESSIONS l1 · l2) 그대로
    v7.39 (사용자 261016) 스탬프 줄 = 두 줄 목록(커피챗 카드와 같은 문법) · v7.44 (사용자 261016) 「· 시작 출석체크 시 1개 부여」 「· 종료 출석체크 시 1개 부여」(옛 「입장할 때 화면 QR 1개」 「끝날 때 화면 QR 1개」 대체) */
@@ -429,7 +429,7 @@ function progApplyTabHtml() {
   var cc = applyCchatHtml();   /* 261013 오후 순서 = 17F AWS · 17F MS · 18F 커피챗 · v7.39 (사용자 261016 계획서 3-1 · 0-2-4) 라운지 카드 없음(사전 신청자 = 홈 나의 일정 · 1F 칸 표 · 내 상담) */
   var ten = applyTenHtml();   /* v7.67 (사용자 261017 셋째 칸 변경) 사전 신청자 = 10F 머리 + 실습 줄을 맨 위로(옛 D2 칸 맨 아래 줄 대체) · 운영 시간도 층 순서 */
   return '<div class="axs-apply axs-pan" aria-label="' + progApplyNm() + '">' +   /* v7.74 (사용자 261017) 운영 시간 = 각 구획 머리 줄 오른쪽(1F 칸 로비 맵과 같은 알약 · 정렬 barHrsHtml) · 옛 칸 맨 위 한 줄(10F · 18F 두 값) · 17F 는 운영 시간 없음 · 커피챗 카드가 없으면 18F 머리째 없음 */
-    (ten ? barHrsHtml("10F", "실습형 세션", F10_HOURS) + ten : "") +
+    (ten ? '<div class="axs-bar"><b>10F 실습형 세션</b><span>사전 신청자 참여</span></div>' + ten : "") +
     '<div class="axs-bar"><b>17F 대강당</b><span>신청 없이 자유 참석</span></div>' + apply17Html("l1") + apply17Html("l2") +
     '<button type="button" class="ax-link axs-plain axs-self axs-tlnk" onclick="progTimeGo()">' + lnkChev("오전 강연 · Closing Speech는 시간표") + "</button>" +
     (cc ? barHrsHtml("18F", "AX 커피챗", F18_HOURS) + cc : "") +
