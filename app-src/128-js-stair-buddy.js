@@ -587,7 +587,7 @@ function stbArrInfo(res, q) {
     else { pop = true; line = "스탬프 " + n + " / " + STAMP_DENOM; hint = srGoalLine(n); }
   }
   else if (st && st.dup) line = "스탬프는 이미 받았어요";
-  else if (st && st.no === "preday") line = "스탬프 · 행사 당일(10/26) 적립";   /* 261016 행사 전 가드 */
+  else if ((st && st.no === "preday") || (res && res.no === "preday")) line = "스탬프 · 행사 당일(10/26) 적립";   /* 261016 행사 전 가드 */
   else if (res && (res.goal || 1) > 1) line = "누적 " + (res.total || 0) + " / " + res.goal + "개 층";
   var sg = stampCount() >= STAMP_DENOM ? null : stbSugs()[0];
   return { pop: pop, line: line, hint: hint, tag: sg ? "다음 참여" : "", say: sg ? sg[1] : "오늘도 힘내세요!" };
@@ -606,7 +606,7 @@ function stbArrive(res, q) {
       '<div class="sa-bub">' + (f.tag ? '<span class="stb-tag">' + f.tag + "</span>" : "") + '<span class="sa-tx">' + esc(f.say) + "</span></div>" +
       (q ? "" : '<button type="button" class="sa-re" onclick="stbArrRe(event)">종료가 아니라 새로 시작이에요</button>') +
     '</div><canvas class="sa-iris" id="saIris" aria-hidden="true"></canvas>' +
-    '<p class="stb-sr" aria-live="polite">고생했어요 · ' + esc(from) + "F에서 " + esc(to) + "F 계단 완료 · " + esc(f.line) + " · " + esc(f.say) + "</p>";
+    '<p class="stb-sr" aria-live="polite">고생했어요 · ' + esc(from) + "F에서 " + esc(to) + "F 계단 완료" + (f.line ? " · " + esc(f.line) : "") + (f.say ? " · " + esc(f.say) : "") + "</p>";
   document.body.appendChild(d);
   SA.d = d; SA.t = []; SA.out = false; SA.rm = rm; SA.done = false; SA.go = function () { expStamp("st"); }; SA.log = [["in", 0]]; SA.t0 = performance.now(); SA.f = f;
   stbLeave();

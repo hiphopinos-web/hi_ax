@@ -729,7 +729,7 @@ function stairHtml() {
       '<p class="ax-meta">' + stairSec(o.sec) + "</p>" +
       '<section class="ax-card axs-gap12">' + stairGauge(o.total, goal) +
       (got ? '<p class="ax-description">스탬프 ' + Math.min(STAMP_DENOM, stampCount()) + " / " + STAMP_DENOM + " · " + esc(srGoalLine(stampCount())) + "</p>" : "") +
-      (got && o.stamp.dry ? '<p class="ax-meta">테스트 계정 · 서버 적립 없음</p>' : "") + (o.stamp && o.stamp.no === "preday" ? '<p class="ax-meta">계단 스탬프 · 행사 당일(10/26) 적립</p>' : "") + "</section>" +   /* 261016 행사 전 가드 */
+      (got && o.stamp.dry ? '<p class="ax-meta">테스트 계정 · 서버 적립 없음</p>' : "") + ((o.stamp && o.stamp.no === "preday") || o.no === "preday" ? '<p class="ax-meta">계단 스탬프 · 행사 당일(10/26) 적립</p>' : "") + "</section>" +   /* 261016 행사 전 가드 */
       '<button type="button" class="ax-link axs-plain axs-self" onclick="stairReclassOpen()">종료가 아니라 새로 시작이에요</button>',
       btn: ax2Btn(got ? "스탬프 확인하기" : "확인", got ? "expStamp('st')" : "App.tab('exp')") };
   }
