@@ -162,12 +162,11 @@ var FLOOR_GD = {
   17: { hdr: "17F 대강당", sub: "신청 없이 자유 참석" },   /* v5.96 출석 QR 은 오후 AWS · MS 상세에서만 */
   10: { hdr: "10F 실습형 세션", sub: "사전 신청자 참여 · 5개 세션" }
 };
-/* v7.78 (사용자 261017) 10F 목록 카드 제목 덩어리 = 한 글자 앞 덩어리(A · B · E)는 다음 덩어리와 묶어 한 줄(「A · 컨퍼런스룸」 · 「E · 1회차」) · 나머지는 「· 」로 시작하는 덩어리 단위로만 꺾임 */
+/* v7.82 (사용자 261018) 10F 목록 카드 제목 = 「A 세션」 알약(옅은 회색 면 · 제목보다 작은 글자) + 장소 · 장소는 「 · 」 덩어리 단위로만 꺾임(첫 덩어리 그대로 · 다음부터 「· 」로 시작) · 옛 v7.78 「A · 컨퍼런스룸」 한 글자 묶음은 알약으로 대체 */
 function floorSessTtl(s) {
-  var p = (s.ttl.replace(/^세션\s*/, "") + " · " + sessPlace(s).replace(/^10F\s*·?\s*/, "")).split(" · "), out = [], i = 0;
-  if (p.length > 1 && p[0].length <= 1) { out.push(p[0] + " · " + p[1]); i = 2; } else { out.push(p[0]); i = 1; }
-  for (; i < p.length; i++) out.push("· " + p[i]);
-  return out.map(function (t) { return '<span class="axs-nwr">' + esc(t) + "</span>"; }).join(" ");
+  var p = (s.ttl.replace(/^세션\s*/, "") + " · " + sessPlace(s).replace(/^10F\s*·?\s*/, "")).split(" · "), out = ['<span class="axs-sesspill">' + esc(p[0]) + " 세션</span>"], i = 1;
+  for (; i < p.length; i++) out.push('<span class="axs-nwr">' + esc((i > 1 ? "· " : "") + p[i]) + "</span>");
+  return out.join(" ");
 }
 function floorGuideHtml() {
   var f = PROG.floor, g = FLOOR_GD[f];

@@ -1516,10 +1516,15 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-tt .rc .rb { padding: 0 0 var(--ax-space-16); }
   /* v7.77 (사용자 261017) 10F 실습형 세션 목록(floor_d) = 6장이 폰 한 화면에 · 카드 사이 24 → 12 · 카드 높이 64 → 56 · 안쪽 위아래 9 → 6 · 시간 칸(tok 48) · 글자 크기 그대로 · 눌리는 높이 56 */
   .axs-flg .axs-tt { gap: var(--ax-space-12); }
-  .axs-flg .axs-tt .rc { --rc-h: 56px; }
-  .axs-flg .axs-tt .rc .bd { padding: 6px 0; }
+  .axs-flg .axs-tt .rc .bd { padding: 5px 0; }
   .axs-flg .axs-tt .rc .tr { flex-wrap: wrap; row-gap: 2px; }   /* v7.78 폭이 모자라면 「내 세션」 칩이 제목 아래 줄로 */
   .axs-flg .axs-tt .rc .rh .tt { white-space: normal; overflow: visible; text-overflow: clip; }   /* 큰 글씨에서 제목이 넘치면 말줄임 대신 「 · 」 자리에서 둘째 줄로 */
+  /* v7.82 (사용자 261018 「시간 알약과 카드 높이가 너무 같아서 이상해 · A 세션 알약으로」) 시간 칸 = 카드 위 · 아래 · 왼쪽 6 여백을 둔 알약(높이 44 · 카드 모서리 20 − 6 = 14 동심) · 카드 높이 56(SE 6장이 탭 바 위에) · 제목 = 「A 세션」 알약 + 장소 */
+  .axs-flg .axs-tt .rc { --rc-h: 56px; --rc-gap: 10px; padding: 0 14px 0 6px; }
+  .axs-flg .axs-tt .rc .ls .tok { min-height: 44px; padding-top: 0; padding-bottom: 0; border-radius: 14px; }
+  .axs-flg .axs-tt .rc .tr .tt { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--ax-space-4); }
+  .axs-sesspill { display: inline-flex; align-items: center; flex: none; min-height: 1.375rem; padding: 0 7px; margin-right: 2px; border-radius: 999px; background: var(--ax-color-canvas); color: var(--ax-color-body); font: 600 0.75rem/1 var(--ax-font); white-space: nowrap; }
+  .axs-tt .rc.my .axs-sesspill { background: var(--ax-color-surface); }
   /* v5.21 시간표 = 점 노드 흐름 한 줄(사용자 261003 · 설계 「시간표 흐름/설계.md」 안 A · design.md A-5 5-10) · 시각 | 노드 + 레일 | 카드
      노드 3상태(지남 O50 작은 점 · 지금 O100 큰 점 + O25 고리 하나 · 앞 = 속 빈 점) · 같이 진행 중인 다른 줄(on) = O100 작은 점
      O25 · O50 = brand 를 흰색과 섞은 값(30% · 60% = design.md 오렌지 사다리 O25 · O50 과 같은 색 · 토큰에 없는 단이라 섞어 만든다)
