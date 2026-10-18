@@ -85,7 +85,12 @@ var RAIN_EXTRA_EVERY = 30;                    /* 램프 시작 뒤 이 초마다
    목표 = 분당 200~300타 · 오타 5~8% 인 사람이 약 1분 동안 3단계까지 · 빠른 사람은 계속 어려워진다(순위 경쟁)
    stage = 단계 길이 초 · fall · spawn = 단계별 낙하 · 등장 간격 초 · max = 단계별 동시 단어 · len = 단계별 최대 글자 수(없는 단계 = 전부) ·
    ramp* = 마지막 단계 뒤 조이기 · hurt = 목숨을 잃은 뒤 숨 돌리는 초(다른 단어는 hurtSlow 배속 · 새 단어 없음) · gap = 바닥 도착 간격 하한 초 · crowd = 판 단어가 이만큼이면 다음 등장 간격 × crowdMul */
-var RAIN_SITE = { stage: 18, fall: [7.2, 6.3, 5.3, 4.3, 3.4], spawn: [2.1, 1.8, 1.5, 1.25, 1.05], max: [3, 4, 5, 5, 6], len: [3, 4], rampFrom: 90, rampSpan: 60, rampMin: 0.5, hurt: 1.2, hurtSlow: 1, gap: 0.8, crowd: 4, crowdMul: 1.35, cap: 300, rp: [[100, 1], [240, 0.66], [280, 0.45], [296, 0.28]], gapRamp: true };
+var RAIN_SITE = { stage: 12, fall: [5.3, 4.93, 4.58, 4.25, 3.94, 3.64, 3.37, 3.11, 2.87, 2.65, 2.44, 2.24, 2.06, 1.89, 1.73, 1.58, 1.45], spawn: [1.75, 1.575, 1.419, 1.28, 1.155, 1.043, 0.943, 0.853, 0.773, 0.701, 0.636, 0.577, 0.524, 0.477, 0.434, 0.396, 0.361], max: [5, 6], len: [], ramp: false, extra: false, hurt: 1.2, hurtSlow: 1, gap: 0.8, gapFall: true, crowd: 4, crowdMul: 1.35, cap: 300 };
+/* 261018 v7.88 곡선(사용자 결정 「기획 문서/타자왕 개편 제안_261017.md」 10절 안 I · 아래 261017 램프 · 단계 18초 5단계를 대체) · 1F 셀프만 · 대전 · 앱 솔로는 RAIN_FALL · RAIN_SPAWN · RAIN_STAGE_SEC 그대로
+   단계 = 12초마다 · 단계 수 = fall 길이(17 · rgLayout 셀프만) · 1단계 낙하 5.3초(옛 3단계 빠르기) · 등장 1.75초 · 단계 시작 t초에서 낙하 = 5.3 × e^(-0.0060t - 0.000004t²) · 등장 = 1.75 × e^(-0.0088t + 0.000003t²)
+   단계마다 낙하 약 7.5% → 9.8% · 등장 약 10% 빨라진다 · 단계 안에서는 그대로(ramp false = 램프 없음) · 동시 단어 +1 · +2 없음(extra false) · 동시 단어 1단계 5 · 2단계부터 6 · 단어 길이 처음부터 전부(len 빈 배열)
+   gapFall = 바닥 도착 간격 0.8초 × (그 단계 낙하 ÷ 1단계 낙하) · 17단계(192초~) 뒤에는 17단계 값 그대로(rgSiteAt 끝 값) · 안전 상한 cap 300초 그대로
+   봇 40판(오타 6% · 92단어) 버틴 시간 중앙 = 300타 약 49초 · 550타 약 97초 · 700타 약 117초 · 1,100타 약 147초 · 2,000타 약 174초 · 최장 약 189초 · 상한 도달 0 */
 /* 261017 타자왕 개편(사용자 확정 D1 · D2 · 「기획 문서/타자왕 개편 제안_261017.md」 3 · 4절) · 셀프만 안전 상한 300초(cap · 대전 · 앱 솔로는 RAIN_CAP_SEC 180 그대로) ·
    램프 = 구간식 rp(초, 배율) 점 사이 직선(100초까지 1 · 240초 0.66 · 280초 0.45 · 296초 0.28 · 뒤는 끝 값) · rampFrom · rampSpan · rampMin 은 rp 가 없을 때와 동시 단어 +1 · +2 시점(rampFrom 90)에만 ·
    gapRamp = 바닥 도착 간격(gap 0.8초)에도 램프를 곱한다(296초 0.22초 · 빠른 사람도 끝난다) · hurtSlow 0.3 → 1 = 목숨을 잃어도 다른 단어는 같은 빠르기(새 단어만 hurt 1.2초 쉼) ·
@@ -192,7 +197,7 @@ function rgLayout(W, H, big, side) {
   L.ground = H - L.soil;
   L.floor = L.ground - L.masH - L.D;                          /* 단어 상자 아래가 여기 닿으면 놓침 */
   L.top = 8;
-  if (big) { L.maxWords = H >= 640 ? 6 : 5; L.stages = 5; }
+  if (big) { L.maxWords = H >= 640 ? 6 : 5; L.stages = RG.mode === "site" ? RAIN_SITE.fall.length : 5; }   /* 261018 v7.88 셀프만 17단계 · 대전 · 앱은 5(RAIN_FALL 5칸) */
   else { for (var i = 0; i < RAIN_BANDS.length; i++) if (H < RAIN_BANDS[i][0]) { L.maxWords = RAIN_BANDS[i][1]; L.stages = RAIN_BANDS[i][2]; break; } }
   L.laneW = big ? 190 : 100;
   L.lanes = Math.max(1, Math.floor((W - 16) / L.laneW));
@@ -212,6 +217,7 @@ function rgAutoOn() { return !!RGP.touch || !!RAIN_AUTO[RG.mode]; }
 function rgSiteAt(a, st) { return a[Math.max(0, Math.min(a.length, st) - 1)]; }
 function rgRampSite(sec) {
   var S = RAIN_SITE, P = S.rp;
+  if (S.ramp === false) return 1;   /* 261018 v7.88 단계 값만 · 단계 안 램프 없음 */
   if (P && P.length) {   /* 261017 구간식 · 첫 점 앞 = 첫 값 · 끝 점 뒤 = 끝 값 */
     if (sec <= P[0][0]) return P[0][1];
     for (var i = 1; i < P.length; i++) if (sec <= P[i][0]) return P[i - 1][1] + (P[i][1] - P[i - 1][1]) * (sec - P[i - 1][0]) / (P[i][0] - P[i - 1][0]);
@@ -228,7 +234,7 @@ function rgSpawnSec(st, sec) {
    261012 사용자 「3라운드쯤부터 단어마다 빠르고 느린 게 섞이고 중간에 느려진다」 · 옛 rgGapFall 은 새 단어를 느리게(낙하 시간을 늘려) 맞췄다 · 판이 붐비는 3단계부터 줄줄이 밀려 40%까지 느린 단어가 섞였다 ·
    이제 속도는 그대로 두고 등장만 미룬다(도착 시각은 옛 규칙과 같다) */
 function rgGapWait(f) {
-  var g = RAIN_SITE.gap * (RAIN_SITE.gapRamp ? rgRampSite(RG.surv || 0) : 1), t = f, a =RG.words.map(function (w) { return (1 - Math.min(1, w.p)) * w.fall; }).sort(function (x, y) { return x - y; });
+  var g = RAIN_SITE.gap * (RAIN_SITE.gapFall ? rgSiteAt(RAIN_SITE.fall, RG.stage) / RAIN_SITE.fall[0] : 1) * (RAIN_SITE.gapRamp ? rgRampSite(RG.surv || 0) : 1), t = f, a =RG.words.map(function (w) { return (1 - Math.min(1, w.p)) * w.fall; }).sort(function (x, y) { return x - y; });
   for (var i = 0; i < a.length; i++) if (Math.abs(t - a[i]) < g) t = a[i] + g;
   return t - f;
 }
@@ -642,7 +648,7 @@ function rgStart(mode, opt) {
   RG.wait = opt.wait != null ? !!opt.wait : (RG.mode !== "race" && !rgTouch() && !RGP.go);
   RGP.go = false;
   RG.next = null; RG.top = null; RG.hk = false;
-  if (RG.bonusOn) rgCloudStart();   /* v5.24 첫 구름은 카운트다운부터 판 위에 */
+  if (RG.bonusOn && rgCloudStage() <= 1) rgCloudStart();   /* v5.24 첫 구름은 카운트다운부터 판 위에 · 261018 v7.88 RAIN_CLOUD.at 단계부터(시험 손잡이 bns=2 는 1단계) */
   if (!RG.seed) rgNextFill();   /* 대기 화면부터 옆판 NEXT 가 보인다 */
   try { if (typeof SFX !== "undefined") SFX.site = RG.mode !== "app"; } catch (e) {}
   if (typeof rgPlayOpen === "function") rgPlayOpen();
@@ -760,7 +766,7 @@ function rgUpdate(dt, now) {
   RG.surv = sec;
   rgTipTick(now);
   if (sec >= RG.cap) { rgEnd("cap"); return; }   /* 안전 상한 · 현장에서 서버 값으로 조절한다 */
-  if (RG.bonusOn && !RG.cloud && RG.cloudN < RAIN_CLOUD.max && sec >= RG.cloudAt) rgCloudStart();   /* v5.24 맑은 틈이 끝나면 다음 구름 */
+  if (RG.bonusOn && !RG.cloud && RG.cloudN < RAIN_CLOUD.max && sec >= RG.cloudAt && RG.stage >= rgCloudStage()) rgCloudStart();   /* 261018 v7.88 첫 구름 = RAIN_CLOUD.at 단계 */   /* v5.24 맑은 틈이 끝나면 다음 구름 */
   var st = Math.min(L.stages, 1 + Math.floor(sec / rgStageSec()));   /* 261003 1F 셀프 = RAIN_SITE.stage */
   if (st > RG.stage) {
     RG.stage = st;
@@ -771,7 +777,7 @@ function rgUpdate(dt, now) {
   var slow = 1;   /* 261003 1F 셀프 · 목숨을 잃은 직후 RAIN_SITE.hurt 초 · 다른 단어는 천천히 · 새 단어 없음(오타 하나로 목숨이 줄줄이 빠지지 않게) */
   if (RG.hurt > 0) { RG.hurt = Math.max(0, RG.hurt - dt); slow = RAIN_SITE.hurtSlow; }
   else RG.spawnT -= dt;
-  var site = rgSiteOn(), extra = Math.min(2, Math.floor(Math.max(0, sec - (site ? RAIN_SITE.rampFrom : RAIN_RAMP_FROM)) / RAIN_EXTRA_EVERY));
+  var site = rgSiteOn(), extra = site && RAIN_SITE.extra === false ? 0 : Math.min(2, Math.floor(Math.max(0, sec - (site ? RAIN_SITE.rampFrom : RAIN_RAMP_FROM)) / RAIN_EXTRA_EVERY));
   var cap = site ? Math.min(L.maxWords, rgSiteAt(RAIN_SITE.max, RG.stage)) : L.maxWords;   /* 261003 1F 셀프 = 단계별 동시 단어 */
   /* 대전은 화면에 몇 개 남았는지로 등장을 막지 않는다(막으면 사람마다 단어 순서가 갈라진다) · 솔로는 원래대로 상한을 둔다 */
   var room = RG.seed ? RG.ghost.length <= L.maxWords + extra : RG.words.length < cap + extra;
@@ -1297,7 +1303,7 @@ var RAIN_BONUS = { pt: 75, max: 3000, k: 1.2, add: 6, floor: 0.1, tick: 0.25, in
    완성(자동) · Enter 순간 숫자가 멈추고 점수 = 멈춘 숫자 × 맞은 글자 ÷ 글자 수 · 문장 그대로면 PERFECT 표시(점수 추가 없음) · 20자 최대 3,000 + 목숨 보너스 2,500 ≤ 서버 TYPE_PTS_BONUS 15,000 · tick = 틱 소리 간격 초(25% 아래는 절반) · 옛 ch · perfect · sec(글자 × 40 + 600 + 남은 초 × 50) 폐기 */   /* v5.26(사용자 261003 「권장대로」) 비구름으로 문장이 한 판 1~3번으로 줄어 20 · 300 · 30 → 40 · 600 · 50 · 문장 하나 최대 = 20자 × 40 + 600 + 21초 × 50 = 2,450 · 3번 7,350 + 목숨 보너스 2,500 = 9,850 ≤ 서버 TYPE_PTS_BONUS 15,000 */   /* v5.24 intro 2.2 → 2.6(문장 먼저 읽기) · 그 뒤 카운트다운 RAIN_CLOUD.count */
 /* v5.24 비구름 · 리허설로 조절하는 손잡이 · n = 구름마다 내리는 단어 수(첫째 · 둘째 · 셋째) · key = 핵심 단어 하나가 몇 번 내리나 · gap = 구름이 걷힌 뒤 맑은 틈(게임 초) ·
    max = 한 판 최대 구름 수 · clear = 구름이 걷히는 연출 초 · count = 문장 입력 전 카운트다운 초 · 첫 구름 약 35~40초(1~3단계 · 간격 2.2~1.6초) · 보통 판 1~2번 */
-var RAIN_CLOUD = { n: [14, 16, 16], key: 2, gap: 0, max: 1, clear: 1.4, count: 3, go: 0.8 };   /* 261017 보너스 한 판 1번(사용자 확정 D4) · max 3 → 1 · 그 뒤 구름 없이 비만 · gap 15 → 0(2번 이상으로 되돌리면 복귀 즉시 다음 구름) */   /* 261012 go 0.6 → 0.8(「시작!」 팡 · 보이기만) · go = 카운트다운 뒤 GO 를 보이는 초(261003 부터 입력은 GO 와 함께 열린다 · 보이기만) · 261007 0.3 → 0.6(GO 팡 · 시간 · 점수 영향 없음) */
+var RAIN_CLOUD = { n: [10, 16, 16], key: 2, gap: 0, max: 1, clear: 1.4, count: 3, go: 0.8, at: 5 };   /* 261018 v7.88 보너스 = 6단계안(사용자 결정) · at = 첫 구름이 뜨는 단계(5단계 = 48초 · 그 전에는 구름 없이 비만 · 「다음 구름」도 안 그림) · 첫 구름 14 → 10단어(핵심 단어 4~5개 × 2 + 채움) · 다 처리하면 보너스(약 60~64초 = 6단계 진입 무렵) · 시험 손잡이 bns=2 는 1단계부터 2단어 · at 이 1 이하 · 없으면 옛 그대로 판 시작부터 */   /* 261017 보너스 한 판 1번(사용자 확정 D4) · max 3 → 1 · 그 뒤 구름 없이 비만 · gap 15 → 0(2번 이상으로 되돌리면 복귀 즉시 다음 구름) */   /* 261012 go 0.6 → 0.8(「시작!」 팡 · 보이기만) · go = 카운트다운 뒤 GO 를 보이는 초(261003 부터 입력은 GO 와 함께 열린다 · 보이기만) · 261007 0.3 → 0.6(GO 팡 · 시간 · 점수 영향 없음) */
 /* 261012 보너스 들어가기(사용자 「문장을 미리 보여 주고 읽게 하는 것을 없앤다」) · 안내(문구 = 사용자 그대로) → 3 · 2 · 1 → 「시작!」 → 그때 문장이 나오고 입력이 열린다 · intro 2.6 → 2.2(읽을 문장이 없어 안내만)
    IN · OUT = 전역 움직임 규격(mobile-popup-motion) 들어옴 300ms · 나감 180ms · 6px 떠오름 · ease · 동작 줄이기 = 바로
    261018 v7.84 (사용자 「권장대로」) 안내 3.5초 동안 문장을 미리 보여 준다 · 안내 = 문장 아래 칸 「빠르게 따라 치세요.」 하나(옛 첫 줄 「잠시 후에 문장이 나타납니다.」는 문장이 이미 보여 뺐다) · 입력 · 줄어드는 숫자는 그대로 「시작!」부터 */
@@ -1348,6 +1354,8 @@ function rgBonusScore(typed, text, why, left, lim, v) {
 /* ═══ v5.24 비구름 ═══
    구름 하나 = 문장 하나 · 핵심 단어 × key + 단계에 맞는 단어로 n 개를 채워 섞는다(같은 단어가 붙어 나오지 않게) · 내린 단어는 cl 표시 · 남은 칸 = 아직 안 내린 단어 + 판 위 구름 단어.
    다 내리고 판 위 구름 단어가 다 사라지면(친 것 · 놓친 것 모두) 걷힌다 → 보너스 스테이지(clear → intro → count → type → res) · 끝나면 맑은 틈(gap) 뒤 다음 구름 · max 번이면 그 뒤로는 소나기만. */
+/* 261018 v7.88 첫 구름이 뜨는 단계 · 시험 손잡이(bns=2 · RG.cloudTestN)는 1단계 · RAIN_CLOUD.at 이 없거나 1 이하면 1(옛 그대로 판 시작부터) */
+function rgCloudStage() { return RG.cloudTestN > 0 ? 1 : Math.max(1, Math.round(RAIN_CLOUD.at) || 1); }
 function rgCloudStart() {
   if (!RG.bnsBag || !RG.bnsBag.length) RG.bnsBag = rgShuf(RAIN_BONUS_LINES.slice());
   var ln = RG.bnsBag.pop(), n = RAIN_CLOUD.n[Math.min(RG.cloudN, RAIN_CLOUD.n.length - 1)], seq = [];
@@ -1481,7 +1489,7 @@ function rgCloudDraw(ctx, L, now) {
   var G = rgCloudGeo(L, now), c = G.c;
   if (b && b.ph === "clear") { k = 1 - Math.max(0, b.t) / RAIN_CLOUD.clear; a = 1 - k; t = "구름이 걷혀요"; }
   else if (cl) { tone = G.f > 0.6 ? 0 : G.f > 0.25 ? 1 : 2; if (G.pf > 0) tone = Math.max(0, tone - 1); t = "구름" + (RAIN_CLOUD.max > 1 ? " " + cl.no + "/" + RAIN_CLOUD.max : ""); }   /* 261017 한 판 1번이면 번호 없이 */
-  else if (RG.cloudN < RAIN_CLOUD.max && isFinite(RG.cloudAt)) { gapT = Math.max(0, RG.cloudAt - (RG.t0 ? rgElapsed(now) : 0)); a = 0.12 + 0.4 * (1 - Math.min(1, gapT / (RAIN_CLOUD.gap || 1))); t = "다음 구름 " + Math.ceil(gapT) + "초"; }
+  else if (RG.cloudN > 0 && RG.cloudN < RAIN_CLOUD.max && isFinite(RG.cloudAt)) {   /* 261018 v7.88 첫 구름 전(RAIN_CLOUD.at 단계까지)은 그리지 않는다 */ gapT = Math.max(0, RG.cloudAt - (RG.t0 ? rgElapsed(now) : 0)); a = 0.12 + 0.4 * (1 - Math.min(1, gapT / (RAIN_CLOUD.gap || 1))); t = "다음 구름 " + Math.ceil(gapT) + "초"; }
   else return;
   var mid = G.x0 + G.w / 2, lift = Math.round(k * G.h * 1.2), sp = rm ? 0 : k * L.W * 0.35;
   var X = function (p) { var x = G.x0 + p[0] * c; return Math.round(x + (x + c / 2 < mid ? -sp : sp)); };
@@ -1945,5 +1953,5 @@ if (typeof module !== "undefined" && module.exports) module.exports = { RG: RG, 
   RAIN_BONUS_LINES: RAIN_BONUS_LINES, RAIN_BONUS: RAIN_BONUS, RAIN_LIFE_BONUS: RAIN_LIFE_BONUS, rgBonusLim: rgBonusLim, rgLev: rgLev, rgBonusScore: rgBonusScore, rgRaceRank: rgRaceRank,
   rgRaceTick: rgRaceTick, rgSubmit: rgSubmit, rgEnd: rgEnd, rgBonusStart: rgBonusStart, RAIN_CLOUD: RAIN_CLOUD, rgCloudStart: rgCloudStart, rgCloudRem: rgCloudRem, rgLive: rgLive, rgHgKey: rgHgKey,
   rgCloudGeo: rgCloudGeo, RAIN_CLOUD_FX: RAIN_CLOUD_FX, RAIN_TRANS: RAIN_TRANS, rgWordY: rgWordY,
-  RAIN_SITE: RAIN_SITE, RAIN_AUTO: RAIN_AUTO, RAIN_BNS_GUARD: RAIN_BNS_GUARD, rgSiteReset: rgSiteReset, rgAutoOn: rgAutoOn, rgFallSec: rgFallSec, rgSpawnSec: rgSpawnSec, rgStageSec: rgStageSec, rgRampSite: rgRampSite, rgGapWait: rgGapWait, rgCdNum: rgCdNum, rgSpawnFall: rgSpawnFall, rgJit: rgJit, rgEase: rgEase, RAIN_BNS_GUIDE: RAIN_BNS_GUIDE, RAIN_BNS_GO: RAIN_BNS_GO, rgClash: rgClash, rgPool: rgPool, rgBnsNorm: rgBnsNorm, rgBlk: rgBlk, rgCloudPick: rgCloudPick,
+  RAIN_SITE: RAIN_SITE, RAIN_AUTO: RAIN_AUTO, RAIN_BNS_GUARD: RAIN_BNS_GUARD, rgSiteReset: rgSiteReset, rgAutoOn: rgAutoOn, rgFallSec: rgFallSec, rgSpawnSec: rgSpawnSec, rgStageSec: rgStageSec, rgRampSite: rgRampSite, rgGapWait: rgGapWait, rgCdNum: rgCdNum, rgSpawnFall: rgSpawnFall, rgJit: rgJit, rgEase: rgEase, RAIN_BNS_GUIDE: RAIN_BNS_GUIDE, RAIN_BNS_GO: RAIN_BNS_GO, rgClash: rgClash, rgPool: rgPool, rgBnsNorm: rgBnsNorm, rgBlk: rgBlk, rgCloudPick: rgCloudPick, rgCloudStage: rgCloudStage,
   rgBonusVal: rgBonusVal, rgBonusValOf: rgBonusValOf, RAIN_DROP: RAIN_DROP, rgBonusV0: rgBonusV0, rgBnsLines: rgBnsLines, rgBnsBr: rgBnsBr };   /* 261017 타자왕 개편 */
