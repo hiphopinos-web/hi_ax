@@ -615,7 +615,7 @@ function f1LnOn() { return !!loungeMine(); }   /* D3 라운지 스탬프 칸 = �
 function f1Cell(id) {
   if (id === "welcome") { var fc = fcfsCapTxt().replace(/^ · /, ""); return [f1Medal(!!fc && !/마감/.test(fc)), fc || "6개면 선착순 참여상", !!fc && !/마감/.test(fc)]; }
   if (id === "event") { var ro = f1RoulOn(); return [f1Roul(ro), ro ? "룰렛 1회 사용 가능" : "3개면 룰렛 1회", ro]; }
-  if (id === "lounge") { if (!f1LnOn()) return null; var lg = f1Got("ln"); return [f1Seal(lg), lg ? "받음" : "상담 종료 때 2개", lg]; }
+  if (id === "lounge") { if (!f1LnOn()) return null; var lg = f1Got("ln"); return [f1Seal(lg), lg ? "받음" : "상담 종료 때 2개", lg, 2]; }
   var st = { lab: "p5", play: "p2", stair: "st" }[id]; if (!st) return null;
   var g = f1Got(st); return [f1Seal(g), g ? "받음" : "스탬프 1개", g];
 }
@@ -663,12 +663,14 @@ function f1MapSvg() {
   var T = function (x, y, s, t, a) { return '<text x="' + x + '" y="' + y + '" font-size="' + s + '" text-anchor="' + (a || "middle") + '">' + t + "</text>"; };
   var tri = function (x, y, d) { var p = { d: [[-11, -7], [11, -7], [0, 7]], u: [[-11, 7], [11, 7], [0, -7]], l: [[7, -11], [7, 11], [-7, 0]] }[d]; return '<path d="M' + p.map(function (v) { return (x + v[0]) + " " + (y + v[1]); }).join("L") + 'Z" fill="#4E5968"/>'; };
   var mk = function (x, y, svg, s) { return '<g transform="translate(' + (x - s / 2) + " " + (y - s / 2) + ") scale(" + (s / 24) + ')">' + svg.replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/, "") + "</g>"; };
+  /* v8.05 (사용자 261019) 도장 개수가 2 이상이면 지도 도장 오른쪽 아래에 스탬프 탭 「×2」 알약과 같은 모양(O100 면 · ink 글자 · 흰 테두리) · 1개 = 표시 없음 */
+  var sk = function (id, x, y, s) { var q = c(id), n = q[3] || 0, w = Math.round(s * 1.0), h = Math.round(s * 0.74), px = x + s / 2 + 5 - w, py = y + s / 2 + 5 - h, o = mk(x, y, q[0] || "", s); return !q[0] ? "" : o + (n > 1 ? '<rect x="' + px + '" y="' + py + '" width="' + w + '" height="' + h + '" rx="' + (h / 2) + '" style="fill:var(--ax-color-brand);stroke:var(--ax-color-surface,#fff);stroke-width:2"/><text x="' + (px + w / 2) + '" y="' + (py + h / 2 + 5.4) + '" font-size="15" font-weight="800" text-anchor="middle" style="fill:var(--ax-color-ink)">×' + n + "</text>" : ""); };
   var wall = 'fill="none" stroke="#9AA3AE" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"', c = function (id) { return f1Cell(id) || [""]; };
   /* v7.99 (사용자 261018) 부스 이름 글자 한 단계 작게(36 → 32 · 33 → 29 · 31 → 28 = 약 11%) · 머리 「로비 맵」보다 작게(위계) */
-  var IN = [T(151, 93, 32, zoneById("lounge").sign) + (f1LnOn() ? mk(252, 52, c("lounge")[0], 30) : ""), T(81, 214, 29, "EVENT") + mk(81, 268, c("event")[0], 44),
-    T(263, 347, 32, "AX PLAY") + mk(176, 318, c("play")[0], 30), T(500, 347, 32, "AX LAB") + mk(412, 318, c("lab")[0], 30),
+  var IN = [T(151, 93, 32, zoneById("lounge").sign) + (f1LnOn() ? sk("lounge", 252, 52, 30) : ""), T(81, 214, 29, "EVENT") + mk(81, 268, c("event")[0], 44),
+    T(263, 347, 32, "AX PLAY") + sk("play", 176, 318, 30), T(500, 347, 32, "AX LAB") + sk("lab", 412, 318, 30),
     '<text x="663" y="275" font-size="28" text-anchor="middle" transform="rotate(-90 663 275)" dy="10">AX VISION</text>',
-    mk(320, 92, f1Stair("#4E5968"), 34) + mk(320, 56, c("stair")[0], 26), mk(556, 98, f1Stair("#4E5968"), 34) + mk(556, 62, c("stair")[0], 26)];
+    mk(320, 92, f1Stair("#4E5968"), 34) + sk("stair", 320, 56, 26), mk(556, 98, f1Stair("#4E5968"), 34) + sk("stair", 556, 62, 26)];
   var G = function (b, i) { var st = b[0] === "stair"; return '<g class="zg" data-i="' + i + '">' + (st ? "" : B(b)) + H(b) + IN[i] + (st ? "" : CV(b)) + "</g>"; };
   return '<svg class="mp" viewBox="0 0 ' + F1_MAP_W + " " + F1_MAP_H + '" aria-hidden="true">' +
     '<defs><filter id="f1Sh" x="-12%" y="-12%" width="124%" height="140%" color-interpolation-filters="sRGB"><feDropShadow dx="0" dy="3" stdDeviation="3.5" flood-color="#191F28" flood-opacity="0.16"/></filter></defs>' +
