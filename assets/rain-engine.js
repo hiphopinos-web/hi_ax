@@ -1088,6 +1088,23 @@ function rgWrap(ctx, text, maxW) {
   if (line) out.push(line);
   return out;
 }
+/* 261018 은행 문장의 나눌 자리(br · 그 자리가 띄어쓰기일 때만) · 송출 화면도 같은 엔진이라 문장 글자로 찾는다 */
+function rgBnsBr(text) { for (var i = 0; i < RAIN_BONUS_LINES.length; i++) { var x = RAIN_BONUS_LINES[i]; if (x && x.s === text) return x.br > 0 && text.charAt(x.br) === " " ? x.br : 0; } return 0; }
+/* 261018 v7.83 보너스 문장 두 줄(문장 약 40자) · 은행에 적은 자리(br)가 두 줄 다 들어가면 그 자리 · 아니면 띄어쓰기 자리마다 두 줄이 다 maxW 안에 드는지 보고 · 쉼표 바로 뒤를 먼저(두 줄 폭 차이가 전체의 40% 안이면) · 그 밖에는 두 줄 폭이 가장 고른 어절 경계 ·
+   한 줄에 들어가면 한 줄 · 두 줄로 안 되면 rgWrap(세 줄 이상) · 줄 사이 띄어쓰기 하나는 앞줄 끝에 붙는다(rgBonusDraw 의 st · 아래 따라 쓰기 줄도 같은 자리에서 나뉜다) */
+function rgBnsLines(ctx, text, maxW) {
+  text = String(text);
+  var tw = ctx.measureText(text).width, best = null, bs = Infinity, br = rgBnsBr(text);
+  if (tw <= maxW) return [text];
+  if (br > 0 && ctx.measureText(text.slice(0, br)).width <= maxW && ctx.measureText(text.slice(br + 1)).width <= maxW) return [text.slice(0, br), text.slice(br + 1)];   /* 은행에 적은 자리(br) 먼저 */
+  for (var i = text.indexOf(" "); i > 0; i = text.indexOf(" ", i + 1)) {
+    var a = text.slice(0, i), b = text.slice(i + 1), wa = ctx.measureText(a).width, wb = ctx.measureText(b).width;
+    if (!b || wa > maxW || wb > maxW) continue;
+    var sc = Math.abs(wa - wb) / tw - (a.charAt(a.length - 1) === "," ? 0.4 : 0);
+    if (sc < bs) { bs = sc; best = [a, b]; }
+  }
+  return best || rgWrap(ctx, text, maxW);
+}
 /* v4.51 게임판 틀 · 셋 중 유일한 전체 높이 · 양옆 판(나무 이중 테두리)보다 한 단계 강하게 · 바깥 먹 3 → O100 4 → 안 먹 3(= RAIN_FRAME)
    위 모서리는 계단(rtStep) · 아래는 캔버스 끝까지 열어 둔다(입력칸 틀이 같은 세 겹으로 이어 받는다 · 화면 쪽 CSS) */
 function rgFrameDraw(ctx, L) {
@@ -1222,25 +1239,31 @@ function rgSideHearts(ctx, right, cy, k) {
    s = 구름이 걷히면 나오는 문장 · w = 그 문장의 핵심 단어 3~5개(2~6자 · 공백 없음 · 문장 안에 그대로 있다) · 이 단어들이 그 구름의 비로 내린다(단어로 한 번 · 문장으로 또 한 번)
    근거 = 슬로건 국문 · 3개년 로드맵(공감과 참여 → 확산과 체화 → 혁신과 연결) · 기획 철학(체감 → 상상 → 발굴 → 연결 · 내 업무에 적용할 마음) · 1층 판(DAP · 현장의 AX · 하이디큐 · 하이헬퍼 · AX Lounge · 1인 1 AI Agent) */
 var RAIN_BONUS_LINES = [
-  { s: "나의 경험을 우리의 가능성으로", w: ["경험", "우리", "가능성"] },
-  { s: "공감과 참여에서 확산과 체화로", w: ["공감", "참여", "확산", "체화"] },
-  { s: "확산과 체화를 지나 혁신과 연결로", w: ["확산", "체화", "혁신", "연결"] },
-  { s: "일하는 방식을 바꿔가는 과정", w: ["일하는", "방식", "과정"] },
-  { s: "업무에서 발견한 나의 작은 경험들", w: ["업무", "발견", "경험"] },
-  { s: "목표를 정하고 결과를 판단하는 사람", w: ["목표", "결과", "판단", "사람"] },
-  { s: "판단에 필요한 근거를 제공하는 데이터", w: ["판단", "근거", "제공", "데이터"] },
-  { s: "목표에 맞춰 도구와 작업을 연결", w: ["목표", "도구", "작업", "연결"] },
-  { s: "문서를 올리고 물어보면 대화하듯", w: ["문서", "올리고", "대화"] },
-  { s: "업무 영역별 에이전트 구축", w: ["업무", "영역별", "에이전트", "구축"] },
-  { s: "에이전트를 스스로 만드는 플랫폼", w: ["에이전트", "스스로", "플랫폼"] },
-  { s: "비즈니스 모델 혁신 달성", w: ["비즈니스", "모델", "혁신", "달성"] },
-  { s: "고객 개인정보 입력하지 않기", w: ["고객", "개인정보", "입력"] },
-  { s: "사내 기밀정보 입력하지 않기", w: ["사내", "기밀정보", "입력"] },
-  { s: "정보 유출이 의심되면 즉시 신고하기", w: ["유출", "의심", "즉시", "신고"] },
-  { s: "업무에 활용하기 전 사전에 점검", w: ["업무", "활용", "사전", "점검"] }
+  { s: "나의 경험을 우리의 가능성으로, 현대해상의 변화를 함께 만들어갑니다", br: 17, w: ["경험", "우리", "가능성", "변화"] },
+  { s: "공감과 참여에서 확산과 체화로, 그리고 혁신과 연결로 나아가는 여정", br: 17, w: ["공감", "참여", "확산", "체화", "여정"] },
+  { s: "공감과 참여의 해, 사내 생성형 서비스를 오픈하고 필요성을 체감합니다", br: 17, w: ["공감", "참여", "생성형", "필요성", "체감"] },
+  { s: "확산과 체화의 해, 업무 영역별 에이전트를 구축하고 경험을 가속화합니다", br: 17, w: ["확산", "체화", "영역별", "구축", "가속화"] },
+  { s: "혁신과 연결의 해, 각자 필요한 에이전트로 비즈니스 모델 혁신 달성", br: 17, w: ["혁신", "연결", "각자", "비즈니스", "달성"] },
+  { s: "인공지능을 활용해 우리가 일하는 방식을 조금씩 바꿔가는 과정을 말합니다", br: 21, w: ["활용", "일하는", "방식", "과정"] },
+  { s: "업무에서 발견한 나의 작은 경험들이 모여 우리의 큰 가능성으로 이어집니다", br: 19, w: ["업무", "발견", "경험", "가능성"] },
+  { s: "사람을 중심으로 데이터와 에이전트를 연결해 더 나은 판단과 실행을 돕습니다", br: 19, w: ["사람", "중심", "데이터", "연결", "실행"] },
+  { s: "더 나은 판단과 실행을 돕는 업무 환경, 데이터로 판단하고 일하는 회사", br: 22, w: ["판단", "실행", "환경", "데이터", "회사"] },
+  { s: "목표를 정하고 결과를 판단하는 사람, 판단에 필요한 근거를 제공하는 데이터", br: 20, w: ["목표", "결과", "사람", "근거", "제공"] },
+  { s: "판단에 필요한 근거를 주는 데이터와 정보를 분석하고 답을 찾는 인공지능", br: 19, w: ["판단", "근거", "데이터", "분석"] },
+  { s: "목표에 맞춰 도구와 작업을 연결하는 에이전트가 일하는 방식을 바꿉니다", br: 19, w: ["목표", "도구", "작업", "연결", "에이전트"] },
+  { s: "문서를 올리고 물어보면 대화하듯 답해주는 사내 생성형 서비스 하이디큐", br: 17, w: ["문서", "올리고", "대화", "서비스", "하이디큐"] },
+  { s: "영업과 보상, 언더라이팅 등 각 업무에 전담 에이전트를 하나씩 만들어갑니다", br: 21, w: ["영업", "보상", "언더라이팅", "전담", "에이전트"] },
+  { s: "전사 구성원 모두가 각자 업무에 필요한 에이전트를 스스로 만드는 플랫폼", br: 21, w: ["각자", "에이전트", "스스로", "플랫폼", "전사"] },
+  { s: "업무에 활용하기 전에 개인정보와 사내 기밀정보가 없는지 먼저 확인하기", br: 17, w: ["활용", "개인정보", "기밀정보", "확인"] },
+  { s: "이름과 연락처 같은 고객 개인정보는 어떤 경우에도 대화창에 입력하지 않기", br: 19, w: ["이름", "연락처", "고객", "개인정보", "입력"] },
+  { s: "경영전략과 인사정보 같은 기밀정보는 어떤 경우에도 대화창에 입력하지 않기", br: 19, w: ["경영전략", "인사정보", "기밀정보", "입력"] },
+  { s: "정보 유출이 의심되면 망설이지 말고 즉시 정보보호파트로 연락해 신고하기", br: 19, w: ["유출", "의심", "즉시", "신고"] },
+  { s: "업무에 활용하기 전에는 체크리스트의 항목을 사전에 하나씩 꼼꼼하게 점검하기", br: 19, w: ["업무", "활용", "항목", "사전", "점검"] }
 ];
+/* v7.83 (261018 사용자 「연출 효과에 비해 너무 빨리 끝난다」) 문장 길이 약 두 배 · 20문장 · 36~44자(평균 약 41) · 원천 = AX VISION · 리플릿 AX CHECK LIST(기획 문서/게임 콘텐츠 원천_AX VISION · CHECK LIST_261017.md) · 슬로건 · 로드맵 세 단계 포함 ·
+   숫자 · 영문 · 가운뎃점 0(현장 자판으로 치기 어렵다) · 쉼표는 된다 · 핵심 단어 = 단어 은행(RAIN_WORDS)에 있는 말 · br = 두 줄로 나누는 띄어쓰기 자리(쉼표 · 구 경계 · 앞줄 글자 수) · 화면 = rgBnsLines */
 /* v7.64 (261017 게임 콘텐츠 교체) 문장 16 = 슬로건 · 로드맵 두 문장 유지(D1) + AX VISION · 리플릿 AX CHECK LIST 문장 13 · 12~20자 · 숫자 · 영문 0 */
-var RAIN_BONUS = { pt: 150, k: 1.2, add: 6, floor: 0.1, tick: 0.25, intro: 2.2, show: 2.4, inMax: 40 };   /* 261017 줄어드는 숫자(사용자 확정 D3) · 시작값 = 글자 수(띄어쓰기 포함) × pt · 제한 시간 = 글자 수 × k + add 초 · 숫자는 그 시간에 걸쳐 일정하게 줄고 시작값의 floor 에서 멈춘다 ·
+var RAIN_BONUS = { pt: 75, max: 3000, k: 1.2, add: 6, floor: 0.1, tick: 0.25, intro: 3.5, show: 2.4, inMax: 80 };   /* 261018 v7.83 문장 약 40자(사용자 결정 A안) · 시작값 = 글자 수 × 75(옛 × 150 대체) · 최대 3,000 그대로(max · 40자 넘어도 3,000) · 1.2n + 6초 · 바닥 10% · × 정확도 · 한 판 1번 그대로 · 안내 2.2 → 3.5초 · 입력 상한 40 → 80 · 최대 3,000 + 목숨 보너스 2,500 = 5,500 ≤ 서버 TYPE_PTS_BONUS 15,000(서버 수정 없음) */   /* 261017 줄어드는 숫자(사용자 확정 D3) · 시작값 = 글자 수(띄어쓰기 포함) × pt · 제한 시간 = 글자 수 × k + add 초 · 숫자는 그 시간에 걸쳐 일정하게 줄고 시작값의 floor 에서 멈춘다 ·
    완성(자동) · Enter 순간 숫자가 멈추고 점수 = 멈춘 숫자 × 맞은 글자 ÷ 글자 수 · 문장 그대로면 PERFECT 표시(점수 추가 없음) · 20자 최대 3,000 + 목숨 보너스 2,500 ≤ 서버 TYPE_PTS_BONUS 15,000 · tick = 틱 소리 간격 초(25% 아래는 절반) · 옛 ch · perfect · sec(글자 × 40 + 600 + 남은 초 × 50) 폐기 */   /* v5.26(사용자 261003 「권장대로」) 비구름으로 문장이 한 판 1~3번으로 줄어 20 · 300 · 30 → 40 · 600 · 50 · 문장 하나 최대 = 20자 × 40 + 600 + 21초 × 50 = 2,450 · 3번 7,350 + 목숨 보너스 2,500 = 9,850 ≤ 서버 TYPE_PTS_BONUS 15,000 */   /* v5.24 intro 2.2 → 2.6(문장 먼저 읽기) · 그 뒤 카운트다운 RAIN_CLOUD.count */
 /* v5.24 비구름 · 리허설로 조절하는 손잡이 · n = 구름마다 내리는 단어 수(첫째 · 둘째 · 셋째) · key = 핵심 단어 하나가 몇 번 내리나 · gap = 구름이 걷힌 뒤 맑은 틈(게임 초) ·
    max = 한 판 최대 구름 수 · clear = 구름이 걷히는 연출 초 · count = 문장 입력 전 카운트다운 초 · 첫 구름 약 35~40초(1~3단계 · 간격 2.2~1.6초) · 보통 판 1~2번 */
@@ -1263,10 +1286,12 @@ var RAIN_CLOUD_FX = { w0: 0.40, w1: 0.22, drift: 28, amp: 0.6, puff: 0.32 };   /
 var RAIN_TRANS = { wipe: 0.6, title: 1.6, back: 1.2 };
 var RAIN_LIFE_BONUS = 500;
 function rgBonusLim(n) { return Math.ceil(n * RAIN_BONUS.k) + RAIN_BONUS.add; }
+/* 261018 시작값 = 글자 수 × pt · 최대 max(3,000) */
+function rgBonusV0(n) { return Math.min(n * RAIN_BONUS.pt, RAIN_BONUS.max || Infinity); }
 /* 261017 줄어드는 숫자 · n = 글자 수 · left = 남은 초 · lim = 제한 시간(없으면 rgBonusLim(n)) · 바닥 = 시작값 × floor */
 function rgBonusValOf(n, left, lim) {
   lim = lim > 0 ? lim : rgBonusLim(n);
-  return Math.round(n * RAIN_BONUS.pt * Math.max(RAIN_BONUS.floor, Math.min(1, (left || 0) / lim)));
+  return Math.round(rgBonusV0(n) * Math.max(RAIN_BONUS.floor, Math.min(1, (left || 0) / lim)));
 }
 function rgBonusVal(b) { return b ? (b.v != null ? b.v : rgBonusValOf(String(b.text || "").length, b.left, b.lim)) : 0; }   /* b.v = 멈춘 숫자(송출 화면은 노트북 값) */
 /* 편집 거리(글자 단위) */
@@ -1538,7 +1563,10 @@ function rgBonusDraw(ctx, L, now) {
   (b.keys || []).forEach(function (w) { var i = b.text.indexOf(w); if (i >= 0) for (var j = 0; j < w.length; j++) km[i + j] = 1; });
   ctx.save();
   ctx.font = rtFont(fp);
-  var lines = rgWrap(ctx, b.text, pw - 16 * s - 8), lh = Math.round(fp * 1.5), rg = big ? 12 : 8, th = big ? 40 : 26, nb = big ? 80 : 44, npx = big ? 64 : 32;   /* 261017 nb = 줄어드는 숫자 칸(시간 막대 자리를 문장 위로) */
+  var lines = rgBnsLines(ctx, b.text, pw - 16 * s - 8);   /* 261018 v7.83 두 줄 · 안 되면 판을 게임판 폭까지 넓히고 · 그래도 안 되면(1366 × 768 같은 좁은 노트북 화면) 글자 32 → 16(도트 글꼴이 또렷한 크기만 · 1920 × 1080 은 32 두 줄) */
+  if (lines.length > 2 && pw < L.W - 2 * s) { pw = L.W - 2 * s; px = Math.round(L.W / 2 - pw / 2); lines = rgBnsLines(ctx, b.text, pw - 16 * s - 8); }
+  if (lines.length > 2 && big) { fp = 16; ctx.font = rtFont(fp); lines = rgBnsLines(ctx, b.text, pw - 16 * s - 8); }
+  var lh = Math.round(fp * 1.5), rg = big ? 12 : 8, th = big ? 40 : 26, nb = big ? 80 : 44, npx = big ? 64 : 32;   /* 261017 nb = 줄어드는 숫자 칸(시간 막대 자리를 문장 위로) */
   /* 261007 아래 칸(lpH) = 판 높이에 맞춘다 · 넉넉하면 104(노트북 96px 팡) · 좁으면(1366 · 125% 등) 줄 간격부터 줄이고 64(64px 팡)까지 · 판이 땅(L.ground · 챗봇이 서는 줄)을 넘지 않게 */
   var avail = (L.ground || L.floor) - 12, room = avail - 8, base = function () { return 8 * s + th + 14 + nb + lines.length * (2 * lh + rg) + 6 + 12 + 8 * s; }, lpMin = big ? 64 : 40;
   if (room - base() < lpMin) { lh = Math.round(fp * 1.3); rg = big ? 6 : 4; nb = big ? 64 : 40; npx = big ? 48 : 32; }
@@ -1887,4 +1915,4 @@ if (typeof module !== "undefined" && module.exports) module.exports = { RG: RG, 
   rgRaceTick: rgRaceTick, rgSubmit: rgSubmit, rgEnd: rgEnd, rgBonusStart: rgBonusStart, RAIN_CLOUD: RAIN_CLOUD, rgCloudStart: rgCloudStart, rgCloudRem: rgCloudRem, rgLive: rgLive, rgHgKey: rgHgKey,
   rgCloudGeo: rgCloudGeo, RAIN_CLOUD_FX: RAIN_CLOUD_FX, RAIN_TRANS: RAIN_TRANS, rgWordY: rgWordY,
   RAIN_SITE: RAIN_SITE, RAIN_AUTO: RAIN_AUTO, RAIN_BNS_GUARD: RAIN_BNS_GUARD, rgSiteReset: rgSiteReset, rgAutoOn: rgAutoOn, rgFallSec: rgFallSec, rgSpawnSec: rgSpawnSec, rgStageSec: rgStageSec, rgRampSite: rgRampSite, rgGapWait: rgGapWait, rgCdNum: rgCdNum, rgSpawnFall: rgSpawnFall, rgJit: rgJit, rgEase: rgEase, RAIN_BNS_GUIDE: RAIN_BNS_GUIDE, RAIN_BNS_GO: RAIN_BNS_GO, rgClash: rgClash, rgPool: rgPool, rgBnsNorm: rgBnsNorm, rgBlk: rgBlk, rgCloudPick: rgCloudPick,
-  rgBonusVal: rgBonusVal, rgBonusValOf: rgBonusValOf, RAIN_DROP: RAIN_DROP };   /* 261017 타자왕 개편 */
+  rgBonusVal: rgBonusVal, rgBonusValOf: rgBonusValOf, RAIN_DROP: RAIN_DROP, rgBonusV0: rgBonusV0, rgBnsLines: rgBnsLines, rgBnsBr: rgBnsBr };   /* 261017 타자왕 개편 */
