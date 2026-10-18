@@ -145,5 +145,5 @@
   @media (prefers-reduced-motion: reduce) { #axsDet .axs-dft { transition: none; } }
   /* 끌어 닫기(sheetDrag) · 짧은 확인 시트 · 팝업도 같은 손 · 손을 따라 뒷배경이 옅어진다(261009 세 시트 모두 ::before 층 opacity = --dd) */
   #axsSheet .axs-grab, #axsSheet .axs-mhead, #modal .axs-mhead { touch-action: none; }
-  /* v7.86 (사용자 261018) 하이디큐 공식 앰블럼 · 글자 높이에 맞춰 줄 안에 · 세로 가운데는 글자 중간선 */
-  .hdq-emb { display: inline-block; height: 1.6em; width: auto; vertical-align: -0.46em; margin: 0 .04em; }
+  /* v7.86 (사용자 261018) 하이디큐 공식 앰블럼 · 「HiDI」 대문자 높이 = 옆 글자 대문자 높이(v7.87 · 1.6em → 1.05em) · 기준선은 글자 기준선에 맞춤 */
+  .hdq-emb { display: inline-block; height: 1.05em; width: auto; vertical-align: -0.22em; margin: 0 .04em; }
