@@ -421,14 +421,13 @@ function attGo() {
   if (tm && testEmp() && !attPre()) p.tm = tm;   /* 261008 시험 시각이 행사 전(10/25)이면 tm 을 보내지 않는다(서버도 행사 전 규칙 · 창 없음) */
   beCall(p, attDone, function () { sheetFail({ t: "연결이 불안정해 출석하지 못했어요", b: "출석은 아직 되지 않았어요. 다시 시도해 주세요." }); });
 }
-/* 데모(서버 없음) · 서버와 같은 규칙(입장 · 끝 창 · 같은 구분 1회 · 17F 몫 = 입장 1 + 끝 1)
+/* 데모(서버 없음) · 서버와 같은 규칙(입장 · 끝 창 · 같은 구분 1회 · 17F 몫 = 강연마다 입장 1 + 끝 1 중 큰 값)
    v5.94 (사용자 결정 261006) 17F 몫 = 오후 파트너 강연(P3_PM · AWS · MS) 행만 · 오전 강연은 출석만(스탬프 없음 · 서버 「프로그램스탬프_범위」 기본 오후강연) */
 function attLocal(x) {
   var t = attNow(), wo = attKWin(x, "out"), k = ATT.k || (t >= wo.a && t <= wo.b ? "out" : "in"), kw = attKWin(x, k), at = attMineK(x.id, k);
   if (!at && !attPre() && (t < kw.a || t > kw.b)) return attDone({ ok: false, reason: "window", k: k, open: hm2(kw.a) + "~" + hm2(kw.b) });
-  var pm = P3_PM.indexOf(x.id) >= 0, m = attMine(), isPm = function (q) { return P3_PM.indexOf(q.replace(/\.out$/, "")) >= 0; };
-  var hasI = Object.keys(m).some(function (q) { return isPm(q) && !/\.out$/.test(q); }) || (pm && k === "in"), hasO = Object.keys(m).some(function (q) { return isPm(q) && /\.out$/.test(q); }) || (pm && k === "out");
-  var pg = (hasI ? 1 : 0) + (hasO ? 1 : 0);
+  var pm = P3_PM.indexOf(x.id) >= 0, m = attMine(), pg = 0;
+  P3_PM.forEach(function (id) { var u = (m[id] || (x.id === id && k === "in") ? 1 : 0) + (m[id + ".out"] || (x.id === id && k === "out") ? 1 : 0); if (u > pg) pg = u; });   /* 261019 강연별 짝 · AWS 입장 + MS 끝 = 1 · AWS 입장 + AWS 끝 = 2 */
   attDone({ ok: true, prog: x.id, k: k, at: at || hm2(t), dup: !!at, mine: [], pg: pg, stamp: at || !pm ? null : { id: pg >= 2 ? "p3" : "p3h", dry: true, pg: pg }, nost: pm ? 0 : 1, test: true });
 }
 function attDone(res) {
