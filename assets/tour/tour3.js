@@ -3865,6 +3865,7 @@
     var PADI = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 8h9a4.5 4.5 0 0 1 4.3 5.8l-.9 3.1a2.2 2.2 0 0 1-3.8.8L14.4 16H9.6l-1.7 1.7a2.2 2.2 0 0 1-3.8-.8l-.9-3.1A4.5 4.5 0 0 1 7.5 8z"/><path d="M8 10.8v3M6.5 12.3h3"/></svg>';
     function add(label, run, at, n, extra) {
       var b = document.createElement('button'); b.type = 'button'; b.className = 'mag' + (extra && extra.cls ? ' ' + extra.cls : ''); b.innerHTML = ((extra && extra.icon) || ICON) + '<span>' + esc(label) + '</span>'; b.setAttribute('aria-label', label);
+      b.style.display = 'none';   /* v7.81 첫 자리(placeMags) 전에는 숨김 · 자리 없이 보이면 무대 왼쪽 위(0, 0) = 「다른 층 이동하기」 뒤에 겹침 */
       b.onclick = run; box.appendChild(b); mags.push(Object.assign({ el: b, at: at, n: n }, extra || {}));
     }
     add('타자왕 광고 보기', openPromo, toThree(1.75, 1.25).setY(1.0), null);   /* 「재생 중」 TV 앞 */
