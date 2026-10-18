@@ -641,7 +641,7 @@
       for (var i = 0; i < regs.length; i++) { var R = regs[i], dx = x - R.a[0], dz = z - R.a[1], al = dx * R.r[0] + dz * R.r[1], dp = dx * R.n[0] + dz * R.n[1]; if (al > -0.2 && al < R.L + 0.2 && dp > 0.15 && dp < 2.1) return true; }
       return false;
     }
-    var v = new T.Vector3(), nm = new T.Vector3(), done = new Set(), fixed = 0;
+    var v = new T.Vector3(), nm = new T.Vector3(), done = new Set(), fixed = 0, deskRef = null;
     root.traverse(function (o) {
       if (!o.isMesh || Array.isArray(o.material) || !o.material.lightMap || !/^zone_/.test(o.name) || !o.geometry.attributes.uv1 || done.has(o.geometry.attributes.uv1)) return;
       var geo = o.geometry, pos = geo.attributes.position, nrm = geo.attributes.normal, uv = geo.attributes.uv1, idx = geo.index, tx = o.material.lightMap, im = tx.image; if (!nrm || !im || !im.width) return;
@@ -666,8 +666,28 @@
       if (!pick[2]) pick[2] = pick[1]; if (!pick[1]) pick[1] = pick[2];
       for (var j = 0; j < pos.count; j++) if (kind[j]) { var pk = pick[kind[j]]; uv.setXY(j, pk.u, pk.w); fixed++; }
       uv.needsUpdate = true;
+      if (!deskRef && /^zone_play_body/.test(o.name)) deskRef = { tex: tx, p: pick };
     });
     G.deskFix = fixed;
+    G.roomDeskFix = deskRef ? fixRoomDesks(root, deskRef) : -1;
+  }
+  /* v7.81 미팅룸 1 · 2 · 3 탁자 다시 칠하기(사용자 261018 실기기 「유리벽 안 책상이 흰색이어야 하는데 다른 색이 침범한 것처럼 보인다」)
+   * 원인 = 탁자(날개 몸체 wing_body · 흰 탁자 색)도 구운 빛뿐인데 닫힌 방이라 라이트맵이 어둡고 얼룩졌다(윗면 꼭짓점 밝기 91 ~ 120 · 화면 137 ~ 179 회색 · 모서리마다 다름)
+   *   유리 너머로 보면 회색 얼룩 윗면이 검은 의자 · 스태프와 섞여 지저분하다 · 겹친 면 · 투명 순서 문제는 아님(윗면 하나 · 의자 윗면 0.45m · 탁자 0.74m)
+   * 고침 = 탁자 꼭짓점(탁자 색 · 방 안 · 높이 0.76m 아래)의 라이트맵 자리를 PLAY 책상(fixDesks 가 고른 흰 자리)과 같은 한 점으로 · 윗면 = 윗면 자리 · 옆면 = 옆면 자리
+   *   배치 · 크기 · 색(꼭짓점 색) · 의자 · 벽은 그대로 · 같은 라이트맵 그림일 때만 · 미팅룸 3 탁자는 뒤(remodel)에서 이 탁자를 복사해 되살리므로 고친 자리를 그대로 받는다 */
+  function fixRoomDesks(root, R) {
+    var o = root.getObjectByName('wing_body'); if (!o || !o.isMesh || Array.isArray(o.material) || o.material.lightMap !== R.tex) return 0;
+    var geo = o.geometry, pos = geo.attributes.position, nrm = geo.attributes.normal, col = geo.attributes.color, uv = geo.attributes.uv1; if (!nrm || !col || !uv) return 0;
+    var v = new T.Vector3(), nm = new T.Vector3(), n = 0; o.updateMatrixWorld(true);
+    for (var i = 0; i < pos.count; i++) {
+      if (Math.abs(col.getX(i) - 0.8) > 0.03 || Math.abs(col.getY(i) - 0.78) > 0.03 || Math.abs(col.getZ(i) - 0.741) > 0.03) continue;   /* 탁자 색만(의자 = 먹색 · 벽 = 0.741) */
+      v.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld); nm.fromBufferAttribute(nrm, i).transformDirection(o.matrixWorld);
+      var x = v.x + 16, z = 6 - v.z; if (x < 1.2 || x > 6.6 || z < 13.4 || z > 25.6 || v.y > 0.76) continue;   /* 미팅룸 1 · 2 · 3 탁자(x 1.45 ~ 6.4 · z 13.7 ~ 25.3 · 높이 0.74) */
+      var pk = nm.y > 0.7 ? R.p[1] : R.p[2]; uv.setXY(i, pk.u, pk.w); n++;
+    }
+    if (n) uv.needsUpdate = true;
+    return n;
   }
   /* 바닥에 깔린 얇은 판 띄우기 · 바닥(floor · paving · base)이 아닌 메시에서 위를 보는 면 중 세 꼭짓점이 바닥 위 -0.5~3cm 인 것 + 같은 자리의 옆면 꼭짓점 → ZLIFT 만큼 위로 */
   function liftFloorPlates(root) {
@@ -2873,24 +2893,27 @@
   /* v5.84 (사용자 261006 「1층을 다 둘러보셨으면 엘리베이터를 타고 다른 층으로 이동해 보세요라는 권고」 · 메인 권장안) 엘리베이터 권유 한 번 · 막지 않음
    *   조건 = 이번 방문에 1층 구역 멈춤 자리 70% 이상(3m 안) 들르고 3분 지남 · 또는 5분 지남 · 이 기기에서 처음(axfTour3ElevTip) · 엘리베이터를 탄 적 없음(axfTour3Elev)
    *   로비에서만 · 포토부스 근처 · 연출 · 시트 · 카드 · 도움말 · 한 줄 힌트 · 큰 지도 동안은 기다림 · 8초 뒤 저절로 사라짐 · 그동안 작은 지도 엘리베이터 자리 강조
-   *   「엘리베이터로 가기」 = 가장 가까운 엘리베이터(게이트 앞 · 방화문 앞)까지 자동 걷기(walkTo) · 닫기 × · 움직임 줄이기 = 움직임 없이 나타남 */
-  var ETIP = { iv: 0, t: 0 }, ETIP_MIN = 180000, ETIP_MAX = 300000, ETIP_RATE = 0.7, ETIP_MS = 8000, ETIP_R = 3.0, ETIP_TO = [[18.4, 9.7], [28.7, 17.3]];
+   *   「엘리베이터로 가기」 = 가장 가까운 엘리베이터(게이트 앞 · 방화문 앞)까지 자동 걷기(walkTo) · 닫기 × · 움직임 줄이기 = 움직임 없이 나타남
+   *   v7.81 (사용자 261018 「안내 메시지가 너무 빨리 나오고 방해가 된다 · 그 요소는 없애자 · 그 타이밍에 「다른 층 이동하기」가 주황 테두리로 강조되고 손가락이 가리키게」) 말풍선 · 「엘리베이터로 가기」 · 닫기 · 작은 지도 강조 뺌
+   *   같은 조건 · 같은 시점에 왼쪽 위 「다른 층 이동하기」(bFloor) = 주황 고리 숨쉬기 + 손가락 톡톡(.flh · 누름 통과) · 누르거나 8초 뒤 사라짐(나타남 0.3초 · 사라짐 0.18초) · 움직임 줄이기 = 고리만 */
+  var ETIP = { iv: 0, t: 0, on: false }, ETIP_MIN = 180000, ETIP_MAX = 300000, ETIP_RATE = 0.7, ETIP_MS = 8000, ETIP_R = 3.0, ETIP_TO = [[18.4, 9.7], [28.7, 17.3]];
   function etipTick() {
     if (!G.open || !G.loaded || G.scn !== 'lobby') return;
     var p = planOf(G.pos), zs = STOPS.filter(function (s) { return s.zone; });
     zs.forEach(function (s) { if (Math.hypot(s.x - p[0], s.z - p[1]) < ETIP_R) VIS.seen[s.id] = 1; });
-    if (store.get('axfTour3ElevTip') === '1' || store.get('axfTour3Elev') === '1' || !$('etip').hidden) return;
+    if (store.get('axfTour3ElevTip') === '1' || store.get('axfTour3Elev') === '1' || ETIP.on) return;
     var el = performance.now() - VIS.t0, rate = Object.keys(VIS.seen).length / (zs.length || 1);
     if (!((el >= ETIP_MIN && rate >= ETIP_RATE) || el >= ETIP_MAX)) return;
     if (PH.on || PH.near || SP.on || SH || SCARD || G.anim || G.squeeze || G.bigMap || EV.seq || !$('help').hidden || !$('hint').hidden || !$('pola').hidden) return;   /* 다음 틱에 다시 */
     etipShow();
   }
   function etipShow() {
+    var b = $('bFloor'); if (!b || b.hidden) return;   /* 「다른 층 이동하기」가 보일 때만(로비) · 다음 틱에 다시 */
     store.set('axfTour3ElevTip', '1'); G.etipN = (G.etipN || 0) + 1;
-    var e = $('etip'); e.hidden = false; e.classList.toggle('in', !RM); ROOTEL.classList.add('etip-on');
+    ETIP.on = true; b.classList.add('hl');
     clearTimeout(ETIP.t); ETIP.t = setTimeout(etipHide, ETIP_MS);
   }
-  function etipHide() { clearTimeout(ETIP.t); var e = $('etip'); if (e) { e.hidden = true; e.classList.remove('in'); } if (ROOTEL) ROOTEL.classList.remove('etip-on'); }
+  function etipHide() { clearTimeout(ETIP.t); ETIP.on = false; var b = $('bFloor'); if (b) b.classList.remove('hl'); }
   function etipGo() {
     etipHide(); if (!G.loaded || G.scn !== 'lobby' || PH.on) return;
     var p = planOf(G.pos), q = (CS_SHUT ? ETIP_TO.slice(0, 1) : ETIP_TO).reduce(function (a, b) { return Math.hypot(b[0] - p[0], b[1] - p[1]) < Math.hypot(a[0] - p[0], a[1] - p[1]) ? b : a; });
@@ -3854,8 +3877,7 @@
     var keep = [], hid = 0;
     function rc(el) { var r = el.getBoundingClientRect(); return r.width ? r : null; }
     function hit(a, b) { return a.left < b.right + 4 && b.left < a.right + 4 && a.top < b.bottom + 4 && b.top < a.bottom + 4; }
-    var lk = $('look'), gb = $('gbub'), sb = $('shot'), et = $('etip');
-    if (et && !et.hidden) { var re = rc(et); if (re) keep.push(re); }   /* v5.84 엘리베이터 권유 = 말풍선보다 앞 */
+    var lk = $('look'), gb = $('gbub'), sb = $('shot');
     var fb = $('bFloor'); if (fb && !fb.hidden) { var rf = rc(fb); if (rf) keep.push(rf); }   /* 261016 v7.41 「다른 층 이동하기」 = 말풍선 · 표지 단추보다 앞 */
     if (sb && !sb.hidden) { var r0 = rc(sb); if (r0) keep.push(r0); }   /* v5.67 사진 찍기 = 맨 앞 */
     var sp = $('spg'); if (sp && !sp.hidden) { var rs = rc(sp); if (rs) keep.push(rs); }   /* v6.91 룰렛 돌리기 묶음 = 사진 찍기와 같은 앞 */
@@ -4170,7 +4192,6 @@
     });
     o += '<circle cx="' + mmX(B.revolve) + '" cy="' + mmY(0) + '" r="3" fill="#4E5968"/><circle cx="' + mmX(32.57) + '" cy="' + mmY(8.4) + '" r="3" fill="#4E5968"/><rect x="' + mmX(17.0) + '" y="' + mmY(11.7) + '" width="' + (2.8 * MM.k).toFixed(1) + '" height="3" fill="#4E5968"/>';
     o += '<rect x="' + mmX(WW.x1 - WW.w) + '" y="' + mmY(WW.z + 0.15) + '" width="' + (WW.w * MM.k).toFixed(1) + '" height="2" fill="#191F28"/>';   /* v5.45 가벽 */
-    o += '<circle class="mmev" cx="' + mmX(18.4) + '" cy="' + mmY(10.45) + '" r="9"/><circle class="mmev" cx="' + mmX(27.6) + '" cy="' + mmY(17.3) + '" r="9"/>';   /* v5.84 엘리베이터 권유 동안만 보이는 강조 */
     o += '<g id="t3-mmMe"><path d="M0,-8 L5,3 L0,1 L-5,3 Z" fill="#191F28"/><circle r="4.2" fill="#FF7F32" stroke="#FFFFFF" stroke-width="1.5"/></g></g></svg>';
     $('mini').innerHTML = o; G.mmAz = null;
   }
@@ -5105,7 +5126,7 @@
   function tapLearned() { if (store.get('axfTour3TapUsed') !== '1') store.set('axfTour3TapUsed', '1'); }   /* 직접 눌러 걸어가 봄 = 다음부터 안내 없음 */
   function hintBusy() {
     return !G.open || !G.loaded || G.scn !== 'lobby' || document.hidden || !!G.path || !!G.stick || G.air || !!HOLD || !!G.anim || !!G.squeeze || G.bigMap || !!EV.seq || PH.on || PH.near || SP.on || SP.near || !!SH || !!SCARD || G.sheetOpen ||
-      !$('help').hidden || !$('pola').hidden || !$('etip').hidden || !$('vid').hidden || !$('cfg').hidden || !$('swc').hidden;
+      !$('help').hidden || !$('pola').hidden || ETIP.on || !$('vid').hidden || !$('cfg').hidden || !$('swc').hidden;
   }
   /* 261007 (사용자 「권장대로 진행해 줘」 · 둘러보기 조작 재검토 A · 결정 3) 돌기 단추가 없어져 시점 돌리기 = 화면 밀기 · 첫 구역에 도착한 뒤 한 번 「화면을 좌우로 밀면 돌아봐요」 + 손가락이 좌우로 미는 그림
    *   이 기기 1회(axfTour3SwCoach) · 3초 · 막지 않음(누름 통과) · 아무 데나 닿거나 키 · 움직이면 끝 · 다시 보기 = 도움말 둘째 줄
@@ -5424,7 +5445,6 @@
     Array.prototype.forEach.call($('evp').querySelectorAll('.evb'), function (b) { b.onclick = function () { pressFloor(b); }; });
     $('gbub').onclick = function (e) { if (performance.now() - (G.guardT || 0) < 500) return; var cr = $('cv').getBoundingClientRect(), nc = e && e.clientX ? coinNear(e.clientX - cr.left, e.clientY - cr.top, 2) : null; if (nc) { tapGo({ k: 'coin', b: nc }); return; }   /* 261007 말풍선 아래 동전을 누른 것 = 동전 */ var gd = G.talk; if (!gd) return; if (gd.stamp) { openStampCard(gd.stamp); return; } if (gd.spot === 'typing') { openPromo(); return; } if (!gd.go) return; doLook(); };   /* v5.54 말풍선 = 자세히 보기 단추와 같은 일 */
     $('look').onclick = doLook;
-    $('etGo').onclick = etipGo; $('etX').onclick = etipHide;   /* v5.84 */
     $('bFloor').onclick = etipGo;   /* 261016 v7.41 「다른 층 이동하기」 = 가장 가까운 엘리베이터까지 걸어가 층 단추(etipGo · tapGo gate · cs) */
     $('shot').onclick = doShot; $('pola').addEventListener('click', phClose);
     $('spd').innerHTML = spSvg(); $('spin').onclick = doSpin; $('spcX').onclick = function () { spClose(); }; $('spcG').onclick = spPrize; $('spov').addEventListener('click', function (e) { if (SP.ph === 'card' && !$('spc').contains(e.target)) spClose(); });   /* v7.40 목록 밖 톡 = 닫기(판이 아직 돌아도) · 도는 중 = 무시 */   /* v5.67 사진 찍기 · 팝업 톡 = 닫기 */
@@ -5451,7 +5471,7 @@
     ['pointerdown', 'pointermove', 'touchstart', 'keydown', 'wheel', 'resize'].forEach(function (t) { window.addEventListener(t, loopWake, { capture: true, passive: true }); });   /* v6.83 쉬던 그리기 깨우기(쉬지 않을 때는 바로 돌아간다) */
   }
   /* 시험 · 녹화용 손잡이(앱에는 없음) */
-  G.api = { scene: function () { return S; }, proj: function (x, y, z) { _p.set(x, y, z).project(camera); var r = $('stage').getBoundingClientRect(); return [r.left + (_p.x + 1) / 2 * r.width, r.top + (1 - _p.y) / 2 * r.height, _p.z]; },   /* v5.51 확인용 · 3D 점 → 화면 좌표(실제 톡 확인) */ shotCamKeep: function (x, y, z, lx, ly, lz, face) { camera.position.set(x - 16, y, 6 - z); camera.lookAt(lx - 16, ly, 6 - lz); if (face) { guides.forEach(function (g) { g.m.rotation.y = Math.atan2(camera.position.x - g.m.position.x, camera.position.z - g.m.position.z); }); bot.rotation.y = Math.atan2(camera.position.x - bot.position.x, camera.position.z - bot.position.z); } S.frame(camera, 'lobby'); if (G.ceil) G.ceil.visible = false; renderer.render(scene, camera); G.hold = true; }, shotCam: function (x, y, z, lx, ly, lz, inside) { camera.position.set(x - 16, y, 6 - z); camera.lookAt(lx - 16, ly, 6 - lz); var bv = bot.visible; bot.visible = false; S.frame(camera, 'lobby', !!inside); renderer.render(scene, camera); bot.visible = bv; G.hold = true; }, guides: function () { return guides.map(function (g) { return [g.zone, g.at, +g.h.toFixed(2)]; }); }, enter: function (zid, pg) { enterPanel(D.Z(zid), pg || null); }, pose: function (x, z, yaw, h) { G.pos.copy(toThree(x, z)); G.mode = 'free'; G.path = null; G.yaw = yaw; G.h = h == null ? yaw + Math.PI : h; G.yo = 0; G.need = true; }, goStop: goStop, openSheet: function (zid, i) { openSheet(D.Z(zid), i || 0); }, closeSheet: closeSheet, setPage: function (k) { setPage(k); }, tap: tap, walkTo: walkTo, plan: function () { return planOf(G.pos); }, cam: function () { return planOf(camera.position).concat([camera.position.y]); }, toCafe: toCafe, back: backTo1F, free: free, hw: function (x, z) { var c = gi(x, z); return c < 0 ? -1 : hw[c] * 0.05; }, move: moveStep, attrAt: attrAt, round: function () { return ROUND.slice(); }, slow: function (f) { DIVE_FX = f || 1; }, occ: function () { var A = OCCA; return A ? { pg: A.face.userData.pg, ent: A.ent.length, tris: A.ent.reduce(function (n, e) { return n + e.gh.geometry.drawRange.count / 3; }, 0), tvs: A.tvs.length, alpha: A.alpha, hid: A.dyn.filter(function (o) { return o.userData.occ; }).length } : null; }, look: function () { return LOOK.key; },   /* v5.54 확인용 */ sqLog: function (on) { if (on) G.sqLog = []; return G.sqLog; }, wd: function (x, z) { var c = gi(x, z); return c < 0 ? -1 : wd[c]; }, gate: function () { return { GZ: GZ, BR: BR, SQ: SQ }; },   xf: function () { return XF ? { b: XF.b, fr: XF.fr, M: XF.M } : null; }, faceQuad: function () { var f = G.lastFace || (XF && XF.face); return f ? xfQuad(f) : null; },   /* v5.56 확인용 */ camLog: function (on) { G.camLog = on ? [] : null; }, camStep: function (dt) { stepCam(dt || 0); S.frame(camera, 'lobby', G.scn === 'lobby' && !G.anim && !!G.camIn); return { cam: planOf(camera.position).concat([camera.position.y]), k: G.boomK, fp: !!G.fp, inside: !!G.camIn, cut: S.cut(), stub: !!(S.lobby.getObjectByName('coreStub') || {}).visible, ray: camRay(camera.position.x, camera.position.y, camera.position.z) }; }, cocc: function (x, z, y) { var c = gi(x, z); return !cocc || c < 0 ? -1 : (cocc[c] >>> Math.floor(y / COCC_H)) & 1; },   /* v5.73 확인용 */ tvs: function () { return TVS.map(function (v) { var m = v.mot; return { kind: v.kind, w: v.w, h: v.h, at: planOf(v.c).map(function (q) { return +q.toFixed(2); }), on: v.on, n: v.n, mot: m ? { ord: m.ord.join(' '), k: m.k, cur: m.cur, loops: m.loops, show: m.show, paused: m.el.paused, t: +m.el.currentTime.toFixed(2), rs: m.el.readyState, blocked: m.blocked } : null }; }); }, mot: function () { return { on: MOT.on, n: MOT.n, got: MOT.got, fps: MOT_FPS, files: Object.keys(MOT.blob) }; }, elev: function () { toElev(); }, pb: function () { return { n: PB.n, on: PB.on, cut: G.kioskCut, relit: G.kioskRelit, trueN: G.trueN, posterHi: G.posterHi, gate: G.gateGlass }; },   /* v5.58 확인용 */ ph: function () { var p = planOf(G.pos); return { on: PH.on, ph: PH.ph, n: PH.n, ms: PH.ms, size: PH.size, snd: PH.snd, near: PH.near, keep: PH.keep > performance.now(), pola: !$('pola').hidden, pos: [+p[0].toFixed(2), +p[1].toFixed(2)], h: +G.h.toFixed(3), free: free(p[0], p[1]), log: PH.log }; }, phStart: function () { if (phNear()) phStart(); return PH.on; }, aim: function () { return { aim: AIM.b ? AIM.b.id : null, demo: !!AIM.demo, demoN: G.aimDemoN || 0, tipN: G.aimTipN || 0, tip: !!($('jtip') && !$('jtip').hidden), cls: $('bJump').className, blk: BLOCKS.map(function (b) { return { id: b.id, at: b.at.map(function (q) { return +q.toFixed(2); }), got: b.got, prox: +b.prox.toFixed(2), lit: +b.lit.toFixed(2) }; }) }; },   /* v5.67 확인용 */ iris: function () { return { seq: EV.seq ? EV.seq.ph[EV.seq.i][0] : null, cur: IR.cur, log: IR.log, dings: IR.dings }; }, face: function () { return irFace(); }, dingAt: dingAt, mus: function () { return { want: MUS.want, on: musOn(), ctx: MUS.ctx ? MUS.ctx.state : null }; }, visit: function (ago) { if (ago) VIS.t0 -= ago; return { age: Math.round(performance.now() - VIS.t0), seen: Object.keys(VIS.seen || {}), bub: Object.keys(VIS.bub), cheerN: VIS.cheerN, etipN: G.etipN || 0, etip: !$('etip').hidden, go: G.etipGo || null, ring: PB.ring ? +PB.ring.material.opacity.toFixed(2) : null, shot: !$('shot').hidden, shotCls: $('shot').className }; } };   /* v5.84 확인용 */   /* v5.55 확인용 */
+  G.api = { scene: function () { return S; }, proj: function (x, y, z) { _p.set(x, y, z).project(camera); var r = $('stage').getBoundingClientRect(); return [r.left + (_p.x + 1) / 2 * r.width, r.top + (1 - _p.y) / 2 * r.height, _p.z]; },   /* v5.51 확인용 · 3D 점 → 화면 좌표(실제 톡 확인) */ shotCamKeep: function (x, y, z, lx, ly, lz, face) { camera.position.set(x - 16, y, 6 - z); camera.lookAt(lx - 16, ly, 6 - lz); if (face) { guides.forEach(function (g) { g.m.rotation.y = Math.atan2(camera.position.x - g.m.position.x, camera.position.z - g.m.position.z); }); bot.rotation.y = Math.atan2(camera.position.x - bot.position.x, camera.position.z - bot.position.z); } S.frame(camera, 'lobby'); if (G.ceil) G.ceil.visible = false; renderer.render(scene, camera); G.hold = true; }, shotCam: function (x, y, z, lx, ly, lz, inside) { camera.position.set(x - 16, y, 6 - z); camera.lookAt(lx - 16, ly, 6 - lz); var bv = bot.visible; bot.visible = false; S.frame(camera, 'lobby', !!inside); renderer.render(scene, camera); bot.visible = bv; G.hold = true; }, guides: function () { return guides.map(function (g) { return [g.zone, g.at, +g.h.toFixed(2)]; }); }, enter: function (zid, pg) { enterPanel(D.Z(zid), pg || null); }, pose: function (x, z, yaw, h) { G.pos.copy(toThree(x, z)); G.mode = 'free'; G.path = null; G.yaw = yaw; G.h = h == null ? yaw + Math.PI : h; G.yo = 0; G.need = true; }, goStop: goStop, openSheet: function (zid, i) { openSheet(D.Z(zid), i || 0); }, closeSheet: closeSheet, setPage: function (k) { setPage(k); }, tap: tap, walkTo: walkTo, plan: function () { return planOf(G.pos); }, cam: function () { return planOf(camera.position).concat([camera.position.y]); }, toCafe: toCafe, back: backTo1F, free: free, hw: function (x, z) { var c = gi(x, z); return c < 0 ? -1 : hw[c] * 0.05; }, move: moveStep, attrAt: attrAt, round: function () { return ROUND.slice(); }, slow: function (f) { DIVE_FX = f || 1; }, occ: function () { var A = OCCA; return A ? { pg: A.face.userData.pg, ent: A.ent.length, tris: A.ent.reduce(function (n, e) { return n + e.gh.geometry.drawRange.count / 3; }, 0), tvs: A.tvs.length, alpha: A.alpha, hid: A.dyn.filter(function (o) { return o.userData.occ; }).length } : null; }, look: function () { return LOOK.key; },   /* v5.54 확인용 */ sqLog: function (on) { if (on) G.sqLog = []; return G.sqLog; }, wd: function (x, z) { var c = gi(x, z); return c < 0 ? -1 : wd[c]; }, gate: function () { return { GZ: GZ, BR: BR, SQ: SQ }; },   xf: function () { return XF ? { b: XF.b, fr: XF.fr, M: XF.M } : null; }, faceQuad: function () { var f = G.lastFace || (XF && XF.face); return f ? xfQuad(f) : null; },   /* v5.56 확인용 */ camLog: function (on) { G.camLog = on ? [] : null; }, camStep: function (dt) { stepCam(dt || 0); S.frame(camera, 'lobby', G.scn === 'lobby' && !G.anim && !!G.camIn); return { cam: planOf(camera.position).concat([camera.position.y]), k: G.boomK, fp: !!G.fp, inside: !!G.camIn, cut: S.cut(), stub: !!(S.lobby.getObjectByName('coreStub') || {}).visible, ray: camRay(camera.position.x, camera.position.y, camera.position.z) }; }, cocc: function (x, z, y) { var c = gi(x, z); return !cocc || c < 0 ? -1 : (cocc[c] >>> Math.floor(y / COCC_H)) & 1; },   /* v5.73 확인용 */ tvs: function () { return TVS.map(function (v) { var m = v.mot; return { kind: v.kind, w: v.w, h: v.h, at: planOf(v.c).map(function (q) { return +q.toFixed(2); }), on: v.on, n: v.n, mot: m ? { ord: m.ord.join(' '), k: m.k, cur: m.cur, loops: m.loops, show: m.show, paused: m.el.paused, t: +m.el.currentTime.toFixed(2), rs: m.el.readyState, blocked: m.blocked } : null }; }); }, mot: function () { return { on: MOT.on, n: MOT.n, got: MOT.got, fps: MOT_FPS, files: Object.keys(MOT.blob) }; }, elev: function () { toElev(); }, pb: function () { return { n: PB.n, on: PB.on, cut: G.kioskCut, relit: G.kioskRelit, trueN: G.trueN, posterHi: G.posterHi, gate: G.gateGlass }; },   /* v5.58 확인용 */ ph: function () { var p = planOf(G.pos); return { on: PH.on, ph: PH.ph, n: PH.n, ms: PH.ms, size: PH.size, snd: PH.snd, near: PH.near, keep: PH.keep > performance.now(), pola: !$('pola').hidden, pos: [+p[0].toFixed(2), +p[1].toFixed(2)], h: +G.h.toFixed(3), free: free(p[0], p[1]), log: PH.log }; }, phStart: function () { if (phNear()) phStart(); return PH.on; }, aim: function () { return { aim: AIM.b ? AIM.b.id : null, demo: !!AIM.demo, demoN: G.aimDemoN || 0, tipN: G.aimTipN || 0, tip: !!($('jtip') && !$('jtip').hidden), cls: $('bJump').className, blk: BLOCKS.map(function (b) { return { id: b.id, at: b.at.map(function (q) { return +q.toFixed(2); }), got: b.got, prox: +b.prox.toFixed(2), lit: +b.lit.toFixed(2) }; }) }; },   /* v5.67 확인용 */ iris: function () { return { seq: EV.seq ? EV.seq.ph[EV.seq.i][0] : null, cur: IR.cur, log: IR.log, dings: IR.dings }; }, face: function () { return irFace(); }, dingAt: dingAt, mus: function () { return { want: MUS.want, on: musOn(), ctx: MUS.ctx ? MUS.ctx.state : null }; }, visit: function (ago) { if (ago) VIS.t0 -= ago; return { age: Math.round(performance.now() - VIS.t0), seen: Object.keys(VIS.seen || {}), bub: Object.keys(VIS.bub), cheerN: VIS.cheerN, etipN: G.etipN || 0, etip: ETIP.on, go: G.etipGo || null, ring: PB.ring ? +PB.ring.material.opacity.toFixed(2) : null, shot: !$('shot').hidden, shotCls: $('shot').className }; } };   /* v5.84 확인용 */   /* v5.55 확인용 */
 
   G.api.pick = function (x, y) {   /* 확인용 · 화면 좌표(창 기준)에 걸리는 물체 순서(가까운 것부터) */
     var r = $('cv').getBoundingClientRect(); ray.setFromCamera(new T.Vector2((x - r.left) / r.width * 2 - 1, -((y - r.top) / r.height) * 2 + 1), camera);
@@ -5479,7 +5499,7 @@
     '    <div class="pins" id="t3-pins"></div>\n' +
     '    <div class="mags" id="t3-mags"></div>\n' +
     '    <button type="button" class="mini" id="t3-mini" aria-label="작은 지도 · 누르면 크게 보기"></button>\n' +
-    '    <button type="button" class="flr" id="t3-bFloor" hidden>다른 층 이동하기</button>\n' +   /* 261016 v7.41 (사용자) 왼쪽 위 · 1층에서만 · 엘리베이터 권유 「엘리베이터로 가기」와 같은 걷기(etipGo) */
+    '    <button type="button" class="flr" id="t3-bFloor" hidden>다른 층 이동하기<span class="flh" aria-hidden="true"><i class="rg"></i><svg class="fh" width="40" height="46" viewBox="0 0 40 46" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a4 4 0 0 1 4 4v13.5l11.2 2.2a5 5 0 0 1 4 5.6l-1.6 10.5a6.5 6.5 0 0 1-6.4 5.5h-8.6a6.5 6.5 0 0 1-5-2.4l-6.8-8.4a3.3 3.3 0 0 1 4.8-4.5L8 31.2V7a4 4 0 0 1 4-4z" fill="#FFFFFF" stroke="#191F28" stroke-width="2.2"/><path d="M16 21v5.5M21.4 22v5M26.4 23.2v4.4" stroke="#191F28" stroke-width="1.8"/></svg></span></button>\n' +   /* 261016 v7.41 (사용자) 왼쪽 위 · 1층에서만 · 엘리베이터 권유 「엘리베이터로 가기」와 같은 걷기(etipGo) */
     '    <div class="cap" id="t3-cap" hidden></div>\n' +
     '    <div class="load" id="t3-load">모형 불러오는 중</div>\n' +
     '    <div class="pad" id="t3-pad" role="application" aria-label="움직이기 패드 · 밀면 그쪽으로 걸어요"><span class="knob" id="t3-knob"></span><kbd class="kh kw" aria-hidden="true">WASD</kbd></div>\n' +
@@ -5498,7 +5518,6 @@
     '    <p class="hint" id="t3-hint" role="status" hidden>가고 싶은 곳을 눌러 보세요<span class="h2" id="t3-hint2" hidden>또는 아래 「다음 구역」을 누르면 저절로 걸어가요</span></p>\n' +   /* v5.91 첫 입장 = 손가락 + 이 한 줄 */
     '    <div class="swc" id="t3-swc" role="status" hidden><p class="swt">화면을 좌우로 밀면 돌아봐요</p><span class="swa" aria-hidden="true"><i class="ar"></i><svg class="fh" width="40" height="46" viewBox="0 0 40 46" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a4 4 0 0 1 4 4v13.5l11.2 2.2a5 5 0 0 1 4 5.6l-1.6 10.5a6.5 6.5 0 0 1-6.4 5.5h-8.6a6.5 6.5 0 0 1-5-2.4l-6.8-8.4a3.3 3.3 0 0 1 4.8-4.5L8 31.2V7a4 4 0 0 1 4-4z" fill="#FFFFFF" stroke="#191F28" stroke-width="2.2"/><path d="M16 21v5.5M21.4 22v5M26.4 23.2v4.4" stroke="#191F28" stroke-width="1.8"/></svg></span></div>\n' +   /* 261007 첫 구역 도착 뒤 끌기 안내(swcTick) */
     '    <span class="hfg" id="t3-hfg" hidden aria-hidden="true"><i class="rp"></i><svg class="fh" width="40" height="46" viewBox="0 0 40 46" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a4 4 0 0 1 4 4v13.5l11.2 2.2a5 5 0 0 1 4 5.6l-1.6 10.5a6.5 6.5 0 0 1-6.4 5.5h-8.6a6.5 6.5 0 0 1-5-2.4l-6.8-8.4a3.3 3.3 0 0 1 4.8-4.5L8 31.2V7a4 4 0 0 1 4-4z" fill="#FFFFFF" stroke="#191F28" stroke-width="2.2"/><path d="M16 21v5.5M21.4 22v5M26.4 23.2v4.4" stroke="#191F28" stroke-width="1.8"/></svg></span>\n' +
-    '    <div class="etip" id="t3-etip" role="status" hidden><p class="et">1층을 다 둘러보셨나요?<br>엘리베이터로 다른 층도 둘러보세요</p><div class="eb"><button type="button" class="nb pri" id="t3-etGo">엘리베이터로 가기</button><button type="button" class="ex" id="t3-etX" aria-label="닫기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button></div></div>\n' +   /* v5.84 엘리베이터 권유 */   /* v5.84 첫 입장 한 줄 힌트(막지 않음) */
     '    <div class="evp" id="t3-evp" role="group" aria-label="엘리베이터 층 버튼" hidden><span class="evh">층 선택</span><button type="button" class="evb" data-f="18" aria-label="18층"><b>18</b></button><button type="button" class="evb" data-f="17" aria-label="17층"><b>17</b></button><button type="button" class="evb" data-f="10" aria-label="10층"><b>10</b></button><button type="button" class="evb" data-f="1" aria-label="1층 · 내리기"><b>1</b></button></div>\n' +
     '    <div class="bubble" id="t3-bubble" hidden>아이디어 한 줄을 내면 커피챗을 신청할 수 있어요</div>\n' +
     '    <div class="fps" id="t3-fps" hidden></div>\n' +
@@ -5670,5 +5689,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v7.65', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v7.81', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();

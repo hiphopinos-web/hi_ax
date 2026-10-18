@@ -266,20 +266,6 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 @keyframes shotGlow { 0%, 100% { opacity: 0; transform: scale(1); } 50% { opacity: 1; transform: scale(1.06); } }
 #axTour3.rm .look.shot.pri.pop, #axTour3.rm .look.shot.pri::after { animation: none; }
 @media (prefers-reduced-motion: reduce) { #axTour3 .look.shot.pri.pop, #axTour3 .look.shot.pri::after { animation: none; } }
-/* v5.84 엘리베이터 권유 · 막지 않는 작은 카드(조작부 위 · 사진 찍기 · 자세히 보기 자리보다 위) · 8초 뒤 사라짐 · 작은 지도 엘리베이터 자리 강조 */
-#axTour3 .etip { position: absolute; left: 50%; bottom: calc(var(--lookB, 214px) + 60px); transform: translateX(-50%); z-index: 7; width: min(320px, calc(100% - 32px)); padding: 12px 12px 12px 16px; border-radius: 16px; background: var(--surface); color: var(--ink); box-shadow: 0 6px 20px rgba(25, 31, 40, .18); }
-#axTour3 .etip[hidden] { display: none; }
-#axTour3 .etip.in { animation: etipIn .28s cubic-bezier(.2, .8, .2, 1); }
-@keyframes etipIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%); } }
-#axTour3 .etip .et { margin: 0 0 10px; font-size: 15px; line-height: 22px; font-weight: 700; word-break: keep-all; }
-#axTour3 .etip .eb { display: flex; align-items: center; gap: 8px; }
-#axTour3 .etip .nb.pri { flex: 1; height: 44px; }
-#axTour3 .etip .ex { flex: none; width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--canvas); color: var(--body); }
-#axTour3 .mmev { display: none; fill: none; stroke: var(--brand); stroke-width: 3; }
-#axTour3.etip-on .mmev { display: inline; animation: mmevP 1.2s ease-in-out infinite; }
-@keyframes mmevP { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
-#axTour3.rm .etip.in, #axTour3.rm.etip-on .mmev { animation: none; }
-@media (prefers-reduced-motion: reduce) { #axTour3 .etip.in, #axTour3.etip-on .mmev { animation: none; } }
 #axTour3 .hint.out { opacity: 0; }
 #axTour3.rm .gbub, #axTour3.rm .hint { transition: none; }
 /* 261007 (둘러보기 조작 재검토 A · 결정 3) 첫 구역 도착 뒤 끌기 안내 · 화면 가운데 · 어두운 알약(첫 손가락 안내 .hint 와 같은 ink) + 아래 주황 양쪽 화살표 위를 손가락이 좌우로 민다
@@ -512,3 +498,16 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3 .flr { position: absolute; left: 12px; top: 12px; z-index: 4; height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: rgba(255, 255, 255, .95); color: var(--ink); font-size: 15px; line-height: 40px; font-weight: 700; white-space: nowrap; box-shadow: inset 0 0 0 1px var(--divider2), 0 2px 10px rgba(25, 31, 40, .16); }
 #axTour3 .flr[hidden] { display: none; }
 #axTour3 .flr:active { transform: scale(.97); }
+/* v7.81 (사용자 261018) 「다른 층 이동하기」 강조 = 옛 엘리베이터 권유 말풍선 대신(같은 조건 · 같은 시점 · 누르거나 8초 뒤 사라짐) · 주황 고리(O100) 숨쉬기 + 손가락 톡톡(첫 입장 손가락 hfg 와 같은 그림 · 같은 움직임)
+ *   누름 통과(pointer-events none) · 나타남 0.3초 · 사라짐 0.18초 · transform · opacity 만 · 움직임 줄이기 = 움직임 없이 고리만 */
+#axTour3 .flr .flh { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .18s ease-in; }
+#axTour3 .flr.hl .flh { opacity: 1; transition: opacity .3s ease-out; }
+#axTour3 .flr .flh .rg { position: absolute; inset: -4px; border: 3px solid var(--brand); border-radius: 999px; }
+#axTour3 .flr .flh .fh { position: absolute; left: 50%; top: 100%; margin: -8px 0 0 -12px; width: 40px; height: 46px; filter: drop-shadow(0 3px 6px rgba(25, 31, 40, .3)); }
+#axTour3 .flr.hl .flh .rg { animation: flhRg 1.6s ease-in-out infinite; }
+#axTour3 .flr.hl .flh .fh { animation: hfgTap 1.6s ease-in-out infinite; }
+@keyframes flhRg { 0%, 100% { opacity: .55; transform: scale(1); } 50% { opacity: 1; transform: scale(1.04); } }
+#axTour3.rm .flr.hl .flh .rg { animation: none; }
+#axTour3.rm .flr .flh .fh { display: none; }
+#axTour3.rm .flr .flh, #axTour3.rm .flr.hl .flh { transition: none; }
+@media (prefers-reduced-motion: reduce) { #axTour3 .flr.hl .flh .rg { animation: none; } #axTour3 .flr .flh .fh { display: none; } #axTour3 .flr .flh, #axTour3 .flr.hl .flh { transition: none; } }
