@@ -945,11 +945,22 @@ function rgFlourish(cx, cy, tnow) {
   rgSfx("rgfx", lv);
   return lv;
 }
-function rgFlDraw(ctx, L) {
+/* 261018 v7.91 판 위에 그려지는 큰 구름(비구름 · 다음 구름 이름표)의 아래 끝 y · 안 보이면 0 · rgCloudDraw 가 그리는 조건과 같다 */
+function rgCloudBottom(L, now) {
+  if (!RG.bonusOn || RG.bonus) return 0;
+  if (!RG.cloud) {
+    if (!(RG.cloudN > 0 && RG.cloudN < RAIN_CLOUD.max && isFinite(RG.cloudAt))) return 0;
+    var g = RAIN_CLOUD.at && RAIN_CLOUD.at.length ? rgCloudNextSec(now) : Math.max(0, RG.cloudAt - (RG.t0 ? rgElapsed(now) : 0));
+    if (RAIN_CLOUD.at && RAIN_CLOUD.at.length && g > 15) return 0;
+  }
+  return rgCloudGeo(L, now).bottom;
+}
+function rgFlDraw(ctx, L, now) {
   var f = RG.fxs; if (!f || !(f.t > 0)) return;
   var S0 = RAIN_SITE_FX.show, e = 1 - f.t / S0, rm = rgReduced(), h = (L.big ? [32, 40, 48] : [16, 24, 24])[Math.max(0, Math.min(2, (f.lv || 1) - 1))];
   var sc = rm ? 1 : e < 0.24 ? 1.35 - e / 0.24 * 0.35 : 1, a = f.t < 0.15 ? f.t / 0.15 : 1, hw = (typeof DotGlyph !== "undefined" && DotGlyph.width ? DotGlyph.width(f.text, h) : f.text.length * h * 0.6) / 2 + 8;
-  var x = Math.max(hw, Math.min(L.W - hw, f.x)), y = Math.round(f.y);
+  var x = Math.max(hw, Math.min(L.W - hw, f.x)), y = Math.round(f.y), cb = rgCloudBottom(L, now == null ? performance.now() : now);
+  if (cb > 0 && y - h / 2 - 4 < cb) y = Math.round(cb + h / 2 + 4);   /* 261018 v7.91 큰 구름(이름표 · 칸)과 겹치지 않게 구름 아래로 */
   ctx.save(); ctx.globalAlpha = a; ctx.translate(x, y); if (sc !== 1) ctx.scale(sc, sc);
   rtDots(ctx, f.text, 0, 0, h, f.lv >= 2 ? RAIN_PAL.o100 : RAIN_PAL.o60, { align: "center", line: RAIN_PAL.ink });
   ctx.restore();
@@ -1058,12 +1069,27 @@ function rgSwayX(L, w, now) {
   var amp = Math.min(Math.round(w.bw * 0.5), L.D * 6);
   return Math.round(Math.max(4, Math.min(L.W - 4 - w.bw, w.x + Math.sin(now / 1000 * 2 * Math.PI / RAIN_SITE_FX.swayT + (w.ph || 0)) * amp)));
 }
-function rgHidePuff(ctx, L, x, y, bw, a) {   /* 도트 구름 한 덩이 · 이름표보다 조금 크게 */
-  var D = L.D, w = bw + 4 * D, h = L.boxH + 2 * D, x0 = Math.round(x - 2 * D), y0 = Math.round(y - D);
+/* 261018 v7.91 가림 덩어리 = 도트 구름(판 위 큰 구름 · 보너스 구름과 같은 칸 언어 · 맨 윗칸 크림 · 몸통 회색 · 맨 아랫칸 어두운 회색 · 먹 테두리는 꽉 찰 때만) · 이름표보다 조금 크게 · 칸 = 도트 2개 · 그리기만(가리는 시간 · 크기 · 판정 · 점수 그대로) */
+var RG_HPS = {};
+function rgHidePuffShape(nx, nb) {
+  var k = nx + "x" + nb; if (RG_HPS[k]) return RG_HPS[k];
+  var up = 3, ny = nb + up, B = [[0.2, 0.15, 2.2], [0.48, 0.2, 3], [0.79, 0.16, 2.4]], on = {}, cells = [], i, j, q;
+  for (i = 0; i < nx; i++) for (j = 0; j < ny; j++) {
+    var ok = j >= up;
+    if (ok && (i === 0 || i === nx - 1) && (j === up || j >= ny - 2)) ok = false;   /* 모서리 둥글게 · 아랫단은 안쪽으로 한 칸 더 */
+    if (ok && j === ny - 1 && (i === 1 || i === nx - 2)) ok = false;
+    for (q = 0; !ok && q < B.length; q++) { var dx = (i + 0.5 - B[q][0] * nx) / Math.max(1, B[q][1] * nx), dy = (j + 0.5 - up) / B[q][2]; if (dx * dx + dy * dy <= 1) ok = true; }
+    if (ok) { on[i + "," + j] = 1; cells.push([i, j]); }
+  }
+  cells.forEach(function (p) { p.push(!on[p[0] + "," + (p[1] - 1)] ? 0 : !on[p[0] + "," + (p[1] + 1)] ? 2 : 1); });
+  return (RG_HPS[k] = { ny: ny, cells: cells });
+}
+function rgHidePuff(ctx, L, x, y, bw, a) {   /* 도트 구름 한 덩이 · 이름표를 다 덮는다(둘레 한 칸 이상) */
+  var c = 2 * L.D, nx = Math.ceil(bw / c) + 2, nb = Math.ceil(L.boxH / c) + 1, S = rgHidePuffShape(nx, nb);
+  var x0 = Math.round(x + bw / 2 - nx * c / 2), y0 = Math.round(y + L.boxH + c / 2) - S.ny * c, tone = [RT_PAL.cream, RAIN_PAL.gray, RAIN_PAL.dim];
   ctx.save(); ctx.globalAlpha = a;
-  ctx.fillStyle = RAIN_PAL.gray; ctx.fillRect(x0 + D, y0 - D, w - 2 * D, h + 2 * D); ctx.fillRect(x0, y0, w, h);
-  ctx.fillStyle = RT_PAL.cream; ctx.fillRect(x0 + D, y0, w - 2 * D, h); ctx.fillRect(x0 + 2 * D, y0 - D + 2, w - 4 * D, h + 2 * D - 4);
-  ctx.fillStyle = RAIN_PAL.w; ctx.fillRect(x0 + 2 * D, y0 + Math.round(D / 2), Math.round(w * 0.4), D);
+  if (a >= 0.99) { ctx.fillStyle = RAIN_PAL.ink; S.cells.forEach(function (p) { ctx.fillRect(x0 + p[0] * c - 2, y0 + p[1] * c - 2, c + 4, c + 4); }); }   /* 먹 테두리는 꽉 찬 구름에만(반투명이면 칸마다 겹쳐 격자가 보인다) */
+  S.cells.forEach(function (p) { ctx.fillStyle = tone[p[2]]; ctx.fillRect(x0 + p[0] * c, y0 + p[1] * c, c, c); });
   ctx.restore();
 }
 function rgWordFx(ctx, L, w, on, danger, tv, now) {
@@ -2119,4 +2145,4 @@ if (typeof module !== "undefined" && module.exports) module.exports = { RG: RG, 
   RAIN_SITE: RAIN_SITE, RAIN_AUTO: RAIN_AUTO, RAIN_BNS_GUARD: RAIN_BNS_GUARD, rgSiteReset: rgSiteReset, rgAutoOn: rgAutoOn, rgFallSec: rgFallSec, rgSpawnSec: rgSpawnSec, rgStageSec: rgStageSec, rgRampSite: rgRampSite, rgGapWait: rgGapWait, rgCdNum: rgCdNum, rgSpawnFall: rgSpawnFall, rgJit: rgJit, rgEase: rgEase, RAIN_BNS_GUIDE: RAIN_BNS_GUIDE, RAIN_BNS_GO: RAIN_BNS_GO, rgClash: rgClash, rgPool: rgPool, rgBnsNorm: rgBnsNorm, rgBlk: rgBlk, rgCloudPick: rgCloudPick, rgCloudStage: rgCloudStage,
   rgBonusVal: rgBonusVal, rgBonusValOf: rgBonusValOf, RAIN_DROP: RAIN_DROP, rgBonusV0: rgBonusV0, rgBnsLines: rgBnsLines, rgBnsBr: rgBnsBr,   /* 261017 타자왕 개편 */
   RAIN_SITE_MORE: RAIN_SITE_MORE, RAIN_SITE_MIX: RAIN_SITE_MIX, rgShiftW: rgShiftW, rgSiteCls: rgSiteCls, rgSiteSlot: rgSiteSlot, rgSiteMixOn: rgSiteMixOn, rgPickIn: rgPickIn,
-  RAIN_SITE_MOD: RAIN_SITE_MOD, RAIN_SITE_FX: RAIN_SITE_FX, rgModSlot: rgModSlot, rgWordFx: rgWordFx, rgSwayX: rgSwayX, rgFlourish: rgFlourish, rgKeyN: rgKeyN, rgCloudNextSec: rgCloudNextSec, rgBnsJump: rgBnsJump };   /* 261018 v7.90 */   /* 261018 v7.89 셀프 단어 섞기 */
+  RAIN_SITE_MOD: RAIN_SITE_MOD, RAIN_SITE_FX: RAIN_SITE_FX, rgModSlot: rgModSlot, rgWordFx: rgWordFx, rgCloudBottom: rgCloudBottom, rgSwayX: rgSwayX, rgFlourish: rgFlourish, rgKeyN: rgKeyN, rgCloudNextSec: rgCloudNextSec, rgBnsJump: rgBnsJump };   /* 261018 v7.90 */   /* 261018 v7.89 셀프 단어 섞기 */
