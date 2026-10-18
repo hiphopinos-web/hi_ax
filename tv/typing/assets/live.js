@@ -293,7 +293,9 @@
       });
     }
     if (P && F.lv === 1 && P.lv > 1) r.banner = { text: "마지막 목숨", t: 1.0 };
-    if (P && F.st > P.st && !F.bn) r.banner = { text: "LEVEL " + F.st, t: 1.3 };
+    if (F.bn || S.stLv == null) S.stLv = F.lv;   /* 261018 v7.90 CLEAN = 목숨을 잃지 않고 넘긴 단계(보너스 뒤 건너뛴 단계는 새로 센다) */
+    if (P && F.st > P.st && !F.bn) { r.banner = { text: "LEVEL " + F.st + (F.lv >= S.stLv ? " · CLEAN" : ""), t: 1.3 }; S.stLv = F.lv; }
+    if (F.fx && F.fx.length >= 4 && F.fx[0] !== S.fxN) { S.fxN = F.fx[0]; r.fxs = { n: F.fx[0], text: clip(F.fx[1], 16), lv: Number(F.fx[4]) || 1, x: Number(F.fx[2]) / 1000 * u.L.W, y: Number(F.fx[3]) / 1000 * u.L.H, t: typeof RAIN_SITE_FX === "object" ? RAIN_SITE_FX.show : 0.5 }; }   /* 261018 v7.90 연출 RUSH · COMBO x10(같은 그리기 rgFlDraw) */
     if (F.cd > 0 && r.cd !== F.cd) { r.cdAt = pnow; }
     if (P && P.cd > 0 && !(F.cd > 0)) { r.goT = RAIN_CLOUD.go; r.goAt = pnow; }
     r.cd = F.cd > 0 ? F.cd : 0;
@@ -305,7 +307,7 @@
     var bn = F.bn;
     if (bn && bn.ph) {
       var b = S.bns;
-      if (!b) { b = S.bns = { text: clip(bn.t, 80), keys: KEYS[bn.t] || [], lim: rgBonusLim(String(bn.t || "").length), left: 0, ph: "", t: 0, at: pnow, typed: "", res: null, no: Math.max(1, S.cloudNo), phAt: F.hs, typeAt: 0, sc0: P ? P.sc : F.sc }; }
+      if (!b) { b = S.bns = { text: clip(bn.t, 80), keys: KEYS[bn.t] || [], lim: rgBonusLim(String(bn.t || "")), left: 0, ph: "", t: 0, at: pnow, typed: "", res: null, no: Math.max(1, S.cloudNo), phAt: F.hs, typeAt: 0, sc0: P ? P.sc : F.sc }; }
       b.text = clip(bn.t, 80); b.typed = clip(bn.ty, 80);
       if ((bn.ph === "res" || bn.ph === "bin") && bn.v >= 0) b.v = Math.round(Number(bn.v)) || 0;   /* 261017 줄어드는 숫자 · 멈춘 값은 노트북 값(bn.v) · 그 전은 이 화면 시계(b.left)로 그린다(rgBonusVal) */
       if (b.ph !== bn.ph) {
@@ -354,6 +356,7 @@
       if (o.c && o.y0 == null) o.y0 = r.cloud ? rgClY0(L, pnow) : L.top;
       o.pd = p;
       var wd = { text: o.text, bw: o.bw, x: o.x, p: p, fall: Number(o.w[4]) / 1000 }; if (o.c) { wd.y0 = o.y0; wd.cl = true; }
+      var fg = Number(o.w[6]) || 0; if (fg) { if (fg & 2) wd.fast = 1; if (fg & 4) wd.sway = 1; if (fg & 8) wd.hide = 1; if (fg & 16) wd.hold = 1; wd.ph = (Number(o.id) % 7) * 0.9; }   /* 261018 v7.90 요소(노트북 7번째 칸 · 옛 Hub 면 없음 = 보통 단어) */
       o.wd = wd; words.push(wd);
     }
     r.words = words;

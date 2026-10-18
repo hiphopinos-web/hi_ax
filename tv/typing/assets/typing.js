@@ -263,7 +263,7 @@
     var S = [-3.2, -2.3, -1.4, -0.5, 0.4], H = [0.7, 1.55, 2.4, 3.25, 4.05], FX = [0.12, 0.85, 0.4, 0.95, 0.55], F = 5.0;
     BX2.font = rtFont(BL.tf);
     var C0 = 3, combo = C0, score = 2340, ws = [];
-    MON = { k: k, ln: ln, lim: rgBonusLim(ln.s.length), ws: ws, fm: -9, F: F, n: 14 };
+    MON = { k: k, ln: ln, lim: rgBonusLim(ln.s), ws: ws, fm: -9, F: F, n: 14 };
     txt.forEach(function (t, i) {
       var bw = Math.ceil(BX2.measureText(t).width) + BL.padX * 2;
       monCloud(S[i]); var G = rgCloudGeo(BL, NOW0 + S[i] * 1000), lo = Math.max(8, G.left), hi = Math.max(lo, Math.min(BL.W - 8 - bw, G.right - bw));

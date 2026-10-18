@@ -905,7 +905,7 @@ function tsfLeftHtml() {
   }
   /* 261007(사용자 「오른쪽 순위표 10등까지 · 일부 정보는 왼쪽으로」) 오른쪽 점수 설명을 왼쪽으로 · 방법 · 점수 두 묶음 · 엔터 없이 한 줄 */
   var rule = '<section class="tsf-p tsf-rule"><p class="tsf-rh">방법</p><p>맞게 치면 엔터 없이 터져요</p><p>목숨 ' + RAIN_LIVES + "개를 다 잃으면 끝</p><p>" + typeTryTxt(tsfLimit()) + "</p><p>최고 점수로 순위</p><p>17:00 마감 · 1~10위<br>Closing Speech에서 순위 발표</p></section>" +
-    '<section class="tsf-p tsf-rule"><p class="tsf-rh">점수</p><p>글자 × 10 × 콤보(최대 3배)</p><p>구름이 비면 보너스 한 번</p><p>줄어드는 숫자가 보너스 점수</p></section>';   /* 261017 보너스 스테이지 문구 · 옛 상한 시간 줄(버티면 목숨) 삭제(사용자 확정 D5 · 코드는 안전장치로 남김) */   /* 줄마다 한 줄에 들어가게 짧게(1920 · 1366 · 24 · 16px) */
+    '<section class="tsf-p tsf-rule"><p class="tsf-rh">점수</p><p>글자 × 10 × 콤보(최대 3배)</p><p>구름이 비면 보너스 · 최대 2번</p><p>줄어드는 숫자가 보너스 점수</p></section>';   /* 261017 보너스 스테이지 문구 · 옛 상한 시간 줄(버티면 목숨) 삭제(사용자 확정 D5 · 코드는 안전장치로 남김) */   /* 줄마다 한 줄에 들어가게 짧게(1920 · 1366 · 24 · 16px) */
   if (ph === "result" && !tsfClosed()) return '<section class="tsf-p"><p class="tsf-k">다음 도전자</p><p class="tsf-go">SPACE = 새 QR</p><p class="tsf-hint" id="tsfCount">' + (TSF.send === "ok" || TSF.send === "fail" ? Math.round(TSF_RES_MS / 1000) + "초 뒤 처음 화면" : "") + "</p></section>";   /* 261007 처음 화면 = 광고 · SPACE = 곧바로 QR */
   return rule;
 }
@@ -1418,7 +1418,8 @@ function tvlFrame(x) {
     if (id == null) { id = (++TVL.nid) % 1000000; if (TVL.ids) TVL.ids.set(o, id); }
     var p = tvlN((o.p || 0) * 1000, 0, 1000);
     cur[id] = p;
-    if (w.length < 30) w.push([id, String(o.text || "").slice(0, 12), W ? tvlN(o.x / W * 1000, 0, 1000) : 0, p, tvlN((o.fall || 0) * 1000, 0, 600000), o.cl ? 1 : 0]);
+    var fg = (o.fast ? 2 : 0) | (o.sway ? 4 : 0) | (o.hide ? 8 : 0) | (o.hold > 0 ? 16 : 0);   /* 261018 v7.90 요소(빠른 2 · 흔들림 4 · 가림 8 · 예고 중 16) · 7번째 칸(옛 Hub 는 버린다 · 그래도 TV 는 보통 단어로 그린다) */
+    if (w.length < 30) w.push([id, String(o.text || "").slice(0, 12), W ? tvlN(o.x / W * 1000, 0, 1000) : 0, p, o.hold > 0 ? 600000 : tvlN((o.fall || 0) * 1000, 0, 600000), o.cl ? 1 : 0, fg]);
   }
   var dh = (RG.hits || 0) - TVL.ht0, ds = (RG.score || 0) - TVL.sc0;
   if (dh > 0) {
@@ -1430,9 +1431,10 @@ function tvlFrame(x) {
   var inp = ""; try { inp = String(rgInVal() || "").slice(0, 24); } catch (e) {}
   var b = RG.bonus, bn = b ? { t: String(b.text || "").slice(0, 80), ty: String(b.typed || "").slice(0, 80), ph: String(b.ph || "").slice(0, 8) } : null;
   if (bn && (b.ph === "type" || b.ph === "res" || b.ph === "bin") && typeof rgBonusVal === "function") bn.v = tvlN(rgBonusVal(b), 0, 9999);   /* 261017 줄어드는 숫자(사용자 확정 D9) · 송출 화면도 그린다 · 멈춘 값 그대로 */
-  var f = { t: "tl", g: TVL.g, q: 0, at: Date.now(), el: TVL.el, sc: tvlN(RG.score, 0, 60000), ht: tvlN(RG.hits, 0, 400), lv: tvlN(RG.lives, 0, 9), cb: tvlN(RG.combo, 0, 999), st: tvlN(RG.stage, 0, 20),
+  var f = { t: "tl", g: TVL.g, q: 0, at: Date.now(), el: TVL.el, sc: tvlN(RG.score, 0, 60000), ht: tvlN(RG.hits, 0, 400), lv: tvlN(RG.lives, 0, 9), cb: tvlN(RG.combo, 0, 999), st: tvlN(RG.stage, 0, 30),
     cd: RG.cd > 0 ? tvlN(Math.ceil(RG.cd), 0, 9) : 0, pz: RG.paused ? 1 : 0, inp: inp, w: w, hw: hw, bn: bn, x: x || "", tn: tvlN(TVL.tn, 0, 9), tm: tvlN(TVL.tm, 0, 9) };   /* 261017 tn = 몇 번째 도전 · tm = 이 사람 최대 기회(옛 Hub 는 버린다) */
-  if (RG.hurt > 0 && !RG.paused) f.hu = tvlN(RG.hurt * 1000, 0, 5000);   /* v7.60 목숨을 잃은 뒤 느려진 남은 ms(송출 화면 앞질러 그리기) */
+  if (RG.hurt > 0 && !RG.paused) f.hu = tvlN(RG.hurt * 1000, 0, 5000);
+  if (RG.fxs && RG.fxs.t > 0 && L) f.fx = [tvlN(RG.fxs.n, 0, 1000000), String(RG.fxs.text || "").slice(0, 16), W ? tvlN(RG.fxs.x / W * 1000, 0, 1000) : 0, L.H ? tvlN(RG.fxs.y / L.H * 1000, 0, 1000) : 0, tvlN(RG.fxs.lv, 0, 3)];   /* 261018 v7.90 연출(RUSH · COMBO x10) · 옛 Hub 는 버린다 */   /* v7.60 목숨을 잃은 뒤 느려진 남은 ms(송출 화면 앞질러 그리기) */
   return f;
 }
 /* 연결이 살아 있을 때만 · 아니면 버린다 · 망이 느려 쌓이면(8KB · 진행 열 건 안팎) 버린다 */

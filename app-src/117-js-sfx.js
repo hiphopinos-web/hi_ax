@@ -80,7 +80,8 @@ function sfxSite(name, p) {
     case "rgcd": var fd = 262 * Math.pow(1.122, 3 - Math.max(1, Math.min(3, p || 3))); T(150, 0.16, { to: 70, vol: 0.7 }); T(fd, 0.16, { type: "triangle", vol: 0.3 }); return true;
     case "rgstart": T(110, 0.22, { to: 55, vol: 0.75 }); T(392, 0.1, { type: "triangle", vol: 0.26 }); T(523, 0.32, { type: "triangle", vol: 0.26, delay: 0.08 }); T(784, 0.3, { type: "triangle", vol: 0.18, delay: 0.08 }); return true;
     case "best": [523, 659, 784, 1047].forEach(function (f, i) { T(f, 0.1, { type: "triangle", vol: 0.26, delay: i * 0.06 }); }); return true;
-    case "rgtick": T(p ? 247 : 220, 0.03, { vol: 0.12 }); return true;   /* 줄어드는 숫자 · 25% 아래(p = 1) 한 음 높게 */
+    case "rgtick": T(p ? 247 : 220, 0.03, { vol: 0.12 }); return true;
+    case "rgfx": [196, 262, 330, 392].slice(0, 1 + Math.max(1, Math.min(3, p || 1))).forEach(function (f, i) { T(f, 0.07, { type: "triangle", vol: 0.2, delay: i * 0.06 }); }); return true;   /* 261018 v7.90 연출 RUSH · COMBO x10 · 낮고 짧게(단계 1 = 두 음 · 3 = 네 음) */   /* 줄어드는 숫자 · 25% 아래(p = 1) 한 음 높게 */
   }
   return false;
 }
@@ -231,22 +232,36 @@ function bgmDrum(c, k, t) {
   g2.gain.setValueAtTime(k === "snare" ? 0.32 : 0.12, t); g2.gain.exponentialRampToValueAtTime(0.0001, t + d);
   src.connect(f); f.connect(g2); g2.connect(BGM.bus); src.start(t); src.stop(t + d + 0.02);
 }
-/* 한 박(16분음표) · pos = 곡 안 16분음표 번호 · 멜로디 · 베이스 = 8분음표 · 0 = 앞 음을 끈다 · -1 = 쉼 */
+/* 한 박(16분음표) · pos = 곡 안 16분음표 번호 · 멜로디 · 베이스 = 8분음표 · 0 = 앞 음을 끈다 · -1 = 쉼
+   261018 v7.90 (사용자 결정 E10) 판 곡 = 단계마다 층을 쌓는다(bgmLayer · 마디 머리에 정해 그 마디 내내) · 0 베이스 · 킥 → 1 + 하이햇 8분(4단계) → 2 + 멜로디 · 스네어(7단계) → 3 + 아르페지오(12단계 = 첫 보너스 스테이지 복귀) → 4 + 하이햇 16분 · 스네어 꾸밈(13단계) → 5 + 대선율(멜로디 한 옥타브 위 · 17단계 = 둘째 보너스 스테이지 복귀)
+   조 = 보너스 스테이지 한 번마다 반음 위(BGM.tr) · 단계 경계가 든 마디 뒤 반 = 스네어 채움(BGM.fill) · 보너스 스테이지 곡은 그대로 전부 */
+function bgmLayer() { var st = RG.stage || 1; return st >= 17 ? 5 : st >= 13 ? 4 : st >= 12 ? 3 : st >= 7 ? 2 : st >= 4 ? 1 : 0; }
 function bgmStep(c, song, pos, t, sp) {
   var S0 = BGM_SONG[song], bar = Math.floor(pos / 16) % S0.mel.length, st = pos % 16, ch = S0.bars[bar], r = S0.root[bar];
+  var g = song === "game", lay = g ? BGM.lay || 0 : 9, tr = g ? BGM.tr || 0 : 0;
   if (st % 2 === 0) {
     var m = S0.mel[bar], i = st / 2, nt = m[i];
-    if (nt > 0) { var len = 1; while (i + len < 8 && m[i + len] === 0) len++; bgmNote(c, BGM.wv.a, bgmHz(nt), t, len * 2 * sp * 0.92, 0.3); }
-    bgmNote(c, "triangle", bgmHz(r + (i % 2 ? 12 : 0) + (i === 6 ? 7 : 0)), t, 2 * sp * 0.9, 0.42);
-    bgmDrum(c, "hat", t);
-  }
-  bgmNote(c, BGM.wv.b, bgmHz(ch[[0, 1, 2, 1][st % 4]] + 12), t, sp * 0.8, 0.06);
+    if (nt > 0 && lay >= 2) { var len = 1; while (i + len < 8 && m[i + len] === 0) len++; bgmNote(c, BGM.wv.a, bgmHz(nt + tr), t, len * 2 * sp * 0.92, 0.3); if (lay >= 5 && g) bgmNote(c, BGM.wv.b, bgmHz(nt + tr + 12), t, len * 2 * sp * 0.8, 0.1); }
+    bgmNote(c, "triangle", bgmHz(r + tr + (i % 2 ? 12 : 0) + (i === 6 ? 7 : 0)), t, 2 * sp * 0.9, 0.42);
+    if (lay >= 1) bgmDrum(c, "hat", t);
+  } else if (lay >= 4 && g) bgmDrum(c, "hat", t);
+  if (lay >= 3) bgmNote(c, BGM.wv.b, bgmHz(ch[[0, 1, 2, 1][st % 4]] + 12 + tr), t, sp * 0.8, 0.06);
   if (st === 0 || st === 8 || (song === "bns" && st === 10)) bgmDrum(c, "kick", t);
-  if (st === 4 || st === 12) bgmDrum(c, "snare", t);
+  if (g && BGM.fill && st >= 8 && st !== 9 && st !== 11) bgmDrum(c, "snare", t);
+  else if (lay >= 2 && (st === 4 || st === 12 || (lay >= 4 && g && st === 14))) bgmDrum(c, "snare", t);
 }
+/* 261018 v7.90 빠르기 = 112 + 단계마다 2 + 보너스 스테이지 한 번마다 4 · 상한 150 · 보너스 스테이지 곡 150 */
 function bgmBpm(song) {
   if (song === "bns") return 150;
-  return Math.min(140, 112 + 4 * Math.max(0, (RG.stage || 1) - 1) + Math.max(0, Math.floor(((RG.surv || 0) - 100) / 10)));
+  return Math.min(150, 112 + 2 * Math.max(0, (RG.stage || 1) - 1) + 4 * (RG.bnsN || 0));
+}
+/* 마디 머리 · 빠르기 · 층 · 조 · 채움을 정한다(마디 중간에 바꾸지 않는다) */
+function bgmBar(song) {
+  BGM.sp = 60 / bgmBpm(song) / 4;
+  if (song !== "game") { BGM.fill = false; return; }
+  BGM.lay = bgmLayer(); BGM.tr = Math.min(2, RG.bnsN || 0);
+  var ss = typeof rgStageSec === "function" ? rgStageSec() : 12, rem = ss - ((RG.surv || 0) % ss);
+  BGM.fill = rem < 16 * BGM.sp && rem > 0.2;
 }
 function bgmWant() {
   if (typeof RG === "undefined" || !RG.on || RG.mode !== "site" || RG.paused || RG.ending || !bgmOk()) return "";
@@ -271,9 +286,10 @@ function bgmTick() {
     if (!want) return;
     BGM.bus.gain.setValueAtTime(0.0001, BGM.next); BGM.bus.gain.exponentialRampToValueAtTime(BGM.vol, BGM.next + 0.05);
   }
-  var sp = 60 / bgmBpm(BGM.cur) / 4, N = BGM_SONG[BGM.cur].mel.length * 16;
+  var N = BGM_SONG[BGM.cur].mel.length * 16;
+  if (!BGM.sp || BGM.song !== BGM.cur) { BGM.song = BGM.cur; bgmBar(BGM.cur); }   /* 곡이 바뀌면 그 자리에서 한 번 */
   if (BGM.next < now) BGM.next = now + 0.02;
-  while (BGM.next < now + 0.12) { try { bgmStep(c, BGM.cur, BGM.pos, BGM.next, sp); } catch (e) {} BGM.next += sp; BGM.pos = (BGM.pos + 1) % N; }
+  while (BGM.next < now + 0.12) { if (BGM.pos % 16 === 0) bgmBar(BGM.cur); try { bgmStep(c, BGM.cur, BGM.pos, BGM.next, BGM.sp); } catch (e) {} BGM.next += BGM.sp; BGM.pos = (BGM.pos + 1) % N; }   /* 261018 v7.90 빠르기 · 층 · 조 = 마디 머리 */
 }
 function bgmArm() { BGM.gpos = 0; if (!BGM.t) BGM.t = setInterval(bgmTick, 25); }   /* 판이 열릴 때(rgPlayOpen · 셀프만) · 판 곡은 처음부터 */
 function bgmStop() {
