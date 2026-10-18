@@ -364,7 +364,7 @@ function vidOk(x) { return !!(x && x.v && (x.v.src || x.v.page)); }
 function vidRowHtml(x, i) {
   var ok = vidOk(x), th = '<span class="tb">' + (ok && x.v.poster ? '<img src="' + esc(x.v.poster) + '" alt="" width="1280" height="720" loading="lazy" decoding="async">' : "") + '<span class="pl">' + IV_PLAY_SVG + "</span>" + (x.len ? "<em>" + esc(x.len) + "</em>" : "") + "</span>";
   return '<button type="button" class="vr"' + (ok ? ' onclick="ivAsk(this, ' + i + ')" aria-label="' + esc(x.t) + ' 영상 보기"' : " disabled") + ">" + th +
-    '<span class="x"><b>' + esc(x.t) + "</b><span>" + esc(ok ? x.s : x.s + " · 준비 중") + "</span></span>" + (ok ? '<span class="cv">' + CHEV_SVG + "</span>" : "") + "</button>";
+    '<span class="x"><b>' + hdqHtml(esc(x.t)) + "</b><span>" + esc(ok ? x.s : x.s + " · 준비 중") + "</span></span>" + (ok ? '<span class="cv">' + CHEV_SVG + "</span>" : "") + "</button>";
 }
 function progIvHtml() {
   var rs = VIDS.map(function (x, i) { return [x, i]; }).filter(function (r) { return vidOk(r[0]) || !VIDS_HIDE; }), n = rs.length, o = VFOLD.open;

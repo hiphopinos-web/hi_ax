@@ -162,6 +162,10 @@ function segHtml(h, fn) {
   if (fn) p = p.map(fn);
   return p.length < 2 ? p[0] : p.map(function (s) { return "<ax-seg>" + s + "</ax-seg>"; }).join(" ");
 }
+/* v7.86 (사용자 261018) 「HiDI Q」 글자 이름 = 하이디큐 공식 앰블럼(assets/hidiq.svg · 둘러보기 판과 같은 파일 · 색 · 모양 그대로) · 이미 escape 한 글자에 씌운다 · alt = 접근성 · 검색용 글자
+   제목 · 라벨 · 카드 이름 자리에만 쓴다(문장 중간 · 단추 · 알림 · 작은 글자는 글자 그대로) */
+var HDQ_IMG = '<img class="hdq-emb" src="assets/hidiq.svg" alt="HiDI-Q" width="945" height="232" decoding="async">';
+function hdqHtml(h) { return String(h == null ? "" : h).replace(/HiDI[ -]Q/g, HDQ_IMG); }
 var SEG_GRP = ".axs-sec, section, .axs-rows, .axs-stps, .axs-pz, ul, ol, .ax-stack";   /* 묶음 칸 · 이 안에서 같은 클래스의 보조 줄끼리 형식을 맞춘다 */
 /* v7.54 (사용자 261016 「점 통일은 권장대로」 D4) 메타 줄(.ax-meta)은 속성 나열에서 뺀다 = 두 줄이면 목록(줄마다 주황 점 · 첫 줄 포함) · 남은 속성 나열은 꺾인 줄 머리의 구분 점을 지운다(segBol) */
 function segBol(p, on) {

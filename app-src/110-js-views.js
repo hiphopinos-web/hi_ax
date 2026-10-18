@@ -374,8 +374,8 @@ var Views = {
     /* v4.84 (261001 앱 개편 2묶음 · 1층 부스 정리 결정 1 A) 구역 이름 AX PLAY · 판 철자 HiDI-Q · Hi-Helper(하이헬퍼) · 체험 뒤 스태프가 내 QR 을 찍는다(v4.83 p2 스태프 인증) */
     return '<div class="ax-stack">' +
       '<div class="axs-chiprow"><span class="axs-chip">1F AX PLAY · 2종</span>' + (got2 ? '<span class="axs-chip ok">적립 완료</span>' : "") + "</div>" +
-      '<div class="ax-stack-tight"><h1 class="ax-title">HiDI Q · Hi-Helper<br>직접 써 보기</h1><p class="ax-description">1곳 체험 = 스탬프 1개 · 체험 후 스태프가 내 QR 스캔</p></div>' +
-      BOOTH_INFO.map(function (x) { return booth(x.nm, OPEN[x.k], x.sub, x.steps, x.note); }).join("") +
+      '<div class="ax-stack-tight"><h1 class="ax-title">' + HDQ_IMG + ' · Hi-Helper<br>직접 써 보기</h1><p class="ax-description">1곳 체험 = 스탬프 1개 · 체험 후 스태프가 내 QR 스캔</p></div>' +
+      BOOTH_INFO.map(function (x) { return booth(hdqHtml(x.nm), OPEN[x.k], x.sub, x.steps, x.note); }).join("") +
       (testMode() && !got2 ? '<button type="button" class="ax-button ax-button-weak" onclick="boothStamp()">완료 처리 (시연 · 테스트 모드)</button>' : "") +
       "</div>" + ax2Btn(got2 ? "스탬프 확인하기" : "내 QR 보여주기", got2 ? "expStamp('p2')" : "qrPanelOpen('mine')");
   },

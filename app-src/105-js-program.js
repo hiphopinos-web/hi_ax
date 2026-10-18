@@ -629,7 +629,7 @@ function zoneRowHtml(id) {
   var sg = z ? zoneSign(z.sign) : '<span class="stl">' + f1Stair() + "계단</span>", tx = z ? z.tb : "계단으로 한 층 이동";
   return '<div class="zr' + (c ? "" : " nb") + '" data-zone="' + id + '"><span class="zsg">' + sg + "</span>" +
     '<span class="bn' + (c && c[2] ? " on" : "") + '">' + (c ? c[0] + '<span class="t">' + esc(c[1]) + "</span>" : "") + "</span>" +
-    '<span class="ztx">' + segHtml(esc(tx)) + '</span><button type="button" class="ax-link axs-plain axs-self zgo" onclick="' + f1Go(id) + '" aria-label="' + esc((z ? z.hdr || z.sign : "계단") + " 자세히 보기") + '">' + lnkChev("자세히 보기") + "</button></div>";
+    '<span class="ztx">' + segHtml(hdqHtml(esc(tx))) + '</span><button type="button" class="ax-link axs-plain axs-self zgo" onclick="' + f1Go(id) + '" aria-label="' + esc((z ? z.hdr || z.sign : "계단") + " 자세히 보기") + '">' + lnkChev("자세히 보기") + "</button></div>";
 }
 /* 고른 구역 · 처음(1F 칸에 새로 오면) = 지도 순서 첫 구역 · 다시 그려도(동기화 · 시트 닫힘) 그대로 */
 var F1SEL = { z: "" };
