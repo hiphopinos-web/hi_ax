@@ -24,7 +24,7 @@ var Views = {
       pbfHomeHtml() +   /* v7.67 (사용자 261017) 광고판 바로 아래 · 스탬프 위 한 줄 「1F 선착순 이벤트 중 · 자세히 보기 ›」 · 10/26 08:30~17:00 에만 · 누르면 선착순 시트 */
       tourHeroHtml() +
       betaBannerHtml() +
-      '<section class="axs-sec axs-railgo" onclick="if (!event.target.closest(\'.mk, .sect span\')) App.tab(\'exp\')">' + myCouponHtml() + "</section>" + stFoldHtml() +   /* v7.65 레일 아래 접기 단추(stFoldHtml) · 레일 칸(누르면 스탬프 탭 · 누를 때 어두워짐) 밖 형제 · 단추 · 펼친 판을 눌러도 레일 칸이 어두워지거나 스탬프 탭으로 가지 않는다 */
+      '<section class="axs-sec axs-railgo" onclick="if (!event.target.closest(\'.mk, .sect span\')) App.tab(\'exp\')">' + myCouponHtml() + "</section>" +   /* v7.97 레일 아래 접기 칸 삭제(사용자 261018 · v7.65 칸) · 레일 칸 = 누르면 스탬프 탭 */
       cnHomeHtml() +
       "</div>";
   },

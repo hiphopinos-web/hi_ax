@@ -804,9 +804,9 @@
   #view[data-v="home"] .axs-railgo .sect span[role="button"]::after { content: ""; position: absolute; inset: -6px -8px; }   /* v6.83 (접근성 B-3) 「바로가기」 눌림 32 → 44 · 투명 */
   #view[data-v="home"] .axs-railgo .rail { padding: var(--ax-space-12) var(--ax-space-20); }
   #view[data-v="home"] .axs-railgo .axs-pzgo { min-height: 44px; margin-top: var(--ax-space-8); padding-top: var(--ax-space-4); padding-bottom: var(--ax-space-4); }
-  /* v7.65 (사용자 261017) 홈 스탬프 아래 접기 단추 「스탬프 모으는 방법」 · 펼치면 스탬프 탭과 같은 판(stpBoardMine)
+  /* v7.65 (사용자 261017) 접기 부품 axs-sfd(처음 = 홈 「스탬프 모으는 방법」 · v7.97 홈 칸 삭제 · 지금 = 영상 보기 · 스탬프 획득하기)
      높이 = grid-template-rows 0fr → 1fr · 안쪽 = 흐려짐 + 떠오름 6px · 열림 0.3초 이동 곡선 · 닫힘 0.18초 닫힘 곡선(--ax-motion-* · mobile-popup-motion) · 셰브론 회전 같은 시간 · 동작 줄이기 = 즉시 */
-  .axs-sfd { display: flex; flex-direction: column; margin-top: calc(var(--ax-space-20) * -1); }   /* 레일 칸 밖 형제 · 홈 칸 사이 24 → 레일과 4(옛 레일 칸 안 간격) */
+  .axs-sfd { display: flex; flex-direction: column; }   /* v7.97 홈 칸 삭제 · 홈 전용 위 여백(-20) 걷음 · 부품은 영상 보기(axs-vfd) · 스탬프 획득하기(axs-sgfd)가 쓴다 */
   .axs-sfdb { display: flex; align-items: center; justify-content: center; gap: var(--ax-space-4); width: 100%; min-height: var(--ax-touch-size); padding: 0 var(--ax-space-16); border: 0; background: transparent; color: var(--ax-color-body); font: var(--ax-type-t6-strong); cursor: pointer; }
   .axs-sfdb .axs-chev { flex: none; width: 18px; height: 18px; color: var(--ax-color-muted); transform: rotate(90deg); transition: transform var(--ax-motion-out) var(--ax-motion-ease-exit); }
   .axs-sfd.open .axs-sfdb .axs-chev { transform: rotate(-90deg); transition: transform var(--ax-motion-in) var(--ax-motion-ease); }
@@ -2141,7 +2141,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   /* v7.92 (사용자 확정 261018) ① 광고 영상 = 정사각 · 카드 모서리 24 · 흰 면(포스터가 칸 배경) · 영상 누름 = 덮개 단추(axs-reel-go)
      v7.93 스피커 단추 = 오른쪽 아래 구석(오른쪽 위는 8초 뒤 작은 스탬프 판 6번째 칸을 가렸다) · 보이는 원 32(반투명 흰 면 · 옅은 그림자 · 구석에서 8 안쪽) · 눌림 44 · 영상 내용은 1080 기준 y 928(342 기준 약 294)까지라 그 아래 띠 · 켬 = 연주황 원 + 주황 아이콘
      ③ 스탬프 획득하기 = 홈 접기 부품(axs-sfd) · 머리 = 구획 제목 모양(t4 · 오른쪽 t7 회색 · 셰브론) · 움직임은 부품 그대로(0.3초 · 0.18초 · 동작 줄이기 즉시) */
-  .axs-reel { position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: var(--ax-radius-24); overflow: hidden; isolation: isolate; transform: translateZ(0); background: var(--ax-color-surface) url("assets/reel/stamp_reel_v11_poster_342.webp") center / cover no-repeat; }
+  .axs-reel { position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: var(--ax-radius-24); overflow: hidden; isolation: isolate; transform: translateZ(0); background: var(--ax-color-surface) url("assets/reel/stamp_reel_v13_poster_342.webp") center / cover no-repeat; }
   .axs-reel-v { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; background: transparent; }
   .axs-reel-go { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; border-radius: inherit; background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .axs-reel-go:focus-visible { outline: 3px solid var(--ax-color-ink); outline-offset: -3px; }
@@ -2157,6 +2157,9 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   html.reel-lock, html.reel-lock body { overflow: hidden; overscroll-behavior: none; }
   #modal.axs-reelm .mcard { padding-bottom: max(var(--ax-space-12), env(safe-area-inset-bottom)); overscroll-behavior: contain; }
   .axs-reelp { display: flex; flex-direction: column; gap: var(--ax-space-8); }
+  #modal.axs-reelm .axs-mtitle { padding-top: 11px; line-height: 0; }   /* v7.97 「STAMP MISSION」 표지(26) = X(48) 세로 가운데 */
+  .axs-reel-tag { display: inline-flex; line-height: 0; }
+  .axs-reel-tag > span { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; height: 26px; padding: 0 10px; overflow: hidden; border-radius: 4px; background: var(--ax-color-brand); color: var(--ax-color-inverse); line-height: 0; white-space: nowrap; }   /* zoneSign 표지 = 1F 칸 TIME EVENT(.axs-pan .axs-sign.tev.lg)와 같은 값 · 판 부품 이름(axs-sign) · 경계(axs-pan)는 판 화면 밖에서 쓰지 않는다(§132) */
   .axs-reelm .axs-reel::after { content: ""; position: absolute; inset: 0; z-index: 3; border-radius: inherit; box-shadow: inset 0 0 0 1px var(--ax-color-divider); pointer-events: none; }
   .axs-reel-skip { align-self: center; min-height: 44px; padding: 0 var(--ax-space-16); border: 0; border-radius: var(--ax-radius-12); background: transparent; color: var(--ax-color-body); font: var(--ax-type-t6-strong); cursor: pointer; }
   #view[data-v="exp"] .axs-stget { scroll-margin-top: calc(var(--stick, 0px) + var(--ax-space-12)); }

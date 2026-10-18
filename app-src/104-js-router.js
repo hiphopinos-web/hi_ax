@@ -184,7 +184,6 @@ var App = {
       if (this.PARENT[v] === prev) delete this.from[v]; else this.from[v] = prev;
     }
     if (v === "guide" && this.current !== "guide" && !detIs(this.current) && typeof VFOLD !== "undefined") VFOLD.open = false;   /* v7.67 1F 칸 영상 묶음 = 다른 화면에서 오면 닫힘(시트를 닫고 돌아오면 그대로) */
-    if (v === "home" && this.current !== "home" && typeof STFOLD !== "undefined") STFOLD.open = false;   /* v7.65 홈 스탬프 접기 단추 = 홈에 새로 오면 닫힘(사용자 261017 「닫힌 게 기본값」) */
     this.current = v;
     if (typeof fgTick === "function") fgTick(false);   /* v7.61 A1 화면 그룹이 바뀌면 지난 구간을 닫는다 */
     detHist(v, isBack, dPrev);   /* v5.69 시트에서 시트로 = 앞 내용을 기억(뒤로 = 앞 내용) */
@@ -288,7 +287,6 @@ var App = {
     /* v4.08 아래 고정 버튼(axs-fix)이 있는 화면 = 결정·제출 화면 · 하단 메뉴를 숨기고 버튼 높이만큼 비운다 */
     var fixB = !!el("view").querySelector(".axs-fix.ax-bottom");
     if (fixB) { el("view").dataset.fix = "1"; nav.style.display = "none"; } else delete el("view").dataset.fix;
-    if (ae && ae.id === "stFoldBtn" && !aeId && el("stFoldBtn")) { try { el("stFoldBtn").focus({ preventScroll: true }); } catch (e) {} }   /* v7.65 홈 4초 다시 그리기 · 접기 단추 초점 유지(키보드 · 읽기 프로그램) */
     if (aeId) { var aeN = el(aeId); if (aeN) { try { aeN.focus({ preventScroll: true }); if (aeSel) aeN.setSelectionRange(aeSel[0], aeSel[1]); } catch (e) {} } }   /* 다시 그려도 입력 중인 칸과 커서를 되돌린다 */
     if (v === "scan_q") { if (SCQ.tab === "scan") setTimeout(scanQStart, 80); else if (!QRM.timer) qrMineOn(); }   /* v5.23 카메라는 스캔 탭에서만 · 내 QR 탭은 6초 동기화 */
     if (v === "stair" && STR.mode === "start") stairTickOn();

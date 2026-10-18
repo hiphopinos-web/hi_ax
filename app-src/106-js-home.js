@@ -138,21 +138,7 @@ function myCouponHtml() {
     '<span role="button" tabindex="0" aria-label="스탬프 바로가기" onclick="App.tab(\'exp\')">' + lnkChev("바로가기") + "</span></div>" +
     railHtml(stampCount(), false, null, true);
 }
-/* v7.65 (사용자 261017) 홈 스탬프 아래 「스탬프 모으는 방법」 접기 단추 · 닫힘 기본(다른 화면에서 홈으로 오면 닫힘 · App.go) · 4초 다시 그리기는 열린 채 그대로(STFOLD)
-   펼치면 스탬프 탭과 같은 판(stpBoardMine · 4단계 8줄 · 같은 함수) · 경품 보기 · 담당자 적립 · 스탬프 탭 아래쪽은 넣지 않는다 · 레일은 바로 위 그대로
-   움직임 = 높이 grid-template-rows 0fr → 1fr + 안쪽 떠오름 6px · 열림 0.3초 · 닫힘 0.18초(--ax-motion-*) · 동작 줄이기 = 즉시(CSS) */
-var STFOLD = { open: false };
-function stFoldHtml() {
-  var o = STFOLD.open;
-  return '<div class="axs-sfd' + (o ? " open" : "") + '">' +
-    '<button type="button" class="axs-sfdb" id="stFoldBtn" aria-expanded="' + o + '" aria-controls="stFoldBody" onclick="stFoldTog(this)"><span>스탬프 모으는 방법</span>' + CHEV_SVG + "</button>" +
-    '<div class="axs-sfdp" id="stFoldBody"><div class="axs-sfdi"><div class="axs-sfdc">' + stpBoardMine() + "</div></div></div></div>";
-}
-function stFoldTog(b) {
-  STFOLD.open = !STFOLD.open;
-  var w = b.closest(".axs-sfd"); if (w) w.classList.toggle("open", STFOLD.open);
-  b.setAttribute("aria-expanded", String(STFOLD.open));
-}
+/* v7.97 (사용자 261018 「홈 화면에 스탬프 모으는 방법 << 이건 삭제해줘」) v7.65 홈 스탬프 아래 접기 칸(상태 · 그리기 · 열고 닫기 함수)을 지웠다 · 같은 판은 스탬프 탭 「스탬프 획득하기」 · 접기 부품 CSS(axs-sfd)는 영상 보기 · 스탬프 획득하기가 쓴다 */
 /* v5.57 (사용자 261004 「다음 스탬프 없애자」) 홈 「다음 스탬프」 카드(v4.84 · nextStampHtml · nextStampPick · nxEvents · nxLectureNow)를 걷었다 · 홈 = 레일 → 나의 일정 · 다음 할 일은 스탬프 탭 한 목록에서
    카드 틀 CSS(axs-nx · axs-nx-c · axs-nx-t)는 최초 로그인 시트의 「찍은 QR」 카드가 쓰므로 남긴다(axs-nx-i · axs-nx1 은 지움)
    261013 오후 (사용자 확정) 줄마다 붙던 받는 방식 칩(STAMP_MODE · 자동 · 폰으로 · 현장 · 스태프 인증)은 걷었다 · 스탬프 탭 단계 제목(STAMP_STAGES)이 대신한다 */
