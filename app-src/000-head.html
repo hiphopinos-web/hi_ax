@@ -2,11 +2,17 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<script>/* 261017 hiax.app 주소 옮기기 · github.io 로 열렸을 때만 assets/hiax-move.js(값 한 곳 · 확인 뒤 옮김 · 실패하면 그대로) */if(location.hostname==="hiphopinos-web.github.io")document.write('<script src="assets/hiax-move.js"><\/script>');</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>AX Festival 2026 · ME to WE</title>
 <!-- 홈 화면에 추가 = 아이콘 한 번으로 실행 (설치·스토어 없음) -->
 <link rel="manifest" href="manifest.json">
+<!-- 261019 아래 시작 화면이 <body> 를 일찍 열어서 <head> 에 있어야 하는 것(홈 화면 앱 · 아이콘 · 상태 줄)을 여기로 올렸다 -->
+<meta name="theme-color" content="#FFFFFF">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="AX Festival">
 <!-- 261007 PC 휴대폰 틀(사용자 261007 긴급 「PC 화면에서도 핸드폰처럼」) · 넓은 창(폭 900 이상 · 높이 600 이상 · 마우스 기기)에서만 이 창은 기기 틀만 그리고 앱은 틀 안 iframe(같은 주소)에서 휴대폰 폭 그대로 돈다
      그래서 바텀 시트 · 탭 막대 · 모달 · 게임 · 둘러보기 · 카메라처럼 화면에 붙는(fixed) 것과 vh · 스크롤이 모두 틀 안에서 휴대폰과 똑같다 · 앱 코드는 바꾸지 않는다
      틀을 안 쓰는 곳(지금 그대로): 휴대폰 · 태블릿(터치 전용) · 좁은 창 · #tv= · #self · 셀프 노트북(self_on) · 주소에 cap · file:// 단일 파일 · 자동화 브라우저(헤드리스 캡처 도구) · ?frame=0 · #noframe(이 탭 동안 끔) · ?frame=1 = 강제로 켬(확인용)
@@ -127,6 +133,25 @@
   D.addEventListener("DOMContentLoaded", boot);
 })();
 </script>
+<!-- 261019 첫 바이트 시작 화면(사용자 「진행」 · U+ 데이터 첫 화면 하얗게 멈춤) · 큰 style · script · 바깥 서체보다 앞 · 입장 화면과 같은 주황 · 점 격자 · 행사명 + 「접속하는 중」 · 바깥 파일을 기다리지 않는다
+     여기서 <body> 를 연다(head 의 링크 · 스크립트는 그리기를 막는다 · body 안으로 옮긴 아래 링크 · 스크립트 · style 은 그대로 적용되고 이 화면을 막지 않는다 · 이 화면 style 은 스크립트로 넣는다(앱 큰 style 이 문서의 첫 style 닫힘이어야 하는 검사 · 67절 등))
+     앱 부팅이 끝나면(DOMContentLoaded) 0.16초에 걷힌다 · 동작 줄이기 = 바로 · PC 휴대폰 틀 바깥 창은 위 틀 스크립트의 <plaintext> 가 이 아래를 삼켜 그리지 않는다(틀 안 앱이 자기 시작 화면을 그린다) -->
+<script>(function () { var s = document.createElement("style"); s.id = "axfBootCss"; s.textContent =
+  "#axfBoot{position:fixed;left:0;top:0;right:0;bottom:0;z-index:2147483000;overflow:hidden;background:#FF7F32;color:#FFFFFF;font-family:\"Pretendard Variable\",Pretendard,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"Malgun Gothic\",sans-serif;-webkit-text-size-adjust:100%;transition:opacity .16s ease-out}" +
+  "#axfBoot.off{opacity:0;pointer-events:none}" +
+  "#axfBoot svg{position:absolute;left:0;top:0;width:100%;height:100%}" +
+  "#axfBoot div{position:absolute;left:24px;right:24px;top:max(calc(54px + env(safe-area-inset-top,0px)),calc(50% - 192px))}" +
+  "#axfBoot b{display:block;font-size:40px;line-height:42px;font-weight:700;letter-spacing:-.01em;white-space:nowrap}" +
+  "#axfBoot p{margin:16px 0 0;font-size:15px;line-height:21px;font-weight:600}" +
+  "#axfBoot p::after{content:\"\";display:inline-block;width:5px;height:5px;margin:0 9px 2px 8px;border-radius:50%;vertical-align:middle;background:currentColor;box-shadow:9px 0 0 currentColor;animation:axfBootDot 1.2s ease-in-out infinite}" +
+  "@keyframes axfBootDot{50%{opacity:.3}}" +
+  "@media (prefers-reduced-motion:reduce){#axfBoot{transition:none}#axfBoot p::after{animation:none}}";
+  document.head.appendChild(s); })();</script>
+</head>
+<body>
+<div id="axfBoot" role="status"><svg aria-hidden="true"><defs><pattern id="axfBootG" width="28" height="28" x="13" y="0" patternUnits="userSpaceOnUse"><circle cx="14" cy="14" r="1.2" fill="#FFFFFF" fill-opacity=".45"/></pattern></defs><rect width="100%" height="100%" fill="url(#axfBootG)"/></svg><div><b>AX Festival</b><b>2026</b><p>접속하는 중</p></div></div>
+<script>window.axfBootOff = function () { var b = document.getElementById("axfBoot"), q = false; if (!b || b.className) return; function rm() { if (b.parentNode) b.parentNode.removeChild(b); } try { q = matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {} if (q) return rm(); b.className = "off"; setTimeout(rm, 200); }; document.addEventListener("DOMContentLoaded", function () { window.axfBootOff(); }); window.addEventListener("load", function () { window.axfBootOff(); });</script>
+<!--axf-boot-end-->
 <!-- AX-TDS v1 (260922 · design.md §A) · 홍보부 앱 디자인 가이드 패키지의 잠긴 토큰·컴포넌트 · 이 두 파일은 고치지 않는다 -->
 <link rel="stylesheet" href="design-handoff/design-system/tokens.css">
 <link rel="stylesheet" href="design-handoff/design-system/components.css">
@@ -142,10 +167,4 @@
 <!-- 본문 서체 · 로컬 미설치 기기에서도 Pretendard로 렌더 (오프라인이면 시스템 고딕으로 자동 폴백) -->
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<meta name="theme-color" content="#FFFFFF">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="AX Festival">
 <style>
