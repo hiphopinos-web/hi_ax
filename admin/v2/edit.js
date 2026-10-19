@@ -93,7 +93,7 @@ function p10Undo(id){ call("pre10_undo",{ id:id, confirm:P10_W.undo }).then(func
 function pcListsHtml(d){
   var L=d.lists||{}, e=d.emp, J=jq(e), p=d.p10, h='';
   var row=function(lk, key, nm, note){ var on=!!L[key]; return '<div class="pc-pr'+(on?" got":"")+'"><span class="t"><b>'+esc(nm)+'</b><span class="cap">'+(on?"있음":"없음")+(note?" · "+esc(note):"")+'</span></span>'+(lk?'<button class="btn sm'+(on?" dng":"")+'" type="button" aria-label="'+esc(nm+(on?" 빼기":" 넣기"))+'" onclick="pcRoll(\''+lk+'\',\''+(on?"del":"add")+'\',\''+J+'\')">'+(on?"빼기":"넣기")+'</button>':'')+'</div>'; };
-  h+=row("gate","gate","접속 허용","클로즈 베타 기간에 들어옴")+row("staff_app","staffApp","스태프 폰 권한","스캔 · 현장 부여")+row("staff_wear","staffWear","스태프 옷","")+row("","test","시험 사번","넣기 · 빼기는 대화로");
+  h+=row("gate","gate","접속 허용","클로즈 베타 기간에 들어옴")+row("staff_app","staffApp","스태프 폰 권한","스캔 · 현장 부여")+row("staff_wear","staffWear","스태프 옷","")+(typeof pcSzHtml==="function"?pcSzHtml(d):"")+row("","test","시험 사번","넣기 · 빼기는 대화로");
   var opt=P10_IDS.map(function(k){ return '<option value="'+k+'"'+(p&&p.sid===k?" selected":"")+'>'+esc(p10Nm(k))+'</option>'; }).join("");
   h+='<div class="pc-pr'+(p?" got":"")+'"><span class="t"><b>10F 사전 신청</b><span class="cap">'+(p?esc(p10Nm(p.sid))+(p.role?" · 운영진":"")+" · 키트 "+(p.kit?"받음":"아직"):"없음")+'</span></span></div>'+
     '<div class="btns mt4"><select class="xg-q" id="pcP10" aria-label="10F 세션" style="width:auto">'+opt+'</select>'+(p?'<button class="btn sm" type="button" onclick="pcP10Set(\''+J+'\')">세션 바꾸기</button><button class="btn sm dng" type="button" onclick="pcP10Del(\''+J+'\')">10F 명단에서 빼기</button>':'<button class="btn sm" type="button" onclick="pcP10Set(\''+J+'\')">10F 명단에 넣기</button>')+'</div>';
