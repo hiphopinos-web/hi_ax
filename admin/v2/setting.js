@@ -43,7 +43,7 @@ SCREENS.log={
     if(s==="qr") return qrPaint();
   }
 };
-function scrUrl(p){ try{ return new URL(p, location.href).href; }catch(e){ return p; } }
+function scrUrl(p){ try{ var x=new URL(p, location.href); if(BE_QA&&/\/draw\//.test(x.pathname)&&!x.searchParams.has("srv")) x.searchParams.set("srv","qa"); return x.href; }catch(e){ return p; } }   /* 261019 ?srv=qa 콘솔 = 추첨 화면 주소에도 srv=qa(없으면 지금 그대로) */
 /* ── 활동 기록 ── */
 function lgWhat(r){ if(r.cnt&&r.list==="stamp") return "종이 기록 일괄 반영 · 스탬프 "+(r.gmN||"")+"줄 · "+r.cnt+"명"; if(r.cnt) return (r.list==="gate"?"접속 허용 명단":r.list==="staff_app"?"앱 스태프 명단":r.list==="staff_wear"?"스태프 의류 명단":"명단")+(r.op==="add"?"에 넣음":"에서 뺌")+" · "+r.cnt+"명"; return String(r.x||"").replace(/상담석/g,"미팅룸"); }   /* 261016 밤 라운지 상담석 = 미팅룸(서버 운영로그 글자는 그대로 · 화면만) */
 function lgUndoTx(r){ var u=r.undo; if(!u) return ""; if(u.done) return u.done+" 되돌림"; if(LG_DONE[r.ref]) return LG_DONE[r.ref]+" 되돌림"; if(u.a==="roulette_undo") return ""; if(u.ok) return GEN_UNDO[u.a]?"가능":""; return u.cur?"지금 "+u.cur:"오늘만 · 지남"; }

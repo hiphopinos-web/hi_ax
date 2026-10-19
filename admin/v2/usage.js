@@ -3,7 +3,7 @@
  * 기간 = 이 브라우저에만 기억(localStorage · 실패해도 기본값) · 기본 = 사전 오픈 날 pre · 행사일 day · 그 밖 all
  * 그리는 곳 = now.js(지금 탭) · 당일 08:00~17:30 이면 이상 신호 아래, 그 밖은 맨 위(D6) */
 var US={ per:"", am:"h", rs:0 };
-var US_LS="axf_usage_p";
+var US_LS=skey("axf_usage_p");
 var US_PROG=[["09:30","Opening · Keynote"],["13:30","AWS"],["15:10","MS"],["17:00","Closing"]];
 var US_OP=[1,.78,.56,.38,.22];   /* 화면 겹 · 네이비 농도(순위 1~5) · 그 밖 = 회색 */
 function usDay(ymd, n){ var a=String(ymd||"").split("-"); if(a.length<3) return ""; var d=new Date(+a[0],+a[1]-1,+a[2]+n); return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2); }

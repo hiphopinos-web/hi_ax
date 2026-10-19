@@ -8,6 +8,11 @@ function beUrlOk(u){ return typeof u==="string"&&/^https:\/\/([a-z0-9-]+\.[a-z0-
 var BE=beUrlOk(typeof AXF_SERVER==="string"?AXF_SERVER:"")?AXF_SERVER:BE_DEFAULT;
 if(typeof AXF_SERVER==="string"&&/^http:\/\/127\.0\.0\.1:\d+\/exec$/.test(AXF_SERVER)) BE=AXF_SERVER;   /* 로컬 QA 서버(QA/local.mjs · 127.0.0.1 만) */
 else if(/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) BE="http://127.0.0.1:9/exec";   /* 로컬에서 서버 주소를 못 받으면 원격 기본값(옛 서버)으로 가지 않고 실패로 둔다 */
+/* 261019 럭키드로우 리허설 · 주소에 ?srv=qa = 시험 서버(hi-qa) · 무대 stage.html?srv=qa 와 같은 방식 · 저장 키(로그인 · 화면 기억)에 qa_ 를 붙여 운영과 섞지 않는다 · 위에 띠(qaBand)
+ * 없으면 BE · 저장 키 · 화면 모두 지금 그대로(skey(k) = k) */
+var BE_QA=/[?&]srv=qa(&|$)/.test(location.search);
+if(BE_QA) BE="https://hi-qa.axf2026.workers.dev/exec";
+function skey(k){ return BE_QA?"qa_"+k:k; }
 var LOUNGE_DEF={ start:"09:30", n:7, seats:2 };   /* 배치판 기본값 · 서버가 칸 설정을 주면 그 값(now_board lounge · 서버 갱신 뒤) */
 
 /* ── 1. 작은 도구 ── */
@@ -25,12 +30,12 @@ function ago(s){ var m=String(s||"").match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(
 function srvNow(){ var m=String(S.srvT||"").match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/); if(!m) return new Date(); var d=new Date(m[1],m[2]-1,m[3],m[4],m[5],m[6]||0); return new Date(d.getTime()+(Date.now()-S.srvAt)); }
 function tag(t,c){ return '<span class="tag '+(c||"")+'">'+esc(t)+'</span>'; }
 function stt(c,t){ return '<span class="st '+c+'"><i></i>'+esc(t)+'</span>'; }
-function lsGet(k,d){ try{ var v=localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch(e){ return d; } }
-function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
-function aemp(){ try{ return sessionStorage.getItem("axf_adm_emp")||""; }catch(e){ return window.__e||""; } }
-function setAemp(v){ try{ sessionStorage.setItem("axf_adm_emp",v||""); }catch(e){ window.__e=v||""; } }
-function tok(){ try{ return sessionStorage.getItem("axf_adm_tok")||""; }catch(e){ return window.__t||""; } }
-function setTok(v){ try{ sessionStorage.setItem("axf_adm_tok",v||""); }catch(e){ window.__t=v||""; } }
+function lsGet(k,d){ try{ var v=localStorage.getItem(skey(k)); return v==null?d:JSON.parse(v); }catch(e){ return d; } }
+function lsSet(k,v){ try{ localStorage.setItem(skey(k),JSON.stringify(v)); }catch(e){} }
+function aemp(){ try{ return sessionStorage.getItem(skey("axf_adm_emp"))||""; }catch(e){ return window.__e||""; } }
+function setAemp(v){ try{ sessionStorage.setItem(skey("axf_adm_emp"),v||""); }catch(e){ window.__e=v||""; } }
+function tok(){ try{ return sessionStorage.getItem(skey("axf_adm_tok"))||""; }catch(e){ return window.__t||""; } }
+function setTok(v){ try{ sessionStorage.setItem(skey("axf_adm_tok"),v||""); }catch(e){ window.__t=v||""; } }
 function normE(v){ return String(v==null?"":v).replace(/\s/g,"").toUpperCase().replace(/^0+(?=.)/,""); }
 function envName(){ return /127\.0\.0\.1/.test(BE)?"로컬":/hi-qa/.test(BE)?"QA":/hi-load/.test(BE)?"부하 시험":/script\.google/.test(BE)?"옛 서버":"운영"; }
 
@@ -106,12 +111,16 @@ function reload(keys){ keys.forEach(function(k){ S.at[k]=0; }); load(true, keys)
 setInterval(function(){ load(false); },5000);
 document.addEventListener("visibilitychange",function(){ if(!document.hidden) load(false); });
 
+/* 261019 ?srv=qa 띠 · 화면 맨 위에 늘(입장 화면 · 확인 창 위에도) · 운영 주소에는 만들지 않는다 */
+function qaBand(){ if(!BE_QA||el("qaBand")) return; var b=document.createElement("div"); b.id="qaBand"; b.className="qa-band"; b.setAttribute("role","status");
+  b.innerHTML='<b>시험 서버(hi-qa)</b><span>운영 데이터가 아닙니다 · 주소에서 ?srv=qa 를 지우면 운영</span>'; document.body.insertBefore(b, document.body.firstChild); document.body.classList.add("qa"); try{ document.title="[시험] "+document.title; }catch(e){} }
 /* ── 4. 로그인 · 잠금 ── */
 /* 261017 입장 화면 · 들어가기 · 비밀번호 정하기 · 바꾸기는 auth.js(lockUI · unlock · pwDetect · pwChangeAsk) · 옛 서버면 사번 + 관리코드 그대로 */
 function lock(msg){ setTok(""); S.me=null; PWM.set=null; el("lock").hidden=false; lockUI(msg); }
 function boot(){
   whoHook();
   el("envTx").textContent=envName();
+  qaBand();
   routeFromHash();
   pwDetect(function(){
     if(!tok()){ lock(""); return; }
@@ -347,7 +356,7 @@ function whoByName(n, pool){
 function whoOf(r){
   r=r||{}; var e=normE(r.emp||""), n=String(r.name||r.nm||"").trim(), d=String(r.dept||"").trim(), dup=0;
   if(!whoOkE(e)) e="";
-  if(!e&&n){ var hit=whoByName(n, r._wp); if(hit&&hit.length===1) e=hit[0]; else if(hit&&hit.length>1) dup=hit.length; }
+  if(!e&&n&&!r._noNm){ var hit=whoByName(n, r._wp); if(hit&&hit.length===1) e=hit[0]; else if(hit&&hit.length>1) dup=hit.length; }
   var o=e?WHO.e[e]:null;
   /* 소속은 명부 부서를 쓰는 명단(list_get · 찾기)의 값이 먼저 · 줄에 딸린 부서(부문일 수 있음)는 그다음
    * 없으면 먼저 접속 명단(가입한 사람 전부 · 5분에 한 번) · 거기도 없으면 명부 찾기(한 사람 한 번) · 이름을 사람이 넣는 명단(PIN 분실)은 바로 명부 찾기 */

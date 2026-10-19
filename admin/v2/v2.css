@@ -432,3 +432,9 @@ details.memo summary{cursor:pointer;font-weight:600;min-height:32px;display:flex
 .pwck{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--tx3)}
 .pwck li.on{color:var(--tx);font-weight:600}.pwck li.no{color:var(--warn)}
 .pwck2{font-size:12px;margin:4px 0 0;color:var(--tx3);min-height:16px}.pwck2.on{color:var(--tx);font-weight:600}.pwck2.no{color:var(--warn)}
+/* 261019 ?srv=qa 시험 서버 띠 · 맨 위에 늘(입장 화면 · 확인 창 · 서랍 위) · 운영 주소에는 없다(body.qa 도 없음) */
+.qa-band{position:fixed;top:0;left:0;right:0;height:40px;z-index:80;background:var(--warn);color:#fff;display:flex;align-items:center;justify-content:center;gap:12px;padding:0 16px;font-size:13px;white-space:nowrap;overflow:hidden}
+.qa-band b{font-size:16px;font-weight:700}
+body.qa .app,body.qa .lockscr,body.qa .dlg-bg{top:40px}
+body.qa .cc-drawer{top:calc(var(--top) + 40px)}
+@media (max-width:560px){.qa-band span{display:none}}

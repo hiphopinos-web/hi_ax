@@ -2,7 +2,7 @@
  * 데이터 = now_sofar(관리코드 · 읽기 · 60초 캐시) · 사람 이름 · 사번 · 부문 없음 · test = 1 테스트 사번 포함(기본 뺌 · 이 브라우저에만 기억)
  * 행사일이 아닌 날 = 앱 사용 아래에 펼쳐 둔다 · 행사일 = 맨 아래 접힘(이상 신호 우선 D6) */
 var SF={ t:null };
-var SF_LS="axf_sofar_t";
+var SF_LS=skey("axf_sofar_t");
 var SF_TH=[[3,"룰렛 1회"],[4,"행운권 1장"],[5,"행운권 2장"],[6,"행운권 3장 · 선착순"]];
 function sfTest(){ if(SF.t!=null) return SF.t; var v=""; try{ v=localStorage.getItem(SF_LS)||""; }catch(e){ v=""; } return v==="1"?1:0; }
 function sfNeed(){ return { k:"sf", a:"now_sofar", p:{ test:String(sfTest()) }, ttl:60000 }; }

@@ -6,8 +6,8 @@
 var NT_SUBS=[["send","보내기"],["hist","보낸 기록"]];
 var NT_GRP=[["dap","AX 라운지 신청자"],["cchat","커피챗 희망자"],["stamps","스탬프 개수"]];
 var NT_MAX={ t:40, b:120, from:20 }, NT_FROM="AX Festival";
-var NT=(function(){ var g={}; try{ g=JSON.parse(sessionStorage.getItem("axf_v2_nt")||"{}")||{}; }catch(e){} return { tgt:g.tgt||"all", grp:g.grp||"dap", smin:g.smin!=null?g.smin:3, smax:g.smax!=null?g.smax:6, ppl:g.ppl||[], from:g.from!=null?g.from:NT_FROM, t:g.t||"", b:g.b||"", push:g.push!==false, pv:null, seq:0, q:"", qr:null, qseq:0, hold:null }; })();
-function ntSave(){ try{ sessionStorage.setItem("axf_v2_nt",JSON.stringify({ tgt:NT.tgt, grp:NT.grp, smin:NT.smin, smax:NT.smax, ppl:NT.ppl, from:NT.from, t:NT.t, b:NT.b, push:NT.push })); }catch(e){} }
+var NT=(function(){ var g={}; try{ g=JSON.parse(sessionStorage.getItem(skey("axf_v2_nt"))||"{}")||{}; }catch(e){} return { tgt:g.tgt||"all", grp:g.grp||"dap", smin:g.smin!=null?g.smin:3, smax:g.smax!=null?g.smax:6, ppl:g.ppl||[], from:g.from!=null?g.from:NT_FROM, t:g.t||"", b:g.b||"", push:g.push!==false, pv:null, seq:0, q:"", qr:null, qseq:0, hold:null }; })();
+function ntSave(){ try{ sessionStorage.setItem(skey("axf_v2_nt"),JSON.stringify({ tgt:NT.tgt, grp:NT.grp, smin:NT.smin, smax:NT.smax, ppl:NT.ppl, from:NT.from, t:NT.t, b:NT.b, push:NT.push })); }catch(e){} }
 function ntAddPerson(p){ if(!p||!p.emp) return; NT.tgt="ppl"; if(!NT.ppl.some(function(x){ return x.emp===p.emp; })) NT.ppl.push({ emp:p.emp, name:p.name||"", dept:p.dept||"" }); NT.pv=null; ntSave(); }
 function ntSub(){ return subsOf(NT_SUBS,"send"); }
 function pushSt(){ var d=S.data.pst; return d&&d.ok&&d.rt?d:null; }
