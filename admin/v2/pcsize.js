@@ -29,7 +29,7 @@ function pcSzAsk(emp){
         '<label class="fld">확인 문구 「'+PSZ_W+'」를 그대로 넣습니다<input class="in" id="pszQ" autocomplete="off" oninput="gateUpd()"></label>',
       focus:"pszQ", ok:x.cur?"바꾸기":"넣기", gate:function(){ var i=el("pszQ"); return !!i&&i.value.trim()===PSZ_W; },
       run:function(){ return call("kit_staff_size_apply",{ rows:rows, sig:r.sig, confirm:PSZ_W, addw:"0", adda:"0" }); },
-      fail:function(y){ return y&&y.reason==="state"?"그 사이 바뀌었습니다 · 닫고 다시 누릅니다":y&&y.reason==="none"?PSZ_ST.same:""; },
+      fail:function(y){ return y&&y.reason==="super"?"슈퍼관리자만 합니다":y&&y.reason==="state"?"그 사이 바뀌었습니다 · 닫고 다시 누릅니다":y&&y.reason==="none"?PSZ_ST.same:""; },
       done:function(y){ pcAfter(); toast((x.cur?"사이즈를 바꿨습니다 · ":"사이즈를 넣었습니다 · ")+sz+(y.nos?" · 신청번호 발급":""), y.batch?{ undo:function(){ pcSzUndo(y.batch); } }:{}); } });
   });
 }
