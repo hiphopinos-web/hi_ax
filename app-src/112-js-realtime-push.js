@@ -226,6 +226,14 @@ function beSync(after) {
         var sr = hhmm(res.my.cchat.round), stb = String(res.my.cchat.table || "");
         if (!c || c.status !== "matched" || c.round !== sr || c.table !== stb) S.set("cchat", { status: "matched", round: sr, table: stb, ts: Date.now() });   /* v3.43 서버가 정본 */
       }
+      /* v8.07 (261019 버그) 콘솔이 선정을 대기열로 되돌림(「대기열로 보내고 저장」) = 서버 대기 · 기기 저장값 matched 를 pending 으로 내린다 · 같은 회차 · 테이블로 다시 선정되면 앱 안 알림이 다시 뜨게 noti_seen.cchat 비움 */
+      if (res.my.cchat && res.my.cchat.status === "대기") {
+        var cw = S.get("cchat", null);
+        if (cw && cw.status === "matched") {
+          S.set("cchat", { status: "pending", pref: res.my.cchat.pref || String(res.my.cchat.tag || "").split(CCHAT_TAG_SEP)[1] || "", ts: Date.now() });
+          var nsn = S.get("noti_seen", {}); if (nsn.cchat) { delete nsn.cchat; S.set("noti_seen", nsn); }
+        }
+      }
       if (res.my.sess) {
         /* 강의 신청 · 서버 우선. 서버에 없는 로컬 신청은 30초(전송 유예)만 유지 */
         var srv = {}, curS = sessMy(), chg = false, k3;

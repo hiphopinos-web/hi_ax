@@ -184,15 +184,30 @@ var Views = {
         '<ul class="axs-ccdl"><li>18F · 1:1 · ' + CC_DUR + "분</li><li>신청 순서대로 시간을 정해 알려 드려요</li></ul></div>" +   /* v7.52 (사용자 확정 261016 미팅 개편) 옛 「회차 20분 · 회차마다 4명」 · 「운영진이 선정해 알려 드려요」 */
         '<div class="ax-bottom axs-fix"><button type="button" class="ax-button" id="ccNext" onclick="ccStep(2)"' + (d.r.length ? "" : " disabled") + ">다음</button></div>";
     }
+    /* v8.07 (사용자 확정 261019 · 현장 피드백) 화면 2 = 아이디어 한 줄 · 낸 아이디어가 있으면 「내가 낸 아이디어」 목록에서 하나 골라 신청(서버 idea = 그 ID · 아이디어 행 새로 안 생김) · 「새로 쓰기」 = 쓰는 칸
+       낸 아이디어가 없으면 제목 「아이디어 한 줄 등록」 + 「등록한 아이디어로 커피챗 상담을 신청해요」 · 쓴 글 = 아이디어 한 줄 등록 + 같은 글로 신청(옛 동작)
+       아래 = 아이디어 한 줄 입력 화면과 같은 부품(도장 stampTagHtml p5 · 시상 묶음 ideaPrizeHtml) · 옛 회색 두 줄(「이 글은 아이디어 한 줄로도 등록돼요」 · 「따로 쓰지 않아도 돼요」) 삭제 */
+    ideaMineFetch();
+    var mine = ccMyIdeas(), pk = ccPicked(mine), busyD = CCA.busy ? " disabled" : "";
+    var timeRow = '<div class="axs-ccpick"><span class="k">고른 시간</span><b>' + segHtml(esc(d.r.join(" · "))) + '</b><button type="button" class="ax-link axs-plain" onclick="ccStep(1)"' + busyD + ">바꾸기</button></div>";
+    var head = function (t) { return '<div class="ax-stack-tight axs-gap8"><h1 class="ax-type-t2">' + t + '</h1><p class="ax-description">등록한 아이디어로 커피챗 상담을 신청해요</p></div>'; };
+    var go = function (on) { return '<div class="ax-bottom axs-fix"><button type="button" class="ax-button" id="ccGo" onclick="ccSubmit()"' + (on && !CCA.busy ? "" : " disabled") + (CCA.busy ? ' aria-busy="true"' : "") + ">" + (CCA.busy ? "보내는 중" : "신청하기") + "</button></div>"; };
+    if (mine.length && CCA.mode !== "new") {
+      return '<div class="ax-stack axs-form axs-cca">' + head("내가 낸 아이디어") + err +
+        '<div class="axs-ccis" role="group" aria-label="내가 낸 아이디어 · 하나 고르기">' + mine.map(function (i) {
+          var on = !!pk && pk.id === i.id;
+          return '<button type="button" class="axs-opt axs-cci" aria-pressed="' + on + '" onclick="ccPickIdea(\'' + i.id + '\')"' + busyD + '><span class="tx">' + esc(i.text) + '</span><span class="mt">' + (i.ch === "cchat" ? '<span class="axs-chip">커피챗 신청</span> ' : "") + (i.ts ? fmtTime(i.ts) : "") + "</span></button>";
+        }).join("") + "</div>" +
+        '<button type="button" class="ax-link axs-plain axs-self" onclick="ccMode(\'new\')"' + busyD + ">새로 쓰기</button>" +
+        timeRow + ccIdeaFootHtml() + "</div>" + go(!!pk);
+    }
     setTimeout(function () { var t = el("ccText"); if (t) { t.style.height = "auto"; t.style.height = (t.scrollHeight + 2) + "px"; } }, 0);
-    return '<div class="ax-stack axs-form axs-cca">' +
-      '<h1 class="ax-type-t2">어떤 상담을 하고 싶으세요?</h1>' + err +
-      '<div class="ax-stack-tight"><label class="ax-type-t6-strong" for="ccText">상담하고 싶은 내용</label>' +
+    return '<div class="ax-stack axs-form axs-cca">' + head("아이디어 한 줄 등록") + err +
+      '<div class="ax-stack-tight"><label class="ax-sr-only" for="ccText">아이디어 한 줄</label>' +
       '<textarea id="ccText" class="ax-field axs-ta axs-grow" rows="4" maxlength="' + IDEA_MAX + '" placeholder="예: 매달 하는 실적 집계를 AI로 줄이고 싶어요" oninput="ccInput(this.value)" onfocus="kbFocus(this)" aria-describedby="ccCnt"' + (CCA.busy ? " readonly" : "") + ">" + esc(d.t) + "</textarea>" +
       '<p class="ax-meta axs-cccnt" id="ccCnt">' + ccCntTxt(ideaLen(d.t)) + "</p></div>" +
-      '<ul class="axs-ccdl"><li>이 글은 아이디어 한 줄로도 등록돼요</li><li>아이디어 한 줄 메뉴에 따로 쓰지 않아도 돼요</li><li id="ccP5Line">' + esc(ccP5Line()) + "</li></ul>" +
-      '<div class="axs-ccpick"><span class="k">고른 시간</span><b>' + segHtml(esc(d.r.join(" · "))) + '</b><button type="button" class="ax-link axs-plain" onclick="ccStep(1)"' + (CCA.busy ? " disabled" : "") + ">바꾸기</button></div></div>" +
-      '<div class="ax-bottom axs-fix"><button type="button" class="ax-button" id="ccGo" onclick="ccSubmit()"' + (ideaOk(d.t) && !CCA.busy ? "" : " disabled") + (CCA.busy ? ' aria-busy="true"' : "") + ">" + (CCA.busy ? "보내는 중" : "신청하기") + "</button></div>";
+      (mine.length ? '<button type="button" class="ax-link axs-plain axs-self" onclick="ccMode(null)"' + busyD + ">내가 낸 아이디어 " + mine.length + "건</button>" : "") +
+      timeRow + ccIdeaFootHtml() + "</div>" + go(ideaOk(d.t));
   },
 
   ideas: function () {

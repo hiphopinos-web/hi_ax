@@ -133,6 +133,7 @@ var App = {
   back: function () {
     if (TOUR_RET && !TOUR_RET.away && this.current === TOUR_RET.v && tourRetBack()) return;   /* v5.53 둘러보기 바로 가기로 온 화면 = 뒤로 가면 둘러보기 */
     if (TOUR_RET && !TOUR_RET.away && TOUR_RET.done && this.isAnc(TOUR_RET.v, this.current) && tourRetBack()) return;   /* v5.57 둘러보기에서 출발한 활동을 마쳤으면 그 활동의 어느 화면(결과 · 게임 · 완료)에서 뒤로 가도 둘러보기 */
+    if (this.current === "cc_apply" && CCA.step === 2 && !CCA.busy && CCA.mode === "new" && ccMyIdeas().length) { ccMode(null); return; }   /* v8.07 새로 쓰기 → 내가 낸 아이디어 목록(쓴 글 그대로) */
     if (this.current === "cc_apply" && CCA.step === 2 && !CCA.busy) { ccStep(1); return; }   /* v7.39 커피챗 신청 화면 2 → 화면 1(고른 시간 · 쓴 글 그대로) */
     if (QRS.hold) { QRS.gate = 0; QRS.gateQ = []; }   /* v4.13 인식 중 뒤로 = 미뤄 둔 전환을 버리고 바로 나간다 */
     var v = this.current, p = this.parentOf(v) || "home";
