@@ -157,6 +157,16 @@
     }
     return { people: people, order: order, kind: "demo" };
   }
+  /* 261019 시험 페이지(test.html · ?sandbox=1)만 · 테스트자가 정한 풀(사람 수 · 장수 · 번호 · 이름) · 등수별 인원
+   *   값은 부모 창(test.html)의 __axTestCfg() 메모리에서 읽는다 · 이 화면은 그 값을 서버로 보내지 않는다(sandbox = 호출 0)
+   *   등수 이름(6등 ~ 1등) · 경품 글자 · 당첨을 정하는 곳(pickBatch · startExit)은 그대로 · 무대 노트북(라이브 · 데모)은 이 블록을 타지 않는다 */
+  if (SANDBOX) (function () {
+    var tc = null;
+    try { tc = window.parent !== window && typeof window.parent.__axTestCfg === "function" ? window.parent.__axTestCfg() : null; } catch (e) { tc = null; }
+    if (!tc) return;
+    if (tc.counts && tc.counts.length === CFG.rounds.length) CFG.rounds.forEach(function (r, i) { r.count = clamp(Math.floor(+tc.counts[i] || 1), 1, 12); });
+    if (tc.pool && tc.pool.order && tc.pool.people) { var p0 = JSON.stringify({ people: tc.pool.people, order: tc.pool.order }); demoPool = function () { var p = JSON.parse(p0); p.kind = "demo"; return p; }; }
+  })();
 
   /* ─────────────── 서버 · JSONP(옛 화면과 같은 방식) · 주소는 ../assets/server.js 의 AXF_SERVER ─────────────── */
   /* 261016 보낼 줄(draw_log 대기)은 서버마다 따로(시험 서버 hi-qa 리허설 기록이 행사 날 운영 서버로 나가지 않게) · 시험 페이지는 쓰지 않는다 */
@@ -2218,6 +2228,15 @@
       tier: function (t) { FORCEQ = -1; applyTier(t, "시험"); return QL.tier; },
       srv: function () { return { ws: WSD.st, wsGive: WSD.give, based: CMD.based, seq: cmdSeqOf("srv"), close: SRV.closeStatus || "", status: SRV.status, log: SRV.logStatus || "", queue: SRV.queue.length, state: SRV.stateStatus || "" }; },
       wsKill: function () { WSD.give = true; clearTimeout(WSD.t); if (WSD.ws) try { WSD.ws.close(); } catch (e) {} }
+    };
+    /* 261019 시험 페이지 판정만 · 무대에 그려진 번호(릴이 지금 선 자리 · 캔버스와 같은 계산) · 칸 이름 · 부서 글자 · 읽기만 */
+    if (SANDBOX) window.__axs.shown = function () {
+      var t = REEL.on ? Math.max(0, T - REEL.t0) : 0;
+      return { sc: SC, round: ST.round, cells: WB.map(function (b, j) {
+        var c = REEL.cells[j], el = document.getElementById("wc" + j), nm = el && el.querySelector(".nm"), dp = el && el.querySelector(".dp"), no = "", k;
+        if (c && REEL.on) for (k = 0; k < 4; k++) no += String(((Math.round(reelPos(c, k, t)) % 10) + 10) % 10);
+        return { id: b.id, no: no, stop: !!(c && c.done[0] && c.done[1] && c.done[2] && c.done[3]), nm: nm ? nm.textContent : "", dp: dp && dp.style.display !== "none" ? dp.textContent : "", op: el ? +(el._op == null ? el.style.opacity || 0 : el._op) : 0 };
+      }) };
     };
   }
   window.addEventListener("DOMContentLoaded", boot);
