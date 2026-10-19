@@ -1,26 +1,78 @@
-/* AX FESTIVAL · 최소 서비스워커
- * 목적: 안드로이드에서 "홈 화면에 추가" 네이티브 설치창을 띄울 수 있게 하는 것 · v4.76 웹 푸시 받기(아래).
- * ⚠ 캐시를 전혀 하지 않는다. 구버전이 폰에 고착되는 사고를 원천 차단하기 위함.
- *   (페이지 이동 요청만 네트워크로 그대로 통과시키고, 나머지는 브라우저 기본 동작에 맡긴다) */
-var SW_VERSION = "axf-2026-10-03-v510";   /* v5.10 · 경품 사진(같은 파일 이름으로 교체 · v5.09 뒤) · 버전이 바뀌면 activate 가 옛 캐시를 지운다 */
+/* AX FESTIVAL · 서비스워커
+ * 목적: 안드로이드 "홈 화면에 추가" 설치창 · v4.76 웹 푸시 받기(아래) · 261019 앱 첫 문서 캐시(사용자 결정 「hiax.app 유지 + 캐시」).
+ * 앱 첫 문서만 캐시한다 = 이 서비스워커 범위의 앱 주소(hiax.app 은 / · /index.html, github.io 는 /hi_ax/ · /hi_ax/index.html · 쿼리 · 해시 무시 · 한 항목).
+ *   · 네트워크 우선 · 본문을 다 받을 때까지 3초와 겨룬다(헤더만 빨리 오고 본문이 느린 경우가 실제 문제 · 국내 접속이 LAX 거점으로 가는 회선).
+ *   · 3초 안에 200 · html 본문이 다 오면 그 판을 보여 주고 캐시를 바꾼다.
+ *   · 3초가 지나면 캐시 판을 보여 주고, 네트워크는 끝까지 받아 캐시만 바꾼다(다음 열기 = 새 판 · 옛 판 고착 방지).
+ *   · 캐시가 없으면(첫 열기) · 직접 새로고침(request.cache = reload · no-cache)이면 예전처럼 네트워크를 그대로 기다린다.
+ *   · 네트워크 오류 · 5xx 면 캐시 · 캐시도 없으면 오류 그대로 · 200 이 아닌 응답은 캐시에 넣지 않는다.
+ *   · 새 서비스워커 설치 때 첫 문서를 한 번 받아 넣어 둔다(실패해도 설치는 계속).
+ * 나머지(admin · draw · typing · king · tv · interview · wall 등 다른 경로 · 미디어 · API)는 손대지 않는다(브라우저 기본 동작 · mp4 Range 그대로). */
+var SW_VERSION = "axf-2026-10-19-v520";   /* v5.20 · 261019 앱 첫 문서 캐시(네트워크 우선 3초) · activate 는 APP_CACHE 하나만 남기고 지운다 */
+var APP_CACHE = "axf-app-doc";            /* 이름을 바꾸지 않는다(서비스워커 판이 바뀌어도 첫 문서 캐시는 남아 다음 열기가 빠르다 · 내용은 네트워크가 늘 갈아 끼운다) */
+var NET_WAIT = 3000;                      /* 네트워크 본문을 기다리는 시간(ms) · 넘으면 캐시 판 */
 
-self.addEventListener("install", function () {
+function axfNoop() {}
+function axfAppKey(u) {                    /* 앱 첫 문서면 캐시 열쇠(범위 주소 · 쿼리 없음) · 아니면 "" */
+  var sc = new URL(self.registration.scope);
+  if (u.origin !== sc.origin) return "";
+  return u.pathname === sc.pathname || u.pathname === sc.pathname + "index.html" ? sc.origin + sc.pathname : "";
+}
+function axfOkDoc(r) { return !!r && r.status === 200 && r.type === "basic" && !r.redirected && /text\/html/i.test(r.headers.get("content-type") || ""); }
+function axfWarm() {                       /* 설치 때 첫 문서를 받아 둔다 · 30초 넘으면 설치를 붙잡지 않는다 */
+  var key = axfAppKey(new URL(self.registration.scope));
+  if (!key) return Promise.resolve();
+  var job = fetch(new Request(key, { cache: "no-cache", credentials: "same-origin" })).then(function (res) {
+    return axfOkDoc(res) ? caches.open(APP_CACHE).then(function (c) { return c.put(key, res); }) : null;
+  });
+  return Promise.race([job, new Promise(function (ok) { setTimeout(ok, 30000); })]).catch(axfNoop);
+}
+
+self.addEventListener("install", function (event) {
   self.skipWaiting();                 // 새 버전이 곧바로 적용되도록
+  event.waitUntil(axfWarm());
 });
 
 self.addEventListener("activate", function (event) {
   event.waitUntil(
     caches.keys()
-      .then(function (keys) { return Promise.all(keys.map(function (k) { return caches.delete(k); })); })
+      .then(function (keys) { return Promise.all(keys.filter(function (k) { return k !== APP_CACHE; }).map(function (k) { return caches.delete(k); })); })
       .then(function () { return self.clients.claim(); })
       .catch(function () { return self.clients.claim(); })
   );
 });
 
 self.addEventListener("fetch", function (event) {
-  if (event.request.mode !== "navigate") return;   // 미디어·API는 손대지 않음
-  event.respondWith(fetch(event.request));         // 항상 최신 · 캐시 없음
+  var req = event.request;
+  if (req.mode !== "navigate" || req.method !== "GET") return;   // 미디어·API는 손대지 않음
+  var key = axfAppKey(new URL(req.url));
+  if (!key) return;                                              // 앱 첫 문서가 아니면(admin 등) 그대로 통과
+  event.respondWith(axfAppDoc(event, req, key));
 });
+
+function axfAppDoc(event, req, key) {
+  return caches.open(APP_CACHE).then(function (cache) {
+    return cache.match(key, { ignoreSearch: true, ignoreVary: true }).catch(axfNoop).then(function (old) {
+      var reload = req.cache === "reload" || req.cache === "no-cache";
+      if (!old || reload) {               /* 첫 열기 · 직접 새로고침 = 네트워크를 그대로(받는 대로 그린다) */
+        return fetch(req).then(function (res) {
+          if (axfOkDoc(res)) event.waitUntil(cache.put(key, res.clone()).catch(axfNoop));
+          if (old && res.status >= 500) return old;
+          return res;
+        }, function (e) { if (old) return old; throw e; });
+      }
+      var full = fetch(req).then(function (res) {   /* 본문을 다 받아 캐시에 넣은 뒤에 끝난다 */
+        return axfOkDoc(res) ? cache.put(key, res.clone()).then(function () { return res; }) : res;
+      });
+      event.waitUntil(full.catch(axfNoop));         /* 캐시 판을 보여 줘도 끝까지 받아 다음 열기에 새 판 */
+      var late = new Promise(function (ok) { setTimeout(function () { ok(null); }, NET_WAIT); });
+      return Promise.race([full.catch(function () { return null; }), late]).then(function (res) {
+        if (!res || res.status >= 500) return old;  /* 3초 넘음 · 오류 · 5xx = 캐시 판 */
+        return res;
+      });
+    });
+  });
+}
 
 /* ── v4.76 (260930) 웹 푸시 · 받기 · 누르기 · 구독 바뀜 · 캐시 없음 원칙은 그대로 ─────────────
  * 본문 = { t: 제목, b: 내용, go: 열 화면, tag: 사건키, j: 작업, u: 급함, q: 소리 없이 } · 서버가 RFC 8291 로 암호화해 보낸다(브라우저가 풀어 준다).

@@ -4,7 +4,7 @@ setInterval(function () { tick++; if (App.current === "home" && !PTR_DOWN && Dat
 /* 백엔드 연결 · GAS_URL 이 채워져 있으면 서버 모드로 전환하고 월 집계를 주기적으로 받는다 */
 BE.on = !!GAS_URL;
 if (BE.on) pollNext(beJit());   /* v4.57 첫 sync 0~5초 뒤 · 이후 pollNext 가 30초씩(실패 시 늘림) · stats 60초 폴링은 없앴다(앱은 stats 에서 월 숫자만 쓰고 sync 가 같은 값을 준다 · 요청 3분의 1 절감) */
-/* 서비스워커 · 안드로이드 홈 화면 설치창의 전제조건. 캐시는 전혀 하지 않는 무해 버전(sw.js) */
+/* 서비스워커 · 안드로이드 홈 화면 설치창의 전제조건. 캐시 = 앱 첫 문서 하나(sw.js · 261019 네트워크 우선 3초 · 늦으면 폰에 저장된 판 · 끝까지 받아 다음 열기에 새 판) */
 if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(127\.0\.0\.1|localhost)$/.test(location.hostname))) {   /* v4.76 웹 푸시 · 로컬 QA 서버도 */
   try { navigator.serviceWorker.register("sw.js"); } catch (e) {}
 }
