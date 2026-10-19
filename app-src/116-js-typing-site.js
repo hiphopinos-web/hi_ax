@@ -305,7 +305,7 @@ var TSF_CAM = false;   /* 261006 노트북 카메라(방법 1) · false = 카메
 var TSF = { ph: "ad", adAt: 0, adI: -1, msg: "", emp: "", nick: "", info: null, busy: false, ticket: "", res: null, sub: null, send: "", why: "", top: null, topT: 0, resAt: 0, phAt: 0, idle: 0, t: null, raf: 0, unl: false, snd: true, cfg: null, cfgT: 0,
   cam: { stream: null, timer: null, err: "", last: "", lastT: 0, busy: false, cv: null, g: null, res: "" }, race: null, err: null, nm: "", nmBad: false, retry: 0, via: "", closedK: "",
   sc: { on: false, hits: [], last: 0, box: null, tgt: null, rect: null, di: 2, n3: false, since: 0, okAt: 0, lum: 128, tick: 0, cands: 0, ms: 0, msg: "", hint: "", staff: 0 },
-  lk: { tok: "", at: 0, busy: false, pollAt: 0, retryAt: 0, fail: 0, url: "", hold: false, gen: 0, sent: 0, n: 0, ext: false, okAt: 0, srv: false }, dbg: /[?&]tsfdbg=1\b/.test(location.search) };
+  lk: { tok: "", at: 0, busy: false, pollAt: 0, retryAt: 0, fail: 0, url: "", hold: false, gen: 0, sent: 0, n: 0, ext: false, okAt: 0, srv: false, why: "" }, dbg: /[?&]tsfdbg=1\b/.test(location.search) };
 var TSF_READY_MS = 60000, TSF_NICK_MS = 60000, TSF_RES_MS = 10000, TSF_RES_SCAN_MS = 8000, TSF_SWAP_MS = 60000, TSF_JOIN_S = 0.8, TSF_LINK_ROT = 30000, TSF_LINK_POLL = 1500;
 /* 261007 (사용자 「늦게 찍으면 만료」) 화면 QR 나이 상한 · 토큰은 요청을 보낸 때부터 센다(서버 발급 시각보다 늘 이르다 = 보수적) · 45초를 넘긴 QR 은 새 토큰을 못 받았어도 내린다(서버 만료 60초 · 찍고 앱이 뜰 시간 15초 이상 남김)
    TSF_LINK_WAIT = 서버 물음 · 새 토큰 요청이 6초 안에 안 오면 버리고 다시(앱 공용 타임아웃 15초를 기다리면 그사이 QR 이 늙는다) · 실패 뒤 다시 = 2 · 4 · 8 · 15초 */
@@ -462,7 +462,7 @@ function tsfAdmin() {
   var on = S.get("site_sound", true) === true, C = TSF.cam;
   modalOpen('<div class="ax-stack-tight axs-gap12"><label class="ax-sr-only" for="tsfOffCode">관리코드</label>' +
     '<input id="tsfOffCode" class="ax-field" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="관리코드" onkeydown="onEnter(event, tsfOffGo)">' +
-    '<p class="ax-meta" id="tsfOffMsg">효과음 ' + (on ? "켜짐" : "꺼짐") + " · 배경 음악 기본 " + (S.get("site_bgm_def", true) === true ? "켜짐" : "꺼짐") + (TSF_CAM ? " · 카메라 " + (C.stream ? "켜짐 " + esc(C.res) : "꺼짐") + " · 한 번 읽기 " + Math.round(TSF.sc.ms) + "ms" : "") + " · 접속 QR " + (TSF.lk.tok ? "켜짐" : "꺼짐") + (TSF.lk.hold ? " · 폰 로그인 중" : "") +
+    '<p class="ax-meta" id="tsfOffMsg">효과음 ' + (on ? "켜짐" : "꺼짐") + " · 배경 음악 기본 " + (S.get("site_bgm_def", true) === true ? "켜짐" : "꺼짐") + (TSF_CAM ? " · 카메라 " + (C.stream ? "켜짐 " + esc(C.res) : "꺼짐") + " · 한 번 읽기 " + Math.round(TSF.sc.ms) + "ms" : "") + " · 접속 QR " + (TSF.lk.tok ? "켜짐" : "꺼짐" + (tsfLinkWhy() ? "(" + esc(tsfLinkWhy()) + ")" : "")) + (TSF.lk.hold ? " · 폰 로그인 중" : "") +
     " · 송출 " + (tvlSeat() ? "자리 " + tvlSeat() + (TVL.st === "ok" ? " 연결됨" : "") : "끔") + "</p>" +   /* 261017 실시간 송출 자리 */
     '<p class="ax-meta" id="tsfQLn">' + esc(tsfQLine()) + "</p>" +   /* v7.66 이 노트북 대기열 · 마지막 실패 */
     '<button type="button" class="ax-button" onclick="tsfOffGo()">셀프 모드 끄기</button>' +
@@ -811,7 +811,7 @@ function tsfLinkUrl(tok) { return location.origin + location.pathname + "#q=type
 function tsfLinkTick() {
   var L = TSF.lk, now = Date.now();
   if (!tsfLinkWant()) { if (L.tok || L.srv || L.busy) tsfLinkDrop(); return; }   /* 261007 광고로 가면 토큰을 서버에서도 지운다(받는 중 · 내린 뒤에도) */
-  if (L.busy && now - L.sent > TSF_LINK_WAIT) { L.busy = false; L.gen++; L.fail++; L.retryAt = now + tsfLinkBack(); tsfDbg("lkwait", L.fail); }   /* 응답이 안 온다 · 늦은 응답은 버린다 */
+  if (L.busy && now - L.sent > TSF_LINK_WAIT) { L.busy = false; L.gen++; L.fail++; L.why = "응답 6초 넘음"; L.retryAt = now + tsfLinkBack(); tsfDbg("lkwait", L.fail); }   /* 응답이 안 온다 · 늦은 응답은 버린다 */
   if (L.tok && !tsfLinkLive(now)) { L.tok = L.url = ""; L.hold = false; tsfDbg("link", "old"); }   /* 만료에 가까운 QR 은 내린다(새 토큰을 못 받았어도) */
   var bx = el("tsfLqr"); if (bx && bx._tk !== tsfLinkKey()) tsfLinkPaint();
   if (L.busy || document.hidden) return;
@@ -833,11 +833,11 @@ function tsfLinkNew() {
   admCall({ action: "type_link_new", key: tsfKey(), tok: tsfTok(), dev: tsfDev() }, function (r) {
     if (g !== L.gen) return;
     L.busy = false;
-    if (!r || !r.ok || !r.tok) { L.fail++; L.retryAt = Date.now() + tsfLinkBack(); tsfLinkPaint(); return; }
-    L.tok = r.tok; L.at = sent; L.pollAt = Date.now(); L.fail = 0; L.n++; L.url = tsfLinkUrl(r.tok); tsfDbg("link", r.tok);
+    if (!r || !r.ok || !r.tok) { L.fail++; L.why = "거절 " + ((r && r.reason) || "응답 이상"); L.retryAt = Date.now() + tsfLinkBack(); tsfLinkPaint(); return; }
+    L.why = ""; L.tok = r.tok; L.at = sent; L.pollAt = Date.now(); L.fail = 0; L.n++; L.url = tsfLinkUrl(r.tok); tsfDbg("link", r.tok);
     L.ext = !!(r.live && r.max); L.okAt = sent; L.srv = true;   /* 261007 연장을 아는 서버 · 지우기(off) 대상 */
     tsfLinkPaint();
-  }, function () { if (g !== L.gen) return; L.busy = false; L.fail++; L.retryAt = Date.now() + tsfLinkBack(); tsfLinkPaint(); });
+  }, function (w) { if (g !== L.gen) return; L.busy = false; L.fail++; L.why = "연결 실패 " + (w || ""); L.retryAt = Date.now() + tsfLinkBack(); tsfLinkPaint(); });
 }
 function tsfLinkPoll() {
   var L = TSF.lk, tk = L.tok, g = ++L.gen, sent = Date.now(); L.busy = true; L.pollAt = L.sent = sent;
@@ -861,6 +861,18 @@ function tsfLinkKey() {
   var L = TSF.lk;
   if (L.tok && L.url && tsfLinkLive(Date.now())) return L.tok;
   return L.fail >= 2 ? "w2" : L.n ? "w1" : "w0";
+}
+/* 261019 (노트북 접속 QR 「준비하는 중」 멈춤 조사) F2 「관리」 줄 · 접속 QR 이 안 나오는 까닭 · 현장에서 읽어 알린다(화면 문구 아님 · 스태프 창만) */
+function tsfLinkWhy() {
+  var L = TSF.lk;
+  if (L.tok) return "";
+  if (!BE.on) return "서버 주소 없음";
+  if (RG.on) return "게임 엔진 켜짐";
+  if (TSF.busy) return "확인 중";
+  if (tsfClosed()) return "도전 시간 밖";
+  if (document.hidden) return "창이 가려진 것으로 보임";
+  if (!TSF.t) return "시계 멈춤";
+  return L.why ? L.why + (L.fail ? " · " + L.fail + "번" : "") : "";
 }
 /* 접속 QR 칸만 다시 그린다 · 일반 QR(검정 정사각 · 흰 바탕 · ECC Q · 장식 없음 · 261001 규칙) · 폭은 칸에 맞춘다(261006 가운데 큰 칸 · 480 까지) · 「폰에서 로그인하는 중」 줄 */
 function tsfLinkPaint() {
@@ -1150,12 +1162,14 @@ function tsfMount() {
 function tsfFrame() {
   TSF.raf = 0;
   if (App.current !== "type_site" || !tsfOn()) return;
+  if (!TSF.t) TSF.t = setInterval(tsfTick, 265);   /* 261019 화면이 떠 있는데 시계가 꺼져 있으면 다시(접속 QR · 광고 · 결과 넘김이 모두 이 시계) */
   if (!RG.on) { tsfPrevDraw(); tsfScanDraw(); }
   TSF.raf = requestAnimationFrame(tsfFrame);
 }
 function tsfStop() { if (typeof bgmBtn === "function") { bgmBtn(false); bgmStop(); } tvlOff(); if (TSF.t) { clearInterval(TSF.t); TSF.t = null; } if (TSF.raf) { cancelAnimationFrame(TSF.raf); TSF.raf = 0; } tsfCamStop(); }
 function tsfTick() {
   if (App.current !== "type_site" || !tsfOn()) { tsfStop(); return; }
+  if (RG.on && (RG.mode !== "site" || TSF.ph !== "play")) { rgStop(); tsfDbg("rgfix", TSF.ph); }   /* 261019 (접속 QR 「준비하는 중」 멈춤 조사) 판이 아닌 화면에 엔진이 켜져 있으면(이 탭에서 앞서 돈 다른 판 · 놓친 끝) 끈다 · 켜져 있으면 QR · 키 · 시계가 모두 멈춘다 */
   tsfLinkTick();
   try { tsfQTick(); } catch (e) {}   /* v7.66 못 보낸 기록 다시 보내기(판 중에도) */
   if (RG.on) return;
@@ -1569,6 +1583,26 @@ function tsfKeyDoc(e) {
   if (sp || e.key === "Tab") e.preventDefault();   /* 대기 · 확인 중 · 안내 = 키로 할 일 없음 · 공백 · Tab 이 단추로 새지 않게 */
 }
 document.addEventListener("keydown", tsfKeyDoc);
+/* 261019 (사용자 「탭키를 누르더라도 다른 창으로 못 넘어가게」) 셀프 화면 Tab · Shift+Tab = 초점이 화면 밖(주소창 · 단추)으로 나가지 않는다 · 대기 · 판 · 결과 모두
+   먼저 받는다(창 · 잡기 단계) · 기본 동작만 막고 뒤의 tsfKeyDoc 은 그대로(READY Tab = 닉네임 바꾸기 · 닉네임 칸 Tab = 칸에 머묾) · 판 중 = 입력칸으로 · 닉네임 = 닉네임 칸으로
+   관리 창(#modal)이 떠 있으면 그 안에서만 돈다(끝에서 처음으로 · 처음에서 끝으로) · 셀프 모드가 꺼진 켜기 화면은 그대로 */
+function tsfTabGuard(e) {
+  if (e.key !== "Tab" || App.current !== "type_site" || !tsfOn()) return;
+  var m = el("modal");
+  if (m) {
+    var f = [].slice.call(m.querySelectorAll("input:not([disabled]), button:not([disabled]), a[href], select:not([disabled]), textarea:not([disabled])")).filter(function (x) { return x.offsetParent && x.tabIndex >= 0; });
+    if (!f.length) { e.preventDefault(); return; }
+    var i = f.indexOf(document.activeElement);
+    if (i < 0) { e.preventDefault(); f[e.shiftKey ? f.length - 1 : 0].focus(); }
+    else if (e.shiftKey && i === 0) { e.preventDefault(); f[f.length - 1].focus(); }
+    else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+    return;
+  }
+  e.preventDefault();
+  if (RG.on) rgFocus();
+  else if (TSF.ph === "nick") tsfNickFocus();
+}
+window.addEventListener("keydown", tsfTabGuard, true);
 /* 261007 마우스 누름 · 터치도 깨운다(광고 화면 어디든 · 「관리」 단추는 그대로) · QR 화면에서 누르면 남은 시간이 다시 가득 */
 document.addEventListener("pointerdown", function (e) {
   if (App.current !== "type_site" || !tsfOn() || RG.on || el("modal") || !e.target || !e.target.closest || !e.target.closest(".tsf") || e.target.closest(".tsf-adm")) return;

@@ -801,6 +801,7 @@ function progMine(id) {
 /* 목록 상태 한 줄 [글, 색] · ok = success · off = muted · "" = brandText */
 function progState(s) {
   if (s.kind === "open") return attUi(s.id) && attStLbl(s.id) ? [attStLbl(s.id), "ok"] : [s.id === "expo" ? "자유 입장" : "자유 참석", ""];   /* v5.68 입장 · 끝 둘 다 = 출석 완료 · 하나만 = 입장 출석 | 끝 출석 */   /* v4.26 17F 는 출석하면 「출석 완료」 · v4.38 강연 = 「자유 참석」(시간표 딱지와 같은 말) · 전시 = 「자유 입장」 */
+  if (s.kind === "info" && s.join && !sessMine(s.id)) return [s.join, ""];   /* 261019 (사용자) 세션 A = 「대상자 추천 참여」(SESSIONS join) · B~E 는 아래 그대로 */
   if (s.kind === "info") return ATT10_UI && sessMine(s.id) && attMineK(s.id, "out") ? ["출석 완료", "ok"] : sessMine(s.id) ? ["사전 신청 완료", "ok"] : ["사전 신청자 참여", ""];   /* v5.60 T3 · v5.71 끝 QR 출석 = 출석 완료 */
   if (s.id === "dap") { var r = loungeMine(); return r ? [RESV_ST[r.status] || "승인 완료", "ok"] : ["사전 신청자 상담", ""]; }   /* v7.39 사전 신청제 · 앱 신청 없음 */
   if (s.id === "cchat") { var cs = cchatState(); return !cs ? ["신청 마감", "off"] : !cs.mine ? ["신청할 수 있어요", ""] : [cs.chip, cs.cc || "ok"]; }   /* v7.39 네 상태 */
@@ -905,6 +906,7 @@ function progDetail(s) {
     var mi = sessMine(s.id), ax = att10X(s), ao = mi ? attMineK(s.id, "out") : "", tn = attNow(), kw = attKWin(ax, "out"), wo = mi && !ao && ((typeof betaFree === "function" && betaFree()) || ((evPhase() === "live" || !!attTm()) && tn >= kw.a && tn <= kw.b));   /* 261014 클로즈 베타 = 끝 창 없음 */
     D.cat = "실습형 세션 · " + s.ttl; D.title = s.sub;
     D.kv = [["일시", day + progTm(s.tm)], ["장소", pl]].concat(s.who ? [["강사", s.who.split(", ").map(function (n) { return n.replace(/ /g, "\u00a0"); }).join(", ")]] : [], [["정원", s.capNote || ""], ["참여 방법", "사전 신청자 참여"]]);   /* v5.60 T1 (design.md §7 배제로 읽히는 말) · v6.22 줄 이름 「강사」 · 이름 단위로만 줄이 꺾임(이름 안 공백 = 붙임 공백) · v6.21 진행 = 강사 · 발표자 실명 · 소속(261007 운영진 메신저 · 실명은 남기는 원칙 261004) */
+    if (s.join) D.kv[D.kv.length - 1] = ["참여 방법", s.joinKv || s.join];   /* 261019 (사용자) 세션 A 참여 방법 = 「대상자 추천 참여(TO 배정 후 진행)」 · B~E 는 위 줄 그대로 */
     if (mi && ATT10_UI) D.kv.push(["끝 QR", ao ? ao + " 출석" : attWinLbl(ax, "out")]);   /* v5.71 10F 끝 QR(신청자만) · 출석하면 시각 */
     if (ao && ATT10_UI) { D.st = "출석 완료"; D.stc = "ok"; }   /* v5.96 10F 끝 QR 표시 끔 */
     D.sg = sessGuideHtml(s, !!mi);   /* v5.60 세션 안내 = (한 줄 소개) → 하는 일 → 준비할 것(신청자만) · 셋 다 없으면 블록 없음 */
