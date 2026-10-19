@@ -128,8 +128,11 @@ var S = {
     window.dispatchEvent(new CustomEvent("axf-store", { detail: k }));
   }
 };
-/* 다른 탭의 변경(관리자 승인 등)을 실시간 수신 */
+/* 다른 탭의 변경(관리자 승인 등)을 실시간 수신
+   v8.12 (261020 「타자왕 순위가 안 보인다」) localStorage 변경만 받는다 · 같은 탭 iframe(순위 화면 TV 칸)의 sessionStorage 쓰기(hiax-move.js axf_hiax_hold_t)가
+   이 신호로 들어와 화면을 다시 그리고 → iframe 을 새로 만들고 → 또 쓰는 고리가 돌아 칸이 빈 판(어두운 바탕)으로만 남았다 */
 if (LS_OK) window.addEventListener("storage", function (e) {
+  if (e.storageArea && e.storageArea !== window.localStorage) return;
   if (e.key && e.key.indexOf("axf_") === 0) {
     var k = e.key.slice(4);
     if (e.newValue == null) delete MEM[k]; else MEM[k] = e.newValue;
