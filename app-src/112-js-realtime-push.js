@@ -215,8 +215,9 @@ function beSync(after) {
       /* v4.07 서버에 대기 중인 요청이 있는데 이 기기에 없으면(자동 요청 시절 행 · 다른 기기) 보여 줘서 취소할 수 있게 한다 · 방금 취소한 30초는 제외 */
       if (res.my.cchat && res.my.cchat.status === "대기" && !S.get("cchat", null) && Date.now() - CCHAT_CX_TS > 30000) S.set("cchat", { status: "pending", pref: res.my.cchat.pref || String(res.my.cchat.tag || "").split(CCHAT_TAG_SEP)[1] || "", ts: Date.now() });
       if (!res.my.cchat) {
-        var c0 = S.get("cchat", null);
-        if (c0 && Date.now() - (c0.ts || 0) > 30000) S.set("cchat", null);
+        var c0 = S.get("cchat", null), c0old = !c0 || Date.now() - (c0.ts || 0) > 30000, cxGone = c0old && (!!c0 || !!S.get("cchat_srv", null));   /* 방금 보낸 신청(30초)은 그대로 */
+        if (c0 && c0old) S.set("cchat", null);
+        if (cxGone) { S.put("cc_draft", null); S.put("p5cc", 0); }   /* v8.21 (261021 버그) 이 기기가 알던 신청이 서버에서 취소 · 없음 = 남은 초안(시간 · 글 · cid) · 커피챗 신청 글 표시도 비움 · 신청 전 쓰는 중인 초안은 그대로 */
       }
       /* v7.39 (사용자 261016 · 서버 U4 my.cchat) 상태 st(wait · pick · over · done) · 고른 시간 pref · 내 글 앞부분 text(more) · 아이디어 한 줄 스탬프를 커피챗 신청 글로 받았나 p5cc · 옛 서버 = st 없음(옛 필드로 판정 cchatSt) */
       var mc = res.my.cchat, ccSrv = mc && mc.st ? { st: String(mc.st), pref: String(mc.pref || ""), text: String(mc.text || ""), more: mc.more ? 1 : 0, p5cc: mc.p5cc ? 1 : 0 } : null;

@@ -553,7 +553,8 @@ function stampPendRetry() {
   if (chg) S.set("stamp_pend", p);
 }
 /* ═══ v7.39 (사용자 확정 261016 「커피챗 최종」 · 계획서 0-2) AX 커피챗 신청 = 두 화면(라우트 cc_apply) ═══
-   화면 1 「가능한 시간」(회차 여러 개 · 지난 회차 꺼짐) → 화면 2 「어떤 상담을 하고 싶으세요?」(상담하고 싶은 내용 · 아이디어 한 줄과 같은 길이 IDEA_MIN ~ IDEA_MAX) → cchat_req(round · text · cid) → 완료 「신청을 접수했어요」(선정 전)
+   v8.21 (사용자 확정 261021 · 아래 261016 순서 번복) 화면 1 = 아이디어 한 줄(내가 낸 아이디어 고르기 · 새로 쓰기) → 화면 2 = 가능한 시간 → 신청하기
+   (옛) 화면 1 「가능한 시간」(회차 여러 개 · 지난 회차 꺼짐) → 화면 2 「어떤 상담을 하고 싶으세요?」(상담하고 싶은 내용 · 아이디어 한 줄과 같은 길이 IDEA_MIN ~ IDEA_MAX) → cchat_req(round · text · cid) → 완료 「신청을 접수했어요」(선정 전)
    신청 글 = 서버가 아이디어 한 줄(경로 cchat)로 함께 등록 · 신청을 마치면 아이디어 한 줄 스탬프(p5 · 이미 있으면 그대로) · 운영진 선정 → 상담 마치면 스태프가 내 QR 확인(cc)
    옛 조건 「아이디어 한 줄을 먼저 내야 커피챗」(v4.45 · v5.82 noidea · 제출 직후 질문 ideaCchat · 희망 시트 cchatSheetSpec · 시간대 칩 cchatPrefHtml)은 걷었다(되살릴 때 = git 이력 v7.38) */
 var CC_ROUNDS = ["13:00", "13:20", "13:40", "14:00", "14:20", "14:40", "15:00", "15:20", "15:40"], CC_DUR = 20, CC_CAP = 2;   /* v7.52 (사용자 확정 261016 미팅 개편) 1:1 · 20분 간격 9회차 · 회차마다 TABLE A · B 두 명(CC_CAP 는 화면에 쓰지 않는다) · 서버 설정 커피챗_회차와 같은 값 · 옛 6회차 30분 간격 · 4명 */
@@ -571,7 +572,7 @@ function ccWaitTxt() {
   var at = ccOpenAt(), m = /^(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/.exec(at); if (!m) return "";
   return appNow(1).getTime() < new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]).getTime() ? ccOpenTxt(at) : "";
 }
-var CCA = { step: 1, busy: false, err: "", res: null, open: null, mode: null };   /* step 1 시간 · 2 상담 내용 · "done" 완료 · open = 서버가 past 로 돌려준 지금 받는 회차 · v8.07 mode = 화면 2 낸 아이디어 목록(null) | 새로 쓰기("new") */
+var CCA = { step: 1, busy: false, err: "", res: null, open: null, mode: null };   /* v8.21 step 1 아이디어 한 줄 · 2 시간 · "done" 완료 · open = 서버가 past 로 돌려준 지금 받는 회차 · v8.07 mode = 화면 2 낸 아이디어 목록(null) | 새로 쓰기("new") */
 function ccDraft() { var d = S.get("cc_draft", null); return d && typeof d === "object" && Array.isArray(d.r) ? d : { r: [], t: "", cid: "", pick: "" }; }   /* v8.07 pick = 목록에서 고른 내 아이디어 ID */
 function ccDraftPut(d) { S.put("cc_draft", d); }   /* 조용한 저장 · 쓰는 중 다시 그리지 않는다(한글 조합 보호) */
 /* 지난 회차 = 꺼짐 「마감」 · 행사일 서버 시각(cchatOver 와 같은 시계) · 클로즈 베타 = 늘 열림 · 서버가 past 로 알려 준 목록(CCA.open) 밖도 꺼짐 */
@@ -617,7 +618,9 @@ function ccPick(r) {
   if (i >= 0) d.r.splice(i, 1); else d.r.push(r);
   d.r.sort(); ccDraftPut(d); CCA.err = ""; App.render();
 }
-function ccStep(n) { if (n === 2 && !ccDraft().r.length) return; CCA.step = n; CCA.err = ""; App.render(); window.scrollTo(0, 0); }
+function ccStep(n) { if (n === 2 && !ccIdeaReady()) return; CCA.step = n; CCA.err = ""; App.render(); window.scrollTo(0, 0); }   /* v8.21 화면 1 아이디어 → 화면 2 시간 */
+/* v8.21 화면 1 다 됐나 · 목록 = 하나 골랐나 · 쓰는 칸 = 글 길이(ideaOk) · ccSubmit 과 같은 판정 */
+function ccIdeaReady(mine) { mine = mine || ccMyIdeas(); return mine.length && CCA.mode !== "new" ? !!ccPicked(mine) : ideaOk(String(ccDraft().t || "").trim()); }
 function ccCntTxt(n) { return n < IDEA_MIN ? n + " / " + IDEA_MIN + "자" : n.toLocaleString() + " / " + IDEA_MAX.toLocaleString() + "자"; }   /* 30자 전 = 몇 자 남았는지 · 넘으면 최대 */
 /* v8.07 (사용자 확정 261019) 화면 2 「내가 낸 아이디어」 = 이 기기 기록(서버에 닿은 것 · 데모는 전부) + 서버 idea_mine · 같은 ID · 같은 글은 한 번 · 새것 먼저
    ID 는 서버 cchat_req idea 로 그대로 보낸다(onclick 안전 글자만) */
@@ -635,7 +638,7 @@ function ccMyIdeas() {
 function ccPicked(mine) { var id = ccDraft().pick; return id ? (mine || ccMyIdeas()).filter(function (i) { return i.id === id; })[0] || null : null; }
 function ccPickIdea(id) { if (CCA.busy) return; var d = ccDraft(); d.pick = d.pick === id ? "" : id; ccDraftPut(d); CCA.err = ""; App.render(); }
 function ccMode(m) { if (CCA.busy) return; CCA.mode = m; CCA.err = ""; App.render(); window.scrollTo(0, 0); }
-/* 화면 2 아래 = 아이디어 한 줄 입력 화면과 같은 부품 · 도장(stampTagHtml p5 · 줄 모양) + 스탬프 한 줄 + 시상 묶음(ideaPrizeHtml) */
+/* 화면 1(v8.21 · 옛 화면 2) 아래 = 아이디어 한 줄 입력 화면과 같은 부품 · 도장(stampTagHtml p5 · 줄 모양) + 스탬프 한 줄 + 시상 묶음(ideaPrizeHtml) */
 function ccIdeaFootHtml() {
   var tx = ideaP5cc() ? "커피챗 신청 글로 아이디어 한 줄 스탬프를 받았어요" : ccP5Line();
   return stampLineHtml("p5", '<p class="ax-type-t6-strong axs-ccst" id="ccP5Line">' + esc(tx) + "</p>") + ideaPrizeHtml();
@@ -643,7 +646,7 @@ function ccIdeaFootHtml() {
 function ccInput(v) {
   CCA.mode = "new";   /* v8.07 쓰기 시작하면 목록이 늦게 와도 쓰는 칸 그대로 */
   var d = ccDraft(); d.t = v; ccDraftPut(d);
-  var n = ideaLen(v), c = el("ccCnt"), b = el("ccGo"), t = el("ccText");
+  var n = ideaLen(v), c = el("ccCnt"), b = el("ccNext"), t = el("ccText");   /* v8.21 쓰는 칸 = 화면 1 · 주 버튼 「다음」 */
   if (c) c.textContent = ccCntTxt(n);
   if (t) { t.style.height = "auto"; t.style.height = (t.scrollHeight + 2) + "px"; }
   if (b) b.disabled = !ideaOk(v) || CCA.busy;
@@ -676,9 +679,10 @@ function ccSubmit() {
   var bad = function (r, open, at) {
     CCA.busy = false; botWait(false);
     if (r === "ccwait" && /^\d{4}-\d\d-\d\d \d\d:\d\d/.test(String(at || ""))) S.set("cc_open", String(at).slice(0, 16));   /* v7.52 서버가 알려 준 시작 시각 · 카드 단추도 같은 글 */
-    if (r === "past" && Array.isArray(open)) { CCA.open = open; d.r = d.r.filter(function (x) { return open.indexOf(x) >= 0; }); ccDraftPut(d); CCA.step = 1; }
-    if (r === "round") CCA.step = 1;
-    if (r === "idea") { d.pick = ""; ccDraftPut(d); IDEA_MINE.at = 0; ideaMineFetch(); }   /* v8.07 고른 ID 를 지우고 목록을 다시 받는다 */
+    if (r === "past" && Array.isArray(open)) { CCA.open = open; d.r = d.r.filter(function (x) { return open.indexOf(x) >= 0; }); ccDraftPut(d); CCA.step = 2; }   /* v8.21 시간 = 화면 2 · 글 · 아이디어 = 화면 1 */
+    if (r === "round") CCA.step = 2;
+    if (r === "short" || r === "long") CCA.step = 1;
+    if (r === "idea") { d.pick = ""; ccDraftPut(d); IDEA_MINE.at = 0; ideaMineFetch(); CCA.step = 1; }   /* v8.07 고른 ID 를 지우고 목록을 다시 받는다 */
     CCA.err = ccErrTxt(r, at); App.render();
   };
   if (!BE.on || !u.empId) {   /* 데모 · 서버 없이 같은 화면 */
@@ -840,7 +844,7 @@ function ideaMineFetch() {
     if (!res || !res.ok || !Array.isArray(res.rows)) return;
     IDEA_MINE.e = u.empId; IDEA_MINE.rows = res.rows.filter(function (r) { return r && r.text; });
     if (App.current === "ideas_mine") App.render();
-    else if (App.current === "cc_apply" && CCA.step === 2 && CCA.mode !== "new" && !CCA.busy && !(document.activeElement && document.activeElement.id === "ccText")) App.render();   /* v8.07 커피챗 신청 화면 2 목록 · 쓰는 중이면 다시 그리지 않는다(한글 조합 보호) */
+    else if (App.current === "cc_apply" && CCA.step === 1 && CCA.mode !== "new" && !CCA.busy && !(document.activeElement && document.activeElement.id === "ccText")) App.render();   /* v8.07 커피챗 신청 목록(v8.21 화면 1) · 쓰는 중이면 다시 그리지 않는다(한글 조합 보호) */
   }, function () {});
 }
 /* v5.90 (261006) 아이디어 입구 · 서버 pub.idea { open, cut, late, prz, ps } · 행사 전 + 사전 오픈 OFF = 입구 숨김(테스트 사번 · 커피챗에서 온 경우 제외) · 옛 서버(없음) = 예전처럼 */

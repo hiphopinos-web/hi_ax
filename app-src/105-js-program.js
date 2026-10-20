@@ -340,7 +340,7 @@ var FLOOR18 = [
     todo: ["데이터사이언스파트 멘토와 이야기해요"],   /* v7.59 (사용자 261017) 「호스트와 1:1로 이야기해요」 → 「데이터사이언스파트 멘토와 이야기해요」 · v6.83 (사용자 261009 묶음 11) 「아이디어 한 줄을 내고 커피챗 희망을 남겨요」 덜기 = 사실 표 「지금 · 아이디어 한 줄 쓰고 희망」 · 주 버튼과 같은 말 */
     gd: ["DAP 과제 상담은 1F AX 라운지", "1F AX 라운지 보기", "lounge"], gl: "DAP 과제 상담은 1F AX 라운지",
     gift: "",   /* 사은품 표 값 = gift + APPLY_GIFT · v6.83 (사용자 261009 묶음 16 · 보충 2) 사실 표 = 지금 · 시간 · 장소 · 사은품만 · 진행 · 선정 · 알림 · 방식 = 「참여 전 확인」 상자(17F 강연 「스탬프 받으려면」과 같은 부품 needBoxHtml) · 옛 접힘 표 chk(진행 · 시간 · 선정 · 알림) 삭제 */
-    need: ["참여하려면", [["time", "시간 고르고 상담 내용 쓰기", "신청 순서대로 시간을 정해 알려 드려요"], ["talk", "주제 소개 → 고민 나누기 → 다음 한 걸음", "1:1 · 20분"]]] }   /* v7.39 (사용자 261016) 아이디어 한 줄 조건 없음 · 첫 줄 = 신청 전 「지금」과 같은 말(사실 표에서 지금 줄을 뺀다) */
+    need: ["참여하려면", [["time", "아이디어 한 줄 쓰고 커피챗 시간 선택", "신청 순서대로 시간 배정"], ["talk", "주제 소개 → 고민 나누기 → 다음 한 걸음", "1:1 · 20분"]]] }   /* v7.39 (사용자 261016) 아이디어 한 줄 조건 없음 · 첫 줄 = 신청 전 「지금」과 같은 말(사실 표에서 지금 줄을 뺀다) */
 ];
 /* v7.67 (사용자 261017 D5 · 261002 「Welcome 구역 목록 제외」 번복) 1F 칸 표 · 지도의 WELCOME = 1F 주차장 체크인존 · 시트 = 체크인 · 선착순 참여상 수령처 · 키트 구성 · 가격은 쓰지 않는다
    FLOOR1(판 퀴즈 지도 · 둘러보기 6구역 id)에는 넣지 않고 표 · 지도 · 시트만 쓴다 · ZONE_PBF = 선착순 이벤트 시트(첫 진입 · TIME EVENT 카드 · 홈 한 줄이 같이 연다) */
@@ -367,7 +367,7 @@ function cchatState() {
   if (st === "wait") return { t: "신청 접수 · 선정되면 알림", mine: true, chip: "선정 전", cc: "" };
   if (cchatOver() || cchatClosed() || ccAllOff()) return null;
   var w = ccWaitTxt(); if (w) return { t: w, mine: false, wait: w };   /* v7.52 신청 시작 전(sync ccOpen) · 카드 주 버튼 꺼짐 · 신청 점(applyOpenN) 없음 */
-  return { t: "시간 고르고 상담 내용 쓰기", mine: false };
+  return { t: "아이디어 한 줄 쓰고 커피챗 시간 선택", mine: false };   /* v8.21 (사용자 확정 261021) 옛 「시간 고르고 상담 내용 쓰기」 */
 }
 /* 홈 나의 일정 · 신청 전에만(신청한 뒤에는 나의 일정 커피챗 줄이 맡는다) · 장소는 아래 줄 */
 function cchatRowHtml() {
@@ -400,11 +400,11 @@ function applyCardHtml(o) {
 }
 /* v7.39 (사용자 261016 계획서 0-2-3) 커피챗 카드 · 시간(회차 20분) · 신청(선정 단계를 카드에서 먼저) · 스탬프 두 줄(받는 때 · 스탬프 이름 · 개수 · 판 4번 · 7번 이름과 같게) · 사은품 · 신청 뒤 = 지금 한 줄(네 상태 같은 자리)
    아이디어 한 줄 스탬프를 이미 받았으면 첫 줄 = 「아이디어 한 줄 · 받음」(하나 더로 셈하지 않게) */
-function ccStampRows() { return [S.get("stamps", []).indexOf("p5") >= 0 ? "아이디어 한 줄 · 받음" : "신청하면 아이디어 한 줄 1개", "종료 때 프로그램 참여 1개"]; }   /* 261016 (사용자 스태프 QR 정리) 커피챗 스탬프 = 종료 스캔 */
+function ccStampRows() { return ["아이디어 한 줄 작성 시 1개 부여", "커피챗 상담 완료 시 1개 부여"]; }   /* v8.21 (사용자 확정 261021) 받은 사람도 같은 글(「받음」 없음) · 옛 「신청하면 아이디어 한 줄 1개」 · 「아이디어 한 줄 · 받음」 · 「종료 때 프로그램 참여 1개」 */   /* 261016 (사용자 스태프 QR 정리) 커피챗 스탬프 = 종료 스캔 */
 function applyCchatHtml() {
   var s = cchatState(); if (!s) return "";
   var z = zoneById("cchat");
-  var kv = (s.mine ? [["지금", s.t]] : []).concat([["시간", CCHAT_HOURS + " · 1:1 20분"]], s.mine ? [] : [["신청", "시간 고르고 상담 내용 쓰기 › 신청 순서대로 시간 배정"]], [["스탬프", ccStampRows()], ["사은품", APPLY_GIFT]]);
+  var kv = (s.mine ? [["지금", s.t]] : []).concat([["시간", CCHAT_HOURS + " · 1:1 20분"]], s.mine ? [] : [["신청", ["아이디어 한 줄 쓰고 커피챗 시간 선택", "신청 순서대로 시간 배정"]]], [["스탬프", ccStampRows()], ["사은품", APPLY_GIFT]]);
   return applyCardHtml({ k: "cchat", nm: "AX 커피챗", fl: 18, mine: s.mine, chip: s.chip, chipC: s.cc, kor: z.kor, kv: kv, btn: s.mine ? ["내 커피챗", "progOpen('cchat')"] : s.wait ? [s.wait, "", "ccApplyBtn", true] : ["커피챗 신청하기", "ccApplyGo()", "ccApplyBtn"], more: "cchatGo()" });   /* v7.52 신청 시작 전 = 꺼진 단추 「10/21(수) 00:00부터 신청」 */
 }
 /* 10F 실습형 세션 줄 = 사전 신청자(10F 명단 · tenMine)와 테스트 사번(testMode · 310555 · 데모)에게만 · 일반 직원에게는 없다(사용자 261006) */
@@ -482,7 +482,7 @@ function zoneLive(z) {
   } else if (z.id === "cchat") {
     /* v7.39 (사용자 261016 계획서 0-2) 시간 고르고 상담 내용 쓰기 → 운영진 선정 · 아이디어 한 줄 조건 없음 · 신청 뒤 네 상태(선정 전 · 선정 · 마감 · 완료) */
     var st = cchatSt(), c = S.get("cchat", null) || {}, ov = !st && cchatOver(), cl = !st && !ov && (cchatClosed() || ccAllOff());
-    var cnow = st === "done" ? "상담 완료" : st === "pick" ? "선정" + (c.table ? " · TABLE " + c.table : "") : st === "over" ? "선정 마감" : st === "wait" ? "신청 접수 · 선정되면 알림" : ov ? "오늘 커피챗은 끝났어요" : cl ? "신청 마감" : "시간 고르고 상담 내용 쓰기";
+    var cnow = st === "done" ? "상담 완료" : st === "pick" ? "선정" + (c.table ? " · TABLE " + c.table : "") : st === "over" ? "선정 마감" : st === "wait" ? "신청 접수 · 선정되면 알림" : ov ? "오늘 커피챗은 끝났어요" : cl ? "신청 마감" : "아이디어 한 줄 쓰고 커피챗 시간 선택";
     o.tm = st === "pick" && c.round ? "10월 26일 " + c.round : CCHAT_HOURS + " · 1:1 20분";
     o.tm0 = o.tm;
     o.fact = st === "pick" && c.round ? cnow.replace("선정", "선정 · " + c.round) : st || ov || cl ? cnow : CCHAT_HOURS + " · 1:1 20분";
@@ -1151,6 +1151,7 @@ function progCancelGo() {
   sheetBusy(true);
   var ok = function () {
     S.set("cchat", null); S.set("cchat_srv", null); CCHAT_CX_TS = Date.now();
+    S.put("cc_draft", null); S.put("p5cc", 0);   /* v8.21 (261021 버그) 다시 신청할 때 옛 시간 · 글 · cid 가 남지 않게 · 「커피챗 신청 글로 … 받았어요」 줄도 일반 줄로 */
     sheetClose(true);
     toast("커피챗 신청을 취소했어요");
     mySched();
