@@ -355,7 +355,7 @@ var IV_PLAY_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6.8v1
    옛 v7.05 큰 썸네일 + [영상 보기] 카드(axs-ivc · axs-ivth)는 이 묶음 줄로 바뀌었다 · 재생은 그대로(ivAsk 소리 확인 창 → ivPlay 전체 화면 · page 면 새 창) */
 var VIDS_HIDE = false;   /* 사용자 결정 261017 D15 = 숨기지 않고 「준비 중」(누를 수 없음 · 회색) · true = 파일 없는 줄 숨김 */
 var VIDS = [
-  { t: "AI 활용 현장 인터뷰", s: "현장 직원이 업무에 AI를 쓴 이야기", len: "", v: IV_VIDEO },
+  { t: "AI 활용 현장 인터뷰", s: "현장 인터뷰", len: "", v: { src: "", poster: "", loop: false, page: "" } },   /* v8.20 (사용자 261021) 다른 두 줄과 같은 「준비 중」(회색 빈 칸 · 누를 수 없음) · 영상 연결 비움(옛 v: IV_VIDEO · 파일 assets/interview/ 는 그대로) */
   { t: "HiDI Q", s: "AX PLAY", len: "", v: { src: "", poster: "", loop: false, page: "" } },
   { t: "Hi-Helper", s: "AX PLAY", len: "", v: { src: "", poster: "", loop: false, page: "" } }
 ];
@@ -366,8 +366,10 @@ function vidRowHtml(x, i) {
   return '<button type="button" class="vr"' + (ok ? ' onclick="ivAsk(this, ' + i + ')" aria-label="' + esc(x.t) + ' 영상 보기"' : " disabled") + ">" + th +
     '<span class="x"><b>' + hdqHtml(esc(x.t)) + "</b><span>" + esc(ok ? x.s : x.s + " · 준비 중") + "</span></span>" + (ok ? '<span class="cv">' + CHEV_SVG + "</span>" : "") + "</button>";
 }
+function vidPre() { return typeof evPreDay === "function" && evPreDay() && !(typeof testEmp === "function" && testEmp()); }   /* v8.20 (사용자 261021 「당일에 오픈 · 일단 메뉴 자체를 숨겨」) 10/26 전 = 「영상 보기」 칸째 없음 · 테스트 사번은 미리 보임 */
 function progIvHtml() {
-  var rs = VIDS.map(function (x, i) { return [x, i]; }).filter(function (r) { return vidOk(r[0]) || !VIDS_HIDE; }), n = rs.length, o = VFOLD.open;
+  if (vidPre()) return "";
+  var rs =VIDS.map(function (x, i) { return [x, i]; }).filter(function (r) { return vidOk(r[0]) || !VIDS_HIDE; }), n = rs.length, o = VFOLD.open;
   if (!rs.length) return "";
   return '<section class="axs-zsec" id="zoneVid"><div class="axs-sfd axs-vfd' + (o ? " open" : "") + '">' +   /* v7.71 (사용자 261017) 머리 줄 「영상 보기」 · 접힘 단추는 이름 대신 개수(머리와 이름이 겹치지 않게) */
     '<button type="button" class="axs-sfdb axs-pfb" id="vFoldBtn" aria-expanded="' + o + '" aria-controls="vFoldBody" onclick="vFoldTog(this)"><b>영상 보기</b>' + lnkChev("자세히 보기") + "</button>" +   /* v8.03 (사용자 261018) 가운데 「n개 보기」 단추 없앰 · 머리 줄 오른쪽 「자세히 보기 ⌄」(선착순 이벤트와 같은 부품 axs-pfb) */
