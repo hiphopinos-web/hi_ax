@@ -178,7 +178,7 @@ function pcHtml(d){
   var fx=d.fcfs, kit=d.kit, lg=d.lounge, gr=[];
   gr.push(rowH("룰렛", rl.used?"사용 "+fmtD(rl.at)+(rl.gn?" · "+rl.gn:""):"안 씀", rl.used?'<button class="btn sm" type="button" onclick="rlUndoAsk(\''+J+'\')">사용 취소</button>':tag("안 씀","off")));
   gr.push(rowH("선착순 가습기"+(fx&&fx.rk?" · 달성 "+n0(fx.rk)+"번째":""), !fx?"6개 전 · 달성순 · 17:00 마감":fx.st==="done"?"수령 "+fmtD(fx.gotAt)+(fx.gotBy?" · "+fx.gotBy:""):fx.st==="void"?"자격 취소됨":fx.st==="full"?"수량 넘음":"수령 전 · 17:00 마감", (fx&&fx.st==="done"?tag("받음","ok"):fx?tag("받기 전","off"):"")+(typeof pcFxBtns==="function"?pcFxBtns(d):"")));
-  if(kit) gr.push(rowH(kit.pool==="staff"?"스태프 옷":"사전 신청 키트 · 옷", "사이즈 "+(kit.sz||"아직")+(kit.how==="auto"?"(자동)":"")+(kit.no?" · "+kit.no:""), kit.got?tag("받음 "+fmtD(kit.got),"ok"):tag("받기 전","off")));
+  if(kit) gr.push(rowH(kit.pool==="staff"?"스태프 옷":"사전 신청 키트 · 옷", "사이즈 "+(kit.sz||"아직")+(kit.how==="auto"?"(자동)":""), kit.got?tag("받음 "+fmtD(kit.got),"ok"):tag("받기 전","off")));
   if(lg) gr.push(rowH("라운지 사전 신청 "+n0(lg.rk)+"번째", lg.kit?"키트":"가습기", lg.got?tag("받음 "+fmtD(lg.got),"ok"):tag("받기 전","off")));
   h+=pcSec("경품 · 옷 수령", gr.join(""));
   /* 라운지 · 커피챗 */

@@ -85,7 +85,7 @@ function paRoll(k){
 }
 PA_SP.gate=function(){ return paRoll("gate"); }; PA_SP.staff=function(){ return paRoll("staff"); }; PA_SP.test=function(){ return paRoll("test"); };
 /* 사람 명단 선택 삭제(list_rows_cancel kind = 화면 이름 · 스태프는 폰 권한 · 옷 고르기) */
-var PP_CX={ gate:["접속 허용 명단","클로즈 베타 동안 다음 쓰기부터 앱이 거절 · 메모 · 넣은 시각은 되돌리면 그대로 · 본인 사번은 빼지 않음"], staff:["스태프 명단","폰 권한 · 스태프 옷 명단에서 빠짐 · 옷 신청번호는 남음"],
+var PP_CX={ gate:["접속 허용 명단","클로즈 베타 동안 다음 쓰기부터 앱이 거절 · 메모 · 넣은 시각은 되돌리면 그대로 · 본인 사번은 빼지 않음"], staff:["스태프 명단","폰 권한 · 스태프 옷 명단에서 빠짐"],
   pre10:["10F 사전 신청 명단","세션 · 키트 · 끝 QR 자격이 같이 빠짐 · 키트 받은 사람은 설정대로"], test:["시험 사번","시험 사번 지정이 풀림 · 기록은 그대로"] };
 function ppCx(s){
   return { kind:s, what:PP_CX[s][0], sub:PP_CX[s][1], after:paAfter, noSelf:s==="gate"?"본인 사번은 접속 허용 명단에서 빼지 않습니다":"",

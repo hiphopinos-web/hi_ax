@@ -137,10 +137,10 @@ function cnPaint(){
   else {
     var sg=d.seg, segs=["A","B","C","D","E"];
     k.innerHTML='<div class="grid g4">'+kpi({ l:"10F 사전 신청", v:n0(d.list), u:"명", s:d.lng?"라운지만 신청 "+n0(d.lng)+"명은 번호 없음":"" })+kpi({ l:"번호 있음", v:n0(d.has), u:"명", s:d.moved?"세션 바뀜 "+n0(d.moved)+"명 · 번호 그대로":"" })+
-      kpi({ l:"번호 없음", v:n0(num(d.pend)+num(d.nseg)), u:"명", st:d.pend||d.nseg?"warn":"", s:d.nseg?"세션 모름 "+n0(d.nseg)+"명":"" })+kpi({ l:"명단에서 빠짐", v:n0(d.gone), u:"명", s:"번호 비움 · 새로 든 사람이 받음" })+'</div>'+
+      kpi({ l:"번호 없음", v:n0(num(d.pend)+num(d.nseg)), u:"명", st:d.pend||d.nseg||d.spend?"warn":"", s:(d.nseg?"세션 모름 "+n0(d.nseg)+"명":"")+(d.spend?(d.nseg?" · ":"")+"스태프 "+n0(d.spend)+"명":"") })+kpi({ l:"명단에서 빠짐", v:n0(d.gone), u:"명", s:"번호 비움 · 새로 든 사람이 받음" })+'</div>'+
       '<div class="xg-wrap mt" style="--xg-h:auto"><table class="tb"><thead><tr><th>세션</th><th class="n">명단</th><th class="n">번호 있음</th><th class="n">번호 없음</th><th class="n">마지막 번호</th></tr></thead><tbody>'+
       segs.map(function(g){ var x=sg[g]||{}; return '<tr><td><b>'+g+'</b></td><td class="n">'+n0(x.list||0)+'</td><td class="n">'+n0(x.has||0)+'</td><td class="n">'+(x.pend?'<b>'+n0(x.pend)+'</b>':"0")+'</td><td class="n">'+(x.max?g+"-"+x.max:"-")+'</td></tr>'; }).join("")+'</tbody></table></div>'+
-      '<div class="btns mt"><button class="btn'+(d.pend?" pri":"")+'" type="button" onclick="'+(d.has?"cnFillAsk()":"cnAsk()")+'"'+(d.pend?'':' disabled')+'>'+(d.pend?(d.has?"빈 번호 채우기 · "+n0(d.pend)+"명":"번호 매기기 · "+n0(d.pend)+"명"):"새로 매길 사람 없음")+'</button></div>'+
+      '<div class="btns mt"><button class="btn'+(cnPend(d)?" pri":"")+'" type="button" onclick="'+(d.has||!d.pend?"cnFillAsk()":"cnAsk()")+'"'+(cnPend(d)?'':' disabled')+'>'+(cnPend(d)?(d.has||!d.pend?"빈 번호 채우기 · "+n0(cnPend(d))+"명":"번호 매기기 · "+n0(d.pend)+"명"):"새로 매길 사람 없음")+'</button></div>'+
       '<p class="cap mt">'+(d.at?"마지막으로 매긴 시각 "+esc(fmtD(d.at))+" · ":"")+'번호 = 세션 글자 + 세션 안 순번(A-1 · E 는 두 회차 한 줄) · 한 번 매긴 번호는 바뀌지 않습니다 · 10F 명단에 한 사람을 넣으면 그 세션의 가장 작은 빈 번호가 자동으로 붙습니다</p>';
   }
   if(!IV.gno) IV.gno=XG.make({ id:"ckno", file:"체크인 번호 명단", key:function(r){ return r.no; }, sort:{ k:"no", d:1 },
@@ -165,7 +165,8 @@ function cnFillAsk(){
       done:function(r){ toast("빈 번호를 채웠습니다 · "+n0(r.no)+"명"+(r.gAdd?" · 접속 허용 "+n0(r.gAdd)+"명":"")); reload(["cno","cnl"]); } });
   });
 }
-function cnSid(sid){ return typeof TEN_N!=="undefined"&&TEN_N[sid]||sid||""; }
+function cnPend(d){ return num(d&&d.pend)+num(d&&d.spend); }   /* 261020 빈 번호 채우기 = 10F + 스태프(S) */
+function cnSid(sid){ if(sid==="staff") return "스태프"; return typeof TEN_N!=="undefined"&&TEN_N[sid]||sid||""; }
 function cnAsk(){
   var d=S.data.cno; if(!d||!d.ok||!d.pend) return;
   var sg=d.seg||{}, rg=["A","B","C","D","E"].filter(function(g){ return sg[g]&&sg[g].pend; }).map(function(g){ var x=sg[g]; return g+"-"+(num(x.max)+1)+(x.pend>1?" ~ "+g+"-"+(num(x.max)+x.pend):""); }).join(" · ");

@@ -9,7 +9,7 @@ function pszTop(){ return typeof adrTop==="function"?adrTop():!!(S.me&&S.me.top)
 function pszPool(k){ return k&&k.pool==="staff"?"스태프 옷":"사전 신청 키트"; }
 function pcSzHtml(d){
   var k=d.kit, J=jq(d.emp), cur=k&&k.sz||"";
-  var cap=k?(cur?"지금 "+cur+(k.how==="auto"?"(자동)":""):"아직 안 정함")+" · "+pszPool(k)+(k.no?" · "+k.no:""):"옷 명단에 없음 · 스태프 옷에 넣은 뒤 정함";
+  var cap=k?(cur?"지금 "+cur+(k.how==="auto"?"(자동)":""):"아직 안 정함")+" · "+pszPool(k):"옷 명단에 없음 · 스태프 옷에 넣은 뒤 정함";
   var ctl="";
   if(k&&pszTop()) ctl='<select class="xg-q" id="pcSz" aria-label="옷 사이즈" style="width:auto">'+PSZ_SIZES.map(function(z){ return '<option value="'+z+'"'+(z===cur?" selected":"")+'>'+z+'</option>'; }).join("")+'</select><button class="btn sm" type="button" onclick="pcSzAsk(\''+J+'\')">'+(cur?"사이즈 바꾸기":"사이즈 넣기")+'</button>';
   else if(k) cap+=" · 넣기 · 바꾸기는 슈퍼관리자";
@@ -25,12 +25,12 @@ function pcSzAsk(emp){
     if(x.st!=="set"&&x.st!=="new"){ toast(PSZ_ST[x.st]||"넣지 못합니다 · "+(x.st||"-"),{ bad:x.st!=="same" }); return; }
     var left=r.left&&r.left.all?r.left.all[sz]:null, short=left!=null&&left<0;
     confirmBox({ t:x.cur?"옷 사이즈를 바꿀까요?":"옷 사이즈를 넣을까요?", who:pcWho(emp), sub:(x.cur?x.cur+" → ":"")+sz+" · "+(x.pool==="staff"?"스태프 옷":"사전 신청 키트")+" · 본인 앱에 바로 보임 · 되돌리기 7초 · 활동 기록에 남음",
-      body:'<table class="tb"><tbody><tr><td>신청번호</td><td class="n">'+esc(x.no||"새로 발급")+'</td></tr><tr><td>적용 뒤 '+esc(sz)+' 남는 수</td><td class="n">'+(left==null?"-":short?tag("모자람 "+n0(-left)+"벌","warn"):n0(left)+"벌")+'</td></tr></tbody></table>'+
+      body:'<table class="tb"><tbody><tr><td>적용 뒤 '+esc(sz)+' 남는 수</td><td class="n">'+(left==null?"-":short?tag("모자람 "+n0(-left)+"벌","warn"):n0(left)+"벌")+'</td></tr></tbody></table>'+
         '<label class="fld">확인 문구 「'+PSZ_W+'」를 그대로 넣습니다<input class="in" id="pszQ" autocomplete="off" oninput="gateUpd()"></label>',
       focus:"pszQ", ok:x.cur?"바꾸기":"넣기", gate:function(){ var i=el("pszQ"); return !!i&&i.value.trim()===PSZ_W; },
       run:function(){ return call("kit_staff_size_apply",{ rows:rows, sig:r.sig, confirm:PSZ_W, addw:"0", adda:"0" }); },
       fail:function(y){ return y&&y.reason==="super"?"슈퍼관리자만 합니다":y&&y.reason==="state"?"그 사이 바뀌었습니다 · 닫고 다시 누릅니다":y&&y.reason==="none"?PSZ_ST.same:""; },
-      done:function(y){ pcAfter(); toast((x.cur?"사이즈를 바꿨습니다 · ":"사이즈를 넣었습니다 · ")+sz+(y.nos?" · 신청번호 발급":""), y.batch?{ undo:function(){ pcSzUndo(y.batch); } }:{}); } });
+      done:function(y){ pcAfter(); toast((x.cur?"사이즈를 바꿨습니다 · ":"사이즈를 넣었습니다 · ")+sz, y.batch?{ undo:function(){ pcSzUndo(y.batch); } }:{}); } });
   });
 }
 function pcSzUndo(b){

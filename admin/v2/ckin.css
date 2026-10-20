@@ -1,0 +1,83 @@
+/* AXF CONTROL v2 · 체크인 탭(261020) · 큰 글씨 · 큰 단추 · 노트북 1024 · 태블릿 768 에서 카드 한 화면 · 색 = 네이비 + 상태 3색(v2.css 토큰) · 오렌지 없음 */
+.cki{display:grid;gap:0;min-width:0}
+.cki-find{padding:12px}
+.cki-fbar{display:flex;gap:8px;align-items:center;min-width:0}
+.cki-q{flex:1;min-width:0;height:56px;border:2px solid var(--line3);border-radius:10px;padding:0 16px;font-size:20px;font-weight:600;background:#fff;letter-spacing:0}
+.cki-q:focus{border-color:var(--navy);outline:none}
+.cki-go{height:56px;font-size:16px;min-width:88px}
+.cki-camb{height:56px;font-size:16px;gap:8px}
+.cki-camb svg{width:22px;height:22px}
+.cki-hits{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-top:8px}
+.cki-hit{position:relative;display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;align-items:center;text-align:left;min-height:64px;padding:8px 12px;border:1px solid var(--line3);border-radius:10px;background:#fff}
+.cki-hit b{font-size:17px}.cki-hit span{font-size:13px;color:var(--tx2);grid-column:1}
+.cki-hit .cki-hno{grid-column:2;grid-row:1/3;font-size:18px;font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums}
+.cki-dot{position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--warn)}
+
+.cki-card{padding:14px;display:grid;gap:12px}
+.cki-card.bad{border-color:var(--bad-ln)}
+.cki-fh,.cki-msg{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;border-radius:10px;padding:12px 16px;border:1px solid var(--line)}
+.cki-fh b{font-size:28px;line-height:1.2;font-weight:800;font-variant-numeric:tabular-nums}
+.cki-fh span{font-size:16px;font-weight:600}
+.cki-msg b{font-size:18px}.cki-msg span{font-size:14px}
+.cki-fh.t-due,.cki-msg.t-due,.cki-iss li.t-due{background:var(--navy);border-color:var(--navy);color:#fff}
+.cki-fh.t-ok,.cki-msg.t-ok,.cki-iss li.t-ok{background:var(--ok-bg);border-color:var(--ok-ln);color:var(--ok)}
+.cki-fh.t-warn,.cki-msg.t-warn,.cki-iss li.t-warn{background:var(--warn-bg);border-color:var(--warn-ln);color:var(--warn)}
+.cki-fh.t-bad,.cki-msg.t-bad,.cki-iss li.t-bad{background:var(--bad-bg);border-color:var(--bad-ln);color:var(--bad)}
+.cki-fh.t-off,.cki-msg.t-off,.cki-iss li.t-off,.cki-iss li.t-info{background:var(--soft);border-color:var(--line);color:var(--tx2)}
+.cki-who{display:flex;gap:12px;align-items:stretch;min-width:0}
+.cki-nm{flex:1;min-width:0}
+.cki-nm h2{font-size:28px;line-height:1.2;font-weight:800;margin:0}
+.cki-nm .cap{font-size:14px}
+.cki-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.cki-tags .tag{height:26px;font-size:13px;padding:0 10px}
+.cki-no{flex:none;min-width:132px;border-radius:10px;background:var(--navy05);border:1px solid var(--navy1);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 14px;color:var(--navy)}
+.cki-no .l,.cki-no .s{font-size:13px;font-weight:600}
+.cki-no b{font-size:40px;line-height:1.1;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.cki-no.none{background:var(--warn-bg);border-color:var(--warn-ln);color:var(--warn)}
+.cki-no.none b{font-size:28px}
+.cki-iss{list-style:none;display:grid;gap:6px;margin:0;padding:0}
+.cki-iss li{display:flex;flex-wrap:wrap;gap:2px 12px;align-items:baseline;border-radius:8px;padding:8px 12px;border:1px solid;border-left-width:6px}
+.cki-iss li b{font-size:16px}.cki-iss li span{font-size:14px}
+.cki-iss li.t-info,.cki-iss li.t-off{border-color:var(--line);border-left-color:var(--line3)}
+.cki-blks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.cki-blk{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:6px;align-content:start;min-width:0}
+.cki-bh{font-size:14px;font-weight:700;color:var(--tx2)}
+.cki-bv{display:flex;align-items:baseline;gap:8px;min-height:52px}
+.cki-big{font-size:44px;line-height:1;font-weight:800;color:var(--tx);font-variant-numeric:tabular-nums}
+.cki-big small{font-size:18px;font-weight:700;margin-left:2px;color:var(--tx2)}
+.cki-big.off{color:var(--tx3)}
+.cki-bs{font-size:18px;font-weight:700;color:var(--tx2)}
+.cki-bst .tag{height:26px;font-size:13px}
+.cki-bb{display:flex;flex-wrap:wrap;gap:6px}
+.cki-bb .btn{height:44px;font-size:14px}
+.cki-give{height:64px!important;font-size:20px!important;font-weight:800}
+.cki-foot{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.cki-foot .cap{margin-left:auto}
+.cki-k .kpi .v{font-size:28px}
+.cki-szt td,.cki-szt th{font-size:15px}
+.cki-szt tr.cki-bad td{color:var(--bad)}
+.cki-szt tr.cki-warn td{color:var(--warn)}
+.xg-t tr.cki-bad td:first-child{box-shadow:inset 4px 0 0 var(--bad)}
+.xg-t tr.cki-warn td:first-child{box-shadow:inset 4px 0 0 var(--warn)}
+.cki-sup .btns>.btn{flex:none}
+
+/* 카메라 */
+.cki-cam-bg{position:fixed;inset:0;z-index:90;background:rgba(10,14,24,.72);display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;transition:opacity var(--t-out) var(--ease)}
+.cki-cam-bg.on{opacity:1;transition:opacity var(--t-in) var(--ease)}
+.cki-cam{width:min(560px,100%);background:var(--sf);border-radius:var(--r);padding:12px;display:grid;gap:10px;transform:translateY(8px);transition:transform var(--t-out) var(--ease)}
+.cki-cam-bg.on .cki-cam{transform:none;transition:transform var(--t-in) var(--ease)}
+.cki-cam-v{position:relative;border-radius:10px;overflow:hidden;background:#000;aspect-ratio:4/3}
+.cki-cam-v video{width:100%;height:100%;object-fit:cover;display:block}
+.cki-cam-box{position:absolute;left:50%;top:50%;width:58%;aspect-ratio:1;transform:translate(-50%,-50%);border:3px solid #fff;border-radius:12px;box-shadow:0 0 0 999px rgba(0,0,0,.28)}
+#ckiCamTx{font-size:16px;font-weight:600;text-align:center;margin:0}
+@media (prefers-reduced-motion:reduce){.cki-cam-bg,.cki-cam-bg.on,.cki-cam,.cki-cam-bg.on .cki-cam{transition:none!important}}
+
+@media (max-width:700px){
+  .cki-blks{grid-template-columns:minmax(0,1fr)}
+  .cki-camb{min-width:56px;padding:0 10px;font-size:0;gap:0}
+  .cki-camb svg{width:24px;height:24px}
+  .cki-go{min-width:64px}
+  .cki-fh b{font-size:24px}
+  .cki-no{min-width:104px}.cki-no b{font-size:32px}
+}
+@media (max-width:900px){ .cki-k.g4{grid-template-columns:repeat(2,minmax(0,1fr))} }

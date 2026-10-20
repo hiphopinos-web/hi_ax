@@ -21,7 +21,8 @@ function ckzPaint(){
     var chip=function(v,t){ return '<button type="button" class="chip'+(CKZ.st===v?" on":"")+'" aria-pressed="'+(CKZ.st===v)+'" onclick="ckzSt(\''+v+'\')">'+t+'</button>'; };
     top.innerHTML=errTop("ckz")+'<div class="ckz-bar"><div class="chips" role="group" aria-label="체크인 상태">'+chip("out","안 옴 <b>"+n0(nOut)+"</b>")+chip("in","옴 <b>"+n0(nIn)+"</b>")+chip("all","전체 "+n0(all.length))+'</div>'+
       (apmMap()?'<button type="button" class="chip'+(CKZ.app?" on":"")+'" aria-pressed="'+!!CKZ.app+'" onclick="ckzApp()">앱 미가입 <b>'+n0(all.filter(function(r){ return ckzStOk(r)&&apmOf(r.emp)===0; }).length)+'</b></button>':'')+
-      '<span class="cap">사이즈 미선택 '+n0(nSz)+'명 · 체크인 = 스태프 폰 「체크인존」 스캔</span><span class="sp"></span>'+
+      '<span class="cap">사이즈 미선택 '+n0(nSz)+'명 · 체크인 = 스태프 폰 「체크인존」 스캔 · 콘솔은 체크인 탭</span><span class="sp"></span>'+
+      (typeof ckiCam==="function"?'<button class="btn sm" type="button" onclick="ckiCam()">QR 찍기 · 체크인 탭</button>':'')+   /* 261020 노트북 · 태블릿 카메라 → 체크인 탭 카드 */
       '<button class="btn sm'+(nNo?" pri":"")+'" type="button" onclick="ckzNoAsk()"'+(nNo?'':' disabled')+'>'+(nNo?"스태프 번호 매기기 · "+n0(nNo)+"명":"스태프 번호 매길 사람 없음")+'</button></div>';
   }
   if(!CKZ.g) CKZ.g=XG.make({ id:"ckzone", file:"체크인존 명단", key:function(r){ return r.emp; }, sort:{ k:"_o", d:1 },

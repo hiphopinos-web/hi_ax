@@ -322,7 +322,7 @@ var KSTAFF_UP={
   line:upLine1,
   judge:function(o, pr){ return upJudge1(o, pr, function(p){ return p.st==="kit"?{ k:"ok", res:"사전 신청과 겹침", msg:"넣지만 옷은 사전 신청 쪽 하나만" }:{ k:"ok", res:"정상", msg:"" }; }); },
   chips:upChips([["kit","사전 신청과 겹침",function(r){ return r.res==="사전 신청과 겹침"; }]]), cols:UP_COLS0.concat([UP_COLK,UP_COLM]),
-  sum:function(pv, mode){ var d=pv.diff||{}; return { who:n0(pv.n)+"명 · 새로 "+n0(d.add)+" · 그대로 "+n0(d.keep), sub:(mode==="replace"?"빠지는 사람 "+n0(d.del)+"명 · 고른 사이즈 몫이 풀림 · ":"")+"남는 사람의 사이즈 · 신청번호는 그대로", danger:mode==="replace"&&num(d.del)>0 }; },
+  sum:function(pv, mode){ var d=pv.diff||{}; return { who:n0(pv.n)+"명 · 새로 "+n0(d.add)+" · 그대로 "+n0(d.keep), sub:(mode==="replace"?"빠지는 사람 "+n0(d.del)+"명 · 고른 사이즈 몫이 풀림 · ":"")+"남는 사람의 사이즈는 그대로", danger:mode==="replace"&&num(d.del)>0 }; },
   kpis:function(pv, rows, mode){ return upKp(pv, rows, mode, "", ""); },
   back:function(){ ppUpBack(); }, done:upDone("스태프 옷")
 };

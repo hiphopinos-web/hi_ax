@@ -220,8 +220,9 @@ var IC=(function(){ var s=function(d){ return '<svg viewBox="0 0 24 24" fill="no
   return { now:s('<path d="M3 12h4l3-8 4 16 3-8h4"/>'), inbox:s('<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>'), people:s('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8"/><path d="M18 14.6A6.5 6.5 0 0 1 21.5 20"/>'),
     prize:s('<path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/>'), stage:s('<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>'),
     meet:s('<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2.5v3M16 2.5v3M8 14h3M13 14h3M8 17.5h3"/>'),
+    ckin:s('<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M8.5 12.2l2.4 2.4 4.8-5"/>'),   /* 261020 체크인 탭 */
     notify:s('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>'), log:s('<circle cx="12" cy="12" r="3"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/>') }; })();
-var TABS=[["now","지금","지금"],["inbox","처리함","처리함"],["meet","미팅","미팅"],["people","사람","사람"],["prize","경품 · 재고","경품"],["stage","무대","무대"],["notify","알림","알림"],["log","기록 · 설정","설정"]];
+var TABS=[["now","지금","지금"],["inbox","처리함","처리함"],["meet","미팅","미팅"],["ckin","체크인","체크인"],["people","사람","사람"],["prize","경품 · 재고","경품"],["stage","무대","무대"],["notify","알림","알림"],["log","기록 · 설정","설정"]];
 var SCREENS={};
 function go(tab, sub){ if(!SCREENS[tab]) tab="now"; if(sub!=null) S.sub[tab]=sub; var ch=S.tab!==tab; S.tab=tab; hashSet(); render(); load(false); if(ch) el("main").scrollTop=0; }
 function goSub(sub){ go(S.tab, sub); }

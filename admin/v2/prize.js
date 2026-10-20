@@ -69,15 +69,15 @@ function pzTable(){
 var PZ_SES={ fld:"A", ta:"B", tb:"C", aws:"D", ms1:"E 1회차", ms2:"E 2회차" };   /* 261020 옷 명단 세션 열 · 10F 세션 글자(서버 sid) · 스태프 · 라운지 사전 · 옛 서버(sid 없음)는 빈칸 */
 function pzSes(r){ if(PZ_SES[r.sid]) return PZ_SES[r.sid]; if(r.cno&&/^[A-E]-/.test(r.cno)) return r.cno.charAt(0); return r.pool==="staff"?"스태프":pzPool(r)==="lng"?"라운지 사전":""; }
 function pzPeople(){
-  if(!PZ.g) PZ.g=XG.make({ id:"kit", file:"옷 명단", key:function(r){ return r.emp; }, sort:{ k:"no", d:1 },
+  if(!PZ.g) PZ.g=XG.make({ id:"kit", file:"옷 명단", key:function(r){ return r.emp; }, sort:{ k:"cno", d:1 },
     chips:[["all","전체",null],["pre","사전 신청자",function(r){ return pzPool(r)==="pre"; }],["staff","스태프",function(r){ return r.pool==="staff"; }],["lng","라운지 사전",function(r){ return pzPool(r)==="lng"; }],["none","미신청",function(r){ return !r.sz; }]],
     onChip:function(c){ if(c!=="none"){ PZ.chip=c; paint(); } },
-    cols:[{ k:"no", t:"신청번호", w:88 },{ k:"name", t:"이름", w:100 },{ k:"emp", t:"사번", w:84 },{ k:"dept", t:"부서", w:120 },{ k:"pool", t:"구분", w:96, v:function(r){ var p=pzPool(r); return p==="staff"?"스태프":p==="lng"?"라운지 사전":"사전 신청자"; } },
+    cols:[{ k:"name", t:"이름", w:100 },{ k:"emp", t:"사번", w:84 },{ k:"dept", t:"부서", w:120 },{ k:"pool", t:"구분", w:96, v:function(r){ var p=pzPool(r); return p==="staff"?"스태프":p==="lng"?"라운지 사전":"사전 신청자"; } },
       { k:"sid", t:"세션", w:90, v:pzSes },{ k:"cno", t:"세션 번호", w:84, v:function(r){ return r.cno||""; }, f:function(r){ return r.cno?'<b>'+esc(r.cno)+'</b>':r.cno==null?"":tag("없음","off"); } },
       { k:"sz", t:"사이즈", w:70, f:function(r){ return r.sz?'<b>'+esc(r.sz)+'</b>':tag("미신청","warn"); } },{ k:"how", t:"고른 방식", w:80, v:function(r){ return r.how==="auto"?"자동":r.how==="pick"?"직접":""; } },{ k:"at", t:"고른 시각", type:"date", w:100 },
       { k:"got", t:"받음", w:96, v:function(r){ return r.got||""; }, x:function(r){ return r.got?"받음 "+r.got:r.pool==="staff"?"따로 전달":"받기 전"; }, f:function(r){ return r.got?tag("받음 "+fmtD(r.got),"ok"):r.pool==="staff"?tag("따로 전달","off"):tag("받기 전","off"); } }],
     src:{ a:"roll_list", p:{ list:"kit" } }, h:460, onRow:function(k){ rowDetail(PZ.g,k); },
-    select:1, cancel:{ kind:"kit", what:"옷 명단", sub:"고른 사이즈를 비움(미신청으로) · 신청번호는 남음 · 받은 사람 · 가습기 대상은 못 함", after:function(){ reload(["kit","kb","kss"]); } } });
+    select:1, cancel:{ kind:"kit", what:"옷 명단", sub:"고른 사이즈를 비움(미신청으로) · 받은 사람 · 가습기 대상은 못 함", after:function(){ reload(["kit","kb","kss"]); } } });
   if(PZ.chip!=="all"&&PZ.g.chip!=="none") PZ.g.chip=PZ.chip;
   var gt=dataGate("kit","옷 명단"); PZ.g.gate=gt||""; XG.set(PZ.g, gt?null:pzRows(), el("pzP"));
 }
