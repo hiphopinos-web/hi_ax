@@ -210,8 +210,9 @@ var Views = {
     setTimeout(function () { var t = el("ccText"); if (t) { t.style.height = "auto"; t.style.height = (t.scrollHeight + 2) + "px"; } }, 0);
     return '<div class="ax-stack axs-form axs-cca">' + head("아이디어 한 줄 등록") + err +
       '<div class="ax-stack-tight"><label class="ax-sr-only" for="ccText">아이디어 한 줄</label>' +
-      '<textarea id="ccText" class="ax-field axs-ta axs-grow" rows="4" maxlength="' + IDEA_MAX + '" placeholder="예: 매달 하는 실적 집계를 AI로 줄이고 싶어요" oninput="ccInput(this.value)" onfocus="kbFocus(this)" aria-describedby="ccCnt"' + (CCA.busy ? " readonly" : "") + ">" + esc(d.t) + "</textarea>" +
-      '<p class="ax-meta axs-cccnt" id="ccCnt">' + ccCntTxt(ideaLen(d.t)) + "</p></div>" +
+      '<textarea id="ccText" class="ax-field axs-ta axs-grow" rows="4" maxlength="' + IDEA_MAX + '" placeholder="예: 매달 하는 실적 집계를 AI로 줄이고 싶어요" oninput="ccInput(this.value)" onfocus="kbFocus(this)" aria-describedby="ccLeft"' + (CCA.busy ? " readonly" : "") + ">" + esc(d.t) + "</textarea>" +
+      '<div class="axs-cnt"><p class="ax-meta" id="ccLeft" aria-live="polite">' + ideaLeftTxt(ideaLen(d.t), d.t) + '</p><p class="ax-meta"><span id="ccCnt">' + String(d.t || "").length.toLocaleString() + "</span>/" + IDEA_MAX.toLocaleString() + "</p></div>" +   /* v8.21 (사용자 261021) 스탬프 › 아이디어 한 줄 입력 화면과 같은 부품(axs-cnt · ideaLeftTxt · n/3,000) · 옛 「n / 30자」(ccCntTxt) */
+      '<p class="ax-meta axs-ccprz">커피챗 상담 시 시상 확률이 높아집니다</p></div>' +   /* v8.21 (사용자 확정 261021 문구 그대로) · 아이디어 한 줄 입력 화면에는 없는 줄(커피챗 신청 쪽만) */
       (mine.length ? '<button type="button" class="ax-link axs-plain axs-self" onclick="ccMode(null)"' + busyD + ">내가 낸 아이디어 " + mine.length + "건</button>" : "") +
       ccIdeaFootHtml() + "</div>" + next(ideaOk(d.t));
   },

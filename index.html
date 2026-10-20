@@ -2057,6 +2057,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-ccdl { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ax-space-4); font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; }
   /* v7.54 .axs-ccdl 점 = 공용 목록 점 부품(주황 둥근 점 · 옛 「·」 회색 글자) */
   .axs-cccnt { margin: 0; text-align: right; }
+  .axs-ccprz { margin: 0; }   /* v8.21 커피챗 신청 1/2 쓰는 칸 아래 「커피챗 상담 시 시상 확률이 높아집니다」 */
   .axs-ccpick { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ax-space-4) var(--ax-space-12); padding: var(--ax-space-12) var(--ax-space-16); border-radius: var(--ax-radius-16); background: var(--ax-color-surface); font: var(--ax-type-t6); }
   .axs-ccpick .k { color: var(--ax-color-muted); }
   .axs-ccpick b { flex: 1 1 auto; min-width: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
@@ -5930,8 +5931,9 @@ function ccIdeaFootHtml() {
 function ccInput(v) {
   CCA.mode = "new";   /* v8.07 쓰기 시작하면 목록이 늦게 와도 쓰는 칸 그대로 */
   var d = ccDraft(); d.t = v; ccDraftPut(d);
-  var n = ideaLen(v), c = el("ccCnt"), b = el("ccNext"), t = el("ccText");   /* v8.21 쓰는 칸 = 화면 1 · 주 버튼 「다음」 */
-  if (c) c.textContent = ccCntTxt(n);
+  var n = ideaLen(v), c = el("ccCnt"), l = el("ccLeft"), b = el("ccNext"), t = el("ccText");   /* v8.21 쓰는 칸 = 화면 1 · 주 버튼 「다음」 */
+  if (c) c.textContent = String(v).length.toLocaleString();   /* v8.21 아이디어 한 줄 입력 화면과 같은 셈(ideaInput) */
+  if (l) l.textContent = ideaLeftTxt(n, v);
   if (t) { t.style.height = "auto"; t.style.height = (t.scrollHeight + 2) + "px"; }
   if (b) b.disabled = !ideaOk(v) || CCA.busy;
 }
@@ -10410,8 +10412,9 @@ var Views = {
     setTimeout(function () { var t = el("ccText"); if (t) { t.style.height = "auto"; t.style.height = (t.scrollHeight + 2) + "px"; } }, 0);
     return '<div class="ax-stack axs-form axs-cca">' + head("아이디어 한 줄 등록") + err +
       '<div class="ax-stack-tight"><label class="ax-sr-only" for="ccText">아이디어 한 줄</label>' +
-      '<textarea id="ccText" class="ax-field axs-ta axs-grow" rows="4" maxlength="' + IDEA_MAX + '" placeholder="예: 매달 하는 실적 집계를 AI로 줄이고 싶어요" oninput="ccInput(this.value)" onfocus="kbFocus(this)" aria-describedby="ccCnt"' + (CCA.busy ? " readonly" : "") + ">" + esc(d.t) + "</textarea>" +
-      '<p class="ax-meta axs-cccnt" id="ccCnt">' + ccCntTxt(ideaLen(d.t)) + "</p></div>" +
+      '<textarea id="ccText" class="ax-field axs-ta axs-grow" rows="4" maxlength="' + IDEA_MAX + '" placeholder="예: 매달 하는 실적 집계를 AI로 줄이고 싶어요" oninput="ccInput(this.value)" onfocus="kbFocus(this)" aria-describedby="ccLeft"' + (CCA.busy ? " readonly" : "") + ">" + esc(d.t) + "</textarea>" +
+      '<div class="axs-cnt"><p class="ax-meta" id="ccLeft" aria-live="polite">' + ideaLeftTxt(ideaLen(d.t), d.t) + '</p><p class="ax-meta"><span id="ccCnt">' + String(d.t || "").length.toLocaleString() + "</span>/" + IDEA_MAX.toLocaleString() + "</p></div>" +   /* v8.21 (사용자 261021) 스탬프 › 아이디어 한 줄 입력 화면과 같은 부품(axs-cnt · ideaLeftTxt · n/3,000) · 옛 「n / 30자」(ccCntTxt) */
+      '<p class="ax-meta axs-ccprz">커피챗 상담 시 시상 확률이 높아집니다</p></div>' +   /* v8.21 (사용자 확정 261021 문구 그대로) · 아이디어 한 줄 입력 화면에는 없는 줄(커피챗 신청 쪽만) */
       (mine.length ? '<button type="button" class="ax-link axs-plain axs-self" onclick="ccMode(null)"' + busyD + ">내가 낸 아이디어 " + mine.length + "건</button>" : "") +
       ccIdeaFootHtml() + "</div>" + next(ideaOk(d.t));
   },

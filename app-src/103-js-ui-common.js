@@ -646,8 +646,9 @@ function ccIdeaFootHtml() {
 function ccInput(v) {
   CCA.mode = "new";   /* v8.07 쓰기 시작하면 목록이 늦게 와도 쓰는 칸 그대로 */
   var d = ccDraft(); d.t = v; ccDraftPut(d);
-  var n = ideaLen(v), c = el("ccCnt"), b = el("ccNext"), t = el("ccText");   /* v8.21 쓰는 칸 = 화면 1 · 주 버튼 「다음」 */
-  if (c) c.textContent = ccCntTxt(n);
+  var n = ideaLen(v), c = el("ccCnt"), l = el("ccLeft"), b = el("ccNext"), t = el("ccText");   /* v8.21 쓰는 칸 = 화면 1 · 주 버튼 「다음」 */
+  if (c) c.textContent = String(v).length.toLocaleString();   /* v8.21 아이디어 한 줄 입력 화면과 같은 셈(ideaInput) */
+  if (l) l.textContent = ideaLeftTxt(n, v);
   if (t) { t.style.height = "auto"; t.style.height = (t.scrollHeight + 2) + "px"; }
   if (b) b.disabled = !ideaOk(v) || CCA.busy;
 }

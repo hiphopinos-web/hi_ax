@@ -1887,6 +1887,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-ccdl { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ax-space-4); font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; }
   /* v7.54 .axs-ccdl 점 = 공용 목록 점 부품(주황 둥근 점 · 옛 「·」 회색 글자) */
   .axs-cccnt { margin: 0; text-align: right; }
+  .axs-ccprz { margin: 0; }   /* v8.21 커피챗 신청 1/2 쓰는 칸 아래 「커피챗 상담 시 시상 확률이 높아집니다」 */
   .axs-ccpick { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ax-space-4) var(--ax-space-12); padding: var(--ax-space-12) var(--ax-space-16); border-radius: var(--ax-radius-16); background: var(--ax-color-surface); font: var(--ax-type-t6); }
   .axs-ccpick .k { color: var(--ax-color-muted); }
   .axs-ccpick b { flex: 1 1 auto; min-width: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
