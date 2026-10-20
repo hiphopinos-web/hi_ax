@@ -220,7 +220,8 @@ function ttGet() {
    옛 서버(필드 없음) · 범위를 바꾼 뒤(false) = 지금 규칙 · 시험 시각(tt)을 고른 테스트 계정은 그 시각 규칙을 본다 */
 function betaFree() { return !ttGet() && S.get("bf", false) === true; }
 function ttMs() { var o = ttGet(); return o ? new Date(2026, 9, o.d === "pre" ? 25 : 26, Math.floor(o.m / 60), o.m % 60).getTime() : null; }
-function appNow(srv) { var t = ttMs(); return new Date(t != null ? t : Date.now() + (srv && typeof sesOff === "function" ? sesOff() : 0)); }
+/* 261020 (폰 시계 점검) 운영 참가자도 서버 시계 보정(toff · 서버 응답 now 와 1.5초 넘게 다를 때만 저장)을 늘 쓴다 · 폰 시계가 틀려도 홈 국면 · 시간표 「지금」 · 선착순 카드 · 하루 한 번 표시가 서버 날짜 · 시각을 따른다 · srv 인자는 옛 호출 호환(뜻 같음) · 시험 시각(tt)이 있으면 그것이 먼저 */
+function appNow(srv) { var t = ttMs(); return new Date(t != null ? t : Date.now() + (typeof sesOff === "function" ? sesOff() : 0)); }
 function hmNow() { var tm = ""; try { tm = attTm(); } catch (e) { tm = ""; } if (tm) return t2m(tm); var d = appNow(); return d.getHours() * 60 + d.getMinutes(); }
 function nowIdx() {
   var hm = hmNow(), nx = -1, last = -1;
