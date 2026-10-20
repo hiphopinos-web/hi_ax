@@ -1,0 +1,4 @@
+/* AXF CONTROL v2 · 상단 바 AX PASSPORT 바로가기(261021) · 칩 모양은 v2.css .chip-s 그대로 */
+.top .tbl-app{text-decoration:none;font-weight:600;flex:none}
+.top .tbl-app:hover{background:rgba(255,255,255,.14)}
+@media (max-width:600px){.top .tbl-app{display:none}}

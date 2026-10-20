@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="drill.css?v=26101795">
 <link rel="stylesheet" href="preday.css?v=26102030">
 <link rel="stylesheet" href="ckin.css?v=26102030">
+<link rel="stylesheet" href="topbar-link.css?v=26102120">
 </head>
 <body>
 <!-- AXF CONTROL v2 · 콘솔 재구축(261016) · 탭 8개 고정(261016 밤 미팅 탭) · 3단계 = 재고 장부 · 사이즈 교환 · 체크인 번호 · 현장 QR · 4단계 = 아이디어 · 예약 · 설문 · 접속 거부 · 추첨 설정 · 관리자 명단 · 한 사람 넣기 빼기 -->
@@ -21,6 +22,7 @@
     <span class="brand">AXF CONTROL</span><span class="env" id="envTx"></span>
     <span id="topL" style="display:flex;gap:8px;align-items:center;min-width:0"></span>
     <span class="sp"></span>
+    <a class="chip-s tbl-app" id="tblApp" href="https://hiax.app/" target="_blank" rel="noopener" aria-label="AX PASSPORT 참가자 앱 새 탭으로 열기">AX PASSPORT <span aria-hidden="true">↗</span></a>
     <input class="search" id="gq" type="search" placeholder="사번 · 이름 찾기  /" aria-label="사람 찾기" onkeydown="searchGo(event)">
     <button type="button" class="chip-s" id="upd" onclick="refreshAll()" aria-label="다시 받기">갱신</button>
   </header>
