@@ -1,30 +1,51 @@
 /* AX FESTIVAL · 서비스워커
  * 목적: 안드로이드 "홈 화면에 추가" 설치창 · v4.76 웹 푸시 받기(아래) · 261019 앱 첫 문서 캐시(사용자 결정 「hiax.app 유지 + 캐시」).
- * 앱 첫 문서만 캐시한다 = 이 서비스워커 범위의 앱 주소(hiax.app 은 / · /index.html, github.io 는 /hi_ax/ · /hi_ax/index.html · 쿼리 · 해시 무시 · 한 항목).
- *   · 네트워크 우선 · 본문을 다 받을 때까지 3초와 겨룬다(헤더만 빨리 오고 본문이 느린 경우가 실제 문제 · 국내 접속이 LAX 거점으로 가는 회선).
- *   · 3초 안에 200 · html 본문이 다 오면 그 판을 보여 주고 캐시를 바꾼다.
- *   · 3초가 지나면 캐시 판을 보여 주고, 네트워크는 끝까지 받아 캐시만 바꾼다(다음 열기 = 새 판 · 옛 판 고착 방지).
- *   · 캐시가 없으면(첫 열기) · 직접 새로고침(request.cache = reload · no-cache)이면 예전처럼 네트워크를 그대로 기다린다.
- *   · 네트워크 오류 · 5xx 면 캐시 · 캐시도 없으면 오류 그대로 · 200 이 아닌 응답은 캐시에 넣지 않는다.
- *   · 새 서비스워커 설치 때 첫 문서를 한 번 받아 넣어 둔다(실패해도 설치는 계속).
+ * 261020 (사용자 「1 + 2 + 3 모두 지금」 · 계단 QR 이 느린 까닭 = 카메라 링크마다 앱을 처음부터 여는 것) 캐시가 있으면 바로 쓰고 새 판은 뒤에서 받는다.
+ * 캐시하는 것 = 이 서비스워커 범위의 앱 첫 문서(hiax.app 은 / · /index.html, github.io 는 /hi_ax/ · /hi_ax/index.html · 쿼리 · 해시 무시 · 한 항목)
+ *   + 첫 화면을 막는 하위 파일 5개(SUB_FILES · 쿼리 무시).
+ *   · 캐시가 있으면 곧바로 캐시 판 · 같은 때 네트워크로 새 판(문서 + 하위 파일 5개)을 끝까지 받아 캐시만 바꾼다(다음 열기 = 새 판).
+ *   · 캐시가 없으면(첫 열기 · 지워짐 · 깨져 읽지 못함) · 직접 새로고침(request.cache = reload · no-cache)이면 네트워크를 그대로 기다린다.
+ *   · 문서를 네트워크로 받은 뒤 20초(FRESH_MS) 동안은 하위 파일도 네트워크 먼저(새로 고침 · 앱의 최소 판 새로 고침 때 새 문서와 옛 하위 파일이 섞이지 않게).
+ *   · 네트워크 오류 · 5xx 면 캐시 · 캐시도 없으면 오류 그대로 · 200 이 아닌 응답 · 다른 형식은 캐시에 넣지 않는다.
+ *   · 새 서비스워커 설치 때 첫 문서와 하위 파일을 한 번 받아 넣어 둔다(실패해도 설치는 계속).
  * 나머지(admin · draw · typing · king · tv · interview · wall 등 다른 경로 · 미디어 · API)는 손대지 않는다(브라우저 기본 동작 · mp4 Range 그대로). */
-var SW_VERSION = "axf-2026-10-19-v520";   /* v5.20 · 261019 앱 첫 문서 캐시(네트워크 우선 3초) · activate 는 APP_CACHE 하나만 남기고 지운다 */
+var SW_VERSION = "axf-2026-10-20-v815";   /* v8.15 · 261020 캐시 먼저 + 뒤에서 새 판(문서 · 하위 파일 5개) · v5.20 261019 앱 첫 문서 캐시(네트워크 우선 3초) */
 var APP_CACHE = "axf-app-doc";            /* 이름을 바꾸지 않는다(서비스워커 판이 바뀌어도 첫 문서 캐시는 남아 다음 열기가 빠르다 · 내용은 네트워크가 늘 갈아 끼운다) */
-var NET_WAIT = 3000;                      /* 네트워크 본문을 기다리는 시간(ms) · 넘으면 캐시 판 */
+var SUB_CACHE = "axf-app-sub";            /* 하위 파일 5개 · activate 는 이 둘만 남긴다 */
+var SUB_FILES = ["design-handoff/design-system/tokens.css", "design-handoff/design-system/components.css", "assets/bot.js", "assets/rain-engine.js", "assets/server.js"];
+var FRESH_MS = 20000;                     /* 문서를 네트워크로 받은 뒤 하위 파일 네트워크 먼저 */
+var FRESH = { t: 0 };
 
 function axfNoop() {}
+function axfScope() { return new URL(self.registration.scope); }
 function axfAppKey(u) {                    /* 앱 첫 문서면 캐시 열쇠(범위 주소 · 쿼리 없음) · 아니면 "" */
-  var sc = new URL(self.registration.scope);
+  var sc = axfScope();
   if (u.origin !== sc.origin) return "";
   return u.pathname === sc.pathname || u.pathname === sc.pathname + "index.html" ? sc.origin + sc.pathname : "";
 }
+function axfSubKey(u) {                    /* 하위 파일 5개면 캐시 열쇠(범위 주소 + 경로 · 쿼리 없음) · 아니면 "" */
+  var sc = axfScope();
+  if (u.origin !== sc.origin || u.pathname.indexOf(sc.pathname) !== 0) return "";
+  return SUB_FILES.indexOf(u.pathname.slice(sc.pathname.length)) >= 0 ? sc.origin + u.pathname : "";
+}
 function axfOkDoc(r) { return !!r && r.status === 200 && r.type === "basic" && !r.redirected && /text\/html/i.test(r.headers.get("content-type") || ""); }
-function axfWarm() {                       /* 설치 때 첫 문서를 받아 둔다 · 30초 넘으면 설치를 붙잡지 않는다 */
-  var key = axfAppKey(new URL(self.registration.scope));
+function axfOkSub(r) { return !!r && r.status === 200 && r.type === "basic" && !r.redirected && /css|javascript/i.test(r.headers.get("content-type") || ""); }
+function axfGet(name, key) { return caches.open(name).then(function (c) { return c.match(key, { ignoreSearch: true, ignoreVary: true }); }).catch(axfNoop); }
+function axfPut(name, key, res) { return caches.open(name).then(function (c) { return c.put(key, res); }).catch(axfNoop); }
+/* 하위 파일 5개를 네트워크로 받아 캐시만 바꾼다(no-cache = 바뀌지 않았으면 304 로 짧게) */
+function axfSubWarm() {
+  var sc = axfScope();
+  return Promise.all(SUB_FILES.map(function (p) {
+    var key = sc.origin + sc.pathname + p;
+    return fetch(new Request(key, { cache: "no-cache", credentials: "same-origin" })).then(function (res) { return axfOkSub(res) ? axfPut(SUB_CACHE, key, res) : null; }, axfNoop);
+  }));
+}
+function axfWarm() {                       /* 설치 때 첫 문서 · 하위 파일을 받아 둔다 · 30초 넘으면 설치를 붙잡지 않는다 */
+  var key = axfAppKey(axfScope());
   if (!key) return Promise.resolve();
   var job = fetch(new Request(key, { cache: "no-cache", credentials: "same-origin" })).then(function (res) {
-    return axfOkDoc(res) ? caches.open(APP_CACHE).then(function (c) { return c.put(key, res); }) : null;
-  });
+    return axfOkDoc(res) ? axfPut(APP_CACHE, key, res) : null;
+  }).then(axfSubWarm);
   return Promise.race([job, new Promise(function (ok) { setTimeout(ok, 30000); })]).catch(axfNoop);
 }
 
@@ -36,7 +57,7 @@ self.addEventListener("install", function (event) {
 self.addEventListener("activate", function (event) {
   event.waitUntil(
     caches.keys()
-      .then(function (keys) { return Promise.all(keys.filter(function (k) { return k !== APP_CACHE; }).map(function (k) { return caches.delete(k); })); })
+      .then(function (keys) { return Promise.all(keys.filter(function (k) { return k !== APP_CACHE && k !== SUB_CACHE; }).map(function (k) { return caches.delete(k); })); })
       .then(function () { return self.clients.claim(); })
       .catch(function () { return self.clients.claim(); })
   );
@@ -44,33 +65,45 @@ self.addEventListener("activate", function (event) {
 
 self.addEventListener("fetch", function (event) {
   var req = event.request;
-  if (req.mode !== "navigate" || req.method !== "GET") return;   // 미디어·API는 손대지 않음
-  var key = axfAppKey(new URL(req.url));
+  if (req.method !== "GET") return;
+  var u = new URL(req.url);
+  if (req.mode !== "navigate") {                                 // 미디어 · API 는 손대지 않음 · 하위 파일 5개만
+    var sk = axfSubKey(u);
+    if (sk) event.respondWith(axfSub(event, req, sk));
+    return;
+  }
+  var key = axfAppKey(u);
   if (!key) return;                                              // 앱 첫 문서가 아니면(admin 등) 그대로 통과
   event.respondWith(axfAppDoc(event, req, key));
 });
 
 function axfAppDoc(event, req, key) {
-  return caches.open(APP_CACHE).then(function (cache) {
-    return cache.match(key, { ignoreSearch: true, ignoreVary: true }).catch(axfNoop).then(function (old) {
-      var reload = req.cache === "reload" || req.cache === "no-cache";
-      if (!old || reload) {               /* 첫 열기 · 직접 새로고침 = 네트워크를 그대로(받는 대로 그린다) */
-        return fetch(req).then(function (res) {
-          if (axfOkDoc(res)) event.waitUntil(cache.put(key, res.clone()).catch(axfNoop));
-          if (old && res.status >= 500) return old;
-          return res;
-        }, function (e) { if (old) return old; throw e; });
-      }
-      var full = fetch(req).then(function (res) {   /* 본문을 다 받아 캐시에 넣은 뒤에 끝난다 */
-        return axfOkDoc(res) ? cache.put(key, res.clone()).then(function () { return res; }) : res;
-      });
-      event.waitUntil(full.catch(axfNoop));         /* 캐시 판을 보여 줘도 끝까지 받아 다음 열기에 새 판 */
-      var late = new Promise(function (ok) { setTimeout(function () { ok(null); }, NET_WAIT); });
-      return Promise.race([full.catch(function () { return null; }), late]).then(function (res) {
-        if (!res || res.status >= 500) return old;  /* 3초 넘음 · 오류 · 5xx = 캐시 판 */
+  return axfGet(APP_CACHE, key).then(function (old) {
+    var reload = req.cache === "reload" || req.cache === "no-cache";
+    if (!old || reload) {                 /* 첫 열기 · 캐시 없음 · 직접 새로고침 = 네트워크를 그대로(받는 대로 그린다) */
+      FRESH.t = Date.now();
+      return fetch(req).then(function (res) {
+        if (axfOkDoc(res)) { FRESH.t = Date.now(); event.waitUntil(axfPut(APP_CACHE, key, res.clone())); }
+        if (old && res.status >= 500) return old;
         return res;
-      });
-    });
+      }, function (e) { if (old) return old; throw e; });
+    }
+    /* 캐시 판을 곧바로 · 뒤에서 새 문서 + 하위 파일을 끝까지 받아 캐시만 바꾼다(다음 열기 = 새 판) */
+    event.waitUntil(fetch(req).then(function (res) { return axfOkDoc(res) ? axfPut(APP_CACHE, key, res) : null; }).then(axfSubWarm).catch(axfNoop));
+    return old;
+  });
+}
+function axfSub(event, req, key) {
+  return axfGet(SUB_CACHE, key).then(function (old) {
+    var fresh = Date.now() - FRESH.t < FRESH_MS, reload = req.cache === "reload" || req.cache === "no-cache";
+    if (!old || fresh || reload) {        /* 캐시 없음 · 방금 문서를 네트워크로 받음 · 직접 새로고침 = 네트워크 먼저 · 오류면 캐시 */
+      return fetch(req, fresh ? { cache: "no-cache" } : undefined).then(function (res) {
+        if (axfOkSub(res)) event.waitUntil(axfPut(SUB_CACHE, key, res.clone()));
+        if (old && res.status >= 500) return old;
+        return res;
+      }, function (e) { if (old) return old; throw e; });
+    }
+    return old;                           /* 뒤에서 새 판 받기는 문서 쪽(axfAppDoc · axfSubWarm)이 한다 */
   });
 }
 

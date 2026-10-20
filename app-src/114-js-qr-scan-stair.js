@@ -22,6 +22,14 @@ function scanLinkRun() {
   if (Date.now() - (p.t || 0) > 30 * 60000) return;
   qrRoute(p.raw, p.t);
 }
+/* 261020 (계단 QR 이 느린 까닭 = 카메라 링크마다 앱을 처음부터 연다) 걸어 둔 링크가 계단 QR 인가 · qrRoute 의 계단 갈래와 같은 판정(AXW 코드 또는 fl=) · 30분 넘은 링크는 아니다
+   저장된 로그인으로 열리면 부팅(enterNow)이 홈을 그리지 않고 곧바로 scanLinkRun = 계단 「확인하는 중」 + stair_scan · 홈(광고판 · 영상)은 결과 뒤 다른 화면으로 갈 때 */
+function scanLinkStair() {
+  var p = scanLinkPeek();
+  if (!p || Date.now() - (p.t || 0) > 30 * 60000) return false;
+  var raw = String(p.raw || ""), m = raw.match(/#s=([A-Za-z0-9]+)/i);
+  return !!m && (/^AXW/i.test(m[1]) || /[#&?]fl=\d{1,2}\b/i.test(raw));
+}
 /* 261006 1F 타자왕 노트북 접속 QR(#q=type&lt=)을 로그인 전에 찍고 들어왔다 · 그 순간 서버가 토큰을 5분 붙잡는다(처음 로그인이 1분을 넘겨도 「다시 찍어 주세요」가 안 뜨게)
    토큰마다 한 번 · 응답은 쓰지 않는다(로그인 뒤 type_link_join 이 판정) · 실패 · 옛 서버는 조용히 넘어간다(예전처럼 60초)
    261007 (사용자 「늦게 찍으면 만료」) 로그인한 폰도 앱이 뜨자마자 붙잡는다(스크립트 시작 · hashchange) · 카메라 링크를 늦게 누르거나 앱이 늦게 떠도 1분 안에 연 QR 은 5분 동안 연결된다 */
@@ -1083,8 +1091,10 @@ function myQrWhoHtml(u) {
 function qrCamStart() {
   try { QRS.det = "BarcodeDetector" in window ? new BarcodeDetector({ formats: ["qr_code"] }) : null; } catch (e) { QRS.det = null; }
   QRS.busy = false; QRS.next = 0; QRS.hold = false; QRS.gate = 0; QRS.gateQ = [];
-  navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }).then(function (stream) {
+  /* 261020 (계단 QR 거리) 카메라 해상도 · 기본(640×480)이면 멀리서 작은 QR 을 못 읽어 1280 을 바란다(ideal · 못 주면 기기 기본) · 연속 초점은 되는 기기만 */
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } }).then(function (stream) {
     QRS.stream = stream;
+    try { var tk = stream.getVideoTracks()[0], cp = tk && tk.getCapabilities ? tk.getCapabilities() : null; if (cp && cp.focusMode && cp.focusMode.indexOf("continuous") >= 0) tk.applyConstraints({ advanced: [{ focusMode: "continuous" }] }).catch(function () {}); } catch (e) {}
     var v = el("qrVideo");
     if (!v) { qrCamStop(); return; }
     v.srcObject = stream;
@@ -1481,11 +1491,13 @@ function staffStampGive(id) {
 }
 /* ── 인앱 QR 스캔 · BarcodeDetector(안드로이드 크롬). 미지원 기기는 기본 카메라로 QR을 찍는 기존 경로 ── */
 var QRS = { stream: null, timer: null, det: null, busy: false, hint: null, next: 0, cv: null, g: null, tab: "scan" };
-/* jsQR 경로 · 카메라 프레임을 480px로 줄여 디코딩한다(원본 해상도로 돌리면 폰에서 프레임당 수백 ms) */
+/* jsQR 경로 · 카메라 프레임을 긴 변 QR_DEC_PX 로 줄여 디코딩한다(원본 해상도로 돌리면 폰에서 프레임당 수백 ms)
+   261020 480 → 800(계단 QR 버전 5 를 더 멀리서 · 디코딩에 쓴 만큼 쉬는 규칙(qrScanTick)은 그대로) */
+var QR_DEC_PX = 800;
 function qrDecodeFrame(v) {
   var vw = v.videoWidth, vh = v.videoHeight;
   if (!vw || !vh) return null;
-  var sc = Math.min(1, 480 / Math.max(vw, vh));
+  var sc = Math.min(1, QR_DEC_PX / Math.max(vw, vh));
   var w = Math.round(vw * sc), h = Math.round(vh * sc);
   if (!QRS.cv) { QRS.cv = document.createElement("canvas"); QRS.g = QRS.cv.getContext("2d", { willReadFrequently: true }); }
   if (QRS.cv.width !== w || QRS.cv.height !== h) { QRS.cv.width = w; QRS.cv.height = h; }

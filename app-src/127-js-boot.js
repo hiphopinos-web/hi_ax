@@ -2,7 +2,7 @@
 (function () {
   var splash = el("splash");
   function enterApp() { xitionRun(enterNow); }
-  function enterNow(scene) {   /* v4.87 scene = 최초 로그인 장면이 덮은 뒤 · 찍은 QR · 알림 이동 · 큰글씨 안내는 장면이 닫힌 뒤(lgxAfter) */
+  function enterNow(scene, fast) {   /* 261020 fast = 저장된 로그인으로 바로 열림(계단 QR 링크면 홈 없이 곧바로) · v4.87 scene = 최초 로그인 장면이 덮은 뒤 · 찍은 QR · 알림 이동 · 큰글씨 안내는 장면이 닫힌 뒤(lgxAfter) */
     splash.classList.add("gone");
     el("frame").classList.remove("splash-mode");
     el("app").hidden = false;
@@ -17,9 +17,17 @@
       var lf = parseInt(sessionStorage.getItem("axf_last_fl"), 10);
       if ([1, 10, 17, 18].indexOf(lf) >= 0) PROG.fl = lf;
     } catch (e) {}
-    App.go(target);
+    var stairNow = fast && !scene && typeof scanLinkStair === "function" && scanLinkStair();   /* 261020 계단 QR 링크 = 0.4초 기다리지 않고 · 홈을 그리지 않고 곧바로 계단 「확인하는 중」 + stair_scan */
+    if (stairNow) Promise.resolve().then(function () {
+      var fromT = { passport: "exp", guide_time: "guide" }[target] || target, setF = App.PARENT.stair !== fromT;
+      if (setF) App.from.stair = fromT;   /* 예전처럼 보던 탭 위에 계단 화면(뒤로 · 위치 줄 · 탭 표시 = 보던 탭) */
+      try { scanLinkRun(); } catch (e) {}
+      if (setF && App.current !== "stair") delete App.from.stair;
+      if (!App.booted) App.go(target);
+    });   /* 마이크로태스크 = 이 스크립트 끝(뒤 조각의 계단 봇 변수 STBWL 등이 잡힌 뒤) · 첫 그리기 전 · 저장만 하고 화면을 안 바꾼 경우(오프라인 · 처리 중)는 예전처럼 보던 탭 */
+    else App.go(target);
     if (!scene) {
-      setTimeout(scanLinkRun, 400);
+      if (!stairNow) setTimeout(scanLinkRun, 400);
       setTimeout(pushGoRun, 500);   /* v4.76 알림을 눌러 들어왔으면 그 화면으로 */
     }
     setTimeout(function () { if (typeof ntcCheck === "function") ntcCheck(); }, 700);   /* 261007 앱을 열 때 안 읽은 최근 공지 = 시트 한 번(장면 · 팝 · 다른 안내가 끝난 뒤 · 대기열) */
@@ -127,7 +135,7 @@
   var savedU = S.get("user", {});
   if (savedU && savedU.empId) {
     /* 261007 (사용자 「로그인 기록이 있는 사람이 재차 들어오면 바로 메인으로」) 저장된 로그인 = 로그인 화면 · 입장 전환(1초) 없이 바로 홈(axf-saved 가 첫 그림부터 로그인 화면을 가린다) */
-    enterNow(); document.documentElement.classList.remove("axf-saved");
+    enterNow(false, true); document.documentElement.classList.remove("axf-saved");
     a2hsAuto();   /* v5.34 (311537 진단 · 사용자 261003) 로그인 유지로 홈 화면 앱을 처음 연 사람에게도 「알림을 켤까요?」 한 번(pushFirst · 기기당 1회 push_first · 차단이면 묻지 않음) · 허용된 기기는 다시 등록 */
     return;
   }
