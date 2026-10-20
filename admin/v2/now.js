@@ -42,8 +42,9 @@ function nbKinds(kinds){ var m={}; kinds.forEach(function(k){ m[k.id]=k; }); ret
 SCREENS.now={
   title:"지금", desc:"앱 사용 · 지금까지 · 이상 신호 · 지금 단계 · 스탬프 · 경품 · 스태프 요청",
   need:function(){ return [usNeed(),sfNeed(),{ k:"rst", a:"roll_stat", ttl:60000 },{ k:"sreqo", a:"sreq_list", p:{ st:"open", n:20 }, ttl:15000 },{ k:"inv", a:"inv_state", ttl:60000 },{ k:"kss", a:"kit_size_state", ttl:60000 }]; },
-  mount:function(vb){ vb.innerHTML='<div id="nwChips" class="chips"></div><div id="nwErr"></div><div id="nwUseA"></div><div id="nwSfA"></div><div class="grid g4 mb" id="nwSig"></div><div id="nwUseB"></div><div class="grid g32"><div class="col" id="nwL"></div><div class="col" id="nwR"></div></div><div id="nwSfB"></div>'; },
+  mount:function(vb){ vb.innerHTML='<div id="nwPda"></div><div id="nwChips" class="chips"></div><div id="nwErr"></div><div id="nwUseA"></div><div id="nwSfA"></div><div class="grid g4 mb" id="nwSig"></div><div id="nwUseB"></div><div class="grid g32"><div class="col" id="nwL"></div><div class="col" id="nwR"></div></div><div id="nwSfB"></div>'; },
   paint:function(){
+    if(typeof pdaBand==="function") el("nwPda").innerHTML=pdaBand();   /* 261020 행사 전 스탬프 점검(preday.js) · 맨 위 · 진행판보다 먼저 */
     var b=S.data.nb, g=dataGate("nb","진행판");
     if(g){ el("nwSig").innerHTML=g; return; }
     var ph=nowPhase()||{ n:"-" };
