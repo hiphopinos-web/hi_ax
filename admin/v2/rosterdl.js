@@ -2,8 +2,8 @@
  * 단추 둘 = 선착순 명부 · 행운권 전체 명단 · 서버 roster_export(POST · 슈퍼관리자 본인만 · 읽기 · 운영로그에 줄 수만)
  * 파일 = .xlsx 를 이 파일 안에서 직접 만든다(바깥 라이브러리 · 주소 없음 · 압축 없는 zip) · 서버가 멈춘 뒤에도 파일 하나로 출력 · 손뽑기
  *   1행 = 기준 시각 · 총 몇 명 · 2행 = 머리글(쪽마다 반복) · A4 세로 · 폭 맞춤 · 테두리 · 아래 가운데 쪽 번호 · 사번 · 번호 = 글자 칸(앞자리 0 · 4자리)
- *   선착순 명부 = 순번 · 사번 · 소속 · 직위 · 성명 · 구분 · 달성 시점(순번 오름차순 · 취소 줄 없음 · 대기마감 줄 있음)
- *   행운권 전체 명단 = 사번 · 소속 · 직위 · 성명 · 행운권 번호(번호 한 장 = 한 줄 · 번호 오름차순 · 무대 추첨 풀과 같은 원천)
+ *   선착순 명부 = 순번 · 사번 · 소속 · 직위 · 성명 · 구분 · 달성 시점 · 수령 시각 · 서명(순번 오름차순 · 취소 줄 없음 · 대기마감 줄 있음 · 줄 높이 2배 · 261020 후속)
+ *   행운권 전체 명단 = 사번 · 소속 · 직위 · 성명 · 행운권 번호 · 당첨(번호 한 장 = 한 줄 · 번호 오름차순 · 무대 추첨 풀과 같은 원천 · 당첨 = N등 · N등 부재 · 다른 번호 당첨 · 다른 번호 부재)
  *   직위 = 서버 명부에 없어 빈 열(종이에 손으로 적을 수 있게 열은 남긴다)
  * 마지막 내려받기 시각 = 이 PC(localStorage) */
 var RDL={ busy:"" };
@@ -48,17 +48,19 @@ function rdlGo(k){
 function rdlSave(blob, file){ var a=document.createElement("a"), u=URL.createObjectURL(blob); a.href=u; a.download=file; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(u); a.remove(); },1500); }
 
 /* ── 표 한 장 · { name, title, head[], w[], kind[](t 글자 · n 숫자 · c 가운데 글자), rows[][] } ── */
+function rdlHm(v, day){ var t=String(v||""), m=t.match(/^(\d{4}-(\d{2})-(\d{2}))[ T](\d{2}:\d{2})/); if(!m) return t; return m[1]===day?m[4]:m[2]+"-"+m[3]+" "+m[4]; }   /* 기준 시각과 같은 날 = HH:MM · 다른 날 = MM-DD HH:MM */
 function rdlSheet(k, r, st){
-  var rows=r.rows||[];
+  var rows=r.rows||[], day=st.s.slice(0,10);
   if(k==="raffle") return { name:"행운권 전체 명단", file:"행운권 전체 명단",
-    title:"행운권 전체 명단 · 기준 시각 "+st.s+" · 총 "+n0(r.n)+"명 · 행운권 "+n0(r.m)+"장",
-    head:["사번","소속","직위","성명","행운권 번호"], w:[12,40,10,12,13], kind:["c","t","c","c","b"],
-    rows:rows.map(function(x){ return [x.emp, x.dept, "", x.name, x.no]; }) };
+    title:"행운권 전체 명단 · 기준 시각 "+st.s+" · 총 "+n0(r.n)+"명 · 행운권 "+n0(r.m)+"장"+(r.wins!=null?" · 당첨 "+n0(r.wins)+"명"+(num(r.absent)?" · 부재 "+n0(r.absent)+"명":""):""),
+    head:["사번","소속","직위","성명","행운권 번호","당첨"], w:[11,34,8,11,12,15], kind:["c","t","c","c","b","c"],
+    rows:rows.map(function(x){ return [x.emp, x.dept, "", x.name, x.no, x.win||""]; }) };
   var ok=r.m-num(r.wait);
-  return { name:"선착순 명부", file:"선착순 명부",
+  /* 261020 후속 · 체크인존에서 출력해 손으로 확인 · 서명 · 줄 높이 2배(36) · 서명 칸 넓게 · 옛 서버(got 없음)면 수령 시각 빈칸 */
+  return { name:"선착순 명부", file:"선착순 명부", ht:36,
     title:"선착순 명부 · 기준 시각 "+st.s+" · 총 "+n0(r.m)+"명("+n0(r.cap)+"번까지 "+n0(ok)+"명 · 대기마감 "+n0(r.wait)+"명)",
-    head:["순번","사번","소속","직위","성명","구분","달성 시점"], w:[7,11,32,8,10,11,17], kind:["n","c","t","c","c","c","c"],
-    rows:rows.map(function(x){ return [x.rk, x.emp, x.dept, "", x.name, x.g, String(x.at||"").slice(0,16)]; }) };
+    head:["순번","사번","소속","직위","성명","구분","달성 시점","수령 시각","서명"], w:[5,9,22,6,9,10,9,9,23], kind:["n","c","t","c","c","c","c","c","c"],
+    rows:rows.map(function(x){ return [x.rk, x.emp, x.dept, "", x.name, x.g, rdlHm(x.at,day), rdlHm(x.got,day), ""]; }) };
 }
 
 /* ── xlsx 만들기 · 압축 없는 zip(저장 방식) · CRC-32 ── */
@@ -85,7 +87,7 @@ function rdlZip(files){
 }
 function rdlX(s){ return String(s==null?"":s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,"").replace(/[&<>"]/g,function(c){ return { "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]; }); }
 function rdlCol(i){ var s=""; i++; while(i>0){ var m=(i-1)%26; s=String.fromCharCode(65+m)+s; i=Math.floor((i-1)/26); } return s; }
-/* 서식 번호 · 0 기본 · 1 제목(굵게 12) · 2 머리글(굵게 · 회색 · 테두리 · 가운데) · 3 글자(테두리 · 왼쪽 · 글자 서식 @) · 4 숫자(테두리 · 가운데) · 5 글자(테두리 · 가운데 · @) · 6 굵은 글자(테두리 · 가운데 · @ · 행운권 번호) */
+/* 서식 번호 · 0 기본 · 1 제목(굵게 12 · 길면 줄여 맞춤) · 2 머리글(굵게 · 회색 · 테두리 · 가운데) · 3 글자(테두리 · 왼쪽 · 글자 서식 @) · 4 숫자(테두리 · 가운데) · 5 글자(테두리 · 가운데 · @) · 6 굵은 글자(테두리 · 가운데 · @ · 행운권 번호) */
 var RDL_STY='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'+
   '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+
   '<fonts count="3"><font><sz val="10"/><name val="맑은 고딕"/><family val="3"/><charset val="129"/></font><font><b/><sz val="10"/><name val="맑은 고딕"/><family val="3"/><charset val="129"/></font><font><b/><sz val="12"/><name val="맑은 고딕"/><family val="3"/><charset val="129"/></font></fonts>'+
@@ -94,7 +96,7 @@ var RDL_STY='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'+
   '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'+
   '<cellXfs count="7">'+
   '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'+
-  '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"><alignment vertical="center"/></xf>'+
+  '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment vertical="center" shrinkToFit="1"/></xf>'+
   '<xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>'+
   '<xf numFmtId="49" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" shrinkToFit="1"/></xf>'+
   '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>'+
@@ -114,7 +116,7 @@ function rdlSheetXml(sh){
   x.push('<sheetFormatPr defaultRowHeight="18" customHeight="1"/><cols>'+sh.w.map(function(w,i){ return '<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+w+'" customWidth="1"/>'; }).join("")+'</cols><sheetData>');
   x.push('<row r="1" ht="24" customHeight="1"><c r="A1" s="1" t="inlineStr"><is><t xml:space="preserve">'+rdlX(sh.title)+'</t></is></c></row>');
   x.push('<row r="2" ht="20" customHeight="1">'+sh.head.map(function(h,i){ return '<c r="'+rdlCol(i)+'2" s="2" t="inlineStr"><is><t>'+rdlX(h)+'</t></is></c>'; }).join("")+'</row>');
-  sh.rows.forEach(function(r,ri){ var n=ri+3; x.push('<row r="'+n+'">'+r.map(function(v,i){ return rdlCell(rdlCol(i)+n, v, sh.kind[i]); }).join("")+'</row>'); });
+  sh.rows.forEach(function(r,ri){ var n=ri+3; x.push('<row r="'+n+'"'+(sh.ht?' ht="'+sh.ht+'" customHeight="1"':'')+'>'+r.map(function(v,i){ return rdlCell(rdlCol(i)+n, v, sh.kind[i]); }).join("")+'</row>'); });
   x.push('</sheetData><mergeCells count="1"><mergeCell ref="A1:'+last+'1"/></mergeCells>');
   x.push('<printOptions horizontalCentered="1"/><pageMargins left="0.4" right="0.4" top="0.6" bottom="0.6" header="0.25" footer="0.25"/>');
   x.push('<pageSetup paperSize="9" orientation="portrait" fitToWidth="1" fitToHeight="0"/>');
