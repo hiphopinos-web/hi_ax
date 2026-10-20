@@ -28,16 +28,19 @@ function mtNote(p, emp){ var d=mtNoteD(p); if(!d||!d.ok||!Array.isArray(d.rows))
 function mtNotePatch(p, emp, o){ var d=mtNoteD(p); if(!d||!d.ok||!Array.isArray(d.rows)) return; var n=mtNote(p, emp); if(!n){ n={ prog:p, emp:normE(emp) }; d.rows.push(n); } for(var k in o) n[k]=o[k]; }
 
 /* ── 2. 커피챗 모양 · 서버 칸 + 이 기기 초안(MT.ov = 사번 → { to 칸 | "" 대기 줄, base 초안 만들 때 서버 칸 }) ── */
+/* 261021 (사용자 「콘솔 시간표 9:00~16:00 · 앱은 13:00 그대로」) 시간표 회차 = 오전 칸(cchat_list am · 운영진 배정 전용) + 앱 신청 회차(ccCfg) · 옛 서버(am 없음)면 오전 칸 없음 · 자동 배정은 앱 신청 회차만 */
+function mtCcRounds(cf){ var d=S.data.cc, am=d&&d.ok&&Array.isArray(d.am)?d.am.map(hm).filter(Boolean):[], seen={};
+  return am.concat(cf.rounds).filter(function(t){ if(seen[t]) return false; seen[t]=1; return true; }).sort(); }
 function mtSrvK(r){ return CC_ON.indexOf(r.status)>=0&&hm(r.round)&&r.table?hm(r.round)+":"+r.table:""; }
 function mtCcM(){
-  var cf=ccCfg(), rows=ccRows(), useOv=!MT.day, at={}, out=[], q=[], by={}, chg=[], conf=[];
+  var cf=ccCfg(), br=mtCcRounds(cf), rows=ccRows(), useOv=!MT.day, at={}, out=[], q=[], by={}, chg=[], conf=[];
   rows.forEach(function(r){
     if(r.status==="취소") return;
     var e=jq(r.emp), s=mtSrvK(r), o=useOv?MT.ov[e]:null, k=s; by[e]=r;
     if(o){ if(o.base!==s||["대기","매칭"].indexOf(r.status)<0) conf.push(e); else { k=o.to; if(k!==s) chg.push({ e:e, r:r, from:s, to:k }); } }
     r._k=k; r._s=s;
     if(!k){ q.push(r); return; }
-    var ks=mtKp(k); if(cf.rounds.indexOf(ks[0])<0||cf.tables.indexOf(ks[1])<0||(at[k]&&at[k].length>=CC_SEAT_MAX)){ out.push(r); return; }
+    var ks=mtKp(k); if(br.indexOf(ks[0])<0||cf.tables.indexOf(ks[1])<0||(at[k]&&at[k].length>=CC_SEAT_MAX)){ out.push(r); return; }
     (at[k]=at[k]||[]).push(r);
   });
   var so=function(r){ var n=mtNote("cc", r.emp); return n&&num(n.ord)?num(n.ord):1e9; };
@@ -46,7 +49,7 @@ function mtCcM(){
     return (so(a)-so(b))||String(a.ts).localeCompare(String(b.ts)); });
   MT.qno={}; q.forEach(function(r,i){ MT.qno[jq(r.emp)]=i+1; });
   return { p:"cc", cf:cf, at:at, out:out, q:q, by:by, chg:chg, conf:conf, len:CC_LEN, tables:cf.tables,
-    rows:cf.rounds.map(function(t){ return { t:t, to:m2hm(mins(t)+CC_LEN) }; }) };
+    rows:br.map(function(t){ return { t:t, to:m2hm(mins(t)+CC_LEN), am:cf.rounds.indexOf(t)<0 }; }) };
 }
 function mtQno(r){ return MT.qno[jq(r.emp)]||""; }
 function mtOrdChanged(){ return !!(MT.ordD&&mtNoteOk("cc")); }
@@ -176,13 +179,14 @@ function mtBoardH(p){
   h+='<section class="card mtg-bd"><h2>'+(cc?"18F 커피챗 · 1:1 "+len+"분 · 테이블 "+M.tables.join(" · "):"1F AX 라운지 · 1:1 "+len+"분 · 미팅룸 "+M.tables.join(" · "))+'</h2>'+
     (cc&&!ccCfg().srv?'<p class="cap" style="margin-bottom:6px">회차 · 테이블 = 설계값(서버 설정 커피챗_회차 · 커피챗_회차정원을 받으면 그 값)</p>':'')+
     '<div class="mtg-grid" style="grid-template-columns:'+(window.innerWidth<=760?"52px":"76px")+' repeat('+M.tables.length+',minmax(0,1fr))"><div class="th">회차</div>'+M.tables.map(function(t){ return '<div class="th"><b>'+lab(t)+'</b></div>'; }).join("");
-  var pastN=MT.day?live.filter(function(r){ return nm>=mins(r.t)+len; }).length:0, foldDone=false, gap=null;
+  var pastN=MT.day?live.filter(function(r){ return nm>=mins(r.t)+len; }).length:0, foldDone=false, gap=null, amS=null;
   var flushGap=function(){ if(gap){ h+='<div class="mtg-gap">'+(mins(gap[0])>=11*60&&mins(gap[0])<14*60?"점심 ":"쉬는 시간 ")+gap[0]+"~"+gap[1]+' · 칸 없음</div>'; gap=null; } };
   rows.forEach(function(r){
     if(r.rest){ gap=gap?[gap[0],r.to]:[r.t,r.to]; return; }
     flushGap();
     var past=MT.day&&nm>=mins(r.t)+len, cur=curR&&curR.t===r.t;
     if(past&&!MT.past){ if(!foldDone){ foldDone=true; h+='<button type="button" class="mtg-fold" onclick="MT.past=1;paint()">지난 회차 '+pastN+'개 접힘 · 펼치기</button>'; } return; }
+    if(cc&&amS!==!!r.am&&(r.am||amS!==null)){ amS=!!r.am; h+='<div class="mtg-div">'+(r.am?"오전 칸 · 운영진 배정 · 앱 신청 시간 아님":r.t+"부터 · 앱 신청 시간")+'</div>'; }
     var cl=(cur?" cur":"")+(past?" past":"");
     h+='<div class="mtg-tm'+cl+'"><b>'+r.t+'</b><span>~'+r.to+'</span></div>';
     M.tables.forEach(function(t){ var key=r.t+":"+t, xs=mtAt(M, key), n=xs.length, room=cc?n<CC_SEAT_MAX:!n;
@@ -206,7 +210,7 @@ function mtCcDraftDrop(e, to, before){
   if(mtAt(M, to).length>=CC_SEAT_MAX){ toast(CC_SEAT_TX+" · 다른 칸에 놓습니다",{ bad:1 }); return; }
   mtOvSet(r, to); mtSave(); paint();
 }
-/* 자동 배정 · 대기 줄 순서대로 · 그 사람이 고른 시간 중 가장 이른 빈 칸(테이블 A 먼저) · 고른 시간이 없으면 모든 회차 · 놓인 사람은 그대로 · 미선정 알림 받은 사람은 건너뜀 */
+/* 자동 배정 · 대기 줄 순서대로 · 그 사람이 고른 시간 중 가장 이른 빈 칸(테이블 A 먼저) · 고른 시간이 없으면 모든 회차(앱 신청 회차 M.cf.rounds · 오전 칸 안 씀) · 놓인 사람은 그대로 · 미선정 알림 받은 사람은 건너뜀 */
 function mtAuto(){
   var M=mtCcM(), used={}, n=0; Object.keys(M.at).forEach(function(k){ used[k]=1; });
   M.q.forEach(function(r){

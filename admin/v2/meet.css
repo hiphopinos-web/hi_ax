@@ -54,6 +54,8 @@
 .mtg-sl.cur.fill{border-color:var(--or)}
 .mtg-tm.past,.mtg-sl.past{opacity:.55}
 .mtg-gap{grid-column:1/-1;height:30px;border-radius:var(--r-s);background:repeating-linear-gradient(135deg,var(--line2) 0 8px,var(--soft) 8px 16px);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--tx3);font-weight:600}
+.mtg-div{grid-column:1/-1;display:flex;align-items:center;gap:8px;padding:6px 4px 0;font-size:12px;font-weight:600;color:var(--tx3)}
+.mtg-div::after{content:"";flex:1;border-top:1px solid var(--line)}
 .mtg-fold{grid-column:1/-1;height:32px;border-radius:var(--r-s);border:1px solid var(--line);background:var(--soft);font-size:12px;font-weight:600;color:var(--tx2)}
 
 .mtg-pc{flex:1;min-width:0;background:var(--sf);border:1px solid var(--line);border-radius:var(--r-s);padding:8px 10px;cursor:grab;user-select:none;-webkit-user-select:none;display:flex;flex-direction:column;gap:3px;position:relative;touch-action:manipulation;-webkit-touch-callout:none}
