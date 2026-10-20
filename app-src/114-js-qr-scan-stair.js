@@ -1156,12 +1156,38 @@ function scanStart() {
   setTimeout(qrCamStart, 40);
 }
 function scanStop() { SCAN.on = false; qrCamStop(); }
+/* ═══ 261021 (사용자 「스태프 연습용 QR」 · (다) 권장안 · AXT:1 ~ AXT:4 · 띠 표지 「연습 · 기록 안 함」) 연습 QR ═══
+ * 스태프 폰이 AXT:1 ~ AXT:4 를 찍으면 서버를 부르지 않고 칸마다 정해 둔 답을 진짜 QR 과 같은 화면 함수(scanDone · gateDone · fcfsScanDone)로 보인다
+ *   답 = 10/26 일반 사번 실측(QA/staff_test_qr_local.mjs V1 첫 찍기) · 1 사전 신청자(스탬프 3 · 옷 L) · 2 사전 신청 안 함(스탬프 3) · 3 스탬프 5개(AX PLAY 포함) · 4 201번 이후(스탬프 6 · 선착순 마감)
+ *   띠 작은 줄 앞 = 「연습 · 기록 안 함」 · 이름 가림 없음(「연습 1」) · 오늘 처리 수 · 최근 스캔에 넣지 않는다 · 룰렛 등급 단추 없음(서버 호출 없음) · 몇 번을 찍어도 같은 답
+ *   선착순 칸 fv = 서버 fcfsVerdict_ 와 같은 글자(검사 538절 대조) · 체크인존 칸 = 옷만(v8.19 · 참여상 줄 없음) · 진짜 참가자 QR(AXU) 경로는 그대로 */
+var PQR_TAG = "연습 · 기록 안 함";
+var PQR_P = { 1: { n: 3, kit: 1 }, 2: { n: 3 }, 3: { n: 5, p2: 1 }, 4: { n: 6, p2: 1, full: 1 } };
+function pqrParse(raw) { var m = /^AXT:([1-4])$/.exec(String(raw || "").trim()); return m ? Number(m[1]) : 0; }
+function pqrRes(no, sp) {
+  var p = PQR_P[no], nm = "연습 " + no;
+  if (!p || !sp) return null;
+  if (sp.kind === "roulette") return { ok: true, name: nm, n: p.n };
+  if (sp.kind === "stamp") return { ok: true, dup: !!p.p2, who: nm, n: p.p2 ? p.n : p.n + 1, id: sp.id };
+  if (sp.kind === "roster") return { ok: false, reason: "notfound", name: nm };
+  if (sp.kind === "gate") return { ok: true, name: nm, kit: p.kit ? { st: "give", pool: "kit", sz: "L", ckno: "C-0" } : { st: "none", reason: "nolist", pool: "" }, fcfs: { st: "skip" }, give: p.kit ? ["kit"] : [] };
+  if (sp.kind === "fcfs") return { ok: true, give: "none", reason: p.full ? "full" : "noelig", n: p.n, name: nm, fv: { k: p.full ? "full" : "need", c: "dup", h: p.full ? "선착순 마감" : "아직 완주 전", s: "스탬프 " + p.n + "/6", big: "" } };
+  return null;
+}
+function pqrHit(no, sp) {
+  var res = pqrRes(no, sp);
+  if (!res) return;
+  SCAN.px = true;
+  try { scanDone("연습 " + no, sp, res); } finally { SCAN.px = false; }
+}
 /* 연속 스캔이라 같은 QR이 몇 프레임 연속으로 잡힌다. 3초 안의 같은 코드는 무시한다 */
 function scanHit(raw) {
   var emp = qrParseUser(raw);
   if (scanSeen(emp)) return;   /* v5.98 같은 사람 QR 이 카메라에 계속 비치면 3초를 다시 잰다(서명 QR 은 20초마다 글자가 바뀐다 · 사번으로 본다) · 치웠다가 3초 뒤 다시 대면 찍힌다 */
   if (raw === SCAN.last && Date.now() - SCAN.lastT < 3000) return;   /* v4.65 참가자 QR 이 아닌 것도 3초에 한 번 · 전에는 카메라가 보는 동안 0.12초마다 한 줄씩 기록을 밀어냈다 */
   SCAN.last = raw; SCAN.lastT = Date.now(); SCAN.lastE = emp || ""; SCAN.seenE = Date.now();
+  var pq = emp ? 0 : pqrParse(raw);
+  if (pq) { pqrHit(pq, scanSpot(SCAN.spot)); return; }   /* 261021 연습 QR · 서버 없이 정해 둔 답 */
   if (!emp) { scanLog("", "참가자 QR이 아니에요", false); scanShow("bad", "", "참가자 QR이 아니에요", "참가자 앱의 내 QR을 찍어 주세요"); return; }
   var sp = scanSpot(SCAN.spot);
   if (!sp) return;
@@ -1237,7 +1263,7 @@ function scanDone(emp, sp, res) {
     ro ? (rout ? (dup ? "이미 종료 확인됨" : "종료 확인 완료") : dup ? "이미 체크인됨" : "체크인 완료") :
       sp.kind === "stamp" ? (dup ? "이미 받은 스탬프" : "스탬프 적립 완료") : "룰렛 체크인 완료",
     sp.kind === "roulette" ? "스탬프 " + (res.n || "") + "개 · 바로 돌리세요" : pre ? SCAN_PREDAY : sp.nm);
-  if (sp.kind === "roulette" && !dup) invRoulStart(emp);   /* v5.34 결과 화면에 5등급 버튼 */
+  if (sp.kind === "roulette" && !dup && !SCAN.px) invRoulStart(emp);   /* v5.34 결과 화면에 5등급 버튼 · 261021 연습 QR 은 단추 없음(서버 호출 없음) */
 }
 /* ═══ v5.34 경품 · 재고 · 스태프 폰 (설계 「디자인 시안/경품 재고/앱_명세.md」 · 설계안 §10 · 사용자 261003) ═══
  * 새 탭 · 새 메뉴 없음(260930 「스캔 · 혼잡 제보만 크게」) · 참가자 화면에는 아무것도 없다 · 품목은 「키트」로만 · 가격 없음.
@@ -1343,7 +1369,7 @@ function fcfsFvOf(r) {
   return { k: "err", c: "dup", h: "지급 없음", s: r && r.reason ? String(r.reason) : "", big: "" };
 }
 function fcfsScanDone(emp, res) {
-  var v = fcfsFvOf(res), big = v.k === "give" && v.big ? String(v.big) : "", mw = typeof sscMask === "function" ? sscMask(res.name || emp) : "";
+  var v = fcfsFvOf(res), big = v.k === "give" && v.big ? String(v.big) : "", mw = SCAN.px ? res.name || emp : typeof sscMask === "function" ? sscMask(res.name || emp) : "";   /* 261021 연습 QR = 「연습 N」 가림 없음 */
   SCAN.bd = { c: v.c, big: big, full: 1, t: v.h, s: (mw ? mw + (v.s ? " · " : "") : "") + v.s, x: big ? 3 : 2 };   /* 띠 = 큰 줄(판정) 그대로 · 이름(가림)은 작은 줄 앞(「1번째 완주자」 · 「스탬프 4/6」이 줄에서 갈리지 않게) */
   scanLog(emp, (res.name ? res.name + " · " : "") + fcfsFvTxt(v), v.k === "give" ? true : v.c === "bad" ? false : null, true);
   scanShow(v.c, res.name || emp, v.h, v.s);
@@ -1437,6 +1463,7 @@ function scanBig(why, sp, res, err) {
     ["bad", "처리하지 못했어요", why || String(err || "").slice(0, 40)];
 }
 function scanLog(emp, msg, ok, redraw) {
+  if (SCAN.px) return;   /* 261021 연습 QR 은 최근 스캔에 넣지 않는다 */
   var i = emp ? SCAN.log.findIndex(function (r) { return r.pend && r.emp === emp; }) : -1;   /* v4.15 결과가 오면 그 사람의 「처리 중」 줄을 바꾼다(두 줄로 남기지 않는다) */
   if (i >= 0) SCAN.log.splice(i, 1);
   SCAN.log.unshift({ emp: emp, msg: msg, ok: ok, t: Date.now(), pend: ok === null && msg === "처리 중" });

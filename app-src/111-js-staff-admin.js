@@ -89,7 +89,8 @@ function scanBigHtml() {
 }
 function hhmmss(t) { var d = new Date(t || Date.now()), p = function (n) { return (n < 10 ? "0" : "") + n; }; return p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds()); }
 function scanShow(tone, who, head, sub, go) {
-  SCAN.res = { tone: tone, who: who, head: head, sub: sub || "", go: go || "", t: Date.now() };
+  if (SCAN.px) sub = PQR_TAG + (sub ? " · " + sub : "");   /* 261021 연습 QR 결과 판 표지 */
+  SCAN.res = { tone: tone, who: who, head: head, sub: sub || "", go: go || "", t: Date.now(), px: !!SCAN.px };
   var box = el("scanRes");
   if (box) box.innerHTML = scanBigHtml();
   if (tone === "ok") stampBuzz(60);
@@ -167,9 +168,10 @@ function sscMask(s) {
   return a.length <= 1 ? s : a.length === 2 ? a[0] + "*" : a[0] + new Array(a.length - 1).join("*") + a[a.length - 1];
 }
 function sscShow(tone, who, head, sub, bd) {
-  if (tone === "ok") sscCntUp();
+  if (tone === "ok" && !SCAN.px) sscCntUp();   /* 261021 연습 QR 은 오늘 처리 수에 넣지 않는다 */
   var c = bd && bd.c || tone;
-  SSC.band = { c: c, big: bd && bd.big || "", t: tone === "wait" ? head : bd && bd.full ? bd.t : (who ? sscMask(who) + " · " : "") + (bd && bd.t || head), s: bd && bd.s != null ? bd.s : sub || "" };   /* 261007 big = 사이즈 · 창구 글자 아주 크게 · full = 문구 그대로(접수 「B-007 · 홍*동 → B 창구」) */
+  SSC.band = { c: c, big: bd && bd.big || "", t: tone === "wait" ? head : bd && bd.full ? bd.t : (who ? (SCAN.px ? who : sscMask(who)) + " · " : "") + (bd && bd.t || head), s: bd && bd.s != null ? bd.s : sub || "" };
+  if (SCAN.px && String(SSC.band.s).indexOf(PQR_TAG) !== 0) SSC.band.s = PQR_TAG + (SSC.band.s ? " · " + SSC.band.s : "");   /* 261021 연습 QR 띠 작은 줄 앞 표지 */   /* 261007 big = 사이즈 · 창구 글자 아주 크게 · full = 문구 그대로(접수 「B-007 · 홍*동 → B 창구」) */
   sscBandPaint();
   if (SSC.bandT) clearTimeout(SSC.bandT);
   SSC.bandT = setTimeout(function () { SSC.bandT = null; SSC.band = null; sscBandPaint(); }, tone === "wait" ? 16000 : SSC_BAND_MS * (bd && bd.x || 1));   /* 261007 창구 띠는 다음 사람까지 더 오래(x 배) */
