@@ -527,7 +527,7 @@ function reelPopMaybe(pbn) {
   return true;
 }
 function reelPopOpen() {
-  modalOpen('<div class="axs-reelp">' + reelHtml() + '<button type="button" class="axs-reel-skip" onclick="reelPopSkip()">오늘 하루 보지 않기</button></div>', '<span class="axs-reel-tag">' + zoneSign("STAMP MISSION", "tev lg") + "</span>");   /* v7.97 (사용자 261018 「갑자기 광고판이 뜨니 뭔지 이해가 잘 안 된다」) 머리 줄 = 「STAMP MISSION」 표지(1F 칸 TIME EVENT 와 같은 zoneSign · 점 글자 14 · 주황 알약 · 판 밖이라 모양은 axs-reel-tag 가 같은 값으로) · X 와 한 줄 · 대화 상자 이름 */
+  modalOpen('<div class="axs-reelp">' + reelHtml() + '<button type="button" class="axs-reel-skip" onclick="reelPopSkip()">오늘 하루 보지 않기</button></div>', '<span class="axs-reel-tag">' + zoneSign("STAMP TOUR", "tev lg") + "</span>");   /* v7.97 (사용자 261018 「갑자기 광고판이 뜨니 뭔지 이해가 잘 안 된다」) 머리 줄 = 「STAMP TOUR」 표지(261020 사용자 · 옛 STAMP MISSION)(1F 칸 TIME EVENT 와 같은 zoneSign · 점 글자 14 · 주황 알약 · 판 밖이라 모양은 axs-reel-tag 가 같은 값으로) · X 와 한 줄 · 대화 상자 이름 */
   var m = el("modal"); if (!m) return;
   m.classList.add("axs-reelm");
   var c = m.querySelector(".mcard"); c.classList.remove("axs-tall");

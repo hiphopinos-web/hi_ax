@@ -1137,9 +1137,11 @@ var SCAN_SPOTS = [
   { id: "dap", nm: "1F AX 라운지", kind: "roster", prog: "dap", mark: "in", lb: "라운지 체크인", tsub: "출석 확인", will: "AX 라운지 체크인 · 출석", cond: "승인된 상담 · 상담 시간 · 스탬프는 종료 때" },
   { id: "dapout", nm: "1F AX 라운지", kind: "roster", prog: "dap", mark: "out", lb: "라운지 종료", tsub: "스탬프 2개", will: "라운지 종료 · 스탬프 2개", cond: "승인된 상담 · 상담 끝 시간", su: 2 },
   { id: "ccout", nm: "18F AX 커피챗", kind: "roster", prog: "cchat", mark: "out", lb: "커피챗 종료", tsub: "스탬프 1개", will: "커피챗 종료 · 스탬프 1개", cond: "선정된 사람 · 내 회차 끝", su: 1 },
-  { id: "gate", nm: "1F 주차장 체크인존", kind: "gate", lb: "체크인존", tsub: "키트 · 선착순 참여상", will: "받을 것 확인 · 지급 기록", cond: "키트와 선착순 참여상을 함께 판정" }
+  { id: "gate", nm: "1F 주차장 체크인존", kind: "gate", lb: "체크인존", tsub: "키트 · 선착순 참여상", will: "받을 것 확인 · 지급 기록", cond: "키트와 선착순 참여상을 함께 판정" },
+  /* 261020 (사용자 「스태프 QR 칸에 선착순 참여상」) 참여상만 따로 · fcfs_give(체크인존 칸과 같은 판정 · 찍는 즉시 지급 기록) · 결과 글자 = 서버 fv(fcfsVerdict_) */
+  { id: "fcfs", nm: "선착순 참여상", kind: "fcfs", lb: "선착순 참여상", tsub: "완주 순번 · 지급", will: "선착순 참여상 지급 기록", cond: "스탬프 6개 완주 순서" }
 ];
-var SCAN_TILES = ["roulette", "p2", "dap", "dapout", "ccout", "gate"];
+var SCAN_TILES = ["roulette", "p2", "dap", "dapout", "ccout", "gate", "fcfs"];
 function scanTileIds() { return SCAN_TILES.slice(); }
 function scanSpot(id) { return SCAN_SPOTS.filter(function (s) { return s.id === id; })[0] || null; }
 var SCAN = { spot: S.get("scan_spot", ""), log: [], last: "", lastT: 0, on: false, pick: false, sub: "", res: null };
@@ -1169,6 +1171,7 @@ function scanHit(raw) {
   if (sp.kind === "roster") { params.action = "staff_mark"; params.prog = sp.prog; params.mark = sp.mark; }   /* 261016 라운지 체크인(in · 출석만) · 라운지 종료 · 커피챗 종료(out · 스탬프) */
   else if (sp.kind === "stamp") { params.action = "stamp_grant"; params.id = sp.id; }
   else if (sp.kind === "gate") params.action = "ck_gate";   /* 261016 체크인존 한 칸 */
+  else if (sp.kind === "fcfs") params.action = "fcfs_give";   /* 261020 선착순 참여상 칸 */
   else params.action = "roulette_redeem";
   scanLog(emp, "처리 중", null);
   scanShow("wait", emp, "확인하는 중", sp.will || sp.nm);
@@ -1179,6 +1182,7 @@ function scanHit(raw) {
 var SCAN_PREDAY = "행사 당일에 적립 · 지금은 기록 없음";
 function scanDone(emp, sp, res) {
   if (sp.kind === "gate" && res && res.ok) { gateDone(emp, res); return; }   /* 261016 */
+  if (sp.kind === "fcfs" && res && res.ok) { fcfsScanDone(emp, res); return; }   /* 261020 */
   if (!res || !res.ok) {
     var why = res && res.reason;
     /* 시트 잠금 충돌은 실패가 아니라 「지금 붐빔」이다(실측). 담당자가 다시 찍으면 되므로 「처리 실패」로 말하지 않는다 */
@@ -1301,7 +1305,7 @@ function invLeftHtml(x) {
 var GATE_FC = { norank: "스탬프 6개 전", full: "선착순 마감", void: "자격 취소 · 운영 본부 문의", off: "지금은 지급하지 않아요", test: "테스트 계정 · 기록 안 함", out: "모두 나감" };
 function gateKitRow(k) {
   if (!k) return null;
-  var lb = k.sz ? kitLbl(k.sz) : "", sz = lb ? lb + (lb !== k.sz ? "\u00A0(" + k.sz + ")" : "") : "사이즈 미정", no = k.ckno || (k.pool === "staff" ? k.no || "" : ""), nm = k.pool === "staff" ? "스태프 의류 " : "키트 ";
+  var lb = k.sz ? kitLbl(k.sz) : "", sz = lb ? lb + (lb !== k.sz ? "\u00A0(" + k.sz + ")" : "") : "사이즈 미정", no = k.ckno || "", nm = k.pool === "staff" ? "스태프 의류 " : "키트 ";
   if (k.st === "give") return ["ok", nm + sz + (no ? " · " + no : "") + " 지급"];
   if (k.st === "sub") return ["ok", "가습기로 대체 지급 · 라운지 초과"];
   if (k.st === "dup") return ["dup", (k.sub ? "가습기 " : nm) + "이미 받음" + (k.at ? " · " + k.at : "")];
@@ -1310,6 +1314,7 @@ function gateKitRow(k) {
 }
 function gateFcRow(f) {
   if (!f) return null;
+  if (f.fv && f.fv.h) return [f.fv.c || "dup", fcfsFvTxt(f.fv)];   /* 261020 서버 판정 글자(fcfsVerdict_) · 「선착순 참여상」 칸과 같은 글자 · 옛 서버 = 아래 */
   if (f.st === "give") return ["ok", "선착순 참여상 " + (f.rk ? f.rk + "번 " : "") + "지급"];
   if (f.st === "dup") return ["dup", "참여상 이미 받음" + (f.at ? " · " + f.at : "")];
   var r = f.reason;
@@ -1321,11 +1326,27 @@ function gateDone(emp, res) {
   var bad = rows.some(function (x) { return x[0] === "bad"; }), dupAny = (k && k.st === "dup") || (f && f.st === "dup");
   var tone = give.length ? "ok" : bad ? "bad" : "dup";
   var head = give.length ? "지급 " + give.length + "건" : dupAny ? "이미 받음" : "지금 지급할 것 없음";
-  var big = k && (k.st === "give") && k.sz ? kitLbl(k.sz) : f && f.st === "give" && f.rk ? String(f.rk) : "";
-  SCAN.bd = { c: tone, big: big, t: rows[0] ? rows[0][1] : head, s: rows[1] ? rows[1][1] : "", x: 3 };
+  var big = k && (k.st === "give") && k.sz ? kitLbl(k.sz) : f && f.st === "give" && f.rk ? String(f.rk) : "";   /* 키트 사이즈 먼저 · 없으면 참여상 순번(fv.big 과 같은 값) */
+  SCAN.bd = { c: tone, big: big, t: rows[0] ? rows[0][1] : head, s: rows[1] ? (f && f.fv && f.fv.h ? "참여상 · " + f.fv.h : rows[1][1]) : "", x: 3 };   /* 261020 띠 둘째 줄 = 참여상 판정 큰 줄만(짧게 · 아래 결과 판은 줄 전체) */
   scanLog(emp, (res.name ? res.name + " · " : "") + rows.map(function (x) { return x[1]; }).join(" · "), tone === "bad" ? false : true, true);
   scanShow(tone, who, head, "");
   if (SCAN.res) { SCAN.res.rows = rows; var b = el("scanRes"); if (b) b.innerHTML = scanBigHtml(); }
+}
+/* 261020 (사용자 「스태프 QR 칸에 선착순 참여상」) 「선착순 참여상」 칸 · fcfs_give 결과 · 찍는 즉시 지급 기록(체크인존 칸과 같은 방식)
+ * 글자 = 서버 fv { k, c ok | dup | bad, h 큰 줄, s 작은 줄, big 지급한 순간 순번 }(fcfsVerdict_ 한 곳 · 체크인존 칸 · 콘솔 체크인 탭과 같다) · 옛 서버(fv 없음) = give 값으로 짧게 */
+function fcfsFvTxt(v) { return v.h + (v.s ? " · " + v.s : ""); }
+function fcfsFvOf(r) {
+  if (r && r.fv && r.fv.h) return r.fv;
+  var g = r && r.give;
+  if (g === "new") return { k: "give", c: "ok", h: "선착순 참여상 지급", s: r.rk ? r.rk + "번" : "", big: "" };
+  if (g === "dup") return { k: "dup", c: "dup", h: "이미 받음" + (r.at ? " · " + r.at : ""), s: "", big: "" };
+  return { k: "err", c: "dup", h: "지급 없음", s: r && r.reason ? String(r.reason) : "", big: "" };
+}
+function fcfsScanDone(emp, res) {
+  var v = fcfsFvOf(res), big = v.k === "give" && v.big ? String(v.big) : "", mw = typeof sscMask === "function" ? sscMask(res.name || emp) : "";
+  SCAN.bd = { c: v.c, big: big, full: 1, t: v.h, s: (mw ? mw + (v.s ? " · " : "") : "") + v.s, x: big ? 3 : 2 };   /* 띠 = 큰 줄(판정) 그대로 · 이름(가림)은 작은 줄 앞(「1번째 완주자」 · 「스탬프 4/6」이 줄에서 갈리지 않게) */
+  scanLog(emp, (res.name ? res.name + " · " : "") + fcfsFvTxt(v), v.k === "give" ? true : v.c === "bad" ? false : null, true);
+  scanShow(v.c, res.name || emp, v.h, v.s);
 }
 function gateRowsHtml(rows) {
   return '<ul class="axs-gate">' + rows.map(function (x) { return '<li class="' + x[0] + '">' + esc(x[1]) + "</li>"; }).join("") + "</ul>";
@@ -1677,6 +1698,6 @@ function submitIdea() {
   if (WALL_ON) setTimeout(function () { toast("오늘 " + (nth + 1).toLocaleString() + "번째 아이디어! ME to WE 월에 점 하나가 켜졌어요."); }, 100);   /* v5.00 월 문구는 WALL_ON 일 때만 · 제출 완료는 다음 화면이 알린다 */
 }
 function tryAdmin() {
-  admVerify(el("adminCode").value, function (role) { S.set("admin_authed", true); if (role === "staff") toast("관리자 모드는 관리코드로 열려요 · 스캔은 아래 가운데 「스캔」"); App.render(); });   /* v6.83 (묶음 18) 스태프 코드 = 연속 스캔 · 관리자 모드 화면은 관리코드만 */
+  admVerify(el("adminCode").value, function (role) { S.set("admin_authed", true); if (role === "staff") toast("관리자 모드는 관리코드로 열려요 · 스캔은 아래 가운데 「QR코드」"); App.render(); });   /* v6.83 (묶음 18) 스태프 코드 = 연속 스캔 · 관리자 모드 화면은 관리코드만 */
 }
 

@@ -275,10 +275,18 @@ function ckzMy() { return ckzVal(S.get("ckz", null)); }
 function ckzSno(z) { return z && z.stf && z.sno ? z.sno.replace("-", "") : ""; }
 function ckzNo(z) { return z && z.pre ? (z.no ? (/^\d+$/.test(z.no) ? z.no + "번" : z.no) : ckNoMy()) : ""; }
 function ckHiNo() { return ckzNo(ckzMy()) || ckNoMy(); }   /* 홈 인사 세션 번호 · my.ckz 의 no 먼저 · 없으면 옛 my.ckno */
+/* 261020 (사용자 「옷 신청번호는 화면에서 내리고 세션 번호로 통일」) 기념품 옷 화면의 번호 = 세션 번호 · 사전 신청 = my.ckz.no(C-2) · 스태프 의류 = my.ckz.sno(S-11) · 옛 서버 = my.ckno · 없으면 "" = 번호 없이
+ *   옷 신청번호(k.no · K-001 · S-001)는 서버 기록 · 콘솔에만 · 테스트 미리 보기 = 「테스트」 */
+function kitSessNo(k) {
+  if (k && k.test) return k.no || "";
+  var z = typeof ckzMy === "function" ? ckzMy() : null, pre = z && z.pre && typeof ckzNo === "function" ? ckzNo(z) : "", sn = z && z.stf && z.sno ? z.sno : "";
+  if (kitStaff(k) && sn) return sn;
+  return pre || sn || (typeof ckNoMy === "function" ? ckNoMy() : "");
+}
 function kitCardHtml() {
   var k = kitMy();
   if (!k) return "";
-  var seen = S.get("kit_seen", "") === kitSeenKey(k), t = "", m = "", a = "보기", no = k.no ? "신청번호 " + k.no + " · " : "";
+  var sn = kitSessNo(k), seen = S.get("kit_seen", "") === kitSeenKey(k), t = "", m = "", a = "보기", no = sn ? sn + " · " : "";
   if (k.st === "pick" && k.ph === "open" && !k.sz) { t = "기념품 옷 사이즈 선택하기"; m = "마감 " + kitWhen(k.close); a = "선택"; }
   else if (k.st === "pick" && k.ph === "open" && k.sz) { t = kitRo(k.sz) + " 신청 완료"; m = no + "마감 전 변경 가능"; }   /* 261008 고른 뒤 = 결과 한 장(신청번호) · 마감 뒤에는 자동 배정 안내만 */
   else if (k.st === "pick" && k.ph === "chg" && k.how === "auto" && !seen) { t = kitRo(k.sz) + " 배정됐어요"; m = no + "변경 " + kitWhen(k.chg) + "까지 · 남은 사이즈만"; }
@@ -293,7 +301,7 @@ function kitCardHtml() {
 function kitMyRowHtml() {
   var k = kitMy();
   if (!k) return "";
-  var t = k.st === "hum" ? "사전 신청 키트 · 가습기" : k.sz ? "기념품 옷 " + kitLbl(k.sz) + (k.no ? " · " + k.no : "") : "기념품 옷 사이즈 선택하기", d = k.st === "hum" ? "1F 주차장 체크인존" : k.sz ? kitGetTxt(k) : "마감 " + kitWhen(k.close);
+  var sn = kitSessNo(k), t = k.st === "hum" ? "사전 신청 키트 · 가습기" : k.sz ? "기념품 옷 " + kitLbl(k.sz) + (sn ? " · " + sn : "") : "기념품 옷 사이즈 선택하기", d = k.st === "hum" ? "1F 주차장 체크인존" : k.sz ? kitGetTxt(k) : "마감 " + kitWhen(k.close);
   return '<div class="axs-list">' + axDest(esc(t), esc(d), lnkChev(k.st === "pick" && !k.sz && kitCanSet(k) ? "선택" : "보기"), "kitOpen()") + "</div>";
 }
 function kitFsRow() {
@@ -513,19 +521,19 @@ function kitProdHtml(k) {
     '<p class="ax-description">' + (kitStaff(k) ? "스태프용 행사 기념 플리스예요 · 부드럽고 따뜻한 폴리에스터" : "행사 기념 플리스 · 에코백과 함께 드려요") + "</p></section>" +
     kitImgHtml(0);
 }
-/* 신청 완료 · 신청번호 · 사이즈 · 변경 기한 · 수령 */
+/* 신청 완료 · 세션 번호(261020 · 옛 신청번호 자리) · 사이즈 · 변경 기한 · 수령 */
 function kitDoneHtml(k) {
   /* 261008 받는 방법 상자(사용자 「중요한 정보이니 신청 완료 시 수령 방법 안내를 따로 주자」) · 체크 바로 아래 · 스태프 = 행사 전 미리 전달(사용자 결정) · 사전 신청 = 당일 체크인존 · 검사 샌드박스 때문에 함수로 빼지 않는다 */
   var st0 = kitStaff(k), gm = st0 ? "따로 전달해 드려요" : "10/26(월) 08:00부터 · 1F 주차장 체크인존", gs = st0 ? "" : "내 QR을 보여 주면 바로 드려요";
   var gb = '<div class="axs-pz-need axs-kitget" role="group" aria-label="받는 방법"><p class="k" aria-hidden="true">받는 방법</p><ul><li><span class="i" aria-hidden="true">' + (typeof PZ_ICO === "object" ? PZ_ICO.box : "") + '</span><span class="x"><b>' + esc(gm) + "</b>" + (gs ? "<span>" + esc(gs) + "</span>" : "") + "</span></li></ul></div>";   /* 261008 받으려면 상자와 같은 틀 · 같은 CSS(needBoxHtml 과 같은 마크업 · 함수를 부르지 않는 까닭은 위 줄) */
-  var chg = k.ph === "open" ? kitWhen(k.close) + "까지 변경 가능" : k.ph === "chg" ? kitWhen(k.chg) + "까지 · 남은 사이즈만" : "마감";
+  var chg = k.ph === "open" ? kitWhen(k.close) + "까지 변경 가능" : k.ph === "chg" ? kitWhen(k.chg) + "까지 · 남은 사이즈만" : "마감", sn = kitSessNo(k);
   return '<section class="axs-kitok"><span class="ok" aria-hidden="true">' + CHECK_SVG + "</span>" +
     '<h3 class="ax-type-t3">' + kitRo(k.sz) + (k.how === "auto" ? " 배정됐어요" : " 신청 완료") + "</h3>" +
-    (k.no ? '<p class="axs-kitno">신청번호 <b>' + esc(k.no) + "</b></p>" : "") + "</section>" + gb + kitImgHtml(0) +
+    (sn ? '<p class="axs-kitno">세션 번호 <b>' + esc(sn) + "</b></p>" : "") + "</section>" + gb + kitImgHtml(0) +
     (KIT_SIZES.indexOf(k.sz) >= 0 ? '<button type="button" class="axs-kitvl" onclick="kitView(\'' + k.sz + '\', 0)">착용 사진 보기</button>' : "") +   /* 261008 신청한 사이즈부터 보는 전체 화면(보기만) */
     '<section class="axs-kitsum">' + kitImgHtml(1) + '<div class="tx"><b>' + KIT_NAME + '</b><span>사이즈 ' + esc(kitLbl(k.sz)) + (kitStaff(k) ? "" : " · 에코백 포함") + "</span></div></section>" +
-    kitKvHtml([["신청번호", k.no ? "<b>" + esc(k.no) + "</b>" : "확인 중"], ["사이즈", esc(kitLbl(k.sz))], ["변경", esc(chg)], ["수령", esc(kitGetTxt(k))]]) +
-    '<p class="ax-meta axs-kitnote">교환할 때 신청번호를 알려 주세요</p>';
+    kitKvHtml((sn ? [["세션 번호", "<b>" + esc(sn) + "</b>"]] : []).concat([["사이즈", esc(kitLbl(k.sz))], ["변경", esc(chg)], ["수령", esc(kitGetTxt(k))]])) +
+    (sn ? '<p class="ax-meta axs-kitnote">교환할 때 세션 번호를 알려 주세요</p>' : "");
 }
 /* 상품 시트(detPaint · 라우트 kit) */
 function kitSheet() {

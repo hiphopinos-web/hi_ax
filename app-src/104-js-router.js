@@ -270,9 +270,10 @@ var App = {
     var T = this.TABS;
     /* 가운데 = QR 화면(v5.23 사용자 261003 · 기본 내 QR · 스캔은 탭) · 주황 원 + 짙은 글리프 · 둥근 모서리 그림(qr-corners)만(v5.75 원 안 「QR」 글자 없앰 · 아래 「내 QR」 라벨이 이름) */
     var stf = typeof staffBtn === "function" && staffBtn();   /* v5.98 (사용자 261006 밤) 스태프 폰 = 가운데 단추가 곧바로 스태프 연속 스캐너 · 일반 직원은 그대로 내 QR · v6.00 앱 스태프 명단 사번이면 로그인만으로(staffBtn · 서버 staff) */
+    /* 261020 (사용자) 스태프 폰 가운데 이름 「스캔」 → 「QR코드」 · 일반 직원 「내 QR」 그대로 */
     nav.innerHTML = btn(T[0]) + btn(T[1]) +
-      (stf ? '<button class="axs-scan" onclick="sscOpen()" aria-label="스태프 스캔"><span class="axs-scan-c" aria-hidden="true">' +
-        '<svg><use href="#qr-corners"/></svg></span><span aria-hidden="true">스캔</span></button>' :
+      (stf ? '<button class="axs-scan" onclick="sscOpen()" aria-label="QR코드 · 스태프 스캔"><span class="axs-scan-c" aria-hidden="true">' +
+        '<svg><use href="#qr-corners"/></svg></span><span aria-hidden="true">QR코드</span></button>' :
       '<button class="axs-scan" onclick="qrOpen()" aria-label="내 QR · QR 스캔"><span class="axs-scan-c" aria-hidden="true">' +
       '<svg><use href="#qr-corners"/></svg></span><span aria-hidden="true">내 QR</span></button>') +
       btn(T[2]) + btn(T[3]);

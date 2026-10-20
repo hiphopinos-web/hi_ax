@@ -49,6 +49,7 @@ function admHtml() {
  * 찍은 결과는 크게(이름 · 결과 · 한 줄) · 성공 · 실패를 색과 짧은 진동으로 · 최근 스캔은 아래에 작게.
  * 찍는 순간의 처리(액션 · 서명 QR · 스태프 토큰 · 잠금 문구 · 룰렛 소진 out · who 이름)는 v4.65~v4.67 그대로(scanHit · scanDone). */
 function scanWhat(sp) {
+  if (sp.kind === "fcfs") { var fx = typeof fxGet === "function" ? fxGet() : null; return sp.cond + " " + ((fx && fx.cap) || 200) + "명 · " + ((fx && fx.start) || "10:30") + "~" + ((fx && fx.cut) || "17:00"); }   /* 261020 수량 · 지급 시각 = 서버 pub.fx */
   if (sp.kind === "roulette" && S.get("roulette_out", false)) return "룰렛 소진 · 찍어도 차감하지 않아요";   /* v4.65 */
   return sp.cond || "";
 }
