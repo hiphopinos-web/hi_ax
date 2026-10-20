@@ -253,6 +253,7 @@ function lkPaint(){
   var steps=[["마감 "+String(d.cut||"").slice(11,16), d.ph!=="open"],["17:00 룰렛 잔여", rem],["대상 확정", d.ph==="lock"||d.ph==="drawn"],["추첨", d.ph==="drawn"]], cur=-1;
   for(var i=0;i<steps.length;i++) if(!steps[i][1]){ cur=i; break; }
   var h='<ol class="up-steps mb">'+steps.map(function(x,i){ return '<li class="'+(x[1]?"done":i===cur?"on":"")+'"><b>'+(i+1)+'</b>'+esc(x[0])+'</li>'; }).join("")+'</ol>';
+  if(d.tx) h+='<div class="mb">'+band("info",esc(String(d.tx)))+'</div>';
   h+='<div class="grid g4 mb">'+kpi({ l:d.ph==="lock"||d.ph==="drawn"?"대상(확정)":"대상(미리 보기)", v:n0(d.lock&&d.lock.n!=null?d.lock.n:pool.n), u:"명", s:"1~6등 "+n0(pool.lucky)+" · 시험 "+n0(pool.test)+" 제외" })+kpi({ l:"당첨 수", v:n0(qty), u:"명", s:"사람마다 남은 경품에서 무작위" })+
     kpi({ l:"남은 경품", v:n0(tot), u:"개", st:tot<qty?"warn":"", s:tot<qty?"당첨 수보다 "+n0(qty-tot)+"개 적음":rem?"17:00 실사 기준":"계산값 · 실사 전" })+kpi({ l:"당첨", v:dr?n0(dr.W):"-", u:dr?"명":"", s:dr?"추첨 "+fmtD(dr.at||""):"행사 뒤 추첨" })+'</div>';
   var remT='<div class="card"><h2>17:00 룰렛 잔여 '+(rem?tag("저장됨","ok"):tag("아직","warn"))+'</h2><table class="tb"><tbody>'+LK_ROUL.map(function(x){ return '<tr><td>'+esc(x[1])+'</td><td class="n"><b>'+n0(q[x[0]]||0)+'</b></td></tr>'; }).join("")+'</tbody></table><div class="btns mt"><button class="btn" type="button" onclick="lkRem()"'+(d.ph==="drawn"?' aria-disabled="true"':'')+'>17:00 잔여 입력</button></div></div>';

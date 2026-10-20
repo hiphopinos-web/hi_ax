@@ -7,6 +7,7 @@ function dsTop(){ return typeof adrTop==="function"?adrTop():!!(S.me&&S.me.top);
 function dsTx(){ return DS.L&&DS.L.ok&&DS.L.tx&&typeof DS.L.tx==="object"?DS.L.tx:null; }
 /* 문구 · {a} {b} {c} {d} 를 순서대로 채운다 */
 function dsT(k){ var t=dsTx(), s=t&&t[k]!=null?String(t[k]):"", a=arguments; return s.replace(/\{([a-d])\}/g,function(m,c){ var i="abcd".indexOf(c)+1; return a[i]!=null?String(a[i]):""; }); }
+function dsStg(){ var s=dsT("stg"); return s?" · "+s:""; }
 function dsTA(k){ var t=dsTx(); return t&&Array.isArray(t[k])?t[k]:[]; }
 function dsLoad(){
   if(!dsTop()) return;
@@ -63,9 +64,9 @@ function dsSet(mode){
     if(!(d&&d.ok)){ toast(dsT("chkX",d&&d.reason==="empty"?dsT("noEmp"):why(d)),{ bad:1 }); return; }
     var prev=dsPrev();
     confirmBox({ t:mode==="add"?dsT("cAddT"):dsT("cRepT"), who:dsT("cWho",n0(d.add),mode==="replace"?dsT("cDelN",n0(d.del)):"",n0(d.keep),n0(d.n)),
-      sub:dsT("cSub",(d.bad?dsT("cBad",n0(d.bad)):"")+(d.dup?dsT("cDup",n0(d.dup)):"")), ok:mode==="add"?dsT("bAdd"):dsT("bRep"), danger:mode==="replace",
+      sub:dsT("cSub",(d.bad?dsT("cBad",n0(d.bad)):"")+(d.dup?dsT("cDup",n0(d.dup)):""))+(mode==="replace"&&d.del?dsStg():""), ok:mode==="add"?dsT("bAdd"):dsT("bRep"), danger:mode==="replace",
       run:function(){ return call("dset_set",{ mode:mode, rows:tx }); },
-      done:function(r){ if(el("dsTx")) el("dsTx").value=""; dsLoad(); toast(dsT("tSet",n0(r.n),n0(r.add),r.del?dsT("tDelN",n0(r.del)):""),{ undo:dsUndo(prev) }); } });
+      done:function(r){ if(el("dsTx")) el("dsTx").value=""; dsLoad(); toast(dsT("tSet",n0(r.n),n0(r.add),r.del?dsT("tDelN",n0(r.del)):"")+(r.del?dsStg():""),{ undo:dsUndo(prev) }); } });
   });
 }
 function dsGrp(){
@@ -82,15 +83,15 @@ function dsGrp(){
 }
 function dsDel(emp){
   var prev=dsPrev(), r0=((DS.L&&DS.L.rows)||[]).filter(function(r){ return r.emp===emp; })[0]||{};
-  confirmBox({ t:dsT("dT"), who:emp+(r0.name?" · "+r0.name:""), sub:dsT("dSub",n0(r0.tk)), ok:dsT("bDel"), danger:true,
+  confirmBox({ t:dsT("dT"), who:emp+(r0.name?" · "+r0.name:""), sub:dsT("dSub",n0(r0.tk))+dsStg(), ok:dsT("bDel"), danger:true,
     run:function(){ return call("dset_del",{ emp:emp }); },
-    done:function(r){ dsLoad(); toast(dsT("tDel",n0(r.n)),{ undo:dsUndo(prev) }); } });
+    done:function(r){ dsLoad(); toast(dsT("tDel",n0(r.n))+dsStg(),{ undo:dsUndo(prev) }); } });
 }
 function dsClear(){
   var prev=dsPrev();
-  confirmBox({ t:dsT("xT"), who:dsT("xWho",n0(prev.length)), sub:dsT("xSub"), ok:dsT("xOk"), danger:true,
+  confirmBox({ t:dsT("xT"), who:dsT("xWho",n0(prev.length)), sub:dsT("xSub")+dsStg(), ok:dsT("xOk"), danger:true,
     run:function(){ return call("dset_set",{ mode:"replace", rows:"", clear:"1" }); },
-    done:function(){ dsLoad(); toast(dsT("tClr"),{ undo:dsUndo(prev) }); } });
+    done:function(){ dsLoad(); toast(dsT("tClr")+dsStg(),{ undo:dsUndo(prev) }); } });
 }
 
 /* ── 시험 서버 · 로컬 칸(서버가 sim 1 과 문구를 줄 때만) ── */
