@@ -9,7 +9,7 @@ var US_OP=[1,.78,.56,.38,.22];   /* 화면 겹 · 네이비 농도(순위 1~5) �
 function usDay(ymd, n){ var a=String(ymd||"").split("-"); if(a.length<3) return ""; var d=new Date(+a[0],+a[1]-1,+a[2]+n); return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2); }
 function usMd(ymd){ var s=String(ymd||""); return s.length>=10?Number(s.slice(5,7))+"/"+Number(s.slice(8,10)):""; }
 function usEv(){ var b=S.data.nb; return b&&b.ev?String(b.ev):"2026-10-26"; }
-function usPerDef(){ var b=S.data.nb||{}, d=String(b.day||""), ev=usEv(); if(!d) return "day"; if(d===ev) return "day"; if(d<usDay(ev,-5)) return "pre"; return "all"; }
+function usPerDef(){ var b=S.data.nb||{}, d=String(b.day||""), ev=usEv(); if(!d) return "day"; if(d===ev) return "day"; if(d<usDay(ev,-4)) return "pre"; return "all"; }
 function usPer(){ if(US.per) return US.per; var v=""; try{ v=localStorage.getItem(US_LS)||""; }catch(e){ v=""; } return /^(pre|all|day)$/.test(v)?v:usPerDef(); }
 function usNeed(){ var p=usPer(); return { k:"use", a:"usage_stats", p:{ per:p }, ttl:p==="day"?60000:300000 }; }
 function usSet(p){ US.per=p; try{ localStorage.setItem(US_LS,p); }catch(e){} paint(); load(false); }
@@ -22,7 +22,7 @@ function usHm(t, add){ var m=Number(String(t).slice(0,2))*60+Number(String(t).sl
 /* 당일 08:00~17:30 = 이상 신호 아래(D6) */
 function usBelow(){ var b=S.data.nb; if(!b||String(b.day||"")!==usEv()) return false; var t=mins(hm(srvNow().toTimeString())); return t>=mins("08:00")&&t<mins("17:30"); }
 function usSegH(per){
-  var ev=usEv(), L={ pre:usMd(usDay(ev,-7))+"~"+usMd(usDay(ev,-6)).split("/")[1], all:usMd(usDay(ev,-5))+"~"+usMd(usDay(ev,1)).split("/")[1], day:usMd(ev) };
+  var ev=usEv(), L={ pre:usMd(usDay(ev,-7))+"~"+usMd(usDay(ev,-5)).split("/")[1], all:usMd(usDay(ev,-4))+"~"+usMd(usDay(ev,1)).split("/")[1], day:usMd(ev) };
   return '<div class="us-seg" role="tablist" aria-label="기간">'+[["pre","사전 오픈"],["all","전체 오픈"],["day","행사 당일"]].map(function(x){ var on=x[0]===per; return '<button type="button" role="tab" aria-selected="'+(on?"true":"false")+'" class="'+(on?"on":"")+'" onclick="usSet(\''+x[0]+'\')">'+x[1]+'<small>'+esc(L[x[0]])+'</small></button>'; }).join("")+'</div>';
 }
 function nwUsage(b){
