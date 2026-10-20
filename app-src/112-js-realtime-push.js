@@ -156,6 +156,7 @@ function beSync(after) {
   if (!BE.on) return;
   var u = S.get("user", {}), fgP = u.empId ? fgPack() : null, sp = { action: "sync", emp: u.empId || "", sv: svWantPre() ? 1 : "" };   /* v7.61 A1 fg · fq(로그인했을 때만 · 끝에 덧붙인다) */
   if (fgP) { sp.fg = fgP.fg; if (fgP.fq) sp.fq = fgP.fq; }
+  var sentT = Date.now();   /* 261020 보낸 시각 · 이 sync 보다 늦게 이 폰에서 한 추첨 체크인을 늦게 온 「없음」이 지우지 않게(dinSrv) */
   beCall(sp, function (res) {   /* v7.15 sv = 1 · 설문 화면에서 Q2-0 미리 체크를 아직 안 했을 때만 참석 목록(my.svPre)을 달라고 한다 */
     if (res && res.ok && res.poll >= 30 && res.poll <= 120) POLL.base = res.poll * 1000;   /* v4.57 운영이 붐비는 시간에 서버 설정으로 폴링을 늘린다(재배포 없이) */
     if (res && res.ok) wsCfg(res.ws);   /* v4.75 소켓 설정(새 서버만 보낸다 · 없거나 0 이면 소켓을 닫고 폴링만) */
@@ -164,6 +165,7 @@ function beSync(after) {
     if (after) after(!!(res && res.ok));
     if (!res || !res.ok) return;
     if (genCheck(res.gen)) setTimeout(function () { App.render(); }, 0);   /* 261008 데이터 세대 · 오픈 전 초기화 뒤 이 기기의 시험 흔적을 한 번 비우고 아래에서 서버 정본으로 다시 채운다 · 대기열 재전송(scanQFlush 등)보다 먼저 */
+    if (typeof minvSeen === "function") minvSeen(res.minv);   /* 261020 최소 앱 판(새 서버만 보낸다) · 이 앱이 낮으면 한 번 새로 고침(미룸 · 반복 방지는 minvTry) */
     if (stampVerSet(res.stv === 2 ? 2 : 1)) setTimeout(function () { App.render(); }, 0);   /* v4.83 스탬프 체계 판 · 새 서버 stv 2 = 새 8종 · 없으면 옛 서버(옛 8종) · 스탬프 목록 맞추기(stampSync)보다 먼저 */
     if (u.empId && res.sesNeed === 1) SES.need = true;   /* v4.68 세션필수 ON 인데 토큰이 없거나 지난 토큰(PIN 초기화) · 서버가 개인 부분(my)을 빼고 보냈다 · 이 기기 기록은 그대로 둔다 */
     if (u.empId && (res.ses === 1 && !u.ses || SES.need)) setTimeout(sesAsk, 600);   /* v4.67 세션필수 ON · 토큰 없는 로그인(옛 앱)이면 비밀번호 한 번 더 */
@@ -191,6 +193,7 @@ function beSync(after) {
     var nbBase = !!res.my && !!u.empId && !testEmp() && (S.get("pp_seen", null) === null || !!S.get("pp_base", 0));   /* 261007 이 기기 첫 동기화(분석 P4 · stampSync 기준선과 같은 조건 · 그보다 먼저 잰다) */
     if (nbBase && typeof NB !== "undefined") NB.base = 1;
     if (res.my) {
+      if ("din" in res.my && typeof dinSrv === "function") dinSrv(res.my.din, sentT);   /* 261020 추첨 체크인 = 서버 기록(옛 서버는 din 없음 · 폰 값 그대로) */
       var all = resvAll();
       if (res.my.resv) {
         var map = { "신청": "requested", "승인": "approved", "체크인": "checked", "완료": "done", "노쇼": "noshow", "취소": "canceled" };

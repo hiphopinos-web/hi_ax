@@ -287,7 +287,14 @@ function ppSeenGet() { var s = S.get("pp_seen", null); if (s === null) { S.put("
    17F 대강당 입구 추첨 QR(AXD…)을 찍으면 draw_in · 코드 · 창(기본 16:40~17:25) · 날짜 · 1인 1회는 서버가 판정한다 · 앱에 코드가 없다.
    무대 추첨은 체크인한 사람의 응모 번호(공)만 쓴다 · 250개 사후 추첨은 따로다 · 스탬프 · 17F 출석과 무관하다.
    결과 = scan_res 「추첨 체크인 완료 · 응모 번호 N개」 · 0장이어도 체크인은 된다(한 줄) · 오프라인 저장은 하지 않는다(서버 시계로 판정 · 다시 스캔). */
-var DRAWQ = { busy: false };
+var DRAWQ = { busy: false, t: 0 };   /* 261020 t = 이 폰에서 체크인이 된 시각(dinSrv) */
+/* 261020 추첨 체크인 표시 = 서버 기록 · sync my.din({ at } | null · 시트 추첨체크인 처음 행)이 오면 그 값으로 그린다 · 다른 폰에서 한 체크인도 같게 보인다
+   폰 값(draw_in)은 서버 값이 올 때까지 임시값 · 옛 서버(din 없음)면 폰 값 그대로 · 이 폰이 체크인한 뒤에 보낸 sync 의 「없음」만 받는다(먼저 보낸 sync 가 늦게 와도 지우지 않게) */
+function dinSrv(v, sentT) {
+  var on = !!(v && typeof v === "object");
+  if (!on && DRAWQ.t && DRAWQ.t >= (Number(sentT) || 0)) return;
+  if (on !== !!S.get("draw_in", false)) S.set("draw_in", on);
+}
 function drawByCode(code) {
   var u = S.get("user", {}) || {};
   if (!u.empId) { srShow({ st: "fail", why: "param", draw: true }); return; }
@@ -296,7 +303,7 @@ function drawByCode(code) {
   DRAWQ.busy = true;
   beCall({ action: "draw_in", emp: u.empId, code: String(code || "").trim() }, function (res) {
     DRAWQ.busy = false;
-    if (res && res.ok) { S.set("draw_in", true); srShow({ st: "draw", n: Number(res.n) || 0, nos: Array.isArray(res.no) ? res.no : [], dup: !!res.dup, at: res.at || "", test: !!res.test }); return; }
+    if (res && res.ok) { DRAWQ.t = Date.now(); S.set("draw_in", true); srShow({ st: "draw", n: Number(res.n) || 0, nos: Array.isArray(res.no) ? res.no : [], dup: !!res.dup, at: res.at || "", test: !!res.test }); return; }
     var why = res && res.reason;
     srShow({ st: "fail", draw: true, why: beBusy(res) ? "server" : why === "window" || why === "day" ? "dwin" : why === "closed" ? "dclosed" : why === "nocode" || why === "param" ? why : "other", open: res && res.open ? String(res.open).replace("~", "–") : "" });
   }, function () { DRAWQ.busy = false; srShow({ st: "fail", draw: true, why: "server" }); });
