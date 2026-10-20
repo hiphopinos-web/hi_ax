@@ -196,14 +196,14 @@ function dcBody(d){
 var IK={ ch:"lounge_pre", late:0 };
 var IK_CH={ lounge_pre:"AX 라운지 사전", lounge_day:"AX 라운지 당일", chat:"18F 커피챗", app:"앱" };
 var IK_PH={ open:["접수 중","ok"], judging:["심사 중","warn"], done:["선정 끝",""] };
-var IK_PRZ=[{ rk:1, mo:6, n:1 },{ rk:2, mo:3, n:1 },{ rk:3, mo:1, n:3 }];
+var IK_PRZ=[{ rk:1, mo:6, n:1 },{ rk:2, mo:3, n:2 },{ rk:3, mo:1, n:3 }];
 function ikPrz(d){ return d&&d.prz&&d.prz.length?d.prz:IK_PRZ; }
 function ikPickOf(emp){ var d=S.data.ik, ps=d&&d.ok&&d.picks||[]; for(var i=0;i<ps.length;i++) if(normE(ps[i].emp)===normE(emp)) return ps[i]; return null; }
 function ikRow(emp){ var L=S.data.ikl, rs=L&&L.ok&&L.rows||[]; for(var i=0;i<rs.length;i++) if(normE(rs[i].emp)===normE(emp)) return rs[i]; return null; }
 function ikPaint(){
   var top=el("ikTop"); if(!top) return; var d=S.data.ik, gt=dataGate("ik","아이디어왕");
   if(gt){ top.innerHTML=gt; } else {
-    var P=IK_PH[d.ph]||["-",""], prz=ikPrz(d), picks=d.picks||[], mx=d.max||5;
+    var P=IK_PH[d.ph]||["-",""], prz=ikPrz(d), picks=d.picks||[], mx=d.max||6;
     top.innerHTML='<div class="card"><h2>선정 '+tag(P[0],P[1])+' <span class="cap">마감 '+esc(d.cut||"없음")+' · 접수 '+(d.open?"열림":"닫힘")+' · 선정 '+picks.length+' / '+mx+'</span></h2><div class="ik-slots">'+prz.map(function(z){ var got=picks.filter(function(p){ return Number(p.rk)===Number(z.rk); }), out="";
       for(var i=0;i<(Number(z.n)||0);i++){ var p=got[i]; out+='<div class="ik-slot'+(p?" got":"")+'"><div><b>'+z.rk+'등</b> <span class="cap">AI 구독권 '+z.mo+'개월</span></div>'+(p?'<div class="mt4">'+personTwo(p)+'</div><div class="cap">'+esc(IK_CH[p.ch]||p.ch||"")+(p.why?" · "+esc(p.why):"")+'</div><button class="btn sm mt4" type="button" onclick="ikUnpickAsk(\''+jq(p.emp)+'\')">선정 취소</button>':'<div class="cap mt4">비어 있음</div>')+'</div>'; }
       return out; }).join("")+'</div></div>'; }

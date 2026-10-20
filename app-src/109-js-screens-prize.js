@@ -161,7 +161,7 @@ var PRIZES = {
     { rk: "7등", nm: "랜덤 굿즈", sub: "행사 종료 후 행운권 중 랜덤 선정 후 행랑 발송", qt: "무작위 경품", img: "lk7_random_v2" }] },   /* v7.61 (사용자 261017) 수량 자리 = 「무작위 경품」 · 부제 = 받는 방법 한 문장 */
   idea: { unit: "명", list: [
     { rk: "1등", nm: "AI 구독권 6개월", q: 1, img: "idea1" },
-    { rk: "2등", nm: "AI 구독권 3개월", q: 1, img: "idea2" },
+    { rk: "2등", nm: "AI 구독권 3개월", q: 2, img: "idea2" },
     { rk: "3등", nm: "AI 구독권 1개월", q: 3, img: "idea3" }] },
   /* v5.05 1F 타자왕 1~3위(17:00 Outro 시상) · v5.09 (261003 사용자 확정) 새 상품 · 사진 = 제조사 공식 컷 */
   type: { unit: "명", list: [
@@ -427,7 +427,7 @@ function roulCut() {
   var d = appNow(true);
   return d.getFullYear() === 2026 && d.getMonth() === 9 && d.getDate() === 26 && d.getHours() * 60 + d.getMinutes() >= (+c[0]) * 60 + (+c[1]);
 }
-function ideaKingN() { var ip = S.get("idea_pub", null), n = 0; ((ip && ip.prz) || []).forEach(function (x) { n += +x.n || 0; }); return n || 5; }
+function ideaKingN() { var ip = S.get("idea_pub", null), n = 0; ((ip && ip.prz) || []).forEach(function (x) { n += +x.n || 0; }); return n || 6; }
 /* 커피 · 간식 사진 2장 · 18F 커피챗 상세 · DAP 과제상담 상세 */
 function treatHtml(sm) {   /* v6.07 sm = 한 줄 4칸(커피챗 희망 묶음) · v6.83 (사용자 261009 묶음 10) 큰 사진 칸 = 사실 표 아래 옅은 구분선(axs-hr) 다음에 */
   return (sm ? "" : '<div class="axs-hr"></div>') + '<div class="axs-treat' + (sm ? " sm" : "") + '">' + TREATS.map(function (t) {

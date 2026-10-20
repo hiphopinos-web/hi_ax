@@ -9,7 +9,7 @@
  *   · 네트워크 오류 · 5xx 면 캐시 · 캐시도 없으면 오류 그대로 · 200 이 아닌 응답 · 다른 형식은 캐시에 넣지 않는다.
  *   · 새 서비스워커 설치 때 첫 문서와 하위 파일을 한 번 받아 넣어 둔다(실패해도 설치는 계속).
  * 나머지(admin · draw · typing · king · tv · interview · wall 등 다른 경로 · 미디어 · API)는 손대지 않는다(브라우저 기본 동작 · mp4 Range 그대로). */
-var SW_VERSION = "axf-2026-10-20-v815";   /* v8.15 · 261020 캐시 먼저 + 뒤에서 새 판(문서 · 하위 파일 5개) · v5.20 261019 앱 첫 문서 캐시(네트워크 우선 3초) */
+var SW_VERSION = "axf-2026-10-20-v816";   /* v8.16 · 아이디어왕 2등 2명 / v8.15 · 261020 캐시 먼저 + 뒤에서 새 판(문서 · 하위 파일 5개) · v5.20 261019 앱 첫 문서 캐시(네트워크 우선 3초) */
 var APP_CACHE = "axf-app-doc";            /* 이름을 바꾸지 않는다(서비스워커 판이 바뀌어도 첫 문서 캐시는 남아 다음 열기가 빠르다 · 내용은 네트워크가 늘 갈아 끼운다) */
 var SUB_CACHE = "axf-app-sub";            /* 하위 파일 5개 · activate 는 이 둘만 남긴다 */
 var SUB_FILES = ["design-handoff/design-system/tokens.css", "design-handoff/design-system/components.css", "assets/bot.js", "assets/rain-engine.js", "assets/server.js"];
