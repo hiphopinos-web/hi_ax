@@ -137,11 +137,11 @@ function cnPaint(){
   else {
     var sg=d.seg, segs=["A","B","C","D","E"];
     k.innerHTML='<div class="grid g4">'+kpi({ l:"10F 사전 신청", v:n0(d.list), u:"명", s:d.lng?"라운지만 신청 "+n0(d.lng)+"명은 번호 없음":"" })+kpi({ l:"번호 있음", v:n0(d.has), u:"명", s:d.moved?"세션 바뀜 "+n0(d.moved)+"명 · 번호 그대로":"" })+
-      kpi({ l:"번호 없음", v:n0(num(d.pend)+num(d.nseg)), u:"명", st:d.pend||d.nseg?"warn":"", s:d.nseg?"세션 모름 "+n0(d.nseg)+"명":"" })+kpi({ l:"명단에서 빠짐", v:n0(d.gone), u:"명", s:"번호 비워 둠" })+'</div>'+
+      kpi({ l:"번호 없음", v:n0(num(d.pend)+num(d.nseg)), u:"명", st:d.pend||d.nseg?"warn":"", s:d.nseg?"세션 모름 "+n0(d.nseg)+"명":"" })+kpi({ l:"명단에서 빠짐", v:n0(d.gone), u:"명", s:"번호 비움 · 새로 든 사람이 받음" })+'</div>'+
       '<div class="xg-wrap mt" style="--xg-h:auto"><table class="tb"><thead><tr><th>세션</th><th class="n">명단</th><th class="n">번호 있음</th><th class="n">번호 없음</th><th class="n">마지막 번호</th></tr></thead><tbody>'+
       segs.map(function(g){ var x=sg[g]||{}; return '<tr><td><b>'+g+'</b></td><td class="n">'+n0(x.list||0)+'</td><td class="n">'+n0(x.has||0)+'</td><td class="n">'+(x.pend?'<b>'+n0(x.pend)+'</b>':"0")+'</td><td class="n">'+(x.max?g+"-"+x.max:"-")+'</td></tr>'; }).join("")+'</tbody></table></div>'+
-      '<div class="btns mt"><button class="btn'+(d.pend?" pri":"")+'" type="button" onclick="cnAsk()"'+(d.pend?'':' disabled')+'>'+(d.pend?(d.has?"새 "+n0(d.pend)+"명 번호 매기기":"번호 매기기 · "+n0(d.pend)+"명"):"새로 매길 사람 없음")+'</button></div>'+
-      '<p class="cap mt">'+(d.at?"마지막으로 매긴 시각 "+esc(fmtD(d.at))+" · ":"")+'번호 = 세션 글자 + 세션 안 순번(A-1 · E 는 두 회차 한 줄) · 한 번 매긴 번호는 바뀌지 않습니다</p>';
+      '<div class="btns mt"><button class="btn'+(d.pend?" pri":"")+'" type="button" onclick="'+(d.has?"cnFillAsk()":"cnAsk()")+'"'+(d.pend?'':' disabled')+'>'+(d.pend?(d.has?"빈 번호 채우기 · "+n0(d.pend)+"명":"번호 매기기 · "+n0(d.pend)+"명"):"새로 매길 사람 없음")+'</button></div>'+
+      '<p class="cap mt">'+(d.at?"마지막으로 매긴 시각 "+esc(fmtD(d.at))+" · ":"")+'번호 = 세션 글자 + 세션 안 순번(A-1 · E 는 두 회차 한 줄) · 한 번 매긴 번호는 바뀌지 않습니다 · 10F 명단에 한 사람을 넣으면 그 세션의 가장 작은 빈 번호가 자동으로 붙습니다</p>';
   }
   if(!IV.gno) IV.gno=XG.make({ id:"ckno", file:"체크인 번호 명단", key:function(r){ return r.no; }, sort:{ k:"no", d:1 },
     chips:[["all","전체",null]].concat(["A","B","C","D","E"].map(function(g){ return [g,g,function(r){ return r.seg===g; }]; })),
@@ -151,6 +151,21 @@ function cnPaint(){
   XG.set(IV.gno, g2?null:cnSort(L.rows||[]), el("cnL"));
 }
 function cnSort(rows){ return rows.map(function(r){ var o={}; for(var k in r) o[k]=r[k]; var m=String(r.no||"").match(/^([A-E])-(\d+)$/); o._k=m?m[1]+("000"+m[2]).slice(-4):String(r.no); return o; }); }
+/* 261020 빈 번호 채우기(ck_no_fill) · 번호 없는 10F 사람에게 명단에 든 시각 순서로 그 세션의 가장 작은 빈 번호 · 미리 보기(dry) → 확인 문구 「번호채우기」 */
+function cnFillAsk(){
+  call("ck_no_fill",{ dry:"1" }).then(function(v){
+    if(!v||!v.ok){ toast("미리 보지 못했습니다 · "+ivWhy(v),{ bad:1 }); return; }
+    if(!v.no&&!v.gAdd){ toast("채울 사람이 없습니다"); reload(["cno","cnl"]); return; }
+    var li=(v.rows||[]).map(function(r){ return '<tr><td><b>'+esc(r.no)+'</b></td><td>'+esc(r.name||"")+'</td><td>'+esc(cnSid(r.sid))+'</td><td>'+esc(r.at||"")+'</td><td>'+(r.reuse?"빈 번호":"새 번호")+'</td></tr>'; }).join("");
+    confirmBox({ t:"빈 번호를 채울까요?", who:"번호 "+n0(v.no)+"명 · 접속 허용 추가 "+n0(v.gAdd)+"명", sub:"이미 번호가 있는 사람은 그대로 · 명단에 든 시각 순서 · 빠진 사람 번호 줄은 새 사람으로 바뀌고 운영로그에 남음",
+      body:(li?'<div class="xg-wrap mt4" style="--xg-h:auto"><table class="tb"><thead><tr><th>번호</th><th>이름</th><th>세션</th><th>명단에 든 시각</th><th></th></tr></thead><tbody>'+li+'</tbody></table></div>':'')+
+        '<label class="fld">확인 문구 · 「번호채우기」를 입력합니다<input class="in" id="cnFW" autocomplete="off" oninput="gateUpd()"></label>', focus:"cnFW", ok:"빈 번호 채우기",
+      gate:function(){ return String((el("cnFW")||{}).value||"").trim()==="번호채우기"; },
+      run:function(){ return call("ck_no_fill",{ confirm:"번호채우기" }); }, fail:function(r){ return "채우지 못했습니다 · "+ivWhy(r); },
+      done:function(r){ toast("빈 번호를 채웠습니다 · "+n0(r.no)+"명"+(r.gAdd?" · 접속 허용 "+n0(r.gAdd)+"명":"")); reload(["cno","cnl"]); } });
+  });
+}
+function cnSid(sid){ return typeof TEN_N!=="undefined"&&TEN_N[sid]||sid||""; }
 function cnAsk(){
   var d=S.data.cno; if(!d||!d.ok||!d.pend) return;
   var sg=d.seg||{}, rg=["A","B","C","D","E"].filter(function(g){ return sg[g]&&sg[g].pend; }).map(function(g){ var x=sg[g]; return g+"-"+(num(x.max)+1)+(x.pend>1?" ~ "+g+"-"+(num(x.max)+x.pend):""); }).join(" · ");

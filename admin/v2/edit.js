@@ -13,6 +13,11 @@ function rid(){ return "r"+Date.now().toString(36)+Math.random().toString(36).sl
 function rollBack(batch, after){ call("roll_undo",{ batch:batch }).then(function(x){ after&&after(); ppStale(); load(false); toast(x&&x.ok?"되돌렸습니다 · "+n0(x.done||0)+"명"+((x.skip||[]).length?" · 건너뜀 "+x.skip.length:""):"되돌리지 못했습니다 · "+why(x),{ bad:!(x&&x.ok) }); }); }
 function p10Cnt(){ var d=S.data.pl_pre10, c={}; P10_IDS.forEach(function(k){ c[k]=0; }); if(d&&d.ok) (d.rows||[]).forEach(function(r){ if(!r.role&&c[r.sid]!=null) c[r.sid]++; }); return c; }
 function p10Nm(sid){ return TEN_N[sid]||sid||"-"; }
+/* 261020 서버 자동 맞춤(auto) 한 줄 · 넣기 = 「번호 C-2 · 접속 허용 추가」 · 빼기 = 「번호 C-2 비움 · 접속 허용 뺌」 */
+function p10AutoTx(a){ if(!a) return ""; if(a.err) return " · 번호 · 접속 허용 자동 맞춤 실패(체크인 번호 「빈 번호 채우기」)"; var t=[];
+  if(a.free) t.push("번호 "+a.free+" 비움"); else if(a.no) t.push("번호 "+a.no);
+  if(a.gate==="add") t.push("접속 허용 추가"); else if(a.gate==="del") t.push("접속 허용 뺌");
+  return t.length?" · "+t.join(" · "):""; }
 /* ── 표 위 「추가」 창(261016 저녁 · 맨 위 「한 사람 넣기」 카드를 합침) · 명단마다 sp = PA_SP[이름]() ──
  * sp = { t 제목 · cap 한 줄 · have(emp) 이미 있으면 글자 · opts(p) 고르기 html · note(p) 알림 html · block(p) · run(p) · fail(r) · done(r, p) }
  * 명부 찾기(og_gate_find by name · 이름 · 사번 20명) → 고르기 → 창의 「넣기」 단추 하나(처리 중 잠금 · 거절 이유는 창 안) */
@@ -61,7 +66,7 @@ PA_SP.pre10=function(){ return { k:"pre10", t:"10F 사전 신청 추가", cap:"�
   note:function(){ var c=p10Cnt(); return !PA.role&&c[PA.sid]>=P10_CAP[PA.sid]?band("warn","정원을 넘습니다 · "+esc(p10Nm(PA.sid))+" "+c[PA.sid]+" / "+P10_CAP[PA.sid]+" · 넣을 수는 있습니다"):""; },
   run:function(p){ var e=normE(p.emp); return call("pre10_row_set",{ emp:e, sid:PA.sid, from:"", role:PA.role?"staff":null, confirm:P10_W.set }); },
   fail:function(r){ return r&&P10_WHY[r.reason]||""; },
-  done:function(r, p){ var sid=PA.sid; paAfter(); toast("넣었습니다 · "+(p.name||p.emp)+" · "+p10Nm(sid), r.id?{ undo:function(){ p10Undo(r.id); } }:{}); } }; };
+  done:function(r, p){ var sid=PA.sid; paAfter(); toast("넣었습니다 · "+(p.name||p.emp)+" · "+p10Nm(sid)+p10AutoTx(r.auto), r.id?{ undo:function(){ p10Undo(r.id); } }:{}); } }; };
 /* 접속 허용 · 스태프(폰 권한 · 옷) · 시험 사번 = roll_apply · 되돌리기 roll_undo 묶음 */
 function paRoll(k){
   var t={ gate:"접속 허용 추가", staff:"스태프 추가", test:"시험 사번 추가" }[k], sub={ gate:"클로즈 베타 · 사전 신청자까지 범위에서 바로 로그인", staff:"폰 권한 = 로그인하면 스태프 화면 · 옷 = 스태프 옷 대상", test:"시험 사번 = 스탬프 · 순위 숫자에서 빠짐" }[k];
@@ -114,13 +119,13 @@ function pcP10Set(emp){
   var c=p10Cnt(), ov=c[to]>=P10_CAP[to]&&!(d.p10&&d.p10.role);
   confirmBox({ t:cur?"세션을 바꿀까요?":"10F 사전 신청에 넣을까요?", who:pcNm()+" · 사번 "+emp, sub:(cur?p10Nm(cur)+" → ":"")+p10Nm(to)+" · 참가자 앱 「내 세션」이 바로 바뀜"+(ov?" · 정원 넘음 "+c[to]+" / "+P10_CAP[to]:""), ok:cur?"바꾸기":"넣기",
     run:function(){ return call("pre10_row_set",{ emp:emp, sid:to, from:cur, confirm:P10_W.set }); }, fail:function(r){ return r&&P10_WHY[r.reason]||""; },
-    done:function(r){ pcAfter(); toast((cur?"세션을 바꿨습니다 · ":"넣었습니다 · ")+p10Nm(to), r.id?{ undo:function(){ p10Undo(r.id); } }:{}); } });
+    done:function(r){ pcAfter(); toast((cur?"세션을 바꿨습니다 · ":"넣었습니다 · ")+p10Nm(to)+p10AutoTx(r.auto), r.id?{ undo:function(){ p10Undo(r.id); } }:{}); } });
 }
 function pcP10Del(emp){
   var d=PC.d||{}, cur=d.p10?d.p10.sid:""; if(!cur) return;
   confirmBox({ t:"10F 명단에서 뺄까요?", who:pcNm()+" · 사번 "+emp, sub:p10Nm(cur)+" · 키트 · 끝 QR 자격이 같이 빠짐"+(d.p10.kit?" · 키트를 이미 받음(기록은 남김)":""), ok:"빼기", danger:true,
     run:function(){ return call("pre10_row_del",{ emp:emp, from:cur, confirm:P10_W.del }); }, fail:function(r){ return r&&P10_WHY[r.reason]||""; },
-    done:function(r){ pcAfter(); toast("뺐습니다 · "+p10Nm(cur), r.id?{ undo:function(){ p10Undo(r.id); } }:{}); } });
+    done:function(r){ pcAfter(); toast("뺐습니다 · "+p10Nm(cur)+p10AutoTx(r.auto), r.id?{ undo:function(){ p10Undo(r.id); } }:{}); } });
 }
 /* ── 한 사람 카드 · 선착순 가습기 ── */
 function fxWhyBox(ph){ return '<label class="fld">사유(2자 이상)<input class="in" id="fxWhy" maxlength="60" autocomplete="off" placeholder="'+esc(ph)+'" oninput="gateUpd()"></label>'; }
