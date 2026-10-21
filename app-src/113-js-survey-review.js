@@ -27,6 +27,29 @@ function svrDev() {
   return os + " · " + br + " · " + window.innerWidth + "px" + (fr ? " · PC 틀" : "");
 }
 /* 지금 화면 · id 와 글(첫 화면 · 안내 = 제목 · 문항 = 질문 · 완료 = 감사 제목) */
+/* 261022 보낸 전체 의견 · 이 기기에 남겨 완료 화면에 쌓는다(최신이 위 · 50건 · 새로 고쳐도 유지 · axsvr_sent) */
+var SVR_SENT_MAX = 50;
+function svrSent() {
+  var a = [];
+  try { a = JSON.parse(svrLs("axsvr_sent") || "[]"); } catch (e) { a = []; }
+  return Array.isArray(a) ? a.filter(function (x) { return x && typeof x.t === "string"; }) : [];
+}
+function svrSentAdd(t, nm) {
+  var a = svrSent();
+  a.unshift({ t: t, nm: nm, at: Date.now() });
+  svrLs("axsvr_sent", JSON.stringify(a.slice(0, SVR_SENT_MAX)));
+}
+function svrSentTime(ms) {
+  var d = new Date(ms), z = function (n) { return (n < 10 ? "0" : "") + n; };
+  return z(d.getMonth() + 1) + "/" + z(d.getDate()) + " " + z(d.getHours()) + ":" + z(d.getMinutes());
+}
+function svrSentHtml() {
+  var a = svrSent();
+  if (!a.length) return "";
+  return '<div class="svr-sent" id="svrSent"><h3 class="svr-sent-h">보낸 의견 ' + a.length + "건</h3>" + a.map(function (x) {
+    return '<div class="svr-sent-i"><p class="ax-meta">' + esc(svrSentTime(x.at)) + (x.nm ? " · " + esc(x.nm) : "") + '</p><p class="svr-sent-t">' + esc(x.t) + "</p></div>";
+  }).join("") + "</div>";
+}
 function svrScreen() {
   if (surveyDone()) return { id: "done", q: SURVEY_DONE.t };
   var d = svDraft(), fl = svFlow(d), q = fl[svCur(d, fl)] || SURVEY_Q[0];
@@ -69,7 +92,7 @@ function svrSend(kind) {
   var end = function (msg) {
     SVR.busy = false;
     if (!msg) {
-      if (all) { SVR.all = ""; App.render(); } else { SVR.txt = ""; sheetClose(true); }
+      if (all) { svrSentAdd(t, nm); SVR.all = ""; App.render(); } else { SVR.txt = ""; sheetClose(true); }
       toast("저장됨"); return;
     }
     if (all) { App.render(); toast(msg); } else { SHEET.spec.body = svrSheetBody(); sheetFail(msg); }
@@ -99,7 +122,7 @@ function svrDoneHtml() {
     '<h2 class="ax-section-title" id="svrAllT">전체 의견</h2>' +
     '<textarea id="svrAll" class="ax-field axs-ta" rows="5" maxlength="' + SVR_MAX + '" placeholder="설문 전체에 대한 의견" aria-label="전체 의견" oninput="SVR.all=this.value; var c=el(\'svrAllCn\'); if (c) c.textContent=this.value.length"' + (SVR.busy ? " disabled" : "") + ">" + esc(SVR.all) + "</textarea>" +
     svrCnt("svrAllCn", SVR.all.length) + svrNameHtml("svrNmAll") +
-    '<button type="button" class="ax-button" onclick="svrSend(\'all\')"' + (SVR.busy ? ' disabled aria-busy="true"' : "") + ">" + (SVR.busy ? "보내는 중" : "의견 보내기") + "</button></div></section>" +
+    '<button type="button" class="ax-button" onclick="svrSend(\'all\')"' + (SVR.busy ? ' disabled aria-busy="true"' : "") + ">" + (SVR.busy ? "보내는 중" : "의견 보내기") + "</button>" + svrSentHtml() + "</div></section>" +
     '<div class="ax-bottom axs-fix"><button type="button" class="ax-button ax-button-weak" onclick="svrRestart()">처음부터 다시</button></div>';
 }
 function svrSeed() {
@@ -129,6 +152,11 @@ function svrCss() {
     ".svr-sw { flex: none; min-width: 52px; height: 32px; border-radius: 16px; border: 1px solid var(--axs-divider-strong); background: var(--ax-color-surface); color: var(--ax-color-ink); font: 700 13px/1 var(--disp); cursor: pointer; }" +
     ".svr-sw[aria-checked=\"true\"] { background: var(--ax-color-ink); border-color: var(--ax-color-ink); color: #fff; }" +
     ".svr-done { margin-top: 24px; }" +
+    ".svr-sent { margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--axs-divider-strong); }" +
+    ".svr-sent-h { margin: 0 0 8px; color: var(--ax-color-ink); font: 700 14px/1.4 var(--disp); }" +
+    ".svr-sent-i { padding: 10px 0; border-top: 1px solid var(--ax-color-divider, #E5E8EB); } .svr-sent-i:first-of-type { border-top: 0; padding-top: 0; }" +
+    ".svr-sent-i .ax-meta { margin: 0 0 2px; }" +
+    ".svr-sent-t { margin: 0; color: var(--ax-color-ink); font: 500 14px/1.5 var(--disp); white-space: pre-wrap; word-break: break-word; }" +
     ".svr-nm { width: 100%; box-sizing: border-box; }" +
     ".svr-where { word-break: keep-all; }";
   document.head.appendChild(st);
