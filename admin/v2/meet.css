@@ -104,3 +104,25 @@
   .mtg-pc .acts button{padding:0 8px}
 }
 @media (prefers-reduced-motion:reduce){ .mtg-sw i::after{transition:none} }
+
+/* 261022 잠금(확정 · mlock.js · 사용자 「확정된 칸은 색깔을 조금 다르게」) · 잠긴 카드 = 네이비 옅은 면 + 왼쪽 네이비 줄 + 채운 자물쇠 · 고름 = 점선 테두리 · 이모지 없음(SVG) */
+.mtg-pc.lkd{background:var(--navy05);border-color:var(--navy);box-shadow:inset 3px 0 0 var(--navy);cursor:pointer}
+.mtg-pc.lkd .nm{color:var(--navy)}
+.mtg-lk{flex:none;width:28px;height:24px;margin:-2px -6px -2px 0;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:var(--tx3);border:1px solid transparent;background:transparent;cursor:pointer}
+.mtg-lk:hover,.mtg-lk:focus-visible{border-color:var(--line3);color:var(--navy)}
+.mtg-lk.on{color:var(--navy)}
+.mtg-pc.mlk-sel{outline:2px dashed var(--navy);outline-offset:1px}
+.mtg.mlkon .mtg-sl .mtg-pc{cursor:pointer}
+.mlk-bar .mlk-ic{display:inline-flex;color:var(--navy)}
+.mlk-bar.pick{background:var(--navy05);border-color:var(--navy)}
+/* 261022 (사용자 「카드 높이 고정」) 시간표 칸 카드 = 이름 1줄(꼬리표는 이름 줄 안) + 사번 · 소속 1줄(긴 소속은 말줄임 · 「 · 」 앞에서 꺾지 않음) · 빈 칸도 같은 높이 · 당일 모드 = 단추 줄만큼 더 · 잠금 표시가 들어가도 그대로 */
+.mtg{--pc-h:56px;--pc-act:34px}
+.mtg-sl{min-height:calc(var(--pc-h) + 3px)}
+.mtg-sl .mtg-pc{height:var(--pc-h);overflow:hidden;gap:2px;justify-content:center}
+.mtg.dayon .mtg-sl{min-height:calc(var(--pc-h) + var(--pc-act) + 3px)}
+.mtg.dayon .mtg-sl .mtg-pc{height:calc(var(--pc-h) + var(--pc-act))}
+.mtg-sl .mtg-pc .l1{flex-wrap:nowrap;overflow:hidden;height:20px}
+.mtg-sl .mtg-pc .nm{overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto}
+.mtg-sl .mtg-pc .l1t{display:inline-flex;gap:3px;flex:0 1 auto;min-width:0;overflow:hidden}
+.mtg-sl .mtg-pc .l1t .tag{height:18px;padding:0 6px;font-size:12px;font-weight:600;flex:none}
+.mtg-sl .mtg-pc .dp{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:16px;line-height:16px}

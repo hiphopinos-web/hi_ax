@@ -87,7 +87,7 @@ function myItems(withTest) {
   var mr = myResv();
   if (mr && RESV_LIVE.indexOf(mr.status) >= 0) {   /* v7.39 (사용자 261016 계획서 3-2) 사전 신청 상담 줄 「AX 라운지 · 10:30 · 1F AX 라운지」(이름 = 「AX 라운지」 v5.85 통일 그대로) · 칸 미정 = 시각 없는 줄(맨 뒤) */
     var mrP = resvPre(mr), mrA = mr.slot ? (mrP ? 1 + sessStartMin(mr.slot) / 2000 : sessStartMin(mr.slot)) : 9997;   /* 261021 사전 면담 = 당일 일정 앞 · 당일 시간 칸 밖(iv 없음) */
-    out.push({ place: "1F AX 라운지", min: mrA, go: "App.go('dap')", badge: mrP ? resvMd(mr) : mr.slot || "예정", label: (mrP ? mr.dl + " " : "") + (mr.slot || "시간 안내 예정"), title: "AX 라운지", gTitle: "AX 라운지", sub: "1:1 · " + resvDur(mr), gSub: resvPlace(mr) + (mr.slot ? " · " + resvRng(mr) : ""), kind: "resv", iv: mr.slot && !mrP ? [mrA, mrA + resvMin(mr)] : null, t0x: mrP && mr.slot ? resvMd(mr) : "", t1x: mrP && mr.slot ? mr.slot : "" });
+    out.push({ place: "1F AX 라운지", min: mrA, go: "App.go('dap')", badge: mrP ? resvMd(mr) : mr.slot || "예정", label: (mrP ? mr.dl + " " : "") + (mr.slot || RESV_TBD), title: "AX 라운지", gTitle: "AX 라운지", sub: "1:1 · " + resvDur(mr), gSub: resvPlace(mr) + (mr.slot ? " · " + resvRng(mr) : ""), kind: "resv", iv: mr.slot && !mrP ? [mrA, mrA + resvMin(mr)] : null, t0x: mrP && mr.slot ? resvMd(mr) : "", t1x: mrP && mr.slot ? mr.slot : "" });
   }
   var cc = S.get("cchat", null), ccs = cchatSt();
   if (cc && cc.status === "matched")
@@ -386,6 +386,11 @@ function resvDl(r) { return r && r.dl && (RESV_DL_ALL || resvPre(r)) ? String(r.
 function resvMd(r) { return String(r && r.dl || "").replace(/\(.*$/, ""); }   /* 「10/22」 */
 function resvRng0(r) { if (!r || !r.slot) return ""; return r.rng || r.slot + "~" + hm2(t2m(r.slot) + resvMin(r)); }
 function resvRng(r) { var g = resvRng0(r), d = resvDl(r); return g && d ? d + " " + g : g; }
+/* 261022 (사용자 확정) 미팅 잠금 · 서버 my.resv lk 0 = 운영진이 잠그기 전(날짜 · 시간 · 미팅룸 없음) · 옛 서버(lk 없음) = 확정으로 본다 */
+var RESV_TBD = "시간 확정 전";
+function resvTbd(r) { return !!(r && r.lk === 0 && RLK_ST.indexOf(r.status) >= 0); }
+var RLK_ST = ["requested", "booked", "approved"];
+function resvStTx(r) { return resvTbd(r) ? RESV_TBD : RESV_ST[r.status] || "승인 완료"; }
 function resvPlace(r) { return String(r && r.place || "1F AX 라운지").replace(/상담석/g, "미팅룸") + (r && +r.seat > 0 ? " · 미팅룸 " + r.seat : ""); }   /* v7.53 (사용자 261016) 화면 글자 상담석 → 미팅룸 · 서버 값(seat · place)은 그대로 받고 보여 줄 때만 */
 /* 신청 전이고 지금 신청할 수 있는 곳 수(세그먼트 주황 점) · v7.39 = 커피챗만(라운지 앱 신청 없음) */
 function applyOpenN() { var c = cchatState(); return c && !c.mine && !c.wait ? 1 : 0; }   /* v7.52 신청 시작 전 = 점 없음 */
@@ -481,9 +486,9 @@ function zoneLive(z) {
     /* v7.39 (사용자 261016 계획서 3-2 · 3-3) 전면 사전 신청 · 앱 신청 없음 · 사전 신청자 = 내 상담(시간 · 상담석) · 그 밖 = 사실만(「09:30~16:00 · 사전 신청자 상담」 · 신청 단추 없음 · v7.52 RESV_CONF.end 16:00) */
     var r = loungeMine(), dn = r && r.status === "done", rg = resvRng(r), rc = resvConf();
     o.tm = rc.start + "~" + rc.end;
-    o.fact = r ? (dn ? "상담 완료" : (rg || "시간 안내 예정") + " · 내 상담") : o.tm + " · 사전 신청자 상담";
-    o.chip = r ? (dn ? ["완료", "ok"] : [RESV_ST[r.status] || "승인 완료", ""]) : null;
-    o.kv = r ? [["내 상담", dn ? "상담 완료" : rg || "시간 안내 예정"], ["장소", resvPlace(r)]] : [["참여", "사전 신청자 상담"], ["장소", "1F AX 라운지"]];
+    o.fact = r ? (dn ? "상담 완료" : (rg || RESV_TBD) + " · 내 상담") : o.tm + " · 사전 신청자 상담";
+    o.chip = r ? (dn ? ["완료", "ok"] : [resvStTx(r), ""]) : null;
+    o.kv = r ? [["내 상담", dn ? "상담 완료" : rg || RESV_TBD], ["장소", resvPlace(r)]] : [["참여", "사전 신청자 상담"], ["장소", "1F AX 라운지"]];
     o.btn = r ? ["내 상담", "progOpen('dap')"] : null;
   } else if (z.id === "cchat") {
     /* v7.39 (사용자 261016 계획서 0-2) 시간 고르고 상담 내용 쓰기 → 운영진 선정 · 아이디어 한 줄 조건 없음 · 신청 뒤 네 상태(선정 전 · 선정 · 마감 · 완료) */
@@ -809,7 +814,7 @@ function progState(s) {
   if (s.kind === "open") return attUi(s.id) && attStLbl(s.id) ? [attStLbl(s.id), "ok"] : [s.id === "expo" ? "자유 입장" : "자유 참석", ""];   /* v5.68 입장 · 끝 둘 다 = 출석 완료 · 하나만 = 입장 출석 | 끝 출석 */   /* v4.26 17F 는 출석하면 「출석 완료」 · v4.38 강연 = 「자유 참석」(시간표 딱지와 같은 말) · 전시 = 「자유 입장」 */
   if (s.kind === "info" && s.join && !sessMine(s.id)) return [s.join, ""];   /* 261019 (사용자) 세션 A = 「대상자 추천 참여」(SESSIONS join) · B~E 는 아래 그대로 */
   if (s.kind === "info") return ATT10_UI && sessMine(s.id) && attMineK(s.id, "out") ? ["출석 완료", "ok"] : sessMine(s.id) ? ["사전 신청 완료", "ok"] : ["사전 신청자 참여", ""];   /* v5.60 T3 · v5.71 끝 QR 출석 = 출석 완료 */
-  if (s.id === "dap") { var r = loungeMine(); return r ? [RESV_ST[r.status] || "승인 완료", "ok"] : ["사전 신청자 상담", ""]; }   /* v7.39 사전 신청제 · 앱 신청 없음 */
+  if (s.id === "dap") { var r = loungeMine(); return r ? [resvStTx(r), resvTbd(r) ? "" : "ok"] : ["사전 신청자 상담", ""]; }   /* 261022 잠그기 전 = 「시간 확정 전」 */   /* v7.39 사전 신청제 · 앱 신청 없음 */
   if (s.id === "cchat") { var cs = cchatState(); return !cs ? ["신청 마감", "off"] : !cs.mine ? ["신청할 수 있어요", ""] : [cs.chip, cs.cc || "ok"]; }   /* v7.39 네 상태 */
   return ["", ""];
 }
@@ -927,8 +932,8 @@ function progDetail(s) {
     var r = myResv(), live = r && RESV_HOLD.indexOf(r.status) >= 0, rg = resvRng(r);
     D.cat = "AX 라운지"; D.title = "내년 DAP 과제 상담"; D.who = "데이터사이언스파트"; D.av = "DS"; D.whoSub = live && r.slot ? "1:1 · " + resvDur(r) : "1:1 상담";
     if (live) {
-      D.st = RESV_ST[r.status] || "승인 완료"; D.stc = "ok";
-      D.kv = [["일시", rg ? (resvDl(r) ? rg : "10월 26일 " + rg) : (r.dl ? r.dl : "10월 26일") + " · 시간 안내 예정"], ["장소", resvPlace(r)],   /* 261021 서버 dl 이 있으면 「10/22(목) 14:00~15:00」 */ ["진행", r.status === "checked" ? "상담 진행 중" : r.status === "done" ? "상담 완료" : "시작 5분 전 도착"]];
+      D.st = resvStTx(r); D.stc = resvTbd(r) ? "" : "ok";
+      D.kv = [["일시", rg ? (resvDl(r) ? rg : "10월 26일 " + rg) : resvTbd(r) ? RESV_TBD : (r.dl ? r.dl : "10월 26일") + " · " + RESV_TBD],   /* 261022 잠그기 전 = 날짜 · 시간 없이 「시간 확정 전」 */ ["장소", resvPlace(r)],   /* 261021 서버 dl 이 있으면 「10/22(목) 14:00~15:00」 */ ["진행", r.status === "checked" ? "상담 진행 중" : r.status === "done" ? "상담 완료" : "시작 5분 전 도착"]];
       D.secT = r.status === "done" ? "상담을 마쳤어요" : "사전 신청한 상담이에요";
       D.secB = r.status === "checked" ? "업무 설명 → 병목 → 개선방안 순서로 진행돼요." : r.status === "done" ? "아래 코드를 AX 라운지 데스크에 보여 주고 사은품을 받으세요." : "";
       if (r.status === "done") D.after = '<div class="ax-inset ax-stack-tight axs-gift"><p class="ax-card-title">사은품 교환권 · 1회</p>' + qrHtml() + '<p class="ax-type-t5-strong axs-center-tx">GIFT-' + esc((S.get("user", {}) || {}).empId || "") + '</p></div>';   /* v5.60 W4 「중복 수령 방지 코드예요」 줄 삭제 */
