@@ -25,6 +25,11 @@
   var MODE = Q.mode === "1" ? 1 : (Q.mode === "2" || Q.mode === "split") ? 2 : 0;
   var ONLY = /^[123]$/.test(Q.seat || "") ? Number(Q.seat) : 0;   /* 261017 예비 노트북 3(seat=3) */
   var NS = [1, 2, 3];
+  /* 261021 1F 55인치 가로 LED(제3 송출 · 예비 노트북 3 · 플랜 B) · &seats=1,2&o=land · 대기 = 가로 루프(assets/led.js) · 한 자리 = 가운데 크게 · 두 자리 = 왼쪽 1P · 오른쪽 2P 고정
+     바뀐 뒤 8초 고정(늘어남 0 → 1 · 1 → 2 는 곧바로 · 줄어듦 · 바뀜만 기다린다) · 오늘 1위가 바뀌면 띠(화면만) · seats 가 없으면 이 갈래는 꺼져 있다(세로 · 옛 가로 화면 그대로) */
+  var LEDS = []; String(Q.seats || "").split(",").forEach(function (s) { s = s.trim(); if (/^[123]$/.test(s) && LEDS.indexOf(Number(s)) < 0) LEDS.push(Number(s)); }); LEDS.sort();
+  var LED = LEDS.length > 0 && Q.o !== "port";
+  var LED_HOLD = 8000, LED_MOVE = 600, LED_OUT = 300, LED_EASE = "cubic-bezier(.2,.7,.2,1)";   /* 움직임 값은 이 한 곳 · 바뀜 0.6초 · 사라짐 0.3초 · 곡선 하나 */
   var TEST = Q.test === "1";
   var DELAY = Math.max(100, Math.min(2000, parseInt(Q.delay, 10) || 200));   /* 261017 지연 개선 · 0.6 → 0.2초 · 사건은 기다리지 않는다 */
   var HURT_SLOW = typeof RAIN_SITE === "object" && RAIN_SITE && RAIN_SITE.hurtSlow > 0 ? RAIN_SITE.hurtSlow : 0.3;
@@ -36,7 +41,7 @@
   function now() { return Date.now(); }
 
   /* ── 겉모습 · 스타일 한 장(assets/live.css) ── */
-  var css = document.createElement("link"); css.rel = "stylesheet"; css.href = "assets/live.css?v=261017b"; document.head.appendChild(css);
+  var css = document.createElement("link"); css.rel = "stylesheet"; css.href = "assets/live.css?v=261021a"; document.head.appendChild(css);
   var LV = document.createElement("div"); LV.id = "lv"; LV.setAttribute("aria-hidden", "true");
   LV.innerHTML = '<div id="lvSt"><div id="lvHead"><b>AX 타자왕 · 1F</b><span><i></i>LIVE</span></div><div id="lvLine"></div></div>';
   body.appendChild(LV);
@@ -53,7 +58,13 @@
     port1: { W: 1080, H: 1920, head: false, seats: [{ x: 0, y: 0, w: 1080, h: 1920, p1: 1, bd: [60, 380, 960, 1190, 640], ih: 104, tag: [52, 40], try: [52, 232, 256], nick: [336, 50, 688, 84, 64], sc: [336, 140, 128], rk: [540, 1734, 64, 132, "c"], life: [56, 300, 44], stg: [1024, 298, 48] }] },
     port2: { W: 1080, H: 1920, head: false, line: [0, 956, 1080, 8], seats: [
       { x: 0, y: 0, w: 1080, h: 956, bd: [450, 34, 580, 790], ih: 64, tag: [48, 48], nick: [48, 116, 360, 64, 48], sc: [48, 200, 96], rk: [48, 340, 40, 72], life: [48, 470, 30], stg: [48, 530, 36, "l"] },
-      { x: 0, y: 964, w: 1080, h: 956, bd: [450, 34, 580, 790], ih: 64, tag: [48, 48], nick: [48, 116, 360, 64, 48], sc: [48, 200, 96], rk: [48, 340, 40, 72], life: [48, 470, 30], stg: [48, 530, 36, "l"] }] }
+      { x: 0, y: 964, w: 1080, h: 956, bd: [450, 34, 580, 790], ih: 64, tag: [48, 48], nick: [48, 116, 360, 64, 48], sc: [48, 200, 96], rk: [48, 340, 40, 72], life: [48, 470, 30], stg: [48, 530, 36, "l"] }] },
+    /* 261021 LED 한 자리 · 가운데 = 게임판(엔진 폭 640 · 노트북 판과 비슷한 비율) · 왼쪽 띠 = 「1P」 · n번째 도전 · 닉네임 · 행사명 / 오른쪽 띠 = 점수 · 지금 N위 · 목숨 · 단계 */
+    led1: { W: 1920, H: 1080, head: true, seats: [{ x: 0, y: 0, w: 1920, h: 1080, p1: 1, led: 1, bd: [590, 64, 740, 872, 640], ih: 96, tag: [96, 96], try: [96, 290, 256], nick: [96, 404, 440, 100, 80], scl: [1404, 100], sc: [1404, 152, 132], rk: [1404, 404, 56, 132], life: [1404, 676, 56], stg: [1404, 790, 56, "l"] }] },
+    /* 261021 LED 두 자리 · 왼쪽 1P · 오른쪽 2P 고정 · 세로 1자리 판의 짜임(위 = 「NP」 · 닉네임 · 점수 · 목숨 · 단계 / 가운데 = 게임판 / 아래 = 지금 N위)을 반 화면에 */
+    led2: { W: 1920, H: 1080, head: false, line: [956, 0, 8, 1080], seats: [
+      { x: 0, y: 0, w: 956, h: 1080, p1: 1, led: 2, bd: [98, 214, 760, 676, 640], ih: 64, tag: [40, 40], nick: [220, 36, 470, 66, 56], sc: [220, 108, 84], rk: [478, 990, 52, 76, "c"], life: [706, 52, 34], stg: [916, 112, 40] },
+      { x: 964, y: 0, w: 956, h: 1080, p1: 1, led: 2, bd: [98, 214, 760, 676, 640], ih: 64, tag: [40, 40], nick: [220, 36, 470, 66, 56], sc: [220, 108, 84], rk: [478, 990, 52, 76, "c"], life: [706, 52, 34], stg: [916, 112, 40] }] }
   };
   var HEART = [".XX.XX.", "XXXXXXX", "XXXXXXX", ".XXXXX.", "..XXX..", "...X..."];
   function heartSvg() { var h = ""; HEART.forEach(function (r, y) { for (var x = 0; x < 7; x++) if (r.charAt(x) === "X") h += '<rect x="' + x + '" y="' + y + '" width="1" height="1"/>'; }); return '<svg viewBox="0 0 7 6" shape-rendering="crispEdges">' + h + "</svg>"; }
@@ -65,7 +76,7 @@
     e.className = "lvSeat"; e.style.left = P.x + "px"; e.style.top = P.y + "px"; e.style.width = P.w + "px"; e.style.height = P.h + "px";
     var h = '<div class="lvTag"></div><div class="lvNick"></div>' + (P.scl ? '<div class="lvScl">점수</div>' : "") + '<div class="lvSc">0</div><div class="lvRk"></div>' +
       '<div class="lvLife">' + [0, 1, 2, 3, 4].map(function () { return '<i class="on">' + HS + "</i>"; }).join("") + '</div><div class="lvStg"></div>' + (P.race ? '<div class="lvRace"></div>' : "") +
-      (P.p1 ? '<div class="lvTry"></div>' : "") + '<div class="lvBd"><canvas></canvas><div class="lvIn"><span></span><i></i></div><div class="lvPz">일시정지</div><div class="lvRes"><b></b><em></em><small></small></div></div><div class="lvIdle"><b></b><span>대기</span></div>';
+      (P.p1 && P.try ? '<div class="lvTry"></div>' : "") + '<div class="lvBd"><canvas></canvas><div class="lvIn"><span></span><i></i></div><div class="lvPz">일시정지</div><div class="lvRes"><b></b><em></em><small></small></div></div><div class="lvIdle"><b></b><span>대기</span></div>';
     e.innerHTML = h;
     ST.appendChild(e);
     function q(c) { return e.querySelector(c); }
@@ -86,11 +97,12 @@
     u.cv.style.width = b[2] + "px"; u.cv.style.height = b[3] + "px";
     var ib = u.e.querySelector(".lvIn"); ib.style.top = (10 + b[3] + 6) + "px"; ib.style.height = P.ih + "px"; ib.style.width = b[2] + "px"; ib.style.fontSize = Math.round(P.ih * 0.5) + "px";
     u.idle.style.left = (b[0] - 10) + "px"; u.idle.style.top = (b[1] - 10) + "px"; u.idle.style.width = (b[2] + 20) + "px"; u.idle.style.height = (b[3] + 6 + P.ih + 20) + "px";
-    u.idle.querySelector("b").textContent = n + "번 자리";
+    u.idle.querySelector("b").textContent = P.led ? n + "P" : n + "번 자리";
     var lw = b[4] || b[2]; u.zs = b[2] / lw; u.L = rgLayout(lw, Math.round(b[3] / u.zs), true, false);
     u.c = {};   /* 값 기억 · 바뀔 때만 DOM 을 고친다 */
     e.classList.toggle("one", !!one);
     e.classList.toggle("p1", u.p1);
+    if (P.led) e.classList.add(P.led === 1 ? "ledOne" : "ledHalf");
     return u;
   }
   function nickFit(u) {   /* 분할 · 닉네임은 자리 이름표 바로 오른쪽(이름표 폭은 글꼴에 따라 다르다) */
@@ -117,7 +129,7 @@
     var t = Number(m && m.tn), x = Number(m && m.tm);
     return t >= 1 && t <= 99 && t === Math.floor(t) && (!(x >= 1) || t <= x) ? t : 0;
   }
-  function seatOk(n, test) { return (n === 1 || n === 2 || n === 3) && (!ONLY || ONLY === n) && (!test || TEST); }
+  function seatOk(n, test) { return (n === 1 || n === 2 || n === 3) && (!ONLY || ONLY === n) && (!test || TEST) && (!LED || LEDS.indexOf(n) >= 0); }
   function done(g) { if (DONE[g]) return; DONE[g] = 1; DONE_Q.push(g); if (DONE_Q.length > 64) delete DONE[DONE_Q.shift()]; }
   var G8 = /^[0-9a-f]{8}$/;
 
@@ -389,7 +401,7 @@
     if (!u.p1) set(u, "test", S.test, function (v) { u.tag.textContent = u.n + "번 자리" + (v ? " · 리허설" : ""); nickFit(u); });
     var sc = F ? Number(F.sc) || 0 : 0;
     S.scD = sc < S.scD ? sc : S.scD + (sc - S.scD) * Math.min(1, dt * 7); if (sc - S.scD < 1) S.scD = sc;
-    set(u, "sc", Math.round(S.scD), function (v) { u.sc.textContent = fmt(v); });
+    set(u, "sc", Math.round(S.scD), function (v) { u.sc.textContent = fmt(v); if (u.P.led) ledFit(u, "scW", u.sc, u.P.sc[2], fmt(v).length); });
     var lr = liveRank(S, sc), rt = "", rk = 0;
     if (S.end) rt = "";
     else if (F && F.x === "over") rt = "<span>결과 집계 중</span>";
@@ -400,6 +412,10 @@
     }
     if (set(u, "rk", rt, function (v) { u.rk.innerHTML = v; }) && rk && S.rkPrev && rk < S.rkPrev) { u.rk.classList.remove("up"); void u.rk.offsetWidth; u.rk.classList.add("up"); }
     if (rk) S.rkPrev = rk;
+    if (LED && lr && !S.test && !S.lead && !S.end && sc > 0 && lr.l.length && sc > lr.l[0].score) {   /* 261021 LED · 오늘 1위가 바뀜 = 지금 점수가 다른 사람의 1위 기록을 넘음(자기 기록이 1위면 아님) · 판마다 한 번 · 화면만 */
+      var tp = TY.rk && TY.rk.data && TY.rk.data.top;
+      if (tp && tp[0] && tp[0].name !== S.nick) { S.lead = 1; if (window.__tyled && window.__tyled.lead) window.__tyled.lead(S.nick, sc); }
+    }
     var lv = F ? Number(F.lv) : 5, hit = r.heartHit > 0 ? 1 : 0;
     set(u, "lv", lv + "|" + hit, function () { Array.prototype.forEach.call(u.life.children, function (h, i) { h.className = i < lv ? "on" : i === lv && hit ? "hit" : ""; h.style.display = i < Math.max(5, S.lives0) ? "" : "none"; }); });
     set(u, "stg", F ? (u.p1 && S.test ? "리허설 · " : "") + "단계 " + (Number(F.st) || 1) : "", function (v) { u.stg.textContent = v; });
@@ -451,12 +467,13 @@
     var o = ori(), key = o + list.join("") + "|" + window.innerWidth + "x" + window.innerHeight;
     if (key === VIEW.key) return;
     VIEW.key = key; VIEW.ori = o;
-    var lay = LAY[o + (list.length > 1 ? "2" : "1")];
-    VIEW.lay = lay;
-    VIEW.ui.forEach(function (u) { if (u && u.e.parentNode) u.e.parentNode.removeChild(u.e); });
+    var lay = LAY[(LED ? "led" : o) + (list.length > 1 ? "2" : "1")];
+    VIEW.lay = lay; VIEW.list = list.slice();
+    var old = VIEW.ui;
+    if (!LED) old.forEach(function (u) { if (u && u.e.parentNode) u.e.parentNode.removeChild(u.e); });
     VIEW.K = Math.min(window.innerWidth / lay.W, window.innerHeight / lay.H) || 1;
     ST.style.width = lay.W + "px"; ST.style.height = lay.H + "px"; ST.style.marginLeft = -lay.W / 2 + "px"; ST.style.marginTop = -lay.H / 2 + "px"; ST.style.transform = "scale(" + VIEW.K + ")";
-    HEAD.style.display = lay.head ? "" : "none"; HEAD.className = o;
+    HEAD.style.display = lay.head ? "" : "none"; HEAD.className = LED ? "led" : o;
     LINE.style.display = lay.line ? "" : "none";
     if (lay.line) { LINE.style.left = lay.line[0] + "px"; LINE.style.top = lay.line[1] + "px"; LINE.style.width = lay.line[2] + "px"; LINE.style.height = lay.line[3] + "px"; }
     var dpr = Math.min(2, Math.max(1, VIEW.K * (window.devicePixelRatio || 1)));
@@ -465,7 +482,58 @@
       u.dpr = dpr * u.zs; u.cv.width = Math.round(lay.seats[i].bd[2] * dpr); u.cv.height = Math.round(lay.seats[i].bd[3] * dpr);
       return u;
     });
+    if (LED) ledMorph(old, VIEW.ui, lay);
     NS.forEach(function (n) { var S = SEATS[n]; if (S) { S.wm = {}; S.cur = null; S.bns = null; S.rg.cloud = null; S.rg.bonus = null; S.rg.parts = []; S.rg.pops = []; } });   /* 판 크기가 바뀌면 다음 진행부터 다시 맞춘다 */
+  }
+
+  /* ── 261021 LED · 8초 고정 · 바뀜 움직임(같은 곡선 · transform · opacity 만) · 점수 칸 맞추기 ── */
+  function ledSame(a, b) { if (a.length !== b.length) return false; for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) return false; return true; }
+  function ledHold(list, t) {   /* 늘어남(0 → 1 · 1 → 2)은 곧바로 · 줄어듦(2 → 1 · 1 → 0) · 자리 바뀜은 직전 바뀜 뒤 8초가 지나야 · 그동안 빠진 자리는 「대기」 */
+    var cur = ON ? VIEW.list || [] : [];
+    if (ledSame(list, cur)) return list;
+    var grow = cur.every(function (n) { return list.indexOf(n) >= 0; });
+    if (!grow && t - VIEW.at < LED_HOLD) return cur;
+    VIEW.at = t; VIEW.n = (VIEW.n || 0) + 1;
+    return list;
+  }
+  function ledGo(el, tf, op, ms, delay) {   /* 지금 자리에서 tf · op 로 옮겨 놓고 제자리로 되돌아오게(FLIP) */
+    el.style.transition = "none"; el.style.transform = tf; el.style.opacity = String(op);
+    void el.offsetWidth;
+    var d = delay ? " " + delay + "ms" : "";
+    el.style.transition = "transform " + ms + "ms " + LED_EASE + d + ", opacity " + ms + "ms " + LED_EASE + d;
+    el.style.transform = ""; el.style.opacity = "";
+  }
+  function ledRect(u) { var P = u.P, b = P.bd; return { x: P.x + b[0] - 10, y: P.y + b[1] - 10, w: b[2] + 20, h: b[3] + 6 + P.ih + 20 }; }
+  function ledMorph(old, neu, lay) {
+    var om = {}, keep = {};
+    old.forEach(function (u) { om[u.n] = u; });
+    if (lay.line && old.length < 2) ledGo(LINE, "scaleY(.2)", 0, LED_MOVE);
+    if (lay.head) ledGo(HEAD, "", 0, LED_OUT, LED_MOVE - LED_OUT);
+    neu.forEach(function (u, i) {
+      var o = om[u.n];
+      if (!old.length) { ledGo(u.bd, "scale(.94)", 1, LED_MOVE); return; }   /* 대기 → 한 판 · #lv 가 0.35초에 나타나며 판이 살짝 커진다 */
+      if (o) {   /* 남는 자리 · 판은 옛 자리에서 새 자리로 · 글자는 새 자리에서 0.3초 늦게 나타난다 */
+        keep[u.n] = 1;
+        var a = ledRect(o), b = ledRect(u);
+        if (a.x === b.x && a.y === b.y && a.w === b.w && a.h === b.h) return;
+        ledGo(u.bd, "translate(" + Math.round(a.x + a.w / 2 - b.x - b.w / 2) + "px, " + Math.round(a.y + a.h / 2 - b.y - b.h / 2) + "px) scale(" + (a.h / b.h).toFixed(4) + ")", 1, LED_MOVE);
+        Array.prototype.forEach.call(u.e.children, function (c) { if (c !== u.bd && c !== u.idle) ledGo(c, "", 0, LED_OUT, LED_MOVE - LED_OUT); });
+      } else ledGo(u.e, neu.length > 1 ? "translateX(" + (i ? 80 : -80) + "px)" : "translateY(40px)", 0, LED_MOVE);   /* 새 자리 · 제 쪽 바깥에서 들어온다 */
+    });
+    old.forEach(function (o) {   /* 옛 자리 · 남는 자리는 판을 숨기고 글자만 0.3초에 사라짐 · 빠지는 자리는 통째로 0.3초에 사라짐 */
+      if (!o.e.parentNode) return;
+      if (!neu.length) { o.e.parentNode.removeChild(o.e); return; }
+      if (keep[o.n]) o.bd.style.visibility = "hidden";
+      o.e.style.zIndex = "0";
+      o.e.style.transition = "opacity " + LED_OUT + "ms " + LED_EASE; o.e.style.opacity = "0";
+      setTimeout(function () { if (o.e.parentNode) o.e.parentNode.removeChild(o.e); }, LED_OUT + 40);
+    });
+    neu.forEach(function (u) { u.e.style.zIndex = "1"; });
+  }
+  function ledFit(u, k, el, fs, len) {   /* 칸 폭을 넘으면 글자를 줄인다 · 글자 수가 바뀔 때만 잰다 */
+    if (u.c[k] === len) return; u.c[k] = len;
+    el.style.fontSize = fs + "px"; el.style.lineHeight = fs + "px";
+    var f = fs; while (f > fs * 0.5 && el.scrollWidth > el.clientWidth + 1) { f -= 6; el.style.fontSize = f + "px"; el.style.lineHeight = f + "px"; }
   }
 
   /* ── 켜기 · 끄기 · 광고 루프 멈춤 ── */
@@ -477,11 +545,15 @@
       if (TY.hold) TY.hold(true);
       LV.classList.remove("out"); LV.classList.add("on"); void LV.offsetWidth; LV.classList.add("in");
       body.classList.add("lvOn");
+      if (LED && window.__tyled) window.__tyled.idle(false);
     } else {
       LV.classList.add("out"); LV.classList.remove("in");
       var from = ANY_END ? "rank" : "ad"; ANY_END = false;
+      if (LED) { if (window.__tyled) window.__tyled.idle(true, from); }   /* 261021 LED · 가로 대기 루프 · 세로 광고 루프는 멈춘 채 둔다 */
+      else {
       if (TY.from) TY.from(from);
       if (TY.hold) TY.hold(false);
+      }
       OFF_T = setTimeout(function () { if (!ON) { LV.classList.remove("on", "out"); body.classList.remove("lvOn"); VIEW.key = ""; VIEW.ui.forEach(function (u) { if (u.e.parentNode) u.e.parentNode.removeChild(u.e); }); VIEW.ui = []; } }, 260);
     }
   }
@@ -502,6 +574,7 @@
       if (!WS.up && t - WS.down > DROP_MS) SEATS[n] = null;
     });
     var list = shown();
+    if (LED) list = ledHold(list, t);
     if (!list.length) { liveOn(false); return; }
     liveOn(true);
     layout(list);
@@ -530,6 +603,7 @@
   function pct(a, p) { if (!a.length) return null; var s = a.slice().sort(function (x, y) { return x - y; }); return s[Math.min(s.length - 1, Math.floor(p * s.length))]; }
   window.__tvlive = {
     seats: SEATS, ws: WS, q: Q, delay: DELAY,
+    view: function () { return { led: LED, seats: LEDS.slice(), list: (VIEW.list || []).slice(), on: ON, at: VIEW.at || 0, n: VIEW.n || 0, lay: VIEW.lay ? (LED ? "led" : VIEW.ori) + VIEW.lay.seats.length : "" }; },
     off: function () { return OFF; }, fps: function () { return FPS.v; }, on: function () { return ON; },
     lat: function () { return { n: LAT.length, p50: pct(LAT, 0.5), p95: pct(LAT, 0.95), max: pct(LAT, 1) }; },
     latReset: function () { LAT.length = 0; DRAW.length = 0; DRAW_EV.length = 0; COST.length = 0; },

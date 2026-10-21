@@ -1,0 +1,105 @@
+/* 1F 타자왕 · 55인치 가로 LED(?live=1&seats=1,2&o=land · 261021) · led.js 가 붙인다 · 색 · 글꼴 토큰은 index.html :root 그대로 · 곡선 하나(.2,.7,.2,1) */
+body.led #stage, body.led #net, body.led #demoMark { visibility: hidden; }
+#led { position: fixed; inset: 0; z-index: 40; overflow: hidden;
+  background: radial-gradient(circle, var(--wood) 0 calc(var(--ldot, 36px) * .056), transparent calc(var(--ldot, 36px) * .07)) 50% 50% / var(--ldot, 36px) var(--ldot, 36px), var(--night); }
+#ledSt, #ledBnSt { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; margin: -540px 0 0 -960px; transform-origin: 50% 50%; }
+#ledSt > div { position: absolute; }
+
+/* 머리 · 어느 장면이든 무엇인지 */
+#ledHd { left: 96px; right: 96px; top: 44px; height: 64px; display: flex; align-items: center; justify-content: space-between; }
+#ledHd b { font-family: var(--neo); font-weight: 400; font-size: 52px; line-height: 64px; color: var(--o100); text-shadow: 4px 4px 0 var(--ink); white-space: nowrap; }
+#ledHd span { font-family: var(--pre); font-weight: 600; font-size: 30px; line-height: 40px; color: var(--tan); white-space: nowrap; }
+#ledNet { right: 96px; top: 1030px; font-family: var(--pre); font-size: 26px; line-height: 32px; color: var(--dim); display: none; }
+body.off #ledNet { display: block; }
+#ledDemo { left: 96px; top: 1030px; font-family: var(--pre); font-size: 26px; line-height: 32px; color: var(--dim); display: none; }
+body.demo #ledDemo { display: block; }
+
+/* 장면 · 들어옴 0.45초(아래에서 40px) · 사라짐 0.3초 */
+.ls { position: absolute; inset: 0; display: none; opacity: 1; transition: opacity .3s cubic-bezier(.2,.7,.2,1); }
+.ls.on { display: block; }
+.ls.out { opacity: 0; }
+.ls > div { position: absolute; }
+.lsIn { opacity: 0; transform: translateY(40px); transition: opacity .45s cubic-bezier(.2,.7,.2,1), transform .45s cubic-bezier(.2,.7,.2,1); }
+.ls.in .lsIn { opacity: 1; transform: translateY(0); }
+
+/* 하는 법 · 세 칸 */
+.lsH { left: 96px; top: 184px; width: 1728px; font-family: var(--pre); font-weight: 800; font-size: 88px; line-height: 112px; letter-spacing: -2px; color: #fff; white-space: nowrap; }
+.lsH i { font-style: normal; color: var(--o100); }
+.lsSt { top: 404px; width: 544px; height: 560px; }
+.lsSt > div { position: absolute; }
+.lsBx { left: 0; top: 0; width: 544px; height: 380px; display: flex; align-items: center; justify-content: center; background: var(--bark); box-shadow: var(--line4), inset 0 0 0 4px var(--wood), inset 0 0 0 8px var(--tan); }
+.lsNo { left: -24px; top: -24px; z-index: 2; width: 88px; height: 88px; background: var(--o100); color: var(--btn); font-family: var(--neo); font-size: 64px; line-height: 88px; text-align: center; box-shadow: var(--line4); }
+.lsLb { left: -30px; top: 428px; width: 604px; text-align: center; font-family: var(--pre); font-weight: 800; font-size: 58px; line-height: 72px; letter-spacing: -1px; color: var(--cream); white-space: nowrap; }
+.lsLb b { font-weight: 800; color: var(--o100); }
+.lsNtb { position: relative; width: 300px; height: 200px; margin-top: -40px; background: var(--night); box-shadow: 0 0 0 12px var(--tan2); display: flex; align-items: center; justify-content: center; }
+.lsNtb:after { content: ""; position: absolute; left: -46px; right: -46px; bottom: -60px; height: 28px; background: var(--tan2); }
+.lsScr { position: relative; width: 156px; height: 156px; background: var(--cream); }
+.lsScr i { position: absolute; left: -14px; top: -14px; right: -14px; bottom: -14px;
+  background: linear-gradient(var(--o100), var(--o100)) 0 0 / 44px 10px, linear-gradient(var(--o100), var(--o100)) 0 0 / 10px 44px,
+    linear-gradient(var(--o100), var(--o100)) 100% 0 / 44px 10px, linear-gradient(var(--o100), var(--o100)) 100% 0 / 10px 44px,
+    linear-gradient(var(--o100), var(--o100)) 0 100% / 44px 10px, linear-gradient(var(--o100), var(--o100)) 0 100% / 10px 44px,
+    linear-gradient(var(--o100), var(--o100)) 100% 100% / 44px 10px, linear-gradient(var(--o100), var(--o100)) 100% 100% / 10px 44px; background-repeat: no-repeat; }
+.lsKey { width: 330px; height: 168px; margin-top: -20px; display: flex; align-items: center; justify-content: center; background: var(--cream); color: var(--btn); font-family: var(--neo); font-size: 64px; letter-spacing: 3px;
+  box-shadow: 0 0 0 9px var(--ink), 0 24px 0 9px var(--wood2); }
+.lsWd { position: relative; width: 440px; height: 240px; }
+.lsWd span { position: absolute; padding: 0 22px; font-family: var(--neo); font-size: 54px; line-height: 80px; background: #FFEBE0; color: var(--btn); box-shadow: 0 0 0 4px var(--ink); white-space: nowrap; }
+.lsWd .a { left: 10px; top: 30px; background: var(--o100); box-shadow: 0 0 0 4px var(--ink), 0 0 0 10px var(--cream); }
+.lsWd .b { left: 300px; top: 140px; }
+
+/* 상품 · 세 칸 · 같은 어두운 판 + 얇은 오렌지 선 · 순위 숫자만 오렌지(1위만 밝게) */
+.lsPc { top: 150px; width: 544px; height: 650px; background: var(--bark); box-shadow: inset 0 0 0 4px var(--o100); }
+.lsPc .no { position: absolute; left: 32px; top: 24px; font-family: var(--neo); font-size: 120px; line-height: 120px; color: var(--deep); }
+.lsPc.p1 .no { color: var(--o100); text-shadow: 6px 6px 0 var(--ink); }
+.lsPc .im { position: absolute; left: 112px; top: 60px; width: 320px; height: 320px; background: #fff; display: flex; align-items: center; justify-content: center; }
+.lsPc .im img { width: 290px; height: 290px; object-fit: contain; display: block; }
+.lsPc b { position: absolute; left: 0; right: 0; top: 420px; text-align: center; font-family: var(--pre); font-weight: 800; font-size: 60px; line-height: 72px; letter-spacing: -1px; color: var(--cream); white-space: nowrap; }
+.lsPc small { position: absolute; left: 0; right: 0; top: 506px; text-align: center; font-family: var(--pre); font-weight: 600; font-size: 40px; line-height: 50px; color: var(--tan2); }
+.lsPf { left: 96px; top: 868px; width: 1728px; text-align: center; font-family: var(--pre); font-weight: 800; font-size: 60px; line-height: 76px; letter-spacing: -1px; color: var(--cream); white-space: nowrap; }
+.lsPf b { font-weight: 800; color: var(--o100); }
+
+/* 오늘 순위 · 1~5위 | 6~10위 · 1~3위 줄 색은 세로 TV 와 같음 */
+.lsRh { left: 96px; top: 128px; font-family: var(--neo); font-size: 104px; line-height: 112px; letter-spacing: 4px; color: var(--o100); text-shadow: 6px 6px 0 var(--deep); white-space: nowrap; }
+.lsRs { left: 96px; top: 252px; font-family: var(--neo); font-size: 44px; line-height: 52px; color: var(--cream); white-space: nowrap; }
+.lsR { position: absolute; width: 840px; height: 112px; display: flex; align-items: center; padding: 0 36px; background: var(--bark); font-family: var(--neo); font-size: 58px; line-height: 64px; }
+.lsR .no { flex: none; width: 112px; color: var(--tan); }
+.lsR .nm { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--cream); }
+.lsR .lsSc { flex: none; margin-left: 24px; white-space: nowrap; color: var(--tan2); font-size: 52px; }
+.lsR.nil .no { color: var(--dim); }
+.lsR.r1 { background: var(--o100); } .lsR.r2 { background: var(--o60); } .lsR.r3 { background: var(--o30); }
+.lsR.r1 > span, .lsR.r2 > span, .lsR.r3 > span { color: var(--btn); }
+.lsRe { right: 96px; top: 986px; font-family: var(--neo); font-size: 40px; line-height: 48px; color: var(--tan2); white-space: nowrap; }
+.lsRn { left: 0; right: 0; top: 560px; text-align: center; font-family: var(--pre); font-weight: 800; font-size: 64px; line-height: 80px; color: var(--o60); display: none; }
+
+/* 중계 · LED 한 자리(가운데 판 · 양옆 띠) */
+#lvHead.led { left: 96px; right: auto; top: 884px; width: 440px; height: auto; flex-direction: column; align-items: flex-start; gap: 20px; }
+.lvSeat.ledOne .lvNick { color: var(--cream); }
+.lvSeat.ledOne .lvScl { font-size: 40px; line-height: 48px; }
+.lvSeat.ledOne .lvSc { width: 452px; overflow: hidden; }
+.lvSeat.ledOne .lvRk { width: 452px; }
+.lvSeat.ledOne .lvRk span { display: block; font-size: 52px; line-height: 66px; white-space: normal; }
+.lvSeat.ledOne .lvStg { color: var(--tan2); }
+.lvSeat.ledOne .lvRk.up, .lvSeat.ledHalf .lvRk.up { opacity: 1; transform: none; transition: none; }   /* 순위가 오를 때 붙는 .up 이 index.html 의 전역 .up(숨김 · 세로 광고 루프용)에 걸려 줄이 사라지던 것 막음 */
+/* 중계 · LED 두 자리(반 화면마다 세로 1자리 판의 짜임) */
+.lvSeat.ledHalf .lvTag { width: 156px; height: 140px; font-size: 120px; line-height: 140px; box-shadow: 0 0 0 5px var(--ink), 8px 8px 0 5px var(--ink); }
+.lvSeat.ledHalf .lvSc { width: 480px; overflow: hidden; text-shadow: 6px 6px 0 var(--ink); }
+.lvSeat.ledHalf .lvRk span { font-size: 48px; }
+/* 결과 · 판 폭 740 · 760 에 맞춘 크기 */
+.lvSeat.ledOne .lvRes b, .lvSeat.ledHalf .lvRes b { font-size: 120px; line-height: 132px; }
+.lvSeat.ledOne .lvRes em, .lvSeat.ledHalf .lvRes em { font-size: 68px; line-height: 78px; }
+.lvSeat.ledOne .lvRes small, .lvSeat.ledHalf .lvRes small { font-size: 44px; line-height: 56px; }
+.lvSeat.ledOne .lvIdle b, .lvSeat.ledHalf .lvIdle b { font-size: 120px; color: var(--o100); }
+.lvSeat.ledOne .lvIdle span, .lvSeat.ledHalf .lvIdle span { font-size: 56px; }
+
+/* 오늘 1위 바뀜 띠 · 왼쪽에서 0.45초 · 3.6초 · 0.3초에 사라짐 · 화면만 */
+#ledTop { position: fixed; inset: 0; z-index: 60; overflow: hidden; pointer-events: none; }
+#ledBn { position: absolute; left: 0; top: 800px; width: 1920px; height: 150px; display: flex; align-items: center; justify-content: center; gap: 48px; background: var(--ink);
+  box-shadow: inset 0 6px 0 var(--o100), inset 0 -6px 0 var(--o100); opacity: 0; transform: translateX(-100%); visibility: hidden; }
+#ledBn.in { visibility: visible; opacity: 1; transform: translateX(0); transition: transform .45s cubic-bezier(.2,.7,.2,1), opacity .45s cubic-bezier(.2,.7,.2,1); }
+#ledBn.in.out { opacity: 0; transition: opacity .3s cubic-bezier(.2,.7,.2,1); }
+#ledBn i { font-style: normal; font-family: var(--neo); font-size: 72px; line-height: 80px; color: var(--o100); white-space: nowrap; }
+#ledBn b { max-width: 900px; overflow: hidden; text-overflow: ellipsis; font-family: var(--pre); font-weight: 800; font-size: 72px; line-height: 88px; letter-spacing: -1px; color: var(--cream); white-space: nowrap; }
+#ledBn em { font-style: normal; font-family: var(--neo); font-size: 64px; line-height: 80px; color: var(--tan2); white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ls, .lsIn, #ledBn.in, #ledBn.in.out { transition: none !important; }
+}
