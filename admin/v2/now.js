@@ -90,7 +90,7 @@ function nwPrize(b){
   return '<div class="card"><h2>경품 <span class="cap">남은 수</span><span class="r"><button class="btn sm" type="button" onclick="go(\'prize\')">경품 · 재고</button></span></h2>'+
     drRow("선착순 가습기","지급 "+nwD("fx:got", fx.got)+" · 달성순 · 17:00 마감"+(fx.on?"":" · 꺼짐"),'<span class="big">'+n0(fx.left)+'<small> / '+n0(fx.cap)+'</small></span>')+
     drRow("룰렛","사용 "+nwD("st:rl", st.used)+"명 · 소진 안내 "+(b.rout?"켜짐":"꺼짐"),(rl?'<span class="big">'+rl+'</span>':'')+(b.rout?tag("소진 안내","warn"):tag("진행 중","ok")))+
-    drRow("행운권","가진 사람 "+nwD("tk", st.holders)+"명",drBig("tk", st.tickets, "장"))+'</div>';
+    drRow("행운권","가진 사람 "+nwD("tk", st.holders)+"명",drBig("lky", st.tickets, "장"))+'</div>';
 }
 function nwFocus(b, ph){
   var id=ph.id, h="", t="";
@@ -121,7 +121,7 @@ function nwFocus(b, ph){
   } else if(id==="close"){ t="Closing · 추첨";
     var dr2=b.draw&&b.draw.scr, st2=b.st||{};
     h=rowH("추첨 화면",dr2==null?"연결 없음":"마지막 신호 "+n0(dr2)+"초 전",dr2==null||dr2>15?stt("warn","확인"):stt("ok","연결"))+
-      drRow("행운권","가진 사람 "+nwD("tk", st2.holders)+"명 · 당첨 "+nwD("draw", b.draw&&b.draw.wins)+"명",drBig("tk", st2.tickets, "장"))+
+      drRow("행운권","가진 사람 "+nwD("tk", st2.holders)+"명 · 당첨 "+nwD("draw", b.draw&&b.draw.wins)+"명",drBig("lky", st2.tickets, "장"))+
       drRow("아이디어 한 줄","16:00 마감 · 낸 사람 "+nwD("idea", b.idea&&b.idea.people)+"명",drBig("idea", b.idea&&b.idea.n, "건"))+
       '<div class="mt fx-w"><button class="btn sm pri" type="button" onclick="go(\'stage\',\'draw\')">추첨 진행판</button><button class="btn sm" type="button" onclick="go(\'stage\',\'ik\')">아이디어왕</button><button class="btn sm" type="button" onclick="go(\'stage\',\'lk7\')">7등 굿즈</button></div>';
   } else { t="행사 후 · 발송 대상";

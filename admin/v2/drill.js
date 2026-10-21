@@ -113,7 +113,7 @@ function drDef(key){
   return null;
 }
 /* 사람별 값이 서버에 없는 칸 · 가장 가까운 화면 */
-var DR_GO={ roster:function(){ go("people","find"); }, usage:function(){ go("people","visit"); }, draw:function(){ go("stage","draw"); } };
+var DR_GO={ roster:function(){ go("people","find"); }, usage:function(){ go("people","visit"); }, draw:function(){ go("stage","draw"); }, lky:function(){ if(DRW.k) drwClose(); go("stage","now"); } };   /* 261021 행운권 장 숫자(지금 탭 · 한 사람 카드) = 행운권 탭 현황 */
 /* 누를 수 있는 숫자 · v = 보일 html · 0 이면 그냥 글자 */
 function drN(key, v, n){
   if(n!=null&&!num(n)) return v;

@@ -193,7 +193,7 @@ function pcHtml(d){
     var sub=x?((x.at?fmtD(x.at):"받음")+(x.src&&x.src!=="본인"?" · "+(x.byName||x.src):"")+(rid!==id?" · 한쪽":"")):"";
     return '<div class="pc-pr'+(x?" got":"")+'"><span class="t"><b>'+esc(nm)+'</b>'+(sub?'<span class="cap">'+esc(sub)+'</span>':'')+'</span>'+(act||'<span class="cap">'+(x?"":"없음")+'</span>')+'</div>'; };
   var rl=d.roulette||{};
-  h+=pcSec('스탬프 <b class="n">'+Math.min(6,num(d.n))+' / 6</b> · 행운권 <b class="n">'+n0(d.tickets||0)+'</b>장',
+  h+=pcSec('스탬프 <b class="n">'+Math.min(6,num(d.n))+' / 6</b> · 행운권 '+drN("lky", '<b class="n">'+n0(d.tickets||0)+'</b>', d.tickets)+'장',
     '<div class="pc-st">'+STAMP8.filter(function(s){ return s[0]!=="p3"; }).map(function(s){ return cell(s[0],s[1],s[2]); }).join("")+
     /* 261016 3단계 · 07 프로그램 참여 한 칸(세부 세 줄 · 상태 · 부여 · 취소 · 규칙 한 줄) */
     '<div class="pc-c pc-pg'+(pg?" got":"")+'"><div class="pc-pgh"><span class="no">07</span><b>프로그램 참여</b><span class="n pc-pgn">'+pg+' / 2</span></div><div class="cap">17F 강연 · 10F 실습 · 라운지 · 커피챗, 합쳐 최대 2개</div>'+
