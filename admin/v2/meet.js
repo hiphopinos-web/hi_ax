@@ -7,11 +7,12 @@
  * 끌어다 놓기 = 마우스(6px 움직이면) · 터치(길게 누르기 · 보조) · 키보드(카드에서 Space = 고르기 → 칸에서 Enter) · 사람 상세 「옮기기」도 같은 고르기
  * 노쇼(커피챗) = cchat_status 취소(why 노쇼) 한 번 · 서버가 노쇼 표시 · 칸 비움 · 알림 거둠을 함께 · 되돌리기 7초(261017)
  * 261017 커피챗 한 칸(회차 × 테이블) = 최대 3명(사용자 「비슷한 주제면 2~3명」) · 칸 안에서 카드가 위아래로 쌓임 · 4명째는 놓지 않음 · 서버도 4명째를 seat 로 거절
- * 왔음 · 종료 단추 = 누르는 동안 그 사람 단추 잠금(MT.qb) */
+ * 왔음 · 종료 단추 = 누르는 동안 그 사람 단추 잠금(MT.qb)
+ * 261021 (사용자 확정) 라운지 날짜 탭 = lng_board days(사전 면담 10/22 · 10/23 + 당일 10/26) · 탭마다 같은 칸 · 놓기 = resv_move day · 다른 날짜로 옮기기 = 「옮기기」(고르기) → 날짜 탭 → 칸 · 칸 미정은 날짜 공통 */
 var MT_REST_DEF=["12:00","12:30"], CC_SEAT_MAX=3, CC_SEAT_TX="한 칸 최대 "+CC_SEAT_MAX+"명입니다";
 function mtAt(M, k){ var x=M.at[k]; return M.p==="cc"?(x||[]):x?[x]:[]; }   /* 칸에 놓인 사람들(커피챗 = 배열 · 라운지 = 한 명) */
 var MT={ ov:lsGet("axf_v2_meet_ov",{})||{}, ord:lsGet("axf_v2_meet_ord",[])||[], ordD:lsGet("axf_v2_meet_ordd",0)?1:0, day:lsGet("axf_v2_meet_day",0)?1:0,
-  pick:null, past:0, ns:{}, log:{}, fail:null, det:null, qno:{}, nowT:null, memo:null, jd:0, qb:{} };
+  pick:null, past:0, ns:{}, log:{}, fail:null, det:null, qno:{}, nowT:null, memo:null, jd:0, qb:{}, lnD:lsGet("axf_v2_meet_lnd","")||"" };
 var MTD=null;
 function mtSave(){ lsSet("axf_v2_meet_ov",MT.ov); lsSet("axf_v2_meet_ord",MT.ord); lsSet("axf_v2_meet_ordd",MT.ordD); }
 function mtSub(){ var a=String(S.sub.meet||"cc").split("-"), p=a[0]==="ln"?"ln":"cc", v=a[1]||"board";
@@ -59,16 +60,27 @@ function meetCount(){ var d=S.data.cc; if(d&&d.ok) return mtCcM().q.filter(funct
 /* ── 3. 라운지 모양 · lng_board(cells · none · over) ── */
 function mtRest(){ var d=S.data.ccf, rows=d&&d.ok&&d.rows||[], r=rows.filter(function(x){ return x.k==="라운지_쉬는칸"; })[0];
   return r?String(r.v||"").split(/[\s,·]+/).map(hm).filter(Boolean):MT_REST_DEF; }
+/* 261021 날짜 · lng_board days(d · l 「10/22(목)」 · n · main) · 고른 날짜 = 이 기기(axf_v2_meet_lnd) · 없으면 오늘 · 다음 날짜 · 마지막 · 옛 서버(days 없음) = 날짜 없음("") */
+function mtLnDays(){ var d=S.data.lgb; return d&&d.ok&&Array.isArray(d.days)&&d.days.length?d.days:null; }
+function mtLnDay(){ var ds=mtLnDays(); if(!ds) return ""; var have=ds.map(function(x){ return x.d; }), t=String(S.data.lgb.today||"");
+  if(MT.lnD&&have.indexOf(MT.lnD)>=0) return MT.lnD; if(have.indexOf(t)>=0) return t; var nx=ds.filter(function(x){ return x.d>=t; })[0]; return (nx||ds[ds.length-1]).d; }
+function mtDl(d){ var ds=mtLnDays()||[], x=ds.filter(function(y){ return y.d===d; })[0]; if(x) return x.l; var m=/^(\d{4})-(\d\d)-(\d\d)$/.exec(String(d||"")); if(!m) return "";
+  return (+m[2])+"/"+(+m[3])+"("+"일월화수목금토".charAt(new Date(+m[1],+m[2]-1,+m[3]).getDay())+")"; }
+function mtLnDaySet(dd){ MT.lnD=dd; lsSet("axf_v2_meet_lnd",dd); MT.past=0; var b=el("mtgB"); if(b) b._h=""; var h=el("mtgHd"); if(h) h._h=""; paint(); }
 function mtLnM(){
   var d=S.data.lgb; if(!d||!d.ok||!Array.isArray(d.cells)) return null;
-  var rest=mtRest(), at={}, rows=[], by={}, q=[], out=[], seats=num(d.seats)||2, tb=[];
+  var dd=mtLnDay(), src=dd&&d.by&&d.by[dd]?d.by[dd]:d, rest=mtRest(), at={}, rows=[], by={}, q=[], out=[], seats=num(d.seats)||2, tb=[];
   for(var s=1;s<=seats;s++) tb.push(String(s));
-  d.cells.forEach(function(c){ var t=hm(c.from), any=(c.seats||[]).some(Boolean);
+  /* by = 모든 날짜 사람(다른 날짜 칸으로 옮기기 · 상세) · at · out = 고른 날짜만 */
+  if(dd&&d.by) Object.keys(d.by).forEach(function(k){ if(k===dd) return; var o=d.by[k]||{};
+    (o.cells||[]).forEach(function(c){ (c.seats||[]).forEach(function(x,j){ if(x){ x._k=hm(c.from)+":"+(j+1); x._d=k; by[String(x.id)]=x; } }); });
+    (o.over||[]).forEach(function(x){ x._k=""; x._d=k; by[String(x.id)]=x; }); });
+  src.cells.forEach(function(c){ var t=hm(c.from), any=(c.seats||[]).some(Boolean);
     rows.push({ t:t, to:hm(c.to), rest:rest.indexOf(t)>=0&&!any });
-    (c.seats||[]).forEach(function(x,j){ if(x){ var k=t+":"+(j+1); x._k=k; at[k]=x; by[String(x.id)]=x; } }); });
-  (d.none||[]).forEach(function(x){ x._k=""; by[String(x.id)]=x; q.push(x); });
-  (d.over||[]).forEach(function(x){ x._k=""; by[String(x.id)]=x; out.push(x); });
-  return { p:"ln", d:d, at:at, rows:rows, by:by, q:q, out:out, tables:tb, len:num(d.step)||30 };
+    (c.seats||[]).forEach(function(x,j){ if(x){ var k=t+":"+(j+1); x._k=k; x._d=dd; at[k]=x; by[String(x.id)]=x; } }); });
+  (d.none||[]).forEach(function(x){ x._k=""; x._d=""; by[String(x.id)]=x; q.push(x); });
+  (src.over||[]).forEach(function(x){ x._k=""; x._d=dd; by[String(x.id)]=x; out.push(x); });
+  return { p:"ln", d:d, at:at, rows:rows, by:by, q:q, out:out, tables:tb, len:num(d.step)||30, day:dd, dl:dd?mtDl(dd):"", today:!dd||dd===String(d.today||"") };
 }
 function meetLnCount(){ var L=mtLnM(); return L?L.q.length:null; }
 
@@ -82,7 +94,7 @@ SCREENS.meet={
     return a; },
   mount:function(vb){
     var s=mtSub();
-    el("phCap").textContent=s.v==="ideaall"?"앱 · 부스 · 라운지 · 커피챗에서 남긴 한 줄 · 숫자는 시험 사번 뺀 수 · 줄을 누르면 전문":s.p==="cc"?"18F 커피챗 · 1:1 20분 · 신청 순서대로 놓기 · 저장 뒤 알림 보내기":"1F AX 라운지 · 1:1 상담 · 사전 명단 · 놓으면 바로 반영(알림 없음)";
+    el("phCap").textContent=s.v==="ideaall"?"앱 · 부스 · 라운지 · 커피챗에서 남긴 한 줄 · 숫자는 시험 사번 뺀 수 · 줄을 누르면 전문":s.p==="cc"?"18F 커피챗 · 1:1 20분 · 신청 순서대로 놓기 · 저장 뒤 알림 보내기":"1F AX 라운지 · 1:1 상담 · 사전 면담 10/22 · 10/23 · 당일 10/26 · 날짜 탭마다 놓기 · 놓으면 바로 반영(알림 없음)";
     vb.innerHTML='<div class="mtg'+(MT.pick?" picking":"")+'" id="mtgR"><div class="mtg-hd" id="mtgHd"></div><div id="mtgB"></div></div>';
     var b=el("mtgB");
     if(s.v==="list"){ if(s.p==="cc") b.innerHTML='<div class="card"><div id="mtgL"></div></div>'; else lgShell(b); }
@@ -105,9 +117,12 @@ function mtHead(s){
   var h='<div class="chips" role="tablist" aria-label="미팅">'+chip("cc","18F 커피챗",cn)+chip("ln","1F AX 라운지",ln)+'</div>'+
     '<div class="mtg-seg" role="group" aria-label="보기">'+vs.map(function(v){ return '<button type="button" aria-pressed="'+(s.v===v[0])+'" class="'+(s.v===v[0]?"on":"")+'" onclick="mtGo(\''+s.p+'\',\''+v[0]+'\')">'+v[1]+'</button>'; }).join("")+'</div>'+
     '<button type="button" class="mtg-sw" role="switch" aria-checked="'+(MT.day?"true":"false")+'" onclick="mtDay()"><i></i>당일 모드</button>';
+  var ds=s.p==="ln"&&s.v==="board"?mtLnDays():null;   /* 261021 라운지 날짜 탭 */
+  if(ds){ var cd=mtLnDay(), td=String(S.data.lgb.today||"");
+    h=h.replace('<button type="button" class="mtg-sw"', '<div class="mtg-seg mtg-days" role="tablist" aria-label="날짜">'+ds.map(function(x){ var on=x.d===cd; return '<button type="button" role="tab" aria-selected="'+on+'" class="'+(on?"on":"")+'" onclick="mtLnDaySet(\''+x.d+'\')">'+esc(x.l)+(x.d===td?' · 오늘':'')+' <span class="c" style="margin-left:4px;font-weight:500;font-variant-numeric:tabular-nums;color:'+(on?"var(--navy)":"var(--tx3)")+'">'+n0(num(x.n))+'</span></button>'; }).join("")+'</div><button type="button" class="mtg-sw"'); }
   if(hd._h!==h){ hd._h=h; hd.innerHTML=h; }
 }
-function mtDay(){ MT.day=MT.day?0:1; lsSet("axf_v2_meet_day",MT.day); MT.pick=null; MT.fail=null; var s=mtSub(); if(MT.day&&s.v!=="board") mtGo(s.p,"board"); else { var b=el("mtgB"); if(b) b._h=""; paint(); } reload(["cc","lgb"]); }
+function mtDay(){ MT.day=MT.day?0:1; lsSet("axf_v2_meet_day",MT.day); MT.pick=null; MT.fail=null; if(MT.day){ var dsT=mtLnDays(), tT=S.data.lgb&&String(S.data.lgb.today||""); if(dsT&&dsT.some(function(x){ return x.d===tT; })){ MT.lnD=tT; lsSet("axf_v2_meet_lnd",tT); } var hT=el("mtgHd"); if(hT) hT._h=""; } var s=mtSub(); if(MT.day&&s.v!=="board") mtGo(s.p,"board"); else { var b=el("mtgB"); if(b) b._h=""; paint(); } reload(["cc","lgb"]); }
 
 /* ── 5. 시간표 ── */
 function mtBoardPaint(p){
@@ -137,7 +152,7 @@ function mtCard(M, x, no){
   var stt0=mtTagSt(M.p, x); if(stt0) tags.unshift(stt0);
   if(MT.day&&k){
     var r0=mins(mtKp(k)[0]), nm=mtNowMin();
-    if(!inn&&!done&&!ns&&nm>=r0+5&&nm<r0+M.len) tags.unshift(tag("늦음","warn"));
+    if(!inn&&!done&&!ns&&(cc||M.today)&&nm>=r0+5&&nm<r0+M.len) tags.unshift(tag("늦음","warn"));   /* 261021 라운지 = 고른 날짜가 오늘일 때만 */
     if(ns) sc=" st-no"; else if(done) sc=" st-dn";
     var qb=mtQb(M.p, key)?' aria-disabled="true" aria-busy="true"':'';
     if(!done&&!ns) acts='<div class="acts"><button type="button" data-a="in" aria-pressed="'+inn+'" class="'+(inn?"on":"")+'"'+qb+'>'+(qb?"처리 중":"왔음")+'</button><button type="button" data-a="ns"'+qb+'>노쇼</button><button type="button" data-a="dn"'+qb+'>종료</button></div>';
@@ -152,12 +167,12 @@ function mtCard(M, x, no){
 }
 function mtBoardH(p){
   var cc=p==="cc", M=cc?mtCcM():mtLnM(); if(!M) return band("info","이 서버는 아직 라운지 시간표를 모릅니다 · 서버 갱신 뒤");
-  var nm=mtNowMin(), len=M.len, rows=M.rows, h="";
+  var nm=mtNowMin(), len=M.len, rows=M.rows, h="", DAY=MT.day&&(cc||M.today);   /* 261021 라운지 = 고른 날짜가 오늘일 때만 지금 · 다음 띠 · 지난 칸 접기 */
   var on=function(r){ return !r.rest; }, live=rows.filter(on);
-  var curR=MT.day?live.filter(function(r){ return nm>=mins(r.t)&&nm<mins(r.t)+len; })[0]:null;
-  var nxt=MT.day?live.filter(function(r){ return mins(r.t)>(curR?mins(curR.t):nm); })[0]:null;
+  var curR=DAY?live.filter(function(r){ return nm>=mins(r.t)&&nm<mins(r.t)+len; })[0]:null;
+  var nxt=DAY?live.filter(function(r){ return mins(r.t)>(curR?mins(curR.t):nm); })[0]:null;
   var lab=function(t){ return (cc?"테이블 ":"미팅룸 ")+t; };
-  if(MT.day){
+  if(DAY){
     var who=function(r,t){ if(!r) return "-"; var xs=mtAt(M, r.t+":"+t); return xs.length?xs.map(personTwo).join(" · "):"빈 칸"; };
     h+='<div class="mtg-now"><div class="cur"><h3>'+(curR?'지금 <em class="n">'+curR.t+'</em> 회차':'지금 진행 중인 회차 없음')+'</h3><div class="rw">'+(curR?M.tables.map(function(t){ return '<div><small>'+lab(t)+'</small><span>'+who(curR,t)+'</span></div>'; }).join(""):'')+'</div></div>'+
       '<div><h3>'+(nxt?'다음 <span class="n">'+nxt.t+'</span> 회차':'다음 회차 없음')+'</h3><div class="rw">'+(nxt?M.tables.map(function(t){ return '<div><small>'+lab(t)+'</small><span>'+who(nxt,t)+'</span></div>'; }).join(""):'')+'</div></div></div>';
@@ -179,24 +194,24 @@ function mtBoardH(p){
     (M.out.length?'<h2 class="mt">칸 밖 <span class="cap n">'+M.out.length+'명</span></h2><p class="cap" style="margin-bottom:6px">'+(cc?"지금 회차 · 테이블 설정에 없는 칸":"운영 시간 밖 칸")+' · 칸으로 끌어 놓기</p><div class="mtg-ql">'+M.out.map(function(x){ return mtCard(M, x, 0); }).join("")+'</div>':'')+
     (cc?'<div class="mt"><button class="btn sm dng" type="button" onclick="ccClose()"'+(ccWaitN()?'':' aria-disabled="true"')+'>희망 접수 마감 · 미선정 알림</button></div>':'')+'</section>';
   /* 오른쪽 · 격자 */
-  h+='<section class="card mtg-bd"><h2>'+(cc?"18F 커피챗 · 1:1 "+len+"분 · 테이블 "+M.tables.join(" · "):"1F AX 라운지 · 1:1 "+len+"분 · 미팅룸 "+M.tables.join(" · "))+'</h2>'+
+  h+='<section class="card mtg-bd"><h2>'+(cc?"18F 커피챗 · 1:1 "+len+"분 · 테이블 "+M.tables.join(" · "):"1F AX 라운지"+(M.dl?" · "+esc(M.dl):"")+" · 1:1 "+len+"분 · 미팅룸 "+M.tables.join(" · "))+'</h2>'+
     (cc&&!ccCfg().srv?'<p class="cap" style="margin-bottom:6px">회차 · 테이블 = 설계값(서버 설정 커피챗_회차 · 커피챗_회차정원을 받으면 그 값)</p>':'')+
     '<div class="mtg-grid" style="grid-template-columns:'+(window.innerWidth<=760?"52px":"76px")+' repeat('+M.tables.length+',minmax(0,1fr))"><div class="th">회차</div>'+M.tables.map(function(t){ return '<div class="th"><b>'+lab(t)+'</b></div>'; }).join("");
-  var pastN=MT.day?live.filter(function(r){ return nm>=mins(r.t)+len; }).length:0, foldDone=false, gap=null, amS=null;
+  var pastN=DAY?live.filter(function(r){ return nm>=mins(r.t)+len; }).length:0, foldDone=false, gap=null, amS=null;
   var flushGap=function(){ if(gap){ h+='<div class="mtg-gap">'+(mins(gap[0])>=11*60&&mins(gap[0])<14*60?"점심 ":"쉬는 시간 ")+gap[0]+"~"+gap[1]+' · 칸 없음</div>'; gap=null; } };
   rows.forEach(function(r){
     if(r.rest){ gap=gap?[gap[0],r.to]:[r.t,r.to]; return; }
     flushGap();
-    var past=MT.day&&nm>=mins(r.t)+len, cur=curR&&curR.t===r.t;
+    var past=DAY&&nm>=mins(r.t)+len, cur=curR&&curR.t===r.t;
     if(past&&!MT.past){ if(!foldDone){ foldDone=true; h+='<button type="button" class="mtg-fold" onclick="MT.past=1;paint()">지난 회차 '+pastN+'개 접힘 · 펼치기</button>'; } return; }
     if(cc&&amS!==!!r.am&&(r.am||amS!==null)){ amS=!!r.am; h+='<div class="mtg-div">'+(r.am?"오전 칸 · 운영진 배정 · 앱 신청 시간 아님":r.t+"부터 · 앱 신청 시간")+'</div>'; }
     var cl=(cur?" cur":"")+(past?" past":"");
     h+='<div class="mtg-tm'+cl+'"><b>'+r.t+'</b><span>~'+r.to+'</span></div>';
     M.tables.forEach(function(t){ var key=r.t+":"+t, xs=mtAt(M, key), n=xs.length, room=cc?n<CC_SEAT_MAX:!n;
-      h+='<div class="mtg-sl'+(n?" fill":"")+(n>1?" multi":"")+(cc&&!room?" full":"")+cl+'" data-drop="'+key+'"'+(room?' tabindex="0" aria-label="'+r.t+' '+lab(t)+(n?" · "+n+"명 · 더 놓을 수 있음":" 빈 칸")+'"':'')+'>'+(n?xs.map(function(x){ return mtCard(M, x, 0); }).join("")+(cc&&n>1?'<span class="mtg-n">'+n+'/'+CC_SEAT_MAX+'</span>':''):'<span class="em">빈 칸</span>')+'</div>'; });
+      h+='<div class="mtg-sl'+(n?" fill":"")+(n>1?" multi":"")+(cc&&!room?" full":"")+cl+'" data-drop="'+key+'"'+(room?' tabindex="0" aria-label="'+(M.dl?M.dl+" ":"")+r.t+' '+lab(t)+(n?" · "+n+"명 · 더 놓을 수 있음":" 빈 칸")+'"':'')+'>'+(n?xs.map(function(x){ return mtCard(M, x, 0); }).join("")+(cc&&n>1?'<span class="mtg-n">'+n+'/'+CC_SEAT_MAX+'</span>':''):'<span class="em">빈 칸</span>')+'</div>'; });
   });
   flushGap();
-  if(MT.day&&MT.past&&pastN) h+='<button type="button" class="mtg-fold" onclick="MT.past=0;paint()">지난 회차 접기</button>';
+  if(DAY&&MT.past&&pastN) h+='<button type="button" class="mtg-fold" onclick="MT.past=0;paint()">지난 회차 접기</button>';
   h+='</div></section></div>';
   return h;
 }
@@ -307,24 +322,28 @@ function mtCcDayDrop(e, to){
     run:function(){ return mtCcRun(items).then(function(res){ return res.fail.length?{ ok:false, msg:res.fail.map(function(f){ return f.nm+" "+f.why; }).join(" · ") }:res; }); },
     done:function(){ paint(); reload(["cc","nb"]); toast("반영했습니다 · "+(r.name||r.emp)+" "+ks[0]+" "+ks[1]); } });
 }
-var MT_MVWHY={ taken:"그 칸은 다 찼습니다", seat:"그 미팅룸은 다른 사람 자리입니다", same:"지금과 같은 자리입니다", closed:"운영 시간 밖입니다", slot:"칸 시각이 맞지 않습니다" };
+var MT_MVWHY={ taken:"그 칸은 다 찼습니다", seat:"그 미팅룸은 다른 사람 자리입니다", same:"지금과 같은 자리입니다", closed:"운영 시간 밖입니다", slot:"칸 시각이 맞지 않습니다", day:"라운지 날짜가 아닙니다" };
 function mtLnDrop(id, to){
   var L=mtLnM(); if(!L) return; var x=L.by[id]; if(!x) return;
   if(to==="q"){ toast("라운지는 칸 미정으로 되돌리지 않습니다 · 다른 칸으로 옮깁니다"); return; }
   if(RV_ON.indexOf(x.st)<0){ toast("끝 · 노쇼 처리한 사람은 옮기지 않습니다",{ bad:1 }); return; }
-  if(x._k===to) return;
+  if(x._k===to&&(!L.day||x._d===L.day)) return;
   if(L.at[to]){ toast("빈 자리에 놓습니다 · 그 자리에는 "+(L.at[to].name||L.at[to].emp)+" 님",{ bad:1 }); return; }
-  var ks=mtKp(to), was=x._k;
-  confirmBox({ t:"이 칸으로 옮길까요?", who:personLine(x)+" · "+(was?mtKp(was).join(" · 미팅룸 "):"칸 미정")+" → "+ks[0]+" · 미팅룸 "+ks[1], sub:"바로 반영 · 참가자에게 알림 없음", ok:"옮기기",
-    run:function(){ return call("resv_move",{ id:x.id, slot:ks[0], seat:ks[1], from:x.st }); },
+  /* 261021 날짜 · 다른 날짜에서 오면 「날짜 바뀜」 · 되돌리기 = 옛 날짜 · 칸 */
+  var ks=mtKp(to), was=x._k, wasD=x._d||"", chD=!!(L.day&&was&&wasD&&wasD!==L.day), dw=function(d){ return d?mtDl(d)+" ":""; };
+  confirmBox({ t:chD?"이 날짜 · 칸으로 옮길까요?":"이 칸으로 옮길까요?", who:personLine(x)+" · "+(was?dw(wasD)+mtKp(was).join(" · 미팅룸 "):"칸 미정")+" → "+dw(L.day)+ks[0]+" · 미팅룸 "+ks[1], sub:"바로 반영 · 참가자에게 알림 없음"+(chD?" · 10분 전 알림도 새 날짜로":""), ok:"옮기기",
+    run:function(){ var q={ id:x.id, slot:ks[0], seat:ks[1], from:x.st }; if(L.day) q.day=L.day; return call("resv_move",q); },
     fail:function(r){ return r&&r.reason==="state"?"이미 "+(r.cur||"다른 상태")+" · 다시 받습니다":MT_MVWHY[r&&r.reason]||""; },
-    done:function(){ mtLgbPut(x, to); paint(); reload(["lgb","resv","nb"]);
-      toast((x.name||x.emp)+" · "+ks[0]+" 미팅룸 "+ks[1], was?{ undo:function(){ var w=mtKp(was); call("resv_move",{ id:x.id, slot:w[0], seat:w[1], from:x.st }).then(function(r){ reload(["lgb","resv"]); toast(r&&r.ok?"되돌렸습니다 · "+w[0]+" 미팅룸 "+w[1]:"되돌리지 못했습니다 · "+(MT_MVWHY[r&&r.reason]||why(r)),{ bad:!(r&&r.ok) }); }); } }:{}); } });
+    done:function(){ mtLgbPut(x, to, L.day); paint(); reload(["lgb","resv","nb"]);
+      toast((x.name||x.emp)+" · "+dw(L.day)+ks[0]+" 미팅룸 "+ks[1], was?{ undo:function(){ var w=mtKp(was), q={ id:x.id, slot:w[0], seat:w[1], from:x.st }; if(wasD) q.day=wasD; call("resv_move",q).then(function(r){ reload(["lgb","resv"]); toast(r&&r.ok?"되돌렸습니다 · "+dw(wasD)+w[0]+" 미팅룸 "+w[1]:"되돌리지 못했습니다 · "+(MT_MVWHY[r&&r.reason]||why(r)),{ bad:!(r&&r.ok) }); }); } }:{}); } });
 }
-function mtLgbPut(x, to){ var d=S.data.lgb; if(!d||!d.cells) return; var ks=mtKp(to), id=String(x.id);
-  d.cells.forEach(function(c){ c.seats=(c.seats||[]).map(function(y){ return y&&String(y.id)===id?null:y; }); });
+function mtLgbPut(x, to, day){ var d=S.data.lgb; if(!d||!d.cells) return; var ks=mtKp(to), id=String(x.id), all=[d.cells];
+  if(d.by) Object.keys(d.by).forEach(function(k){ var o=d.by[k]||{}; all.push(o.cells||[]); o.over=(o.over||[]).filter(function(y){ return String(y.id)!==id; }); });
+  all.forEach(function(cs){ cs.forEach(function(c){ c.seats=(c.seats||[]).map(function(y){ return y&&String(y.id)===id?null:y; }); }); });
   d.none=(d.none||[]).filter(function(y){ return String(y.id)!==id; }); d.over=(d.over||[]).filter(function(y){ return String(y.id)!==id; });
-  var c=d.cells.filter(function(c){ return hm(c.from)===ks[0]; })[0]; if(c) c.seats[num(ks[1])-1]=x; }
+  if(day){ x.day=day; x.dl=mtDl(day); }
+  var put=function(cs){ var c=(cs||[]).filter(function(c){ return hm(c.from)===ks[0]; })[0]; if(c) c.seats[num(ks[1])-1]=x; };
+  if(day&&d.by&&d.by[day]){ put(d.by[day].cells); if(day===d.main) put(d.cells); } else put(d.cells); }
 function mtPickName(){ var pk=MT.pick; if(!pk) return ""; var x=pk.p==="cc"?ccRow(pk.k):(mtLnM()||{ by:{} }).by[pk.k]; return x?personLine(x):""; }
 function mtPickOn(p, k){ MT.pick={ p:p, k:String(k) }; paint(); var b=el("mtgB"), f=b&&b.querySelector('.mtg-sl:not(.fill)'); if(f) f.focus(); }
 function mtPickOff(){ MT.pick=null; paint(); }
@@ -373,7 +392,7 @@ function mtAct(p, k, a){
 function mtDetRow(){ var D=MT.det; if(!D) return null;
   if(D.p==="cc") return ccRow(D.k);
   var L=mtLnM(), x=L&&L.by[D.k], r=typeof rvRow==="function"?rvRow(D.k):null;
-  if(!x&&!r) return null; return { id:D.k, emp:(x||r).emp, name:(x||r).name, dept:(x||r).dept, st:x?x.st:r.status, k:x?x._k:"", ts:r?r.ts:"", memo:r?r.memo:(x.memo||"") }; }
+  if(!x&&!r) return null; return { id:D.k, emp:(x||r).emp, name:(x||r).name, dept:(x||r).dept, st:x?x.st:r.status, k:x?x._k:"", ts:r?r.ts:"", memo:r?r.memo:(x.memo||""), day:(x&&(x._d||x.day))||(r&&r.day)||"" }; }
 function mtOpen(p, k, g){ MT.det={ p:p, k:String(k), g:g||null }; MT.memo=null; mtDetRe(true); mtLogLoad(); }
 function mtDetRe(first){
   var D=MT.det; if(!D) return;
@@ -384,12 +403,12 @@ function mtDetRe(first){
   if(cc){ k=mtSrvK(x); st=x.status; }
   else { k=x.k; st=x.st; }
   var stTag=cc?ccTagH(x):tag(lnView({ status:st }), RV_TAG[st]);
-  h=drwHead(whoOf(x).n||x.emp, [whoSub(x),x.ts?"신청 "+fmtD(x.ts):""].filter(Boolean).join(" · "), whoFlags(whoOf(x))+ ' '+stTag+(k?' '+tag(mtKp(k)[0]+" · "+(cc?"테이블 ":"미팅룸 ")+mtKp(k)[1],"off"):''));
+  h=drwHead(whoOf(x).n||x.emp, [whoSub(x),x.ts?"신청 "+fmtD(x.ts):""].filter(Boolean).join(" · "), whoFlags(whoOf(x))+ ' '+stTag+(k?' '+tag((!cc&&x.day?mtDl(x.day)+" ":"")+mtKp(k)[0]+" · "+(cc?"테이블 ":"미팅룸 ")+mtKp(k)[1],"off"):''));
   if(cc){
     h+='<div class="fld cc-fld">상담 내용 · 원문</div><div class="mtg-orig">'+(x.text?esc(x.text):'<span class="cap">'+esc(x.tag?"관심 "+x.tag+" · 글 없음":"글 없음")+'</span>')+'</div>';
     h+='<dl class="cc-kv"><dt>희망 시간</dt><dd>'+esc(ccPrefTx(x))+'</dd><dt>배정</dt><dd>'+(k?esc(mtKp(k).join(" · 테이블 ")):"대기 줄"+(mtQno(x)?" "+mtQno(x)+"번":""))+'</dd><dt>스탬프</dt><dd>아이디어 한 줄 · 신청 때 · 프로그램 참여 1개 · '+(st==="완료"?"받음":"상담 끝나면")+'</dd></dl>';
   } else {
-    h+='<dl class="cc-kv"><dt>시간</dt><dd>'+(k?esc(mtKp(k)[0]):"칸 미정")+'</dd><dt>미팅룸</dt><dd>'+(k?esc(mtKp(k)[1]):"-")+'</dd><dt>명단</dt><dd>'+(/^사전 명단/.test(x.memo||"")?"사전 명단":esc(x.memo||"사전 명단"))+'</dd><dt>스탬프</dt><dd>프로그램 참여 2개 · '+(st==="완료"?"받음":"상담 끝나면")+'</dd></dl>';
+    h+='<dl class="cc-kv"><dt>날짜</dt><dd>'+(x.day?esc(mtDl(x.day)):"-")+'</dd><dt>시간</dt><dd>'+(k?esc(mtKp(k)[0]):"칸 미정")+'</dd><dt>미팅룸</dt><dd>'+(k?esc(mtKp(k)[1]):"-")+'</dd><dt>명단</dt><dd>'+(/^사전 명단/.test(x.memo||"")?"사전 명단":esc(x.memo||"사전 명단"))+'</dd><dt>스탬프</dt><dd>프로그램 참여 2개 · '+(st==="완료"?"받음":"상담 끝나면")+'</dd></dl>';
   }
   if(nOk) h+='<div class="fld">운영자 메모 <span class="cap">참가자에게 보이지 않음 · 500자</span></div><textarea class="mtg-memo" id="mtMemo" maxlength="500" aria-label="운영자 메모">'+esc(MT.memo!=null?MT.memo:(n&&n.memo||""))+'</textarea>'+
     '<div class="btns mt"><span class="cap" style="flex:1;align-self:center">'+(n&&n.at?esc((n.by||"")+" · "+fmtD(n.at)+" 저장"):"")+'</span><button class="btn sm pri" type="button" id="mtMemoGo" onclick="mtMemoSave()">메모 저장</button></div>';
@@ -406,7 +425,7 @@ function mtDetRe(first){
     else if(st==="대기"||st==="매칭") b.push('<button class="btn dng" type="button" onclick="ccSet(\''+e+'\',\'취소\')">신청 취소</button>');
   } else {
     var id=jq(D.k), rv=function(to,lab,cls){ return '<button class="btn '+(cls||"")+'" type="button" onclick="rvAsk(\''+id+'\',\''+to+'\')">'+lab+'</button>'; }, hasR=typeof rvRow==="function"&&!!rvRow(D.k);
-    if(RV_ON.indexOf(st)>=0) b.push('<button class="btn" type="button" onclick="mtMoveStart(\'ln\',\''+id+'\')">옮기기</button>');
+    if(RV_ON.indexOf(st)>=0) b.push('<button class="btn" type="button" onclick="mtMoveStart(\'ln\',\''+id+'\')" title="다른 날짜 = 옮기기 → 날짜 탭 → 칸">옮기기 · 날짜 바꾸기</button>');
     if(hasR){ if(RV_ON.indexOf(st)>=0&&st!=="체크인") b.push(rv("체크인","왔음")); if(RV_ON.indexOf(st)>=0) b.push(rv("완료","종료")); if(st==="체크인") b.push(rv("승인","왔음 취소"));
       if(RV_ON.indexOf(st)>=0) b.push(rv("노쇼","노쇼","dng")); if(st==="완료") b.push(rv("체크인","끝 되돌리기")); if(st==="노쇼") b.push(rv("승인","노쇼 되돌리기")); }
   }

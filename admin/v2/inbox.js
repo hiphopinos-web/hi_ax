@@ -35,8 +35,9 @@ SCREENS.inbox={
 /* ── AX 라운지 명단 부품 · 미팅 탭 › 1F AX 라운지 › 명단(meet.js) · lgPlace = 추가 창(lngrow.js)의 칸별 남은 자리 셈 ── */
 function lgCfg(){ var b=S.data.nb, L=b&&b.lounge; return { start:(L&&L.start)||LOUNGE_DEF.start, n:num(L&&L.n)||LOUNGE_DEF.n, seats:num(L&&L.seats)||LOUNGE_DEF.seats, step:num(L&&L.step)||60, srv:!!L }; }
 /* 261016 놓기 = 서버 lngPlace_ 와 같은 규칙 · 시간 빈칸 = 칸 미정(none) · 정한 상담석(seat) 먼저 · 나머지 신청 시각 순 · 못 놓으면 칸 밖(out) */
-function lgPlace(rows){
-  var cf=lgCfg(), s0=mins(cf.start), grid=[], out=[], cx=[], none=[], left=[];
+function lgPlace(rows, day){   /* 261021 day = 그 날짜 줄만 칸에 셈(시간 빈 줄 · 취소는 날짜와 상관없이) · 없으면 날짜 구분 없음 */
+  var cf=lgCfg(), s0=mins(cf.start), grid=[], out=[], cx=[], none=[], left=[], mainD=S.data.lgb&&S.data.lgb.main||"";
+  if(day) rows=rows.filter(function(r){ return r.status==="취소"||!hm(r.slot)||(r.day||mainD)===day; });
   for(var i=0;i<cf.n;i++){ grid.push([]); for(var j=0;j<cf.seats;j++) grid[i].push(null); }
   rows.slice().sort(function(a,b){ return String(a.ts).localeCompare(String(b.ts)); }).forEach(function(r){
     if(r.status==="취소"){ cx.push(r); return; }
@@ -63,12 +64,12 @@ function lgPaint(){
   var box=el("lgList"); if(!box) return;
   var gt=dataGate("resv","AX 라운지 신청");
   if(gt){ box.innerHTML=gt; return; }
-  var rows=S.data.resv.rows||[]; LG.P=lgPlace(rows);
+  var rows=S.data.resv.rows||[]; LG.P=lgPlace(rows, typeof mtLnDay==="function"?mtLnDay():"");
   el("lgErr").innerHTML=errTop("resv");
-  if(!LG.g) LG.g=XG.make({ id:"lounge", file:"AX 라운지 신청", key:function(r){ return r.id; }, sort:{ k:"slot", d:1 },
+  if(!LG.g) LG.g=XG.make({ id:"lounge", file:"AX 라운지 신청", key:function(r){ return r.id; }, sort:{ k:"day", d:1 },   /* 261021 날짜 열 · 날짜 + 시간 순 */
     onRow:function(k){ var r=rvRow(k); if(r&&typeof mtOpen==="function") mtOpen("ln", k, LG.g); },
     chips:[["all","전체",null],["none","칸 미정",function(r){ return r.status!=="취소"&&!hm(r.slot); }],["in","왔음",function(r){ return r.status==="체크인"; }],["dn","끝",function(r){ return r.status==="완료"; }],["no","노쇼",function(r){ return r.status==="노쇼"; }],["cx","취소",function(r){ return r.status==="취소"; }]],
-    cols:[{ k:"slot", t:"시간", w:70, v:function(r){ return hm(r.slot)||"칸 미정"; } },{ k:"seat", t:"미팅룸", w:60 },{ k:"name", t:"이름", w:110 },{ k:"emp", t:"사번", w:90 },{ k:"dept", t:"부서", w:130 },{ k:"status", t:"상태", w:80, v:lnView, f:function(r){ return tag(lnView(r), RV_TAG[r.status]); } },
+    cols:[{ k:"day", t:"날짜", w:80, v:function(r){ return (r.day||"")+" "+(hm(r.slot)||"99"); }, f:function(r){ return r.day&&typeof mtDl==="function"?esc(mtDl(r.day)):"-"; } },{ k:"slot", t:"시간", w:70, v:function(r){ return hm(r.slot)||"칸 미정"; } },{ k:"seat", t:"미팅룸", w:60 },{ k:"name", t:"이름", w:110 },{ k:"emp", t:"사번", w:90 },{ k:"dept", t:"부서", w:130 },{ k:"status", t:"상태", w:80, v:lnView, f:function(r){ return tag(lnView(r), RV_TAG[r.status]); } },
       { k:"mm", t:"운영 메모", w:160, v:function(r){ var n=typeof mtNote==="function"?mtNote("ln",r.emp):null; return n&&n.memo?String(n.memo).slice(0,20):""; } },{ k:"memo", t:"명단 표지", w:150 },{ k:"ts", t:"신청 시각", type:"date", w:110 },{ k:"cxAt", t:"취소 시각", type:"date", w:110 }],
     src:{ a:"resv_list", p:{} }, h:520, select:1, onAdd:function(){ paOpen(laSp()); }, cancel:laCx() });
   XG.set(LG.g, rows, box);
@@ -81,7 +82,7 @@ function rvAsk(id, to){
   var r=rvRow(id); if(!r) return;
   var from=r.status, lab={ "승인":from==="신청"?"승인 · 알림 보내기":"되돌리기", "체크인":from==="승인"?"체크인":"되돌리기", "완료":"상담 완료", "노쇼":"노쇼 처리", "취소":"취소 처리" }[to];
   var q={ "승인":from==="신청"?"상담을 승인할까요?":"승인 상태로 되돌릴까요?", "체크인":from==="승인"?"체크인할까요?":"체크인 상태로 되돌릴까요?", "완료":"상담을 완료할까요?", "노쇼":"노쇼로 바꿀까요?", "취소":"신청을 취소할까요?" }[to];
-  confirmBox({ t:q, who:personLine(r)+" · "+hm(r.slot)+" · "+from+" → "+to, sub:RV_FX[to], ok:lab, danger:to==="노쇼"||to==="취소",
+  confirmBox({ t:q, who:personLine(r)+" · "+(r.day&&typeof mtDl==="function"?mtDl(r.day)+" ":"")+hm(r.slot)+" · "+from+" → "+to, sub:RV_FX[to], ok:lab, danger:to==="노쇼"||to==="취소",
     run:function(){ return call("resv_set",{ id:id, status:to, from:from }); },
     fail:function(x){ return x&&x.reason==="state"?"이미 "+(x.cur||"다른 상태")+"입니다 · 목록을 다시 받습니다":""; },
     done:function(x){ r.status=to; paint(); if(typeof mtDetRe==="function") mtDetRe(); reload(["resv","lgb","nb"]); toast((r.name||r.emp)+" · "+to+(x&&x.stamp&&x.stamp.ok?" · 스탬프":""),{ undo:function(){ rvUndo(id, to, from); } }); } });

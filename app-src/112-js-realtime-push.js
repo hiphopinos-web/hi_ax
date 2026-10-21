@@ -200,11 +200,11 @@ function beSync(after) {
         var stt = map[res.my.resv.status];
         var mine = all.find(function (r) { return r.mine && (r.beId === res.my.resv.id); });
         /* v7.39 (사용자 261016 · 서버 계약 3-5) 사전 신청 상담 · 칸 시작 slot · 끝 to · 범위 rng · 상담석 seat · 장소 place(옛 서버 = slot 만 · 나머지 빈칸) · 배치판 시간 옮기기(resv_move)도 따라간다 */
-        var rv = res.my.resv, rx = { slot: rv.slot ? hhmm(rv.slot) : "", to: rv.to ? hhmm(rv.to) : "", rng: String(rv.rng || ""), seat: +rv.seat || 0, place: String(rv.place || "") };
+        var rv = res.my.resv, rx = { slot: rv.slot ? hhmm(rv.slot) : "", to: rv.to ? hhmm(rv.to) : "", rng: String(rv.rng || ""), seat: +rv.seat || 0, place: String(rv.place || ""), day: String(rv.day || ""), dl: String(rv.dl || "") };   /* 261021 상담일 day · dl(옛 서버 = 빈칸) */
         if (!mine && stt && RESV_HOLD.indexOf(stt) >= 0) {
           all.push(Object.assign({ id: uid(), beId: rv.id, room: 2, name: u.name || "", dept: S.get("dept", null) || "미지정", status: stt, mine: true, ts: Date.now() }, rx));
           S.set("resv", all);
-        } else if (mine && stt && (mine.status !== stt || ["slot", "to", "rng", "seat", "place"].some(function (k) { return (mine[k] || "") !== (rx[k] || ""); }))) {
+        } else if (mine && stt && (mine.status !== stt || ["slot", "to", "rng", "seat", "place", "day", "dl"].some(function (k) { return (mine[k] || "") !== (rx[k] || ""); }))) {
           mine.status = stt; Object.assign(mine, rx); S.set("resv", all);
         }
       } else {
