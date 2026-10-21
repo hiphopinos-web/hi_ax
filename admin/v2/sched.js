@@ -33,26 +33,46 @@ function schBase(){
   if(SCH.tgt==="grp") return SCH.grp==="dap"?{ group:"dap" }:SCH.grp==="cc_wait"?{ group:"cchat", st:"대기" }:SCH.grp==="cc_match"?{ group:"cchat", st:"매칭" }:SCH.gname?{ group:"g:"+SCH.gname }:null;
   var L=SCH.ppl.map(function(x){ return x.emp; }); return L.length&&L.length<=50?{ emps:L }:null;
 }
-function schFl(){ var a=String(SCH.c.fl||"").split(/[^0-9]+/).filter(Boolean).map(Number); return a.every(function(n){ return n>=1&&n<=30; })?a.filter(function(n,i){ return a.indexOf(n)===i; }):null; }
-function schCond(){ var c=SCH.c, o={};
+/* 조건 칸(보내기 · 예약 공통 · c = { smin · smax · tk · rl · fl · dept · dev }) */
+var SCH_CE="조건을 확인합니다 · 스탬프 「부터」가 「까지」보다 크거나 층이 1~30 밖입니다";
+function schFlOf(c){ var a=String(c.fl||"").split(/[^0-9]+/).filter(Boolean).map(Number); return a.every(function(n){ return n>=1&&n<=30; })?a.filter(function(n,i){ return a.indexOf(n)===i; }):null; }
+function schCondOf(c){ var o={};
   if(c.smin!==""||c.smax!==""){ var mn=c.smin===""?0:Number(c.smin), mx=c.smax===""?6:Number(c.smax); if(mn>mx) return null; o.stamps={ min:mn, max:mx }; }
   if(c.tk!=="") o.tickets={ min:Number(c.tk) };
   if(c.rl!=="") o.roulette=Number(c.rl);
-  if(String(c.fl||"").trim()){ var f=schFl(); if(!f||!f.length) return null; o.floors=f; }
+  if(String(c.fl||"").trim()){ var f=schFlOf(c); if(!f||!f.length) return null; o.floors=f; }
   if(String(c.dept||"").trim()) o.dept=String(c.dept).trim().slice(0,40);
   if(c.dev) o.dev=c.dev;
   return o; }
+function schCondNOf(c){ var o=schCondOf(c); return o?Object.keys(o).length:0; }
+function schCondTx(sp){ var d=[];
+  if(sp.stamps) d.push("스탬프 "+sp.stamps.min+"~"+sp.stamps.max+"개"); if(sp.tickets) d.push("행운권 "+sp.tickets.min+"장 이상"); if(sp.roulette!=null) d.push(sp.roulette?"룰렛 씀":"룰렛 안 씀");
+  if(sp.floors) d.push("근무 층 "+sp.floors.join("·")); if(sp.dept) d.push("부문 "+sp.dept); if(sp.dev) d.push("기기 "+(SCH_DEV.filter(function(x){ return x[0]===sp.dev; })[0]||[0,""])[1]);
+  return d; }
+/* P = id 앞글자 · fn = 칸 바뀜 함수 이름(fn(k, v, 입력칸 id)) · tog = 펼침 기억 · clr = 모두 지우기 */
+function schCondBox(c, P, fn, open, tog, clr){ var cn=schCondNOf(c), num=function(a,z){ var r=[["","상관없음"]]; for(var i=a;i<=z;i++) r.push([String(i),String(i)]); return r; }, on=function(k){ return fn+"('"+k+"',this.value)"; };
+  return '<details class="sc-cd nt-f" id="'+P+'Cd"'+(open||cn?" open":"")+' ontoggle="'+tog+'"><summary>조건 <span class="cap">'+(cn?cn+"개 · 모두 맞는 사람":"없음 · 고른 대상 모두")+'</span></summary>'+
+    '<div class="nt-row mt4"><label class="up-f">스탬프 몇 개부터'+schSel(P+"C1",c.smin,num(0,6),on("smin"))+'</label><label class="up-f">몇 개까지'+schSel(P+"C2",c.smax,num(0,6),on("smax"))+'</label>'+
+    '<label class="up-f">행운권'+schSel(P+"C3",c.tk,[["","상관없음"],["1","1장 이상"],["2","2장 이상"],["3","3장"]],on("tk"))+'</label>'+
+    '<label class="up-f">룰렛'+schSel(P+"C4",c.rl,[["","상관없음"],["1","씀"],["0","안 씀"]],on("rl"))+'</label></div>'+
+    '<div class="nt-row mt4"><label class="up-f">근무 층 <span class="cap">예: 10, 17</span><input class="xg-q nt-in n" id="'+P+'C5" value="'+esc(c.fl)+'" oninput="'+fn+'(\'fl\',this.value,\''+P+'C5\')"></label>'+
+    '<label class="up-f">부문<input class="xg-q nt-in" id="'+P+'C6" maxlength="40" placeholder="예: 보상부문" value="'+esc(c.dept)+'" oninput="'+fn+'(\'dept\',this.value,\''+P+'C6\')"></label>'+
+    '<label class="up-f">기기'+schSel(P+"C7",c.dev,[["","상관없음"]].concat(SCH_DEV),on("dev"))+'</label></div>'+
+    '<p class="cap mt4" id="'+P+'Ce" style="color:var(--bad)">'+(schCondOf(c)?'':SCH_CE)+'</p>'+
+    (cn?'<div class="mt4"><button class="btn sm" type="button" onclick="'+clr+'">조건 모두 지우기</button></div>':'')+'</details>'; }
+/* 칸 하나 바뀜 · 고를 칸은 다시 그리고 · 입력 칸은 조건 수가 0 ↔ 1 일 때만 다시 그린다(입력 중 커서 유지) */
+function schCondSet(c, k, v, typed, P, redraw){ var a=schCondNOf(c); c[k]=v;
+  if(!typed||(schCondNOf(c)>0)!==(a>0)){ redraw(); var i=typed&&el(typed); if(i){ i.focus(); try{ i.setSelectionRange(i.value.length,i.value.length); }catch(e){} } } else { var e=el(P+"Ce"); if(e) e.textContent=schCondOf(c)?"":SCH_CE; } }
+function schCond(){ return schCondOf(SCH.c); }
 function schCondN(){ var o=schCond(); return o?Object.keys(o).length:0; }
 function schNto(){ if(SCH.tgt==="ppl") return true; if(SCH.tgt==="all"&&!schCondN()) return false; return SCH.nto!=null?!!SCH.nto:SCH.tgt==="grp"; }
 function schSpec(){ var b=schBase(), c=schCond(); if(!b||!c) return null; for(var k in c) b[k]=c[k]; if(SCH.tgt==="all"&&!Object.keys(c).length) b.all=1; return b; }
 function schSpecTx(){ var sp=schSpec(); if(!sp) return "";
-  var g=SCH.tgt==="all"?(Object.keys(sp).length&&!sp.all?"":"전체"):SCH.tgt==="ppl"?"개인 "+sp.emps.length+"명":(SCH_GRP.filter(function(x){ return x[0]===SCH.grp; })[0]||[0,""])[1]+(SCH.grp==="g"?" "+SCH.gname:""), d=[];
-  if(sp.stamps) d.push("스탬프 "+sp.stamps.min+"~"+sp.stamps.max+"개"); if(sp.tickets) d.push("행운권 "+sp.tickets.min+"장 이상"); if(sp.roulette!=null) d.push(sp.roulette?"룰렛 씀":"룰렛 안 씀");
-  if(sp.floors) d.push("근무 층 "+sp.floors.join("·")); if(sp.dept) d.push("부문 "+sp.dept); if(sp.dev) d.push("기기 "+(SCH_DEV.filter(function(x){ return x[0]===sp.dev; })[0]||[0,""])[1]);
+  var g=SCH.tgt==="all"?(Object.keys(sp).length&&!sp.all?"":"전체"):SCH.tgt==="ppl"?"개인 "+sp.emps.length+"명":(SCH_GRP.filter(function(x){ return x[0]===SCH.grp; })[0]||[0,""])[1]+(SCH.grp==="g"?" "+SCH.gname:""), d=schCondTx(sp);
   return (g?[g]:[]).concat(d).join(" · "); }
 function schSel(id, v, opts, on){ return '<select id="'+id+'" onchange="'+on+'">'+opts.map(function(o){ return '<option value="'+esc(o[0])+'"'+(String(o[0])===String(v)?" selected":"")+'>'+esc(o[1])+'</option>'; }).join("")+'</select>'; }
 function schForm(){
-  var b=el("schF"); if(!b) return; var pOk=!!pushSt(), E=SCH.edit, c=SCH.c, cn=schCondN(), nto=schNto(), num=function(a,z){ var r=[["","상관없음"]]; for(var i=a;i<=z;i++) r.push([String(i),String(i)]); return r; };
+  var b=el("schF"); if(!b) return; var pOk=!!pushSt(), E=SCH.edit, c=SCH.c, cn=schCondN(), nto=schNto();
   b.innerHTML='<h2>'+(E?"예약 고치기":"예약 만들기")+' <span class="cap">'+(E?"시각 · 글자 · 대상 · 조건을 바꿉니다":pOk?"공지 · Closing Speech · 푸시":"공지 · Closing Speech")+'</span></h2>'+
     (E?'':'<div class="chips mt">'+SCH_PRE.map(function(p,i){ return '<button type="button" class="chip" onclick="schPre('+i+')">'+esc(p.n)+'</button>'; }).join("")+'</div>')+
     '<div class="nt-row"><label class="nt-f up-f">종류<select class="xg-q nt-in" id="schK" onchange="SCH.k=this.value"'+(E?" disabled":"")+'><option value="outro"'+(SCH.k==="outro"?" selected":"")+'>Closing Speech</option><option value="notice"'+(SCH.k==="notice"?" selected":"")+'>공지</option></select></label>'+
@@ -65,15 +85,7 @@ function schForm(){
       (SCH.grp==="g"?'<div class="nt-row mt4"><label class="up-f">그룹'+schGrpSel()+'</label></div>':'<p class="cap mt4">'+(SCH.grp==="dap"?"AX 라운지 상담 신청 · 승인 상태인 사람":SCH.grp==="cc_wait"?"커피챗 희망 · 아직 선정 전인 사람":"커피챗 선정(매칭)된 사람")+' · 실행할 때의 상태로 셉니다</p>'):"")+
     (SCH.tgt==="ppl"?'<div class="nt-ppl mt4" id="schPpl"></div><div class="nt-q"><input class="xg-q" id="schQ" type="search" autocomplete="off" placeholder="사번 · 이름으로 찾아 더하기" aria-label="대상 찾기" value="'+esc(SCH.q)+'" oninput="schQ(this.value)"><div class="nt-qr" id="schQr"></div></div>'+
       '<label class="nt-f up-f">사번 여러 개 붙여 넣기 <span class="cap">줄바꿈 · 쉼표 · 띄어쓰기로 나눔</span><textarea id="schPaste" rows="2" placeholder="예: 2019001, 2020123" oninput="SCH.paste=this.value">'+esc(SCH.paste)+'</textarea></label><div class="mt4"><button class="btn sm" id="schPasteB" type="button" onclick="schPasteAdd()">사번 더하기</button> <span class="cap">한 예약에 50명까지</span></div>':"")+'</div>'+
-    '<details class="sc-cd nt-f" id="schCd"'+(SCH.cOpen||cn?" open":"")+' ontoggle="SCH.cOpen=this.open"><summary>조건 <span class="cap">'+(cn?cn+"개 · 모두 맞는 사람":"없음 · 고른 대상 모두")+'</span></summary>'+
-      '<div class="nt-row mt4"><label class="up-f">스탬프 몇 개부터'+schSel("schC1",c.smin,num(0,6),"schC('smin',this.value)")+'</label><label class="up-f">몇 개까지'+schSel("schC2",c.smax,num(0,6),"schC('smax',this.value)")+'</label>'+
-      '<label class="up-f">행운권'+schSel("schC3",c.tk,[["","상관없음"],["1","1장 이상"],["2","2장 이상"],["3","3장"]],"schC('tk',this.value)")+'</label>'+
-      '<label class="up-f">룰렛'+schSel("schC4",c.rl,[["","상관없음"],["1","씀"],["0","안 씀"]],"schC('rl',this.value)")+'</label></div>'+
-      '<div class="nt-row mt4"><label class="up-f">근무 층 <span class="cap">예: 10, 17</span><input class="xg-q nt-in n" id="schC5" value="'+esc(c.fl)+'" oninput="schC(\'fl\',this.value,\'schC5\')"></label>'+
-      '<label class="up-f">부문<input class="xg-q nt-in" id="schC6" maxlength="40" placeholder="예: 보상부문" value="'+esc(c.dept)+'" oninput="schC(\'dept\',this.value,\'schC6\')"></label>'+
-      '<label class="up-f">기기'+schSel("schC7",c.dev,[["","상관없음"]].concat(SCH_DEV),"schC('dev',this.value)")+'</label></div>'+
-      '<p class="cap mt4" id="schCe" style="color:var(--bad)">'+(schCond()?'':'조건을 확인합니다 · 스탬프 「부터」가 「까지」보다 크거나 층이 1~30 밖입니다')+'</p>'+
-      (cn?'<div class="mt4"><button class="btn sm" type="button" onclick="SCH.c=SCH_C0();schForm();schPvQ()">조건 모두 지우기</button></div>':'')+'</details>'+
+    schCondBox(c,"sch","schC",SCH.cOpen,"SCH.cOpen=this.open","SCH.c=SCH_C0();schForm();schPvQ()")+
     (pOk?'<label class="up-ck nt-f"><input type="checkbox" id="schP"'+(SCH.push?" checked":"")+' onchange="SCH.push=this.checked;schForm();schPvQ()"> 푸시도 보내기 · 대상에게</label>':'')+
     (SCH.tgt==="ppl"?'<p class="cap mt4">사람 지정은 앱 공지도 그 사람에게만 나갑니다</p>':SCH.tgt==="all"&&!cn?'':'<label class="up-ck nt-f"><input type="checkbox" id="schN"'+(nto?" checked":"")+' onchange="SCH.nto=this.checked;schForm();schPvQ()"> 앱 공지도 이 대상에게만 · 끄면 앱 공지는 모두에게</label>')+
     '<p class="cap mt4" id="schPv">'+schPvTx()+'</p>'+
@@ -87,9 +99,7 @@ function schGrpSel(){ var g=SCH.grps; if(!g) return '<span class="cap"> 그룹�
 function schGrpLoad(){ if(SCH.grps&&SCH.grps.ok) return; call("push_group_list",{}).then(function(r){ SCH.grps=r||{ ok:false }; schForm(); }); }
 function schTgt(t){ SCH.tgt=t; SCH.nto=null; schForm(); schPvQ(); if(t==="grp"&&SCH.grp==="g") schGrpLoad(); if(t==="ppl") setTimeout(function(){ var i=el("schQ"); if(i) i.focus(); },30); }
 function schGrp(g){ SCH.grp=g; schForm(); schPvQ(); if(g==="g") schGrpLoad(); }
-function schC(k, v, typed){ var a=schCondN(); SCH.c[k]=v;
-  if(!typed||(schCondN()>0)!==(a>0)){ schForm(); var i=typed&&el(typed); if(i){ i.focus(); try{ i.setSelectionRange(i.value.length,i.value.length); }catch(e){} } } else { var e=el("schCe"); if(e) e.textContent=schCond()?"":"조건을 확인합니다 · 스탬프 「부터」가 「까지」보다 크거나 층이 1~30 밖입니다"; }
-  schPvQ(); }
+function schC(k, v, typed){ schCondSet(SCH.c, k, v, typed, "sch", schForm); schPvQ(); }
 function schPplPaint(){ var b=el("schPpl"); if(!b) return; b.innerHTML=SCH.ppl.length?SCH.ppl.map(function(p){ var nm=p.name?personLine(p):p.emp; return '<span class="pchip">'+esc(nm)+'<button type="button" aria-label="'+esc(nm+" 빼기")+'" onclick="schDel(\''+jq(p.emp)+'\')">×</button></span>'; }).join("")+(SCH.ppl.length>50?'<span class="cap" style="color:var(--bad)">50명을 넘습니다 · 나눠서 예약합니다</span>':''):'<span class="cap">아직 고른 사람이 없습니다</span>'; }
 function schAddP(p){ if(!p||!p.emp) return; if(!SCH.ppl.some(function(x){ return x.emp===p.emp; })) SCH.ppl.push({ emp:p.emp, name:p.name||"", dept:p.dept||"" }); }
 function schDel(e){ SCH.ppl=SCH.ppl.filter(function(p){ return p.emp!==e; }); schPplPaint(); schQrPaint(); schPvQ(); }

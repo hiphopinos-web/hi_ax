@@ -5,10 +5,11 @@
  *   → 확인 창(전체급이면 서버가 요구할 때 도달 인원 숫자 입력) → notice_set(push=1 · spec · cnt · pt 보낸 사람 · pb 제목+내용) · 지금 콘솔 「알리기」와 같은 서버 액션
  * 보낸 기록 = notice_hist + push_hist 한 명단 · 줄 상세 서랍에서 공지 중지(notice_clear) · 보류 중 푸시 취소(push_cancel) · 261016 PIN 없음 */
 var NT_SUBS=[["send","보내기"],["hist","보낸 기록"]];
-var NT_GRP=[["dap","AX 라운지 신청자"],["cchat","커피챗 희망자"],["stamps","스탬프 개수"]];
+var NT_GRP=[["dap","AX 라운지 신청자"],["cc_wait","커피챗 대기"],["cc_match","커피챗 매칭"],["g","그룹"]];   /* 261021 (사용자) 예약과 같은 구분 · 스탬프 개수는 조건 칸으로 */
+function ntC0(){ return { smin:"", smax:"", tk:"", rl:"", fl:"", dept:"", dev:"" }; }
 var NT_MAX={ t:40, b:120, from:20 }, NT_FROM="AX Festival";
-var NT=(function(){ var g={}; try{ g=JSON.parse(sessionStorage.getItem(skey("axf_v2_nt"))||"{}")||{}; }catch(e){} return { tgt:g.tgt||"all", grp:g.grp||"dap", smin:g.smin!=null?g.smin:3, smax:g.smax!=null?g.smax:6, ppl:g.ppl||[], from:g.from!=null?g.from:NT_FROM, t:g.t||"", b:g.b||"", push:g.push!==false, pv:null, seq:0, q:"", qr:null, qseq:0, hold:null }; })();
-function ntSave(){ try{ sessionStorage.setItem(skey("axf_v2_nt"),JSON.stringify({ tgt:NT.tgt, grp:NT.grp, smin:NT.smin, smax:NT.smax, ppl:NT.ppl, from:NT.from, t:NT.t, b:NT.b, push:NT.push })); }catch(e){} }
+var NT=(function(){ var g={}; try{ g=JSON.parse(sessionStorage.getItem(skey("axf_v2_nt"))||"{}")||{}; }catch(e){} var c=g.c&&typeof g.c==="object"?g.c:ntC0(), tg=g.tgt||"all", gr=g.grp||"dap"; if(gr==="stamps"){ if(tg==="grp"){ tg="all"; c=ntC0(); c.smin=String(g.smin!=null?g.smin:3); c.smax=String(g.smax!=null?g.smax:6); } gr="dap"; } else if(gr==="cchat") gr="cc_wait"; return { tgt:tg, grp:gr, gname:g.gname||"", c:c, cOpen:false, ppl:g.ppl||[], from:g.from!=null?g.from:NT_FROM, t:g.t||"", b:g.b||"", push:g.push!==false, pv:null, seq:0, q:"", qr:null, qseq:0, hold:null }; })();
+function ntSave(){ try{ sessionStorage.setItem(skey("axf_v2_nt"),JSON.stringify({ tgt:NT.tgt, grp:NT.grp, gname:NT.gname, c:NT.c, ppl:NT.ppl, from:NT.from, t:NT.t, b:NT.b, push:NT.push })); }catch(e){} }
 function ntAddPerson(p){ if(!p||!p.emp) return; NT.tgt="ppl"; if(!NT.ppl.some(function(x){ return x.emp===p.emp; })) NT.ppl.push({ emp:p.emp, name:p.name||"", dept:p.dept||"" }); NT.pv=null; ntSave(); }
 function ntSub(){ return subsOf(NT_SUBS,"send"); }
 function pushSt(){ var d=S.data.pst; return d&&d.ok&&d.rt?d:null; }
@@ -56,21 +57,28 @@ function ntStopAsk(to){
   if(to!=="stop"&&typeof ntfFresh==="function") ntfFresh(ask); else ask();
 }
 /* ── 보내기 ── */
-function ntSpec(){
-  if(NT.tgt==="all") return { all:1 };
-  if(NT.tgt==="grp") return NT.grp==="stamps"?{ stamps:{ min:Number(NT.smin), max:Number(NT.smax) } }:{ group:NT.grp };
+function ntBase(){
+  if(NT.tgt==="all") return {};
+  if(NT.tgt==="grp") return NT.grp==="dap"?{ group:"dap" }:NT.grp==="cc_wait"?{ group:"cchat", st:"대기" }:NT.grp==="cc_match"?{ group:"cchat", st:"매칭" }:NT.gname?{ group:"g:"+NT.gname }:null;
   var L=NT.ppl.map(function(x){ return x.emp; }); return L.length&&L.length<=50?{ emps:L }:null;
 }
-function ntTgtTx(){ return NT.tgt==="all"?"전체":NT.tgt==="grp"?(NT.grp==="stamps"?"스탬프 "+NT.smin+"~"+NT.smax+"개":(NT_GRP.filter(function(x){ return x[0]===NT.grp; })[0]||[0,""])[1]):NT.ppl.length+"명(사람)"; }
+function ntCond(){ return typeof schCondOf==="function"?schCondOf(NT.c):{}; }
+function ntSpec(){ var b=ntBase(), c=ntCond(); if(!b||!c) return null; for(var k in c) b[k]=c[k]; if(NT.tgt==="all"&&!Object.keys(c).length) b.all=1; return b; }
+/* 앱 공지도 고른 사람에게만 = 전체(조건 없음)가 아닐 때 */
+function ntTo(){ var sp=ntSpec(); return !!(sp&&!sp.all); }
+function ntTgtTx(){ var sp=ntSpec(), d=sp&&typeof schCondTx==="function"?schCondTx(sp):[];
+  var g=NT.tgt==="all"?(d.length?"":"전체"):NT.tgt==="grp"?(NT_GRP.filter(function(x){ return x[0]===NT.grp; })[0]||[0,""])[1]+(NT.grp==="g"?" "+(NT.gname||"(고르기)"):""):NT.ppl.length+"명(사람)";
+  return (g?[g]:[]).concat(d).join(" · "); }
 function ntPushTx(){ var t=NT.t.trim(), b=NT.b.trim(), st=pushSt()||{}; return st.ntgt?{ t:(NT.from.trim()||NT_FROM), b:t+(b?"\n"+b:"") }:{ t:t, b:b }; }
 function ntForm(){
   var f=el("ntForm"); if(!f) return;
-  var o=function(v){ return [0,1,2,3,4,5,6].map(function(i){ return '<option'+(String(i)===String(v)?" selected":"")+'>'+i+'</option>'; }).join(""); };
   f.innerHTML='<h2>보낼 말 <span class="cap">앱 안 공지 + 푸시</span></h2>'+
     '<div class="nt-f"><div class="nt-l" id="ntTgtL">받는 사람</div><div class="chips" role="radiogroup" aria-labelledby="ntTgtL" style="margin:0">'+[["all","전체"],["grp","구분"],["ppl","사람"]].map(function(x){ return '<button type="button" role="radio" aria-checked="'+(NT.tgt===x[0])+'" class="chip'+(NT.tgt===x[0]?" on":"")+'" onclick="ntTgt(\''+x[0]+'\')">'+esc(x[1])+'</button>'; }).join("")+'</div>'+
     (NT.tgt==="grp"?'<div class="chips mt4" role="radiogroup" aria-label="구분" style="margin:6px 0 0">'+NT_GRP.map(function(x){ return '<button type="button" role="radio" aria-checked="'+(NT.grp===x[0])+'" class="chip'+(NT.grp===x[0]?" on":"")+'" onclick="ntGrp(\''+x[0]+'\')">'+esc(x[1])+'</button>'; }).join("")+'</div>'+
-      (NT.grp==="stamps"?'<div class="nt-row mt4"><label class="up-f">몇 개부터<select onchange="ntIn(\'smin\',this.value)">'+o(NT.smin)+'</select></label><label class="up-f">몇 개까지<select onchange="ntIn(\'smax\',this.value)">'+o(NT.smax)+'</select></label></div>':'<p class="cap mt4">'+(NT.grp==="dap"?"AX 라운지 상담 신청 · 승인 상태인 사람":"커피챗 희망 · 선정 상태인 사람")+'</p>'):"")+
+      (NT.grp==="g"?'<div class="nt-row mt4"><label class="up-f">그룹'+ntGrpSel()+'</label></div>':'<p class="cap mt4">'+(NT.grp==="dap"?"AX 라운지 상담 신청 · 승인 상태인 사람":NT.grp==="cc_wait"?"커피챗 희망 · 아직 선정 전인 사람":"커피챗 선정(매칭)된 사람")+'</p>'):"")+
     (NT.tgt==="ppl"?'<div class="nt-ppl mt4" id="ntPpl"></div><div class="nt-q"><input class="xg-q" id="ntQ" type="search" autocomplete="off" placeholder="사번 · 이름으로 찾아 더하기" aria-label="받는 사람 찾기" value="'+esc(NT.q)+'" oninput="ntQ(this.value)"><div class="nt-qr" id="ntQr"></div></div><p class="cap mt4">한 번에 50명까지 · 한 사람 카드 「이 사람에게 푸시」가 여기에 더합니다</p>':"")+'</div>'+
+    (typeof schCondBox==="function"?schCondBox(NT.c,"nt","ntC",NT.cOpen,"NT.cOpen=this.open","NT.c=ntC0();NT.pv=null;ntSave();ntForm();ntPvGo()"):"")+
+    (ntTo()?'<p class="cap mt4">앱 안 공지도 고른 사람에게만 나갑니다</p>':'')+
     '<label class="nt-f up-f">보낸 사람 <span class="cap">푸시 제목 자리 · 기본 '+NT_FROM+'</span><input class="xg-q nt-in" id="ntFrom" maxlength="'+NT_MAX.from+'" value="'+esc(NT.from)+'" oninput="ntIn(\'from\',this.value)"></label>'+
     '<label class="nt-f up-f">제목 <span class="cap" id="ntCT"></span><input class="xg-q nt-in" id="ntT" maxlength="'+NT_MAX.t+'" placeholder="예: 17:00 Closing Speech 곧 시작" value="'+esc(NT.t)+'" oninput="ntIn(\'t\',this.value)"></label>'+
     '<label class="nt-f up-f">내용 <span class="cap" id="ntCB"></span><textarea id="ntB" rows="3" maxlength="'+NT_MAX.b+'" placeholder="잠금 화면에 그대로 보입니다 · 이름 · 행운권 수 · 경품은 쓰지 않습니다" oninput="ntIn(\'b\',this.value)">'+esc(NT.b)+'</textarea></label>'+
@@ -78,8 +86,13 @@ function ntForm(){
     '<div class="btns mt"><button class="btn pri" type="button" onclick="ntAsk()">보내기</button><button class="btn" type="button" onclick="ntTest()">나에게 테스트</button></div>';
   ntPplPaint(); ntCnt();
 }
-function ntTgt(t){ NT.tgt=t; NT.pv=null; ntSave(); ntForm(); ntPvGo(); if(t==="ppl") setTimeout(function(){ var i=el("ntQ"); if(i) i.focus(); },30); }
-function ntGrp(g){ NT.grp=g; NT.pv=null; ntSave(); ntForm(); ntPvGo(); }
+function ntTgt(t){ NT.tgt=t; NT.pv=null; ntSave(); ntForm(); ntPvGo(); if(t==="grp"&&NT.grp==="g") ntGrpLoad(); if(t==="ppl") setTimeout(function(){ var i=el("ntQ"); if(i) i.focus(); },30); }
+function ntGrp(g){ NT.grp=g; NT.pv=null; ntSave(); ntForm(); ntPvGo(); if(g==="g") ntGrpLoad(); }
+function ntGrpSel(){ var g=typeof SCH!=="undefined"?SCH.grps:null; if(!g) return '<span class="cap"> 그룹을 불러오는 중</span>'; if(!g.ok) return '<span class="cap"> 그룹을 불러오지 못했습니다 · '+esc(why(g))+'</span>';
+  var L=g.groups||[]; if(!L.length) return '<span class="cap"> 만든 그룹이 없습니다</span>';
+  return '<select id="ntG" onchange="NT.gname=this.value;NT.pv=null;ntSave();ntForm();ntPvGo()">'+[["","그룹 고르기"]].concat(L.map(function(x){ return [x.name, x.name+" · "+n0(x.n)+"명"]; })).map(function(o){ return '<option value="'+esc(o[0])+'"'+(o[0]===NT.gname?" selected":"")+'>'+esc(o[1])+'</option>'; }).join("")+'</select>'; }
+function ntGrpLoad(){ if(typeof SCH==="undefined"||(SCH.grps&&SCH.grps.ok)) return; call("push_group_list",{}).then(function(r){ SCH.grps=r||{ ok:false }; ntForm(); }); }
+function ntC(k, v, typed){ NT.pv=null; schCondSet(NT.c, k, v, typed, "nt", ntForm); ntSave(); clearTimeout(NT._q); NT._q=setTimeout(ntPvGo,450); ntPvPaint(); }
 function ntIn(k, v){ NT[k]=k==="push"?!!v:v; NT.pv=null; ntSave(); if(k==="t"||k==="b"||k==="from") ntCnt(); clearTimeout(NT._q); NT._q=setTimeout(ntPvGo,450); ntPvPaint(); }
 function ntCnt(){ var c=function(id,n,mx){ var e=el(id); if(e) e.textContent=n+" / "+mx; }; c("ntCT",NT.t.length,NT_MAX.t); c("ntCB",NT.b.length,NT_MAX.b); }
 function ntPplPaint(){ var b=el("ntPpl"); if(!b) return; b.innerHTML=NT.ppl.length?NT.ppl.map(function(p){ return '<span class="pchip">'+esc(personLine(p))+'<button type="button" aria-label="'+esc(personLine(p)+" 빼기")+'" onclick="ntDel(\''+jq(p.emp)+'\')">×</button></span>'; }).join("")+(NT.ppl.length>50?'<span class="cap" style="color:var(--bad)">50명을 넘습니다 · 나눠 보냅니다</span>':''):'<span class="cap">아직 고른 사람이 없습니다</span>'; }
@@ -114,10 +127,10 @@ function ntSubPaint(){ var b=el("ntSub"); if(!b) return; var st=pushSt(), td=st&
   b.innerHTML='<h2>오늘 푸시</h2><div class="mini">'+[["구독 기기",st?n0(st.subs):"-","대"],["오늘 발송",n0(td.jobs||0),"건"],["성공",n0(td.ok||0),"건"],["실패",n0(td.fail||0),"건"]].map(function(x){ return '<div><div class="cap">'+x[0]+'</div><div class="v">'+x[1]+'<small> '+x[2]+'</small></div></div>'; }).join("")+'</div>'+(st?'<p class="cap mt4">보낼 수 있는 시간 '+esc(st.time||"-")+' · 전체급 하루 '+n0(st.limits&&st.limits.all)+'회 · 사람 지정 50명까지</p>':''); }
 function ntBy(){ return "콘솔 "+((S.me&&S.me.emp)||aemp()); }
 function ntAsk(){
-  var t=NT.t.trim(), b=NT.b.trim(), sp=ntSpec(), grp=NT.tgt!=="all";
+  var t=NT.t.trim(), b=NT.b.trim(), sp=ntSpec(), grp=ntTo();
   if(!t){ toast("제목을 넣습니다"); el("ntT").focus(); return; }
   if(/○○/.test(t+b)){ toast("○○ 칸을 채웁니다"); return; }
-  if(!sp){ toast("받는 사람을 고릅니다 · 사람 1~50명"); return; }
+  if(!sp){ toast(ntCond()?"받는 사람을 고릅니다 · 사람 1~50명 · 그룹":"조건을 확인합니다"); return; }
   if(!NT.push||!pushSt()){
     confirmBox({ t:"공지를 보낼까요?", who:ntTgtTx()+" · 앱 안 공지", sub:t+(grp?" · 고른 사람들의 앱에만":" · 앱을 여는 모든 사람"), ok:"보내기",
       run:function(){ return call("notice_set",grp?{ title:t, body:b, nto:1, spec:JSON.stringify(sp), by:ntBy() }:{ title:t, body:b, by:ntBy() }); },
