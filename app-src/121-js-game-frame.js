@@ -11,11 +11,23 @@ var GS_GAMES = {
 };
 /* v4.08 키보드가 올라와도 입력칸과 아래 고정 버튼이 가려지지 않게 · 가려진 높이를 --kb 로 넘긴다 · 포커스한 칸은 보이는 곳 가운데로 */
 function kbSync() {
-  var vv = window.visualViewport; if (!vv) return;
-  var kb = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+  var vv = window.visualViewport, inner = window.innerHeight; KBT.base = Math.max(KBT.base, inner);
+  if (!vv) { KBT.up = inner < KBT.base - 80; kbTypeSync(); return; }
+  var kb = Math.max(0, Math.round(inner - vv.height - vv.offsetTop));
   document.documentElement.style.setProperty("--kb", (kb > 80 ? kb : 0) + "px");
   document.documentElement.classList.toggle("kb-on", kb > 80);
+  KBT.up = kb > 80 || inner < KBT.base - 80;   /* 키보드가 올라와 있다 · 화면이 줄어드는 폰(layout 이 줄음)도 */
+  kbTypeSync();
 }
+/* v8.29 (사용자 261021 설문 피드백 「처음부터 다시가 키보드 위로 갔다가 덮었다가」) 글자를 입력하는 동안(키보드가 올라온 채 #view 의 글 칸에 포커스) 설문 화면의 아래 고정 줄은 흐름 안(내용 끝)으로 내려 앉는다
+   html.kb-type · 010 CSS · 키보드가 닫히거나(뒤로 가기 키 포함) 칸에서 나가면 바로 원래 자리 · 키보드 높이가 바뀔 때마다 줄이 오르내리지 않는다 · 줄을 새로 그린 뒤에도 router 가 다시 맞춘다 */
+var KBT = { up: false, base: 0, t: 0 };
+function kbTypeSync() {
+  var a = document.activeElement, on = !!(KBT.up && a && a.nodeType === 1 && (a.tagName === "TEXTAREA" || (a.tagName === "INPUT" && /^(text|search|tel|number|email|url|)$/i.test(a.getAttribute("type") || ""))) && a.closest && a.closest("#view"));
+  document.documentElement.classList.toggle("kb-type", on);
+}
+document.addEventListener("focusin", function (e) { clearTimeout(KBT.t); var t = e.target; if (t && (t.tagName === "TEXTAREA" || t.tagName === "INPUT")) kbTypeSync(); else KBT.t = setTimeout(kbTypeSync, 120); }, true);   /* 단추를 누르는 순간 포커스가 단추로 옮겨도 줄이 눌리는 사이에 움직이지 않게 120ms 뒤에 본다 */
+document.addEventListener("focusout", function () { clearTimeout(KBT.t); KBT.t = setTimeout(kbTypeSync, 120); }, true);   /* 칸 사이를 옮길 때 줄이 깜빡이지 않게 120ms 뒤에 본다 */
 if (window.visualViewport) { window.visualViewport.addEventListener("resize", kbSync); window.visualViewport.addEventListener("scroll", kbSync); }
 function kbFocus(n) { setTimeout(function () { kbSync(); if (n && n.scrollIntoView) try { n.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) { n.scrollIntoView(); } }, 320); }
 /* v4.25 입력 공통 · 한글 조합(IME) 추적과 Enter 한 곳

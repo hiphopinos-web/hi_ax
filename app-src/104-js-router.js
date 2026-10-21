@@ -289,6 +289,7 @@ var App = {
     /* v4.08 아래 고정 버튼(axs-fix)이 있는 화면 = 결정·제출 화면 · 하단 메뉴를 숨기고 버튼 높이만큼 비운다 */
     var fixB = !!el("view").querySelector(".axs-fix.ax-bottom");
     if (fixB) { el("view").dataset.fix = "1"; nav.style.display = "none"; } else delete el("view").dataset.fix;
+    if (typeof kbTypeSync === "function") kbTypeSync();   /* v8.29 칸이 사라졌거나 되돌아왔으면 키보드 입력 중 표시(kb-type)를 다시 맞춘다 */
     if (aeId) { var aeN = el(aeId); if (aeN) { try { aeN.focus({ preventScroll: true }); if (aeSel) aeN.setSelectionRange(aeSel[0], aeSel[1]); } catch (e) {} } }   /* 다시 그려도 입력 중인 칸과 커서를 되돌린다 */
     if (v === "scan_q") { if (SCQ.tab === "scan") setTimeout(scanQStart, 80); else if (!QRM.timer) qrMineOn(); }   /* v5.23 카메라는 스캔 탭에서만 · 내 QR 탭은 6초 동기화 */
     if (v === "stair" && STR.mode === "start") stairTickOn();

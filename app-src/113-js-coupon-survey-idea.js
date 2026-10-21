@@ -151,6 +151,7 @@ function svSubmit() {
   var done = function () {
     S.set("survey_mine", d.a);
     S.set("survey_done", true); S.set("survey_draft", null);
+    try { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch (e) {}   /* v8.29 글 칸의 키보드를 먼저 내린다 · 완료 화면이 키보드 뒤에 남지 않게 */
     App.render(); window.scrollTo(0, 0); AXM.rise(el("svQ"));
   };
   if (testMode()) { done(); if (!(typeof SVR === "object" && SVR && SVR.on)) awardStamp("sv"); return; }   /* v8.28 설문 테스트 주소(?svreview) = 완료 화면만(스탬프 연출 없음 · 서버 호출 0) */

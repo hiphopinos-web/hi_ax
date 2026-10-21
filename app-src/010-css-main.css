@@ -2072,6 +2072,8 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .gs-links .gs-edit { min-height: var(--ax-touch-size); min-width: var(--ax-touch-size); padding: 0 var(--ax-space-8); font: var(--ax-type-t6-strong); color: var(--ax-color-brandText); text-decoration: none; }
   .gs-links .snd-btn { margin-left: auto; }
   html.kb-on .axs-fix.ax-bottom { padding-bottom: var(--ax-space-12); }
+  /* v8.29 (사용자 261021) 설문 · 글을 쓰는 동안(kb-type = 키보드 올라옴 + 글 칸 포커스) 아래 고정 줄은 키보드 위로 오르내리지 않고 내용 끝으로 내려 앉는다 · 키보드가 닫히면 원래 자리 */
+  html.kb-type #view[data-v="survey"] .axs-fix.ax-bottom { position: static; left: auto; bottom: auto; transform: none; width: auto; max-width: none; padding: var(--ax-space-24) 0 var(--ax-space-16); background: transparent; }
   .axs-form { gap: var(--ax-space-24); padding-top: var(--ax-space-8); }
   .axs-ta { width: 100%; min-height: 120px; padding: var(--ax-space-16); resize: none; font: var(--ax-type-t5); line-height: 1.5; }
   .axs-ta.axs-grow { min-height: 132px; max-height: min(40vh, 360px); overflow-y: auto; }   /* v5.39 아이디어 3,000자(사용자 261003) · 쓰면 높이가 늘고(ideaFit) 최대 높이 안에서 스크롤 · 설문 칸(.axs-ta)은 그대로 */
