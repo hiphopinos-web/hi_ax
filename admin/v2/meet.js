@@ -1,5 +1,5 @@
 /* AXF CONTROL v2 · 미팅 탭 (261016 밤 · 디자인 시안/커피챗 콘솔 기획 · 목업 · 서버 계약 · 사용자 D1~D10 권장안 · AI 는 하지 않음)
- * 칩 2개 = 18F 커피챗(시간표 · 명단 · 아이디어) · 1F AX 라운지(시간표 · 명단) · 오른쪽 「당일 모드」
+ * 칩 2개 = 18F 커피챗(시간표 · 명단 · 아이디어(신청자) · 아이디어(전체, 261021 사람 탭에서 옮김 · idea.js)) · 1F AX 라운지(시간표 · 명단) · 오른쪽 「당일 모드」
  * 커피챗 시간표 = 행사 전에는 이 기기의 초안(localStorage) → 「저장」 때 cchat_set · cchat_status 대기(draft=1 · 알림 전) · meet_order_set(순번) → 「알림 보내기」 cchat_notify(261017 저장 · 알림 분리) · 당일 모드 = 놓는 즉시(확인 창 · D2)
  * 라운지 시간표 = lng_board · 놓는 즉시 resv_move(확인 창 · 참가자 알림 없음) · 쉬는 칸(설정 라운지_쉬는칸 · 없으면 12:00 · 12:30)은 그리지 않는다
  * 메모 · 순번 = meet_note_list · meet_note_set · meet_order_set · 서버가 모르는 액션이면 메모 칸을 숨기고 순번은 이 기기에만 둔다
@@ -15,7 +15,7 @@ var MT={ ov:lsGet("axf_v2_meet_ov",{})||{}, ord:lsGet("axf_v2_meet_ord",[])||[],
 var MTD=null;
 function mtSave(){ lsSet("axf_v2_meet_ov",MT.ov); lsSet("axf_v2_meet_ord",MT.ord); lsSet("axf_v2_meet_ordd",MT.ordD); }
 function mtSub(){ var a=String(S.sub.meet||"cc").split("-"), p=a[0]==="ln"?"ln":"cc", v=a[1]||"board";
-  if((p==="cc"&&["board","list","idea"].indexOf(v)<0)||(p==="ln"&&["board","list"].indexOf(v)<0)) v="board"; return { p:p, v:v }; }
+  if((p==="cc"&&["board","list","idea","ideaall"].indexOf(v)<0)||(p==="ln"&&["board","list"].indexOf(v)<0)) v="board"; return { p:p, v:v }; }
 function mtGo(p, v){ MT.pick=null; goSub(p+(v&&v!=="board"?"-"+v:"")); }
 function mtKp(k){ var i=String(k).lastIndexOf(":"); return [k.slice(0,i), k.slice(i+1)]; }
 function mtNowMin(){ if(MT.nowT!=null) return MT.nowT; var d=srvNow(); return d.getHours()*60+d.getMinutes(); }
@@ -77,20 +77,23 @@ SCREENS.meet={
   title:"미팅", desc:"18F 커피챗 · 1F AX 라운지 · 시간표 짜기 · 명단 · 당일 진행",
   need:function(){ var s=mtSub(), t=MT.day?15000:30000, a=[{ k:"cc", a:"cchat_list", ttl:t },{ k:"ccf", a:"cfg_list", ttl:60000 },{ k:"lgb", a:"lng_board", ttl:t }];
     if(s.p==="cc") a.push({ k:"mnc", a:"meet_note_list", p:{ prog:"cc" }, ttl:60000 });
+    if(s.p==="cc"&&s.v==="ideaall") a.push({ k:"idl", a:"idea_list", ttl:30000 });   /* 261021 아이디어(전체) = 사람 탭에서 옮겨 옴 */
     else a.push({ k:"mnl", a:"meet_note_list", p:{ prog:"ln" }, ttl:60000 },{ k:"resv", a:"resv_list", ttl:t });
     return a; },
   mount:function(vb){
     var s=mtSub();
-    el("phCap").textContent=s.p==="cc"?"18F 커피챗 · 1:1 20분 · 신청 순서대로 놓기 · 저장 뒤 알림 보내기":"1F AX 라운지 · 1:1 상담 · 사전 명단 · 놓으면 바로 반영(알림 없음)";
+    el("phCap").textContent=s.v==="ideaall"?"앱 · 부스 · 라운지 · 커피챗에서 남긴 한 줄 · 숫자는 시험 사번 뺀 수 · 줄을 누르면 전문":s.p==="cc"?"18F 커피챗 · 1:1 20분 · 신청 순서대로 놓기 · 저장 뒤 알림 보내기":"1F AX 라운지 · 1:1 상담 · 사전 명단 · 놓으면 바로 반영(알림 없음)";
     vb.innerHTML='<div class="mtg'+(MT.pick?" picking":"")+'" id="mtgR"><div class="mtg-hd" id="mtgHd"></div><div id="mtgB"></div></div>';
     var b=el("mtgB");
     if(s.v==="list"){ if(s.p==="cc") b.innerHTML='<div class="card"><div id="mtgL"></div></div>'; else lgShell(b); }
+    else if(s.v==="ideaall") id2Mount(b);
     else if(s.v==="idea") b.innerHTML='<div class="card"><h2>신청 글 <span class="cap">신청 순서 · 줄을 누르면 사람 상세 · 메모</span></h2><div id="mtIb"></div></div>';
   },
   paint:function(){
     var s=mtSub(); mtHead(s);
     if(s.v==="list"){ if(s.p==="cc"){ mtCcM(); ccListPaint(el("mtgL")); } else lgPaint(); }
     else if(s.v==="idea") mtIdeaPaint();
+    else if(s.v==="ideaall") id2Paint();
     else mtBoardPaint(s.p);
   }
 };
@@ -98,7 +101,7 @@ function mtHead(s){
   var hd=el("mtgHd"); if(!hd) return;
   var cn=meetCount(), ln=meetLnCount();
   var chip=function(p, lab, n){ var on=s.p===p; return '<button type="button" role="tab" aria-selected="'+on+'" class="chip'+(on?" on":"")+'" onclick="mtGo(\''+p+'\',\''+(on?s.v:"board")+'\')">'+lab+' <span class="c">'+(n==null?"-":n0(n))+'</span></button>'; };
-  var vs=s.p==="cc"?[["board","시간표"],["list","명단"],["idea","아이디어"]]:[["board","시간표"],["list","명단"]];
+  var vs=s.p==="cc"?[["board","시간표"],["list","명단"],["idea","아이디어(신청자)"],["ideaall","아이디어(전체)"]]:[["board","시간표"],["list","명단"]];
   var h='<div class="chips" role="tablist" aria-label="미팅">'+chip("cc","18F 커피챗",cn)+chip("ln","1F AX 라운지",ln)+'</div>'+
     '<div class="mtg-seg" role="group" aria-label="보기">'+vs.map(function(v){ return '<button type="button" aria-pressed="'+(s.v===v[0])+'" class="'+(s.v===v[0]?"on":"")+'" onclick="mtGo(\''+s.p+'\',\''+v[0]+'\')">'+v[1]+'</button>'; }).join("")+'</div>'+
     '<button type="button" class="mtg-sw" role="switch" aria-checked="'+(MT.day?"true":"false")+'" onclick="mtDay()"><i></i>당일 모드</button>';

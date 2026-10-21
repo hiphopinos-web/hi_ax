@@ -229,6 +229,7 @@ function goSub(sub){ go(S.tab, sub); }
 function hashSet(){ var h="#"+S.tab+(S.sub[S.tab]?"/"+S.sub[S.tab]:""); if(location.hash!==h) try{ history.replaceState(null,"",h); }catch(e){} }
 function routeFromHash(){ var m=String(location.hash||"").replace(/^#/,"").split("/");
   if(m[0]==="inbox"&&(m[1]==="cchat"||m[1]==="lounge")){ m=["meet",m[1]==="cchat"?"cc":"ln"]; try{ history.replaceState(null,"","#meet/"+m[1]); }catch(e){} }   /* 261016 밤 옛 처리함 커피챗 · 라운지 주소 = 미팅 탭 */
+  if(m[0]==="people"&&m[1]==="idea"){ m=["meet","cc-ideaall"]; try{ history.replaceState(null,"","#meet/cc-ideaall"); }catch(e){} }   /* 261021 옛 사람 › 아이디어 한 줄 주소 = 미팅 › 아이디어(전체) */
   if(SCREENS[m[0]]){ S.tab=m[0]; if(m[1]) S.sub[m[0]]=decodeURIComponent(m[1]); } }
 window.addEventListener("hashchange",function(){ routeFromHash(); render(); load(false); });
 function stageDim(){ var t=srvNow(); return !(S.data.nb&&S.data.nb.day===S.data.nb.ev&&t.getHours()>=16); }
