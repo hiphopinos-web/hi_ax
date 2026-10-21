@@ -4,7 +4,7 @@
  *   1행 = 기준 시각 · 총 몇 명 · 2행 = 머리글(쪽마다 반복) · A4 세로 · 폭 맞춤 · 테두리 · 아래 가운데 쪽 번호 · 사번 · 번호 = 글자 칸(앞자리 0 · 4자리)
  *   선착순 명부 = 순번 · 사번 · 소속 · 직위 · 성명 · 구분 · 달성 시점 · 수령 시각 · 서명(순번 오름차순 · 취소 줄 없음 · 대기마감 줄 있음 · 줄 높이 2배 · 261020 후속)
  *   행운권 전체 명단 = 사번 · 소속 · 직위 · 성명 · 행운권 번호 · 당첨(번호 한 장 = 한 줄 · 번호 오름차순 · 무대 추첨 풀과 같은 원천 · 당첨 = N등 · N등 부재 · 다른 번호 당첨 · 다른 번호 부재)
- *   직위 = 서버 명부에 없어 빈 열(종이에 손으로 적을 수 있게 열은 남긴다)
+ *   직위 = 서버 명부직위(x.pos · 261021 명단 › 명단 올리기 › 직위 올리기 · 없으면 빈칸 · 종이에 손으로 적을 수 있게 열은 남긴다)
  * 마지막 내려받기 시각 = 이 PC(localStorage) */
 var RDL={ busy:"" };
 var RDL_K={ fcfs:{ n:"선착순 명부", f:"선착순명부" }, raffle:{ n:"행운권 전체 명단", f:"행운권명단" } };
@@ -54,13 +54,13 @@ function rdlSheet(k, r, st){
   if(k==="raffle") return { name:"행운권 전체 명단", file:"행운권 전체 명단",
     title:"행운권 전체 명단 · 기준 시각 "+st.s+" · 총 "+n0(r.n)+"명 · 행운권 "+n0(r.m)+"장"+(r.wins!=null?" · 당첨 "+n0(r.wins)+"명"+(num(r.absent)?" · 부재 "+n0(r.absent)+"명":""):""),
     head:["사번","소속","직위","성명","행운권 번호","당첨"], w:[11,34,8,11,12,15], kind:["c","t","c","c","b","c"],
-    rows:rows.map(function(x){ return [x.emp, x.dept, "", x.name, x.no, x.win||""]; }) };
+    rows:rows.map(function(x){ return [x.emp, x.dept, x.pos||"", x.name, x.no, x.win||""]; }) };
   var ok=r.m-num(r.wait);
   /* 261020 후속 · 체크인존에서 출력해 손으로 확인 · 서명 · 줄 높이 2배(36) · 서명 칸 넓게 · 옛 서버(got 없음)면 수령 시각 빈칸 */
   return { name:"선착순 명부", file:"선착순 명부", ht:36,
     title:"선착순 명부 · 기준 시각 "+st.s+" · 총 "+n0(r.m)+"명("+n0(r.cap)+"번까지 "+n0(ok)+"명 · 대기마감 "+n0(r.wait)+"명)",
     head:["순번","사번","소속","직위","성명","구분","달성 시점","수령 시각","서명"], w:[5,9,22,6,9,10,9,9,23], kind:["n","c","t","c","c","c","c","c","c"],
-    rows:rows.map(function(x){ return [x.rk, x.emp, x.dept, "", x.name, x.g, rdlHm(x.at,day), rdlHm(x.got,day), ""]; }) };
+    rows:rows.map(function(x){ return [x.rk, x.emp, x.dept, x.pos||"", x.name, x.g, rdlHm(x.at,day), rdlHm(x.got,day), ""]; }) };
 }
 
 /* ── xlsx 만들기 · 압축 없는 zip(저장 방식) · CRC-32 ── */

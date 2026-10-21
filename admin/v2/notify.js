@@ -11,7 +11,8 @@ var NT_MAX={ t:40, b:120, from:20 }, NT_FROM="AX Festival";
 var NT=(function(){ var g={}; try{ g=JSON.parse(sessionStorage.getItem(skey("axf_v2_nt"))||"{}")||{}; }catch(e){} var c=g.c&&typeof g.c==="object"?g.c:ntC0(), tg=g.tgt||"all", gr=g.grp||"dap"; if(gr==="stamps"){ if(tg==="grp"){ tg="all"; c=ntC0(); c.smin=String(g.smin!=null?g.smin:3); c.smax=String(g.smax!=null?g.smax:6); } gr="dap"; } else if(gr==="cchat") gr="cc_wait"; return { tgt:tg, grp:gr, gname:g.gname||"", c:c, cOpen:false, ppl:g.ppl||[], from:g.from!=null?g.from:NT_FROM, t:g.t||"", b:g.b||"", push:g.push!==false, pv:null, seq:0, q:"", qr:null, qseq:0, hold:null }; })();
 function ntSave(){ try{ sessionStorage.setItem(skey("axf_v2_nt"),JSON.stringify({ tgt:NT.tgt, grp:NT.grp, gname:NT.gname, c:NT.c, ppl:NT.ppl, from:NT.from, t:NT.t, b:NT.b, push:NT.push })); }catch(e){} }
 function ntAddPerson(p){ if(!p||!p.emp) return; NT.tgt="ppl"; if(!NT.ppl.some(function(x){ return x.emp===p.emp; })) NT.ppl.push({ emp:p.emp, name:p.name||"", dept:p.dept||"" }); NT.pv=null; ntSave(); }
-function ntSub(){ return subsOf(NT_SUBS,"send"); }
+function ntSub(){ var s=S.sub.notify; return NT_SUBS.some(function(x){ return x[0]===s; })?s:"send"; }   /* 261021 알림 = 설정 탭 칩(S.sub.log = ntf) · 안쪽 칩 = S.sub.notify */
+function ntOn(){ return S.tab==="log"&&S.sub.log==="ntf"; }
 function pushSt(){ var d=S.data.pst; return d&&d.ok&&d.rt?d:null; }
 SCREENS.notify={
   title:"알림", desc:"",
@@ -160,7 +161,7 @@ function ntDone(t, more){ NT.t=""; NT.b=""; NT.pv=null; ntSave(); ntForm(); ntPv
 function ntHoldPaint(){ var b=el("ntHold"); if(!b) return; var H=NT.hold, left=H?Math.ceil((H.until-Date.now())/1000):0;
   if(left<=0){ if(H){ NT.hold=null; reload(["phist"]); } b.innerHTML=""; return; }
   b.innerHTML=band("warn",'<b>푸시 보류 중 · <span class="n">'+left+'</span>초 뒤 나감</b> · '+esc(H.t),'<button class="btn sm dng" type="button" onclick="ntHoldCancel(\''+jq(H.id)+'\')">푸시 취소</button>'); }
-setInterval(function(){ if(NT.hold&&S.tab==="notify") ntHoldPaint(); },1000);
+setInterval(function(){ if(NT.hold&&ntOn()) ntHoldPaint(); },1000);
 function ntHoldCancel(id){ call("push_cancel",{ id:id, by:ntBy() }).then(function(r){ if(NT.hold&&NT.hold.id===id) NT.hold=null; ntHoldPaint(); reload(["phist","pst"]); toast(r&&r.ok?"푸시를 취소했습니다 · 앱 안 공지는 남음(보낸 기록에서 공지 중지)":"취소하지 못했습니다 · "+ntWhy(r),{ bad:!(r&&r.ok) }); }); }
 function ntTest(){ var tx=ntPushTx(), me=(S.me&&S.me.emp)||aemp(); if(!NT.t.trim()){ toast("제목을 넣습니다"); return; }
   call("push_send",{ test:1, me:me, title:tx.t, body:tx.b, go:"notices", by:ntBy() }).then(function(r){ toast(r&&r.ok?"나에게 보냈습니다 · 내 기기 "+n0(r.subs||r.reach||0)+"대":"테스트 실패 · "+ntWhy(r),{ bad:!(r&&r.ok) }); reload(["phist"]); }); }

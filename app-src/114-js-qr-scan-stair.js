@@ -1126,7 +1126,7 @@ function qrCamStop() {
  *   dap      = AX 라운지 체크인(staff_mark prog dap · mark in · 출석만 · 스탬프 없음)
  *   dapout   = AX 라운지 종료(staff_mark prog dap · mark out · 스탬프 2개)
  *   ccout    = 18F 커피챗 종료(staff_mark prog cchat · mark out · 스탬프 1개)
- *   gate     = 1F 주차장 체크인존 한 칸(ck_gate only=kit · 옷(키트 · 스태프 의류)만 지급 기록 · 선착순 참여상은 「선착순 참여상」 칸 fcfs_give 에서만 · 261020)
+ *   gate     = 1F 주차장 체크인존 한 칸(ck_gate only=chk · 261021 1층 체크인 기록만 · 옷 · 키트 지급 없음 · 선착순 참여상은 「선착순 참여상」 칸 fcfs_give 에서만)
  * 걷은 칸 = 체크인 접수 번호표(ck_ticket) · A~E 창구 · 옛 키트(inv_kit) · 참여상 칸(fcfs_give) · 10F 세션 입장(sess_in) · 포토부스(photo_enter) · 커피챗 참석 확인 · 서버 액션은 그대로 둔다 */
 /* v4.71 lb = 타일 이름 · tsub = 타일 아래 한 줄 · will = 「지금 찍으면」 뒤 결과 · cond = 조건 한 줄 · prog · mark = 서버 staff_mark 값 */
 var SCAN_SPOTS = [
@@ -1136,7 +1136,7 @@ var SCAN_SPOTS = [
   { id: "dap", nm: "1F AX 라운지", kind: "roster", prog: "dap", mark: "in", lb: "라운지 체크인", tsub: "출석 확인", will: "AX 라운지 체크인 · 출석", cond: "승인된 상담 · 상담 시간 · 스탬프는 종료 때" },
   { id: "dapout", nm: "1F AX 라운지", kind: "roster", prog: "dap", mark: "out", lb: "라운지 종료", tsub: "스탬프 2개", will: "라운지 종료 · 스탬프 2개", cond: "승인된 상담 · 상담 끝 시간", su: 2 },
   { id: "ccout", nm: "18F AX 커피챗", kind: "roster", prog: "cchat", mark: "out", lb: "커피챗 종료", tsub: "스탬프 1개", will: "커피챗 종료 · 스탬프 1개", cond: "선정된 사람 · 내 회차 끝", su: 1 },
-  { id: "gate", nm: "1F 주차장 체크인존", kind: "gate", lb: "체크인존", tsub: "옷 지급", will: "옷 확인 · 지급 기록", cond: "옷(키트 · 스태프 의류)만 지급" },
+  { id: "gate", nm: "1F 주차장 체크인존", kind: "gate", lb: "체크인존", tsub: "체크인 기록", will: "체크인 기록", cond: "10F 사전 신청자" },
   /* 261020 (사용자 「스태프 QR 칸에 선착순 참여상」) 참여상만 따로 · fcfs_give(체크인존 칸과 같은 판정 · 찍는 즉시 지급 기록) · 결과 글자 = 서버 fv(fcfsVerdict_) */
   { id: "fcfs", nm: "선착순 참여상", kind: "fcfs", lb: "선착순 참여상", tsub: "완주 순번 · 지급", will: "선착순 참여상 지급 기록", cond: "스탬프 6개 완주 순서" }
 ];
@@ -1169,7 +1169,7 @@ function pqrRes(no, sp) {
   if (sp.kind === "roulette") return { ok: true, name: nm, n: p.n };
   if (sp.kind === "stamp") return { ok: true, dup: !!p.p2, who: nm, n: p.p2 ? p.n : p.n + 1, id: sp.id };
   if (sp.kind === "roster") return { ok: false, reason: "notfound", name: nm };
-  if (sp.kind === "gate") return { ok: true, name: nm, kit: p.kit ? { st: "give", pool: "kit", sz: "L", ckno: "C-0" } : { st: "none", reason: "nolist", pool: "" }, fcfs: { st: "skip" }, give: p.kit ? ["kit"] : [] };
+  if (sp.kind === "gate") return { ok: true, name: nm, chk: p.kit ? { st: "new", at: "" } : { st: "out", at: "" } };   /* 261021 체크인 기록만 · 1 = 사전 신청자 체크인 완료 · 나머지 = 사전 신청자 아님 */
   if (sp.kind === "fcfs") return { ok: true, give: "none", reason: p.full ? "full" : "noelig", n: p.n, name: nm, fv: { k: p.full ? "full" : "need", c: "dup", h: p.full ? "선착순 마감" : "아직 완주 전", s: "스탬프 " + p.n + "/6", big: "" } };
   return null;
 }
@@ -1195,7 +1195,7 @@ function scanHit(raw) {
   var params = admA({ emp: emp, qr: String(raw).trim() });   /* v4.67 찍은 글자 그대로 · 서버가 서명 · 시간을 본다(콘솔 · 담당자 적립은 qr 없음) */
   if (sp.kind === "roster") { params.action = "staff_mark"; params.prog = sp.prog; params.mark = sp.mark; }   /* 261016 라운지 체크인(in · 출석만) · 라운지 종료 · 커피챗 종료(out · 스탬프) */
   else if (sp.kind === "stamp") { params.action = "stamp_grant"; params.id = sp.id; }
-  else if (sp.kind === "gate") { params.action = "ck_gate"; params.only = "kit"; }   /* 261016 체크인존 한 칸 · 261020 옷만(only=kit · 서버는 참여상 건너뜀) */
+  else if (sp.kind === "gate") { params.action = "ck_gate"; params.only = "kit"; }   /* 261016 체크인존 한 칸 · 261021 체크인 기록만(only=kit 그대로 · 서버는 참여상 건너뜀 fcfs skip · 결과 = chk) */
   else if (sp.kind === "fcfs") params.action = "fcfs_give";   /* 261020 선착순 참여상 칸 */
   else params.action = "roulette_redeem";
   scanLog(emp, "처리 중", null);
@@ -1345,17 +1345,22 @@ function gateFcRow(f) {
   var r = f.reason;
   return ["dup", r === "early" ? "참여상 " + (f.start || "10:30") + "부터 지급" : r === "late" ? "참여상 " + (f.cut || "17:00") + " 지급 마감" : "참여상 · " + (GATE_FC[r] || r || "확인 못 함")];
 }
+/* 261021 (사용자 확정 「권장대로 진행」) 체크인존 = 1층 체크인 기록만 · 옷 · 키트 줄(gateKitRow · 사이즈 큰 글자 · 가습기 대체)은 그리지 않는다(함수만 남김)
+ * 서버 chk { st new | dup | out, at HH:MM } · 옛 서버(chk 없음) = res.ck new | dup | none · 둘 다 없으면 기록됨(new)
+ * 띠 · 판 = 이름 + 「체크인 완료」 · 「이미 체크인 · HH:MM」 · 「사전 신청자 아님」 */
+var GATE_CHK = { new: ["ok", "체크인 완료"], dup: ["dup", "이미 체크인"], out: ["bad", "사전 신청자 아님"] };
+function gateChkOf(res) {
+  var c = res && res.chk;
+  if (c && GATE_CHK[c.st]) return { st: c.st, at: c.at ? String(c.at) : "" };
+  var k = res && res.ck;
+  return { st: k === "dup" ? "dup" : k === "none" ? "out" : "new", at: res && res.at ? String(res.at) : "" };
+}
 function gateDone(emp, res) {
-  var who = res.name || emp, k = res.kit || null, give = res.give || [];
-  var rows = [gateKitRow(k)].filter(function (x) { return !!x; });   /* 261020 옷 줄만(선착순 참여상은 「선착순 참여상」 칸) */
-  var bad = rows.some(function (x) { return x[0] === "bad"; }), dupAny = k && k.st === "dup";
-  var tone = give.length ? "ok" : bad ? "bad" : "dup";
-  var head = give.length ? "지급 " + give.length + "건" : dupAny ? "이미 받음" : "지금 지급할 것 없음";
-  var big = k && (k.st === "give") && k.sz ? kitLbl(k.sz) : "";   /* 옷 사이즈 크게 */
-  SCAN.bd = { c: tone, big: big, t: rows[0] ? rows[0][1] : head, s: "", x: 3 };
-  scanLog(emp, (res.name ? res.name + " · " : "") + rows.map(function (x) { return x[1]; }).join(" · "), tone === "bad" ? false : true, true);
-  scanShow(tone, who, head, "");
-  if (SCAN.res) { SCAN.res.rows = rows; var b = el("scanRes"); if (b) b.innerHTML = scanBigHtml(); }
+  var c = gateChkOf(res), g = GATE_CHK[c.st], head = g[1] + (c.st === "dup" && c.at ? " · " + c.at : "");
+  var no = c.st !== "out" && res.kit && res.kit.ckno ? "세션 번호 " + res.kit.ckno : "";   /* 10F 세션 번호(kit.ckno)만 · 사이즈 sz 는 쓰지 않는다 */
+  SCAN.bd = { c: g[0], t: head, s: no, x: 2 };   /* 띠 = 이름(가림) · 판정 한 줄 · 다음 사람까지 2배 */
+  scanLog(emp, (res.name ? res.name + " · " : "") + head, c.st === "new" ? true : c.st === "out" ? false : null, true);
+  scanShow(g[0], res.name || emp, head, no);
 }
 /* 261020 (사용자 「스태프 QR 칸에 선착순 참여상」) 「선착순 참여상」 칸 · fcfs_give 결과 · 찍는 즉시 지급 기록(체크인존 칸과 같은 방식)
  * 글자 = 서버 fv { k, c ok | dup | bad, h 큰 줄, s 작은 줄, big 지급한 순간 순번 }(fcfsVerdict_ 한 곳 · 체크인존 칸 · 콘솔 체크인 탭과 같다) · 옛 서버(fv 없음) = give 값으로 짧게 */

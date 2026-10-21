@@ -1,37 +1,10 @@
-/* AXF CONTROL v2 · S2 처리함 (261016)
- * 칩 = 체크인존(지급 현황) · 스태프 요청 · PIN 분실. 한 건씩 처리하고 처리한 줄만 고친다.
- * 261016 밤 AX 라운지 · 커피챗 칩은 미팅 탭(meet.js)으로 옮김 · 이 파일에는 라운지 명단 부품(명단 올리기 · 명단 표 · 상태 바꾸기)만 남긴다
- * 승인 · 체크인 · 선정 = L2(확인 창, PIN 없음) · 요청 닫기 · 잘못된 PIN 요청 닫기 = L1(바로 · 토스트)
- * 261017 체크인존 = 사전 신청자 + 스태프 명단 한 판 · 체크인 = 스태프 폰 「체크인존」 스캔(ck_gate) · 참여상 = 별도 칩(ckzone.js) · 창구 · 번호표는 걷음
- * 261016 콘솔 동작에는 PIN 을 묻지 않는다(「PIN 분실」은 참가자 앱 PIN 요청 처리) */
-var IB_SUBS=[["ck","체크인존",null],["fx","참여상",null],["req","스태프 요청",""],["pw","PIN 분실",""]];   /* 261017 참여상(선착순 1~200)을 체크인존에서 뺌(K4) */
+/* AXF CONTROL v2 · 옛 처리함 부품 (261016 · 261021 처리함 탭 걷음)
+ * 261021 사용자 「권장대로」 · 처리함 탭 · 스태프 요청 폐지 · 체크인존 · 참여상 = 체크인 탭 · 스태프 묶음 · 번호 = 명단 › 목록 › 스태프(ckzone.js) · 비밀번호 초기화 요청 = 명단 탭 칩(people.js)
+ * 이 파일에 남는 것 = AX 라운지 명단 부품(미팅 탭) · 비밀번호 초기화 요청 명단(pwPaint · 명단 탭이 부른다)
+ * 서버 sreq_* 액션 · 지난 기록은 그대로(콘솔이 부르지 않음) */
 var RV_ON=["신청","승인","체크인"];
 var RV_CLS={ "신청":"req", "승인":"okc", "체크인":"in", "완료":"done", "노쇼":"no" };
 var RV_TAG={ "신청":"warn", "승인":"", "체크인":"", "완료":"ok", "노쇼":"bad", "취소":"off" };
-function ibSub(){ var s=S.sub.inbox; return IB_SUBS.some(function(x){ return x[0]===s; })?s:"ck"; }
-SCREENS.inbox={
-  title:"처리함", desc:"",
-  need:function(){ var s=ibSub();
-    if(s==="fx") return [{ k:"fx1", a:"fcfs_list", p:{ page:1 }, ttl:15000 },{ k:"fx2", a:"fcfs_list", p:{ page:2 }, ttl:15000 }];
-    return s==="ck"?[{ k:"ckz", a:"ck_zone", ttl:15000 },{ k:"inv", a:"inv_state", ttl:30000 },{ k:"cno", a:"ck_no_state", ttl:30000 },{ k:"cnl", a:"ck_no_list", ttl:60000 },APM_NEED]:s==="req"?[{ k:"sreq", a:"sreq_list", p:{ st:"all", n:100 }, ttl:15000 }]:[{ k:"pwl", a:"pw_req_list", ttl:30000 }]; },
-  mount:function(vb){
-    var s=ibSub();
-    el("phCap").textContent={ ck:"1F 체크인존 · 사전 신청자 · 스태프 · 누가 왔고 누가 안 왔나", fx:"6개 선착순 참여상 · 달성 순번 1~200", req:"스태프 폰 「운영자에게 요청」", pw:"앱 로그인 「PIN 을 잊었어요」 요청" }[s];
-    vb.innerHTML='<div class="chips" id="ibChips" role="tablist" aria-label="처리함"></div><div id="ibB"></div>';
-    var b=el("ibB");
-    if(s==="ck") b.innerHTML='<div class="card"><h2>체크인존 명단 <span class="cap">사전 신청자 + 스태프 · 줄을 누르면 한 사람 카드</span></h2><div id="ckzTop"></div><div id="ckzL"></div></div>'+
-      '<details class="memo card mt"><summary>번호 매기기 · 사이즈 교환 · 명단 밖 지급</summary>'+ckExtraHtml()+'</details>';   /* 261017 체크인존 = 명단 한 판(ckzone.js) */
-    else if(s==="fx") b.innerHTML='<div class="card"><h2>참여상 선착순 <span class="cap">스탬프 6개 달성 순</span></h2><div id="fxTop"></div><div id="fxL"></div></div>';
-    else if(s==="req") b.innerHTML='<div class="card"><h2>스태프 요청</h2><div id="rqList"></div></div>';
-    else b.innerHTML='<div class="card"><h2>PIN 분실 요청 <span class="cap">본인 확인(사원증) 뒤 초기화</span></h2><div id="pwList"></div></div>';
-  },
-  paint:function(){
-    var b=S.data.nb, s=ibSub(), c=b&&b.ok?{ req:num(b.sreq&&b.sreq.open), pw:num(b.pw) }:{};
-    el("ibChips").innerHTML=IB_SUBS.map(function(x){ return '<button type="button" role="tab" aria-selected="'+(x[0]===s)+'" class="chip'+(x[0]===s?" on":"")+'" onclick="goSub(\''+x[0]+'\')">'+esc(x[1])+(x[2]===null?"":' <span class="c">'+(x[2]?x[2]+" ":"")+(c[x[0]]!=null?n0(c[x[0]]):"-")+'</span>')+'</button>'; }).join("");
-    ({ ck:function(){ ckzPaint(); ckExtraPaint(); }, fx:fxPaint, req:rqPaint, pw:pwPaint })[s]();
-  }
-};
-
 /* ── AX 라운지 명단 부품 · 미팅 탭 › 1F AX 라운지 › 명단(meet.js) · lgPlace = 추가 창(lngrow.js)의 칸별 남은 자리 셈 ── */
 function lgCfg(){ var b=S.data.nb, L=b&&b.lounge; return { start:(L&&L.start)||LOUNGE_DEF.start, n:num(L&&L.n)||LOUNGE_DEF.n, seats:num(L&&L.seats)||LOUNGE_DEF.seats, step:num(L&&L.step)||60, srv:!!L }; }
 /* 261016 놓기 = 서버 lngPlace_ 와 같은 규칙 · 시간 빈칸 = 칸 미정(none) · 정한 상담석(seat) 먼저 · 나머지 신청 시각 순 · 못 놓으면 칸 밖(out) */
@@ -93,44 +66,25 @@ function rvUndo(id, cur, back){
 
 /* ── 커피챗 · cchat.js 부품 · 화면 = 미팅 탭(meet.js) ── */
 
-/* 261017 체크인존 지급 현황(ckPaint · ck_gate 찍은 명단 · 참여상 수령)은 명단 한 판(ckzone.js)으로 바뀜 · 옷 수령 체크 없음(사용자 261017) */
-/* ── 스태프 요청 · 명단 표 ── */
-var RQ={ g:null };
-function rqPaint(){
-  if(!RQ.g) RQ.g=XG.make({ id:"sreq", file:"스태프 요청", key:function(r){ return r.id; }, sort:{ k:"t", d:-1 },
-    chips:[["open","열림",function(r){ return r.st==="open"; }],["done","닫힘",function(r){ return r.st!=="open"; }],["all","전체",null]],
-    cols:[{ k:"t", t:"요청 시각", type:"date", w:96 },{ k:"kind", t:"종류", w:120, v:function(r){ return SREQ_K[r.kind]||r.kind; } },{ k:"name", t:"대상", w:100, v:function(r){ return r.name||r.emp||""; } },{ k:"spot", t:"자리", w:90 },{ k:"byName", t:"보낸 스태프", w:100, v:function(r){ return r.byName||r.by||""; } },{ k:"note", t:"메모", w:150 },
-      { k:"res", t:"결과", w:70, v:function(r){ return r.st==="open"?"열림":r.res||"닫힘"; }, f:function(r){ return r.st==="open"?tag("열림","warn"):tag(r.res||"닫힘","off"); } },
-      { t:"", w:200, act:function(r){ if(r.st!=="open") return '<span class="cap">'+esc(fmtD(r.doneAt))+' '+esc(r.doneByName||"")+'</span>'; var i=jq(r.id); return '<button class="btn sm pri" type="button" onclick="reqAsk(\''+i+'\',\'처리\')">처리</button> <button class="btn sm" type="button" onclick="reqAsk(\''+i+'\',\'안내\')">안내</button> <button class="btn sm dng" type="button" onclick="reqAsk(\''+i+'\',\'거절\')">거절</button>'; } }],
-    src:{ a:"sreq_list", p:{ st:"all", n:100 }, pick:function(r){ return r.rows; } }, empty:"열린 요청이 없습니다", h:480 });
-  var gt=dataGate("sreq","스태프 요청"); RQ.g.gate=gt||""; XG.set(RQ.g, gt?null:(S.data.sreq.rows||[]), el("rqList"));
-}
-
-/* 261017 스태프 요청 닫기 = 확인 창 뒤(처리 · 안내 · 거절 · 다시 열기 없음) · 닫는 함수는 지금 탭과 같은 reqDone */
-function reqAsk(id, res){
-  var d=S.data.sreq, r=d&&d.rows?d.rows.filter(function(x){ return String(x.id)===String(id); })[0]:null; if(!r) return;
-  confirmBox({ t:"요청을 「"+res+"」로 닫을까요?", who:(SREQ_K[r.kind]||r.kind||"요청")+(r.name||r.emp?" · "+(r.name||r.emp):"")+(r.spot?" · "+r.spot:""), sub:"보낸 스태프 "+(r.byName||r.by||"-")+" · 닫으면 다시 열지 않음", ok:res+"로 닫기", danger:res==="거절",
-    run:function(){ return Promise.resolve({ ok:true }); }, done:function(){ reqDone(id, res); } });
-}
 function pwBy(s){ var a=[]; String(s||"").split(/\s*·\s*/).forEach(function(x){ if(x&&a.indexOf(x)<0) a.push(x); }); return a.join(" · "); }   /* 261017 옛 줄 「콘솔 990901 · 콘솔 990901」 한 번만 */
-/* ── PIN 분실 · 명단 표 ── */
+/* ── 비밀번호 초기화 요청(앱 로그인 「비밀번호를 잊었어요」) · 명단 표 · 명단 탭 › 비밀번호 초기화 ── */
 var PW={ g:null };
 function pwPaint(){
-  if(!PW.g) PW.g=XG.make({ id:"pw", file:"PIN 분실 요청", whoCheck:1, key:function(r){ return String(r.row); }, sort:{ k:"ts", d:-1 },
+  if(!PW.g) PW.g=XG.make({ id:"pw", file:"비밀번호 초기화 요청", whoCheck:1, key:function(r){ return String(r.row); }, sort:{ k:"ts", d:-1 },
     chips:[["w","기다림",function(r){ return r.status==="대기"; }],["d","처리함",function(r){ return r.status!=="대기"; }],["all","전체",null]],
-    cols:[{ k:"ts", t:"요청 시각", type:"date", w:100 },{ k:"name", t:"이름", w:110 },{ k:"emp", t:"사번", w:90 },{ k:"status", t:"상태", w:80, f:function(r){ return tag(r.status, r.status==="대기"?"warn":"off"); } },{ k:"pwSet", t:"PIN 있음", w:80, v:function(r){ return r.pwSet?"있음":r.joined?"없음":"가입 전"; } },{ k:"doneAt", t:"처리 시각", type:"date", w:100 },
-      { t:"", w:250, act:function(r){ if(r.status!=="대기") return '<span class="cap">'+esc(pwBy(r.by))+'</span>'; return '<button class="btn sm pri" type="button" onclick="pwDo('+num(r.row)+')">PIN 초기화하고 처리</button> <button class="btn sm" type="button" onclick="pwCancel('+num(r.row)+')">잘못된 요청</button>'; } }],
+    cols:[{ k:"ts", t:"요청 시각", type:"date", w:100 },{ k:"name", t:"이름", w:110 },{ k:"emp", t:"사번", w:90 },{ k:"status", t:"상태", w:80, f:function(r){ return tag(r.status, r.status==="대기"?"warn":"off"); } },{ k:"pwSet", t:"비밀번호", w:80, v:function(r){ return r.pwSet?"있음":r.joined?"없음":"가입 전"; } },{ k:"doneAt", t:"처리 시각", type:"date", w:100 },
+      { t:"", w:250, act:function(r){ if(r.status!=="대기") return '<span class="cap">'+esc(pwBy(r.by))+'</span>'; return '<button class="btn sm pri" type="button" onclick="pwDo('+num(r.row)+')">초기화하고 처리</button> <button class="btn sm" type="button" onclick="pwCancel('+num(r.row)+')">잘못된 요청</button>'; } }],
     src:{ a:"pw_req_list", p:{} }, empty:"요청이 없습니다", h:420 });
-  var gt=dataGate("pwl","PIN 분실 요청"); PW.g.gate=gt||""; XG.set(PW.g, gt?null:(S.data.pwl.rows||[]), el("pwList"));
+  var gt=dataGate("pwl","비밀번호 초기화 요청"); PW.g.gate=gt||""; XG.set(PW.g, gt?null:(S.data.pwl.rows||[]), el("pwList"));
 }
 function pwRow(row){ var d=S.data.pwl; return d&&d.rows?d.rows.filter(function(x){ return num(x.row)===row; })[0]:null; }
 function pwDo(row){
   var r=pwRow(row); if(!r) return;
-  confirmBox({ t:"PIN 을 초기화할까요?", who:personLine(r), sub:"본인 확인 뒤 · 다음 로그인에 넣는 4자리가 새 PIN · 되돌릴 수 없음", ok:"초기화하고 처리", danger:true,
+  confirmBox({ t:"비밀번호를 초기화할까요?", who:personLine(r), sub:"본인 확인 뒤 · 다음 로그인에 넣는 4자리가 새 비밀번호 · 되돌릴 수 없음", ok:"초기화하고 처리", danger:true,
     run:function(pp){ return call("pw_req_done",Object.assign({ row:row },pp)); },   /* 처리자 = 서버가 로그인 사번으로 적음(by 를 보내면 두 번 적힘) */
-    done:function(){ r.status="처리"; pwPaint(); reload(["pwl","pwc","nb"]); toast("PIN 을 초기화했습니다 · "+(r.name||r.emp)); } });
+    done:function(){ r.status="처리"; pwPaint(); reload(["pwl","pwc","nb"]); toast("비밀번호를 초기화했습니다 · "+(r.name||r.emp)); } });
 }
 function pwCancel(row){
   var r=pwRow(row); if(!r) return;
-  call("pw_req_cancel",{ row:row }).then(function(x){ if(x&&x.ok){ r.status="취소"; pwPaint(); reload(["pwl","pwc"]); toast("요청을 닫았습니다 · PIN 은 그대로"); } else toast("닫지 못했습니다 · "+why(x),{ bad:1 }); });
+  call("pw_req_cancel",{ row:row }).then(function(x){ if(x&&x.ok){ r.status="취소"; pwPaint(); reload(["pwl","pwc"]); toast("요청을 닫았습니다 · 비밀번호는 그대로"); } else toast("닫지 못했습니다 · "+why(x),{ bad:1 }); });
 }
