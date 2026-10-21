@@ -16,10 +16,10 @@ function dsLoad(){
 function dsCard(){
   var L=DS.L; if(!dsTx()) return "";
   var h='<div class="card mt" id="dsCard"><h2>'+esc(dsT("h"))+' <span class="cap">'+esc(dsT("cap"))+'</span></h2><p class="cap">'+esc(dsT("desc"))+'</p>'+
-    '<div class="grid g3 mt">'+
+    '<div class="grid '+(typeof dtKpi==="function"?"g4":"g3")+' mt">'+
       kpi({ l:dsT("kN"), v:n0(L.n), u:dsT("kNu"), s:dsT("kNs",n0(L.grp&&L.grp.n),n0(L.grp&&L.grp.add)) })+
       kpi({ l:dsT("kP"), v:n0(L.pool&&L.pool.balls), u:dsT("kPu"), s:dsT("kPs",n0(L.pool0&&L.pool0.balls),n0(L.pool0&&L.pool0.n)), st:"ok" })+
-      kpi({ l:dsT("kC"), v:L.cond?"ON":"OFF", s:L.cond?dsT("cOn"):dsT("cOff") })+
+      kpi({ l:dsT("kC"), v:L.cond?"ON":"OFF", s:L.cond?dsT("cOn"):dsT("cOff") })+(typeof dtKpi==="function"?dtKpi(L):"")+
     '</div>';
   if(L.bad&&L.bad.length) h+='<div class="mt">'+band("warn",esc(dsT("bad",n0(L.bad.length),L.bad.map(function(b){ return (b.rk||"?")+" · "+b.no+" · "+b.emp+(b.at?" · "+b.at:""); }).join(" / "))))+'</div>';
   var dis=DS.busy?" disabled":"", th=dsTA("th");
