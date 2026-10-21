@@ -1776,7 +1776,7 @@
     /* ③ */
     var Dk = REFIT.LDESK, lb = L.getObjectByName('zone_lounge_lounge_body'), ddx = Dk.to[0] - Dk.from[0], ddz = Dk.to[1] - Dk.from[1];
     var inDk = function (p) { return p[0] > Dk.x0 && p[0] < Dk.x1 && p[1] > Dk.z0 && p[1] < Dk.z1; };
-    if (lb) { R.lounge = regionCut(lb, null, null, function (tri) { return !tri.every(function (V2) { return inDk(V2.p); }); }); R.lmv = shiftWhere(lb, function () { return true; }, ddx, ddz); }
+    if (lb && lb.parent) { lb.parent.remove(lb); R.lounge = 1; }   /* v8.35 (사용자 261021 「여기 테이블 치워줘」) 라운지 데스크 치움 = 옛 부스에서 남겨 옮기던 데스크 삼각형(LDESK)까지 몸체째 뺀다 · 존 자료(줄 · 이름표 · 미니맵 · 웨이포인트)는 그대로 · 충돌 칸 지도(buildGrid)는 이 뒤라 자리가 비게 된다 */
     var Lo = REFIT.LOLD; if (leds) R.lounge += regionCut(leds, { x0: Lo.x0, x1: Lo.x1, z0: Lo.z0, z1: Lo.z1 }, null);
     /* 바닥 빛 · 비운 자리 = 옆 바닥 한 점 */
     var floor = L.getObjectByName('floor'), sn = L.getObjectByName('side_n');
@@ -5690,5 +5690,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v7.81', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v7.82', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();
