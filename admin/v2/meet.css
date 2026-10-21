@@ -1,5 +1,5 @@
 /* AXF CONTROL v2 · 미팅 탭(18F 커피챗 · 1F AX 라운지 · 261016 밤 · 디자인 시안/커피챗 콘솔/목업.html)
- * 색 = 콘솔 네이비 + 상태 3색 · 오렌지는 당일 모드 「지금 회차」 한 곳(.mtg 안에서만 정의) · 움직임 = transform · opacity 만 · 동작 줄이기면 즉시 */
+ * 색 = 콘솔 네이비 + 상태 3색 · 오렌지는 오늘 날짜 「지금 회차」 한 곳(.mtg 안에서만 정의) · 움직임 = transform · opacity 만 · 동작 줄이기면 즉시 */
 .mtg{--or:#FF7E31;--or-bg:#FFF3EA}
 .mtg-hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .mtg-hd .chips{margin-bottom:0}
@@ -115,7 +115,7 @@
 .mtg.mlkon .mtg-sl .mtg-pc{cursor:pointer}
 .mlk-bar .mlk-ic{display:inline-flex;color:var(--navy)}
 .mlk-bar.pick{background:var(--navy05);border-color:var(--navy)}
-/* 261022 (사용자 「카드 높이 고정」) 시간표 칸 카드 = 이름 1줄(꼬리표는 이름 줄 안) + 사번 · 소속 1줄(긴 소속은 말줄임 · 「 · 」 앞에서 꺾지 않음) · 빈 칸도 같은 높이 · 당일 모드 = 단추 줄만큼 더 · 잠금 표시가 들어가도 그대로 */
+/* 261022 (사용자 「카드 높이 고정」) 시간표 칸 카드 = 이름 1줄(꼬리표는 이름 줄 안) + 사번 · 소속 1줄(긴 소속은 말줄임 · 「 · 」 앞에서 꺾지 않음) · 빈 칸도 같은 높이 · 보는 날짜가 오늘(dayon) = 단추 줄만큼 더 · 잠금 표시가 들어가도 그대로 */
 .mtg{--pc-h:56px;--pc-act:34px}
 .mtg-sl{min-height:calc(var(--pc-h) + 3px)}
 .mtg-sl .mtg-pc{height:var(--pc-h);overflow:hidden;gap:2px;justify-content:center}
