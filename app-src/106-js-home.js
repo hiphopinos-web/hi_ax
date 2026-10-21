@@ -212,7 +212,7 @@ function cnRand() {
 }
 function crowdStripHtml() {
   if (!cnShow() && !cnTest()) return "";
-  if (typeof evPreDay === "function" && evPreDay() && !cnTest()) return "";   /* v8.33 (사용자 261021 「혼잡도 정보는 당일에」) 10/26 전 = 「지금 현장」 섹션째 없음(빈 칸 · 준비 중 글자도 없음) · 판정 = evPreDay(서버 시각 보정 appNow · 서버 ev_phase 우선) · 테스트 사번만 미리 보임 */
+  if (typeof evPreDay === "function" && evPreDay() && !cnTest() && !cnStaff()) return "";   /* v8.33 (사용자 261021 「혼잡도 정보는 당일에」) 10/26 전 = 「지금 현장」 섹션째 없음(빈 칸 · 준비 중 글자도 없음) · 판정 = evPreDay(서버 시각 보정 appNow · 서버 ev_phase 우선) · 테스트 사번 · v8.34 스태프(staffBtn · 서버 명단 staff_me 우선)는 미리 보임(제보 연습) */
   var n = cnGet() || {}, st = cnStaff(), tv = cnTest(), sv = tv ? cnRand() : null, dot = String(n.dot || ""), cells = CN_K.map(function (t) { var x = cnCell(t[0], sv); x.k = t[0]; x.nm = t[1]; return x; });
   var ats = cells.filter(function (x) { return x.at > 0; }).map(function (x) { return x.at; }), oldest = ats.length ? Math.min.apply(null, ats) : 0;
   var tvp = tv ? "시험값 · " : "", right = st ? '<span class="cn-st">' + tvp + "눌러서 제보</span>" : oldest ? '<span class="cn-t">' + tvp + crowdHm(oldest) + " 기준</span>" : tv ? '<span class="cn-t">시험값</span>' : "";   /* 261008 시험값 표시 = 섹션 머리 오른쪽 한 곳(칸마다 달면 360 에서 이름이 잘린다) */
