@@ -1,40 +1,59 @@
-/* AXF CONTROL v2 · S3 사람 (261016 2단계)
- * 칩 = 찾기 · 가입자 · 접속 허용 · 스태프 · 10F 사전 신청 · 10F 출석 · 17F 출석 · 게임 순위(rank.js) · 명단 올리기
+/* AXF CONTROL v2 · S3 명단 탭(옛 사람 · 261016 2단계 · 261021 사용자 「권장대로」 칩 10 → 6 · 탭 이름 사람 → 명단)
+ * 칩 = 찾기 · 목록 · 출석 · 게임 순위(rank.js) · 명단 올리기 · 비밀번호 초기화
+ *   목록 = 표 위 구분 칩(가입자 · 접속 허용 · 스태프 · 10F 사전 신청 · 시험 사번) 한 화면 · 구분마다 열 · 단추 · 엑셀 그대로
+ *     스태프 = 아래 「스태프 번호 · 묶음」(옛 처리함 · ck_staff_grp · ck_staff_no 확인 문구 그대로 · ckzone.js) · 10F 사전 신청 = 아래 「체크인 번호」(stock.js cnPaint)
+ *   출석 = 10F · 17F 구분 칩 · 비밀번호 초기화 = 앱 로그인 「비밀번호를 잊었어요」 요청(옛 처리함 PIN 분실 · inbox.js pwPaint) · 열린 요청 수 = 명단 탭 배지
+ * 명단 보안(261021) · 찾기 · 목록 · 명단 올리기 · 한 사람 카드 = 슈퍼관리자만(서버 admTop_ · 다른 입장은 안내 한 줄) · 출석 · 게임 순위 · 비밀번호 초기화는 콘솔 입장 그대로
  * 찾기 = acct_page(q · 명부에만 있는 사람 포함) · 어느 명단이든 줄을 누르면 오른쪽 서랍에 한 사람 카드
- * 한 사람 카드 = person_card + list_get(att10 · att17, q = 사번)
+ * 한 사람 카드 = person_card(직위 pos · 261021) + list_get(att10 · att17, q = 사번)
  *   처리 = 스탬프 부여(stamp_grant · 확인 창 · 되돌리기 토스트) · 취소(stamp_revoke dry → 확인 창) · PIN 초기화(acct_pwreset)
- *          이 사람에게 푸시(알림 탭 받는 사람 칩) · 한 사람 초기화(test_reset dry → 확인 문구 「처음상태」 · 행사일 실사번은 서버가 거절 eventday)
- * 명단 = list_get(visit · gate · staff · pre10 · test · att10 · att17) · 261016 저녁 접속 허용 · 스태프 · 10F 사전 신청 · 시험 사번 = 선택 칸 · 추가 · 선택 삭제(edit.js · table.js) · 명단 올리기 = upload.js(10F 사전 신청 · 접속 허용 · 스태프 옷) · 261016 PIN 없음 */
-var PP_SUBS=[["find","찾기"],["visit","가입자"],["gate","접속 허용"],["staff","스태프"],["pre10","10F 사전 신청"],["test","시험 사번"],["att10","10F 출석"],["att17","17F 출석"],["rank","게임 순위"],["up","명단 올리기"]];
+ *          이 사람에게 푸시(설정 › 알림 받는 사람 칩) · 한 사람 초기화(test_reset dry → 확인 문구 「처음상태」 · 행사일 실사번은 서버가 거절 eventday)
+ * 명단 = list_get(visit · gate · staff · pre10 · test · att10 · att17) · 접속 허용 · 스태프 · 10F 사전 신청 · 시험 사번 = 선택 칸 · 추가 · 선택 삭제(edit.js · table.js) · 명단 올리기 = upload.js(10F 사전 신청 · 접속 허용 · 스태프 옷) + 직위 올리기(pos.js) · PIN 없음 */
+var PP_SUBS=[["find","찾기"],["roll","목록"],["att","출석"],["rank","게임 순위"],["up","명단 올리기"],["pw","비밀번호 초기화"]];
+var PP_KINDS=[["visit","가입자"],["gate","접속 허용"],["staff","스태프"],["pre10","10F 사전 신청"],["test","시험 사번"]];
+var PP_ATTS=[["att10","10F"],["att17","17F"]];
+var PP_TOP={ find:1, roll:1, up:1 };   /* 261021 슈퍼관리자만 */
 var PP_LG={
   visit:{ kind:"visit", file:"가입자", cap:"앱에 가입한 사람 · 시험 사번은 「시험」 칸", sort:{ k:"last", d:-1 }, chips:lgChipsOf("",[["today","오늘 접속"],["pin","PIN 대기"],["test","시험"]]) },
   gate:{ kind:"gate", file:"접속 허용", cap:"클로즈 베타 · 사전 신청 기간에 앱에 들어올 사람 · 추가 · 선택 삭제 · 통째 바꾸기는 명단 올리기", cx:1, sort:{ k:"at", d:-1 }, chips:ppApmChip(lgChipsOf("",[["acct","가입"],["today","오늘 접속"]])) },
-  staff:{ kind:"staff", file:"스태프", cap:"폰 권한(앱 스태프 화면) + 스태프 옷 명단 · 추가 · 선택 삭제 · 통째 바꾸기는 명단 올리기", cx:1, sort:{ k:"name", d:1 }, chips:ppApmChip(ppNoWear(lgChipsOf("",[["app","폰 권한"],["wear","옷"],["today","오늘 접속"]]),"staff")), sheets:function(v){ return [ppPivot(v,"staff")]; } },
-  pre10:{ kind:"pre10", file:"10F 사전 신청", cap:"10F 실습 세션 A~E 사전 신청자 · 추가 · 선택 삭제 · 줄을 누르면 세션 바꾸기", cx:1, sort:{ k:"sn", d:1 }, chips:ppApmChip(ppNoWear(lgChipsOf("sn",[["kit","키트 받음"],["att","출석"]]),"pre10")), sheets:function(v){ return [ppPivot(v,"pre10")]; } },
+  staff:{ kind:"staff", file:"스태프", cap:"폰 권한(앱 스태프 화면) + 스태프 옷 명단 · 추가 · 선택 삭제 · 통째 바꾸기는 명단 올리기 · 번호 · 묶음은 아래", cx:1, sort:{ k:"name", d:1 }, chips:ppApmChip(ppNoWear(lgChipsOf("",[["app","폰 권한"],["wear","옷"],["today","오늘 접속"]]),"staff")), sheets:function(v){ return [ppPivot(v,"staff")]; } },
+  pre10:{ kind:"pre10", file:"10F 사전 신청", cap:"10F 실습 세션 A~E 사전 신청자 · 추가 · 선택 삭제 · 줄을 누르면 세션 바꾸기 · 체크인 번호는 아래", cx:1, sort:{ k:"sn", d:1 }, chips:ppApmChip(ppNoWear(lgChipsOf("sn",[["kit","키트 받음"],["att","출석"]]),"pre10")), sheets:function(v){ return [ppPivot(v,"pre10")]; } },
   test:{ kind:"test", file:"시험 사번", cap:"스탬프 · 순위 숫자에서 빠지는 사번 · 추가 · 선택 삭제", cx:1, sort:{ k:"emp", d:1 }, chips:lgChipsOf("",[["acct","가입"],["today","오늘 접속"]]) },
   att10:{ kind:"att10", file:"10F 출석", cap:"10F 세션 입장 · 종료 QR", sort:{ k:"pn", d:1 }, chips:lgChipsOf("pn",[["out","종료"]]) },
   att17:{ kind:"att17", file:"17F 출석", cap:"17F 강연 입장 · 종료", sort:{ k:"pn", d:1 }, chips:lgChipsOf("pn",[["out","종료"]]) }
 };
 var PP_APM={ visit:1, gate:1, staff:1, pre10:1, test:1 };   /* 261017 「앱」 열을 붙이는 명단 */
 function ppSub(){ return subsOf(PP_SUBS,"find"); }
+function ppKind(){ var k=S.ui.ppk||lsGet("axf_v2_ppk","visit"); return PP_KINDS.some(function(x){ return x[0]===k; })?k:"visit"; }
+function ppAtt(){ var k=S.ui.ppa||"att10"; return PP_ATTS.some(function(x){ return x[0]===k; })?k:"att10"; }
+function ppList(s){ return s==="roll"?ppKind():s==="att"?ppAtt():""; }   /* 목록 · 출석 = 고른 구분의 list_get 종류 */
+function ppSetK(k){ S.ui.ppk=k; lsSet("axf_v2_ppk",k); drwClose(); render(); load(false); }
+function ppSetA(k){ S.ui.ppa=k; drwClose(); render(); load(false); }
+function ppSegH(list, cur, fn, label){ return '<div class="chips pp-seg" role="group" aria-label="'+esc(label)+'">'+list.map(function(x){ var on=x[0]===cur; return '<button type="button" class="chip'+(on?" on":"")+'" aria-pressed="'+on+'" onclick="'+fn+'(\''+x[0]+'\')">'+esc(x[1])+'</button>'; }).join("")+'</div>'; }
+function ppNoTop(){ return '<div class="card">'+band("info","슈퍼관리자만 봅니다 · 이름 · 사번이 담긴 명단")+'</div>'; }
 SCREENS.people={
-  title:"사람", desc:"",
+  title:"명단", desc:"",
   need:function(){ var s=ppSub();
+    if(PP_TOP[s]&&!isTop()) return [];
     if(s==="find") return S.ui.pq?[{ k:"pfind", a:"acct_page", p:{ q:S.ui.pq, n:50, sort:"last" }, ttl:30000 }]:[];
     if(s==="up") return [];
     if(s==="rank") return grNeed();
-    var nd=[{ k:"pl_"+s, a:"list_get", p:{ kind:PP_LG[s].kind }, ttl:60000 }];
-    if(s==="pre10") nd.push({ k:"pl_kit", a:"list_get", p:{ kind:"kit" }, ttl:60000 });   /* 옷 열 = 옷 신청 명단(kit)을 사번으로 붙인다 */
-    if(PP_APM[s]&&typeof APM_NEED!=="undefined") nd.push(APM_NEED);   /* 261017 「앱」 열(appmark.js) */
+    if(s==="pw") return [{ k:"pwl", a:"pw_req_list", ttl:30000 }];
+    var k=ppList(s), nd=[{ k:"pl_"+k, a:"list_get", p:{ kind:PP_LG[k].kind }, ttl:60000 }];
+    if(k==="pre10") nd.push({ k:"pl_kit", a:"list_get", p:{ kind:"kit" }, ttl:60000 },{ k:"cno", a:"ck_no_state", ttl:30000 },{ k:"cnl", a:"ck_no_list", ttl:60000 });   /* 옷 열 = 옷 신청 명단(kit) · 체크인 번호(옛 처리함) */
+    if(k==="staff") nd.push({ k:"ckz", a:"ck_zone", ttl:15000 });   /* 261021 스태프 번호 · 묶음(옛 처리함 › 체크인존) */
+    if(PP_APM[k]&&typeof APM_NEED!=="undefined") nd.push(APM_NEED);   /* 261017 「앱」 열(appmark.js) */
     return nd; },
   mount:function(vb){
-    var s=ppSub();
-    el("phCap").textContent=s==="find"?"사번 · 이름으로 찾기 · 줄을 누르면 한 사람 카드":s==="up"?"엑셀로 명단 바꾸기 · 미리 세기 → 적용":s==="rank"?"미니 게임 순위 · 줄을 누르면 한 사람 카드":PP_LG[s].cap;
+    var s=ppSub(), k=ppList(s);
+    el("phCap").textContent=s==="find"?"사번 · 이름으로 찾기 · 줄을 누르면 한 사람 카드":s==="up"?"엑셀로 명단 바꾸기 · 미리 세기 → 적용":s==="rank"?"미니 게임 순위 · 줄을 누르면 한 사람 카드":s==="pw"?"앱 로그인 「비밀번호를 잊었어요」 요청 · 본인 확인 뒤 초기화":PP_LG[k].cap;
     var h=chipsH(PP_SUBS,s);
+    if(PP_TOP[s]&&!isTop()){ vb.innerHTML=h+ppNoTop(); return; }
     if(s==="rank"){ grMount(vb,h); return; }
+    if(s==="pw"){ vb.innerHTML=h+'<div class="card"><h2>비밀번호 초기화 요청 <span class="cap">본인 확인(사원증) 뒤 초기화</span></h2><div id="pwList"></div></div>'; return; }
     if(s==="up"){ vb.innerHTML=h+'<div id="ppUp"></div>'; if(S.ui.pup&&UP&&UP.sp.people) upMount(el("ppUp")); else ppUpPick(); return; }
     if(s==="find"){
-      gridOf("pfind",{ file:"찾기 결과", key:function(r){ return r.emp; }, sort:{ k:"last", d:-1 }, noDl:1, onRow:function(k){ pcOpen(k, MG.pfind); },
+      gridOf("pfind",{ file:"찾기 결과", key:function(r){ return r.emp; }, sort:{ k:"last", d:-1 }, noDl:1, onRow:function(k2){ pcOpen(k2, MG.pfind); },
         cols:[{ k:"name", t:"이름", w:110, tags:function(r){ return r.test?" "+tag("시험","off"):""; } },{ k:"emp", t:"사번", w:90 },{ k:"dept", t:"부서", w:150 },
           { k:"acct", t:"가입", w:80, v:function(r){ return r.acct?"가입":"명부만"; }, f:function(r){ return r.acct?tag("가입","ok"):tag("명부만","off"); } },{ k:"n", t:"스탬프", type:"num", w:70, v:function(r){ return r.acct?r.n:""; } },
           { k:"last", t:"최근 접속", type:"date", w:110 },{ k:"pw", t:"PIN", w:80, v:function(r){ return !r.acct?"":r.pw?"있음":"초기화 대기"; } }], h:420, empty:"찾는 사람이 없습니다 · 명부에도 없는 사번 · 이름입니다" });
@@ -42,21 +61,27 @@ SCREENS.people={
       if(!S.ui.pq) setTimeout(function(){ var i=el("ppQ"); if(i&&document.activeElement!==el("gq")) i.focus(); },30);
       return;
     }
-    var x=PP_LG[s];
-    gridOf("pp_"+s,{ file:x.file, key:function(r){ return r.emp; }, sort:x.sort, chips:[["all","전체",null]], lgChips:x.chips, sheets:x.sheets, cols:[{ k:"emp", t:"사번", w:90 }], lg:x.kind, h:520, onRow:function(k){ pcOpen(k, MG["pp_"+s]); },
-      select:!!x.cx, onAdd:x.cx?function(){ paOpen(s); }:null, cancel:x.cx?ppCx(s):null });
-    vb.innerHTML=h+'<div class="card"><div id="mg_pp_'+s+'"></div></div>';
+    var x=PP_LG[k], seg=s==="roll"?ppSegH(PP_KINDS,k,"ppSetK","목록 구분"):ppSegH(PP_ATTS,k,"ppSetA","출석 구분");
+    gridOf("pp_"+k,{ file:x.file, key:function(r){ return r.emp; }, sort:x.sort, chips:[["all","전체",null]], lgChips:x.chips, sheets:x.sheets, cols:[{ k:"emp", t:"사번", w:90 }], lg:x.kind, h:520, onRow:function(k2){ pcOpen(k2, MG["pp_"+k]); },
+      select:!!x.cx, onAdd:x.cx?function(){ paOpen(k); }:null, cancel:x.cx?ppCx(k):null });
+    vb.innerHTML=h+seg+'<div class="card"><div id="mg_pp_'+k+'"></div></div>'+
+      (k==="staff"&&typeof ckzStaffHtml==="function"?ckzStaffHtml():"")+
+      (k==="pre10"&&typeof cnHtml==="function"?cnHtml():"");
   },
   paint:function(){
     var s=ppSub();
+    if(PP_TOP[s]&&!isTop()) return;
     if(s==="up") return;
     if(s==="rank"){ grPaint(); return; }
+    if(s==="pw"){ pwPaint(); return; }
     if(s==="find"){ var g=MG.pfind, d=S.data.pfind;
       if(!S.ui.pq){ g.gate=""; XG.set(g, null, el("mg_pfind")); var n=XG.root(g); if(n) n.querySelector('[data-c="note"]').innerHTML=emptyH("사번이나 이름을 넣고 Enter"); return; }
       var gt=dataGate("pfind","사람 찾기"); g.gate=gt||""; XG.set(g, gt?null:(d.rows||[]), el("mg_pfind"));
       if(!gt&&S.ui.pqOpen&&!S.busy.pfind){ S.ui.pqOpen=0; if((d.rows||[]).length===1) pcOpen(d.rows[0].emp, g); }
       return; }
-    var x=PP_LG[s], g2=MG["pp_"+s]; gridPaint("pp_"+s, "pl_"+s, x.file, function(){ var rr=lgRows("pl_"+s, g2, function(dd){ return dd.rows||[]; }); if(s==="pre10") ppWearCol(g2); if(PP_APM[s]&&typeof apmColAdd==="function") apmColAdd(g2, s==="pre10"?"wear10":"name"); return rr; });
+    var k=ppList(s), x=PP_LG[k], g2=MG["pp_"+k]; gridPaint("pp_"+k, "pl_"+k, x.file, function(){ var rr=lgRows("pl_"+k, g2, function(dd){ return dd.rows||[]; }); if(k==="pre10") ppWearCol(g2); if(PP_APM[k]&&typeof apmColAdd==="function") apmColAdd(g2, k==="pre10"?"wear10":"name"); return rr; });
+    if(k==="staff"&&typeof ckzStaffPaint==="function") ckzStaffPaint();
+    if(k==="pre10"&&typeof cnPaint==="function") cnPaint();
   }
 };
 function peopleQ(q){ q=String(q||"").trim(); S.ui.pq=q; S.ui.pqOpen=1; S.at.pfind=0; S.data.pfind=null; if(S.tab==="people"&&ppSub()==="find"){ var i=el("ppQ"); if(i) i.value=q; paint(); load(true,["pfind"]); } else go("people","find"); }
@@ -128,7 +153,8 @@ var PG_HALF={ p3:"p3h", p10:"p10h" };   /* 입장이나 끝 한쪽만 = 1개(서
 var GRANT_IDS=["p2","p3","st"];   /* 서버 REVOKE_FIELD_IDS(담당자 부여 = 현장 셋) · 앱 자동 · 설문은 앱에서만 */
 var PC={ emp:"", d:null, att:null, u:null, g:null, seq:0 };
 var RESV_TAG={ "신청":"warn", "승인":"", "체크인":"", "완료":"ok", "노쇼":"bad", "취소":"off" };
-function pcOpen(emp, g){ emp=normE(emp); if(!emp) return; PC.emp=emp; PC.g=g||null; PC.d=null; PC.att=null; PC.u=null; pcDraw(); pcLoad(); }
+function pcOpen(emp, g){ emp=normE(emp); if(!emp) return; if(!isTop()){ toast("한 사람 카드는 슈퍼관리자만 봅니다",{ bad:1 }); return; }   /* 261021 명단 보안(서버 person_card = admTop_) */
+  PC.emp=emp; PC.g=g||null; PC.d=null; PC.att=null; PC.u=null; pcDraw(); pcLoad(); }
 function pcLoad(){
   var e=PC.emp, s=++PC.seq; if(!e) return;
   call("person_card",{ emp:e, vn:10, tn:30 }).then(function(r){ if(s!==PC.seq) return; PC.d=r||{ ok:false }; pcDraw(); });
@@ -150,7 +176,7 @@ function pcHtml(d){
   st.forEach(function(x){ by[x.id]=x; });
   var pg=Math.min(2,(by.p3?2:by.p3h?1:0)+(by.p10?2:by.p10h?1:0)+(by.ln?2:0)+(by.cc?1:0));   /* 서버 progUnits_ 와 같은 셈 · ck = 0개 */
   var tags=(d.test||L.test?" "+tag("시험","off"):"")+(d.acct?"":" "+tag("가입 전","off"))+(L.staffApp?" "+tag("스태프"):"")+(d.ckno?" "+tag("체크인 "+d.ckno+"번"):"");
-  var w=whoOf(d), h=drwHead(w.n||e, whoSub(d), whoFlags(w)+tags);
+  var w=whoOf(d), h=drwHead(w.n||e, whoSub(d)+(d.pos?" · "+d.pos:""), whoFlags(w)+tags);   /* 261021 직위(명부직위 · 서버 pos) */
   h+='<div class="btns mt">'+(d.acct?'<button class="btn" type="button" onclick="pcPush(\''+J+'\')">이 사람에게 푸시</button>':'')+(d.acct&&d.pw?'<button class="btn" type="button" onclick="pcPinAsk(\''+J+'\')">PIN 초기화</button>':'')+'<button class="btn" type="button" onclick="pcLoad()">새로 받기</button></div>';
   /* 접속 */
   var am=typeof apmOf==="function"?apmOf(e):null, amT=am==null?"":' · 앱 <b>'+esc(apmTxt(am))+'</b>';   /* 261017 앱 = 가입 · 홈 화면(app_marks) */

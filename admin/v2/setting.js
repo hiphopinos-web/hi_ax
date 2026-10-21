@@ -4,7 +4,7 @@
  * 급한 단추 3개 = 룰렛 소진 안내(roulette_out · 되돌리기 토스트) · 푸시 정지(push_cfg · 알림 탭과 같은 함수) · 앱 접속 범위(og_scope_set · 확인 창)
  * 서버 상태 = now_board · 이 콘솔의 최근 호출(NET) · 화면 주소 = 추첨 · 타자왕 TV · 타자왕 체험 · (테스트) 참가자 설문(열기 · 복사 · 261021 테스트 성격 줄은 이름 앞 「(테스트)」) · 261016 체크인 창구 · 대기판 걷음 · 261017 스탬프 월 걷음(사이니지 폐기)
  * 스태프 코드 = adm_roster.staffCode(설정됨 · 비어 있음만 · 값은 받지도 그리지도 않음) · 바꾸기 · 비우기 = adm_code_set(POST · 확인 창) · 운영 설정 76개 「바꾸기」는 넣지 않는다(결정 · 대화로 처리) */
-var LG_SUBS=[["log","활동 기록"],["urgent","급한 단추"],["srv","서버 상태"],["urls","화면 주소"],["qr","현장 QR"]];   /* 261017 「스태프 코드」 칩은 관리자 명단 화면 오른쪽(앱 스태프 폰 권한 아래)으로 옮김 · scPaint 는 그대로(roster.js 가 부른다) */
+var LG_SUBS=[["log","활동 기록"],["ntf","알림"],["urgent","급한 단추"],["srv","서버 상태"],["urls","화면 주소"],["qr","현장 QR"]];   /* 261017 「스태프 코드」 칩은 관리자 명단 화면 오른쪽(앱 스태프 폰 권한 아래)으로 옮김 · scPaint 는 그대로(roster.js 가 부른다) */
 var LOG_CAT=[["all","전체",null],["p","사람",function(r){ return r.cat==="p"; }],["r","명단",function(r){ return r.cat==="r"; }],["s","스탬프 · 경품",function(r){ return r.cat==="s"; }],["n","알림",function(r){ return r.cat==="n"; }],["c","설정",function(r){ return r.cat==="c"; }],["x","스캔",function(r){ return r.cat==="x"; }],["ck","체크인존",function(r){ return r.k==="ck_gate"; }],["u","되돌릴 수 있음",function(r){ return !!(r.undo&&r.undo.ok&&!r.undo.done&&!LG_DONE[r.ref]); }],["f","실패",function(r){ return /^x:/.test(r.res||""); }]];
 var BYK_N={ "콘솔":"콘솔", "스태프":"스태프 폰", "기기":"코드 기기", "서버":"서버 자동" };
 var GEN_UNDO={ roll_undo:"명단 넣기 · 빼기 되돌리기", resv_set:"라운지 상담 상태 되돌리기", cchat_status:"커피챗 상태 되돌리기", stamp_revoke:"담당자 스탬프 취소", inv_undo:"교환 기록 되돌리기", pre10_undo:"10F 묶음 넣기 되돌리기",
@@ -21,7 +21,7 @@ var SCR_URLS=[["추첨 화면","17F 대형 스크린 · 원격 모드","../../dr
   ["(테스트) 참가자 설문","로그인 없이 설문 끝까지 · 답 · 스탬프 저장 안 함 · 화면마다 검토 의견","../../survey-review/"]];   /* 261021 사용자 「설문 테스트 주소 · 테스트 성격 주소는 이름 앞 (테스트)」 */
 function lgSub(){ return subsOf(LG_SUBS,"log"); }
 SCREENS.log={
-  title:"기록 · 설정", desc:"",
+  title:"설정", desc:"",
   need:function(){ var s=lgSub(); return s==="log"?[{ k:"alog", a:"act_log", p:{ n:200 }, ttl:30000 }]:s==="urgent"?[{ k:"ogs", a:"og_scope_state", ttl:30000 },{ k:"pst", a:"push_stats", ttl:30000 }]:s==="srv"?[{ k:"pst", a:"push_stats", ttl:60000 }]:s==="qr"?[{ k:"qal", a:"att_list", ttl:300000 },{ k:"qst", a:"stair_list", ttl:300000 },{ k:"qss", a:"stair_stats", ttl:60000 },{ k:"qqs", a:"qr_stats", ttl:60000 },{ k:"qa10", a:"att_stats", p:{ who:"1" }, ttl:60000 }]:[]; },
   mount:function(vb){
     var s=lgSub();
@@ -48,6 +48,12 @@ SCREENS.log={
     if(s==="qr") return qrPaint();
   }
 };
+/* 261021 사용자 「권장대로」 · 알림 탭 걷음 · 알림(보내기 · 예약 · 보낸 기록 · 공지 · 자동 알림) = 설정 탭 「알림」 칩 · 화면은 notify.js(SCREENS.notify · sched.js · ntf.js 덧칠 포함) 그대로 · 안쪽 칩 = S.sub.notify */
+(function(){ var sc=SCREENS.log, n0_=sc.need, m0=sc.mount, p0=sc.paint;
+  sc.need=function(){ return lgSub()==="ntf"&&SCREENS.notify?SCREENS.notify.need():n0_(); };
+  sc.mount=function(vb){ if(lgSub()!=="ntf"||!SCREENS.notify) return m0(vb); vb.innerHTML=chipsH(LG_SUBS,"ntf")+'<div id="ntWrap"></div>'; SCREENS.notify.mount(el("ntWrap")); };
+  sc.paint=function(vb){ if(lgSub()!=="ntf"||!SCREENS.notify) return p0(vb); SCREENS.notify.paint(el("ntWrap")); };
+})();
 function scrUrl(p){ try{ var x=new URL(p, location.href); if(BE_QA&&/\/draw\//.test(x.pathname)&&!x.searchParams.has("srv")) x.searchParams.set("srv","qa"); return x.href; }catch(e){ return p; } }   /* 261019 ?srv=qa 콘솔 = 추첨 화면 주소에도 srv=qa(없으면 지금 그대로) */
 /* ── 활동 기록 ── */
 function lgWhat(r){ if(r.cnt&&r.list==="stamp") return "종이 기록 일괄 반영 · 스탬프 "+(r.gmN||"")+"줄 · "+r.cnt+"명"; if(r.cnt) return (r.list==="gate"?"접속 허용 명단":r.list==="staff_app"?"앱 스태프 명단":r.list==="staff_wear"?"스태프 의류 명단":"명단")+(r.op==="add"?"에 넣음":"에서 뺌")+" · "+r.cnt+"명"; return String(r.x||"").replace(/상담석/g,"미팅룸"); }   /* 261016 밤 라운지 상담석 = 미팅룸(서버 운영로그 글자는 그대로 · 화면만) */

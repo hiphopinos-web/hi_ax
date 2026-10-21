@@ -86,12 +86,12 @@ function ivUndoAsk(rid, id){
     done:function(r){ toast("되돌렸습니다 · "+(r.n||(it&&it.n)||"")); delete IV.list[id]; reload(["inv"]); if(id==="k1") ckExtra(); setTimeout(function(){ if(DRW.k==="inv:"+id) ivOpen(id); },900); } });
 }
 
-/* ── 처리함 › 체크인존 · 사이즈 교환 · 명단 밖 지급 · 체크인 번호 ── */
+/* ── 경품 탭 아래 「사이즈 교환 · 명단 밖 지급」(옛 처리함 › 체크인존 · 261021 처리함 걷음) · 체크인 번호 = 명단 › 목록 › 10F 사전 신청(cnHtml) ── */
 function ckExtraHtml(){
   return '<div class="card mt"><h2>사이즈 교환 <span class="cap" id="swCap"></span><span class="r"><button class="btn sm pri" type="button" onclick="swAsk()">교환 기록</button></span></h2><div id="swL"></div></div>'+
-    '<div class="card mt"><h2>명단 밖 지급 <span class="cap">여유 키트 · 재고 장부 기록</span></h2><div id="outL"></div></div>'+
-    '<div class="card mt"><h2>체크인 번호 <span class="cap">10F 사전 신청자 · 세션별 가나다순 고정</span></h2><div id="cnK"></div><div id="cnL" class="mt"></div></div>';
+    '<div class="card mt"><h2>명단 밖 지급 <span class="cap">여유 키트 · 재고 장부 기록</span></h2><div id="outL"></div></div>';
 }
+function cnHtml(){ return '<div class="card mt"><h2>체크인 번호 <span class="cap">10F 사전 신청자 · 세션별 가나다순 고정</span></h2><div id="cnK"></div><div id="cnL" class="mt"></div></div>'; }
 function ckExtra(){ delete IV.list.k1; ivListLoad("k1"); }
 function ckExtraPaint(){
   /* 교환 기록 · inv_state swap */
@@ -113,7 +113,6 @@ function ckExtraPaint(){
     src:{ a:"inv_list", p:{ id:"k1" }, pick:function(res){ return outRows(res.rows||[]); } }, empty:"명단 밖 지급이 없습니다", h:300 });
   IV.gout.gate=!L||L==="busy"?"":L.ok?"":'<span class="cap">받지 못했습니다 · '+esc(ivWhy(L))+'</span>';
   XG.set(IV.gout, L&&L!=="busy"&&L.ok?outRows(L.rows||[]):(L&&L!=="busy"?[]:null), el("outL"));
-  cnPaint();
 }
 function swRows(rows){ var who=swWho(); return rows.map(function(r){ var o={}; for(var k in r) o[k]=r[k]; o.name=who[r.emp]||""; return o; }); }
 function swWho(){ var m={}, L=IV.list.k1; if(L&&L.ok) (L.rows||[]).forEach(function(r){ if(r.emp&&r.name) m[r.emp]=r.name; }); return m; }

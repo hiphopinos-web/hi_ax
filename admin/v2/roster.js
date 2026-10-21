@@ -5,7 +5,7 @@
  *   261016 저녁 선택 삭제 = list_rows_cancel(c = kind admin · a = kind staff part app) · 되돌리기 roll_undo
  *   맨 앞 사번(sup)은 서버가 빼지 못하게 막는다 · 처음 저장하는 순간부터 그 명단대로 들어온다 · 261016 PIN 없음(확인 창) */
 var DNY_W="접속거부기록";
-PP_SUBS.splice(PP_SUBS.map(function(x){ return x[0]; }).indexOf("gate")+1,0,["deny","접속 거부"]);
+PP_SUBS.push(["deny","접속 거부"]);   /* 261021 명단 탭 칩 6개 뒤(옛 「접속 허용」 칩 다음 자리 · 접속 허용은 목록 구분으로 옮김) */
 LG_SUBS.splice(LG_SUBS.map(function(x){ return x[0]; }).indexOf("code"),0,["adm","관리자 명단"]);   /* 261017 「스태프 코드」 칩은 이 화면 오른쪽으로 옮겨 LG_SUBS 에 없다(-1 = 마지막 칩 「현장 QR」 앞 · 검사 442 자리 그대로) */
 /* ── 접속 거부 ── */
 function dnyGrid(){
@@ -119,7 +119,7 @@ function adrCodeShow(x, r){
     if(lgSub()!=="adm") return m0(vb);
     el("phCap").textContent="콘솔에 들어오는 사람 · 앱 스태프 화면을 여는 사람 · 추가 · 선택 삭제 · 설정 코드 · 초기화 · 스태프 코드";
     adrGrid("c"); adrGrid("a");
-    vb.innerHTML=chipsH(LG_SUBS,"adm")+'<div class="grid g2 s1" id="adrB">'+adrCard("c")+'<div class="col">'+adrCard("a")+'<div class="card" id="scB"></div></div></div><p class="cap mt">스태프 옷 명단은 사람 › 명단 올리기 · 관리코드 · 등급코드 바꾸기는 대화로 · 비밀번호를 잊은 사람은 슈퍼관리자가 「초기화」</p>';
+    vb.innerHTML=chipsH(LG_SUBS,"adm")+'<div class="grid g2 s1" id="adrB">'+adrCard("c")+'<div class="col">'+adrCard("a")+'<div class="card" id="scB"></div></div></div><p class="cap mt">스태프 옷 명단은 명단 › 명단 올리기 · 관리코드 · 등급코드 바꾸기는 대화로 · 비밀번호를 잊은 사람은 슈퍼관리자가 「초기화」</p>';
   };
   sc.paint=function(vb){
     if(lgSub()!=="adm") return p0(vb);

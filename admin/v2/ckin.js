@@ -172,10 +172,13 @@ function ckiGiveDone(mode, c, r){
     if(r.give==="new") got.push("참여상"+(r.rk?" "+r.rk+"번째":"")); else if(r.give==="dup") dup.push("참여상 이미 받음"+(r.at?" · "+r.at:"")); else no.push("참여상 · "+(CKI_FXR[r.reason]||r.reason||"주지 않음"));
   } else {
     var f=r.fcfs||{};
-    got.push("체크인");   /* 261021 ck_gate = 체크인 기록(옷 · 키트 결과는 화면에 쓰지 않음) */
+    var ch=r.chk||null;   /* 261021 서버 ck_gate = 체크인 기록만 · chk { st new | dup | out, at HH:MM } · 옛 서버(chk 없음) = 체크인 */
+    if(!ch||ch.st==="new") got.push("체크인"+(ch&&ch.at?" "+ch.at:""));
+    else if(ch.st==="dup") dup.push("이미 체크인"+(ch.at?" · "+ch.at:""));
+    else no.push("10F 사전 신청자 아님 · 체크인 기록 안 함");
     if(f.st==="give") got.push("참여상"+(f.rk?" "+f.rk+"번째":"")); else if(f.st==="dup") dup.push("참여상 이미 받음"+(f.at?" · "+f.at:"")); else if(f.st==="none"&&mode==="both") no.push("참여상 · "+(CKI_FXR[f.reason]||f.reason||"주지 않음"));
   }
-  if(dup.length) CKI.msg={ c:"bad", t:"이미 받음 · 다시 주지 않음", s:dup.concat(got.length?["처리 "+got.join(" · ")]:[]).join(" · ") };
+  if(dup.length) CKI.msg={ c:"bad", t:"이미 처리됨 · 다시 기록하지 않음", s:dup.concat(got.length?["처리 "+got.join(" · ")]:[]).join(" · ") };
   else if(got.length){ CKI.msg={ c:"ok", t:"처리 · "+got.join(" + "), s:no.join(" · ") }; toast("처리 · "+(c.name||c.emp)+" · "+got.join(" + ")); }
   else CKI.msg={ c:"warn", t:"처리한 것 없음", s:no.join(" · ") };
   ckiOpen(c.emp, true);

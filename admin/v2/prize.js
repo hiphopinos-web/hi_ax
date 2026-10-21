@@ -15,9 +15,10 @@ SCREENS.prize={
       '<div class="col"><div class="card" id="pzR"></div><div class="card" id="pzF"></div><div class="card" id="pzB"></div></div></div>'+
       '<div class="card mt"><h2>옷 명단 <span class="cap">구분 · 사이즈 · 받음 · 줄을 누르면 상세</span></h2><div id="pzP"></div></div>'+
       '<div class="card mt"><h2>선착순 가습기 수령 명단 <span class="cap">줄을 누르면 상세</span></h2><div id="pzFL"></div></div>'+
-      '<div class="card mt"><h2>재고 장부 <span class="cap">룰렛 · 지급품 · 키트 · 줄을 누르면 남은 수 맞추기 · 총수량 · 입고</span><span class="r"><button class="btn sm" type="button" onclick="go(\'inbox\',\'ck\')">사이즈 교환 기록</button></span></h2><div id="pzIV"></div></div>';
+      '<div class="card mt"><h2>재고 장부 <span class="cap">룰렛 · 지급품 · 키트 · 줄을 누르면 남은 수 맞추기 · 총수량 · 입고</span><span class="r"><button class="btn sm" type="button" onclick="pzSwapOpen()">사이즈 교환 기록</button></span></h2><div id="pzIV"></div></div>'+
+      '<details class="memo card mt" id="pzX"><summary>사이즈 교환 · 명단 밖 지급</summary>'+(typeof ckExtraHtml==="function"?ckExtraHtml():"")+'</details>';   /* 261021 옛 처리함 › 체크인존 아래 칸을 여기로(처리함 걷음) */
   },
-  paint:function(){ pzKpi(); pzTable(); pzPeople(); pzRoul(); pzFcfs(); pzBox(); pzFcfsList(); ivTable(el("pzIV")); }
+  paint:function(){ pzKpi(); pzTable(); pzPeople(); pzRoul(); pzFcfs(); pzBox(); pzFcfsList(); ivTable(el("pzIV")); if(typeof ckExtraPaint==="function"&&el("pzX")&&el("pzX").open) ckExtraPaint(); }
 };
 function pzPool(r){ return pzLng()[r.emp]?"lng":r.pool==="staff"?"staff":"pre"; }
 function pzLng(){ var d=S.data.lng, m={}; if(d&&d.ok) (d.rows||[]).forEach(function(r){ m[r.emp]=1; }); return m; }
@@ -119,3 +120,5 @@ function pzFcfsList(){
   var gt=dataGate("fxl","선착순 명단"), d=S.data.fxl; PZ.gf.gate=(gt||"")+(d&&d.ok&&num(d.n)>(d.rows||[]).length?'<div class="cap" style="padding:6px 2px">앞 '+n0((d.rows||[]).length)+'명 · 전체 '+n0(d.n)+'명은 서버 갱신 뒤</div>':'');
   XG.set(PZ.gf, gt?null:(d.rows||[]), el("pzFL"));
 }
+/* 261021 「사이즈 교환 기록」 단추 = 아래 칸 펼치기(옛 처리함 › 체크인존 걷음) */
+function pzSwapOpen(){ var x=el("pzX"); if(!x) return; x.open=true; if(typeof ckExtraPaint==="function") ckExtraPaint(); x.scrollIntoView({ block:"start", behavior:"smooth" }); }

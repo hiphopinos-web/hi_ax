@@ -215,40 +215,53 @@ function dataGate(k, label){
 }
 function errTop(k){ return S.err[k]&&S.data[k]?band("warn","받지 못했습니다 · "+esc(why(S.err[k]))+" · 마지막 값을 회색으로 둡니다",'<button class="btn sm" type="button" onclick="reload([\''+k+'\'])">다시 시도</button>'):""; }
 
-/* ── 8. 틀 · 상단 띠 · 하단 탭 8(고정 · 261016 밤 미팅) · 화면 ── */
+/* ── 8. 틀 · 상단 띠 · 하단 탭 7(고정 · 261021 처리함 · 알림 탭 걷음 · 사람 → 명단 · 무대 → 행운권) · 화면 ── */
 var IC=(function(){ var s=function(d){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>'; };
   return { now:s('<path d="M3 12h4l3-8 4 16 3-8h4"/>'), inbox:s('<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>'), people:s('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8"/><path d="M18 14.6A6.5 6.5 0 0 1 21.5 20"/>'),
     prize:s('<path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/>'), stage:s('<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>'),
     meet:s('<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2.5v3M16 2.5v3M8 14h3M13 14h3M8 17.5h3"/>'),
     ckin:s('<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M8.5 12.2l2.4 2.4 4.8-5"/>'),   /* 261020 체크인 탭 */
     notify:s('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>'), log:s('<circle cx="12" cy="12" r="3"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/>') }; })();
-var TABS=[["now","지금","지금"],["inbox","처리함","처리함"],["meet","미팅","미팅"],["ckin","체크인","체크인"],["people","사람","사람"],["prize","경품 · 재고","경품"],["stage","무대","무대"],["notify","알림","알림"],["log","기록 · 설정","설정"]];
+var TABS=[["now","지금","지금"],["people","명단","명단"],["meet","미팅","미팅"],["ckin","체크인","체크인"],["prize","경품 · 재고","경품"],["stage","행운권","행운권"],["log","설정","설정"]];   /* 261021 사용자 · 처리함 걷음(체크인존 · 참여상 = 체크인 탭 · 비밀번호 초기화 = 명단 탭 · 스태프 요청 폐지) · 알림 = 설정 탭 칩 */
 var SCREENS={};
-function go(tab, sub){ if(!SCREENS[tab]) tab="now"; if(sub!=null) S.sub[tab]=sub; var ch=S.tab!==tab; S.tab=tab; hashSet(); render(); load(false); if(ch) el("main").scrollTop=0; }
-function goSub(sub){ go(S.tab, sub); }
-function hashSet(){ var h="#"+S.tab+(S.sub[S.tab]?"/"+S.sub[S.tab]:""); if(location.hash!==h) try{ history.replaceState(null,"",h); }catch(e){} }
+/* 261021 옛 주소 옮기기 · #inbox/ck · fx = 체크인 · #inbox/pw = 명단 › 비밀번호 초기화 · #inbox/req = 지금 · #notify/x = 설정 › 알림(x) · #people/visit 등 = 명단 › 목록(구분) · 10F · 17F 출석 = 명단 › 출석 */
+var PP_KIND_IDS={ visit:1, gate:1, staff:1, pre10:1, test:1 }, PP_ATT_IDS={ att10:1, att17:1 };
+function routeFix(tab, sub){
+  sub=sub==null?"":String(sub);
+  if(tab==="inbox") return ({ ck:["ckin"], fx:["ckin"], pw:["people","pw"], req:["now"], cchat:["meet","cc"], lounge:["meet","ln"] })[sub]||["ckin"];
+  if(tab==="notify"){ if(sub) S.sub.notify=sub; return ["log","ntf"]; }
+  if(tab==="people"&&PP_KIND_IDS[sub]){ S.ui.ppk=sub; return ["people","roll"]; }
+  if(tab==="people"&&PP_ATT_IDS[sub]){ S.ui.ppa=sub; return ["people","att"]; }
+  return null;
+}
+function isTop(){ return typeof adrTop==="function"?adrTop():!!(S.me&&S.me.top); }   /* 슈퍼관리자 본인(서버 admTop_ 와 같은 기준) */
+function go(tab, sub){ var rf=routeFix(tab, sub); if(rf){ tab=rf[0]; sub=rf.length>1?rf[1]:""; } if(!SCREENS[tab]) tab="now"; if(sub!=null) S.sub[tab]=sub; var ch=S.tab!==tab; S.tab=tab; hashSet(); render(); load(false); if(ch) el("main").scrollTop=0; }
+function goSub(sub){ if(S.tab==="log"&&S.sub.log==="ntf"&&typeof NT_SUBS!=="undefined"&&NT_SUBS.some(function(x){ return x[0]===sub; })){ S.sub.notify=sub; hashSet(); render(); load(false); return; } go(S.tab, sub); }   /* 261021 설정 › 알림 안 칩 = S.sub.notify */
+function hashSet(){ var h="#"+S.tab+(S.sub[S.tab]?"/"+S.sub[S.tab]:"")+(S.tab==="log"&&S.sub.log==="ntf"&&S.sub.notify?"/"+S.sub.notify:""); if(location.hash!==h) try{ history.replaceState(null,"",h); }catch(e){} }
 function routeFromHash(){ var m=String(location.hash||"").replace(/^#/,"").split("/");
   if(m[0]==="inbox"&&(m[1]==="cchat"||m[1]==="lounge")){ m=["meet",m[1]==="cchat"?"cc":"ln"]; try{ history.replaceState(null,"","#meet/"+m[1]); }catch(e){} }   /* 261016 밤 옛 처리함 커피챗 · 라운지 주소 = 미팅 탭 */
   if(m[0]==="people"&&m[1]==="idea"){ m=["meet","cc-ideaall"]; try{ history.replaceState(null,"","#meet/cc-ideaall"); }catch(e){} }   /* 261021 옛 사람 › 아이디어 한 줄 주소 = 미팅 › 아이디어(전체) */
+  var rf=routeFix(m[0], m[1]?decodeURIComponent(m[1]):""); if(rf){ m=[rf[0], rf[1]||""]; try{ history.replaceState(null,"","#"+m[0]+(m[1]?"/"+m[1]:"")); }catch(e){} }
+  if(m[0]==="log"&&m[1]==="ntf"&&m[2]) S.sub.notify=decodeURIComponent(m[2]);
   if(SCREENS[m[0]]){ S.tab=m[0]; if(m[1]) S.sub[m[0]]=decodeURIComponent(m[1]); } }
 window.addEventListener("hashchange",function(){ routeFromHash(); render(); load(false); });
 function stageDim(){ var t=srvNow(); return !(S.data.nb&&S.data.nb.day===S.data.nb.ev&&t.getHours()>=16); }
 function tabsPaint(){
-  var bdOf={ inbox:inboxCount(), meet:typeof meetCount==="function"?meetCount():0 };
+  var bdOf={ people:pwCount(), meet:typeof meetCount==="function"?meetCount():0 };
   var h=TABS.map(function(t){ var on=S.tab===t[0], dim=t[0]==="stage"&&stageDim(), bd=bdOf[t[0]]||0;
-    return '<button type="button" class="'+(on?"on ":"")+(dim&&!on?"dim":"")+'"'+(on?' aria-current="page"':'')+' onclick="go(\''+t[0]+'\')">'+IC[t[0]]+'<span class="l">'+esc(t[1])+'</span><span class="s">'+esc(t[2])+'</span>'+(bd?'<span class="bd" aria-label="'+(t[0]==="meet"?"칸에 안 놓은 신청 ":"처리할 일 ")+bd+'건">'+bd+'</span>':'')+'</button>'; }).join("");
+    return '<button type="button" class="'+(on?"on ":"")+(dim&&!on?"dim":"")+'"'+(on?' aria-current="page"':'')+' onclick="go(\''+t[0]+'\')">'+IC[t[0]]+'<span class="l">'+esc(t[1])+'</span><span class="s">'+esc(t[2])+'</span>'+(bd?'<span class="bd" aria-label="'+(t[0]==="meet"?"칸에 안 놓은 신청 ":"비밀번호 초기화 요청 ")+bd+'건">'+bd+'</span>':'')+'</button>'; }).join("");
   if(el("tabs")._h!==h){ el("tabs")._h=h; el("tabs").innerHTML=h; }
 }
-/* 처리함 배지 = 스태프 요청 + PIN 분실(체크인존 대기는 줄이라 빼다 · 261016 밤 라운지 · 커피챗은 미팅 탭 배지) */
-function inboxCount(){ var b=S.data.nb; if(!b||!b.ok) return 0; return num(b.sreq&&b.sreq.open)+num(b.pw); }
+/* 261021 명단 탭 배지 = 비밀번호 초기화 요청(열림 · now_board pw) · 스태프 요청은 폐지 */
+function pwCount(){ var b=S.data.nb; if(!b||!b.ok) return 0; return num(b.pw); }
 function sigCount(){ return typeof nowSignals==="function"?nowSignals().filter(function(x){ return x.st==="warn"||x.st==="bad"; }).length:0; }
 function topPaint(){
   var b=S.data.nb, ok=b&&b.ok, er=S.err.nb, busy=Object.keys(S.busy).some(function(k){ return S.busy[k]; });
   var age=S.at.nb?Date.now()-S.at.nb:0, stale=age>60000;
   var srv='<span class="chip-s hide-s"><i class="dot '+(er?"bad":ok?"ok":"")+'"></i>'+(er?"서버 연결 실패":ok?(b.ro?"읽기 전용":"서버 정상"):"연결 중")+'</span>';
-  var sg=sigCount(), rq=ok&&b.sreq?num(b.sreq.open):0;
+  var sg=sigCount();
   var t=busy&&!S.at.nb?"불러오는 중":S.at.nb?(stale?Math.floor(age/60000)+"분 전":hm(S.srvT)+" 갱신"):"";
-  var h=srv+'<button type="button" class="chip-s'+(sg?" w":"")+' hide-s" onclick="go(\'now\')">이상 '+sg+'</button><button type="button" class="chip-s'+(rq?" w":"")+'" onclick="go(\'inbox\',\'req\')">요청 '+rq+'</button>';
+  var h=srv+'<button type="button" class="chip-s'+(sg?" w":"")+' hide-s" onclick="go(\'now\')">이상 '+sg+'</button>';
   if(el("topL")._h!==h){ el("topL")._h=h; el("topL").innerHTML=h; }
   var r=el("upd"); r.textContent=t||"갱신"; r.className="chip-s"+(stale?" old":"");
 }
@@ -341,6 +354,7 @@ function whoPump(){
 function whoRepaint(){ if(WHO.pt) return; WHO.pt=setTimeout(function(){ WHO.pt=0; if(authed()&&!DLG.o) paint(); },300); }
 /* 같은 명단 안에서 이름 맞추기(o.whoPool = list_get 종류 · 그 명단의 부분 집합인 줄만 · 예 체크인 번호 = 옷 명단) */
 function whoPoolGet(kind){
+  if(PP_KIND_IDS[kind]&&!isTop()) return { busy:0, m:{} };   /* 261021 목록(가입자 등)은 슈퍼관리자만 · 다른 입장은 명부 찾기로 */
   var P=WHO.pool[kind]; if(P&&(P.busy||Date.now()-P.at<300000)) return P.busy?P:P.ok?P:{ busy:0, m:{} };
   WHO.pool[kind]={ busy:1, at:Date.now(), ok:P&&P.ok, m:P&&P.m };
   call("list_get",{ kind:kind }).then(function(r){ var m={};
