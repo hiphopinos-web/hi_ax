@@ -809,32 +809,38 @@
         return [ok, "되돌리기 → 3등 공개 " + (a1 ? "✓" : "✕") + " · 다시 추첨 " + (a2 ? "✓ 부재 1" : "✕") + " · 새 3등 " + (nw ? nw.no : "-") + (old ? "(앞 " + old.no + ")" : "") + " · 2등 " + W(x, 4).length];
       } },
     /* ── 261021 체크인 2통 ── */
-    { id: "s12", t: "3 · 2 · 1등은 체크인한 사람만 · 3등 카드 「체크인한 n명 중에서」", cfg: { n: 40, tk: "mix", ck: 40 },
-      steps: ["「이 설정으로 준비」(40명 · 체크인 40%)", "Space 로 끝까지", "3등 카드 아래 줄 「체크인한 n명 중에서」 · 2 · 1등 카드에는 없음", "판정 표 「체크인」 열"],
-      exp: "3 · 2 · 1등 당첨 3명 모두 체크인한 사람 · 6 · 5 · 4등은 전체에서 · 3등 카드 n = 그 순간 체크인 통에 남은 사람 수(이 창이 따로 센 값) · 2 · 1등 카드 줄 없음",
+    { id: "s12", t: "3 · 2 · 1등은 체크인한 사람만 · 3 · 2 · 1등 카드 「체크인한 n명 중에서」", cfg: { n: 40, tk: "mix", ck: 40 },
+      steps: ["「이 설정으로 준비」(40명 · 체크인 40%)", "Space 로 끝까지", "3 · 2 · 1등 카드 아래 줄 「체크인한 n명 중에서」 · 6 · 5 · 4등 카드에는 없음", "판정 표 「체크인」 열"],
+      exp: "3 · 2 · 1등 당첨 3명 모두 체크인한 사람 · 6 · 5 · 4등은 전체에서 · 3 · 2 · 1등 카드 n = 그 순간 체크인 통에 남은 사람 수(이 창이 따로 센 값 · 앞 등수 당첨자가 빠져 하나씩 줄어듦) · 4등 카드 줄 없음",
       run: async function () {
         var x = await prep(this.cfg); if (!x) return [false, "준비 실패"];
-        x = await autoTo(function (y) { return y.scene() === "card" && y.state().round === 3; }, 150000); if (!x) return [false, "3등 카드까지 못 감" + where()];
-        await sleep(300); var st = x.state(), want = elig(st, liveRes(st), true).ppl, card = x.ck().card;
-        x = await autoTo(function (y) { return y.scene() === "card" && y.state().round === 4; }, 90000); if (!x) return [false, "2등 카드까지 못 감" + where()];
-        await sleep(300); var card2 = x.ck().card;
+        x = await autoTo(function (y) { return y.scene() === "card" && y.state().round === 2; }, 150000); if (!x) return [false, "4등 카드까지 못 감" + where()];
+        await sleep(300); var card4 = x.ck().card, cards = [], wants = [];
+        for (var ri = 3; ri <= 5; ri++) {
+          x = await autoTo(function (y) { return y.scene() === "card" && y.state().round === ri; }, 150000); if (!x) return [false, RN[ri] + " 카드까지 못 감" + where()];
+          await sleep(300); var st = x.state(); wants.push("체크인한 " + elig(st, liveRes(st), true).ppl + "명 중에서"); cards.push(x.ck().card);
+        }
         x = await autoTo(function (y) { return y.scene() === "board" || y.scene() === "end"; }, 150000); if (!x) return [false, "결과판까지 못 감" + where()];
-        var tw = topWins(x), ok = card === "체크인한 " + want + "명 중에서" && card2 === "" && tw.length === 3 && topNotIn(x) === 0 && W(x).length === 10 && noFail();
-        return [ok, "3등 카드 「" + card + "」(계산 " + want + "명) · 2등 카드 「" + card2 + "」 · 3 · 2 · 1등 " + tw.length + "명 · 체크인 안 한 3 · 2 · 1등 " + topNotIn(x)];
+        var tw = topWins(x), ok = JSON.stringify(cards) === JSON.stringify(wants) && card4 === "" && tw.length === 3 && topNotIn(x) === 0 && W(x).length === 10 && noFail();
+        return [ok, "3 · 2 · 1등 카드 「" + cards.join("」 「") + "」(계산 " + wants.map(function (t) { return t.replace(/\D/g, ""); }).join(" · ") + "명) · 4등 카드 「" + card4 + "」 · 3 · 2 · 1등 " + tw.length + "명 · 체크인 안 한 3 · 2 · 1등 " + topNotIn(x)];
       } },
     { id: "s13", t: "체크인 0명 · 소진 → 전체 통 이어 뽑기(한 번 누르면 끝까지)", cfg: { n: 12, tk: "1", ckN: 0 },
       steps: ["「이 설정으로 준비」(12명 · 체크인 0명)", "6 · 5 · 4등 확정 → 3등 부저 화면에서 Space", "표시줄 「체크인 통에 남은 행운권 없음」 · 운영 줄 「전체 통에서 이어 뽑기」 두 번", "3 · 2 · 1등 끝까지(다시 누르지 않음)"],
-      exp: "3등 Space = 뽑지 않음(멈춤) · 운영 줄 단추 = 그때만 · 누른 뒤 3 · 2 · 1등 전체 통 · 기록 fb · 단추 누름 1번 · 당첨 10",
+      exp: "3등 Space = 뽑지 않음(멈춤) · 운영 줄 단추 = 그때만 · 누른 뒤 3 · 2 · 1등 전체 통 · 2 · 1등 카드 「체크인한 n명」 줄 숨김 · 기록 fb · 단추 누름 1번 · 당첨 10",
       run: async function () {
         var x = await prep(this.cfg); if (!x) return [false, "준비 실패"];
         x = await autoTo(function (y) { return y.scene() === "mix" && y.state().round === 3 && !A.on; }, 150000); if (!x) x = X();
         A.on = false; await sleep(2200); var show0 = x.ck().fbShow, kb = await pressSee(x), w3a = W(x, 3).length, sc = x.scene();
         x.ui.op("fb"); await sleep(450); x.ui.op("fb"); await sleep(600); var fbOn = !!x.ck().fb;
-        A.fbAuto = true; A.fbN = 0;
+        A.fbAuto = true; A.fbN = 0; var fbCards = [];
+        for (var ri = 4; ri <= 5; ri++) {
+          x = await autoTo(function (y) { return y.scene() === "card" && y.state().round === ri; }, 150000); if (!x) return [false, RN[ri] + " 카드까지 못 감" + where()];
+          await sleep(300); fbCards.push(x.ck().card);
+        }
         x = await autoTo(function (y) { return y.scene() === "board" || y.scene() === "end"; }, 150000); if (!x) return [false, "결과판까지 못 감" + where()];
-        var tw = topWins(x), allFb = tw.every(function (r) { return !!r.fb; });
-        var ok = show0 && /체크인 통에 남은 행운권 없음/.test(kb) && w3a === 0 && sc === "mix" && fbOn && A.fbN === 0 && tw.length === 3 && allFb && W(x).length === 10 && noFail();
-        return [ok, "소진 단추 " + (show0 ? "보임" : "없음") + " · Space 표시줄 「" + kb + "」 · 켬 " + fbOn + " · 그 뒤 다시 누름 " + A.fbN + " · 3 · 2 · 1등 " + tw.length + "명(fb " + tw.filter(function (r) { return r.fb; }).length + ")"];
+        var tw = topWins(x), allFb = tw.every(function (r) { return !!r.fb; }), hid = fbCards.every(function (t) { return t === ""; });
+        var ok = show0 && /체크인 통에 남은 행운권 없음/.test(kb) && w3a === 0 && sc === "mix" && fbOn && A.fbN === 0 && tw.length === 3 && allFb && hid && W(x).length === 10 && noFail();
+        return [ok, "소진 단추 " + (show0 ? "보임" : "없음") + " · Space 표시줄 「" + kb + "」 · 켬 " + fbOn + " · 그 뒤 다시 누름 " + A.fbN + " · 이어 뽑기 중 2 · 1등 카드 줄 " + (hid ? "숨김 ✓" : "✕ " + JSON.stringify(fbCards)) + " · 3 · 2 · 1등 " + tw.length + "명(fb " + tw.filter(function (r) { return r.fb; }).length + ")"];
       } },
     { id: "s14", t: "체크인 1명 · 2명 · 부재가 이어져 소진", cfg: { n: 12, tk: "1", ckN: 1, fbAuto: true }, cfg2: { n: 12, tk: "1", ckN: 2, fbAuto: true }, cfg2t: "체크인 2명으로 준비",
       steps: ["「이 설정으로 준비」 = 체크인 1명 · 3등 공개마다 「다시 추첨」 한 번", "「체크인 2명으로 준비」 = 같은 순서"],

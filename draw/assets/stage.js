@@ -1719,7 +1719,7 @@
   }
   function uiCard() { var r = curRound(); uiCardPic(r); set("kEye", esc(r.name)); fitText($("kEye"), 42, 30, 1); set("kTitle", esc(r.prize)); fitText($("kTitle"), 150, 96, 2); set("kMeta", r.count + "명 추첨"); set("kSub", cardSub(r)); }
   /* 261021 3등 카드 한 줄 「체크인한 n명 중에서」(사용자 확정 · 3등만) · n = 그 순간 체크인 통에 남은 사람 수 · 전체 통 이어 뽑기 중 · 0명이면 없음 */
-  var CARD_IN = { 3: 1 };
+  var CARD_IN = { 3: 1, 2: 1, 1: 1 };   /* 261022 사용자 확정 A안 · 3 · 2 · 1등 카드 모두 · 전체 통 이어 뽑기(fb) 중이면 숨김 */
   function cardSub(r) {
     if (!CARD_IN[rankNo(r)] || ST.fb) return "";
     var rp = roundPool(); if (!rp.useIn || !rp.tk.length) return "";
