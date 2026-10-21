@@ -1,12 +1,12 @@
 /* AXF CONTROL v2 · 알림 › 공지 · 자동 알림 + 정상으로 바꾸면 나갈 것 (261021 사용자 「무엇이 나가는지 미리 보고 · 문구를 고치고 · 하나씩 켜고 끄기」)
  * 칩 = 보내기 · 예약 · 보낸 기록 · 공지 · 자동 알림(이 파일이 뒤 두 칸을 더한다)
- * 데이터 = ntf_list(알림 20종 · 켜짐 · 기본 · 고친 문구 · 예시 글자 · soon = 정상으로 바꾸면 24시간 안 나갈 예약 줄 · 일이 생기면 곧바로 나가는 알림) · sched_list(공지 줄)
+ * 데이터 = ntf_list(알림 15종 · 261021 키트 · 체크인 호출 · 포토부스 3종 걷음 · 켜짐 · 기본 · 고친 문구 · 예시 글자 · soon = 정상으로 바꾸면 24시간 안 나갈 예약 줄 · 일이 생기면 곧바로 나가는 알림) · sched_list(공지 줄)
  * 자동 알림 = ntf_set(id · on 1|0 · t · b 틀 · 빈칸 = 기본 문구) · 되돌리기 토스트(응답 prev)
  * 공지 = 공지 · Closing Speech 예약 줄 · sched_edit(off 끄기 · on 켜기 · edit 고치기 · cancel 취소) · 켜기는 확인 창(그때 나갈 글자 · 받는 사람)
  * 맨 위 푸시 띠 아래 = 요약 한 줄(ntfSoonLine) · 정상 · 잠금 전환 확인 창 목록(ntfSoonBody) · notify.js ntStopPaint · ntStopAsk 가 부른다 */
 NT_SUBS.push(["notice","공지"],["auto","자동 알림"]);
 var NF={ ed:"", f:{ t:"", b:"" }, last:"t" };
-var NF_G=["커피챗","AX 라운지","스태프 스캔","포토부스","혼잡","관람 시간","럭키드로우"];
+var NF_G=["커피챗","AX 라운지","스태프 스캔","혼잡","관람 시간","럭키드로우"];
 var NF_WHY={ var:"모르는 칸이 있습니다 · 아래 칸 단추로 넣습니다", len:"제목 40자 · 내용 120자까지", lock:"코드에서 꺼 둔 알림입니다", id:"없는 알림입니다", text:"제목(40자) · 내용(120자)을 확인합니다", at:"날짜 · 시각 형식을 확인합니다", range:"지금부터 1분 뒤 ~ 30일 안으로 넣습니다", kind:"이 줄은 자동 알림에서 켜고 끕니다", state:"이미 처리된 줄입니다" };
 function nfD(){ var d=S.data.ntf; return d&&d.ok&&d.items?d:null; }
 function nfItem(id){ var d=nfD(); return d?d.items.filter(function(x){ return x.id===id; })[0]:null; }
@@ -100,14 +100,14 @@ function nfNoRow(r){
   var live=r.st==="대기"||r.st==="꺼짐", on=r.st==="대기";
   return '<div class="nf-row'+(on||r.st==="실행중"?"":" is-off")+'"><div class="nf-tm"><span class="n">'+esc(String(r.at||"").slice(5,10).replace("-","/"))+'</span><b class="n">'+esc(hm(r.at))+'</b></div>'+
     '<div class="nf-bd"><div class="nf-tt"><b>'+esc(r.title||"(제목 없음)")+'</b>'+tag(SCH_K[r.kind]||r.kind,"")+(live?"":tag(r.st,SCH_ST[r.st]||""))+'</div>'+(r.body?'<div class="nf-tx">'+esc(r.body)+'</div>':'')+
-    '<div class="nf-when">'+(r.push?"푸시 · "+esc(r.pdesc||"전체 구독자")+(r.quiet?" · 소리 없이":""):"앱 안 공지만 · 푸시 없음")+(r.by?' · 만든 사람 '+esc(r.by):'')+(r.res&&!live?' · '+esc(r.res):'')+'</div></div>'+
-    '<div class="nf-ac">'+(live?nfSw(on,"nfNoToggle('"+jq(r.id)+"')",(r.title||"공지")+" 켜고 끄기")+'<button class="btn sm" type="button" onclick="nfNoEdit(\''+jq(r.id)+'\')">문구 고치기</button><button class="btn sm dng" type="button" onclick="nfNoCancel(\''+jq(r.id)+'\')">취소</button>':'')+'</div></div>';
+    '<div class="nf-when">'+esc(schWho(r))+(r.quiet?" · 소리 없이":"")+(r.by?' · 만든 사람 '+esc(r.by):'')+(r.res&&!live?' · '+esc(r.res):'')+'</div></div>'+
+    '<div class="nf-ac">'+(live?nfSw(on,"nfNoToggle('"+jq(r.id)+"')",(r.title||"공지")+" 켜고 끄기")+'<button class="btn sm" type="button" onclick="nfNoEdit(\''+jq(r.id)+'\')">문구 고치기</button><button class="btn sm" type="button" onclick="schLoad(\''+jq(r.id)+'\')">대상 · 조건</button><button class="btn sm dng" type="button" onclick="nfNoCancel(\''+jq(r.id)+'\')">취소</button>':'')+'</div></div>';
 }
 function nfNoPaint(){
   var box=el("nfNo"); if(!box) return; var g=dataGate("sched","예약"); if(g){ box.innerHTML=g; return; }
   var all=nfNo(), live=all.filter(function(r){ return r.st==="대기"||r.st==="꺼짐"||r.st==="실행중"; }).sort(function(a,b){ return (a.ms||0)-(b.ms||0); }), past=all.filter(function(r){ return live.indexOf(r)<0; }).slice(0,10);
   box.innerHTML='<h2>정해진 공지 <span class="cap">나갈 '+live.filter(function(r){ return r.st==="대기"; }).length+'건 · 꺼 둠 '+live.filter(function(r){ return r.st==="꺼짐"; }).length+'건</span></h2>'+
-    '<p class="nf-note">정한 시각에 서버가 모든 참가자 앱에 공지를 내고, 푸시를 고른 줄은 푸시도 보냅니다 · 꺼 두면 그 시각에 아무것도 나가지 않음 · 3분 넘게 늦으면 「지남」</p>'+
+    '<p class="nf-note">정한 시각에 서버가 앱에 공지를 내고(대상을 고른 줄은 그 사람에게만), 푸시를 고른 줄은 푸시도 보냅니다 · 꺼 두면 그 시각에 아무것도 나가지 않음 · 3분 넘게 늦으면 「지남」</p>'+
     (live.length?live.map(nfNoRow).join(""):emptyH("정해진 공지가 없습니다",'<button class="btn sm" type="button" onclick="goSub(\'sched\')">예약에서 만들기</button>'))+
     (past.length?'<details class="nf-past mt"><summary>지난 공지 '+past.length+'건</summary>'+past.map(nfNoRow).join("")+'</details>':'');
   var pre=el("nfPre"); if(pre) pre.innerHTML='<h2>자주 쓰는 공지 틀 <span class="cap">아직 예약 안 됨</span></h2>'+SCH_PRE.map(function(p,i){ return '<div class="nf-row"><div class="nf-bd"><div class="nf-tt"><b>'+esc(p.t)+'</b>'+tag(SCH_K[p.kind]||p.kind,"")+'</div><div class="nf-tx">'+esc(p.b)+'</div><div class="nf-when">'+(p.at?"시각 "+esc(p.at):"시각은 정해서 넣음")+' · 푸시 '+(p.tgt==="tickets"?"행운권 보유자":"전체 구독자")+'</div></div><div class="nf-ac"><button class="btn sm" type="button" onclick="schPre('+i+');goSub(\'sched\')">예약으로 만들기</button></div></div>'; }).join("");
@@ -116,17 +116,17 @@ function nfNoGet(id){ return nfNo().filter(function(r){ return String(r.id)===St
 function nfNoToggle(id){
   var r=nfNoGet(id); if(!r) return;
   if(r.st==="대기"){ call("sched_edit",{ id:id, op:"off" }).then(function(x){ reload(["sched","ntf"]); toast(x&&x.ok?"껐습니다 · "+hm(r.at)+" "+r.title+" · 그 시각에 나가지 않음":"끄지 못했습니다 · "+nfWhy(x),x&&x.ok?{ undo:function(){ call("sched_edit",{ id:id, op:"on" }).then(function(z){ reload(["sched","ntf"]); toast(z&&z.ok?"다시 켰습니다":"켜지 못했습니다 · "+nfWhy(z),{ bad:!(z&&z.ok) }); }); } }:{ bad:1 }); }); return; }
-  confirmBox({ t:"이 공지를 켤까요?", who:nfAt(r.at)+" · "+r.title, sub:(r.push?"앱 안 공지 + 푸시 · "+(r.pdesc||"전체 구독자"):"앱 안 공지만")+(r.body?" · "+r.body:""), ok:"켜기",
-    body:'<p class="nf-note">켜면 그 시각에 서버가 모든 참가자 앱에 공지를 냅니다'+(r.push?' · 푸시는 그때 받는 사람을 다시 세고 인원 확인 없이 나갑니다':'')+'</p>',
+  confirmBox({ t:"이 공지를 켤까요?", who:nfAt(r.at)+" · "+r.title, sub:schWho(r)+(r.body?" · "+r.body:""), ok:"켜기",
+    body:'<p class="nf-note">켜면 그 시각에 서버가 '+(r.nto?"대상의":"모든 참가자")+' 앱에 공지를 냅니다'+(r.push?' · 푸시는 그때 받는 사람을 다시 세고 인원 확인 없이 나갑니다':'')+'</p>',
     run:function(){ return call("sched_edit",{ id:id, op:"on" }); }, fail:function(x){ return x&&x.reason==="range"?"시각이 지났습니다 · 문구 고치기에서 시각을 옮긴 뒤 켭니다":nfWhy(x); },
     done:function(){ reload(["sched","ntf"]); toast("켰습니다 · "+nfAt(r.at)+" "+r.title); } });
 }
 function nfNoEdit(id){
   var r=nfNoGet(id); if(!r) return; var d0=String(r.at||"").slice(0,10), t0=hm(r.at);
-  confirmBox({ t:"공지 문구 고치기", who:(SCH_K[r.kind]||r.kind)+" · "+nfAt(r.at), sub:r.push?"푸시 · "+(r.pdesc||"전체 구독자"):"앱 안 공지만", ok:"저장", focus:"nfeT",
+  confirmBox({ t:"공지 문구 고치기", who:(SCH_K[r.kind]||r.kind)+" · "+nfAt(r.at), sub:schWho(r), ok:"저장", focus:"nfeT",
     body:'<div class="nt-row"><label class="nt-f up-f">날짜<input class="xg-q nt-in n" id="nfeD" value="'+esc(d0)+'"></label><label class="nt-f up-f">시각<input class="xg-q nt-in n" id="nfeH" inputmode="numeric" value="'+esc(t0)+'"></label></div>'+
       '<label class="nt-f up-f">제목<input class="xg-q nt-in" id="nfeT" maxlength="40" value="'+esc(r.title)+'" oninput="gateUpd()"></label><label class="nt-f up-f">내용<textarea id="nfeB" rows="2" maxlength="120">'+esc(r.body||"")+'</textarea></label>'+
-      '<p class="nf-note">제목 40자 · 내용 120자 · 받는 사람 · 푸시 여부는 그대로</p>',
+      '<p class="nf-note">제목 40자 · 내용 120자 · 대상 · 조건 · 푸시는 그대로(바꾸려면 「대상 · 조건」)</p>',
     gate:function(){ var t=el("nfeT"); return !!(t&&t.value.trim()); },
     run:function(){ var dy=el("nfeD").value.trim(), tm=el("nfeH").value.trim().replace(/\s/g,""); if(/^\d{3,4}$/.test(tm)) tm=("0"+tm).slice(-4).replace(/(\d\d)(\d\d)/,"$1:$2"); if(/^\d:\d\d$/.test(tm)) tm="0"+tm;
       var at=dy+" "+tm; return call("sched_edit",{ id:id, op:"edit", title:el("nfeT").value.trim(), body:el("nfeB").value.trim(), at:at===String(r.at).slice(0,16)?"":at }); },
@@ -138,7 +138,7 @@ function nfNoCancel(id){ var r=nfNoGet(id); if(!r) return;
     run:function(){ return call("sched_edit",{ id:id, op:"cancel" }); }, fail:function(x){ return nfWhy(x); }, done:function(){ reload(["sched","ntf"]); toast("취소했습니다 · "+r.title); } }); }
 /* 예약 표 · 꺼짐 줄 단추(켜기 · 취소) · 자동 줄 내용 = 나갈 문구 */
 (function(){
-  var a0=schActs; schActs=function(r){ if(r.st==="꺼짐"){ var J=jq(r.id); return '<span class="btns"><button class="btn sm" type="button" onclick="nfNoToggle(\''+J+'\')">켜기</button><button class="btn sm dng" type="button" onclick="nfNoCancel(\''+J+'\')">취소</button></span>'; } return a0(r); };
+  var a0=schActs; schActs=function(r){ if(r.st==="꺼짐"){ var J=jq(r.id); return '<span class="btns">'+(schManual(r)?'<button class="btn sm" type="button" onclick="schLoad(\''+J+'\')">고치기</button>':'')+'<button class="btn sm" type="button" onclick="nfNoToggle(\''+J+'\')">켜기</button><button class="btn sm dng" type="button" onclick="nfNoCancel(\''+J+'\')">취소</button></span>'; } return a0(r); };
   var w0=schWhat; schWhat=function(r){ var id={ cchat_remind:"cc_10", dap_remind:"dap_10", visit_slot:"visit", crowd_notify:"crowd_exp" }[r.kind], x=id&&nfItem(id);
     if(!x) return w0(r); var cw=r.kind==="crowd_notify", v=r.kind==="visit_slot"?{ 시간:String(r.slot||"").replace("-","~") }:cw?{ 대상:r.tgt==="elev"?"엘리베이터":"1F 로비" }:{ 회차:r.slot||"", 테이블:"(테이블마다)", 시간:r.slot||"" };
     return nfFill(x.ct||x.t,v)+(cw?"":" · "+nfFill(x.cb||x.b,v))+(x.on?"":" · 꺼 둠(안 나감)"); };

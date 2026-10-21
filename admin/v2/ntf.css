@@ -52,3 +52,7 @@
   .nf-sum .btn{margin-left:0}
 }
 @media (prefers-reduced-motion:reduce){ .nf-sw i::after{transition:none} }
+/* 261021 예약 조건 칸 */
+.sc-cd{border:1px solid var(--line);border-radius:8px;padding:6px 12px 10px;background:#fff}
+.sc-cd>summary{cursor:pointer;font-size:13px;font-weight:600;min-height:32px;display:flex;align-items:center;gap:8px}
+.sc-cd .nt-row .up-f input{display:block;width:100%;margin-top:4px}
