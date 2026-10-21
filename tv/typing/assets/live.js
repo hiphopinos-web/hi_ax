@@ -41,7 +41,7 @@
   function now() { return Date.now(); }
 
   /* ── 겉모습 · 스타일 한 장(assets/live.css) ── */
-  var css = document.createElement("link"); css.rel = "stylesheet"; css.href = "assets/live.css?v=261017b"; document.head.appendChild(css);
+  var css = document.createElement("link"); css.rel = "stylesheet"; css.href = "assets/live.css?v=261021a"; document.head.appendChild(css);
   var LV = document.createElement("div"); LV.id = "lv"; LV.setAttribute("aria-hidden", "true");
   LV.innerHTML = '<div id="lvSt"><div id="lvHead"><b>AX 타자왕 · 1F</b><span><i></i>LIVE</span></div><div id="lvLine"></div></div>';
   body.appendChild(LV);
