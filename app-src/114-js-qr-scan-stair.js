@@ -459,7 +459,7 @@ function attDone(res) {
   if (!m[key]) m[key] = res.at;
   S.set("att_mine", m);
   var sn = attStamp(res);
-  ATT.res = { id: res.prog, at: m[key], dup: !!res.dup, k: k0, remote: !!res.remote, stamp: sn, add: res.stamp && !res.stamp.dry ? res.stamp.add || 0 : sn ? 1 : 0, pg: res.pg || 0, nost: !!res.nost, test: !!res.test, pre: res.no === "preday" };   /* 261016 pre = 서버 preday 가드 · 출석만 기록 */
+  ATT.res = { id: res.prog, at: m[key], dup: !!res.dup, k: k0, remote: !!res.remote, stamp: sn, add: res.stamp && !res.stamp.dry ? res.stamp.add || 0 : sn ? 1 : 0, pg: res.pg || 0, nost: !!res.nost, test: !!res.test, pre: res.no === "preday" || res.no === "postday" };   /* 261016 pre = 서버 preday 가드 · 출석만 기록 · 261022 postday(행사 뒤 · 출석 QR 스탬프는 행사일에만)도 같은 한 줄 */
   attRepaint();
   App.render();   /* 뒤의 강연 상세 · 시간표 행이 출석 상태로 바뀐다 */
 }
@@ -541,7 +541,7 @@ function att10Done(res) {
     var why = res && res.reason;
     if (why === "nocode") { sheetClose(true); srShow({ st: "fail", why: "nocode" }); return; }
     if (why === "notpre") { ATT10.info = { t: "사전 신청자 출석 QR이에요", l: "<b>" + esc(s.ttl) + "</b><br>17F 강연 · 1F 전시 · 18F 커피챗은 누구나 참여해요" }; att10Repaint(); return; }   /* design.md §7 · 오류 말투 없이 갈 수 있는 곳 한 줄 */
-    if (why === "other") { ATT10.info = { t: "신청한 세션의 QR을 찍어 주세요", l: "신청한 세션 · <b>" + esc(res.preName || "") + "</b>" }; att10Repaint(); return; }
+    if (why === "other") { var rd = !!res.round; ATT10.info = { t: rd ? "신청한 회차의 QR을 찍어 주세요" : "신청한 세션의 QR을 찍어 주세요", l: (rd ? "신청한 회차" : "신청한 세션") + " · <b>" + esc(res.preName || "") + "</b>" }; att10Repaint(); return; }   /* 261022 (사용자 「E 는 같은 회차만」) 서버 round 1 = 같은 세션 다른 회차 */
     if (why === "window") { sheetFail({ t: "출석 시간이 아니에요", b: s.ttl + " · " + att10K() + " " + String(res.open || "") }); return; }
     sheetFail({ t: "출석하지 못했어요", b: "다시 시도해 주세요." });
     return;
@@ -551,7 +551,7 @@ function att10Done(res) {
   if (!m[key]) m[key] = res.at;
   S.set("att_mine", m);
   var sn = attStamp(res);   /* 261016 (사용자) 10F 실습 = 입장 1 + 끝 1 스탬프(서버 p10h · p10 · 묶음 「프로그램 참여」) · 행사 전 = 기록만(no preday) */
-  ATT10.res = { at: m[key], dup: !!res.dup, test: !!res.test, stamp: sn, add: res.stamp && !res.stamp.dry ? res.stamp.add || 0 : sn ? 1 : 0, pg: res.pg || 0, pre: res.no === "preday" };
+  ATT10.res = { at: m[key], dup: !!res.dup, test: !!res.test, stamp: sn, add: res.stamp && !res.stamp.dry ? res.stamp.add || 0 : sn ? 1 : 0, pg: res.pg || 0, pre: res.no === "preday" || res.no === "postday" };   /* 261022 postday = 행사 뒤 · 기록만 · 같은 한 줄 */
   att10Repaint();
   App.render();   /* 뒤의 세션 상세 · 시간표 · 나의 일정이 출석 상태로 바뀐다 */
 }
