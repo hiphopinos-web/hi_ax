@@ -2,7 +2,7 @@
  * 칩 = 활동 기록 · 급한 단추 · 서버 상태 · 화면 주소 · 스태프 코드
  * 활동 기록 = act_log(오늘 · 최근 200줄) 명단 · 줄을 누르면 서랍 · 되돌리기(roll_undo 묶음 · resv_set · cchat_status · stamp_revoke · inv_undo · pre10_undo · 서버가 준 undo 그대로)
  * 급한 단추 3개 = 룰렛 소진 안내(roulette_out · 되돌리기 토스트) · 푸시 정지(push_cfg · 알림 탭과 같은 함수) · 앱 접속 범위(og_scope_set · 확인 창)
- * 서버 상태 = now_board · 이 콘솔의 최근 호출(NET) · 화면 주소 = 추첨 · 타자왕 TV · 타자왕 체험(열기 · 복사) · 261016 체크인 창구 · 대기판 걷음 · 261017 스탬프 월 걷음(사이니지 폐기)
+ * 서버 상태 = now_board · 이 콘솔의 최근 호출(NET) · 화면 주소 = 추첨 · 타자왕 TV · 타자왕 체험 · (테스트) 참가자 설문(열기 · 복사 · 261021 테스트 성격 줄은 이름 앞 「(테스트)」) · 261016 체크인 창구 · 대기판 걷음 · 261017 스탬프 월 걷음(사이니지 폐기)
  * 스태프 코드 = adm_roster.staffCode(설정됨 · 비어 있음만 · 값은 받지도 그리지도 않음) · 바꾸기 · 비우기 = adm_code_set(POST · 확인 창) · 운영 설정 76개 「바꾸기」는 넣지 않는다(결정 · 대화로 처리) */
 var LG_SUBS=[["log","활동 기록"],["urgent","급한 단추"],["srv","서버 상태"],["urls","화면 주소"],["qr","현장 QR"]];   /* 261017 「스태프 코드」 칩은 관리자 명단 화면 오른쪽(앱 스태프 폰 권한 아래)으로 옮김 · scPaint 는 그대로(roster.js 가 부른다) */
 var LOG_CAT=[["all","전체",null],["p","사람",function(r){ return r.cat==="p"; }],["r","명단",function(r){ return r.cat==="r"; }],["s","스탬프 · 경품",function(r){ return r.cat==="s"; }],["n","알림",function(r){ return r.cat==="n"; }],["c","설정",function(r){ return r.cat==="c"; }],["x","스캔",function(r){ return r.cat==="x"; }],["ck","체크인존",function(r){ return r.k==="ck_gate"; }],["u","되돌릴 수 있음",function(r){ return !!(r.undo&&r.undo.ok&&!r.undo.done&&!LG_DONE[r.ref]); }],["f","실패",function(r){ return /^x:/.test(r.res||""); }]];
@@ -14,10 +14,11 @@ var GEN_NOTE={ roll_undo:"그 뒤에 따로 바뀐 사람은 건너뜀 · 종이
 var LG_DONE={};   /* 261017 이 콘솔에서 되돌린 줄(ref → 시각) · 서버가 다시 줄 때까지 단추 숨김 */
 /* 261021 타자왕 줄 = 게임 노트북 · 중계 TV 를 같은 번호끼리 붙여 둔다(사용자 「게임 띄우고 중계 띄웠는데 안 나옴」 · 테스트 사번 판은 test=1 TV 에만 보임 · 주소는 그대로 · 노트북 3 줄이 TV 주소였던 것 바로잡음) */
 var SCR_URLS=[["추첨 화면","17F 대형 스크린 · 원격 모드","../../draw/?remote=1"],
-  ["타자왕 노트북 1","1F 게임 · 관리코드로 셀프 · 중계 = TV 1","../../#self&seat=1"],["타자왕 TV 1","1F 스탠바이미 · 노트북 1 중계 · 테스트 사번 판 안 보임","../../tv/typing/?live=1&mode=1&seat=1&o=port"],["타자왕 TV 1 리허설","노트북 1 중계 · 테스트 사번 판도 보임 · 행사 당일 쓰지 않음","../../tv/typing/?live=1&mode=1&seat=1&o=port&test=1"],
-  ["타자왕 노트북 2","1F 게임 · 관리코드로 셀프 · 중계 = TV 2","../../#self&seat=2"],["타자왕 TV 2","1F 스탠바이미 · 노트북 2 중계 · 테스트 사번 판 안 보임","../../tv/typing/?live=1&mode=1&seat=2&o=port"],["타자왕 TV 2 리허설","노트북 2 중계 · 테스트 사번 판도 보임 · 행사 당일 쓰지 않음","../../tv/typing/?live=1&mode=1&seat=2&o=port&test=1"],
+  ["타자왕 노트북 1","1F 게임 · 관리코드로 셀프 · 중계 = TV 1","../../#self&seat=1"],["타자왕 TV 1","1F 스탠바이미 · 노트북 1 중계 · 테스트 사번 판 안 보임","../../tv/typing/?live=1&mode=1&seat=1&o=port"],["(테스트) 타자왕 TV 1 리허설","노트북 1 중계 · 테스트 사번 판도 보임 · 행사 당일 쓰지 않음","../../tv/typing/?live=1&mode=1&seat=1&o=port&test=1"],
+  ["타자왕 노트북 2","1F 게임 · 관리코드로 셀프 · 중계 = TV 2","../../#self&seat=2"],["타자왕 TV 2","1F 스탠바이미 · 노트북 2 중계 · 테스트 사번 판 안 보임","../../tv/typing/?live=1&mode=1&seat=2&o=port"],["(테스트) 타자왕 TV 2 리허설","노트북 2 중계 · 테스트 사번 판도 보임 · 행사 당일 쓰지 않음","../../tv/typing/?live=1&mode=1&seat=2&o=port&test=1"],
   ["타자왕 노트북 3(예비)","1F 게임 · 보통 TV 없이 운영 · 중계 = TV 3","../../#self&seat=3"],["타자왕 TV 3(예비)","노트북 3 중계 · 테스트 사번 판 안 보임","../../tv/typing/?live=1&mode=1&seat=3&o=port"],
-  ["타자왕 송출 테스트","리허설 · 자리 1 · 2 한 화면 · 테스트 사번 판도 보임","../../tv/typing/?live=1&test=1"],["타자왕 순위판","1F 순위 · 상품 루프 · 중계 없음","../../tv/typing/"],["타자왕 체험","PC 체험 · 중계 없음","../../typing/"]];
+  ["(테스트) 타자왕 송출 테스트","리허설 · 자리 1 · 2 한 화면 · 테스트 사번 판도 보임","../../tv/typing/?live=1&test=1"],["타자왕 순위판","1F 순위 · 상품 루프 · 중계 없음","../../tv/typing/"],["타자왕 체험","PC 체험 · 중계 없음","../../typing/"],
+  ["(테스트) 참가자 설문","로그인 없이 설문 끝까지 · 답 · 스탬프 저장 안 함 · 화면마다 검토 의견","../../survey-review/"]];   /* 261021 사용자 「설문 테스트 주소 · 테스트 성격 주소는 이름 앞 (테스트)」 */
 function lgSub(){ return subsOf(LG_SUBS,"log"); }
 SCREENS.log={
   title:"기록 · 설정", desc:"",

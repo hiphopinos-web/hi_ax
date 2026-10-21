@@ -256,7 +256,7 @@ var Views = {
     var d = svDraft();
     if (surveyDone()) {
       return '<div class="ax-stack axs-form" id="svQ"><div class="ax-stack-tight axs-gap12 axs-sthost">' + stampTagHtml("sv") +
-        '<h1 class="ax-type-t3">' + esc(SURVEY_DONE.t) + '</h1><p class="ax-description">' + esc(SURVEY_DONE.q) + '</p><p class="ax-meta">스탬프 1개 적립</p></div></div>';   /* 정리 #8(261005) 휴면 밸런스 막대 지움 */
+        '<h1 class="ax-type-t3">' + esc(SURVEY_DONE.t) + '</h1><p class="ax-description">' + esc(SURVEY_DONE.q) + '</p><p class="ax-meta">' + esc(SURVEY_DONE.meta || "스탬프 1개 적립") + "</p></div></div>";   /* 정리 #8(261005) 휴면 밸런스 막대 지움 */   /* v8.28 아래 줄 = SURVEY_DONE.meta(테스트 주소 = 「테스트 · 저장하지 않음」) */
     }
     if (!surveyOpen()) return '<div class="ax-stack">' + stampLineHtml("sv") + botHtml((evPhase() === "before" ? "행사 당일 " : "") + SURVEY.open + "에 열려요") + "</div>";
     if (surveyLock() === "nostamp") return '<div class="ax-stack">' + stampLineHtml("sv") + botHtml("스탬프를 하나 모으면 열려요") + '<button type="button" class="ax-button ax-button-weak" onclick="App.go(\'passport\')">스탬프 보기</button></div>';

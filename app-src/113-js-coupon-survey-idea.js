@@ -67,7 +67,7 @@ function svFlow(d) {
 }
 function svAsk(q) { return q.type === "single" || q.type === "multi" || q.type === "text"; }   /* 진행 수에 드는 문항(첫 화면 · 안내 제외) */
 function svEmpty(q, v) {
-  if (q.type === "single") return !(v >= 1 && v <= 5);
+  if (q.type === "single") return !(v >= 1 && v <= ((SV_OPT[q.o] || []).length || 5));   /* v8.28 Q1-4 보기 3개 = 1 ~ 3 */
   if (q.type === "multi") return !Array.isArray(v) || !v.length;
   if (q.type === "text") return !String(v || "").trim();
   return false;
@@ -110,8 +110,8 @@ function svPick(pid) {
 /* 형식별 입력 · 값은 draft.a[문항id] */
 function svInputHtml(q, v) {
   var id = q.id;
-  if (q.type === "single") return '<div class="ax-stack-tight" role="group" aria-label="' + esc(q.q) + '">' + (SV_OPT[q.o] || []).map(function (o, i) {
-    var val = 5 - i;
+  if (q.type === "single") return '<div class="ax-stack-tight" role="group" aria-label="' + esc(q.q) + '">' + (SV_OPT[q.o] || []).map(function (o, i, all) {
+    var val = all.length - i;   /* v8.28 점수 = 보기 수부터(5개 = 5 ~ 1 · Q1-4 3개 = 3 ~ 1) */
     return '<button type="button" class="axs-opt" aria-pressed="' + (v === val) + '" onclick="svChoose(\'' + id + '\', ' + val + ')">' + esc(o) + "</button>";
   }).join("") + "</div>";
   if (q.type === "multi") {
@@ -139,7 +139,7 @@ function svSubmit() {
     var qq = fl[qi];
     if (svAsk(qq) && !qq.optional && svEmpty(qq, d.a[qq.id])) { toast("답을 골라 주세요"); svGoId(qq.id); return; }
   }
-  /* 서버 칸 = 문항 id · 객관식 = 점수 정수 5~1 · q2_0 = 고른 id 배열(없음 = ["none"]) · 고르지 않은 프로그램 문항은 보내지 않는다(서버가 빈 값) · q4 = 글(비면 보내지 않음) */
+  /* 서버 칸 = 문항 id · 객관식 = 점수 정수 5~1(Q1-4 = 3~1) · q2_0 = 고른 id 배열(없음 = ["none"]) · 고르지 않은 프로그램 문항은 보내지 않는다(서버가 빈 값) · q4 = 글(비면 보내지 않음) */
   var a = {};
   fl.forEach(function (qq) {
     if (!svAsk(qq)) return;
@@ -153,7 +153,7 @@ function svSubmit() {
     S.set("survey_done", true); S.set("survey_draft", null);
     App.render(); window.scrollTo(0, 0); AXM.rise(el("svQ"));
   };
-  if (testMode()) { done(); awardStamp("sv"); return; }
+  if (testMode()) { done(); if (!(typeof SVR === "object" && SVR && SVR.on)) awardStamp("sv"); return; }   /* v8.28 설문 테스트 주소(?svreview) = 완료 화면만(스탬프 연출 없음 · 서버 호출 0) */
   if (!BE.on) { toast("서버에 연결되지 않아 제출할 수 없어요."); return; }
   var u = S.get("user", {}) || {};
   SV.busy = true; App.render(); botWait(true, "제출하는 중");   /* v4.36 서버 기다리는 동안 챗봇 덮개 */

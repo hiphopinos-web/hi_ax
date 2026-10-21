@@ -141,6 +141,7 @@ function svrBoot(splash) {
   svrCss();
   stampVerSet(2);
   svrSeed();
+  SURVEY_DONE.meta = "테스트 · 저장하지 않음";   /* v8.28 (사용자 261021 설문 테스트 주소) 제출 = 완료 화면만 · 스탬프 연출 없음(svSubmit) · 서버 호출 0 */
   S.set("survey_force", true);   /* 시험 모드 열림(시각 · 클로즈베타 무관) */
   var pre0 = svPreIds;
   svPreIds = function () { return SVR.on ? (SVR.pre ? SVR_PRE.slice() : []) : pre0(); };
