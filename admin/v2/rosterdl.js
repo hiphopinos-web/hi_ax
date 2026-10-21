@@ -18,12 +18,10 @@ function rdlCard(){
     '<div class="grid g2">'+b("fcfs")+b("raffle")+'</div>'+
     (top?'':'<p class="cap mt">슈퍼관리자가 내려받습니다</p>')+'</div>';
 }
-function rdlPaint(){ var x=el("rdlBox"); if(x) x.innerHTML=rdlCard(); }
-/* 무대 › 행운권 추첨 화면이 그려진 뒤 추첨 판(dcRoot) 아래에 칸 하나를 붙인다(stage.js 는 그대로 · 추첨 판 다시 그리기는 dcRoot 안만) */
-(function(){ var sc=window.SCREENS&&SCREENS.stage; if(!sc||sc.rdl) return; var m0=sc.mount; sc.rdl=1;
-  sc.mount=function(vb){ var r=m0.apply(this,arguments);
-    try{ if(sgSub()==="draw"){ var root=el("dcRoot"); if(root&&!el("rdlBox")){ var d=document.createElement("div"); d.id="rdlBox"; root.parentNode.insertBefore(d,root.nextSibling); } rdlPaint(); } }catch(e){}
-    return r; }; })();
+function rdlPaint(){ var x=el("rdlBox"); if(x) x.innerHTML=rdlCard(); var f=el("rdlFc"); if(f){ f.remove(); rdlFcfsMount(); var bt=el("rdlB_fcfs"); if(bt&&RDL.busy){ bt.disabled=true; bt.textContent="받는 중"; } } }
+/* 261021 행운권 탭 개편 · 행운권 전체 명단 받기 = 행운권 › 명단 칩(lucky.js) · 선착순 명부 = 경품 · 재고 › 옷 · 재고 칩의 선착순 가습기 명단 카드 머리(rdlFcfsMount) */
+function rdlFcfsMount(){ var c=el("pzFL"); if(!c||el("rdlFc")) return; var h=c.parentNode&&c.parentNode.querySelector("h2"); if(!h) return;
+  var L=rdlLast("fcfs"), top=rdlTop(); h.insertAdjacentHTML("beforeend",'<span class="r" id="rdlFc"><button type="button" class="btn sm" id="rdlB_fcfs" onclick="rdlGo(\'fcfs\')"'+(top?"":" disabled")+'>선착순 명부 엑셀</button><span class="cap" id="rdlAt_fcfs" style="align-self:center">'+(L?"마지막 "+esc(L):"")+'</span></span>'); }
 function rdlStamp(t){ var m=String(t||"").match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/); if(!m){ var d=srvNow(), p=function(n){ return ("0"+n).slice(-2); }; return { f:p(d.getMonth()+1)+p(d.getDate())+"_"+p(d.getHours())+p(d.getMinutes()), s:d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes()), hm:p(d.getHours())+":"+p(d.getMinutes()) }; }
   return { f:m[2]+m[3]+"_"+m[4]+m[5], s:m[1]+"-"+m[2]+"-"+m[3]+" "+m[4]+":"+m[5], hm:m[4]+":"+m[5] }; }
 function rdlGo(k){
@@ -52,7 +50,7 @@ function rdlHm(v, day){ var t=String(v||""), m=t.match(/^(\d{4}-(\d{2})-(\d{2}))
 function rdlSheet(k, r, st){
   var rows=r.rows||[], day=st.s.slice(0,10);
   if(k==="raffle") return { name:"행운권 전체 명단", file:"행운권 전체 명단",
-    title:"행운권 전체 명단 · 기준 시각 "+st.s+" · 총 "+n0(r.n)+"명 · 행운권 "+n0(r.m)+"장"+(r.wins!=null?" · 당첨 "+n0(r.wins)+"명"+(num(r.absent)?" · 부재 "+n0(r.absent)+"명":""):""),
+    title:"행운권 전체 명단 · 기준 시각 "+st.s+" · 총 "+n0(r.n)+"명 · 행운권 "+n0(r.m)+"장"+(r.wins!=null?" · 당첨 "+n0(r.wins)+"명"+(num(r.absent)?" · 부재 "+n0(r.absent)+"명":""):"")+(r.fp?" · 대조 코드 "+r.fp:""),
     head:["사번","소속","직위","성명","행운권 번호","당첨"], w:[11,34,8,11,12,15], kind:["c","t","c","c","b","c"],
     rows:rows.map(function(x){ return [x.emp, x.dept, x.pos||"", x.name, x.no, x.win||""]; }) };
   var ok=r.m-num(r.wait);
