@@ -789,7 +789,7 @@ function zoneSheet() {
     foot: b ? progBtn(esc(b[0]), b[1], "", b[2] || "", !!b[3]) : "" };
 }
 /* v7.67 (사용자 261017 폰 캡처 「사진 · 룰렛 · 타자왕이 있는 곳」) EVENT 시트 = 부스 세 칸 · 받으려면 줄은 경품 시트 구역(PZ_SEC roulette · type)과 같은 원천 · 선착순 = PB_FCFS
-   타자왕 = 도전 횟수 상관없음(261021) · 17:00 마감 · 1~10위 Closing Speech에서 순위 발표 · 옛 1F 칸 EVENT 안 「1F 타자왕 순위」 줄 = 여기 「타자왕 순위 보기」 */
+   타자왕 = 17:00 마감 · 1~10위 Closing Speech에서 순위 발표 · 옛 1F 칸 EVENT 안 「1F 타자왕 순위」 줄 = 여기 「타자왕 순위 보기」 */
 function evBoothHtml() {
   var sec = function (h, inner) { return '<section class="axs-dsec axs-evb"><h3>' + h + "</h3>" + inner + "</section>"; };
   return sec("AI 포토부스", '<p class="k">ME to WE 프레임 사진을 찍어요</p>' + pbfBoxHtml() + evPicHtml()) +
