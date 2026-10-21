@@ -250,7 +250,7 @@ function xgFile(g, rows){
   var base="AXF_"+String(g.o.file||g.id).replace(/[\\/:*?"<>|\s]+/g,"_")+"_"+xgStamp();
   XG.last={ name:base, head:aoa[0], n:v.length };
   var csv=function(){
-    var t="\ufeff"+aoa.map(function(r){ return r.map(function(x){ var s=String(x==null?"":x); return /[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }).join(","); }).join("\r\n");
+    var t="\ufeff"+aoa.map(function(r){ return r.map(function(x){ var s=csvCell(x); return /[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }).join(","); }).join("\r\n");
     xgSaveAs(new Blob([t],{ type:"text/csv;charset=utf-8" }), base+".csv");
     XG.last.kind="csv"; return { ok:true, name:base+".csv", csv:1 }; };
   var plain=function(){ return xgLoadLib().then(function(X){ return xgFileX(X, g, cols, aoa, v, base); }, csv); };

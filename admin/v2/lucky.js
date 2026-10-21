@@ -96,7 +96,7 @@ function lkyPaint(s){
   el("lkyR2").innerHTML=lkyR2H();
 }
 /* ── 받기 ── */
-function lkyCsvQ(v){ v=String(v==null?"":v); return /[",\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
+function lkyCsvQ(v){ v=csvCell(v); return /[",\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
 function lkyGet(k){
   if(!lkyTop()){ toast("슈퍼관리자가 받습니다",{ bad:1 }); return; }
   if(LKY.busy) return;

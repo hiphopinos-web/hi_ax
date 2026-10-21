@@ -423,3 +423,6 @@ function whoHook(){
   XG.set=function(g, rows){ if(rows&&g&&g.o&&(g.o.whoPool||g.o.whoCheck)) rows.forEach(function(r){ if(r&&typeof r==="object"){ if(g.o.whoPool) r._wp=g.o.whoPool; if(g.o.whoCheck) r._wck=1; } }); return st.apply(this, arguments); };
   if(typeof xgWho==="function") xgWho=function(r){ return personLine(r); };
 }
+
+/* 261021 CSV 수식 주입 방지 · CSV 로 내려받는 모든 칸은 csvCell 을 거친다(= + - @ 탭 CR 로 시작하면 앞에 ' · 순수 숫자 -12 · 0012 는 그대로) */
+function csvCell(v){ if(v==null) return ""; if(typeof v==="number") return String(v); var s=String(v); if(/^[=+\-@\t\r]/.test(s)&&!/^-?\d+(\.\d+)?$/.test(s)) s="'"+s; return s; }

@@ -133,7 +133,7 @@ function LKIT_MAIN(){
     $("prR").innerHTML='<div class="lh"><b>행운권 종이 추첨 당첨 기록</b><span>기준 '+esc(D.t)+' · 총 '+n0(D.m)+'장 · 대조 코드 '+esc(D.fp)+'</span></div><table class="rt"><thead><tr><th>순서</th><th>시각</th><th>등수</th><th>번호</th><th>사번</th><th>이름</th><th>소속</th><th>상태</th></tr></thead><tbody>'+L.map(function(x,k){ return '<tr><td>'+(k+1)+'</td><td>'+x.at+'</td><td>'+x.rk+'등</td><td>'+x.no+'</td><td>'+esc(x.emp)+'</td><td>'+esc(x.name)+'</td><td>'+esc(x.dept)+'</td><td>'+(x.x?"취소":x.st==="win"?"당첨":"부재")+'</td></tr>'; }).join("")+'</tbody></table>';
   }
   window.kCsv=function(){
-    var q=function(v){ v=String(v==null?"":v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
+    var q=function(v){ v=csvCell(v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
     var t="\ufeff순서,시각,등수,번호,사번,이름,소속,상태\r\n"+st.rec.map(function(x,k){ return [k+1,x.at,x.rk+"등",x.no,x.emp,x.name,x.dept,x.x?"취소":x.st==="win"?"당첨":"부재"].map(q).join(","); }).join("\r\n");
     var a=document.createElement("a"), u=URL.createObjectURL(new Blob([t],{ type:"text/csv" })); a.href=u; a.download="종이추첨_당첨기록_"+hhmm().replace(/:/g,"")+".csv"; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(u); a.remove(); },1500);
   };
