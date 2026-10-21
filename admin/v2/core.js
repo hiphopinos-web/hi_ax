@@ -290,7 +290,7 @@ function drwHead(t, sub, tags){ return '<div class="card"><h2>'+esc(t)+(tags||""
 function rowDetail(g, key, o){
   o=o||{}; var r=(g.rows||[]).filter(function(x){ return g.o.key&&String(g.o.key(x))===String(key); })[0];
   if(!r){ drwClose(); return; }
-  var cols=xgCols(g).filter(function(c){ return !c.act&&c.t; }), w=whoOf(r), emp=w.e, isP=!!(w.e||w.n);
+  var cols=xgCols(g).filter(function(c){ return !c.act&&c.t&&!c.noDet; }), w=whoOf(r), emp=w.e, isP=!!(w.e||w.n);
   var kv='<dl class="cc-kv">'+cols.map(function(c){ var v=xgText(c,r); return '<dt>'+esc(c.t)+'</dt><dd>'+(v?esc(v):'<span class="cap">-</span>')+'</dd>'+(c.k==="dept"&&w.t?'<dt>팀 · 지점</dt><dd>'+esc(w.t)+'</dd>':''); }).join("")+'</dl>';
   drwOpen(g.id+":"+key, drwHead(o.title?o.title(r):(isP?w.n||"-":g.o.file||"줄"), (isP?whoSub(r)+" · ":"")+(g.o.file||"명단")+" · 줄 상세", isP?whoFlags(w):"")+kv+(o.extra?o.extra(r):"")+
     (emp&&/^[0-9A-Z]{3,12}$/.test(emp)&&typeof pcOpen==="function"?'<div class="mt"><button class="btn big" type="button" onclick="pcOpen(\''+jq(emp)+'\')">한 사람 카드 열기</button></div>':'')+'</div>', { g:g, label:(g.o.file||"명단")+" 줄 상세" });
