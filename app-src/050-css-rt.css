@@ -422,7 +422,6 @@
   @container (max-height: 760px) { .rt .tsf-h, .rt .tsf-sm { font-size: var(--rt-f32); line-height: var(--rt-l32); } .rt .tsf-gd, .rt .tsf-scan { top: 94px; } .rt .tsf-gd { gap: 10px; } .rt .tsf-steps p { padding: 6px 4px; gap: 4px; } .rt .tsf-sw { width: min(480px, 84cqw, calc(100cqh - 280px)); } }
   .rt .tsf-who .tsf-big { margin: 2px 0 4px; }
   .rt .tsf-who .tsf-try { color: var(--rt-white); }
-  .rt .tsf-who .tsf-stl { color: var(--rt-tan2); }   /* 261017 몇 번째 도전 · 스탬프 기회 줄 */
   .rt .tsf-ov { position: absolute; left: 0; top: 0; right: 0; bottom: 0; pointer-events: none; }
   .rt .tsf-ov > * { pointer-events: auto; }
   .rt .tsf-nk { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); box-sizing: border-box; width: min(88%, 520px); padding: 24px 22px; display: flex; flex-direction: column; gap: 10px; background: var(--rt-night); box-shadow: var(--rt-line), inset 0 0 0 4px var(--rt-wood), inset 0 0 0 7px var(--rt-tan); }

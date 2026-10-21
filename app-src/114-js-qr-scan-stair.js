@@ -114,9 +114,9 @@ function typeLinkGo(raw) {
   srShow(Object.assign({}, base, { lk: "wait" }));
   beCall({ action: "type_link_join", emp: u.empId, lt: lt }, function (r) {
     if (!(SR.st === "link" && SR.lt === lt)) return;
-    if (r && r.ok && r.inWin && r.left > 0) { srShow(Object.assign({}, base, { lk: "ok", nick: r.nick || "", left: r.left, limit: r.limit, cap: r.cap, stamps: r.stamps, test: !!r.test })); return; }
+    if (r && r.ok && r.inWin && r.left > 0) { srShow(Object.assign({}, base, { lk: "ok", nick: r.nick || "", used: r.used, left: r.left, limit: r.limit, test: !!r.test })); return; }   /* 261021 새 서버 left = 늘 남음(상한 없음) · 옛 서버 left 0 = limit */
     var why = !r ? "other" : r.ok ? (!r.inWin ? "window" : "limit") : r.reason === "busy" ? "net" : TLK_WHY[r.reason] ? r.reason : "other";
-    srShow(Object.assign({}, base, { lk: why, win: (r && r.win) || [], limit: r && r.limit, cap: r && r.cap, stamps: r && r.stamps, test: !!(r && r.test) }));   /* 261017 cap · stamps = 스탬프 기회(옛 서버 = 없음) */
+    srShow(Object.assign({}, base, { lk: why, win: (r && r.win) || [], test: !!(r && r.test) }));
   }, function () { if (SR.st === "link" && SR.lt === lt) srShow(Object.assign({}, base, { lk: "net" })); });
 }
 function typeLinkHtml(o) {
@@ -128,12 +128,12 @@ function typeLinkHtml(o) {
   if (o.lk === "ok") {
     h = bot + '<span class="axs-chip ok axs-self">1F 타자왕 · 노트북 연결됨</span><h1 class="ax-title">노트북 화면을<br>보세요</h1>' +
       '<section class="axs-res-card"><p class="ax-type-t7 axs-bt">SPACE로 시작</p><p class="axs-res-n">' + (o.nick ? esc(o.nick) : "새 도전자") + "</p>" +
-      '<p class="ax-description">' + tsfTry(o).n + "번째 도전 · 이번 판 뒤 남은 기회 " + tsfTry(o).after + "회</p>" + (o.nick ? "" : '<p class="ax-meta">닉네임은 노트북에서 정해요</p>') + "</section>" +   /* 261017 몇 번째 도전(노트북과 같은 셈 tsfTry) */
+      '<p class="ax-description">' + tsfTry(o).n + "번째 도전</p>" + (o.nick ? "" : '<p class="ax-meta">닉네임은 노트북에서 정해요</p>') + "</section>" +   /* 261017 몇 번째 도전(노트북과 같은 셈 tsfTry) */
       (o.test ? '<p class="ax-meta">테스트 사번 · 순위 외</p>' : "");
     return { body: h, btn: ax2Btn("확인", "App.tab('home')") };
   }
-  var more = o.lk === "limit" ? typeMore(o) : null, w = more ? [esc(more.t).replace(" 한 번", "<br>한 번"), more.s, "home"] : TLK_WHY[o.lk] || TLK_WHY.other;   /* 261017 스탬프가 상한보다 적으면 「스탬프를 더 모으면 한 번 더 도전」 · 지금 스탬프 n개 */
-  var sub = o.lk === "window" ? (o.win || []).join(" · ") : o.lk === "limit" && !more ? typeTryTxt(o.cap || o.limit || 3) + " · " + w[1] : w[1];
+  var w = TLK_WHY[o.lk] || TLK_WHY.other;   /* 261021 limit = 옛 서버뿐(스탬프 문구 없음) */
+  var sub = o.lk === "window" ? (o.win || []).join(" · ") : w[1];
   h = '<span class="axs-chip ' + (o.lk === "notok" ? "off" : "err") + ' axs-self">1F 타자왕' + (o.lk === "notok" ? "" : " · 연결되지 않음") + '</span><h1 class="ax-title">' + w[0] + "</h1>" + (sub && o.lk !== "notok" ? '<p class="ax-description">' + esc(sub) + "</p>" : "");
   var btn = w[2] === "scan" ? ax2Btn(o.lk === "notok" ? "QR 찍기" : "QR 다시 찍기", "scanOpen('')", "홈으로", "App.tab('home')") : w[2] === "retry" ? ax2Btn("다시 시도", "typeLinkGo(SR.raw)", "홈으로", "App.tab('home')") : ax2Btn("확인", "App.tab('home')");
   return { body: h, btn: btn };

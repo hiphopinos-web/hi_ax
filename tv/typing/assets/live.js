@@ -113,9 +113,9 @@
     return { n: n, g: m.g, nick: clip(m.nick || "도전자", 16), test: m.test ? 1 : 0, tn: tryNo(m), best0: Number(m.best0) || 0, rank0: m.rank0 == null ? null : Number(m.rank0), total: Number(m.total) || 0,
       fr: [], q: -1, recv: now(), start: now(), cur: null, wm: {}, rg: mkRG(), scD: 0, cloudNo: 0, bns: null, over: 0, end: null, endAt: 0, lives0: 0, rkPrev: 0, lat: [], hub: [] };
   }
-  function tryNo(m) {   /* 261017 n번째 도전(tn 1~9 · tm 최대 기회) · 옛 앱은 칸이 없다 = 0(「1P」만) */
+  function tryNo(m) {   /* 261017 n번째 도전(tn · tm 최대 기회 · 261021 tn 1~99 · tm 0 = 상한 없음) · 옛 앱은 칸이 없다 = 0(「1P」만) */
     var t = Number(m && m.tn), x = Number(m && m.tm);
-    return t >= 1 && t <= 9 && t === Math.floor(t) && (!(x >= 1) || t <= x) ? t : 0;
+    return t >= 1 && t <= 99 && t === Math.floor(t) && (!(x >= 1) || t <= x) ? t : 0;
   }
   function seatOk(n, test) { return (n === 1 || n === 2 || n === 3) && (!ONLY || ONLY === n) && (!test || TEST); }
   function done(g) { if (DONE[g]) return; DONE[g] = 1; DONE_Q.push(g); if (DONE_Q.length > 64) delete DONE[DONE_Q.shift()]; }
