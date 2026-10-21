@@ -2,7 +2,9 @@
  * 쓰는 사람 = 콘솔 입장 명단에 든 사람 누구나(미팅 탭과 같음) · 슈퍼관리자 칸(빈 번호 채우기 · 번호 매기기 · 선착순 명부 내려받기)은 슈퍼관리자에게만
  * 한 사람 처리 = 찾기(이름 · 사번 · 세션 번호 C-2 · 신청번호 K-001 · 앱 내 QR 글자 · USB QR 리더 · 카메라) → 카드 → 단추 한 번
  * 서버 읽기 = ckin_get(q 찾기 · emp 카드 · list=1 명단 · 현황) · 쓰기는 기존 액션 그대로
- *   둘 다 지급 = ck_gate(스태프 폰 「체크인존」과 같은 액션) · 옷만 = ck_gate only=kit · 참여상만 = fcfs_give · 되돌리기 = inv_undo(옷) · fcfs_undo(참여상) · 자격 취소 = fcfs_void · 사이즈 교환 = inv_swap
+ *   체크인 + 참여상 = ck_gate(스태프 폰 「체크인존」과 같은 액션) · 체크인만 = ck_gate only=kit · 참여상만 = fcfs_give · 되돌리기 = fcfs_undo(참여상) · 자격 취소 = fcfs_void
+ * 261021 사용자 「1F 체크인존은 재고 확인 역할 없음(기념품은 10F 자리에서) · 사이즈별 남은 수 걷음 · 체크인 대상 / 체크인 여부 · 사전신청자 명단 / 선착순 명단」
+ *   체크인 대상 = 10F 사전 신청자(kind ten)만 · 옷 · 키트 · 사이즈 · 재고 숫자 · 칸 · 단추(옷만 지급 · 옷 되돌리기 · 사이즈 교환)는 이 화면에서 걷음 · 옷 오류 코드(CKI_KITISS)는 보이지 않게
  *   QR 로 찾은 사람은 그 QR 글자를 같이 보낸다(스태프 폰과 같은 서명 확인 · 스캔 기록) · 지난 QR 이면 QR 없이 한 번 더
  * 선착순 참여상 한 줄(card.fh) = 서버 fcfsHead_ 문구 그대로(스태프 폰과 같은 판정 · 같은 문구) · 카드 맨 위 크게
  * 오류(iss) = 서버 코드 → CKI_ISS(색 · 이름 · 할 일 한 줄) · 카드와 표가 같은 표 · 신청번호(K-001)는 화면에 쓰지 않는다(사용자 261020 · 찾기 입력은 받음) */
@@ -19,7 +21,7 @@ var CKI_ISS={
   "short":["bad","그 사이즈 남은 0","다른 사이즈로 지급 뒤 「사이즈 교환」 기록"],
   hum:["info","옷 대신 가습기","라운지 사전 등록 순 초과 · 지급하면 가습기 대체로 기록"],
   test:["warn","테스트 사번","실제 물건을 주지 않음"],
-  noacct:["info","앱 미가입","스탬프 0개 · 옷 · 키트는 그대로 지급"],
+  noacct:["info","앱 미가입","스탬프 0개 · 체크인은 그대로"],
   fnoelig:["off","참여상 완주 전","스탬프 6개 전 · 주지 않음"],
   fvoid:["bad","참여상 자격 취소","주지 않음 · 운영 본부 확인"],
   ffull:["warn","참여상 대기마감","선착순 수량을 넘음 · 주지 않음"],
@@ -28,19 +30,22 @@ var CKI_ISS={
   fout:["bad","참여상 모두 나감","주지 않음"],
   foff:["off","참여상 꺼짐","지급하지 않음"]
 };
-var CKI_KITW=["nodup","nosz","short","test"];   /* 옷을 줄 때 확인 창을 거치는 오류 */
+var CKI_KITW=["nodup","test"];   /* 체크인할 때 확인 창을 거치는 오류 */
+var CKI_KITISS=["nolist","nosz","short","hum"];   /* 261021 옷 · 키트 오류 · 체크인존 화면에 보이지 않음 */
+function ckiIssOk(k, skipF){ return !!CKI_ISS[k]&&CKI_KITISS.indexOf(k)<0&&!(skipF&&/^f/.test(k)); }
+function ckiTgt(r){ return r.kind==="ten"; }   /* 체크인 대상 = 10F 사전 신청자 */
 function ckiSz(z){ return z?(CKI_SZ[z]?CKI_SZ[z]+" ("+z+")":z):""; }
 function ckiSes(r){ return r.kind==="ten"?(CKI_SES[r.sid]||(r.no?r.no.charAt(0):"")):r.kind==="staff"?"스태프":r.kind==="lng"?"라운지 사전":""; }
 function ckiTone(k){ return (CKI_ISS[k]||["off"])[0]; }
-function ckiWorst(iss){ var t=(iss||[]).map(ckiTone); return t.indexOf("bad")>=0?"bad":t.indexOf("warn")>=0?"warn":""; }
-function ckiIssTags(iss, skipF){ return (iss||[]).filter(function(k){ return CKI_ISS[k]&&!(skipF&&/^f/.test(k)); }).map(function(k){ var x=CKI_ISS[k]; return tag(x[1],x[0]==="info"?"":x[0]); }).join(" "); }
+function ckiWorst(iss){ var t=(iss||[]).filter(function(k){ return CKI_KITISS.indexOf(k)<0; }).map(ckiTone); return t.indexOf("bad")>=0?"bad":t.indexOf("warn")>=0?"warn":""; }
+function ckiIssTags(iss, skipF){ return (iss||[]).filter(function(k){ return ckiIssOk(k, skipF); }).map(function(k){ var x=CKI_ISS[k]; return tag(x[1],x[0]==="info"?"":x[0]); }).join(" "); }
 function ckiRows(){ var d=S.data.ckl; return d&&d.ok&&Array.isArray(d.rows)?d.rows:null; }
 function ckiSum(){ var d=S.data.ckl; return d&&d.ok?d.sum||null:null; }
 function ckiPh(ph, f){ f=f||{}; var day=String(f.day||"").slice(5).replace("-","/"); return ph==="before"?["warn","지급 시작 전",(day?day+" ":"")+(f.start||"10:30")+"부터"]:ph==="closed"?["bad","지급 마감",(f.cut||"17:00")+" 마감 · 못 받은 사람 발송"]:ph==="off"?["off","선착순 꺼짐","지급하지 않음"]:["ok","지급 중",(f.start||"10:30")+" ~ "+(f.cut||"17:00")]; }
 
 SCREENS.ckin={
-  title:"체크인", desc:"1F 주차장 체크인존 · 옷 · 키트 · 스태프 의류 · 선착순 참여상 · 찾기 → 카드 → 지급",
-  need:function(){ var a=[{ k:"ckl", a:"ckin_get", p:{ list:"1" }, ttl:30000 }]; if(ckiTop()) a.push({ k:"cno", a:"ck_no_state", ttl:60000 }); return a; },
+  title:"체크인", desc:"1F 주차장 체크인존 · 사전 신청자 체크인 · 선착순 참여상 · 찾기 → 카드 → 처리",
+  need:function(){ var a=[{ k:"ckl", a:"ckin_get", p:{ list:"1" }, ttl:30000 }]; if(typeof APM_NEED!=="undefined") a.push(APM_NEED); if(ckiTop()) a.push({ k:"cno", a:"ck_no_state", ttl:60000 }); return a; },
   mount:function(vb){
     vb.innerHTML='<div class="cki" id="ckiR">'+
       '<div class="card cki-find"><div class="cki-fbar">'+
@@ -50,7 +55,6 @@ SCREENS.ckin={
       '</div><div id="ckiHit"></div></div>'+
       '<div id="ckiCard"></div>'+
       '<div class="grid g4 cki-k mt" id="ckiK"></div>'+
-      '<div class="card mt" id="ckiSzC"></div>'+
       '<div class="card mt"><div class="chips" id="ckiV" role="tablist" aria-label="명단"></div><div id="ckiL"></div></div>'+
       '<div id="ckiSup"></div></div>';
     setTimeout(function(){ var q=el("ckiQ"); if(q&&!CKI.card&&document.activeElement===document.body) q.focus(); },60);
@@ -98,32 +102,28 @@ function ckiHitPaint(){
 }
 
 /* ── 2. 한 사람 카드 ── */
-function ckiKitDue(c){ return c.kind!=="none"&&c.kit&&c.kit.st==="due"; }
+function ckiKitDue(c){ return ckiTgt(c)&&!c.ck; }   /* 261021 = 체크인할 사람(사전 신청자 · 체크인 전) */
 function ckiFxDue(c){ return !!(c.fh&&c.fh.k==="due"); }
 function ckiCardPaint(){
   var b=el("ckiCard"); if(!b) return;
   var c=CKI.card;
   if(!c){ b.innerHTML=CKI.busy?'<div class="card cki-card mt">'+skel()+'</div>':""; return; }
-  var fh=c.fh||{}, kd=ckiKitDue(c), fd=ckiFxDue(c), both=kd&&fd, kit=c.kit||{}, fx=c.fx||{};
+  var fh=c.fh||{}, kd=ckiKitDue(c), fd=ckiFxDue(c), both=kd&&fd, fx=c.fx||{};
   var head='<div class="cki-fh t-'+esc(fh.tone||"off")+'" role="status"><b>'+esc(fh.t||"선착순 참여상 · 확인 못 함")+'</b>'+(fh.s?'<span>'+esc(fh.s)+'</span>':'')+'</div>';
   var msg=CKI.msg?'<div class="cki-msg t-'+esc(CKI.msg.c)+'" role="alert"><b>'+esc(CKI.msg.t)+'</b>'+(CKI.msg.s?'<span>'+esc(CKI.msg.s)+'</span>':'')+'</div>':'';
   var ses=ckiSes(c);
   var who='<div class="cki-who"><div class="cki-nm"><h2>'+esc(c.name||"이름 없음")+'</h2><span class="cap">'+esc(c.emp)+(c.dept?" · "+esc(c.dept):"")+'</span>'+
     '<div class="cki-tags">'+tag(CKI_KIND[c.kind]||"-",c.kind==="none"?"off":"")+(c.stf?" "+tag("스태프 겸","off"):"")+" "+tag("스탬프 "+n0(c.n)+"/6",c.n>=6?"ok":"off")+" "+(c.ck?tag("체크인 "+fmtD(c.ck),"ok"):tag("체크인 전","off"))+'</div></div>'+
     '<div class="cki-no'+(c.no?"":" none")+'"><span class="l">세션 번호</span><b>'+esc(c.no||"없음")+'</b><span class="s">'+esc(ses||"번호 없음")+'</span></div></div>';
-  var iss=(c.iss||[]).filter(function(k){ return CKI_ISS[k]&&!/^f/.test(k); });
+  var iss=(c.iss||[]).filter(function(k){ return ckiIssOk(k, true); });
   var issH=iss.length?'<ul class="cki-iss">'+iss.map(function(k){ var x=CKI_ISS[k]; return '<li class="t-'+x[0]+'"><b>'+esc(x[1])+'</b><span>'+esc(x[2])+'</span></li>'; }).join("")+'</ul>':'';
-  /* 옷 칸 */
-  var kitT=c.kind==="staff"?"스태프 의류":c.kind==="none"?"옷 · 키트":"옷 · 키트", kSt, kBig, kBtn="";
-  if(c.kind==="none"){ kBig='<b class="cki-big off">-</b>'; kSt=tag("명단에 없음","off"); }
-  else if(c.hum){ kBig='<b class="cki-big">가습기</b>'; kSt=kit.st==="got"?tag("받음 "+fmtD(kit.at),"ok"):tag("줄 것",""); }
-  else { kBig='<b class="cki-big'+(c.sz?"":" off")+'">'+esc(c.sz?CKI_SZ[c.sz]||c.sz:"?")+'</b>'+(c.sz?'<span class="cki-bs">'+esc(c.sz)+'</span>':'<span class="cki-bs">사이즈 미선택</span>');
-    kSt=kit.st==="got"?tag((kit.sub?"가습기 받음 ":"받음 ")+fmtD(kit.at),"ok"):tag("줄 것",""); }
-  if(c.kind!=="none"&&c.sz&&c.left&&c.left[c.sz]!=null&&kit.st!=="got") kSt+=' <span class="cap">남은 '+n0(c.left[c.sz])+'벌</span>';
-  if(kit.st==="got"&&kit.rid) kBtn+='<button class="btn sm" type="button" onclick="ckiUndoKit()"'+(CKI.busy?' disabled':'')+'>되돌리기</button>';
-  if(both) kBtn='<button class="btn sm" type="button" onclick="ckiGive(\'kit\')"'+(CKI.busy?' disabled':'')+'>옷만 지급</button>'+kBtn;
-  if(c.kind!=="none"&&!c.hum&&c.sz) kBtn+='<button class="btn sm" type="button" onclick="ckiSwap()"'+(CKI.busy?' disabled':'')+'>사이즈 교환</button>';
-  var kitB='<div class="cki-blk"><div class="cki-bh">'+esc(kitT)+'</div><div class="cki-bv">'+kBig+'</div><div class="cki-bst">'+kSt+'</div>'+(kBtn?'<div class="cki-bb">'+kBtn+'</div>':'')+'</div>';
+  /* 체크인 칸(261021 옷 · 키트 · 사이즈 칸 걷음) */
+  var kSt, kBig, kBtn="";
+  if(c.ck){ kBig='<b class="cki-big">'+esc(hm(c.ck)||"-")+'</b>'; kSt=tag("체크인 함","ok"); }
+  else if(ckiTgt(c)){ kBig='<b class="cki-big off">전</b>'; kSt=tag("체크인 전",""); }
+  else { kBig='<b class="cki-big off">-</b>'; kSt=tag("체크인 명단 밖","off"); }
+  if(both) kBtn='<button class="btn sm" type="button" onclick="ckiGive(\'kit\')"'+(CKI.busy?' disabled':'')+'>체크인만</button>';
+  var kitB='<div class="cki-blk"><div class="cki-bh">체크인</div><div class="cki-bv">'+kBig+'</div><div class="cki-bst">'+kSt+'</div>'+(kBtn?'<div class="cki-bb">'+kBtn+'</div>':'')+'</div>';
   /* 참여상 칸 */
   var fBig=fx.rk?'<b class="cki-big">'+n0(fx.rk)+'<small>번째</small></b>':'<b class="cki-big off">'+n0(c.n||0)+'<small>/6</small></b>';
   var fSt=fx.st==="got"?tag("받음 "+fmtD(fx.gotAt),"ok"):fd?tag("줄 것",""):tag(fh.k==="none"?"완주 전":fh.k==="full"?"대기마감":fh.k==="void"?"자격 취소":fh.k==="early"?"시작 전":fh.k==="late"?"마감":fh.k==="test"?"테스트":fh.k==="out"?"모두 나감":"주지 않음",fh.tone==="bad"?"bad":fh.tone==="warn"?"warn":"off");
@@ -133,11 +133,10 @@ function ckiCardPaint(){
   if(fx.rk&&fx.st!=="got"&&fx.st!=="void") fBtn+='<button class="btn sm dng" type="button" onclick="ckiVoid()"'+(CKI.busy?' disabled':'')+'>자격 취소</button>';
   var fxB='<div class="cki-blk"><div class="cki-bh">선착순 참여상</div><div class="cki-bv">'+fBig+'</div><div class="cki-bst">'+fSt+'</div>'+(fBtn?'<div class="cki-bb">'+fBtn+'</div>':'')+'</div>';
   /* 큰 단추 */
-  var lbl=both?"옷 "+(c.hum?"가습기":ckiSz(c.sz)||"")+" + 참여상 지급":kd?(c.hum?"가습기(옷 대신) 지급":(c.kind==="staff"?"스태프 의류 ":"옷 ")+(ckiSz(c.sz)||"")+" 지급"):fd?"선착순 참여상 지급":"";
+  var lbl=both?"체크인 + 참여상 지급":kd?"체크인":fd?"선착순 참여상 지급":"";
   var mode=both?"both":kd?"kit":fd?"fx":"";
-  var done=(c.kind==="none"||kit.st==="got")&&(fx.st==="got"||!fd);
-  var big=mode?'<button class="btn pri big cki-give" type="button" onclick="ckiGive(\''+mode+'\')"'+(CKI.busy?' aria-disabled="true"':'')+'>'+esc(CKI.busy?"처리 중":lbl.replace(/\s+/g," "))+'</button>':
-    '<button class="btn big cki-give" type="button" disabled>'+esc(kit.st==="got"||fx.st==="got"?(done?"이미 모두 받음 · 다시 주지 않음":"지급할 것 없음"):"지급할 것 없음")+'</button>';
+  var big=mode?'<button class="btn pri big cki-give" type="button" onclick="ckiGive(\''+mode+'\')"'+(CKI.busy?' aria-disabled="true"':'')+'>'+esc(CKI.busy?"처리 중":lbl)+'</button>':
+    '<button class="btn big cki-give" type="button" disabled>'+esc(fx.st==="got"?"참여상 이미 받음 · 다시 주지 않음":c.ck?"체크인 끝 · 처리할 것 없음":"처리할 것 없음")+'</button>';
   b.innerHTML='<div class="card cki-card mt'+(ckiWorst(c.iss)==="bad"?" bad":"")+'">'+head+msg+who+issH+'<div class="cki-blks">'+kitB+fxB+'</div>'+big+
     '<div class="cki-foot"><button class="btn sm" type="button" onclick="pcOpen(\''+jq(c.emp)+'\')">한 사람 카드</button><button class="btn sm" type="button" onclick="ckiNext()">다음 사람</button><span class="cap">'+(CKI.qr?"QR 로 찾음 · ":"")+'카드 '+esc(hm(S.srvT)||"")+'</span></div></div>';
 }
@@ -157,13 +156,13 @@ function ckiGive(mode){
   var c=CKI.card; if(!c||CKI.busy) return;
   var w=mode==="fx"?(c.iss.indexOf("test")>=0?["test"]:[]):c.iss.filter(function(k){ return CKI_KITW.indexOf(k)>=0; });
   if(w.length){
-    confirmBox({ t:"확인하고 지급할까요?", who:(c.name||"")+" · "+c.emp+(c.no?" · "+c.no:""), sub:w.map(function(k){ return CKI_ISS[k][1]; }).join(" · "),
+    confirmBox({ t:"확인하고 처리할까요?", who:(c.name||"")+" · "+c.emp+(c.no?" · "+c.no:""), sub:w.map(function(k){ return CKI_ISS[k][1]; }).join(" · "),
       body:'<ul class="cki-iss">'+w.map(function(k){ var x=CKI_ISS[k]; return '<li class="t-'+x[0]+'"><b>'+esc(x[1])+'</b><span>'+esc(x[2])+'</span></li>'; }).join("")+'</ul>',
-      ok:"지급", run:function(){ return ckiGiveCall(mode, c); }, fail:function(r){ return ckiFailTx(r); }, done:function(r){ ckiGiveDone(mode, c, r); } });
+      ok:"처리", run:function(){ return ckiGiveCall(mode, c); }, fail:function(r){ return ckiFailTx(r); }, done:function(r){ ckiGiveDone(mode, c, r); } });
     return;
   }
   CKI.busy=1; ckiCardPaint();
-  ckiGiveCall(mode, c).then(function(r){ CKI.busy=0; if(r&&r.ok) ckiGiveDone(mode, c, r); else { CKI.msg={ c:"bad", t:"지급하지 못했습니다", s:ckiFailTx(r) }; ckiCardPaint(); } });
+  ckiGiveCall(mode, c).then(function(r){ CKI.busy=0; if(r&&r.ok) ckiGiveDone(mode, c, r); else { CKI.msg={ c:"bad", t:"처리하지 못했습니다", s:ckiFailTx(r) }; ckiCardPaint(); } });
 }
 function ckiFailTx(r){ r=r||{}; return r.reason==="qr"?"확인할 수 없는 QR · 참가자 폰에서 내 QR 을 다시 열어 찍음":why(r); }
 var CKI_FXR={ noelig:"스탬프 6개 전", norank:"스탬프 6개 전", full:"선착순 마감", void:"자격 취소", notyet:"지급 시작 전", early:"지급 시작 전", closed:"지급 마감", late:"지급 마감", off:"지급하지 않음", test:"테스트 사번", out:"모두 나감" };
@@ -172,20 +171,14 @@ function ckiGiveDone(mode, c, r){
   if(mode==="fx"){
     if(r.give==="new") got.push("참여상"+(r.rk?" "+r.rk+"번째":"")); else if(r.give==="dup") dup.push("참여상 이미 받음"+(r.at?" · "+r.at:"")); else no.push("참여상 · "+(CKI_FXR[r.reason]||r.reason||"주지 않음"));
   } else {
-    var k=r.kit||{}, f=r.fcfs||{};
-    if(k.st==="give") got.push((k.pool==="staff"?"스태프 의류 ":"옷 ")+(ckiSz(k.sz)||"")); else if(k.st==="sub") got.push("가습기(옷 대신)"); else if(k.st==="dup") dup.push((k.sub?"가습기":"옷")+" 이미 받음"+(k.at?" · "+k.at:"")); else if(k.reason==="nolist") no.push("옷 명단에 없음");
+    var f=r.fcfs||{};
+    got.push("체크인");   /* 261021 ck_gate = 체크인 기록(옷 · 키트 결과는 화면에 쓰지 않음) */
     if(f.st==="give") got.push("참여상"+(f.rk?" "+f.rk+"번째":"")); else if(f.st==="dup") dup.push("참여상 이미 받음"+(f.at?" · "+f.at:"")); else if(f.st==="none"&&mode==="both") no.push("참여상 · "+(CKI_FXR[f.reason]||f.reason||"주지 않음"));
   }
-  if(dup.length) CKI.msg={ c:"bad", t:"이미 받음 · 다시 주지 않음", s:dup.concat(got.length?["지급 "+got.join(" · ")]:[]).join(" · ") };
-  else if(got.length){ CKI.msg={ c:"ok", t:"지급 · "+got.join(" + ").replace(/\s+/g," ").trim(), s:no.join(" · ") }; toast("지급 · "+(c.name||c.emp)+" · "+got.join(" + ").replace(/\s+/g," ").trim()); }
-  else CKI.msg={ c:"warn", t:"지급한 것 없음", s:no.join(" · ") };
+  if(dup.length) CKI.msg={ c:"bad", t:"이미 받음 · 다시 주지 않음", s:dup.concat(got.length?["처리 "+got.join(" · ")]:[]).join(" · ") };
+  else if(got.length){ CKI.msg={ c:"ok", t:"처리 · "+got.join(" + "), s:no.join(" · ") }; toast("처리 · "+(c.name||c.emp)+" · "+got.join(" + ")); }
+  else CKI.msg={ c:"warn", t:"처리한 것 없음", s:no.join(" · ") };
   ckiOpen(c.emp, true);
-}
-function ckiUndoKit(){
-  var c=CKI.card; if(!c||!c.kit||!c.kit.rid) return;
-  confirmBox({ t:(c.kit.sub?"가습기":"옷")+" 지급을 되돌릴까요?", who:(c.name||"")+" · "+c.emp+(c.no?" · "+c.no:""), sub:"받은 시각 "+fmtD(c.kit.at)+" · 물건을 돌려받은 뒤 · 재고 장부에 되돌림 한 줄", ok:"되돌리기", danger:1,
-    run:function(){ return call("inv_undo",{ rid:c.kit.rid }); }, fail:function(r){ return typeof ivWhy==="function"?"되돌리지 못했습니다 · "+ivWhy(r):""; },
-    done:function(){ CKI.msg={ c:"warn", t:"옷 지급을 되돌렸습니다", s:"" }; toast("되돌렸습니다 · "+(c.name||c.emp)); ckiOpen(c.emp, true); } });
 }
 function ckiUndoFx(){
   var c=CKI.card; if(!c) return;
@@ -204,14 +197,6 @@ function ckiVoid(){
     fail:function(r){ return r&&r.reason==="got"?"이미 받은 사람입니다 · 먼저 수령 되돌리기":""; },
     done:function(){ CKI.msg={ c:"warn", t:"참여상 자격을 취소했습니다", s:"" }; ckiOpen(c.emp, true); } });
 }
-function ckiSwap(){
-  var c=CKI.card; if(!c||!c.sz) return;
-  var sz=["SS","L","2XL","3XL"], op='<select class="in" id="ckiST" onchange="gateUpd()"><option value="">새로 가져간 사이즈</option>'+sz.filter(function(z){ return z!==c.sz; }).map(function(z){ var l=c.left&&c.left[z]; return '<option value="'+z+'">'+esc(ckiSz(z))+(l!=null?" · 남은 "+n0(l):"")+'</option>'; }).join("")+'</select>';
-  confirmBox({ t:"사이즈 교환을 기록할까요?", who:(c.name||"")+" · "+c.emp, sub:"돌려받은 사이즈 "+ckiSz(c.sz)+" · 재고 장부에 교환 한 줄 · 고른 사이즈 기록은 그대로",
-    body:'<label class="fld">새로 가져간 사이즈'+op+'</label>', focus:"ckiST", ok:"교환 기록", gate:function(){ return !!(el("ckiST")||{}).value; },
-    run:function(){ return call("inv_swap",{ emp:c.emp, from:c.sz, to:el("ckiST").value, memo:"체크인 탭" }); }, fail:function(r){ return typeof ivWhy==="function"?"기록하지 못했습니다 · "+ivWhy(r):""; },
-    done:function(r){ toast("교환 기록 · "+(c.name||c.emp)+" · "+r.from+" → "+r.to); ckiOpen(c.emp, true); reload(["ckl"]); } });
-}
 /* 처리한 사람만 명단 줄 바꿈(card 값이 명단 줄과 같은 모양) */
 function ckiPatch(card){
   var rows=ckiRows(); if(!rows||!card) return;
@@ -221,50 +206,39 @@ function ckiPatch(card){
   if(i>=0) rows[i]=o; else if(o.kind!=="none"||(o.fx&&o.fx.rk)) rows.push(o);
 }
 
-/* ── 4. 현황 ── */
+/* ── 4. 현황 · 체크인 대상 = 10F 사전 신청자 · 사이즈별 남은 수는 걷음(261021) ── */
 function ckiNowPaint(){
-  var k=el("ckiK"), z=el("ckiSzC"); if(!k||!z) return;
+  var k=el("ckiK"); if(!k) return;
   var rows=ckiRows(), sm=ckiSum(), gt=dataGate("ckl","체크인 명단");
-  if(!rows||!sm){ k.innerHTML='<div style="grid-column:1/-1">'+(gt||skel())+'</div>'; z.innerHTML=""; return; }
-  var pre=rows.filter(function(r){ return r.kind==="ten"||r.kind==="lng"; }), stf=rows.filter(function(r){ return r.kind==="staff"; }), f=sm.fcfs||{};
-  var gotN=function(a){ return a.filter(function(r){ return r.kit&&r.kit.st==="got"; }).length; };
+  if(!rows||!sm){ k.innerHTML='<div style="grid-column:1/-1">'+(gt||skel())+'</div>'; return; }
+  var pre=rows.filter(ckiTgt), nIn=pre.filter(function(r){ return !!r.ck; }).length, f=sm.fcfs||{};
   var fxGot=rows.filter(function(r){ return r.fx&&r.fx.st==="got"; }).length, fxDue=rows.filter(function(r){ return r.fx&&r.fx.st==="due"; }).length, ph=ckiPh(f.ph, f);
-  k.innerHTML=errTop("ckl")+kpi({ l:"키트 받음 / 대상", v:n0(gotN(pre)), u:"/ "+n0(pre.length), s:"사전 신청 · 라운지 사전"+(sm.hum?" · 가습기 대체 "+n0(sm.hum):"") })+
-    kpi({ l:"스태프 의류 받음 / 대상", v:n0(gotN(stf)), u:"/ "+n0(stf.length), s:"스태프 의류 명단" })+
+  k.innerHTML=errTop("ckl")+kpi({ l:"체크인 대상", v:n0(pre.length), u:"명", s:"10F 사전 신청자" })+
+    kpi({ l:"체크인", v:n0(nIn), u:"/ "+n0(pre.length), s:"안 온 사람 "+n0(pre.length-nIn)+"명" })+
     kpi({ l:"선착순 받음 / 수량", v:n0(fxGot), u:"/ "+n0(f.cap), s:"받기 전 자격 "+n0(fxDue)+"명 · "+(f.mode||"달성순") })+
     kpi({ l:"선착순 지급", v:ph[1], st:ph[0]==="ok"?"ok":ph[0]==="bad"?"bad":ph[0]==="warn"?"warn":"", s:ph[2] });
-  var gv={}; (sm.sizes||[]).forEach(function(x){ gv[x.sz]=0; });
-  rows.forEach(function(r){ if(r.kind!=="none"&&r.kit&&r.kit.st==="got"&&!r.kit.sub&&r.sz&&gv[r.sz]!=null) gv[r.sz]++; });
-  var due={}; rows.forEach(function(r){ if(r.kind!=="none"&&!r.hum&&r.sz&&r.kit&&r.kit.st==="due") due[r.sz]=(due[r.sz]||0)+1; });
-  z.innerHTML='<h2>사이즈별 남은 수 <span class="cap">총량 − 나감 + 교환으로 돌아옴 · 명단 밖 지급 '+n0(sm.outN)+'벌은 사이즈 없이 따로</span></h2><table class="tb cki-szt"><thead><tr><th>사이즈</th><th class="n">총량</th><th class="n">나감</th><th class="n">교환</th><th class="n">남음</th><th class="n">받을 사람</th></tr></thead><tbody>'+
-    (sm.sizes||[]).map(function(x){ var left=num(x.qty)-gv[x.sz]+num(x.net), d=due[x.sz]||0, cls=left<=0?"bad":left<d?"warn":"";
-      return '<tr'+(cls?' class="cki-'+cls+'"':'')+'><td><b>'+esc(ckiSz(x.sz))+'</b></td><td class="n">'+n0(x.qty)+'</td><td class="n">'+n0(gv[x.sz])+'</td><td class="n">'+(x.net?(x.net>0?"+":"")+n0(x.net):"0")+'</td><td class="n"><b>'+n0(left)+'</b>'+(cls?" "+tag(left<=0?"없음":"모자람",cls):"")+'</td><td class="n">'+n0(d)+'</td></tr>'; }).join("")+'</tbody></table>';
 }
 
-/* ── 5. 명단 표(옷 명단 · 선착순 · 칩으로 바꿈) ── */
+/* ── 5. 명단 표(사전신청자 명단 · 선착순 명단 · 칩으로 바꿈 · 261021 옷 명단 걷음) ── */
 function ckiView(v){ CKI.view=v; lsSet("axf_v2_ckin_v",v); ckiListPaint(); }
-function ckiKitSt(r){ return r.kind==="none"?"-":r.kit&&r.kit.st==="got"?(r.kit.sub?"가습기 받음":"받음"):"받기 전"; }
 function ckiFxSt(r){ var s=r.fx&&r.fx.st; return s==="got"?"받음":s==="due"?"받기 전":s==="full"?"대기마감":s==="void"?"자격 취소":s==="test"?"테스트":s==="off"?"꺼짐":"-"; }
-function ckiErrCol(skipF){ return { k:"iss", t:"확인", w:200, v:function(r){ return (r.iss||[]).filter(function(k){ return !(skipF&&/^f/.test(k)); }).map(function(k){ return (CKI_ISS[k]||[])[1]||k; }).join(" · "); }, f:function(r){ return ckiIssTags(r.iss, skipF)||'<span class="cap">-</span>'; } }; }
+function ckiErrCol(skipF){ return { k:"iss", t:"확인", w:200, v:function(r){ return (r.iss||[]).filter(function(k){ return ckiIssOk(k, skipF); }).map(function(k){ return CKI_ISS[k][1]; }).join(" · "); }, f:function(r){ return ckiIssTags(r.iss, skipF)||'<span class="cap">-</span>'; } }; }
 function ckiRowCls(skipF){ return function(r){ var t=ckiWorst((r.iss||[]).filter(function(k){ return !(skipF&&/^f/.test(k)); })); return t?"cki-"+t:""; }; }
 function ckiErrAny(skipF){ return function(r){ return !!ckiWorst((r.iss||[]).filter(function(k){ return !(skipF&&/^f/.test(k)); })); }; }
 function ckiListPaint(){
   var v=el("ckiV"), L=el("ckiL"); if(!v||!L) return;
-  var rows=ckiRows(), kitR=rows?rows.filter(function(r){ return r.kind!=="none"; }):null, fxR=rows?rows.filter(function(r){ return r.fx&&r.fx.rk; }):null;
+  var rows=ckiRows(), kitR=rows?rows.filter(ckiTgt):null, fxR=rows?rows.filter(function(r){ return r.fx&&r.fx.rk; }):null;
   var chip=function(k,t,n){ var on=CKI.view===k; return '<button type="button" role="tab" aria-selected="'+on+'" class="chip'+(on?" on":"")+'" onclick="ckiView(\''+k+'\')">'+t+' <span class="c">'+(n==null?"-":n0(n))+'</span></button>'; };
-  v.innerHTML=chip("kit","옷 명단",kitR&&kitR.length)+chip("fx","선착순 명단",fxR&&fxR.length)+'<span class="cap">줄을 누르면 위 카드</span>';
+  v.innerHTML=chip("kit","사전신청자 명단",kitR&&kitR.length)+chip("fx","선착순 명단",fxR&&fxR.length)+'<span class="cap">줄을 누르면 위 카드</span>';
   var gt=dataGate("ckl","체크인 명단");
   if(CKI.view==="kit"){
-    if(!CKI.gk) CKI.gk=XG.make({ id:"ckin_kit", file:"체크인 옷 명단", key:function(r){ return r.emp; }, sort:{ k:"no", d:1 }, find:["sz"],
-      chips:[["all","전체",null],["due","받기 전",function(r){ return r.kit&&r.kit.st!=="got"; }],["got","받음",function(r){ return r.kit&&r.kit.st==="got"; }],["err","확인할 것",ckiErrAny(true)],["staff","스태프",function(r){ return r.kind==="staff"; }]],
-      rowCls:ckiRowCls(true),
-      cols:[{ k:"no", t:"세션 번호", w:84, v:function(r){ return r.no||""; }, f:function(r){ return r.no?'<b>'+esc(r.no)+'</b>':tag("없음",r.kind==="lng"?"off":"warn"); } },
-        { k:"ses", t:"세션", w:92, v:ckiSes },{ k:"name", t:"이름", w:90 },{ k:"emp", t:"사번", w:84 },{ k:"dept", t:"소속", w:150 },
-        { k:"kind", t:"구분", w:96, v:function(r){ return (CKI_KIND[r.kind]||"")+(r.stf?" · 스태프 겸":""); } },
-        { k:"sz", t:"사이즈", w:84, v:function(r){ return r.hum?"가습기":ckiSz(r.sz); }, f:function(r){ return r.hum?tag("가습기","off"):r.sz?'<b>'+esc(ckiSz(r.sz))+'</b>':tag("미선택","warn"); } },
-        { k:"got", t:"받음", w:110, v:function(r){ return r.kit&&r.kit.st==="got"?r.kit.at:""; }, x:ckiKitSt, f:function(r){ return r.kit&&r.kit.st==="got"?tag((r.kit.sub?"가습기 ":"")+"받음 "+fmtD(r.kit.at),"ok"):'<span class="cap">받기 전</span>'; } },
-        { k:"ck", t:"체크인", type:"date", w:90, v:function(r){ return r.ck||""; } },ckiErrCol(true)],
-      src:{ a:"ckin_get", p:{ list:"1" }, pick:function(res){ return (res.rows||[]).filter(function(r){ return r.kind!=="none"; }); } }, empty:"옷 명단이 비었습니다", h:520, onRow:function(k){ ckiRowGo(k); } });
+    if(!CKI.gk) CKI.gk=XG.make({ id:"ckin_pre", file:"체크인 사전신청자 명단", key:function(r){ return r.emp; }, sort:{ k:"no", d:1 },
+      chips:[["all","전체",null],["out","안 옴",function(r){ return !r.ck; }],["in","체크인",function(r){ return !!r.ck; }],["err","확인할 것",ckiErrAny(true)]],
+      rowCls:function(r){ return ckiRowCls(true)(r)||(r.ck?"dim":""); },
+      cols:[{ k:"no", t:"세션 번호", w:84, v:function(r){ return r.no||""; }, f:function(r){ return r.no?'<b>'+esc(r.no)+'</b>':tag("없음","warn"); } },
+        { k:"ses", t:"세션", w:92, v:ckiSes },{ k:"name", t:"이름", w:90 },{ k:"emp", t:"사번", w:84 },{ k:"dept", t:"소속", w:150 }].concat(typeof apmCol==="function"?[apmCol()]:[]).concat([
+        { k:"ck", t:"체크인", type:"date", w:110, v:function(r){ return r.ck||""; }, f:function(r){ return r.ck?tag("체크인 "+fmtD(r.ck),"ok"):'<span class="cap">안 옴</span>'; } },ckiErrCol(true)]),
+      src:{ a:"ckin_get", p:{ list:"1" }, pick:function(res){ return (res.rows||[]).filter(ckiTgt); } }, empty:"사전 신청 명단이 비었습니다", h:520, onRow:function(k){ ckiRowGo(k); } });
     CKI.gk.gate=gt||""; XG.set(CKI.gk, gt?null:kitR, L);
   } else {
     if(!CKI.gf) CKI.gf=XG.make({ id:"ckin_fx", file:"체크인 선착순 명단", key:function(r){ return r.emp; }, sort:{ k:"rk", d:1 },

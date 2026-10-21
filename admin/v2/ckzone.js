@@ -2,7 +2,8 @@
  * 데이터 = ck_zone(사전 신청자 + 스태프 · 체크인 첫 시각 = 스태프 폰 「체크인존」 스캔 ck_gate) · 콘솔에서는 체크인하지 않는다(K1)
  * 구분 칩 = 전체 · A~E · 스태프 / 상태 = 안 옴 · 옴 · 전체(이 브라우저에 기억) · 체크인한 줄은 흐리게 · 아래로
  * 스태프 번호 S-1 = ck_staff_no(확인 문구 · 묶음 순 임원 → 주니어보드 → DS → 그 밖 · 이름 가나다순 · 한 번 매기면 고정) · 묶음 = ck_staff_grp
- * 참여상 칩 = fcfs_list 1~200(달성 순번 · 지급은 스태프 폰 스캔 그대로) */
+ * 참여상 칩 = fcfs_list 1~200(달성 순번 · 지급은 스태프 폰 스캔 그대로)
+ * 261021 사용자 「체크인존은 재고 확인 역할 없음」 · 사이즈 열 · 미선택 수 걷음 */
 var CKZ={ g:null, st:lsGet("axf_v2_ckz_st","out")||"out", gf:null, app:0 };   /* app = 「앱 미가입」 칩(261017 · appmark.js app_marks) */
 var CKZ_SEG=["A","B","C","D","E","S"], CKZ_GRP=["임원","주니어보드","DS","그 밖"];
 function ckzRowsAll(){ var d=S.data.ckz; return d&&d.ok?(d.rows||[]):null; }
@@ -11,17 +12,16 @@ function ckzStOk(r){ var st=CKZ.st; return st==="all"?true:st==="in"?!!r.ck:!r.c
 function ckzView(rows){ return (rows||[]).filter(function(r){ return ckzStOk(r)&&(!CKZ.app||apmOf(r.emp)===0); }).map(function(r){ var o={}; for(var k in r) o[k]=r[k]; o._o=ckzOrd(r); return o; }); }
 function ckzSt(v){ CKZ.st=v; lsSet("axf_v2_ckz_st",v); ckzPaint(); }
 function ckzApp(){ CKZ.app=CKZ.app?0:1; ckzPaint(); }
-function ckzSz(r){ return r.hum?"가습기 대체":r.sz||""; }
 function ckzPaint(){
   var top=el("ckzTop"); if(!top) return;
   var all=ckzRowsAll(), gt=dataGate("ckz","체크인존 명단");
   if(!all){ top.innerHTML=errTop("ckz"); }
   else {
-    var nIn=all.filter(function(r){ return !!r.ck; }).length, nOut=all.length-nIn, nNo=all.filter(function(r){ return r.g==="S"&&!r.no; }).length, nSz=all.filter(function(r){ return !r.sz&&!r.hum; }).length;
+    var nIn=all.filter(function(r){ return !!r.ck; }).length, nOut=all.length-nIn, nNo=all.filter(function(r){ return r.g==="S"&&!r.no; }).length;
     var chip=function(v,t){ return '<button type="button" class="chip'+(CKZ.st===v?" on":"")+'" aria-pressed="'+(CKZ.st===v)+'" onclick="ckzSt(\''+v+'\')">'+t+'</button>'; };
     top.innerHTML=errTop("ckz")+'<div class="ckz-bar"><div class="chips" role="group" aria-label="체크인 상태">'+chip("out","안 옴 <b>"+n0(nOut)+"</b>")+chip("in","옴 <b>"+n0(nIn)+"</b>")+chip("all","전체 "+n0(all.length))+'</div>'+
       (apmMap()?'<button type="button" class="chip'+(CKZ.app?" on":"")+'" aria-pressed="'+!!CKZ.app+'" onclick="ckzApp()">앱 미가입 <b>'+n0(all.filter(function(r){ return ckzStOk(r)&&apmOf(r.emp)===0; }).length)+'</b></button>':'')+
-      '<span class="cap">사이즈 미선택 '+n0(nSz)+'명 · 체크인 = 스태프 폰 「체크인존」 스캔 · 콘솔은 체크인 탭</span><span class="sp"></span>'+
+      '<span class="cap">체크인 = 스태프 폰 「체크인존」 스캔 · 콘솔은 체크인 탭</span><span class="sp"></span>'+
       (typeof ckiCam==="function"?'<button class="btn sm" type="button" onclick="ckiCam()">QR 찍기 · 체크인 탭</button>':'')+   /* 261020 노트북 · 태블릿 카메라 → 체크인 탭 카드 */
       '<button class="btn sm'+(nNo?" pri":"")+'" type="button" onclick="ckzNoAsk()"'+(nNo?'':' disabled')+'>'+(nNo?"스태프 번호 매기기 · "+n0(nNo)+"명":"스태프 번호 매길 사람 없음")+'</button></div>';
   }
@@ -32,7 +32,6 @@ function ckzPaint(){
       { k:"g", t:"구분", w:84, v:function(r){ return (r.g==="S"?"스태프":r.g||"-")+(r.g!=="S"&&r.stf?" · 스태프":""); }, f:function(r){ return esc(r.g==="S"?"스태프":r.g||"-")+(r.g!=="S"&&r.stf?" "+tag("스태프","off"):""); } },
       { k:"no", t:"번호", w:70, v:function(r){ return r.no||""; }, f:function(r){ return r.no?'<b>'+esc(r.no)+'</b>':'<span class="cap">-</span>'; } },
       { k:"emp", t:"사번", w:84 },{ k:"dept", t:"소속", w:170 },{ k:"name", t:"이름", w:90 },apmCol(),
-      { k:"sz", t:"사이즈", w:96, v:function(r){ return ckzSz(r)||"미선택"; }, f:function(r){ var s=ckzSz(r); return s?esc(s):tag("미선택","warn"); } },
       { k:"ck", t:"체크인", type:"date", w:96, v:function(r){ return r.ck||""; }, f:function(r){ return r.ck?esc(fmtD(r.ck)):'<span class="cap">안 옴</span>'; } },
       { k:"grp", t:"묶음", w:132, v:function(r){ return r.g==="S"?r.grp||"":""; }, f:function(r){ return r.g!=="S"?'':r.no?esc(r.grp||""):'<select class="in sm" aria-label="'+esc((r.name||r.emp)+" 묶음")+'" onclick="event.stopPropagation()" onchange="ckzGrp(\''+jq(r.emp)+'\',this.value)">'+CKZ_GRP.map(function(x){ return '<option'+(x===r.grp?" selected":"")+'>'+x+'</option>'; }).join("")+'</select>'; } }],
     src:{ a:"ck_zone", pick:function(res){ return ckzView(res.rows||[]); } }, empty:"보일 사람이 없습니다", h:560, onRow:function(k){ pcOpen(k, CKZ.g); } });
