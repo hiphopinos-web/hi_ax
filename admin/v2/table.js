@@ -11,6 +11,7 @@
  *   o.cancel = { kind | kind() · keys(rows) 서버 열쇠(기본 사번) · what 명단 이름 · sub 영향 한 줄 · opts() 확인 창 추가 html · part() · after(res) 다시 읽기 }
  *   「선택 n명 삭제」 = 확인 창 → list_rows_cancel(취소 처리 · 기록 남음) → 못 한 줄은 이유 표 · 토스트 「되돌리기」 = roll_undo(batch)
  * o.rowCls(r) = 줄 class(261017 · 예 dim)
+ * o.pickAct(g, n) = 고른 줄이 있을 때 「선택 n명 삭제」 앞에 붙는 단추 html(261021 · 예 라운지 「스탬프 부여」 lngstamp.js)
  * 열 정의 c = { k 키 · t 머리 글자 · w 너비 · type(num | date | text) · v(row) 값 · f(row) 화면 html · x(row) 엑셀 값 · act(row) 단추 html(엑셀 제외) · sort:false } */
 var XLSX_URL="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js", EXJS_URL="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js";
 var XG={ reg:{}, MAXROWS:500, CXMAX:200 };
@@ -90,7 +91,7 @@ function xgPicked(g){ return (g.rows||[]).filter(function(r){ return g.pick[xgKe
 /* 오른쪽 단추 칸 · 선택 n명 삭제(고른 줄이 있을 때) · 추가 · 엑셀 다운로드 · 머리 칸 체크 상태 */
 function xgActs(g){
   var root=XG.root(g); if(!root) return; var o=g.o, a=root.querySelector('[data-c="acts"]'), n=o.select?xgPicked(g).length:0, id=g.id;
-  if(a) a.innerHTML=(n||g.busy?'<button class="btn sm dng" type="button" onclick="XG.cxAsk(\''+id+'\')"'+(g.busy?' disabled aria-disabled="true"':'')+'>'+(g.busy?"처리 중":"선택 "+n0(n)+(o.unit||"명")+" 삭제")+'</button>':'')+
+  if(a) a.innerHTML=(o.pickAct&&n&&!g.busy?o.pickAct(g,n):'')+(n||g.busy?'<button class="btn sm dng" type="button" onclick="XG.cxAsk(\''+id+'\')"'+(g.busy?' disabled aria-disabled="true"':'')+'>'+(g.busy?"처리 중":"선택 "+n0(n)+(o.unit||"명")+" 삭제")+'</button>':'')+
     (o.onAdd?'<button class="btn sm" type="button" onclick="XG.addBy(\''+id+'\')"'+(g.busy?' disabled':'')+'>추가</button>':'')+
     (o.noDl?'':'<button class="btn sm xg-dl" type="button" onclick="XG.dl(\''+id+'\')">엑셀 다운로드</button>');
   var all=root.querySelector('[data-c="all"]');
