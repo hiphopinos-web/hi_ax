@@ -1,6 +1,6 @@
 /* AXF CONTROL v2 · 행운권 종이 추첨 키트 만들기 (261021 행운권 탭 설계 7-2 · 사용자 261021 「16시에 서버가 죽으면 살아 있는 대상자 위주로 종이 출력해 통에서 뽑는다」)
  * 키트 = HTML 한 파일 · 바깥 주소 · 글꼴 내려받기 없음(file:// · 인터넷 없이 열림) · 데이터 = roster_export raffle 한 번 부른 결과(무대 통과 같은 줄)
- *   쪽지 인쇄 = A4 세로 · 한 쪽 4열 × 12행 = 48칸 · 칸마다 번호(위 · 아래 같은 번호) · 이름 · 사번 없음 · 쪽 아래 「쪽 p/P · 이 쪽 a~b · n칸 · 대조 코드」 · 쪽 범위 골라 나눠 인쇄
+ *   쪽지 인쇄 = A4 세로 · 한 쪽 4열 × 10행 = 40칸 · 칸마다 번호 · 사번 · 이름(위 · 아래 같은 내용, 소속 없음) · 쪽 아래 「쪽 p/P · 이 쪽 a~b · n칸 · 대조 코드」 · 쪽 범위 골라 나눠 인쇄
  *   명단 인쇄 = 번호 → 사번 · 이름 · 소속(번호순 · 쪽마다 90줄) · 이름 가림 · 장수 대조 = 쪽마다 센 수 · 합계 맞음 · 부족 · 초과
  *   당첨 기록 = 6등 3 → 5등 2 → 4등 2 → 3등 1 → 2등 1 → 1등 1 · 번호 넣기 → 사람 · 같은 사람 두 번 당첨 막음 · 3 · 2 · 1등 부재 다시 뽑기 · 이 PC 저장 · CSV
  * 대조 코드(lkFp) = 정렬한 번호를 쉼표로 이은 글자의 FNV-1a 두 가지 · 서버 raffle_board fp(rafFp_)와 같은 셈 */
@@ -42,9 +42,9 @@ var LKIT_CSS=[
   "@page{size:A4 portrait;margin:8mm}",
   "@media print{body{background:#fff}body[data-pr] .scr{display:none!important}body[data-pr=slips] .pr-slips,body[data-pr=list] .pr-list,body[data-pr=rec] .pr-rec{display:block}",
   ".pg{width:194mm;height:280mm;page-break-after:always;break-after:page;position:relative;overflow:hidden}.pg:last-child{page-break-after:auto;break-after:auto}",
-  ".sg{display:grid;grid-template-columns:repeat(4,45mm);grid-auto-rows:22mm;margin:0 auto;width:180mm}",
-  ".sl{border:.3mm dashed #888;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:1mm 0}",
-  ".sl b{font-size:22pt;font-weight:800;letter-spacing:1.5pt;line-height:1}.sl i{font-style:normal;font-size:11pt;font-weight:700;transform:rotate(180deg);line-height:1;letter-spacing:1pt}",
+  ".sg{display:grid;grid-template-columns:repeat(4,45mm);grid-auto-rows:27mm;margin:0 auto;width:180mm}",
+  ".sl{border:.3mm dashed #888;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:1.2mm 1mm;min-width:0;overflow:hidden}.u{display:flex;flex-direction:column;align-items:center;max-width:100%}.u.d{transform:rotate(180deg)}.u em{font-style:normal;font-size:9pt;font-weight:600;white-space:nowrap;overflow:hidden;max-width:41mm;line-height:1.3;margin-top:1mm}.u.d b{font-size:12pt}",
+  ".sl b{font-size:24pt;font-weight:800;letter-spacing:1.5pt;line-height:1}",
   ".ft{position:absolute;left:0;right:0;bottom:0;text-align:center;font-size:8pt;color:#333}",
   ".lh{font-size:10pt;margin-bottom:2mm;display:flex;justify-content:space-between}",
   ".lt{display:grid;grid-template-columns:1fr 1fr;gap:4mm}",
@@ -57,7 +57,7 @@ function LKIT_MAIN(){
   var D=JSON.parse(document.getElementById("kd").textContent);
   var R=D.rows, byNo={}, i;
   for(i=0;i<R.length;i++) byNo[R[i][0]]=R[i];
-  var P=Math.max(1,Math.ceil(R.length/48)), LP=Math.max(1,Math.ceil(R.length/90));
+  var P=Math.max(1,Math.ceil(R.length/40)), LP=Math.max(1,Math.ceil(R.length/90));
   var SEQ=[[6,3],[5,2],[4,2],[3,1],[2,1],[1,1]];
   var KEY="axf_kit_"+D.fp+"_"+D.t;
   var st=load();
@@ -67,15 +67,16 @@ function LKIT_MAIN(){
   function load(){ try{ var v=JSON.parse(localStorage.getItem(KEY)||"null"); if(v&&v.rec) return v; }catch(e){} return { rec:[], cnt:{} }; }
   function save(){ try{ localStorage.setItem(KEY,JSON.stringify(st)); }catch(e){} }
   function hhmm(){ var d=new Date(), p=function(x){ return ("0"+x).slice(-2); }; return p(d.getHours())+":"+p(d.getMinutes())+":"+p(d.getSeconds()); }
+  function csvCell(v){ v=String(v==null?"":v); return /^[=+@\-]/.test(v)?"'"+v:v; }
   function mask(s){ s=String(s||""); if(s.length<2) return s; if(s.length===2) return s[0]+"*"; return s[0]+new Array(s.length-1).join("*")+s[s.length-1]; }
   window.kGo=function(k){ ["slips","list","cnt","rec"].forEach(function(x){ $("s_"+x).className="sec"+(x===k?" on":""); $("b_"+x).className=x===k?"on":""; }); if(k==="cnt") cntPaint(); if(k==="rec") recPaint(); };
   /* 쪽지 */
   function slipPages(a,b){
     var h=[], p, j, k;
     for(p=a;p<=b;p++){
-      var s=(p-1)*48, e=Math.min(R.length,p*48), cells="";
-      for(j=s;j<e;j++) cells+='<div class="sl"><b>'+R[j][0]+'</b><i>'+R[j][0]+'</i></div>';
-      for(k=e-s;k<48;k++) cells+='<div></div>';
+      var s=(p-1)*40, e=Math.min(R.length,p*40), cells="";
+      for(j=s;j<e;j++){ var nm=esc(R[j][1])+' · '+esc(R[j][2]||"-"), fz=nm.length>30?'font-size:5pt':nm.length>26?'font-size:6pt':nm.length>20?'font-size:7pt':nm.length>15?'font-size:8pt':''; cells+='<div class="sl"><div class="u"><b>'+R[j][0]+'</b><em style="'+fz+'">'+nm+'</em></div><div class="u d"><b>'+R[j][0]+'</b><em style="'+fz+'">'+nm+'</em></div></div>'; }
+      for(k=e-s;k<40;k++) cells+='<div></div>';
       h.push('<div class="pg"><div class="sg">'+cells+'</div><div class="ft">쪽 '+p+'/'+P+' · 이 쪽 '+R[s][0]+'~'+R[e-1][0]+' · '+(e-s)+'칸 · 대조 코드 '+esc(D.fp)+' · 기준 '+esc(D.t)+'</div></div>');
     }
     return h.join("");
@@ -96,7 +97,7 @@ function LKIT_MAIN(){
   /* 장수 대조 */
   function cntPaint(){
     var h='<table class="tb"><thead><tr><th>쪽</th><th>번호 범위</th><th class="n">칸 수</th><th>센 수</th><th>결과</th></tr></thead><tbody>', p, sum=0, all=1;
-    for(p=1;p<=P;p++){ var s=(p-1)*48, e=Math.min(R.length,p*48), want=e-s, v=st.cnt[p], got=v===""||v==null?null:Number(v);
+    for(p=1;p<=P;p++){ var s=(p-1)*40, e=Math.min(R.length,p*40), want=e-s, v=st.cnt[p], got=v===""||v==null?null:Number(v);
       if(got==null) all=0; else sum+=got;
       h+='<tr><td>'+p+'</td><td class="n">'+R[s][0]+' ~ '+R[e-1][0]+'</td><td class="n">'+want+'</td><td><input class="in n" inputmode="numeric" value="'+(got==null?"":got)+'" oninput="kCnt('+p+',this.value)"></td><td>'+(got==null?'<span class="cap">아직</span>':got===want?'맞음':got<want?'<b style="color:#A63A34">부족 '+(want-got)+'</b>':'<b style="color:#A63A34">초과 '+(got-want)+'</b>')+'</td></tr>'; }
     h+='</tbody></table>';
@@ -145,12 +146,12 @@ function LKIT_MAIN(){
 function lkKitHtml(d){
   var esc_=function(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){ return { "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]; }); };
   var json=JSON.stringify({ t:d.t, m:d.m, n:d.n, fp:d.fp, rows:d.rows }).replace(/</g,"\\u003c").split(String.fromCharCode(8232)).join("\\u2028").split(String.fromCharCode(8233)).join("\\u2029");
-  var P=Math.max(1,Math.ceil(d.m/48));
+  var P=Math.max(1,Math.ceil(d.m/40));
   return '<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>행운권 종이 추첨 키트 '+esc_(d.t)+'</title><style>'+LKIT_CSS+'</style></head><body>'+
     '<div class="wrap scr"><div class="hd"><h1>행운권 종이 추첨 키트</h1><p>이 파일의 번호는 서버 추첨 통과 같은 기준입니다 · 인터넷 없이 열림 · 실명 · 소속이 들어 있어 OneDrive 밖에 두고 행사 뒤 지웁니다</p>'+
     '<div class="kp"><div><span>기준 시각</span><b>'+esc_(String(d.t).slice(5,16))+'</b></div><div><span>총 장수</span><b>'+Number(d.m).toLocaleString("ko-KR")+'</b></div><div><span>총 인원</span><b>'+Number(d.n).toLocaleString("ko-KR")+'</b></div><div><span>대조 코드</span><b>'+esc_(d.fp)+'</b></div></div></div>'+
     '<div class="nav"><button type="button" id="b_slips" onclick="kGo(\'slips\')">쪽지 인쇄</button><button type="button" id="b_cnt" onclick="kGo(\'cnt\')">장수 대조</button><button type="button" id="b_rec" onclick="kGo(\'rec\')">당첨 기록</button><button type="button" id="b_list" onclick="kGo(\'list\')">명단 인쇄</button></div>'+
-    '<div class="sec" id="s_slips"><div class="card"><h2>쪽지 인쇄</h2><p>A4 세로 · 한 쪽 48칸(4열 × 12행) · 칸마다 번호만 · 총 <b id="pN">'+P+'</b>쪽</p><p class="cap">인쇄 창에서 용지 A4 · 배율 100%(기본) · 머리글 · 바닥글 끔 · 프린터를 나누면 쪽 범위를 나눠 인쇄</p>'+
+    '<div class="sec" id="s_slips"><div class="card"><h2>쪽지 인쇄</h2><p>A4 세로 · 한 쪽 40칸(4열 × 10행) · 칸마다 번호 · 사번 · 이름 · 총 <b id="pN">'+P+'</b>쪽</p><p class="cap">인쇄 창에서 용지 A4 · 배율 100%(기본) · 머리글 · 바닥글 끔 · 프린터를 나누면 쪽 범위를 나눠 인쇄</p>'+
       '<div class="row"><label>쪽 <input class="in n" id="pa" value="1" inputmode="numeric"></label><span>~</span><input class="in n" id="pb" inputmode="numeric"><button class="btn pri" type="button" onclick="kSlips()">쪽지 인쇄</button></div>'+
       '<div class="band info">자르기 · 접기 뒤 쪽 단위로 묶어 셉니다 · 「장수 대조」에 쪽마다 센 수를 적습니다</div></div></div>'+
     '<div class="sec" id="s_cnt"><div class="card"><h2>장수 대조</h2><p class="cap">통에 넣기 전 · 쪽마다 센 쪽지 수 · 이 PC 에 저장</p><div id="cntS"></div><div id="cntT" class="mt"></div></div></div>'+
