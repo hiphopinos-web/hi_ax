@@ -1,24 +1,23 @@
-/* AXF CONTROL v2 · S5 무대 (261016 2단계) · 16:00 전에는 탭이 흐리지만 누를 수 있다(리허설)
- * 칩 = 행운권 추첨 · 당첨 기록 · 아이디어왕 · 타자왕 · 7등 굿즈
- * 행운권 추첨 = 지금 콘솔 추첨 원격(runCmd)과 같은 서버 액션 · draw_stats(2~5초) + 소켓 방 draw(운영 Worker 만) · draw_cmd(cmd · arg · rid 멱등)
+/* AXF CONTROL v2 · 행운권 탭(옛 무대 · 261021 사용자 「순수하게 행운권만」 · 행운권 탭 설계 261021) · 흐려짐 없음(D2) · 진행 칩에만 16:00 전 「리허설 중」
+ * 칩 = 현황 · 명단 · 종이 대비(lucky.js · raffle_board · roster_export) · 진행(옛 행운권 추첨 + 추첨 설정 접이식) · 당첨 기록
+ * 진행 = 지금 콘솔 추첨 원격(runCmd)과 같은 서버 액션 · draw_stats(2~5초) + 소켓 방 draw(운영 Worker 만) · draw_cmd(cmd · arg · rid 멱등)
  *   큰 단추 하나 = 화면 장면에서 다음 차례(dcNext) · 부재 · 다시 뽑기 · 마지막 취소 · 끝 화면은 두 번 누르기(3초) · 세부 명령은 접힘
- * 아이디어왕 = ideaking_state · ideaking_list · ideaking_pick · ideaking_unpick · 타자왕 = type_result(n=10) · 7등 굿즈 = lk7_state · lk7_lock · lk7_draw · lk7_verify · lk7_void · lk7_export
+ * 아이디어왕 · 타자왕 · 7등 굿즈 = 경품 · 재고 탭 칩(D3 · 아래 AW_SUBS 가 SCREENS.prize 를 감싼다 · 코드는 이 파일 그대로)
+ *   아이디어왕 = ideaking_state · ideaking_list · ideaking_pick · ideaking_unpick · 타자왕 = type_result(n=10) · 7등 굿즈 = lk7_state · lk7_lock · lk7_draw · lk7_verify · lk7_void · lk7_export
  * 261016 PIN 없음 · 7등 추첨은 확인 문구 「추첨」 */
-var SG_SUBS=[["draw","행운권 추첨"],["rec","당첨 기록"],["ik","아이디어왕"],["type","타자왕"],["lk7","7등 굿즈"]];
-function sgSub(){ return subsOf(SG_SUBS,"draw"); }
+var SG_SUBS=[["now","현황"],["list","명단"],["paper","종이 대비"],["draw","진행"],["rec","당첨 기록"]];
+function sgSub(){ return subsOf(SG_SUBS,"now"); }
 SCREENS.stage={
-  title:"무대", desc:"",
+  title:"행운권", desc:"",
   need:function(){ var s=sgSub();
-    if(s==="draw") return [{ k:"fin", a:"fin_state", ttl:60000 }];
+    if(s==="draw") return [{ k:"fin", a:"fin_state", ttl:60000 },{ k:"cfgl", a:"cfg_list", ttl:60000 }];
     if(s==="rec") return [{ k:"draw", a:"draw_stats", p:{ who:"1" }, ttl:15000 }];
-    if(s==="ik") return [{ k:"ik", a:"ideaking_state", ttl:20000 },{ k:"ikl", a:"ideaking_list", p:{ ch:IK.ch, late:IK.late?"":"0" }, ttl:30000 }];
-    if(s==="type") return [{ k:"tres", a:"type_result", p:{ n:10 }, ttl:30000 }];
-    return [{ k:"lk", a:"lk7_state", ttl:20000 },{ k:"inv", a:"inv_state", ttl:60000 }]; },
+    return lkyNeed(s); },
   mount:function(vb){
     var s=sgSub();
-    el("phCap").textContent={ draw:"17F Closing Speech 행운권 1~6등 · 진행은 무대 노트북(Space) · 이 판은 보기", rec:"추첨 화면이 보낸 당첨 · 부재(3 · 2 · 1등만) · 취소 · 실명은 상품 전달용", ik:"아이디어왕 1등 1 · 2등 1 · 3등 3 · AI 구독권", type:"1F 현장 타자왕 1~10위 · 1~3위 시상", lk7:"7등 랜덤 굿즈 · 17:00 잔여 → 대상 확정 → 추첨(한 번) → 사내 우편" }[s];
-    var h=chipsH(SG_SUBS,s)+(stageDim()?band("info","16:00 전입니다 · 리허설 때 눌러 보며 확인합니다"):"");
-    if(s==="draw"){ vb.innerHTML=h+'<div id="dcRoot">'+skel()+'</div>'; DC.sig=""; dcStart(); return; }
+    el("phCap").textContent={ now:"발급 현황 · 추첨 통 기준 · 5초마다", list:"명단 받기 · 엑셀 · CSV · 번호만 · 종이 추첨 키트 · 이 PC 백업", paper:"서버가 멈추면 키트 한 파일로 쪽지 인쇄부터 당첨 기록까지 · 인터넷 없이", draw:"17F Closing Speech 행운권 1~6등 · 진행은 무대 노트북(Space) · 이 판은 보기", rec:"추첨 화면이 보낸 당첨 · 부재(3 · 2 · 1등만) · 취소 · 실명은 상품 전달용" }[s];
+    var h=chipsH(SG_SUBS,s);
+    if(s==="draw"){ vb.innerHTML=h+lkyDrawTop()+'<div id="dcRoot">'+skel()+'</div>'+lkyDrawSet(); DC.sig=""; dcStart(); lkyDrawSetMount(); return; }
     if(s==="rec"){
       gridOf("drawrec",{ file:"추첨 당첨 기록", key:function(r){ return r.id+":"+r.st; }, sort:{ k:"t", d:-1 }, onRow:function(k){ rowDetail(MG.drawrec,k); },
         chips:[["all","전체",null],["win","당첨",function(r){ return r.st==="win"&&r.live; }],["absent","부재 · 3 · 2 · 1등",function(r){ return r.st==="absent"&&(dcAbsOk(r)||!dcRk(r)); }],["undo","취소",function(r){ return !r.live||r.st==="undo"; }],["inw","체크인 없음",function(r){ return r.warn==="in"&&r.live; }],["fb","전체 통 이어 뽑기",function(r){ return !!r.fb&&r.live; }]],
@@ -27,6 +26,27 @@ SCREENS.stage={
           f:function(r){ return dtRecCell(r,r.st==="win"?(r.live?"당첨":"당첨 · 취소됨"):r.st==="absent"?(r.live?"부재":"부재 · 취소됨"):"취소"); } }],
         empty:"아직 추첨 기록이 없습니다", h:520 });
       vb.innerHTML=h+'<div class="grid g4 mb" id="rcK"></div><div class="card"><div id="mg_drawrec"></div></div>'; return; }
+    vb.innerHTML=h+lkyMount(s);
+  },
+  paint:function(){ var s=sgSub();
+    if(s==="draw"){ lkyDrawSetPaint(); return dcPaint(); }
+    if(s==="rec"){ var d=S.data.draw; el("rcK").innerHTML=d&&d.ok?kpi({ l:"당첨", v:n0(d.wins), u:"명", s:"취소 뺀 수" })+kpi({ l:"부재", v:n0(d.absent), u:"명", s:"3 · 2 · 1등 다시 추첨" })+kpi({ l:"추첨 대상", v:n0(d.pool&&d.pool.n), u:"명", s:"행운권 "+n0(d.pool&&d.pool.balls)+"장" })+(function(){ var n=dcScrsLive(d).length; return kpi({ l:"추첨 화면", v:n?"연결":"없음", st:n?"ok":"warn", stt:n?"정상":"주의", s:DC_FRESH+"초 안 보고" }); })():"";
+      gridPaint("drawrec","draw","추첨",function(x){ return dcRecs(x); }); return; }
+    lkyPaint(s);
+  }
+};
+/* ── 261021 D3 · 아이디어왕 · 타자왕 · 7등 굿즈 = 경품 · 재고 탭 칩 · 옷 · 재고 칩은 prize.js 그대로 ── */
+var AW_SUBS=[["main","옷 · 재고"],["lk7","7등 굿즈"],["ik","아이디어왕"],["type","타자왕"]];
+function awSub(){ return S.tab==="prize"?subsOf(AW_SUBS,"main"):"main"; }
+(function(){ var sc=SCREENS.prize; if(!sc||sc.aw) return; sc.aw=1; var n0_=sc.need, m0=sc.mount, p0=sc.paint, d0=sc.desc;
+  sc.need=function(){ var s=awSub();
+    if(s==="ik") return [{ k:"ik", a:"ideaking_state", ttl:20000 },{ k:"ikl", a:"ideaking_list", p:{ ch:IK.ch, late:IK.late?"":"0" }, ttl:30000 }];
+    if(s==="type") return [{ k:"tres", a:"type_result", p:{ n:10 }, ttl:30000 }];
+    if(s==="lk7") return [{ k:"lk", a:"lk7_state", ttl:20000 },{ k:"inv", a:"inv_state", ttl:60000 }];
+    return n0_.apply(this,arguments); };
+  sc.mount=function(vb){ var s=awSub(), h=chipsH(AW_SUBS,s);
+    if(s==="main"){ var r=m0.apply(this,arguments); vb.insertAdjacentHTML("afterbegin",h); el("phCap").textContent=d0; if(typeof rdlFcfsMount==="function") rdlFcfsMount(); return r; }
+    el("phCap").textContent={ ik:"아이디어왕 1등 1 · 2등 1 · 3등 3 · AI 구독권", type:"1F 현장 타자왕 1~10위 · 1~3위 시상", lk7:"7등 랜덤 굿즈 · 17:00 잔여 → 대상 확정 → 추첨(한 번) → 사내 우편" }[s];
     if(s==="ik"){ vb.innerHTML=h+'<div id="ikTop"></div><div class="card mt"><h2>후보 <span class="cap">아이디어가 있는 사람 · 줄을 누르면 전문 · 선정</span><span class="r" id="ikLate"></span></h2><div id="ikCh" class="chips"></div><div id="mg_ikl"></div></div>'; return; }
     if(s==="type"){
       gridOf("tyres",{ file:"타자왕 순위", key:function(r){ return String(r.rank); }, sort:{ k:"rank", d:1 }, onRow:function(k){ rowDetail(MG.tyres,k,{ title:function(r){ return r.rank+"위 · "+(r.nick||"-"); } }); },
@@ -36,16 +56,13 @@ SCREENS.stage={
         empty:"아직 기록이 없습니다", h:520 });
       vb.innerHTML=h+'<div class="card"><div id="mg_tyres"></div><p class="cap mt" id="tyWin"></p></div>'; return; }
     vb.innerHTML=h+'<div id="lkB"></div>';
-  },
-  paint:function(){ var s=sgSub();
-    if(s==="draw") return dcPaint();
-    if(s==="rec"){ var d=S.data.draw; el("rcK").innerHTML=d&&d.ok?kpi({ l:"당첨", v:n0(d.wins), u:"명", s:"취소 뺀 수" })+kpi({ l:"부재", v:n0(d.absent), u:"명", s:"3 · 2 · 1등 다시 추첨" })+kpi({ l:"추첨 대상", v:n0(d.pool&&d.pool.n), u:"명", s:"행운권 "+n0(d.pool&&d.pool.balls)+"장" })+(function(){ var n=dcScrsLive(d).length; return kpi({ l:"추첨 화면", v:n?"연결":"없음", st:n?"ok":"warn", stt:n?"정상":"주의", s:DC_FRESH+"초 안 보고" }); })():"";
-      gridPaint("drawrec","draw","추첨",function(x){ return dcRecs(x); }); return; }
+  };
+  sc.paint=function(){ var s=awSub();
+    if(s==="main") return p0.apply(this,arguments);
     if(s==="ik") return ikPaint();
     if(s==="type"){ gridPaint("tyres","tres","타자왕",function(x){ return (x.top||[]).slice(0,10); }); var t=S.data.tres; el("tyWin").textContent=t&&t.ok?"집계 시간 "+((t.win||[]).join(" · ")||"-")+" · 1~3위는 사회자가 닉네임으로 부르고 실명으로 상품 전달 · 부문 통계 없음":""; return; }
-    lkPaint();
-  }
-};
+    lkPaint(); };
+})();
 
 /* 등수 · 상품 글자(상품권 6 · 마사지기 5 · 에어팟 5 · 음식물 3 · 뷔페 2 · 아이패드 1)가 먼저, 없으면 「N등」 글자, 없으면 칸 번호(0 = 6등 ... 5 = 1등) · 모르면 0 */
 var DC_RKP=[["아이패드",1],["뷔페",2],["신라호텔",2],["음식물",3],["미닉스",3],["에어팟",4],["마사지",5],["풀리오",5],["상품권",6]];

@@ -1,0 +1,16 @@
+/* 261021 행운권 탭(lucky.js) · 네이비 하나 · 숫자 tabular-nums */
+.lky-dls{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start}
+.lky-dl{display:flex;flex-direction:column;gap:4px;min-width:150px}
+.lky-dl .btn.big{min-width:260px}
+.lky-ul{list-style:none;display:grid;gap:4px}
+.lky-ul li{position:relative;padding-left:14px;color:var(--tx2)}
+.lky-ul li::before{content:"";position:absolute;left:2px;top:9px;width:5px;height:5px;border-radius:50%;background:var(--navy)}
+.lky-gap{font-size:16px}
+.lky-gap b{font-size:22px}
+.lky-flow{display:flex;align-items:flex-end;gap:2px;height:140px;padding-bottom:18px;overflow-x:auto}
+.lky-fb{flex:1 0 8px;min-width:8px;max-width:40px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;position:relative}
+.lky-fb i{display:block;background:var(--navy);border-radius:2px 2px 0 0;min-height:0}
+.lky-fb span{position:absolute;bottom:-18px;left:0;font-size:12px;color:var(--tx3);white-space:nowrap;font-variant-numeric:tabular-nums}
+.lky-ck{display:flex;gap:8px;align-items:flex-start;min-height:40px;padding:8px 0;border-bottom:1px solid var(--line2)}
+.lky-ck input{width:18px;height:18px;margin-top:2px}
+@media (max-width:600px){ .lky-dl{min-width:0;flex:1 1 100%} .lky-dl .btn.big{min-width:0} }

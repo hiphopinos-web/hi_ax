@@ -41,7 +41,7 @@ function drFx(){
   var all=[], pg=function(i){ return drGet("fcfs_list",{ page:String(i) }).then(function(r){ all=all.concat(r.rows||[]); return all.length<num(r.n)&&(r.rows||[]).length&&i<40?pg(i+1):all; }); };
   return pg(1).then(drNoTest);
 }
-function drRf(){ return drGet("raffle_list",{}).then(function(r){ var m={}; (r.rows||[]).forEach(function(x){ var e=normE(x.emp); (m[e]=m[e]||[]).push(x.no); }); return m; }); }
+function drRf(){ return drGet("raffle_list",{ pool:"1" }).then(function(r){ var m={}; (r.rows||[]).forEach(function(x){ var e=normE(x.emp); (m[e]=m[e]||[]).push(x.no); }); return m; }); }
 function drDay(){ var b=S.data.nb; return b&&b.day?String(b.day):""; }
 var DR_RL={ k:"rl", t:"룰렛", w:52, v:function(r){ return r.rl?"사용":""; } };
 var DR_TK={ k:"tk", t:"행운권", type:"num", w:56 };

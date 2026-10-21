@@ -248,7 +248,7 @@ window.addEventListener("hashchange",function(){ routeFromHash(); render(); load
 function stageDim(){ var t=srvNow(); return !(S.data.nb&&S.data.nb.day===S.data.nb.ev&&t.getHours()>=16); }
 function tabsPaint(){
   var bdOf={ people:pwCount(), meet:typeof meetCount==="function"?meetCount():0 };
-  var h=TABS.map(function(t){ var on=S.tab===t[0], dim=t[0]==="stage"&&stageDim(), bd=bdOf[t[0]]||0;
+  var h=TABS.map(function(t){ var on=S.tab===t[0], dim=false, bd=bdOf[t[0]]||0;
     return '<button type="button" class="'+(on?"on ":"")+(dim&&!on?"dim":"")+'"'+(on?' aria-current="page"':'')+' onclick="go(\''+t[0]+'\')">'+IC[t[0]]+'<span class="l">'+esc(t[1])+'</span><span class="s">'+esc(t[2])+'</span>'+(bd?'<span class="bd" aria-label="'+(t[0]==="meet"?"칸에 안 놓은 신청 ":"비밀번호 초기화 요청 ")+bd+'건">'+bd+'</span>':'')+'</button>'; }).join("");
   if(el("tabs")._h!==h){ el("tabs")._h=h; el("tabs").innerHTML=h; }
 }
