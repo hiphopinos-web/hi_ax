@@ -49,7 +49,7 @@ SCREENS.ckin={
   mount:function(vb){
     vb.innerHTML='<div class="cki" id="ckiR">'+
       '<div class="card cki-find"><div class="cki-fbar">'+
-        '<input class="cki-q" id="ckiQ" type="search" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="search" placeholder="이름 · 사번 · 세션 번호(C-2) · QR" aria-label="찾기 · 이름 · 사번 · 세션 번호 · QR" value="'+esc(CKI.q)+'" onkeydown="if(event.key===\'Enter\'){ event.preventDefault(); ckiGo(this.value); }">'+
+        '<input class="cki-q" id="ckiQ" type="search" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="search" placeholder="이름 · 사번 · 세션 번호" aria-label="찾기 · 이름 · 사번 · 세션 번호 · QR" value="'+esc(CKI.q)+'" onkeydown="if(event.key===\'Enter\'){ event.preventDefault(); ckiGo(this.value); }">'+
         '<button class="btn pri cki-go" type="button" onclick="ckiGo(el(\'ckiQ\').value)">찾기</button>'+
         '<button class="btn cki-camb" type="button" onclick="ckiCam()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M8 8h3v3H8zM13 13h3v3h-3zM13 8h3M8 16h3"/></svg>QR 찍기</button>'+
       '</div><div id="ckiHit"></div></div>'+

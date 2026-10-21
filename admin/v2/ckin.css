@@ -81,3 +81,20 @@
   .cki-no{min-width:104px}.cki-no b{font-size:32px}
 }
 @media (max-width:900px){ .cki-k.g4{grid-template-columns:repeat(2,minmax(0,1fr))} }
+
+/* 휴대폰 글자 정돈(261021) · 찾기 칸 둘 같은 크기 · 숫자 카드 상태 글자 한 단계 작게 · 안내는 칩 줄 아래 · 명단 표는 세션 · 소속 · 앱 열을 접어(사번 · 소속 · 이름 순서 · 앱 열 6번째) 세션 번호 · 사번 · 이름 · 체크인이 첫 화면 */
+@media (max-width:700px){
+  .cki-q{height:48px;font-size:16px;padding:0 12px}
+  .cki-go,.cki-camb{height:48px}
+  .cki-k .kpi .l,.cki-k .kpi .s{font-size:12px}
+  .cki-k .kpi:nth-child(4) .v{font-size:20px;line-height:1.5;font-weight:700}
+  .cki .xg-q{font-size:16px}
+  #ckiV .cap{flex-basis:100%;font-size:12px;margin-top:-2px}
+  .cki [data-xg="ckin_pre"] col:nth-child(2),.cki [data-xg="ckin_pre"] col:nth-child(4),.cki [data-xg="ckin_pre"] col:nth-child(6),
+  .cki [data-xg="ckin_pre"] th:nth-child(2),.cki [data-xg="ckin_pre"] th:nth-child(4),.cki [data-xg="ckin_pre"] th:nth-child(6),
+  .cki [data-xg="ckin_pre"] td:nth-child(2),.cki [data-xg="ckin_pre"] td:nth-child(4),.cki [data-xg="ckin_pre"] td:nth-child(6){display:none}
+  .cki [data-xg="ckin_pre"] col:nth-child(1){width:64px!important}
+  .cki [data-xg="ckin_pre"] col:nth-child(3){width:72px!important}
+  .cki [data-xg="ckin_pre"] col:nth-child(5){width:80px!important}
+  .cki [data-xg="ckin_pre"] col:nth-child(7){width:112px!important}
+}
