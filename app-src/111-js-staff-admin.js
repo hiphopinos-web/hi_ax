@@ -62,13 +62,13 @@ function scanChoose(id) {
   if (qrScanSupported() && BE.on) scanStart();   /* 고르면 곧바로 찍는다(목적을 고른 손짓 = 카메라 허용 손짓) */
 }
 function scanRepick() { scanStop(); SCAN.pick = true; SCAN.sub = ""; App.render(); window.scrollTo(0, 0); }
-var INV_LNK = "";   /* v5.34 스캔 화면 맨 아래 「재고 · 박스 열기」 작은 링크 → 261009 숨김(콘솔 재구성 설계안 4절 · invBoxOpen 코드는 남김) · 그 자리 = 「운영자에게 요청」(sreqLnk · 111-js-staff-req.js) */
+var INV_LNK = "";   /* v5.34 스캔 화면 맨 아래 「재고 · 박스 열기」 작은 링크 → 261009 숨김(콘솔 재구성 설계안 4절 · invBoxOpen 코드는 남김) · 그 자리 = 「운영자에게 요청」(sreqLnk · 111-js-staff-req.js) → 261021 폐지(사용자 「권장대로」 · 진입 단추 3곳 걷음 · 시트 코드 · 서버 sreq_add 그대로) */
 function admScanHtml() {
   var sp = scanSpot(SCAN.spot), log = '<section class="ax-stack-tight axs-gap12"><h2 class="ax-meta">최근 스캔</h2><div class="ax-card axs-slog" id="scanLog">' + scanLogHtml() + "</div></section>";
   if (!sp || SCAN.pick) {
     return '<h2 class="ax-section-title">무엇을 찍나요?</h2><div class="axs-stiles">' +
       scanTileIds().map(function (id) { return scanTileHtml(scanSpot(id)); }).join("") + "</div>" +   /* 261016 (사용자 스태프 QR 정리) 6칸 · 10F 세션 · 포토부스 · 창구 칸 걷음 */
-      (sp ? '<button type="button" class="ax-button ax-button-weak" onclick="SCAN.pick = false; App.render()">' + esc(sp.lb || sp.nm) + " 그대로 찍기</button>" : "") + log + INV_LNK + sreqLnk();
+      (sp ? '<button type="button" class="ax-button ax-button-weak" onclick="SCAN.pick = false; App.render()">' + esc(sp.lb || sp.nm) + " 그대로 찍기</button>" : "") + log + INV_LNK;
   }
   var w = scanWhat(sp), out = sp.kind === "roulette" && S.get("roulette_out", false);
   var will = '<section class="axs-will' + (out ? " bad" : "") + '"><div class="axs-srow"><p class="axs-will-k">지금 찍으면</p>' +
@@ -77,7 +77,7 @@ function admScanHtml() {
   var cam = SCAN.on
     ? '<div class="axs-scam"><video id="qrVideo" playsinline muted></video></div><button type="button" class="ax-button ax-button-weak" onclick="scanStop(); App.render()">스캔 멈추기</button>'
     : '<button type="button" class="ax-button axs-camgo" onclick="scanStart()">카메라 켜고 찍기</button>';
-  return will + cam + '<div id="scanRes">' + scanBigHtml() + "</div>" + log + INV_LNK + sreqLnk();
+  return will + cam + '<div id="scanRes">' + scanBigHtml() + "</div>" + log + INV_LNK;
 }
 /* 찍은 결과 한 장 · tone = ok(성공) | dup(이미 · 할 일 없음) | bad(실패) | wait(확인하는 중 · 붐빔) */
 function scanBigHtml() {
@@ -201,7 +201,7 @@ function sscHtml() {
       (SSC.camErr ? '<button type="button" class="ax-button ssc-camgo" onclick="sscCamGo()">카메라 켜기</button>' : "") + "</div>";
   var log = '<details class="ssc-log"><summary>최근 스캔</summary><div id="scanLog">' + scanLogHtml() + "</div></details>";
   return '<div class="ssc">' + top + warn + will + cam + '<div class="ssc-bot"><div id="scanRes">' + scanBigHtml() + "</div>" +
-    '<div class="ssc-acts"><button type="button" class="ax-button ax-button-weak" onclick="sscMine()">내 QR</button>' + sreqLnk() + "</div>" + log + "</div></div>";
+    '<div class="ssc-acts"><button type="button" class="ax-button ax-button-weak" onclick="sscMine()">내 QR</button></div>' + log + "</div></div>";
 }
 /* 그린 뒤 · 카메라를 새 video 에 다시 붙이거나 켠다(App.render 가 video 를 새로 만든다) */
 function sscMount() {
