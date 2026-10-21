@@ -5042,9 +5042,10 @@ function a2hsSheet(on) {   /* v5.83 옛 top(최초 로그인 장면 위) · A2HS
   box.hidden = false;
   box.scrollTop = 0;
 }
-/* 261016 (설치 안내 개선 4-1 · 레드팀 핵심 2) 시트 맨 위 안심 3줄 · 홈 화면 앱 · 설치됨 · 설치 중 갈래는 넣지 않는다 */
+/* 261022 (사용자 「바로가기 설치에 거부감」) 바로가기 안내 맨 위 두 뜻 = 빠른 접속용 · 설치 없이 hiax.app 주소나 행사장 QR로도 들어올 수 있다 · 설치 화면 = 아래 첫 두 줄 · 시트(a2sShow) · 홈 카드(a2cHtml) = 같은 두 조각(검사 459 가 a2sShow 만 떼어 돌려 헬퍼 없이 글자 그대로 쓴다)
+   261016 (설치 안내 개선 4-1 · 레드팀 핵심 2) 시트 맨 위 안심 3줄 · 홈 화면 앱 · 설치됨 · 설치 중 갈래는 넣지 않는다 */
 function a2hsSafeHtml() {
-  return '<ul class="a-safe"><li>앱 스토어 · 플레이 스토어를 거치지 않아요</li><li>연락처 · 사진 · 위치 권한을 요청하지 않아요 · 알림만 따로 물어요</li><li>행사 뒤 아이콘을 길게 눌러 삭제하면 끝</li></ul>';
+  return '<ul class="a-safe"><li>바로가기는 빠른 접속용이에요</li><li>설치 없이 hiax.app 주소나 행사장 QR로도 들어올&nbsp;수&nbsp;있어요</li><li>앱 스토어 · 플레이 스토어를 거치지 않아요</li><li>연락처 · 사진 · 위치 권한을 요청하지 않아요 · 알림만 따로 물어요</li><li>행사 뒤 아이콘을 길게 눌러 삭제하면 끝</li></ul>';
 }
 /* 인앱 이름 · 홈 카드 · 시트가 같이 쓴다 */
 function a2hsInAppName() { var r = visitRoute(navigator.userAgent, visitStandalone()); return r === "kakao" ? "카카오톡 안 브라우저" : r === "naver" ? "네이버 앱 안 브라우저" : "앱 안 브라우저"; }
@@ -8458,8 +8459,8 @@ function a2cHtml() {
   if (!a2cOn()) return "";
   var ia = isInApp();
   return '<section class="axs-a2c" id="a2cCard" aria-label="QR 없이 바로 열기"><p class="h">QR 없이 바로 열기</p>' +
-    (ia ? '<p class="b">지금은 ' + a2hsInAppName() + '</p><p class="s">메뉴에서 &ldquo;다른 브라우저로 열기&rdquo; 뒤 설치</p>'
-        : '<p class="b">홈 화면에 AX Festival 아이콘을 만들어요</p><p class="s"><ax-seg>행사가 끝나면 바로가기는 삭제하세요</ax-seg></p>') +
+    (ia ? '<p class="b">지금은 ' + a2hsInAppName() + '</p><p class="s">메뉴에서 &ldquo;다른 브라우저로 열기&rdquo; 뒤 설치</p><p class="s"><ax-seg>바로가기는 빠른 접속용이에요</ax-seg> <ax-seg>설치 없이 hiax.app 주소나 행사장 QR로도 들어올&nbsp;수&nbsp;있어요</ax-seg></p>'
+        : '<p class="b">홈 화면에 AX Festival 아이콘을 만들어요</p>' + '<p class="s"><ax-seg>바로가기는 빠른 접속용이에요</ax-seg> <ax-seg>설치 없이 hiax.app 주소나 행사장 QR로도 들어올&nbsp;수&nbsp;있어요</ax-seg> <ax-seg>행사가 끝나면 바로가기는 삭제하세요</ax-seg></p>') +
     '<div class="r"><button type="button" class="ax-button ax-button-weak" onclick="a2hsOpen()">' + (ia ? "방법 보기" : a2hsWord()) + '</button>' +
     '<button type="button" class="ax-link a2c-later" onclick="a2cLater()">나중에</button></div></section>';
 }
@@ -8520,8 +8521,8 @@ function a2sShow(k) {
   if (k === 1 ? n > 0 : n >= 2 || o.day === nxDate()) return;
   a2sPut(k === 1 ? 1 : 2);
   var ia = isInApp();
-  sheetOpen({ id: "a2s", title: "QR 없이 바로 열기", body: '<div class="axs-a2s">' + (ia ? '<p class="b">지금은 ' + a2hsInAppName() + '</p><p class="s">메뉴에서 &ldquo;다른 브라우저로 열기&rdquo; 뒤 설치</p>'
-      : '<p class="b">홈 화면에 AX Festival 아이콘을 만들어요</p><p class="s"><ax-seg>행사가 끝나면 바로가기는 삭제하세요</ax-seg></p>') + "</div>",
+  sheetOpen({ id: "a2s", title: "QR 없이 바로 열기", body: '<div class="axs-a2s">' + (ia ? '<p class="b">지금은 ' + a2hsInAppName() + '</p><p class="s">메뉴에서 &ldquo;다른 브라우저로 열기&rdquo; 뒤 설치</p><p class="s"><ax-seg>바로가기는 빠른 접속용이에요</ax-seg> <ax-seg>설치 없이 hiax.app 주소나 행사장 QR로도 들어올&nbsp;수&nbsp;있어요</ax-seg></p>'
+      : '<p class="b">홈 화면에 AX Festival 아이콘을 만들어요</p>' + '<p class="s"><ax-seg>바로가기는 빠른 접속용이에요</ax-seg> <ax-seg>설치 없이 hiax.app 주소나 행사장 QR로도 들어올&nbsp;수&nbsp;있어요</ax-seg> <ax-seg>행사가 끝나면 바로가기는 삭제하세요</ax-seg></p>') + "</div>",
     go: "sheetClose(true); a2hsOpen()", goLbl: ia ? "방법 보기" : a2hsWord(), keep: "나중에", keepWeak: true, keepLast: true });
 }
 /* ═══ v5.11 (261003 사용자 승인 · 「디자인 시안/가상 1층/계획.md」) 1층 둘러보기 · 본체(3D 모형 · 평면 지도 · 목록 · 판 보기)는 assets/tour/ 에 있고 처음 열 때만 받는다(안 여는 사람은 0바이트)

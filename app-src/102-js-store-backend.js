@@ -611,9 +611,10 @@ function a2hsSheet(on) {   /* v5.83 옛 top(최초 로그인 장면 위) · A2HS
   box.hidden = false;
   box.scrollTop = 0;
 }
-/* 261016 (설치 안내 개선 4-1 · 레드팀 핵심 2) 시트 맨 위 안심 3줄 · 홈 화면 앱 · 설치됨 · 설치 중 갈래는 넣지 않는다 */
+/* 261022 (사용자 「바로가기 설치에 거부감」) 바로가기 안내 맨 위 두 뜻 = 빠른 접속용 · 설치 없이 hiax.app 주소나 행사장 QR로도 들어올 수 있다 · 설치 화면 = 아래 첫 두 줄 · 시트(a2sShow) · 홈 카드(a2cHtml) = 같은 두 조각(검사 459 가 a2sShow 만 떼어 돌려 헬퍼 없이 글자 그대로 쓴다)
+   261016 (설치 안내 개선 4-1 · 레드팀 핵심 2) 시트 맨 위 안심 3줄 · 홈 화면 앱 · 설치됨 · 설치 중 갈래는 넣지 않는다 */
 function a2hsSafeHtml() {
-  return '<ul class="a-safe"><li>앱 스토어 · 플레이 스토어를 거치지 않아요</li><li>연락처 · 사진 · 위치 권한을 요청하지 않아요 · 알림만 따로 물어요</li><li>행사 뒤 아이콘을 길게 눌러 삭제하면 끝</li></ul>';
+  return '<ul class="a-safe"><li>바로가기는 빠른 접속용이에요</li><li>설치 없이 hiax.app 주소나 행사장 QR로도 들어올&nbsp;수&nbsp;있어요</li><li>앱 스토어 · 플레이 스토어를 거치지 않아요</li><li>연락처 · 사진 · 위치 권한을 요청하지 않아요 · 알림만 따로 물어요</li><li>행사 뒤 아이콘을 길게 눌러 삭제하면 끝</li></ul>';
 }
 /* 인앱 이름 · 홈 카드 · 시트가 같이 쓴다 */
 function a2hsInAppName() { var r = visitRoute(navigator.userAgent, visitStandalone()); return r === "kakao" ? "카카오톡 안 브라우저" : r === "naver" ? "네이버 앱 안 브라우저" : "앱 안 브라우저"; }
