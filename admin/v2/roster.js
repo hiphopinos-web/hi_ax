@@ -66,6 +66,7 @@ function adrGrid(sc){
   var o={ file:ADR_SC[sc][0], key:function(r){ return r.emp; }, sort:{ k:"name", d:1 }, src:{ a:"adm_roster", p:{}, pick:function(res){ return (res[sc]||{}).rows||[]; } }, h:360, empty:"명단이 비어 있습니다", onRow:function(k){ pcOpen(k, MG["adr_"+sc]); },
     cols:[{ k:"name", t:"이름", w:120, tags:function(r){ return r.sup?" "+tag("고정"):""; } },{ k:"emp", t:"사번", w:80 },{ k:"dept", t:"부서", w:120 },{ k:"acct", t:"앱 가입", w:64, v:function(r){ return r.acct?"가입":"명부만"; } }] };
   if(sc==="c"){
+    o.cols.push({ k:"lo", t:"AX 라운지 담당", w:130, v:function(r){ return r.lo?"담당":""; }, f:function(r){ return typeof lsmOwnCell==="function"?lsmOwnCell(r):(r.lo?tag("담당","ok"):""); } });   /* 261021 라운지 스탬프 일괄 부여 권한(lngstamp.js) */
     o.cols.push({ k:"pw", t:"비밀번호", w:170, v:adrPwTx, f:adrPwTag });
     o.cols.push({ k:"_a", t:"", w:96, act:function(r){ return adrTop()&&r.pw!=null?'<button class="btn sm" type="button" onclick="adrIssueAsk(\''+jq(r.emp)+'\')">'+(r.pw==="set"||r.pw==="code"?"초기화":"설정 코드")+'</button>':""; } });
   }
