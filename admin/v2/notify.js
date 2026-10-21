@@ -1,5 +1,6 @@
 /* AXF CONTROL v2 · S6 알림 (261016 2단계)
- * 칩 = 보내기 · 보낸 기록 · 맨 위 띠 = 푸시 상태(정상 · 공지 푸시 잠금 · 전체 정지 · push_cfg · 확인 창 · 되돌리기 토스트)
+ * 칩 = 보내기 · 예약(sched.js) · 보낸 기록 · 공지 · 자동 알림(ntf.js · 261021) · 맨 위 띠 = 푸시 상태(정상 · 공지 푸시 잠금 · 전체 정지 · push_cfg · 확인 창 · 되돌리기 토스트)
+ *   261021 띠 아래 요약 한 줄 · 정상 · 잠금으로 바꾸는 확인 창에 「그러면 나갈 것」 목록(ntf.js ntfSoonLine · ntfSoonBody · 창을 열기 전에 ntf_list 를 새로 받음)
  * 보내기 = 받는 사람(전체 · 구분 · 사람 칩 검색) · 보낸 사람(기본 「AX Festival」) · 제목 · 내용 · 미리보기(잠금 화면 모양 + push_preview 인원)
  *   → 확인 창(전체급이면 서버가 요구할 때 도달 인원 숫자 입력) → notice_set(push=1 · spec · cnt · pt 보낸 사람 · pb 제목+내용) · 지금 콘솔 「알리기」와 같은 서버 액션
  * 보낸 기록 = notice_hist + push_hist 한 명단 · 줄 상세 서랍에서 공지 중지(notice_clear) · 보류 중 푸시 취소(push_cancel) · 261016 PIN 없음 */
@@ -40,17 +41,19 @@ function ntStopPaint(){
   var box=el("ntStop"); if(!box) return; var st=pushSt(), cur=ntCur();
   if(!st){ box.innerHTML=S.data.pst&&S.data.pst.ok===false?band("warn","푸시 상태를 받지 못했습니다 · "+esc(why(S.data.pst))):S.data.pst?band("info","이 서버는 알림 기능이 없어 앱 안 공지만 나갑니다"):""; return; }
   var seg='<span class="seg">'+[["ok","정상"],["lock","공지 푸시 잠금"],["stop","전체 정지"]].map(function(x){ return '<button type="button" class="'+(cur===x[0]?"on":"")+'" aria-pressed="'+(cur===x[0])+'" onclick="ntStopAsk(\''+x[0]+'\')">'+esc(x[1])+'</button>'; }).join("")+'</span>';
-  box.innerHTML=band(cur==="ok"?"info":cur==="lock"?"warn":"bad",'<b>푸시 '+(cur==="ok"?"정상":cur==="lock"?"공지 푸시 잠금":"전체 정지")+'</b> · '+(cur==="ok"?"공지 · 예약 · 자동 알림이 나감":cur==="lock"?"공지 · 대상 지정 · 예약 푸시가 나가지 않음 · 자동 알림은 나감":"모든 푸시가 멈춤")+(st.dateOk===0?" · 오늘은 발송 허용 날짜가 아님":"")+(st.err?" · 발송기 오류 있음":""),seg);
+  box.innerHTML=band(cur==="ok"?"info":cur==="lock"?"warn":"bad",'<b>푸시 '+(cur==="ok"?"정상":cur==="lock"?"공지 푸시 잠금":"전체 정지")+'</b> · '+(cur==="ok"?"공지 · 예약 · 자동 알림이 나감":cur==="lock"?"공지 · 대상 지정 · 예약 푸시가 나가지 않음 · 자동 알림은 나감":"모든 푸시가 멈춤")+(st.dateOk===0?" · 오늘은 발송 허용 날짜가 아님":"")+(st.err?" · 발송기 오류 있음":""),seg)+(typeof ntfSoonLine==="function"?ntfSoonLine(cur):"");
 }
 function ntStopAsk(to){
   var cur=ntCur(); if(!cur||to===cur) return;
   var p=to==="ok"?{ on:"ON", manual:"ON" }:to==="lock"?{ on:"ON", manual:"OFF" }:{ on:"OFF" };
   var NM={ ok:"정상", lock:"공지 푸시 잠금", stop:"전체 정지" };
-  confirmBox({ t:to==="ok"?"푸시를 다시 켤까요?":to==="lock"?"공지 푸시를 잠글까요?":"푸시를 전체 정지할까요?", who:NM[cur]+" → "+NM[to],
-    sub:to==="ok"?"공지 푸시 · 예약 · 자동 알림이 다시 나감":to==="lock"?"공지 · 대상 지정 · 예약 푸시가 멈추고 보류 중인 사람 알림은 취소 · 커피챗 · 라운지 자동 알림은 나감":"자동 알림까지 모든 푸시가 멈춤 · 오발송이 이어질 때",
+  var ask=function(){ confirmBox({ t:to==="ok"?"푸시를 다시 켤까요?":to==="lock"?"공지 푸시를 잠글까요?":"푸시를 전체 정지할까요?", who:NM[cur]+" → "+NM[to],
+    sub:to==="ok"?"공지 푸시 · 예약 · 자동 알림이 다시 나감 · 아래가 나갈 것":to==="lock"?"공지 · 대상 지정 · 예약 푸시가 멈추고 보류 중인 사람 알림은 취소 · 커피챗 · 라운지 자동 알림은 나감":"자동 알림까지 모든 푸시가 멈춤 · 오발송이 이어질 때",
+    body:to!=="stop"&&typeof ntfSoonBody==="function"?ntfSoonBody(to):"",
     ok:to==="ok"?"다시 켜기":to==="lock"?"잠그기":"전체 정지", danger:to!=="ok",
     run:function(){ return call("push_cfg",p); },
-    done:function(r){ S.data.pst=r&&r.rt!=null?r:S.data.pst; reload(["pst","nb"]); paint(); toast(to==="ok"?"푸시를 다시 켰습니다":to==="lock"?"공지 푸시를 잠갔습니다":"푸시를 전체 정지했습니다",{ undo:function(){ call("push_cfg",cur==="ok"?{ on:"ON", manual:"ON" }:cur==="lock"?{ on:"ON", manual:"OFF" }:{ on:"OFF" }).then(function(x){ reload(["pst","nb"]); toast(x&&x.ok?"되돌렸습니다 · 푸시 "+NM[cur]:"되돌리지 못했습니다 · "+why(x),{ bad:!(x&&x.ok) }); }); } }); } });
+    done:function(r){ S.data.pst=r&&r.rt!=null?r:S.data.pst; reload(["pst","nb"]); paint(); toast(to==="ok"?"푸시를 다시 켰습니다":to==="lock"?"공지 푸시를 잠갔습니다":"푸시를 전체 정지했습니다",{ undo:function(){ call("push_cfg",cur==="ok"?{ on:"ON", manual:"ON" }:cur==="lock"?{ on:"ON", manual:"OFF" }:{ on:"OFF" }).then(function(x){ reload(["pst","nb"]); toast(x&&x.ok?"되돌렸습니다 · 푸시 "+NM[cur]:"되돌리지 못했습니다 · "+why(x),{ bad:!(x&&x.ok) }); }); } }); } }); };
+  if(to!=="stop"&&typeof ntfFresh==="function") ntfFresh(ask); else ask();
 }
 /* ── 보내기 ── */
 function ntSpec(){

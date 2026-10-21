@@ -1,7 +1,8 @@
 /* AXF CONTROL v2 · 알림 › 예약 (261016 4단계 · 지금 콘솔 「알림 › 예약」을 옮김)
  * 데이터 = sched_list(대기 · 실행중 + 지난 40건) · 만들기 = sched_add(kind outro | notice · at · title · body · push · spec) · 처리 = sched_edit(run · delay 5분 · cancel)
  * 푸시 받는 사람 미리 세기 = push_preview(지금 기준 · 실행할 때 서버가 다시 셈) · 자동 예약(커피챗 · 라운지 10분 전)은 선정 · 승인 때 서버가 잡는다
- * 명단 = 공통 표 · 대기 줄의 단추(지금 실행 · +5분 · 취소) · 줄을 누르면 서랍 · 확인 창(PIN 없음) */
+ * 명단 = 공통 표 · 대기 줄의 단추(지금 실행 · +5분 · 취소) · 줄을 누르면 서랍 · 확인 창(PIN 없음)
+ * 261021 꺼짐 칩(공지 줄을 꺼 둔 것 · 켜기 · 취소 단추와 자동 줄 내용 글자는 ntf.js 가 덧씌움) */
 var SCH_K={ notice:"공지", outro:"Closing Speech", crowd_notify:"혼잡 만료 알림", visit_slot:"관람 시간 알림", cchat_remind:"커피챗 10분 전", dap_remind:"AX 라운지 10분 전" };
 var SCH_ST={ "대기":"warn", "실행중":"", "완료":"ok", "취소":"off", "지남":"bad", "오류":"bad" };
 var SCH_PRE=[{ n:"Closing Speech 10분 전", kind:"outro", t:"Closing Speech 10분 전", b:"17F 대강당 · 17:00 시작", at:"16:50", tgt:"all" },{ n:"경품 추첨 시작", kind:"outro", t:"경품 추첨 시작", b:"17F 대강당", at:"", tgt:"tickets" }];
@@ -13,7 +14,7 @@ function schActs(r){ if(r.st!=="대기") return ""; var J=jq(r.id);
   return '<span class="btns"><button class="btn sm" type="button" onclick="schEdit(\''+J+'\',\'run\')">지금 실행</button><button class="btn sm" type="button" onclick="schEdit(\''+J+'\',\'delay\')">+5분</button><button class="btn sm dng" type="button" onclick="schEdit(\''+J+'\',\'cancel\')">취소</button></span>'; }
 function schGrid(){
   return gridOf("sched",{ file:"알림 예약", key:function(r){ return String(r.id); }, sort:{ k:"at", d:1 }, src:{ a:"sched_list", p:{} }, onRow:function(k){ schOpen(k); }, h:420, empty:"예약이 없습니다",
-    chips:[["all","전체",null],["wait","대기",function(r){ return r.st==="대기"||r.st==="실행중"; }],["done","끝남",function(r){ return r.st!=="대기"&&r.st!=="실행중"; }],["auto","자동",function(r){ return r.kind!=="notice"&&r.kind!=="outro"; }]],
+    chips:[["all","전체",null],["wait","대기",function(r){ return r.st==="대기"||r.st==="실행중"; }],["off","꺼짐",function(r){ return r.st==="꺼짐"; }],["done","끝남",function(r){ return r.st!=="대기"&&r.st!=="실행중"&&r.st!=="꺼짐"; }],["auto","자동",function(r){ return r.kind!=="notice"&&r.kind!=="outro"; }]],
     cols:[{ k:"at", t:"실행 시각", type:"date", w:96 },{ k:"kind", t:"종류", w:120, v:function(r){ return SCH_K[r.kind]||r.kname||r.kind; } },{ k:"what", t:"내용", w:240, v:schWhat },
       { k:"st", t:"상태", w:70, f:function(r){ return tag(r.st, SCH_ST[r.st]||""); } },{ k:"_a", t:"", w:220, act:schActs },{ k:"push", t:"푸시", w:120, v:function(r){ return r.push?("푸시"+(r.pdesc?" · "+r.pdesc:"")):""; } },{ k:"res", t:"결과", w:150 },{ k:"by", t:"만든 사람", w:110 }] });
 }
@@ -72,7 +73,7 @@ function schEdit(id, op){
     if(ntSub()!=="sched") return m0(vb);
     el("phCap").textContent="정해진 시각에 서버가 내는 공지 · 푸시 · 지금 실행 · +5분 · 취소";
     schGrid();
-    vb.innerHTML=chipsH(NT_SUBS,"sched")+'<div class="card"><div id="mg_sched"></div><p class="cap mt">커피챗 · 라운지 10분 전 알림은 선정 · 승인할 때 서버가 스스로 잡습니다</p></div><div class="card mt" id="schF"></div>';
+    vb.innerHTML=chipsH(NT_SUBS,"sched")+'<div class="card"><div id="mg_sched"></div><p class="cap mt">커피챗 · 라운지 10분 전 알림은 선정 · 승인할 때 서버가 스스로 잡습니다 · 문구 · 켜고 끄기는 자동 알림 칸</p></div><div class="card mt" id="schF"></div>';
     schForm();
   };
   sc.paint=function(vb){
