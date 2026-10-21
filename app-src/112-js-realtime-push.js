@@ -21,18 +21,23 @@ function checkMyState(base) {
   var seen = S.get("noti_seen", {});
   var changed = false;
   var my = myResv();
-  if (my && my.status === "approved" && seen.resv !== my.id + ":approved") {
-    seen.resv = my.id + ":approved"; changed = true;
-    if (!base) notifyUser("AX 라운지 시간 안내", (resvRng(my) ? resvRng(my) + " · " : "") + resvPlace(my), "dap");   /* v7.39 (사용자 261016) 사전 신청 상담 줄 = 승인 상태 · 「승인 완료」 대신 시간 · 장소 */
+  /* 261022 (사용자 확정) 미팅 잠금 · 운영진이 잠근(확정) 시간 · 미팅룸이 보일 때만 · 처음 = 「확정됐어요」 · 마지막 확정과 다르면 「바뀌었어요」 · 같으면 없음 · 풀기(시간 확정 전) = 없음
+     본 표시 = noti_seen.resvL(상담 ID|날짜|시간|미팅룸 · 옛 resv 표시와 따로라 배포 뒤 처음 잠그면 다시 뜬다) · 서버 푸시 문구와 같다 */
+  if (my && RLK_ST.indexOf(my.status) >= 0 && my.slot && !resvTbd(my)) {
+    var lkK = my.beId + "|" + (my.day || "") + "|" + my.slot + "|" + (+my.seat || 0), lkW = seen.resvL ? String(seen.resvL).split("|")[0] : "";
+    if (seen.resvL !== lkK) {
+      seen.resvL = lkK; changed = true;
+      if (!base) notifyUser(lkW === String(my.beId) ? "AX 라운지 시간이 바뀌었어요" : "AX 라운지 시간이 확정됐어요", (resvRng(my) ? resvRng(my) + " · " : "") + resvPlace(my), "dap");
+    }
   }
   if (my && my.status === "canceled" && seen.resvX !== my.id + ":canceled") {
     seen.resvX = my.id + ":canceled"; changed = true;
     if (!base) notifyUser("AX 라운지 신청 취소", "", "dap");
   }
   var c = S.get("cchat", null);
-  if (c && c.status === "matched" && seen.cchat !== "m:" + c.round + c.table) {
-    seen.cchat = "m:" + c.round + c.table; changed = true;
-    if (!base) notifyUser("커피챗에 선정됐어요", "18F · " + hhmm(c.round) + " · TABLE " + c.table, "ev_cchat");   /* v6.07 매칭 → 선정(서버 푸시 제목과 같다) */
+  if (c && c.status === "matched" && seen.cchatL !== "m:" + c.round + c.table) {   /* 261022 미팅 잠금 · 잠긴 칸만 matched 로 온다 · 처음 = 선정 · 마지막 확정과 다름 = 시간 바뀜 · 본 표시 cchatL(배포 뒤 처음 잠그면 다시 뜬다) */
+    var ccW = seen.cchatL; seen.cchatL = "m:" + c.round + c.table; seen.cchat = seen.cchatL; changed = true;
+    if (!base) notifyUser(ccW ? "커피챗 시간이 바뀌었어요" : "커피챗에 선정됐어요", "18F · " + hhmm(c.round) + " · TABLE " + c.table, "ev_cchat");   /* v6.07 매칭 → 선정(서버 푸시 제목과 같다) */
   }
   /* v5.90 선착순 참여상 수령 자격 · 앱이 열려 있으면 팝업 1회(푸시 없음 · 계약 5.1) · 옛 완주 경품 당첨 팝업은 지웠다 */
   var fq = fcfsMy();
@@ -200,11 +205,11 @@ function beSync(after) {
         var stt = map[res.my.resv.status];
         var mine = all.find(function (r) { return r.mine && (r.beId === res.my.resv.id); });
         /* v7.39 (사용자 261016 · 서버 계약 3-5) 사전 신청 상담 · 칸 시작 slot · 끝 to · 범위 rng · 상담석 seat · 장소 place(옛 서버 = slot 만 · 나머지 빈칸) · 배치판 시간 옮기기(resv_move)도 따라간다 */
-        var rv = res.my.resv, rx = { slot: rv.slot ? hhmm(rv.slot) : "", to: rv.to ? hhmm(rv.to) : "", rng: String(rv.rng || ""), seat: +rv.seat || 0, place: String(rv.place || ""), day: String(rv.day || ""), dl: String(rv.dl || "") };   /* 261021 상담일 day · dl(옛 서버 = 빈칸) */
+        var rv = res.my.resv, rx = { slot: rv.slot ? hhmm(rv.slot) : "", to: rv.to ? hhmm(rv.to) : "", rng: String(rv.rng || ""), seat: +rv.seat || 0, place: String(rv.place || ""), day: String(rv.day || ""), dl: String(rv.dl || ""), lk: rv.lk === 0 ? 0 : 1 };   /* 261022 lk 0 = 잠그기 전(시간 확정 전) · 옛 서버 = 1 */   /* 261021 상담일 day · dl(옛 서버 = 빈칸) */
         if (!mine && stt && RESV_HOLD.indexOf(stt) >= 0) {
           all.push(Object.assign({ id: uid(), beId: rv.id, room: 2, name: u.name || "", dept: S.get("dept", null) || "미지정", status: stt, mine: true, ts: Date.now() }, rx));
           S.set("resv", all);
-        } else if (mine && stt && (mine.status !== stt || ["slot", "to", "rng", "seat", "place", "day", "dl"].some(function (k) { return (mine[k] || "") !== (rx[k] || ""); }))) {
+        } else if (mine && stt && (mine.status !== stt || ["slot", "to", "rng", "seat", "place", "day", "dl", "lk"].some(function (k) { return (mine[k] == null ? "" : String(mine[k])) !== String(rx[k] == null ? "" : rx[k]); }))) {
           mine.status = stt; Object.assign(mine, rx); S.set("resv", all);
         }
       } else {
@@ -235,7 +240,7 @@ function beSync(after) {
         var cw = S.get("cchat", null);
         if (cw && cw.status === "matched") {
           S.set("cchat", { status: "pending", pref: res.my.cchat.pref || String(res.my.cchat.tag || "").split(CCHAT_TAG_SEP)[1] || "", ts: Date.now() });
-          var nsn = S.get("noti_seen", {}); if (nsn.cchat) { delete nsn.cchat; S.set("noti_seen", nsn); }
+          /* 261022 (사용자 확정 · 미팅 잠금) 본 표시(noti_seen.cchat)는 남긴다 · 다시 잠근 칸이 마지막 확정과 같으면 알림 없음 · 다르면 「시간이 바뀌었어요」 */
         }
       }
       if (res.my.sess) {

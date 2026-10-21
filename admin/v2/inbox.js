@@ -49,11 +49,11 @@ function lgPaint(){
 }
 /* 화면 상태 이름 · 신청 · 승인 단계는 쓰지 않는다(사용자 261016 밤) · 없음 · 왔음 · 끝 · 노쇼 · 취소 */
 function lnView(r){ var s=r.status||r.st; return s==="체크인"?"왔음":s==="완료"?"끝":s==="노쇼"?"노쇼":s==="취소"?"취소":"배정"; }
-var RV_FX={ "승인":"참가자 앱에 승인 알림이 갑니다", "체크인":"출석만 · 스탬프는 완료 때", "완료":"완료하면 스탬프 07 프로그램 참여(라운지 2개) · 사은품 대상", "노쇼":"자리는 그대로 · 완료였으면 스탬프를 거둡니다", "취소":"자리가 비고 참가자 앱에 바로 반영됩니다" };
+var RV_FX={ "승인":"알림 없음 · 미팅 시간표에서 잠그면 그때 확정 알림", "체크인":"출석만 · 스탬프는 완료 때", "완료":"완료하면 스탬프 07 프로그램 참여(라운지 2개) · 사은품 대상", "노쇼":"자리는 그대로 · 완료였으면 스탬프를 거둡니다", "취소":"자리가 비고 참가자 앱에 바로 반영됩니다" };
 function rvRow(id){ var d=S.data.resv; return d&&d.rows?d.rows.filter(function(x){ return x.id===id; })[0]:null; }
 function rvAsk(id, to){
   var r=rvRow(id); if(!r) return;
-  var from=r.status, lab={ "승인":from==="신청"?"승인 · 알림 보내기":"되돌리기", "체크인":from==="승인"?"체크인":"되돌리기", "완료":"상담 완료", "노쇼":"노쇼 처리", "취소":"취소 처리" }[to];
+  var from=r.status, lab={ "승인":from==="신청"?"승인":"되돌리기", "체크인":from==="승인"?"체크인":"되돌리기", "완료":"상담 완료", "노쇼":"노쇼 처리", "취소":"취소 처리" }[to];
   var q={ "승인":from==="신청"?"상담을 승인할까요?":"승인 상태로 되돌릴까요?", "체크인":from==="승인"?"체크인할까요?":"체크인 상태로 되돌릴까요?", "완료":"상담을 완료할까요?", "노쇼":"노쇼로 바꿀까요?", "취소":"신청을 취소할까요?" }[to];
   confirmBox({ t:q, who:personLine(r)+" · "+(r.day&&typeof mtDl==="function"?mtDl(r.day)+" ":"")+hm(r.slot)+" · "+from+" → "+to, sub:RV_FX[to], ok:lab, danger:to==="노쇼"||to==="취소",
     run:function(){ return call("resv_set",{ id:id, status:to, from:from }); },
