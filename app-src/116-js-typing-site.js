@@ -418,7 +418,7 @@ function tsfSetupHtml() {
     '<p class="ax-meta" id="tsfSetMsg">' + esc(TSF.msg) + "</p></section>" +
     '<button type="button" class="ax-button" onclick="tsfEnable()">셀프 모드 켜기</button>' +
     '<button type="button" class="ax-button ax-button-weak" onclick="App.go(\'wall_type\')">1F TV 순위판 열기</button>' +
-    (S.get("admin_authed", false) ? '<button type="button" class="ax-button ax-button-weak" onclick="App.go(\'type_award\')">Closing Speech 시상 화면</button>' : "") + "</div>";
+    '<button type="button" class="ax-button ax-button-weak" onclick="App.go(\'type_award\')">Closing Speech 시상 화면</button>' + "</div>";   /* v8.23 늘 보임 · 시상 화면이 관리코드를 받는다(admDevVerify · 로그인 없는 노트북) */
 }
 /* 관리코드를 서버에 물어 맞으면 이 기기에 둔다(화면에는 다시 나오지 않는다) · 효과음 선택은 이 누름 안에서 소리 길을 연다 · 카메라 권한도 이 누름에서 묻는다 */
 function tsfEnable() {
@@ -1744,6 +1744,8 @@ function olyAwardHtml() {
 }
 /* 시상 화면 데이터 · 관리코드 type_result */
 var TYAW = { data: null, t: 0 };
+/* v8.23 시상 화면 관리코드 칸(기기 · 사번 없이) · 맞으면 그 화면 그대로 다시 그린다 */
+function awCodeGo() { admDevVerify((el("awCode") || {}).value, function () { TYAW.t = 0; App.render(); }); }
 function tyAwardPull(force) {
   if (!BE.on) return;   /* v4.16 서버 없는 로컬 미리보기 · 가짜 예시 이름 대신 빈 상태("불러오는 중") */
   if (!force && Date.now() - TYAW.t < 20000) return;

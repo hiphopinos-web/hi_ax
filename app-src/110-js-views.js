@@ -127,7 +127,7 @@ var Views = {
     var winTxt = TYTV.site && TYTV.site.win ? TYTV.site.win.join(" · ") : "";
     return '<div class="screen-wrap tytv"><div class="row" style="justify-content:space-between;flex-wrap:wrap;padding-top:8px">' +
       '<b class="tytv-brand">AX Festival <span>2026</span></b>' +
-      '<div class="row" style="gap:6px">' + tvBtns() + (S.get("admin_authed", false) ? '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="App.go(\'admin\')">← 콘솔</button>' : "") + "</div></div>" +
+      '<div class="row" style="gap:6px">' + tvBtns() + (admPhoneOk() ? '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="App.go(\'admin\')">← 콘솔</button>' : "") + "</div></div>" +
       /* v4.83 (261001) 종합 = 미니 게임 세 종목(옛 서버면 다섯 종목 · 순위판 oev 로 고른다) · AX 퀴즈는 TV 순위에 없다 */
       '<p class="tytv-k">' + (oly ? olyOvName() + " · 종합 순위" : oly2 ? olyOvName() + " · 종목별 1~3위" : "AX 단어 소나기 · 1F 현장 타자왕전") + "</p>" +
       '<p class="tytv-t">' + (oly ? olyOvSum() + " 최고 점수 합계 · " + olyFmt(olyMax()) + "점 만점" : oly2 ? olyOvEvents().map(function (e) { return e.short; }).join(" · ") : "현장 타자왕전 상위 5") + "</p>" +
@@ -137,7 +137,9 @@ var Views = {
   },
   type_award: function () {
     if (S.get("tyaw_tab", "type") === "oly" && S.get("admin_authed", false)) return olyAwardHtml();
-    if (!S.get("admin_authed", false)) return '<div class="screen-wrap"><p style="padding:40px 8px">관리자 콘솔에 로그인한 뒤 열어 주세요</p><button class="btn mint" onclick="App.go(\'admin\')">관리자 콘솔</button></div>';
+    if (!S.get("admin_authed", false)) return '<div class="screen-wrap"><div class="ax-stack" style="max-width:420px;padding:40px 8px"><label class="ax-sr-only" for="awCode">관리코드</label>' +   /* v8.23 기기 화면 · 사번 없이 관리코드(admDevVerify) · 관리자 모드는 로그인한 명단 사람만 */
+      '<input id="awCode" class="ax-field" type="password" inputmode="numeric" pattern="[0-9]*" enterkeyhint="go" autocomplete="off" placeholder="관리코드" onkeydown="onEnter(event, awCodeGo)">' +
+      '<button type="button" class="ax-button" onclick="awCodeGo()">시상 화면 열기</button></div></div>';
     tyAwardPull();
     var d = TYAW.data, hide = S.get("tyaw_hide", false), top = (d && d.top) || [];
     return '<div class="screen-wrap tytv"><div class="row" style="justify-content:space-between;padding-top:8px;flex-wrap:wrap;gap:6px">' +
@@ -440,8 +442,9 @@ var Views = {
      인증 뒤 3개만: 스캔(스탬프 · 입장 · 포토부스 체크 한 화면) · 존 혼잡도 · 내 담당 명단(보기 · 입장 처리 · 노쇼 표시).
      포토부스 호출 · 예약 · 커피챗 매칭 · 신청 현황 · 긴급 공지 · 대시보드 · 타자왕전 · 부스 QR 인쇄 · Wall QR 퀴즈 편집 · 아이디어 열람은 AXF CONTROL(콘솔) 몫. */
   admin: function () {
-    var stf = S.get("admin_authed", false) && admRole() === "staff";   /* v6.83 (묶음 18) 스태프 코드로 연 폰 = 관리자 모드는 관리코드로 */
-    if (!S.get("admin_authed", false) || stf) {
+    if (!admMeEmp()) return '<div class="ax-stack"><section class="ax-card ax-stack-tight axs-gap12"><h2 class="ax-section-title">관리자 모드</h2><p class="ax-description">로그인 뒤 열 수 있어요</p></section></div>';   /* v8.23 (사용자 확정 261021 · 이중잠금) 로그인 안 한 폰 = 코드 입력 없음 */
+    var pok = admPhoneOk(), stf = pok && admRole() === "staff";   /* v6.83 (묶음 18) 스태프 코드로 연 폰 = 관리자 모드는 관리코드로 · v8.23 로그인 사번 = adm_emp 일 때만 열림(기기 관리코드 · 옛 저장값은 코드 다시) */
+    if (!pok || stf) {
       return '<div class="ax-stack">' +
         '<section class="ax-card ax-stack-tight axs-gap12"><h2 class="ax-section-title">' + (stf ? "관리코드 필요" : "운영 담당자 코드") + "</h2>" + (stf ? '<p class="ax-meta">스태프 코드로는 연속 스캔을 써요 · 관리자 모드는 관리코드로 열려요</p>' : "") +
         '<label class="ax-sr-only" for="adminCode">운영 담당자 코드</label>' +

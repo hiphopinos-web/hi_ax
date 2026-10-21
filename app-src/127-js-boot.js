@@ -3,6 +3,7 @@
   var splash = el("splash");
   function enterApp() { xitionRun(enterNow); }
   function enterNow(scene, fast) {   /* 261020 fast = 저장된 로그인으로 바로 열림(계단 QR 링크면 홈 없이 곧바로) · v4.87 scene = 최초 로그인 장면이 덮은 뒤 · 찍은 QR · 알림 이동 · 큰글씨 안내는 장면이 닫힌 뒤(lgxAfter) */
+    admGuard();   /* v8.23 (사용자 확정 261021 · 이중잠금) 로그인한 사람과 관리자 모드 사번이 다르거나(옛 「코드만」 · 사람 바뀜) 기기 표시가 없으면 저장값 지움 */
     splash.classList.add("gone");
     el("frame").classList.remove("splash-mode");
     el("app").hidden = false;
@@ -103,7 +104,7 @@
     var cq = location.hash.match(/crowd=([elpshmj]+)/);   /* v5.68 h · m · j = 17F 대강당 여유 · 보통 · 혼잡(기조연설 · 데모 수) */
     if (cq) { var n0 = Date.now(), jm = { at: n0 - 180000, x: n0 + 720000 }, hl = /j/.test(cq[1]) ? ["jam", 210] : /m/.test(cq[1]) ? ["mid", 150] : /h/.test(cq[1]) ? ["ok", 120] : null; S.set("crowd", { l: /l/.test(cq[1]) ? jm : 0, e: /e/.test(cq[1]) ? jm : 0, p: /p/.test(cq[1]) ? "11:00-11:20" : "", w: /p/.test(cq[1]) ? "11:00-11:20" : "", st: /s/.test(cq[1]) ? 1 : 0, h: hl ? { id: "key", n: hl[1], lv: hl[0], seats: 230 } : 0 }); }
     var target = dm[1] || "home";
-    if (["admin", "type_site", "type_award"].indexOf(target) >= 0) S.set("admin_authed", true);
+    if (["admin", "type_site", "type_award"].indexOf(target) >= 0) { S.set("admin_authed", true); S.set("adm_emp", "1234"); }   /* v8.23 데모 사번 = 관리자 모드 사번(admPhoneOk) */
     splash.classList.add("gone");
     el("frame").classList.remove("splash-mode");
     el("app").hidden = false;
@@ -129,6 +130,7 @@
 
   /* ── 재방문: 이 기기를 기억하고 있으면 영상 스플래시를 건너뛰고 비밀번호만 받는다 ── */
   /* v19: 이 기기에서 입장한 적 있으면 스플래시·비밀번호 없이 바로 재입장 (로그아웃은 설정에서) */
+  admGuard();   /* v8.23 이중잠금 · 로그인 안 한 폰에 남은 관리자 모드(옛 「코드만(기기)」)는 지운다 · 기기 화면(#self · #tv · 시상 adm_dev)은 위에서 이미 갈라졌거나 기기 표시라 그대로 */
   scanLinkNote();   /* v4.06 찍고 들어왔는데 로그인 전이면 로그인 화면에 한 줄 */
   ogCheck();   /* 261008 단계별 오픈 · 지난번 「열려요」 화면을 받은 기기 = 그 화면을 먼저 깔고 서버에 다시 묻는다 */
   endCheck();   /* 261009 행사 종료 · 지난번 종료 응답을 받은 기기 = 로그인 화면 · 홈 대신 종료 안내 화면부터(오프라인이어도) */

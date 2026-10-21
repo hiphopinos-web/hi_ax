@@ -339,7 +339,7 @@ function wsPollMs() { return wsLive() ? Math.max(POLL.base, (Number(WS.cfg.p) ||
 function wsRole() {
   if (/^#tv=/i.test(location.hash)) return "tv";
   if (/^#(self|demo)/i.test(location.hash) || (typeof tsfOn === "function" && tsfOn())) return "";
-  if (App.current === "admin" && S.get("admin_authed", false) && typeof admTok === "function" && (admTok() || admKey())) return "ops";   /* v4.76 스태프 폰(앱 관리자 모드) = ops 방 · 다른 스태프의 혼잡 제보가 곧바로 */
+  if (App.current === "admin" && typeof admPhoneOk === "function" && admPhoneOk() && (admTok() || admKey())) return "ops";   /* v4.76 스태프 폰(앱 관리자 모드) = ops 방 · 다른 스태프의 혼잡 제보가 곧바로 */
   var u = S.get("user", {}) || {};
   return u.empId ? "p" : "";
 }
@@ -498,6 +498,19 @@ function admTok() { return S.get("adm_tok", ""); }
    새 서버가 사번(emp)과 사람 토큰을 돌려주면 adm_emp 로 두고 관리 요청(admA) · 소켓 hello 에 싣는다 · 명단에서 빠지면 그 토큰이 곧바로 auth(admAuthLost)
    옛 서버(명단 없음)는 emp 를 주지 않아 adm_emp 가 비고 예전처럼 코드 · 기기 토큰만 · 명단을 아직 저장하지 않은 서버는 코드만 맞으면 들어온다(서버 admIn_ 이행) */
 function admEmp() { return S.get("adm_emp", ""); }
+/* v8.23 (사용자 확정 261021 · 이중잠금) 폰 관리자 모드 · 스태프 「QR코드」(스캔 · 지금 현장 제보 · 스태프 요청) = 로그인한 사람 + 그 사번이 앱 스태프 명단에 있음 + 코드 일치(admin_check aemp · 서버 codeCheckE_)일 때만
+   로그인 안 한 폰은 코드 입력을 받지 않는다(admVerify · 관리자 모드 화면 한 줄) · 저장된 관리자 모드도 로그인 사번과 adm_emp 가 같을 때만 쓴다(admPhoneOk) · 아니면 admGuard 가 지운다(옛 「코드만(기기)」으로 연 폰 · 사람이 바뀐 폰)
+   기기 화면(Closing Speech 시상 type_award · TV 전체화면 tvFull)은 사번 없는 관리코드 그대로(admDevVerify · adm_dev) · 그 저장으로는 폰 관리자 모드 · 스캔 · 제보가 열리지 않는다
+   서버는 그대로 · 사번 없는 관리코드 요청(draw/ · 셀프 노트북 · TV · 시상 화면)과 앱 폰을 가를 위조할 수 없는 표지가 없다(관리코드를 아는 사람은 기기 화면 · 직접 호출로 같은 일을 한다) */
+function admNE(v) { return String(v == null ? "" : v).replace(/\s/g, "").replace(/^0+(?=.)/, "").toUpperCase(); }   /* 서버 normEmp_ 와 같은 정규화(공백 · 앞 0 · 대문자) */
+function admMeEmp() { var u = S.get("user", {}) || {}; return u.empId ? admNE(u.empId) : ""; }
+function admPhoneOk() { var me = admMeEmp(); return !!S.get("admin_authed", false) && !!me && admNE(admEmp()) === me; }
+function admGuard() {
+  if (S.get("adm_dev", false) || admPhoneOk()) return;
+  if (!S.get("admin_authed", false) && !admKey() && !admTok() && !admEmp()) return;
+  ["adm_key", "adm_role", "adm_tok", "adm_emp"].forEach(function (k) { S.put(k, ""); });
+  S.put("admin_authed", false);
+}
 /* 관리 요청 인증 한 곳 · 토큰이 있으면 코드는 보내지 않는다(코드가 바뀐 뒤 옛 코드로 틀린 횟수가 쌓이지 않게) · 토큰이 없으면(옛 서버) 코드 · 사번이 있으면 aemp */
 function admA(o) {
   var t = admTok(), e = admEmp();
@@ -506,7 +519,7 @@ function admA(o) {
   if (e) { o.aemp = e; if (!t) o.asc = "a"; }
   return o;
 }
-function admLock() { S.set("adm_key", ""); S.set("adm_role", ""); S.set("adm_tok", ""); S.set("adm_emp", ""); S.set("admin_authed", false); App.render(); }
+function admLock() { S.set("adm_key", ""); S.set("adm_role", ""); S.set("adm_tok", ""); S.set("adm_emp", ""); S.set("adm_dev", false); S.set("admin_authed", false); App.render(); }
 /* v4.65 서버 잠금(reason locked · 이 연결에서 코드를 30번 틀림 · 10분) 문구 · retry = 남은 초 */
 function admLockedMsg(r) { var m = Math.max(1, Math.ceil(Number((r && r.retry) || 600) / 60)); return "코드를 여러 번 틀려 이 연결이 잠겼어요 · " + m + "분 뒤 다시 · 급하면 모바일 데이터로 바꿔 주세요"; }
 /* v4.65 저장해 둔 코드가 더는 맞지 않는다(코드를 바꿈) · 같은 코드로 계속 보내면 틀린 횟수가 쌓여 이 연결이 잠기므로 지우고 다시 받는다 */
@@ -518,26 +531,42 @@ function admAuthLost() { var m = admLostMsg(); admLock(); toast(m + " · 다시 
    그 참가자 기기에 코드가 영구히 남는다(260830 발견 · cd92d8c에서 들어간 회귀).
    v4.86 staffEmp = 담당자 적립에서 스태프가 친 사번(참가자 세션은 싣지 않는다 · 그 폰의 로그인은 참가자 것) · done(역할, 코드, 응답) */
 function admVerify(v, done, keep, staffEmp, fail) {   /* v6.00 fail = 틀림 · 연결 실패 때(스태프 코드 창 단추 되살리기) */
+  var u = S.get("user", {}) || {};
+  if (keep !== false && !u.empId) { if (fail) fail(); toast("로그인 뒤 열 수 있어요"); return; }   /* v8.23 이중잠금 · 로그인 안 한 폰은 코드를 받지 않는다(옛 「코드만(기기)」 길 막음) */
   v = String(v || "").trim();
   if (!v) { toast("코드를 입력해 주세요"); return; }
   /* 서버가 판정하므로 서버 없이는 열 수 없다. 로컬 비교로 되돌리면 상수가 되살아난다. */
   if (!BE.on) { toast("서버에 연결되지 않아 관리자 모드를 열 수 없습니다."); return; }
-  var u = S.get("user", {}) || {}, q = { action: "admin_check", key: v };
+  var q = { action: "admin_check", key: v };
   if (keep === false) { if (staffEmp) { q.aemp = String(staffEmp); q.asc = "a"; } }
-  else if (u.empId) { q.aemp = String(u.empId); q.asc = "a"; if (u.ses) q.ases = String(u.ses); }   /* v4.86 로그인 안 한 폰은 예전처럼 코드만(기기) */
+  else { q.aemp = String(u.empId); q.asc = "a"; if (u.ses) q.ases = String(u.ses); }   /* v8.23 늘 로그인 사번 · 명단 확인(서버 codeCheckE_) */
   admCall(q, function (res) {
+    var ne = function (x) { return String(x == null ? "" : x).replace(/\s/g, "").replace(/^0+(?=.)/, "").toUpperCase(); }, pe = res && res.ok && res.emp && res.tok && ne(res.emp) === ne(u.empId);   /* v8.23 사람 입장(사번 · 사람 토큰)이 아니면 열지 않는다 */
+    if (res && res.ok && keep !== false && !pe) res = { ok: false, reason: "auth" };
     if (!(res && res.ok) && fail) fail();
     if (res && res.ok) {
       if (keep !== false) {
         S.set("adm_key", v);
         S.set("adm_role", res.role || "admin");
         S.set("adm_tok", res.tok || "");   /* v4.65 */
-        S.set("adm_emp", res.emp && res.tok ? String(res.emp) : "");   /* v4.86 새 서버만 · 옛 서버는 빈 값(예전 방식) */
+        S.set("adm_emp", String(res.emp));   /* v8.23 사람 입장만(pe) */
+        S.set("adm_dev", false);
       }
       done(res.role || "admin", v, res);
     } else if (res && res.reason === "ses") { SES.need = true; toast("로그인 확인이 필요해요 · 비밀번호를 넣은 뒤 다시 확인해 주세요"); setTimeout(sesAsk, 300); }   /* v4.86 이 폰의 로그인 토큰이 그 사번 것이 아님 · 지남 */
     else toast(res && res.reason === "locked" ? admLockedMsg(res) : q.aemp ? "명단에 없는 사번이거나 코드가 맞지 않아요" : "코드가 올바르지 않습니다.");   /* v4.65 잠금은 틀린 코드와 다르게 */
   }, function () { if (fail) fail(); toast("서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요."); });
+}
+/* v8.23 기기 화면(Closing Speech 시상 · TV 전체화면) · 사번 없이 관리코드(관리 역할만 · 서버 기기 길 그대로) · adm_dev = 기기 표시(admGuard 가 지우지 않는다 · 폰 관리자 모드는 admPhoneOk 라 열리지 않는다) */
+function admDevVerify(v, done) {
+  v = String(v || "").trim();
+  if (!v) { toast("관리코드를 입력해 주세요"); return; }
+  if (!BE.on) { toast("서버에 연결되지 않아 열 수 없어요"); return; }
+  admCall({ action: "admin_check", key: v }, function (res) {
+    if (!(res && res.ok && res.role === "admin")) { toast(res && res.reason === "locked" ? admLockedMsg(res) : "관리코드가 맞지 않아요"); return; }
+    S.set("adm_key", v); S.set("adm_role", "admin"); S.set("adm_tok", res.tok || ""); S.set("adm_emp", ""); S.set("adm_dev", true); S.set("admin_authed", true);
+    if (done) done();
+  }, function () { toast("서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요."); });
 }
 
 /* ════════════════ v4.76 웹 푸시 · 260930 사용자 확정 (루트 「웹 푸시 기획.md」 2 · 4장 · 「홈 화면 설치 유도 · 레드팀 토론.md」 3장 채택 1 · 2) ════════════════

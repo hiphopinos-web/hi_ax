@@ -111,7 +111,7 @@ var SSC = { band: null, bandT: null, camErr: false, starting: false, wl: null, w
 var SSC_BAND_MS = 1500;
 Views.sscan = function () { return sscHtml(); };
 var SSC_SUB = { p2: [["hdq", "하이디큐"], ["hhp", "하이헬퍼"]] };   /* 같은 동작(stamp_grant p2) · 칩에 어느 부스인지만 */
-function staffOn() { return !!S.get("admin_authed", false) && admRole() !== "grade" && !!(admTok() || admKey()); }   /* 새 판정 없음 · 관리자 모드(사번 + 코드 · admin_check)를 이 폰에서 연 스태프 */
+function staffOn() { return admPhoneOk() && admRole() !== "grade" && !!(admTok() || admKey()); }   /* v8.23 이중잠금 · 로그인 사번 = adm_emp(admPhoneOk) · 새 판정 없음 · 관리자 모드(사번 + 코드 · admin_check)를 이 폰에서 연 스태프 */
 /* v6.00 (사용자 261006 밤 「로그인만으로 바뀜」) 앱 스태프 명단(서버 설정 관리명단_앱 · 콘솔에서 넣음)에 있는 사번 = 로그인 · sync 응답 staff 1 → 처음부터 가운데 단추 「스캔」.
  *   처음 누를 때만 코드를 한 번(sscCodeAsk → admVerify 그대로 · 코드 · 토큰 저장 방식 그대로) · 그 뒤로는 바로 연속 스캐너(staffOn).
  *   staff_me = true | false(서버가 말함 · 다른 사람 명단 · 코드는 오지 않는다) · 없음(옛 서버 · 로그인 직후 응답 전) = 예전대로 관리자 모드를 연 폰만(staffOn).
@@ -337,7 +337,7 @@ var CN_DLV = [["ok", "여유", "cn-lv1"], ["mid", "보통", "cn-lv2"], ["jam", "
 var CN_NMAX = 99, CN_TMIN = 5, CN_TMAX = 300;
 var CNS = { k: "", busy: false, ut: {}, last: {}, undoT: null, nv: {}, tv: {} };
 function cnNow() { return Date.now() + (typeof sesOff === "function" ? sesOff() : 0); }
-function cnAuthed() { return !!(admTok() || admKey()); }
+function cnAuthed() { return admPhoneOk() && !!(admTok() || admKey()); }   /* v8.23 이중잠금 · 기기 관리코드(adm_dev) · 옛 저장값으로는 제보 · 요청이 열리지 않는다 */
 function cnMode() { return S.get("cn_mode", "lv") === "n" ? "n" : "lv"; }
 function cnSheet(k) {
   if (!CN_NM[k]) return;
