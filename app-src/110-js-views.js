@@ -258,7 +258,7 @@ var Views = {
       return '<div class="ax-stack axs-okwrap svdone" id="svQ"><span class="axs-okmark">완료</span>' +   /* v8.29 (사용자 261021 「제출했는데 화면 전환이 없어 저장이 안 됐나」) 제출 직후 = 아이디어 제출 완료 화면과 같은 큰 「완료」 표시 + 「제출했습니다」 */
         '<div class="ax-stack-tight axs-gap12 axs-center-tx"><h1 class="ax-type-t2">제출했습니다</h1><p class="ax-body">' + esc(SURVEY_DONE.t) + '</p><p class="ax-description">' + esc(SURVEY_DONE.q) + '</p><p class="ax-meta">' + esc(SURVEY_DONE.meta || "스탬프 1개 적립") + "</p></div></div>";   /* 정리 #8(261005) 휴면 밸런스 막대 지움 */   /* v8.28 아래 줄 = SURVEY_DONE.meta(테스트 주소 = 「테스트 · 저장하지 않음」) */
     }
-    if (!surveyOpen()) return '<div class="ax-stack">' + stampLineHtml("sv") + botHtml((evPhase() === "before" ? "행사 당일 " : "") + SURVEY.open + "에 열려요") + "</div>";
+    if (!surveyOpen()) { svOpenPeek(); return '<div class="ax-stack">' + stampLineHtml("sv") + botHtml((evPhase() === "before" ? "행사 당일 " : "") + SURVEY.open + "에 열려요") + "</div>"; }   /* 261021 QA · 열릴 시각이 지났는데 서버 값이 닫힘이면 sync 한 번(svOpenPeek) */
     if (surveyLock() === "nostamp") return '<div class="ax-stack">' + stampLineHtml("sv") + botHtml("스탬프를 하나 모으면 열려요") + '<button type="button" class="ax-button ax-button-weak" onclick="App.go(\'passport\')">스탬프 보기</button></div>';
     var fl = svFlow(d), i = svCur(d, fl), q = fl[i], last = i === fl.length - 1, prev = i > 0 && !SV.busy;
     if (q.id === "q2_0" && !Array.isArray(d.a.q2_0)) { d.a.q2_0 = svPreIds(); d.pre = 1; S.put("survey_draft", d); }   /* 초안이 Q2-0 에서 멈춘 옛 기기 · 미리 체크 한 번 */

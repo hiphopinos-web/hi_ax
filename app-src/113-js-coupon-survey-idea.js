@@ -49,6 +49,17 @@ function surveyOpen() {
   return hmNow() >= t2m(SURVEY.open);
 }
 function surveyDone() { return S.get("survey_done", false) || S.get("stamps", []).indexOf("sv") >= 0; }
+/* 261021 QA(svqa) · 서버 열림 값(sv_open)이 「닫힘」으로 남은 채 이 기기 시계로는 열릴 때(행사 당일 14:30 이후 · 행사 뒤)가 지났으면 설문 화면이 sync 를 한 번 부른다
+   예전에는 다음 폴링(소켓이 붙어 있으면 최대 2분)까지 「14:30에 열려요」가 남았다 · 판정은 그대로 서버(sync my.svOpen) · 15초에 한 번까지 · 시험 모드는 부르지 않는다 */
+function svOpenPeek() {
+  if (!BE.on || testMode() || S.get("sv_open", null) !== false) return;
+  var ph = evPhase();
+  if (!(ph === "after" || (ph === "live" && hmNow() >= t2m(SURVEY.open)))) return;
+  var t = Date.now();
+  if (t - (SV.peek || 0) < 15000) return;
+  SV.peek = t;
+  setTimeout(function () { beSync(); }, 0);
+}
 /* Q2-0 미리 체크 · 서버가 준 참석 목록(sync my.svPre) · 옛 서버 · 시험 모드 = 이 기기 스탬프(p2 · ln · cc) + 17F 출석(l1 AWS · l2 MS) */
 function svPreIds() {
   var ok = SV_PROGS.map(function (p) { return p.id; }), sp = S.get("sv_pre", null);
@@ -162,7 +173,7 @@ function svSubmit() {
     SV.busy = false; botWait(false);
     if (res && typeof res.svOpen === "boolean") S.put("sv_open", res.svOpen);
     if (!res || !res.ok) {
-      if (res && res.reason === "dup") { S.set("survey_done", true); S.set("survey_draft", null); App.render(); toast("이미 제출하셨어요"); return; }
+      if (res && res.reason === "dup") { S.set("survey_done", true); S.set("survey_draft", null); App.render(); toast("이미 제출하셨어요"); beSync(); return; }   /* 261021 QA · 저장은 됐는데 응답이 끊겨 다시 누른 경우 · 스탬프 목록(sv)을 바로 받아 온다 */
       toast(res && res.reason === "closed" ? "설문이 아직 열리지 않았어요" : res && res.reason === "nostamp" ? "스탬프를 하나 모으면 제출할 수 있어요" : "제출하지 못했어요. 다시 눌러 주세요.");
       App.render(); return;
     }
