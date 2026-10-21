@@ -145,7 +145,7 @@ var SR = { st: "", id: "", name: "", why: "", open: "", test: false, stair: fals
 var SR_WHY = {
   nocode: ["행사용 QR이 아니에요", "scan", "다시 스캔"],
   window: ["적립 시간이 아니에요", "exp", "확인"],
-  off: ["지금 운영하지 않는 지점이에요", "staff", "담당자에게 적립 요청"],
+  off: ["지금 운영하지 않는 지점이에요", "exp", "확인"],   /* v8.24 (사용자 261021) 스태프 적립 요청 진입 없앰 */
   param: ["사번으로 입장한 뒤 스캔해 주세요", "exp", "확인"],
   server: ["서버에 연결되지 않았어요", "scan", "다시 스캔"],
   stair: ["계단 QR은 계단 화면에서 처리돼요", "scan", "다시 스캔"],
@@ -169,7 +169,6 @@ function srDupPopup(id, name, at, test) {
 }
 function srAct(k) {
   if (k === "scan") { scanOpen(SCQ.ctx); return; }
-  if (k === "staff") { staffStampOpen(); return; }
   if (k === "myqr") { qrPanelOpen("mine"); return; }   /* v5.97 AX PLAY = 스태프가 내 QR 을 찍는다 */
   if (k === "card") { expStamp(SR.id); return; }
   App.tab("exp");
@@ -903,7 +902,7 @@ function scanQHtml() {
     '<h1 class="ax-title">' + t + "<br>화면 안에 맞춰주세요</h1>" + box +
     '<p class="ax-description axs-inv">촬영 버튼 없이 자동으로 인식해요</p>' +
     '<p class="ax-meta axs-inv" id="qrHint" hidden>QR에서 20~30cm 떨어뜨리고, 화면 밝기를 올려 보세요</p></div>' +
-    '<div class="axs-fix ax-sheet axs-scansheet"><button type="button" class="ax-button ax-button-weak" onclick="qrCamStop(); staffStampOpen()">담당자에게 적립 요청</button>' +
+    '<div class="axs-fix ax-sheet axs-scansheet">' +   /* v8.24 (사용자 261021) 시트의 스태프 적립 요청 단추 없앰 */
     '<p class="ax-meta">카메라 권한이 없으면 기본 카메라로 스캔할 수 있어요</p></div>';
 }
 function scanQStart() {

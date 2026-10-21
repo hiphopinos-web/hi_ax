@@ -68,8 +68,7 @@ var Views = {
       '<section class="axs-sec axs-stget" id="stpGet"><div class="axs-sfd axs-sgfd' + (sgo ? " open" : "") + '">' +
       '<button type="button" class="axs-sfdb axs-sgb" id="stGetBtn" aria-expanded="' + sgo + '" aria-controls="stGetBody" onclick="stGetTog()"><b>스탬프 획득하기</b><span>' + STAMPS.length + "가지 중 " + STAMP_DENOM + "개까지</span>" + CHEV_SVG + "</button>" +   /* v7.92 머리 = 「스탬프 획득하기」(옛 「스탬프 모으는 방법」 · 광고 영상 끝 문구와 같게) · v7.57 (사용자 261017 S5 · S6) 오른쪽 = 늘 「8가지 중 6개까지」 */
       '<div class="axs-sfdp" id="stGetBody"><div class="axs-sfdi"><div class="axs-sfdc">' + stpBoardHtml(st, full) + "</div></div></div></div>" +   /* v7.65 홈 접기 단추(stpBoardMine)도 같은 함수 · 같은 값 · 261013 오후 (사용자 확정) 하루 흐름 4단계 · 단계 제목 아래 줄 · 사전등록 체크인 줄은 1단계 아래(대상자만) */
-      scanQNote() + '<div class="axs-stplk"><button type="button" class="lnk axs-stfgo axs-rkgo" onclick="App.go(\'oly_rank\')">' + lnkChev("게임 순위") + "</button>" +   /* 261017 (사용자) 스탬프 탭 → 미니 게임 순위(oly_rank · 뒤로 = 스탬프 탭) */
-      '<button type="button" class="lnk sub axs-stfgo" onclick="staffStampOpen()">' + lnkChev("담당자 적립") + "</button></div></section></div>";   /* v6.83 (접근성 B-3 · B-6) p → button · 눌림 높이 44 · 키보드 */   /* v4.91 1F 타자왕(스탬프 아님)은 프로그램 탭 「상시 운영」로 옮겼다 */
+      scanQNote() + '<div class="axs-stplk"><button type="button" class="lnk axs-stfgo axs-rkgo" onclick="App.go(\'oly_rank\')">' + lnkChev("게임 순위") + "</button></div></section></div>";   /* 261017 (사용자) 스탬프 탭 → 미니 게임 순위(oly_rank · 뒤로 = 스탬프 탭) */   /* v8.24 (사용자 261021) 맨 아래 둘째 링크 없앰(화면 함수 · 서버는 그대로) · v6.83 (접근성 B-3 · B-6) p → button · 눌림 높이 44 · 키보드 */   /* v4.91 1F 타자왕(스탬프 아님)은 프로그램 탭 「상시 운영」로 옮겼다 */
   },
   /* v4.84 옛 「현장에서 / 앱에서」 체험 화면은 지웠다 · 아래 exp_g(체험 안내) · 스캔 · 결과 · 계단은 그대로 */
 

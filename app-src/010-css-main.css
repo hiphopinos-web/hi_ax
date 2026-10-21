@@ -1792,7 +1792,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   body[data-pg="d"], body[data-pg="d"] #frame, body[data-pg="d"] #topbar.ax-header { background: var(--ax-color-ink); }
   body[data-pg="d"] #topbar .axs-htitle, body[data-pg="d"] #topbar .axs-back, body[data-pg="d"] #topbar .axs-ib { color: var(--ax-color-inverse); }
   body[data-pg="d"] #topbar.ax-header { border-bottom-color: var(--ax-color-body); }
-  #view[data-v="scan_q"][data-qt="scan"] { padding-bottom: calc(200px + env(safe-area-inset-bottom)); }   /* v5.23 하단 시트 = 「담당자에게 적립 요청」 하나(「내 QR 보여주기」는 위 [내 QR] 탭으로) */
+  #view[data-v="scan_q"][data-qt="scan"] { padding-bottom: calc(200px + env(safe-area-inset-bottom)); }   /* v5.23 하단 시트 = 카메라 안내 한 줄(v8.24 스태프 적립 요청 단추 없앰 · 「내 QR 보여주기」는 위 [내 QR] 탭으로) */
   .axs-scanwrap .ax-title, .axs-inv { color: var(--ax-color-inverse); }
   .axs-cam { position: relative; aspect-ratio: 1 / 1; border-radius: var(--ax-radius-24); overflow: hidden; background: var(--ax-color-body); }
   .axs-cam video { width: 100%; height: 100%; object-fit: cover; display: block; }
