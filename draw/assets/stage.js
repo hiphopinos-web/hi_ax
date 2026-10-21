@@ -29,6 +29,14 @@
  *   마우스를 움직이면 왼쪽 아래 운영 줄 = 「다시 시작」(같은 모드 처음부터 · 라이브는 서버 기록을 다시 받아 이어서) · 「리셋」(시작 화면으로 · 서버 기록은 지우지 않는다)
  *   콘솔 큰 단추 원격 진행은 받지 않는다(조작은 무대 노트북 한 곳 · 상태 보고는 그대로 · ?ctl=console 이면 옛 방식으로 받는다)
  *   시험 페이지 = test.html(이 화면을 ?sandbox=1 로 품는다 · 저장 키 따로 · 데모 고정 · 서버 호출 0)
+ *
+ * 261021 체크인 2통(사용자 확정 · 기획 문서/럭키드로우 체크인 2통 설계_261021.md · 레드팀 R1 ~ R19 권장 = 확정)
+ *   한 통 + 공마다 체크인 표시(draw_pool in) · 6 · 5 · 4등 = 행운권 전체 · 3 · 2 · 1등 = in 인 공만(체크인 통) · 1인 1회는 두 통을 관통한다
+ *   공 넣기(R1) = 서버 체크인 닫기(성공 필수 · 5초마다 다시) → 전체 읽기(성공 필수 · 폴링이 읽는 중이면 기다린다 · 실패면 다시) → 공 → 고정 → 고정 숫자 서버 보관(D6 · draw_cfg lock)
+ *   뽑은 직후 공개 전 자기 검사(체크인 통이면 in · 통 안 · 같은 사람 · 같은 번호 아님) · 어긋나면 공개하지 않고 다시 뽑는다
+ *   체크인 통 소진(R9) = 무대 멈춤 + 운영 줄 「전체 통에서 이어 뽑기」(그때만 · 두 번 누름) · 한 번 켜지면 남은 등수도 전체 통(ST.fb · 기록 fb)
+ *   서버 warn in(D5 B') = 운영 줄 · 당첨 기록에 경고만(무대는 멈추지 않는다 · 다시 추첨 단추로 처리)
+ *   추첨 계산 = PICK 순수 함수 하나(window.__axs.pick · 시험 페이지 · 계산 보기 · 확률 실험실이 같은 함수 객체를 부른다 · R3 새 파일 없음)
  * ═══════════════════════════════════════════════════════════════════════════ */
 (function () {
   "use strict";
@@ -37,7 +45,12 @@
   var CONSOLE_CTL = Q.get("ctl") === "console";       /* 261016 기본 = 콘솔 원격 명령을 받지 않는다(조작은 무대 노트북 Space 한 곳) */
   var QA_URL = "https://hi-qa.axf2026.workers.dev/exec";
   var SERVER_URL = Q.get("srv") === "qa" ? QA_URL : (window.AXF_SERVER || "");   /* 261016 서버 = ../assets/server.js 하나 · 시험 서버는 ?srv=qa(저장하지 않는다 · 옛 조작 창 저장값 CFG.server 는 읽지 않는다) */
-  function srvName(u) { var m = /^https:\/\/([a-z0-9-]+)\./.exec(u || SERVER_URL); var h = m ? m[1] : ""; return !h ? "서버 없음" : h === "hi" ? "운영 서버 hi" : "시험 서버 " + h; }
+  /* 261021 시험 페이지 가짜 서버(sandbox 안에서만 · 부모 창 메모리 함수 · 네트워크 0) · 라이브 길(닫기 → 읽기 → 고정 · 확인표 · 교체)을 서버 없이 시험한다 */
+  var FAKE = null;
+  if (SANDBOX && Q.get("fake") === "1") try { if (window.parent !== window && typeof window.parent.__axFakeSrv === "function") FAKE = window.parent.__axFakeSrv; } catch (e) { FAKE = null; }
+  if (FAKE) SERVER_URL = "fake://hi-fake/exec";
+  var LAB = SANDBOX && Q.get("lab") === "1";          /* 261021 계산 보기 · 확률 실험실(lab.html)이 함수만 빌려 쓰는 화면 · 저장 키 따로 */
+  function srvName(u) { if ((u || SERVER_URL).indexOf("fake://") === 0) return "가짜 서버(시험 페이지)"; var m = /^https:\/\/([a-z0-9-]+)\./.exec(u || SERVER_URL); var h = m ? m[1] : ""; return !h ? "서버 없음" : h === "hi" ? "운영 서버 hi" : "시험 서버 " + h; }
   var FORCEQ = Q.has("q") ? Math.max(0, Math.min(2, +Q.get("q") || 0)) : -1;
 
   /* ─────────────── 상수 · 무대 좌표(1920×1080 논리 좌표) ─────────────── */
@@ -46,6 +59,7 @@
   var FONT = '"AXP", "Pretendard Variable", Pretendard, "Malgun Gothic", sans-serif';
   var LS_CFG = "axfDraw.cfg.v1", LS_ST = "axfDraw.state.v1";
   if (SANDBOX) { LS_CFG += ".test"; LS_ST += ".test"; }   /* 시험 페이지는 무대 노트북의 진짜 기록과 섞이지 않는다 */
+  if (FAKE) LS_ST += ".fake"; else if (LAB) LS_ST += ".lab";   /* 261021 가짜 서버 시험 · 실험실은 데모 시험 기록과도 따로 */
   /* 통 · drum.js 와 같은 값 */
   var DX = 600, DY = 560, RW = 352, PIT = 0.24, FOC = 2100;
   var NBL = 3, BT = 7, HUBR = 30, WMIX = 3.6, WSLOW = 1.4, G = 3000, JET = 10500, BLL = 0.62, NPEG = 48, GATE0 = 0;
@@ -122,6 +136,53 @@
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function nf(v) { return Number(v || 0).toLocaleString("en-US"); }
   function cryptoShuffle(a) { var u = cryptoUnits(a.length); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(u[i] * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  /* ─────────────── 261021 추첨 계산 · 순수 함수 하나(무대 · 시험 페이지 · 계산 보기 · 확률 실험실이 같은 함수 객체 · window.__axs.pick) ───────────────
+   *   pool = { people: { pk: { nos: [], in: 체크인 } }, order: [] } · arrived = 넣은 사람 · out = { pk: win | absent } · won = { 번호: 1 } · 화면 · 서버 · 저장을 건드리지 않는다
+   *   tickets = 뽑을 수 있는 행운권 [[pk, 번호]] · inOnly = 체크인 통(in 인 사람만)
+   *   roundPool = 이번 뽑기 통 · 3 · 2 · 1등(top)이고 fb(전체 통 이어 뽑기) 아니면 체크인 통 · why = "" | empty(전체도 없음) | emptyin(체크인 통만 없음)
+   *   pick = k 장 · 1인 1회(한 장을 뽑으면 그분의 나머지 번호는 이번 뽑기에서도 뺀다) · units(n) = 0 ~ 1 난수 n 개(무대 = 암호 난수)
+   *   check = 공개 전 자기 검사 · "" = 맞음 · count = 두 통 숫자(명 · 장) */
+  var PICK = {
+    tickets: function (pool, arrived, out, won, inOnly) {
+      var tk = [], pp = pool && pool.people || {};
+      (arrived || []).forEach(function (pk) { if (out[pk]) return; var p = pp[pk]; if (!p || (inOnly && p.in !== true)) return; (p.nos || []).forEach(function (no) { if (!won[no]) tk.push([pk, no]); }); });
+      return tk;
+    },
+    roundPool: function (pool, arrived, out, won, top, fb) {
+      var useIn = !!top && !fb, tk = PICK.tickets(pool, arrived, out, won, useIn);
+      if (tk.length) return { tk: tk, useIn: useIn, why: "" };
+      if (!useIn) return { tk: tk, useIn: false, why: "empty" };
+      return { tk: tk, useIn: true, why: PICK.tickets(pool, arrived, out, won, false).length ? "emptyin" : "empty" };
+    },
+    pick: function (tk, k, units) {
+      var n0 = tk.length, out = [];
+      while (out.length < k && tk.length) {
+        var x = tk[Math.min(tk.length - 1, Math.floor(units(1)[0] * tk.length))];
+        out.push({ pk: x[0], no: x[1] });
+        tk = tk.filter(function (t) { return t[0] !== x[0]; });
+      }
+      return { list: out, n: n0 };
+    },
+    check: function (list, pool, arrived, out, won, useIn) {
+      var seenPk = {}, seenNo = {}, pp = pool && pool.people || {}, ar = {};
+      (arrived || []).forEach(function (pk) { ar[pk] = 1; });
+      for (var i = 0; i < list.length; i++) {
+        var x = list[i], p = pp[x.pk];
+        if (!p || !ar[x.pk] || (p.nos || []).indexOf(x.no) < 0) return "pool";
+        if (out[x.pk]) return "out";
+        if (won[x.no] || seenNo[x.no]) return "no";
+        if (seenPk[x.pk]) return "one";
+        if (useIn && p.in !== true) return "in";
+        seenPk[x.pk] = 1; seenNo[x.no] = 1;
+      }
+      return "";
+    },
+    count: function (pool, out) {
+      var c = { ppl: 0, tks: 0, inPpl: 0, inTks: 0 };
+      if (pool) pool.order.forEach(function (pk) { var p = pool.people[pk]; if (!p || !p.nos.length || (out && out[pk])) return; c.ppl++; c.tks += p.nos.length; if (p.in === true) { c.inPpl++; c.inTks += p.nos.length; } });
+      return c;
+    }
+  };
 
   /* ─────────────── 추첨 상태 · 옛 화면과 같은 모양(+ batch) ───────────────
    * results[] = { id, round, slot, no, pk, nm(가린 이름), dp(draw_pool 부문), fn · fd(draw_who 실명 · 부서 · 당첨자만), prize, rname, at, st, pool, big, q(서버에 아직 안 보냄) }
@@ -130,7 +191,7 @@
   if (!ST || ST.v !== 1) ST = { v: 1, seed: Math.floor(Math.random() * 1e9), scene: "idle", pool: null, arrived: [], closed: false, round: 0, results: [], out: {}, src: CFG.mode };
   ST.batch = ST.batch || [];
   /* 261016 모드 · ST.mode = demo | live(시작 화면에서 고른 값) · 없으면 시작 화면 · 라이브 기록이 다른 서버 것이면 시작 화면(고르면 비운다) · 시험 페이지 = 데모 고정 */
-  if (SANDBOX && ST.mode !== "demo") ST = { v: 1, seed: Math.floor(Math.random() * 1e9), scene: "idle", pool: null, arrived: [], closed: false, round: 0, results: [], out: {}, mode: "demo", batch: [] };
+  if (SANDBOX && ST.mode !== "demo" && !FAKE) ST = { v: 1, seed: Math.floor(Math.random() * 1e9), scene: "idle", pool: null, arrived: [], closed: false, round: 0, results: [], out: {}, mode: "demo", batch: [] };
   var MODE_BAD = ST.mode === "live" && ST.srv !== SERVER_URL;
   var NEED_START = !ST.mode || MODE_BAD;
   CFG.mode = ST.mode === "live" && !MODE_BAD ? "server" : "demo";
@@ -143,7 +204,7 @@
   var DEPT = ["경영지원", "디지털전략", "장기보험", "자동차보험", "일반보험", "리스크관리", "재무", "인사총무", "영업기획", "보상서비스"];
   var DEPT2 = ["노사문화파트", "신성장파트", "데이터사이언스파트", "자동차보험 보상기획파트", "기업보험 해외영업 지원파트", "광화문지점", "디지털고객경험혁신파트", "장기보험상품개발파트"];   /* 데모 부서(긴 이름 포함 · 가짜) */
   function demoPool(n, seed, maxT) {
-    var r = mulberry(seed), people = {}, order = [], used = {}, tot = 0;
+    var r = mulberry(seed), rin = mulberry(seed ^ 0x5F3C1), people = {}, order = [], used = {}, tot = 0;   /* 261021 체크인 표시 = 따로 난수(가짜 이름은 전과 같다) · 35% */
     if (maxT) n = maxT;
     for (var i = 0; i < n && !(maxT && tot >= maxT); i++) {
       var k = r() < 0.5 ? 1 : r() < 0.6 ? 2 : 3;
@@ -152,7 +213,7 @@
       if (maxT) k = Math.min(k, maxT - tot); tot += k;
       while (nos.length < k) { var no = 1 + Math.floor(r() * 9999); if (used[no]) continue; used[no] = 1; nos.push(pad4(no)); }
       var pk = "d" + i;
-      people[pk] = { nm: mask(nm), dp: DEPT[Math.floor(r() * DEPT.length)], nos: nos, fn: nm, fd: DEPT2[Math.floor(r() * DEPT2.length)] };   /* 데모도 서버처럼 명단은 가린 이름 · 실명 · 부서(fn · fd)는 draw_who 대신 당첨 뒤 꺼낸다 */
+      people[pk] = { nm: mask(nm), dp: DEPT[Math.floor(r() * DEPT.length)], nos: nos, fn: nm, fd: DEPT2[Math.floor(r() * DEPT2.length)], in: rin() < 0.35 };   /* 데모도 서버처럼 명단은 가린 이름 · 실명 · 부서(fn · fd)는 draw_who 대신 당첨 뒤 꺼낸다 */
       order.push(pk);
     }
     return { people: people, order: order, kind: "demo" };
@@ -173,9 +234,9 @@
   var QKEY = "axfDraw.q." + ((/^https:\/\/([a-z0-9-]+)\./.exec(SERVER_URL) || ["", "none"])[1]) + (SANDBOX ? ".test" : "");
   var SRV = { status: "", polling: null, since: "", queue: load(QKEY, []) };
   /* 261016 서버 문 한 곳 · 데모 · 시험 페이지 = 호출 0(읽기도 보내지 않는다) · 라이브 연결 상자에서는 읽기만 · 쓰기(draw_log · draw_cfg · draw_scr · draw_cmd)는 라이브로 시작한 뒤에만 */
-  var NET = { connect: false, calls: 0, blocked: 0 }, WRITES = { draw_log: 1, draw_cfg: 1, draw_scr: 1, draw_cmd: 1 };
+  var NET = { connect: false, calls: 0, blocked: 0, fake: 0 }, WRITES = { draw_log: 1, draw_cfg: 1, draw_scr: 1, draw_cmd: 1 };
   function netWhy(action) {
-    if (SANDBOX) return "sandbox";
+    if (SANDBOX && !FAKE) return "sandbox";
     if (WRITES[action]) return isLive() ? "" : "demo";
     return isLive() || NET.connect ? "" : "demo";
   }
@@ -183,6 +244,7 @@
     var nw = netWhy(action); if (nw) { NET.blocked++; done({ ok: false, reason: nw }); return; }
     var url = SERVER_URL;
     if (!url) { done({ ok: false, reason: "noserver" }); return; }
+    if (FAKE) { NET.fake++; var fp = Object.assign({}, params, { action: action }); var res = null; try { res = FAKE(fp); } catch (e) { res = { ok: false, reason: "fake" }; } res = res || { ok: false, reason: "network" }; var ms = +res.__ms || 30; delete res.__ms; setTimeout(function () { done(JSON.parse(JSON.stringify(res))); }, ms); return; }   /* 261021 가짜 서버 · 부모 창 메모리 · 네트워크 0 */
     NET.calls++;
     var name = "__axs" + Math.floor(Math.random() * 1e9), sc = document.createElement("script"), q = [];
     params = Object.assign({}, params, { action: action, callback: name, _: Date.now() });
@@ -195,35 +257,34 @@
     sc.src = url + (url.indexOf("?") >= 0 ? "&" : "?") + q.join("&");
     document.head.appendChild(sc);
   }
-  function pollMs() { return 30000; }   /* 대기 화면 숫자만 바뀐다 · 30초(행운권 전체 읽기는 서버에서 수 초 · 옛 화면과 같다) */
-  function sessionKey() { try { return sessionStorage.getItem("axfDraw.key") || ""; } catch (e) { return ""; } }
+  function pollMs() { return FAKE ? 3000 : 30000; }   /* 대기 화면 숫자만 바뀐다 · 30초(행운권 전체 읽기는 서버에서 수 초 · 옛 화면과 같다) */
+  function sessionKey() { if (FAKE) return "fake"; try { return sessionStorage.getItem("axfDraw.key") || ""; } catch (e) { return ""; } }
   /* 행운권 읽기 · draw_pool(가린 이름 · pk · 번호) · 참석 조건 OFF = 행운권 전체 */
-  function serverLoad(done) {
-    if (SRV.loading) { done(false); return; }
+  function serverLoad(done, full) {
+    if (SRV.loading) { done(false, "busy"); return; }
     SRV.status = "불러오는 중"; SRV.loading = true;
-    jsonp("draw_pool", { since: SRV.since || "" }, function (res) {
+    jsonp("draw_pool", { since: full ? "" : SRV.since || "" }, function (res) {   /* 261021 R1 · full = 공 넣기 마지막 읽기(전체 · 증분 오류가 있어도 고정은 전체 기준) */
       SRV.loading = false;
       if (res && res.ok) {
-        if (ST.closed) { done(false); return; }      /* 261016 공 넣기가 끝나면 풀 고정 · 늦게 온 응답도 넣지 않는다 */
+        if (ST.closed) { done(false, "closed"); return; }      /* 261016 공 넣기가 끝나면 풀 고정 · 늦게 온 응답도 넣지 않는다 */
         SRV.status = "draw_pool 연결"; SRV.hasPool = true;
         poolApply(res);
-        if (SC === "checkin" && !ST.closed) nockQueue();
         uiPool();
         if (!SRV.stateChecked) { SRV.stateChecked = true; serverState(); }
         done(true); return;
       }
-      SRV.status = "실패 · " + (res && (res.reason || res.err) || "응답 없음"); done(false);
+      SRV.status = "실패 · " + (res && (res.reason || res.err) || "응답 없음"); done(false, "fail");
     });
   }
   /* 261016 draw_pool 응답 → ST.pool(가린 이름 · 부서 · 번호) · 서버 기록에 이미 당첨 · 부재인 분은 빠진다 · 서버 시각 */
   function poolApply(res) {
     if (!ST.pool || ST.pool.kind !== "server") ST.pool = { people: {}, order: [], kind: "server" };
     (res.rows || []).forEach(function (r) {
-      if (!ST.pool.people[r.pk]) { ST.pool.people[r.pk] = { nm: r.nm || "", dp: r.dp || "", nos: (r.no || []).map(String) }; ST.pool.order.push(r.pk); }
-      else ST.pool.people[r.pk].nos = (r.no || []).map(String);
+      if (!ST.pool.people[r.pk]) { ST.pool.people[r.pk] = { nm: r.nm || "", dp: r.dp || "", nos: (r.no || []).map(String), in: r.in === true, at: r.at || "" }; ST.pool.order.push(r.pk); }
+      else { var pp = ST.pool.people[r.pk]; pp.nos = (r.no || []).map(String); pp.in = r.in === true; pp.at = r.at || ""; }   /* 261021 체크인 표시 · 있는 사람도 갱신 */
       if (r.x && !ST.out[r.pk] && (r.x === "win" ? CFG.onePerPerson : CFG.absentRemove)) ST.out[r.pk] = r.x;   /* 서버 기록에 이미 당첨 · 부재 */
     });
-    SRV.since = res.cursor || SRV.since; SRV.balls = res.balls; SRV.all = !!res.all;
+    SRV.since = res.cursor || SRV.since; SRV.balls = res.balls; SRV.all = !!res.all; SRV.inb = res.inb; SRV.inn = res.inn;
     setSrvT(res.t);
   }
   /* 261016 서버 시각(KST 'yyyy-MM-dd HH:mm:ss') · 이 기기 시계와의 차이만 기억 · 17:00 행운권 발급 마감 전에는 공 넣기를 받지 않는다(행사일만 · 리허설 날은 그대로) */
@@ -239,12 +300,13 @@
     (rows || []).forEach(function (r) {
       if (r.st === "undo") { if (byId[r.id]) byId[r.id].st = "undone"; return; }
       var x = byId[r.id];
-      if (!x) { x = { id: r.id, round: +r.round || 0, slot: +r.slot || 1, no: String(r.no), pk: r.pk, nm: r.nm || "", dp: "", prize: r.prize, rname: "", at: r.at, st: r.st, pool: 0, srv: 1 }; byId[r.id] = x; list.push(x); }
+      if (!x) { x = { id: r.id, round: +r.round || 0, slot: parseInt(r.slot, 10) || 1, no: String(r.no), pk: r.pk, nm: r.nm || "", dp: "", prize: r.prize, rname: "", at: r.at, st: r.st, pool: 0, srv: 1 }; byId[r.id] = x; list.push(x); }
       else x.st = r.st;
+      if (/f$/.test(String(r.slot || "")) || String(r.fb || "") === "1") x.fb = 1;   /* 261021 R17 · 전체 통 이어 뽑기 기록(칸 꼬리 f) */
       var pp = ST.pool && ST.pool.people[r.pk]; if (pp && !x.nm) x.nm = pp.nm;
     });
     ST.results = list; ST.redo = {};
-    list.forEach(function (x) { if (x.st === "win") ST.out[x.pk] = "win"; if (x.st === "absent") { ST.out[x.pk] = "absent"; ST.redo[x.round] = (ST.redo[x.round] || 0) + 1; } });
+    list.forEach(function (x) { if (x.st === "win") ST.out[x.pk] = "win"; if (x.st === "absent") { ST.out[x.pk] = "absent"; ST.redo[x.round] = (ST.redo[x.round] || 0) + 1; } if (x.fb && (x.st === "win" || x.st === "absent") && !ST.fb) ST.fb = { from: x.round, at: "" }; });   /* 261021 R9 · 한 번 켜지면 남은 등수도 전체 통 */
     var rs = rounds(); ST.round = 0;
     while (ST.round < rs.length - 1 && roundWins(ST.round).length >= rs[ST.round].count) ST.round++;
     return list;
@@ -301,7 +363,9 @@
   /* 당첨 기록 전송 · draw_log · 끊기면 로컬 큐에 두고 다시 보낸다(화면 진행은 막지 않는다) */
   function serverLog(r) {
     if (CFG.mode !== "server") return;
-    SRV.queue.push({ id: r.id, round: r.round, slot: r.slot, no: r.no, pk: r.pk, st: r.st, prize: r.prize, at: r.at });
+    var e = { id: r.id, round: r.round, slot: r.slot, no: r.no, pk: r.pk, st: r.st, prize: r.prize, at: r.at };
+    if (r.fb) e.fb = 1;   /* 261021 인터페이스 4절 · 서버가 칸에 f 꼬리 */
+    SRV.queue.push(e);
     save(QKEY, SRV.queue); flushQueue();
   }
   function flushQueue() {
@@ -310,7 +374,15 @@
     var e = SRV.queue[0];
     jsonp("draw_log", e, function (res) {
       SRV.flushing = false;
-      if (res && (res.ok || res.reason === "dup")) { SRV.logStatus = res.reason === "dup" ? "서버에 같은 분의 다른 당첨이 있습니다 · " + (res.id || "") : "기록됨" + (res.again ? "(이미 있음)" : "") + (res.warn ? " · 명단 밖 pk" : ""); if (res.reason === "dup") { SRV.dup = (SRV.dup || 0) + 1; toast("서버가 중복 당첨을 거절했습니다 · 콘솔 당첨 기록 확인", true); } SRV.queue.shift(); save(QKEY, SRV.queue); flushQueue(); opPaint(); }
+      if (res && (res.ok || res.reason === "dup")) {
+        SRV.logStatus = res.reason === "dup" ? "서버에 같은 분의 다른 당첨이 있습니다 · " + (res.id || "") : "기록됨" + (res.again ? "(이미 있음)" : "") + (res.warn === "in" ? " · 체크인 기록 없음 경고" : res.warn ? " · 명단 밖 pk" : "");
+        if (res.reason === "dup") { SRV.dup = (SRV.dup || 0) + 1; toast("서버가 중복 당첨을 거절했습니다 · 콘솔 당첨 기록 확인", true); }
+        if (res.ok && res.warn === "in" && e.st === "win") {   /* 261021 D5 B' · 3 · 2 · 1등 당첨인데 서버에 체크인 기록 없음 · 무대는 멈추지 않는다 · 스텝이 「다시 추첨」 단추로 처리 */
+          var wr = resById(e.id); if (wr && !wr.warn) { wr.warn = "in"; SRV.warnIn = (SRV.warnIn || 0) + 1; persist(); }
+          kbFlash("info", "서버 경고 · " + e.no + " 체크인 기록 없음 · 자리 확인 뒤 「다시 추첨」", 6);
+        }
+        SRV.queue.shift(); save(QKEY, SRV.queue); flushQueue(); opPaint();
+      }
       else { SRV.logStatus = res && res.err === "unknown action" ? "draw_log 없음 · 로컬 기록만" : "전송 대기 " + SRV.queue.length; if (!(res && res.err === "unknown action")) setTimeout(flushQueue, 5000); }
     });
   }
@@ -895,28 +967,27 @@
     if (NIN >= NB) { LOAD.q = 0; return; }
     spawnBall(NIN++); LOAD.q--; LOAD.t = T + 0.022; LOAD.lastT = T;
   }
-  /* 추첨 대상 행운권 전체(넣은 사람 · 당첨 · 부재로 빠진 분 제외 · 이미 당첨된 번호 제외) */
-  function bigTickets() {
-    var won = {}, out = [];
-    ST.results.forEach(function (r) { if (r.st === "win") won[r.no] = 1; });
-    ST.arrived.forEach(function (pk) { if (ST.out[pk]) return; var p = ST.pool && ST.pool.people[pk]; if (p) p.nos.forEach(function (no) { if (!won[no]) out.push([pk, no]); }); });
-    return out;
-  }
-  /* 한 번의 뽑기 · k 장 · 1인 1회(한 장을 뽑으면 그분의 나머지 번호는 이번 뽑기에서도 뺀다) · 암호 난수 */
+  /* 추첨 대상 행운권(넣은 사람 · 당첨 · 부재로 빠진 분 제외 · 이미 당첨된 번호 제외) · 261021 3 · 2 · 1등 = 체크인 통(fb 면 전체) · 계산 = PICK 한 곳 */
+  function wonNos() { var won = {}; ST.results.forEach(function (r) { if (r.st === "win") won[r.no] = 1; }); return won; }
+  function roundPool() { return PICK.roundPool(ST.pool, ST.arrived, ST.out, wonNos(), topRank(), !!ST.fb); }
+  function bigTickets() { return roundPool().tk; }
+  /* 한 번의 뽑기 · k 장 · 1인 1회 · 암호 난수 · 261021 공개 전 자기 검사(어긋나면 버리고 다시 · 3번까지 · 그래도면 빈 결과 = 공개하지 않는다) */
+  var PCHK = { redo: 0, last: "", fault: 0 };
   function pickBatch(k) {
-    var tk = bigTickets(), n0 = tk.length, out = [];
-    while (out.length < k && tk.length) {
-      var x = tk[Math.floor(cryptoUnits(1)[0] * tk.length)];
-      out.push({ pk: x[0], no: x[1] });
-      tk = tk.filter(function (t) { return t[0] !== x[0]; });
+    var rp = roundPool(), won = wonNos(), pb = { list: [], n: rp.tk.length };
+    for (var a = 0; a < 3; a++) {
+      pb = PICK.pick(rp.tk.slice(), k, cryptoUnits);
+      if (SANDBOX && PCHK.fault > 0 && pb.list.length) { PCHK.fault--; var bad = ST.pool.order.filter(function (pk) { var p = ST.pool.people[pk]; return p && p.in !== true && p.nos.length && !ST.out[pk]; })[0]; if (bad) pb.list[0] = { pk: bad, no: ST.pool.people[bad].nos[0] }; }   /* 시험 페이지만 · 자기 검사가 잡는지 */
+      var why = PICK.check(pb.list, ST.pool, ST.arrived, ST.out, won, rp.useIn);
+      if (!why) { pb.useIn = rp.useIn; return pb; }
+      PCHK.redo++; PCHK.last = why;
     }
-    return { list: out, n: n0 };
+    return { list: [], n: rp.tk.length, bad: PCHK.last };
   }
   function nockLoading() { return SC === "checkin" && (ST.big == null || LOAD.q > 0); }
   function stepArrivals() {
     if (SC !== "checkin") return;
-    if (CFG.mode === "server" && !ST.pool && !SRV.loading && T > (SRV.retryT || 0)) { SRV.retryT = T + 5; serverLoad(function () {}); }
-    if (!ST.closed && ST.big != null && LOAD.q <= 0 && !SRV.loading && T - LOAD.lastT > 1.2 && sT() > 2.5) closeCheckin();   /* 261016 마지막 읽기(draw_pool)가 끝난 뒤 고정 */
+    if (!ST.closed && CK.ph === "load" && ST.big != null && LOAD.q <= 0 && !SRV.loading && T - LOAD.lastT > 1.2 && sT() > 2.5) closeCheckin();   /* 261021 R1 · 닫기 · 전체 읽기 · 공 넣기가 끝난 뒤에만 고정 */
   }
   /* 복원 · 통 안에 넣었던 대표 공 수 − 지금까지 나온 공(당첨 수) */
   function rebuildBalls() {
@@ -954,6 +1025,7 @@
       case "restart": return restartMode();
       case "reset": return resetToStart();
       case "back": return backRun();                  /* 261016 되돌리기 단추(두 번 누름) · 화면만 · 콘솔 원격 명령(CMDS)에는 없다 */
+      case "fb": return fbRun();                      /* 261021 체크인 통 소진 · 운영 줄 「전체 통에서 이어 뽑기」(두 번 누름) · 콘솔 원격 명령(CMDS)에는 없다 */
     }
   }
   /* 다음 동작 하나 · Space 와 콘솔 「추첨 › 진행」 큰 버튼이 같은 순서(콘솔 dcNext 와 같은 표) */
@@ -963,10 +1035,10 @@
     switch (SC) {
       case "intro": return { c: "skip", n: "인트로 건너뛰기" };
       case "idle": if (isLive() && before17()) return { c: "", n: srvNow() ? "17:00 행운권 발급 마감 전입니다 · 서버 " + srvHM() : "서버 시각 확인 중 · 잠시 뒤 다시" }; return { c: cmdWhy("intro", "") ? "checkin" : "intro", n: "추첨 준비 · 공 넣기" };
-      case "checkin": return { c: "", n: "공을 넣는 중 · 다 넣으면 준비 끝" };
+      case "checkin": return { c: "", n: CK.ph === "close" ? "서버 체크인 닫는 중" + (CK.n > 1 ? " · 다시 " + (CK.n - 1) + "회" : "") : CK.ph === "read" ? "행운권 전체 읽는 중" + (CK.n > 1 ? " · 다시 " + (CK.n - 1) + "회" : "") : "공을 넣는 중 · 다 넣으면 준비 끝" };   /* 261021 R1 */
       case "closed": return { c: "round", n: curRound().name + " 추첨 시작" };
       case "card": return { c: "mix", n: "부저 화면(3초 뒤 저절로)" };
-      case "mix": return { c: "draw", n: "부저 · " + curRound().name + " 뽑기" };
+      case "mix": return { c: "draw", n: "부저 · " + curRound().name + " 뽑기" + mixTail() };
       case "spin": case "tension": case "exit": return { c: "", n: "뽑는 중" };
       case "reveal": return { c: "confirm", n: "확정", arg: ST.pending || "" };
       case "board": return { c: "end", n: "끝 화면" };   /* 261016 완주 경품 발표 없음(설정 완주추첨_사용 OFF) */
@@ -986,7 +1058,7 @@
   function rankNo(r) { var n = parseInt(r && r.name, 10); return n >= 1 && n <= 6 ? n : 9; }
   function topRank() { return rankNo(curRound()) <= 3; }
   var WHY_TXT = { busy: "", scene: "지금 장면에서는 할 수 없습니다", drawing: "뽑는 중입니다", same: "", done: "", notclosed: "추첨 준비가 먼저입니다", round: "없는 등수입니다",
-    loading: "공을 넣는 중입니다", full: "", empty: "남은 행운권이 없습니다", none: "", id: "다른 당첨입니다", arg: "완주 경품 추첨 숫자가 없습니다", unknown: "모르는 명령입니다", error: "오류",
+    loading: "공을 넣는 중입니다", full: "", empty: "남은 행운권이 없습니다", emptyin: "체크인 통에 남은 행운권 없음 · 운영 줄 「전체 통에서 이어 뽑기」 두 번", none: "", id: "다른 당첨입니다", arg: "완주 경품 추첨 숫자가 없습니다", unknown: "모르는 명령입니다", error: "오류",
     rank: "6 · 5 · 4등은 다시 추첨하지 않습니다", local: "" };
   function keyRun(c, arg, nm) {
     var why = runCmd(c, arg == null ? "" : String(arg));
@@ -1038,24 +1110,81 @@
     if (confirmKey === k && T - confirmT < 2.5) { confirmKey = null; fn(); return; }
     confirmKey = k; confirmT = T; KB.arm = msg; KB.armN++; KB.k = ""; kbPaint(true);   /* 261016 첫 누름 = 스태프 표시줄 「한 번 더」 + 남은 시간(대형 화면 가운데에는 띄우지 않는다) */
   }
+  /* 261021 R1 · 공 넣기 = ① 서버 체크인 닫기(draw_cfg closed 1 · 성공 필수 · 이미 닫혀 있으면 서버가 성공) → ② 전체 읽기(draw_pool since "" · 성공 필수 · 폴링이 읽는 중이면 기다린다)
+   *   → ③ 공 넣기 → ④ 고정(ST.closed · ST.lock) → ⑤ 고정 숫자 서버 보관(draw_cfg lock · 진행을 막지 않는다 · 저절로 다시)
+   *   ① · ② 가 실패하면 5초마다 저절로 다시(단추 없음 · 표시줄 「n회」) · 그동안 고정하지 않는다 · 데모 = ③ 부터 */
+  var CK = { ph: "", n: 0, mm: 0, tm: null, cfg: null, read: null, lockN: 0, lockTm: null, match: "" };
+  function ckStop() { clearTimeout(CK.tm); CK.tm = null; }
   function startCheckin() {
     if (CFG.mode === "demo" && (!ST.pool || ST.pool.kind !== "demo")) ST.pool = demoPool(CFG.demoN, ST.seed, CFG.demoT);
-    if (CFG.mode === "server" && !ST.pool) serverLoad(function () { pushCtl(); });
     scatterSymbol();
     if (!ST.ckAt) { ST.ckAt = Date.now(); persist(); }
     DRM.mode = "spin"; DRM.tgt = WSLOW; scene("checkin"); lock(0.6);
     if (SRV.polling) { clearInterval(SRV.polling); SRV.polling = null; }
-    nockQueue();
-    if (CFG.mode === "server" && SRV.hasPool) serverLoad(function () {});   /* 그사이 생긴 번호까지 한 번 더 · 그 뒤로는 읽지 않는다 */
+    ckBegin();
+  }
+  function ckBegin() {
+    ckStop(); CK.n = 0; CK.mm = 0; CK.match = "";
+    if (CFG.mode !== "server") { CK.ph = "load"; nockQueue(); return; }
+    ckClose();
+  }
+  function ckClose() {
+    if (SC !== "checkin" || ST.closed) return;
+    CK.ph = "close"; CK.n++;
+    jsonp("draw_cfg", { closed: 1 }, function (res) {
+      if (SC !== "checkin" || ST.closed || CK.ph !== "close") return;
+      if (res && res.ok && +res.closed === 1) { SRV.closeStatus = "서버 체크인 닫힘"; SRV.srvClosed = 1; CK.cfg = res; CK.n = 0; ckRead(); return; }
+      SRV.closeStatus = "서버 체크인 닫기 실패 " + CK.n + "회 · " + (res && (res.reason || res.err) || "응답 없음");
+      kbNote("서버 체크인 닫기 실패 · 5초 뒤 다시(" + CK.n + "회)"); opPaint();
+      CK.tm = setTimeout(ckClose, 5000);
+    });
+  }
+  function ckRead() {
+    if (SC !== "checkin" || ST.closed) return;
+    CK.ph = "read";
+    if (SRV.loading) { CK.tm = setTimeout(ckRead, 300); return; }   /* 폴링 읽기와 겹치면 건너뛰지 않고 끝나길 기다린다 */
+    CK.n++;
+    serverLoad(function (ok, why) {
+      if (SC !== "checkin" || ST.closed || CK.ph !== "read") return;
+      if (!ok && why === "busy") { CK.n--; CK.tm = setTimeout(ckRead, 300); return; }
+      if (!ok) { kbNote("서버 읽기 지연 · 5초 뒤 다시(" + CK.n + "회)"); opPaint(); CK.tm = setTimeout(ckRead, 5000); return; }
+      CK.read = { inn: SRV.inn, inb: SRV.inb, balls: SRV.balls };
+      if (ckMatch() && CK.mm < 2) { CK.mm++; kbNote("두 통 숫자 다름 · 다시 읽기(" + CK.mm + "회)"); CK.tm = setTimeout(ckRead, 1500); return; }   /* 닫힌 뒤라 숫자가 변하지 않는다 · 다르면 전송 오류 · 두 번 더 읽는다 */
+      CK.n = 0; CK.ph = "load"; persist(); nockQueue(); opPaint();
+    }, true);
+  }
+  /* 전체 읽기 뒤 대조 · 이 화면이 센 두 통(당첨 · 부재 포함) = 읽기 응답 inn · inb = 닫기 응답 pool(② 길) · withT · balls(③ 길) · 다르면 글자 · 같으면 "" */
+  function ckMatch() {
+    var c = PICK.count(ST.pool, null), d = [], st = CK.cfg || {}, pl = st.pool || {};
+    if (CK.read && CK.read.inn != null && (c.inPpl !== +CK.read.inn || c.inTks !== +CK.read.inb)) d.push("읽기 응답");
+    if (pl.inN != null && (c.inPpl !== +pl.inN || c.inTks !== +pl.inBalls)) d.push("서버 집계 ②");
+    if (st.withT != null && (c.inPpl !== +st.withT || c.inTks !== +st.balls)) d.push("서버 집계 ③");
+    if (pl.n != null && (c.ppl !== +pl.n || c.tks !== +pl.balls)) d.push("전체 통");
+    CK.match = d.length ? "다름 · " + d.join(" · ") : "일치";
+    return d.length ? CK.match : "";
   }
   function closeCheckin() {
     if (SC !== "checkin") return;
     MIXT = 0; MIXSKIP = false; MIXSKIPAT = 0; MINMIX = NOCKMIX;
     ST.ckMin = ST.ckAt ? (Date.now() - ST.ckAt) / 60000 : 0;
-    ST.closed = true; if (SRV.polling) { clearInterval(SRV.polling); SRV.polling = null; }
-    var pc = poolCount(); ST.lock = { ppl: pc.ppl, tks: pc.tks, at: isLive() ? srvHM() : "" };   /* 261016 고정 숫자 · 운영 줄 · 콘솔 「추첨 대상」과 대조 */
-    if (CFG.mode === "server") jsonp("draw_cfg", { closed: 1 }, function (res) { SRV.closeStatus = res && res.ok ? (res.closed ? "서버 체크인 닫힘" : "서버가 닫기를 아직 모름 · 화면만 마감") : "서버 닫기 실패 · 화면만 마감"; pushCtl(); });
+    ST.closed = true; ckStop(); CK.ph = "done"; if (SRV.polling) { clearInterval(SRV.polling); SRV.polling = null; }
+    var pc = poolCount(), lc = PICK.count(ST.pool, null);
+    ST.lock = { ppl: pc.ppl, tks: pc.tks, inPpl: pc.inPpl, inTks: pc.inTks, at: isLive() ? srvHM() : "", all: [lc.ppl, lc.tks, lc.inPpl, lc.inTks].join(".") };   /* 261016 고정 숫자 · 261021 두 통 · all = 서버 보관 값(당첨 · 부재 포함 셈 · 레드팀 R6) */
+    if (CFG.mode === "server") { CK.lockN = 0; lockSend(); }
     scene("closed"); lock(0.8);
+  }
+  /* 261021 D6 · 고정 숫자 서버 보관(설정 추첨_고정) · 진행을 막지 않는다 · 실패면 5초 간격 5번 · 그 뒤 60초마다 */
+  function lockSend() {
+    clearTimeout(CK.lockTm); CK.lockTm = null;
+    if (!isLive() || !ST.lock || !ST.lock.all || ST.lockSaved === ST.lock.all) return;
+    CK.lockN++;
+    jsonp("draw_cfg", { lock: ST.lock.all }, function (res) {
+      var lk = res && res.ok && res.lock, got = lk ? [lk.n, lk.balls, lk.inN, lk.inBalls].join(".") : "";
+      if (got && got === ST.lock.all) { ST.lockSaved = got; SRV.lockStatus = "고정 숫자 서버 보관"; persist(); opPaint(); return; }
+      SRV.lockStatus = "고정 숫자 보관 실패 " + CK.lockN + "회 · " + (res && (res.reason || res.err) || (got ? "값 다름" : "응답 없음"));
+      opPaint();
+      CK.lockTm = setTimeout(lockSend, CK.lockN < 5 ? 5000 : 60000);
+    });
   }
   function goCard() {
     stageTo("orange", DX, DY, 0.7); scene("card"); lock(0.8);
@@ -1069,7 +1198,7 @@
     if (LOAD.q > 0) return "loading";
     var r = curRound(), left = r.count - roundWins(ST.round).length;
     if (left <= 0) return "full";
-    if (!bigTickets().length) return "empty";
+    var rpw = roundPool().why; if (rpw) return rpw;   /* 261021 empty = 남은 행운권 없음 · emptyin = 체크인 통만 없음(운영 줄 「전체 통에서 이어 뽑기」) */
     var P = RK();
     BZ.press = T; SHK.t0 = T; SHK.amp = 8;
     ROLL.press(); ROLL.start(0.16, P.fan === "l" ? 1.19 : 1); ROLL.to(0.32, SPINUP + P.hold);   /* 6차 · 1등만 롤 +1.5dB */   /* 4차 · 짧은 쿵 → 낮은 롤이 작게 시작 */
@@ -1113,12 +1242,13 @@
   /* 문이 열리는 순간 · 이번 등수 남은 인원 K 명을 행운권 전체에서 한꺼번에 정하고 이 기기에 저장(서버 기록은 공개 순간) */
   function startExit() {
     var pb = pickBatch(DRAW.k);
-    if (!pb.list.length) { ST.drawing = 0; DRM.mode = "spin"; DRM.w = 0.5; DRM.tgt = WMIX; scene("mix"); lock(0.6); toast("남은 행운권이 없습니다", true); return; }
+    if (!pb.list.length) { ST.drawing = 0; DRM.mode = "spin"; DRM.w = 0.5; DRM.tgt = WMIX; scene("mix"); lock(0.6); if (pb.bad) { kbNote("내부 검사 실패 · 공개하지 않음 · 다시 뽑기"); toast("내부 검사 실패 · 다시 뽑기", true); } else toast("남은 행운권이 없습니다", true); return; }
     var r = curRound(), base = roundWins(ST.round).length, now = new Date().toISOString(), ids = [], stamp = Date.now().toString(36);
     pb.list.forEach(function (x, j) {
       var pp = ST.pool && ST.pool.people[x.pk] || {};
       var res = { id: "r" + stamp + j + Math.floor(rng() * 1e4), round: ST.round, slot: base + j + 1, no: x.no, pk: x.pk, nm: pp.nm || "", dp: pp.dp || "", prize: r.prize, rname: r.name,
-        at: now, st: "win", pool: pb.n, big: 1, q: 1, sec: +(T - DRAW.t0).toFixed(2) };
+        at: now, st: "win", pool: pb.n, big: 1, q: 1, sec: +(T - DRAW.t0).toFixed(2), tier: pb.useIn ? "in" : "all" };
+      if (ST.fb && topRank()) res.fb = 1;   /* 261021 체크인 통 소진 뒤 전체 통 이어 뽑기 · 서버 기록 칸 꼬리 f */
       if (MIXSKIP && !ST.results.length) { res.mskip = 1; res.mixed = MIXSKIPAT; }
       ST.results.push(res); ids.push(res.id);
       if (CFG.onePerPerson) ST.out[res.pk] = "win";
@@ -1454,18 +1584,19 @@
     modeUi(); redoPaint();
     pushCtl();
   }
-  function poolCount() {
-    var ppl = 0, tks = 0;
-    if (ST.pool) ST.pool.order.forEach(function (pk) { var p = ST.pool.people[pk]; if (p && p.nos.length && !ST.out[pk]) { ppl++; tks += p.nos.length; } });
-    else if (SRV.stat) { ppl = +SRV.stat.n || 0; tks = +SRV.stat.balls || 0; }
-    return { ppl: ppl, tks: tks, known: !!ST.pool || !!SRV.stat };
+  function poolCount() {   /* 지금 남은 두 통(당첨 · 부재로 빠진 분 제외) · 261021 inPpl · inTks = 체크인 통 */
+    var c = ST.pool ? PICK.count(ST.pool, ST.out) : { ppl: 0, tks: 0, inPpl: 0, inTks: 0 };
+    if (!ST.pool && SRV.stat) { c.ppl = +SRV.stat.n || 0; c.tks = +SRV.stat.balls || 0; c.inPpl = +SRV.stat.inN || 0; c.inTks = +SRV.stat.inBalls || 0; }
+    c.known = !!ST.pool || !!SRV.stat;
+    return c;
   }
   function uiPool() {
     var el = $("pPool"); if (!el) return;
     var c = poolCount(), loadPool = CFG.mode === "server" && !ST.pool, s = SC;
     set("oPeo", c.known ? nf(c.ppl) : "-"); set("oTk", c.known ? nf(c.tks) : "-");
+    set("oInP", c.known ? nf(c.inPpl) : "-"); set("oInT", c.known ? nf(c.inTks) : "-");
     set("oTitle", s === "checkin" ? "추첨 준비" : s === "closed" ? "추첨 준비 끝" : "경품 추첨");
-    var note = loadPool ? "행운권 불러오는 중" : s === "idle" ? "" : ST.big ? "통 안의 공 " + nf(ST.repN || 0) + "개 = 대표 공 · 당첨은 행운권 전체에서" : "당첨은 행운권 전체에서";
+    var note = loadPool ? "행운권 불러오는 중" : s === "idle" ? "" : ST.big ? "통 안의 공 " + nf(ST.repN || 0) + "개 = 대표 공 · 당첨은 행운권 번호에서" : "당첨은 행운권 번호에서";
     var on = $("oNote"); on.textContent = note; on.classList.toggle("load", loadPool);
     $("oLk7").style.display = s === "idle" ? "" : "none";
   }
@@ -1513,7 +1644,8 @@
     h = ws.map(function (w) { return "<span>" + esc(w.no) + "</span>"; }).join("");
     for (var k = ws.length; k < r.count; k++) h += '<span class="dim">····</span>';
     set("sNos", h);
-    set("sRule", "행운권 <b>" + nf(bigTickets().length) + "</b>장 전체에서 추첨<br>" + (ST.big ? "통 안의 공 " + nf(ST.repN || 0) + "개 = 대표 공<br>" : "") + "내 번호 = 앱 「나의 보상」");
+    var rp = roundPool();
+    set("sRule", (rp.useIn ? "17F 체크인 행운권 <b>" + nf(rp.tk.length) + "</b>장에서 추첨" : "행운권 <b>" + nf(rp.tk.length) + "</b>장 전체에서 추첨") + "<br>" + (ST.big ? "통 안의 공 " + nf(ST.repN || 0) + "개 = 대표 공<br>" : "") + "내 번호 = 앱 「나의 보상」");   /* 261021 3 · 2 · 1등 = 체크인 통 */
   }
   /* 공개 준비 · 경품 줄 · 칸마다 이름 자리(이름은 릴이 다 선 뒤 나타난다) */
   function uiRevealPrep() {
@@ -1585,7 +1717,15 @@
     img.src = PIC_DIR + f + ".webp"; picK(img, f);
     void box.offsetWidth; box.classList.add("in");
   }
-  function uiCard() { var r = curRound(); uiCardPic(r); set("kEye", esc(r.name)); fitText($("kEye"), 42, 30, 1); set("kTitle", esc(r.prize)); fitText($("kTitle"), 150, 96, 2); set("kMeta", r.count + "명 추첨"); }
+  function uiCard() { var r = curRound(); uiCardPic(r); set("kEye", esc(r.name)); fitText($("kEye"), 42, 30, 1); set("kTitle", esc(r.prize)); fitText($("kTitle"), 150, 96, 2); set("kMeta", r.count + "명 추첨"); set("kSub", cardSub(r)); }
+  /* 261021 3등 카드 한 줄 「체크인한 n명 중에서」(사용자 확정 · 3등만) · n = 그 순간 체크인 통에 남은 사람 수 · 전체 통 이어 뽑기 중 · 0명이면 없음 */
+  var CARD_IN = { 3: 1 };
+  function cardSub(r) {
+    if (!CARD_IN[rankNo(r)] || ST.fb) return "";
+    var rp = roundPool(); if (!rp.useIn || !rp.tk.length) return "";
+    var seen = {}, n = 0; rp.tk.forEach(function (t) { if (!seen[t[0]]) { seen[t[0]] = 1; n++; } });
+    return "체크인한 " + nf(n) + "명 중에서";
+  }
   function uiBoard() {
     var all = ST.results.filter(function (r) { return r.st === "win" && !inBatch(r.id); }), n = all.length, L = $("bList");
     set("bList", all.map(function (w) { return '<div class="brow"><span class="no">' + esc(w.no) + "</span>" + whoHtml(w) + '<span class="pz fit">' + esc(w.prize) + "</span></div>"; }).join(""));
@@ -1600,7 +1740,7 @@
     if ((tickN++ % 6) !== 0) return;
     if (SC === "idle" || SC === "checkin" || SC === "closed") uiPool();
     if (WHO.fail && !WHO.busy) whoFetch();            /* 261008 실명 받기 실패 뒤 다시 */
-    uiHelp(); redoPaint(); kbPaint();
+    uiHelp(); redoPaint(); kbPaint(); opPaint();
     if (document.body.classList.contains("hud-on")) set("hud", Math.round(FPS.v) + " fps · 단계 " + QL.tier + " · 공 " + liveCount() + "/" + NB + " · " + vw + "×" + vh + " · 물리 " + PH.ms.toFixed(1) + "ms · 그리기 " + RD.ms.toFixed(1) + "ms");
   }
   var toastUntil = 0;
@@ -1689,6 +1829,7 @@
     NIN = 0; LOAD.q = 0; pn = 0; WB = []; REEL.on = false; EXP.ph = ""; GATE.v = GATE.tgt = 0; NEXTCARD = 0; CONF.until = 0;
     SRV.since = ""; SRV.hasPool = false; SRV.stateChecked = true; SRV.loading = false; SRV.dup = 0; if (SRV.polling) { clearInterval(SRV.polling); SRV.polling = null; }
     WHO.miss = {}; WHO.fail = 0; WHO.off = false;
+    ckStop(); clearTimeout(CK.lockTm); CK.lockTm = null; CK.ph = ""; CK.cfg = CK.read = null; CK.match = ""; SRV.warnIn = 0; SRV.closeStatus = ""; SRV.lockStatus = "";   /* 261021 */
     DRM.mode = "spin"; DRM.tgt = 0; MIXT = 0; MIXSKIP = false;
     fade($("rv"), 0, 0); stageTo("black"); ME.from = null; save(LS_ST, ST);
   }
@@ -1727,8 +1868,8 @@
   function startPaint() {
     var live = LV.step !== "";
     document.body.classList.toggle("lv-on", live);
-    set("stWarn", Q.get("old") === "blocked" && !live ? "행사일에는 옛 화면(?classic=1)을 열지 않습니다 · 이 화면으로 진행" : MODE_BAD && !live ? "이 노트북에 다른 서버(" + esc(srvName(ST.srv)) + ")의 라이브 기록이 있습니다 · 고르면 이 화면 기록만 비웁니다(서버 기록은 그대로)" : SANDBOX ? "시험 페이지 · 데모만" : "");
-    $("btnLive").disabled = SANDBOX || !SERVER_URL;
+    set("stWarn", Q.get("old") === "blocked" && !live ? "행사일에는 옛 화면(?classic=1)을 열지 않습니다 · 이 화면으로 진행" : MODE_BAD && !live ? "이 노트북에 다른 서버(" + esc(srvName(ST.srv)) + ")의 라이브 기록이 있습니다 · 고르면 이 화면 기록만 비웁니다(서버 기록은 그대로)" : FAKE ? "시험 페이지 · 가짜 서버(이 창 메모리 · 네트워크 없음)" : SANDBOX ? "시험 페이지 · 데모만" : "");
+    $("btnLive").disabled = (SANDBOX && !FAKE) || !SERVER_URL;
     if (!live) return;
     var qa = !/^https:\/\/hi\./.test(SERVER_URL);
     set("lvSrv", '<span class="' + (qa ? "qa" : "prod") + '">' + esc(srvName()) + "</span>");
@@ -1742,6 +1883,10 @@
       h += "<tr><th>서버 시각</th><td>" + esc(c.now || "-") + (c.pre ? ' <em class="bad">행운권 발급 마감(17:00) 전 · 공 넣기는 17:00 뒤</em>' : c.now && c.now.slice(0, 10) === RAF_DAY ? ' <em class="ok">발급 마감 지남</em>' : "") + "</td></tr>";
       h += "<tr><th>이 화면이 받은 행운권</th><td><b>" + nf(c.ppl) + "</b>명 · <b>" + nf(c.tks) + "</b>장</td></tr>";
       h += "<tr><th>서버 집계 · 콘솔 「추첨 대상」</th><td>" + nf(c.sp) + "명 · " + nf(c.st) + "장 " + ok(c.same) + "</td></tr>";
+      h += "<tr><th>17F 체크인 행운권 · 3 · 2 · 1등</th><td>이 화면 <b>" + nf(c.inP) + "</b>명 · <b>" + nf(c.inT) + "</b>장" + (c.has2 ? "<br>서버 집계 ① " + nf(c.i2.p) + "명 · " + nf(c.i2.t) + "장 · ② " + nf(c.i3.p) + "명 · " + nf(c.i3.t) + "장 " + ok(c.inSame) : ' <em class="bad">서버 숫자 없음</em>') + "</td></tr>";
+      h += "<tr><th>참석 조건</th><td>" + (c.att === "OFF" ? 'OFF <em class="ok">6 · 5 · 4등 전체 · 3 · 2 · 1등 체크인</em>' : '<em class="bad">' + esc(c.att || "모름") + " · 콘솔에서 OFF</em>") + "</td></tr>";
+      h += "<tr><th>17F 체크인</th><td>" + (c.closed ? '마감됨' + (c.closedAt ? " · " + esc(String(c.closedAt).slice(11, 16) || c.closedAt) : "") + ' <em class="ok">닫힘</em>' : "받는 중 · 공 넣기 때 무대가 닫는다") + "</td></tr>";
+      if (c.lock || c.warn.length) h += "<tr><th>서버 고정 숫자</th><td>" + (c.lock ? esc(c.lockStr) + (c.lock.at ? " · " + esc(String(c.lock.at).slice(11, 16)) : "") + " " : "") + (c.warn.length ? '<em class="bad">' + esc(c.warn.join(" · ")) + "</em>" : '<em class="ok">일치</em>') + "</td></tr>";
       h += "<tr><th>서버 당첨 기록</th><td>" + (c.wins || c.abs ? "당첨 " + c.wins + " · 부재 " + c.abs + " · <b>" + esc(c.next) + "</b>부터 이어서" : "없음 · " + esc(c.next) + "부터") + "</td></tr>";
       h += "<tr><th>다른 라이브 화면</th><td>" + (c.other.length ? '<em class="bad">' + c.other.length + "대 보고 중 · " + Math.round(Math.min.apply(null, c.other.map(function (x) { return +x.age; }))) + "초 전</em>" : '<em class="ok">없음</em>') + "</td></tr>";
       h += "<tr><th>테스트 사번</th><td>제외(서버 기준)</td></tr>";
@@ -1755,9 +1900,12 @@
     if (LV.step === "key") setTimeout(function () { try { $("lvKeyIn").focus(); } catch (e) {} }, 30);
   }
   function liveSum() {
-    var rows = LV.pool && LV.pool.rows || [], ppl = 0, tks = 0;
-    rows.forEach(function (r) { var n = (r.no || []).length; if (n) { ppl++; tks += n; } });
+    var rows = LV.pool && LV.pool.rows || [], ppl = 0, tks = 0, inP = 0, inT = 0;
+    rows.forEach(function (r) { var n = (r.no || []).length; if (n) { ppl++; tks += n; if (r.in === true) { inP++; inT += n; } } });   /* 261021 ① 이 화면이 센 두 통(당첨 · 부재 포함 · 레드팀 R6) */
     var sp = LV.stat && LV.stat.pool ? +LV.stat.pool.n || 0 : ppl, st = LV.stat && LV.stat.pool ? +LV.stat.pool.balls || 0 : +(LV.pool && LV.pool.balls) || 0;
+    var S0 = LV.stat || {}, P0 = S0.pool || {}, has2 = P0.inN != null && S0.withT != null;
+    var i2 = { p: +P0.inN || 0, t: +P0.inBalls || 0 }, i3 = { p: +S0.withT || 0, t: +S0.balls || 0 }, i1 = { p: +(LV.pool && LV.pool.inn) || 0, t: +(LV.pool && LV.pool.inb) || 0 };
+    var inSame = has2 && inP === i2.p && inT === i2.t && inP === i3.p && inT === i3.t && (LV.pool && LV.pool.inn != null ? inP === i1.p && inT === i1.t : true);
     var live = {}, order = [];
     (LV.state && LV.state.rows || []).forEach(function (r) { if (r.st === "undo") { if (live[r.id]) live[r.id].st = "undone"; return; } if (!live[r.id]) { live[r.id] = { st: r.st, round: +r.round || 0 }; order.push(r.id); } else live[r.id].st = r.st; });
     var wins = 0, abs = 0, cnt = {};
@@ -1766,12 +1914,22 @@
     var block = [];
     if (!ppl) block.push("행운권이 0장입니다");
     if (ppl !== sp || tks !== st) block.push("받은 수와 서버 집계가 다릅니다 · 다시 불러오기");
+    if (!has2) block.push("서버가 17F 체크인 통 숫자를 주지 않습니다 · 서버 판 확인");
+    else if (!inSame) block.push("17F 체크인 행운권 수가 서버 집계와 다릅니다 · 다시 불러오기");
+    if (S0.att && S0.att !== "OFF") block.push("참석 조건 ON · 콘솔 추첨 설정에서 OFF");
     var other = otherLive();
     if (other.length) block.push("다른 라이브 화면이 " + other.length + "대 돌고 있습니다 · 그 노트북에서 리셋하거나 탭을 닫으면 " + LIVE_QUIET + "초 뒤 풀립니다 · 다시 불러오기");
     var now = srvNow();
     if (now.slice(0, 10) === RAF_DAY && !/^https:\/\/hi\./.test(SERVER_URL)) block.push("행사일에는 운영 서버만 · 주소에서 ?srv=qa 를 지우고 다시 열기");   /* 261017 D6 */
-    return { ppl: ppl, tks: tks, sp: sp, st: st, same: ppl === sp && tks === st, wins: wins, abs: abs, next: ri < rs.length ? rs[ri].name : "결과판", now: now, pre: before17(), block: block, other: other };
+    /* 261021 D6 · R6 · 서버 고정 숫자(추첨_고정) = 이 화면이 센 두 통(당첨 · 부재 포함) · 다르면 경고만(잠그지 않는다 · 서버 통이 정본) */
+    var lk = S0.lock || null, lkStr = lk ? [lk.n, lk.balls, lk.inN, lk.inBalls].join(".") : "", mine = [ppl, tks, inP, inT].join("."), warn = [];
+    if (lk && lkStr !== mine) warn.push("서버 고정 숫자 " + lkStr + " · 이 화면 " + mine + " 다름");
+    if (!lk && wins + abs > 0) warn.push("서버 고정 숫자 없음");
+    if (wins + abs > 0 && +S0.closed !== 1) warn.push("서버 체크인 열림");
+    return { ppl: ppl, tks: tks, sp: sp, st: st, same: ppl === sp && tks === st, wins: wins, abs: abs, next: ri < rs.length ? rs[ri].name : "결과판", now: now, pre: before17(), block: block, other: other,
+      inP: inP, inT: inT, i1: i1, i2: i2, i3: i3, has2: has2, inSame: inSame, closed: +S0.closed === 1, closedAt: S0.closedAt || S0.closeAt || "", lock: lk, lockStr: lkStr, mine: mine, warn: warn, att: S0.att || "" };
   }
+  function liveSumOf(pool, stat) { var a = LV.pool, b = LV.stat; LV.pool = pool; LV.stat = stat; try { return liveSum(); } finally { LV.pool = a; LV.stat = b; } }
   function pickDemo() {
     SFX.ensure(); LV.step = ""; NET.connect = false;
     blankState("demo"); CFG.mode = "demo"; MODE_BAD = false;
@@ -1779,7 +1937,7 @@
     MEsetIdle(); scene("idle"); ME.idleA = 1; modeUi(); uiPool(); startPaint();
   }
   function liveOpen(auto) {
-    if (SANDBOX || !SERVER_URL) return;
+    if ((SANDBOX && !FAKE) || !SERVER_URL) return;
     SFX.ensure(); LV.auto = !!auto; LV.err = ""; LV.why = []; LV.stat = LV.pool = LV.state = null;
     LV.step = sessionKey() ? "load" : "key"; startPaint();
     if (sessionKey()) liveLoad();
@@ -1801,7 +1959,10 @@
           LV.pool = r2; setSrvT(r2.t);
           jsonp("draw_state", {}, function (r3) {
             if (!r3 || !r3.ok) return fail(r3, "당첨 기록 읽기");
-            LV.state = r3; LV.step = "sum"; startPaint();
+            LV.state = r3;
+            var c0 = liveSum();   /* 261021 체크인을 받는 중이면 읽는 사이 숫자가 바뀔 수 있다 · 두 번까지 저절로 다시 읽는다(닫힌 뒤에는 다시 읽지 않는다) */
+            if (c0.has2 && !c0.inSame && !c0.closed && (LV.rer || 0) < 2) { LV.rer = (LV.rer || 0) + 1; return go(); }
+            LV.rer = 0; LV.step = "sum"; startPaint();
             if (LV.auto && !LV.why.length) liveGo();
           });
         });
@@ -1832,7 +1993,9 @@
     persist(); remoteBoot(); startPaint();
     if (!list.length) { MEsetIdle(); scene("idle"); ME.idleA = 1; modeUi(); uiPool(); pollStart(); return; }
     /* 이어받기 · 풀은 첫 화면이 이미 고정했다(서버 추첨_마감) · 공을 다시 넣고 바로 「추첨 준비 끝」 */
-    nockQueue(); ST.closed = true; var pc = poolCount(); ST.lock = { ppl: pc.ppl, tks: pc.tks, at: srvHM() };
+    nockQueue(); ST.closed = true; var pc = poolCount(), sm = liveSumOf(pool, stat); ST.lock = { ppl: pc.ppl, tks: pc.tks, inPpl: pc.inPpl, inTks: pc.inTks, at: srvHM(), all: sm.mine };
+    if (stat.lock) ST.lockSaved = sm.mine; else lockSend();   /* 261021 D6 · 서버 고정 숫자가 있으면 그대로(다르면 확인표 경고만) · 없으면 이 화면 셈을 보관 */
+    CK.ph = "done";
     var lw = list[list.length - 1];
     if (lw.st === "win" && rankNo(rounds()[lw.round]) <= 3) {   /* 3 · 2 · 1등 공개 중에 노트북이 바뀌었으면 그 공개 화면으로(확정 · 다시 추첨을 고를 수 있게) */
       ST.round = lw.round; ST.batch = [lw.id]; ST.pending = lw.id; persist(); SC = "exit"; restoreReveal();
@@ -1841,25 +2004,48 @@
     toast("서버 기록 " + list.length + "건 이어받음 · " + curRound().name + "부터", true);
     whoFetch();
   }
-  function pollStart() { if (isLive() && !SRV.polling && !ST.closed) SRV.polling = setInterval(function () { if ((SC === "idle" || SC === "checkin") && SRV.hasPool) serverLoad(function () { uiPool(); }); }, pollMs()); }
+  function pollStart() { if (isLive() && !SRV.polling && !ST.closed) SRV.polling = setInterval(function () { if (SC === "idle" && SRV.hasPool) serverLoad(function () { uiPool(); }); }, pollMs()); }   /* 261021 공 넣기(checkin)는 R1 순서가 읽는다 */
   /* 모드 표시 · 데모 = 위 줄무늬 띠 + 점선 테두리 · 라이브 = 띠 없음 · 왼쪽 아래 작은 LIVE 점 */
   function modeUi() {
-    var b = document.body, d = SC !== "start" && ST.mode === "demo", l = SC !== "start" && isLive();
+    var b = document.body, d = SC !== "start" && (ST.mode === "demo" || !!FAKE), l = SC !== "start" && isLive() && !FAKE;   /* 261021 가짜 서버 시험도 띠를 단다 */
     b.classList.toggle("m-demo", d); b.classList.toggle("m-live", l); b.classList.toggle("demo", d);
-    set("modeBand", SANDBOX ? "DEMO · 시험 페이지 · 가짜 이름 · 서버 기록 없음" : "DEMO · 가짜 이름 · 서버 기록 없음");
+    set("modeBand", FAKE ? "시험 페이지 · 가짜 서버 · 가짜 이름 · 네트워크 없음" : SANDBOX ? "DEMO · 시험 페이지 · 가짜 이름 · 서버 기록 없음" : "DEMO · 가짜 이름 · 서버 기록 없음");
     opPaint();
   }
   function opPaint() {
     if (!$("opMode")) return;
     var l = isLive(), lk = ST.lock;
     set("opMode", l ? '<b class="lv">LIVE</b> ' + esc(srvName()) : '<b class="dm">DEMO</b> 가짜 이름 · 서버 기록 없음');
-    var info = [];
-    if (lk) info.push("고정 " + nf(lk.ppl) + "명 · " + nf(lk.tks) + "장" + (lk.at ? " · " + lk.at : ""));
+    var info = [], warn = [];
+    if (lk) info.push("고정 " + nf(lk.ppl) + "명 · " + nf(lk.tks) + "장" + (lk.inPpl != null ? " · 체크인 " + nf(lk.inPpl) + "명 · " + nf(lk.inTks) + "장" : "") + (lk.at ? " · " + lk.at : ""));
+    if (l && SC === "checkin" && SRV.closeStatus) info.push(SRV.closeStatus);
+    if (l && CK.match) (CK.match === "일치" ? info : warn).push("두 통 " + CK.match);
+    if (l && SRV.lockStatus) (/실패/.test(SRV.lockStatus) ? warn : info).push(SRV.lockStatus);
     if (l) info.push("보낼 기록 " + SRV.queue.length + (SRV.dup ? " · 중복 거절 " + SRV.dup : ""));
+    if (SRV.warnIn) warn.push("체크인 기록 없음 경고 " + SRV.warnIn);
+    if (ST.fb) info.push("전체 통 이어 뽑기 중");
+    else if (fbShow()) warn.push("체크인 통 소진");
     info.push(SFX.on ? "소리 켬" : "소리 끔");
-    set("opInfo", esc(info.join(" · ")));
+    set("opInfo", (warn.length ? '<span class="warn">' + esc(warn.join(" · ")) + "</span> · " : "") + esc(info.join(" · ")));
+    var fb = $("opFb"); if (fb) { var on = fbShow(); fb.hidden = !on; fb.textContent = ARM.k === "fb" ? "한 번 더 · 전체 통에서 이어 뽑기" : "전체 통에서 이어 뽑기"; fb.classList.toggle("arm", ARM.k === "fb"); }
     $("opRestart").textContent = ARM.k === "restart" ? "한 번 더 · 다시 시작" : "다시 시작";
     $("opReset").textContent = ARM.k === "reset" ? "한 번 더 · 리셋" : "리셋";
+  }
+  /* 261021 체크인 통 소진(R9 · 사용자 「단순하게」) · 3 · 2 · 1등 부저 화면에서 체크인 통 0 · 전체 통은 남음 → 운영 줄 단추 하나(두 번 누름)
+   *   누르면 ST.fb(한 번 켜지면 남은 등수도 전체 통 · sticky) · 기록 fb 1 · 그 밖의 자동 규칙 없음 */
+  function fbShow() { return SC === "mix" && !NEXTCARD && topRank() && !ST.fb && !!ST.closed && roundPool().why === "emptyin"; }
+  function fbRun() {
+    if (!fbShow()) { KB.noN++; kbNote("지금은 전체 통 이어 뽑기를 켤 수 없습니다"); return; }
+    ST.fb = { from: ST.round, at: isLive() ? srvHM() : "" }; persist();
+    KB.okN++; kbFlash("ok", "전체 통 이어 뽑기 켬 · " + curRound().name + "부터 행운권 전체", 3);
+    uiSide(); opPaint(); scrPush(true);
+  }
+  function mixTail() {   /* 261021 스태프 표시줄 · 3 · 2 · 1등 부저 화면 = 「17F 체크인 통 n명 · n장」 · 소진 · 이어 뽑기 */
+    if (!topRank() || SC !== "mix") return "";
+    if (ST.fb) return " · 전체 통 이어 뽑기";
+    var rp = roundPool(); if (!rp.useIn) return "";
+    var seen = {}, n = 0; rp.tk.forEach(function (t) { if (!seen[t[0]]) { seen[t[0]] = 1; n++; } });
+    return " · 17F 체크인 통 " + nf(n) + "명 · " + nf(rp.tk.length) + "장";
   }
   /* 단추 두 번 누름(3초) · 다시 시작 · 리셋 · 다시 추첨 */
   var ARM = { k: "", t: 0, tm: null };
@@ -1869,7 +2055,7 @@
     if (ARM.k === k && Date.now() - ARM.t < 3000) { ARM.k = ""; clearTimeout(ARM.tm); opPaint(); redoPaint(); return true; }
     ARM.k = k; ARM.t = Date.now(); clearTimeout(ARM.tm); ARM.tm = setTimeout(function () { ARM.k = ""; opPaint(); redoPaint(); }, 3000); opPaint(); redoPaint(); return false;
   }
-  function opClick(k) { mouseSeen(); var w = holdWhy(); if (w) { toast(w, true); ARM.k = ""; opPaint(); return; } if (armed(k)) act(k); }
+  function opClick(k) { mouseSeen(); var w = k === "fb" ? "" : holdWhy(); if (w) { toast(w, true); ARM.k = ""; opPaint(); return; } if (armed(k)) act(k); }
   function redoShow() { return SC === "reveal" && topRank() && sT() > 1.4 && (ST.batch || []).length === 1; }
   function redoPaint() {
     backPaint();
@@ -1941,6 +2127,7 @@
     });
     $("opRestart").addEventListener("click", function () { opClick("restart"); });
     $("opReset").addEventListener("click", function () { opClick("reset"); });
+    $("opFb").addEventListener("click", function () { opClick("fb"); });
     $("redoBtn").addEventListener("click", redoClick);
     $("backBtn").addEventListener("click", backClick);
     document.addEventListener("mousemove", mouseSeen);
@@ -1985,7 +2172,7 @@
         if (sT() <= 0.45) return "busy";   /* 부저가 나타나는 0.45초 */
         if (LOAD.q > 0) return "loading";
         if (roundWins(ST.round).length >= curRound().count) return "full";
-        return bigTickets().length ? "" : "empty";
+        return roundPool().why;
       case "confirm": return SC !== "reveal" ? "scene" : sT() <= 1.4 ? "busy" : arg && !inBatch(arg) ? "id" : "";   /* 콘솔은 방금 당첨 id(이번 뽑기의 마지막 칸)를 붙여 보낸다 */
       case "absent": return SC !== "reveal" ? "scene" : !topRank() ? "rank" : sT() <= 1.4 ? "busy" : arg && !inBatch(arg) ? "id" : "";
       case "undo":
@@ -2027,7 +2214,7 @@
     var bw = (SC === "exit" || SC === "reveal") && ST.batch && ST.batch.length ? ST.batch.map(resById).filter(Boolean) : null;
     var slot = bw && bw.length ? bw[0].slot + (bw.length > 1 ? "~" + bw[bw.length - 1].slot : "") + "/" + cr.count : Math.min(cr.count, roundWins(ST.round, true).length + 1) + "/" + cr.count;
     return { scene: SC, pool: liveCount(), checked: ST.arrived.length, round: cr.name, slot: slot, mixing_s: +MIXT.toFixed(1), need_s: 0, mix_skip: !!MIXSKIP, mix_skip_at: MIXSKIP ? MIXSKIPAT : 0,
-      ready: CONSOLE_CTL && SC !== "start" ? CMDS.filter(function (c) { return c !== "reset_screen" && !cmdWhy(c, ""); }) : [],   /* 261016 빈 목록 = 콘솔 진행 단추가 꺼진다(보기만) */ closed: !!ST.closed, last: last, rej: CMD.rej, seq: cmdSeqOf("srv"), msg: CMD.msg, ver: "drum1", remote: remote() };
+      ready: CONSOLE_CTL && SC !== "start" ? CMDS.filter(function (c) { return c !== "reset_screen" && !cmdWhy(c, ""); }) : [],   /* 261016 빈 목록 = 콘솔 진행 단추가 꺼진다(보기만) */ closed: !!ST.closed, last: last, rej: CMD.rej, seq: cmdSeqOf("srv"), msg: CMD.msg, ver: "drum1", remote: remote(), fb: ST.fb ? 1 : 0 };
   }
   function scrPush(now) {
     if (!now && T < CMD.scrT) return;
@@ -2191,7 +2378,7 @@
       if ((s === "exit" || s === "reveal") && okBatch) { SC = "exit"; CAMD.a = 0; restoreReveal(); }
       else {
         if (ST.batch && ST.batch.length) { ST.batch = []; ST.pending = null; }
-        if (s === "checkin") { DRM.mode = "spin"; scene("checkin"); if (ST.big != null) { LOAD.q = 0; } if (CFG.mode === "server") SRV.polling = setInterval(function () { if (SC === "checkin" && SRV.hasPool) serverLoad(function () {}); }, pollMs()); }
+        if (s === "checkin") { DRM.mode = "spin"; scene("checkin"); if (ST.big != null) { LOAD.q = 0; } ckBegin(); }   /* 261021 R1 · 공 넣기 중 새로 고침 = 닫기 → 전체 읽기부터 다시(이미 넣은 사람은 다시 넣지 않는다) */
         else if (s === "card") { SC = "mix"; goCard(); }
         else if (s === "board") scene("board");
         else if (s === "end") { scene("mix"); goEnd(); }
@@ -2218,8 +2405,10 @@
     window.__axs = {
       act: act, scene: function () { return SC; }, state: function () { return ST; }, cfg: function () { return CFG; },
       sid: function () { return SID; },
-      net: function () { return { calls: NET.calls, blocked: NET.blocked, live: isLive(), mode: ST.mode || "", srv: SERVER_URL, queue: SRV.queue.length, sandbox: SANDBOX, ctl: CONSOLE_CTL }; },   /* 261016 시험 · 서버 호출 수 */
-      ui: { demo: pickDemo, live: liveOpen, go: liveGo, redo: redoClick, op: opClick, back: backClick, backTo: function () { var b = backTarget(); return b ? b.n : ""; },
+      pick: PICK,   /* 261021 R3 · 추첨 계산 함수 객체 그대로(시험 페이지 · 계산 보기 · 확률 실험실이 흉내 내지 않고 부른다) */
+      ck: function () { var rp = ST.pool ? roundPool() : { tk: [], why: "", useIn: false }; return { ph: CK.ph, n: CK.n, mm: CK.mm, match: CK.match, close: SRV.closeStatus || "", lockSt: SRV.lockStatus || "", lock: ST.lock || null, lockSaved: ST.lockSaved || "", fb: ST.fb || null, fbShow: fbShow(), why: rp.why, useIn: rp.useIn, tickets: rp.tk.length, warnIn: SRV.warnIn || 0, redo: PCHK.redo, card: $("kSub") ? $("kSub").textContent : "" }; },
+      net: function () { return { calls: NET.calls, blocked: NET.blocked, live: isLive(), mode: ST.mode || "", srv: SERVER_URL, queue: SRV.queue.length, sandbox: SANDBOX, ctl: CONSOLE_CTL, fake: NET.fake, isFake: !!FAKE }; },   /* 261016 시험 · 서버 호출 수 */
+      ui: { demo: pickDemo, live: liveOpen, go: liveGo, redo: redoClick, op: opClick, back: backClick, backTo: function () { var b = backTarget(); return b ? b.n : ""; }, reload: liveLoad,
         kb: function () { return { cls: KB.cls, txt: KB.txt, ok: KB.okN, no: KB.noN, arm: KB.armN }; }, lv: function () { return { step: LV.step, err: LV.err, why: LV.why.slice(), sum: LV.step === "sum" ? liveSum() : null }; } },
       perf: function (reset) { var o = { tier: QL.tier, qlog: QL.log.slice(), fps: Math.round(FPS.v), long: PERF.long, worstMs: Math.round(PERF.worst * 1000), px: vw + "x" + vh, sc: {} };
         for (var k in PERF.sc) { var p = PERF.sc[k]; o.sc[k] = { avg: +(p.n / Math.max(1e-6, p.t)).toFixed(1), min1s: p.min1 === 999 ? null : +p.min1.toFixed(1), worstMs: Math.round(p.worst * 1000), sec: +p.t.toFixed(1) }; }
@@ -2230,6 +2419,7 @@
       wsKill: function () { WSD.give = true; clearTimeout(WSD.t); if (WSD.ws) try { WSD.ws.close(); } catch (e) {} }
     };
     /* 261019 시험 페이지 판정만 · 무대에 그려진 번호(릴이 지금 선 자리 · 캔버스와 같은 계산) · 칸 이름 · 부서 글자 · 읽기만 */
+    if (SANDBOX) window.__axs.fault = function (n) { PCHK.fault = Math.max(0, n | 0); return PCHK.fault; };   /* 261021 시험 페이지만 · 자기 검사가 잡는지(다음 뽑기 첫 칸을 체크인 안 한 사람으로 바꿔 넣는다) */
     if (SANDBOX) window.__axs.shown = function () {
       var t = REEL.on ? Math.max(0, T - REEL.t0) : 0;
       return { sc: SC, round: ST.round, cells: WB.map(function (b, j) {
