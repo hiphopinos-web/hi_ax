@@ -218,10 +218,10 @@ function lkyPrune(d){
 var LKY_CHK=[["kit","키트 마지막 받은 시각이 30분 안"],["prn","프린터 시험 인쇄 완료"],["paper","쪽지 용지 수량"],["box","통"],["cut","가위 또는 절단기"],["sheet","당첨 기록지"]];
 function lkyPaperPaint(b){
   var c=el("lkyChk"); if(!c) return;
-  var ck=lsGet("lky_chk",{})||{}, L=lkyLast("kit"), m=b?num(b.m):L?num(L.m):0, P=Math.ceil(m/48);
+  var ck=lsGet("lky_chk",{})||{}, L=lkyLast("kit"), m=b?num(b.m):L?num(L.m):0, P=Math.ceil(m/LKIT_PER);
   c.innerHTML=LKY_CHK.map(function(x){ var auto=x[0]==="kit", on=auto?!!(L&&Date.now()-L.ts<=1800000):!!ck[x[0]];
     return '<label class="lky-ck"><input type="checkbox"'+(on?" checked":"")+(auto?" disabled":' onchange="lkyChk(\''+x[0]+'\',this.checked)"')+'> <span>'+esc(x[1])+(auto?' <span class="cap">'+(L?esc(L.at)+" · "+lkyAgo(L.ts):"아직 받지 않음")+'</span>':x[0]==="paper"&&P?' <span class="cap">A4 '+n0(P)+'장 + 여유</span>':'')+'</span></label>'; }).join("");
-  el("lkyCalc").innerHTML=m?'지금 <b class="n">'+n0(m)+'</b>장 → 쪽지 <b class="n">'+n0(P)+'</b>쪽 · 인쇄 약 '+n0(Math.max(1,Math.ceil(P/10)))+'분(분당 10쪽) · 자르기 · 접기 약 '+n0(Math.max(1,Math.ceil(P*40/4/60)))+'분(스태프 4명)':'';
+  el("lkyCalc").innerHTML=m?'지금 <b class="n">'+n0(m)+'</b>장 → 쪽지 <b class="n">'+n0(P)+'</b>쪽 · 인쇄 약 '+n0(Math.max(1,Math.ceil(P/10)))+'분(분당 10쪽) · 자르기 · 접기 약 '+n0(Math.max(1,Math.ceil(m/4/60)))+'분(스태프 4명)':'';
   var hhmm=L?L.at:"HH:MM", n=L?n0(L.m):"N";
   var msgs=[["비상 선언 단톡","비상 모드 · "+hhmm+" · 서버 응답 없음 · 럭키드로우는 "+hhmm+" 명단 "+n+"장으로 종이 추첨"],["해제 단톡","재개 · HH:MM · 서버 정상"],
     ["MC 추첨 시작","앱 점검으로 오늘 럭키드로우는 "+hhmm.replace(":","시 ")+"분까지 발급된 행운권 번호로 종이 추첨을 합니다. 번호를 두 번 읽겠습니다."],["MC 안내(필요할 때)","이후에 받으신 번호는 이번 추첨에 포함되지 않습니다."],["MC 응답 없음","다시 뽑겠습니다."]];
