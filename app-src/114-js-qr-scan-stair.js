@@ -564,7 +564,7 @@ function att10Done(res) {
    조건 = 설문 열림 + 아직 안 냄(surveyLock · surveyDone = 서버 sync sv_open · survey_done · 시험 모드 = 이 기기 규칙) · 결과 시트에 한 줄 「설문으로 이동합니다」
    2초 = 스탬프 팝(#spop) · 안내 창(#modal)이 끝난 뒤부터 센다 · 그사이 화면을 누르거나(키 포함) 시트를 닫으면 이동하지 않는다(한 줄은 자리를 지키고 숨김 · 단추가 밀리지 않게)
    이동 = 시트 닫고 App.go("survey")(초안이 있으면 이어서) · 서버면 sync 한 번(설문 화면이라 sv 1 · Q2-0 미리 체크 = 방금 찍은 출석까지) */
-var ENDSV = { id: "", t: 0, iv: 0, off: null, ms: 2000 };
+var ENDSV = { id: "", t: 0, iv: 0, off: null, ms: 2000, jit: 10000, sy: 0, go: 0 };   /* jit = 설문 이동 때 부르는 sync 만 0~10초 무작위로 늦춘다(261022 16:40 몰림 실측 · 요청의 1/3) · 화면 이동은 그대로 */
 function endSvWant(k, pre) { return k === "out" && !pre && !surveyDone() && !surveyLock(); }
 function endSvLn(r) { return r && r.sv ? '<p class="ax-meta" id="endSvLn">설문으로 이동합니다</p>' : ""; }
 function endSvRes(id) { return id === "att10" ? ATT10.res : id === "att" ? ATT.res : null; }
@@ -595,7 +595,17 @@ function endSvGo(id) {
   if (!ok) return;
   sheetClose(true);
   App.go("survey");
-  if (BE.on && !testMode()) beSync();
+  if (BE.on && !testMode()) endSvSync();   /* 화면은 지금 · Q2-0 미리 체크용 sync 만 0~10초 무작위 뒤 */
+}
+/* 늦게 와도 안전한 이유 = 부르는 순간 svWantPre()(설문 화면 · 미제출 · 열림 · Q2-0 을 아직 안 지남)를 다시 보고 sv 를 실어 보낸다 · 그사이 설문을 냈거나 화면을 떠났거나 Q2-0 을 지났으면 부르지 않는다
+   (응답이 Q2-0 통과 뒤에 와도 svPreIds 는 q2_0 이 비었을 때만 읽는다 = 본인이 고른 값을 덮지 않는다) · 그사이 「시작」으로 이미 받았으면(SV.seen) 다시 부르지 않는다 */
+function endSvSync() {
+  clearTimeout(ENDSV.sy); ENDSV.go = Date.now();
+  ENDSV.sy = setTimeout(function () {
+    ENDSV.sy = 0;
+    if ((SV.seen || 0) >= ENDSV.go || !BE.on || testMode() || !svWantPre()) return;
+    beSync();
+  }, Math.floor(Math.random() * ENDSV.jit));
 }
 
 /* ═══ 스캔 대기열 · 통신이 약한 곳(계단 복도 등) · 찍은 순서대로 보낸다 ═══
