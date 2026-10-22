@@ -1,0 +1,21 @@
+/* AXF CONTROL v2 · 출석 탭(attn.js · 261022) · 하단 탭 8칸 · 세션 카드 · 출석 명단 */
+.tabs{grid-template-columns:repeat(8,1fr)}
+.atn-bar{display:flex;align-items:center;gap:8px;margin:8px 0}
+.atn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.atn-card{display:flex;flex-direction:column;gap:6px;text-align:left;width:100%;min-width:0;margin:0;cursor:pointer;transition:border-color var(--t-out) var(--ease)}
+button.atn-card:hover{border-color:var(--navy)}
+.atn-card.one{cursor:default}
+.atn-h{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:16px}
+.atn-t{font-size:14px;font-weight:600;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.atn-ns{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:4px}
+.atn-n{display:flex;flex-direction:column;align-items:flex-start;padding:6px 8px;border-radius:var(--r-s);background:var(--soft);border:1px solid var(--line2);min-width:0}
+.atn-n .l{font-size:12px;color:var(--tx3);white-space:nowrap}
+.atn-n b{font-size:22px;line-height:1.2;font-variant-numeric:tabular-nums;color:var(--tx)}
+.atn-n.ok b{color:var(--navy)}
+.atn-n.warn{background:var(--warn-bg);border-color:var(--warn-ln)}
+.atn-n.warn b{color:var(--warn)}
+.atn-go{align-self:flex-end}
+[data-xg="atn10"] .xg-acts .btn.dng,[data-xg="atn17"] .xg-acts .btn.dng{display:none}
+[data-xg="atn10"] .xg-acts,[data-xg="atn17"] .xg-acts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.atn-ns.f17{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:480px){.atn-ns{grid-template-columns:repeat(3,minmax(0,1fr))}.atn-ns.f17{grid-template-columns:repeat(4,minmax(0,1fr))}.atn-grid{grid-template-columns:1fr}.atn-n{padding:6px}}

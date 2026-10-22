@@ -403,7 +403,7 @@ function attSpec() {
   var r = ATT.res, tmRow = testMode() ? '<label class="axs-attt">테스트 · 시각<input type="time" value="' + esc(attTm()) + '" onchange="attTmSet(this.value)"></label>' : "";
   if (r) {
     var x = attProg(r.id) || { nm: r.id };
-    var more = !r.dup && r.pg === 1 && r.k === "in" && P3_PM.indexOf(r.id) >= 0 && !attShut(x) ? '<p class="ax-meta">종료 출석체크 시 1개 더</p>' : "";   /* v5.94 스탬프는 오후 파트너 강연만 */
+    var more = !r.dup && r.pg === 1 && r.k === "in" && P3_PM.indexOf(r.id) >= 0 && !attShut(x) && !(r.bg >= 2) ? '<p class="ax-meta">종료 출석체크 시 1개 더</p>' : "";   /* v5.94 스탬프는 오후 파트너 강연만 */
     if (!r.stamp && (!attUi(r.id) || r.nost || r.remote)) return { id: "att", title: r.dup ? "이미 기록됐어요" : "출석이 기록됐어요", lead: "<b>" + esc(x.nm) + "</b>",   /* v5.96 오전 강연 · 송출 · 서버 범위 밖(nost) = 기록만 · 스탬프 기대를 만들지 않게 담담하게 · 오류로 만들지 않는다 */
       body: (r.pre ? '<p class="ax-meta">스탬프 · 행사 당일(10/26) 적립</p>' : "") + (r.test ? '<p class="ax-meta">테스트 계정 · 테스트 기록</p>' : "") + endSvLn(r), go: "sheetClose()", goLbl: "확인" };
     return { id: "att", title: r.dup ? "이미 출석했어요" : "출석했어요", lead: "<b>" + esc(x.nm) + "</b><br>" + (r.k === "out" ? "종료 " : "시작 ") + esc(r.at) + (r.remote ? " · 유튜브 송출 출석" : ""),
@@ -459,7 +459,7 @@ function attDone(res) {
   if (!m[key]) m[key] = res.at;
   S.set("att_mine", m);
   var sn = attStamp(res);
-  ATT.res = { id: res.prog, at: m[key], dup: !!res.dup, k: k0, remote: !!res.remote, stamp: sn, add: res.stamp && !res.stamp.dry ? res.stamp.add || 0 : sn ? 1 : 0, pg: res.pg || 0, nost: !!res.nost, test: !!res.test, pre: res.no === "preday" || res.no === "postday" };   /* 261016 pre = 서버 preday 가드 · 출석만 기록 · 261022 postday(행사 뒤 · 출석 QR 스탬프는 행사일에만)도 같은 한 줄 */
+  ATT.res = { id: res.prog, at: m[key], dup: !!res.dup, k: k0, remote: !!res.remote, stamp: sn, add: res.stamp && !res.stamp.dry ? res.stamp.add || 0 : sn ? 1 : 0, pg: res.pg || 0, bg: progUnits(), nost: !!res.nost, test: !!res.test, pre: res.no === "preday" || res.no === "postday" };   /* v8.49 bg = 프로그램 참여 묶음(10F · 라운지 · 커피챗 포함) · 이미 2개면 「종료 출석체크 시 1개 더」 숨김(261022 D3) */   /* 261016 pre = 서버 preday 가드 · 출석만 기록 · 261022 postday(행사 뒤 · 출석 QR 스탬프는 행사일에만)도 같은 한 줄 */
   ATT.res.sv = endSvWant(k0, ATT.res.pre);   /* 261022 종료 QR → 설문(endSv · 10F 와 같은 규칙) */
   attRepaint();
   App.render();   /* 뒤의 강연 상세 · 시간표 행이 출석 상태로 바뀐다 */

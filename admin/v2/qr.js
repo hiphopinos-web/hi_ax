@@ -6,7 +6,7 @@
 var QV_BASE="https://hiax.app/", QV_PX=2048, QV_CACHE={}, QV_ZIP={ busy:false };
 var QV_LEC=[["att_l1_in","l1","in","파트너사 강연 · AWS · 입장 QR","17F 입장 출석"],["att_l1_out","l1","out","파트너사 강연 · AWS · 끝 QR","17F 끝 출석"],["att_l2_in","l2","in","파트너사 강연 · MS · 입장 QR","17F 입장 출석"],["att_l2_out","l2","out","파트너사 강연 · MS · 끝 QR","17F 끝 출석"]];
 var QV_PL={ fld:"컨퍼런스룸", ta:"01 HEART", tb:"06 HEART", aws:"08 HEART", ms1:"07 HEART", ms2:"07 HEART" };
-var QV_GRP=[["app idea","1 · 앱 · 아이디어 한 줄","출력용 · 서버 코드 없음","앱아이디어"],["stair","2 · 계단실 · 층별","방화문 앞 · 층마다 1세트 · 양쪽 계단실에 같은 장","계단실"],["lec","3 · 17F 강의장 출석","오후 AWS · MS 입장 · 끝(PPT)","17F출석"],["lec10","4 · 10F 실습 세션 출석","A~E 입장 · 종료 · 스탬프 없음","10F출석"],["ldraw","5 · 17F 럭키드로우 체크인","Closing 체크인 · 1 · 2 · 3등 추첨 통","럭키드로우"]];
+var QV_GRP=[["app idea","1 · 앱 · 아이디어 한 줄","출력용 · 서버 코드 없음","앱아이디어"],["stair","2 · 계단실 · 층별","방화문 앞 · 층마다 1세트 · 양쪽 계단실에 같은 장","계단실"],["lec","3 · 17F 강의장 출석","오후 AWS · MS 입장 · 끝(PPT)","17F출석"],["lec10","4 · 10F 실습 세션 출석","A~E 입장 · 종료 · 신청한 세션 입장 1 + 종료 1","10F출석"],["ldraw","5 · 17F 럭키드로우 체크인","Closing 체크인 · 1 · 2 · 3등 추첨 통","럭키드로우"]];
 function qvStId(fl, r){ return "st"+("0"+fl).slice(-2)+"-"+r; }
 function qvItems(){
   var B=QV_BASE, al=S.data.qal, out=[];
