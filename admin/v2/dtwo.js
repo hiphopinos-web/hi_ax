@@ -40,6 +40,13 @@ function dtChkH(d){
   else mk("오픈_범위","확인 중",tag("확인 중",""));
   return '<h2>추첨 당일 점검 <span class="cap">읽기 전용</span></h2>'+rows.join("");
 }
+/* 261022 추첨 설정 › 리허설 주소 칸(읽기 전용) · 시험 서버 주소 4줄 · 지금 화면이 ?srv=qa 면 1 · 2번 줄에 「지금 이 화면」 */
+var DT_RH=[["무대 리허설(시험 서버)","https://hiax.app/draw/?srv=qa",1],["콘솔(시험 서버)","https://hiax.app/admin/?srv=qa",1],["계산 보기 · 확률 실험실","https://hiax.app/draw/lab.html",0],["무대 자동 시험","https://hiax.app/draw/test.html",0]];
+function dtRhH(){
+  return '<h2>리허설 주소 <span class="cap">읽기 전용</span></h2>'+DT_RH.map(function(x,i){
+    return '<div class="row"><div class="t"><b>'+esc(x[0])+(x[2]&&BE_QA?' '+tag("지금 이 화면","ok"):'')+'</b><span style="word-break:break-all;user-select:all">'+esc(x[1])+'</span></div><span class="btns"><a class="btn sm" href="'+esc(x[1])+'" target="_blank" rel="noopener">열기</a><button class="btn sm" type="button" onclick="copyTx(DT_RH['+i+'][1])">복사</button></span></div>';
+  }).join("")+'<p class="cap mt4">시험 서버 기록은 운영과 무관 · 10/26 당일 무대는 운영 서버만</p>';
+}
 /* 무대 머리 · 추첨 대상 칸 아래 글 */
 function dtPoolSub(d,aOff){ var p=dtPool(d); return aOff?(p?"행운권 전체 "+n0(p.balls)+"장 · 17F 체크인 "+n0(p.inN)+"명 · "+n0(p.inBalls)+"장":"행운권 번호 전체"):"17F 체크인 "+n0(d["in"])+"명"+(d.closed?" · 마감":""); }
 /* 당첨 기록 표 */
