@@ -84,11 +84,12 @@ function myItems(withTest) {
   }
   var sl0 = stairState().leg;   /* v4.06 계단 진행 중 · 도착 층 QR 을 찍을 때까지 맨 위 */
   if (sl0) out.push({ min: -1, go: "stairOpen()", badge: "계단", label: "지금", title: "계단 이용", gTitle: "계단 이용", sub: sl0.fl + "F 시작 · 도착 층 QR", gSub: sl0.fl + "F 시작 · 도착 층 QR", kind: "stair", iv: null });
-  var mr = myResv();
+  (typeof myResvAll === "function" ? myResvAll() : [myResv()]).forEach(function (mr) {   /* 261022 (사용자 「한 사람 여러 과제」) 상담마다 한 줄 */
   if (mr && RESV_LIVE.indexOf(mr.status) >= 0) {   /* v7.39 (사용자 261016 계획서 3-2) 사전 신청 상담 줄 「AX 라운지 · 10:30 · 1F AX 라운지」(이름 = 「AX 라운지」 v5.85 통일 그대로) · 칸 미정 = 시각 없는 줄(맨 뒤) */
     var mrP = resvPre(mr), mrA = mr.slot ? (mrP ? 1 + sessStartMin(mr.slot) / 2000 : sessStartMin(mr.slot)) : 9997;   /* 261021 사전 면담 = 당일 일정 앞 · 당일 시간 칸 밖(iv 없음) */
     out.push({ place: "1F AX 라운지", min: mrA, go: "App.go('dap')", badge: mrP ? resvMd(mr) : mr.slot || "예정", label: (mrP ? mr.dl + " " : "") + (mr.slot || RESV_TBD), title: "AX 라운지", gTitle: "AX 라운지", sub: "1:1 · " + resvDur(mr), gSub: resvPlace(mr) + (mr.slot ? " · " + resvRng(mr) : ""), kind: "resv", iv: mr.slot && !mrP ? [mrA, mrA + resvMin(mr)] : null, t0x: mrP && mr.slot ? resvMd(mr) : "", t1x: mrP && mr.slot ? mr.slot : "" });
   }
+  });
   var cc = S.get("cchat", null), ccs = cchatSt();
   if (cc && cc.status === "matched")
     out.push({ place: "18F", min: sessStartMin(cc.round), go: "App.go('ev_cchat')", badge: cc.round, label: cc.round, title: "AX 커피챗", gTitle: "AX 커피챗", sub: "TABLE " + cc.table, gSub: "TABLE " + cc.table, kind: "cchat", iv: [sessStartMin(cc.round), sessStartMin(cc.round) + 20] });
@@ -209,8 +210,9 @@ function progFlowItems(onlyFl) {
   if (onlyFl) return pub.filter(function (p) { return p.fl === onlyFl; });   /* v5.65 층 안내(floor_d · 둘러보기 엘리베이터 17F) = 그 층 공용 일정만(개인 일정 · 대신하기 없음) */
   var tm = tenMine();
   if (tm) { var tp = tm.tm.split("~"); mine.push({ k: "ten", pid: tm.id, a: t2m(tp[0]), b: t2m(tp[1]), t0: tp[0], t1: tp[1], ttl: tm.ttl, sub: tm.sub, fl: 10, pl: sessPlace(tm).replace(/^\d+F\s*·?\s*/, ""), go: "progOpen('" + tm.id + "')", chip: "내 세션", mine: true }); if (ATT10_UI && attMineK(tm.id, "out")) mine[mine.length - 1].chip = "출석"; }   /* v5.71 끝 QR 출석 = 17F 와 같은 칩 「출석」 */
-  var r = myResv();
+  (typeof myResvAll === "function" ? myResvAll() : [myResv()]).forEach(function (r) {   /* 261022 상담마다 */
   if (r && r.slot && FL_DAP_OK.indexOf(r.status) >= 0 && !resvPre(r)) { var ra = t2m(r.slot);   /* 261021 사전 면담은 당일 시간표에 넣지 않는다 */ mine.push({ k: "dap", pid: "dap", a: ra, b: ra + resvMin(r), t0: r.slot, t1: hm2(ra + resvMin(r)), ttl: "AX 라운지", sub: "", fl: 1, pl: "AX 라운지", go: "progOpen('dap')", chip: RESV_ST[r.status] || "승인 완료", mine: true }); }
+  });
   var c = S.get("cchat", null);
   if (c && c.status === "matched" && c.round) { var ca = t2m(c.round); mine.push({ k: "cchat", pid: "cchat", a: ca, b: ca + 20, t0: c.round, t1: hm2(ca + 20), ttl: "AX 커피챗", sub: "", fl: 18, pl: c.table ? "TABLE " + c.table : "", go: "progOpen('cchat')", chip: "선정", mine: true }); }   /* v6.07 매칭됨 → 선정 */
   /* v5.74 (사용자 261006 「13:30부터 여기에는 17층 강의가 있어야 사람들이 보고 참여할 수 있을 듯」) 개인 일정은 공용 일정 줄을 빼지 않는다(옛 v5.22 rep = 10F 세션이 겹치는 17F 오후 강연 줄을 지웠다 · 10F 명단에 든 사람 화면에서 17F 가 사라진 원인)
@@ -381,6 +383,9 @@ function resvMin(r) { var a = r && r.slot ? t2m(r.slot) : 0, b = r && r.to ? t2m
 function resvDur(r) { var m = resvMin(r); return m % 60 ? m + "분" : m / 60 + "시간"; }
 /* 261021 (사용자 확정) 라운지 사전 면담 10/22 · 10/23 · 서버 my.resv day 「2026-10-22」 · dl 「10/22(목)」(옛 서버 = 없음 = 날짜 안 붙임) · 날짜는 당일(10/26) 상담에도 붙인다(RESV_DL_ALL) · 사전 면담은 당일 하루 흐름(시간 칸 · 1층 지도 내 일정)에 넣지 않는다 */
 var RESV_EVD = "2026-10-26", RESV_DL_ALL = true;
+/* 261022 (사용자 「한 사람 여러 과제」) 상담 한 건의 일시 글자 · 잠그기 전 = 「시간 확정 전」 · 끝 = 「상담 완료」 */
+function resvWhen(r) { var rg = resvRng(r); return r && r.status === "done" ? "상담 완료" + (rg ? " · " + rg : "") : rg ? (resvDl(r) ? rg : "10월 26일 " + rg) : RESV_TBD; }
+function loungeAll() { return typeof myResvAll === "function" ? myResvAll() : []; }
 function resvPre(r) { return !!(r && r.day && r.day !== RESV_EVD); }
 function resvDl(r) { return r && r.dl && (RESV_DL_ALL || resvPre(r)) ? String(r.dl) : ""; }
 function resvMd(r) { return String(r && r.dl || "").replace(/\(.*$/, ""); }   /* 「10/22」 */
@@ -489,6 +494,7 @@ function zoneLive(z) {
     o.fact = r ? (dn ? "상담 완료" : (rg || RESV_TBD) + " · 내 상담") : o.tm + " · 사전 신청자 상담";
     o.chip = r ? (dn ? ["완료", "ok"] : [resvStTx(r), ""]) : null;
     o.kv = r ? [["내 상담", dn ? "상담 완료" : rg || RESV_TBD], ["장소", resvPlace(r)]] : [["참여", "사전 신청자 상담"], ["장소", "1F AX 라운지"]];
+    var la = loungeAll(); if (r && la.length > 1) { o.fact = "내 상담 " + la.length + "건"; o.kv = la.map(function (x, i) { return ["상담 " + (i + 1), resvWhen(x) + (x.seat ? " · 미팅룸 " + x.seat : "")]; }).concat([["장소", "1F AX 라운지"]]); }   /* 261022 2건부터 = 건마다 한 줄 */
     o.btn = r ? ["내 상담", "progOpen('dap')"] : null;
   } else if (z.id === "cchat") {
     /* v7.39 (사용자 261016 계획서 0-2) 시간 고르고 상담 내용 쓰기 → 운영진 선정 · 아이디어 한 줄 조건 없음 · 신청 뒤 네 상태(선정 전 · 선정 · 마감 · 완료) */
@@ -933,6 +939,8 @@ function progDetail(s) {
     D.cat = "AX 라운지"; D.title = "내년 DAP 과제 상담"; D.who = "데이터사이언스파트"; D.av = "DS"; D.whoSub = live && r.slot ? "1:1 · " + resvDur(r) : "1:1 상담";
     if (live) {
       D.st = resvStTx(r); D.stc = resvTbd(r) ? "" : "ok";
+      var laD = loungeAll();   /* 261022 (사용자 「한 사람 여러 과제」) 2건부터 = 상담마다 일시 · 미팅룸 한 줄 */
+      if (laD.length > 1) D.kv = laD.map(function (x, i) { return ["상담 " + (i + 1), resvWhen(x) + (x.seat ? " · 미팅룸 " + x.seat : "")]; }).concat([["장소", "1F AX 라운지"], ["진행", "시작 5분 전 도착"]]); else
       D.kv = [["일시", rg ? (resvDl(r) ? rg : "10월 26일 " + rg) : resvTbd(r) ? RESV_TBD : (r.dl ? r.dl : "10월 26일") + " · " + RESV_TBD],   /* 261022 잠그기 전 = 날짜 · 시간 없이 「시간 확정 전」 */ ["장소", resvPlace(r)],   /* 261021 서버 dl 이 있으면 「10/22(목) 14:00~15:00」 */ ["진행", r.status === "checked" ? "상담 진행 중" : r.status === "done" ? "상담 완료" : "시작 5분 전 도착"]];
       D.secT = r.status === "done" ? "상담을 마쳤어요" : "사전 신청한 상담이에요";
       D.secB = r.status === "checked" ? "업무 설명 → 병목 → 개선방안 순서로 진행돼요." : r.status === "done" ? "아래 코드를 AX 라운지 데스크에 보여 주고 사은품을 받으세요." : "";

@@ -20,16 +20,20 @@ function checkMyState(base) {
   if (App.current === "admin" || App.current === "sscan" || SIGNAGE.indexOf(App.current) >= 0) return;   /* v5.98 스태프 스캔 중에는 내 알림을 띄우지 않는다(나오면 띄운다) */
   var seen = S.get("noti_seen", {});
   var changed = false;
-  var my = myResv();
+  var my = myResv(), myP = my ? my.beId : null, myAll = typeof myResvAll === "function" ? myResvAll() : [];
   /* 261022 (사용자 확정) 미팅 잠금 · 운영진이 잠근(확정) 시간 · 미팅룸이 보일 때만 · 처음 = 「확정됐어요」 · 마지막 확정과 다르면 「바뀌었어요」 · 같으면 없음 · 풀기(시간 확정 전) = 없음
      본 표시 = noti_seen.resvL(상담 ID|날짜|시간|미팅룸 · 옛 resv 표시와 따로라 배포 뒤 처음 잠그면 다시 뜬다) · 서버 푸시 문구와 같다 */
-  if (my && RLK_ST.indexOf(my.status) >= 0 && my.slot && !resvTbd(my)) {
-    var lkK = my.beId + "|" + (my.day || "") + "|" + my.slot + "|" + (+my.seat || 0), lkW = seen.resvL ? String(seen.resvL).split("|")[0] : "";
-    if (seen.resvL !== lkK) {
-      seen.resvL = lkK; changed = true;
-      if (!base) notifyUser(lkW === String(my.beId) ? "AX 라운지 시간이 바뀌었어요" : "AX 라운지 시간이 확정됐어요", (resvRng(my) ? resvRng(my) + " · " : "") + resvPlace(my), "dap");
+  /* 261022 (사용자 「한 사람 여러 과제」) 줄마다 · 본 표시 = noti_seen.resvLs[상담 ID] (옛 resvL = 그 ID 의 첫 값으로 읽는다) */
+  var lkS = seen.resvLs || {};
+  (myAll.length ? myAll : my ? [my] : []).forEach(function (my) {
+    if (RLK_ST.indexOf(my.status) < 0 || !my.slot || resvTbd(my)) return;
+    var lkK = my.beId + "|" + (my.day || "") + "|" + my.slot + "|" + (+my.seat || 0), lkW = lkS[my.beId] || (seen.resvL && String(seen.resvL).split("|")[0] === String(my.beId) ? seen.resvL : "");
+    if (lkW !== lkK) {
+      lkS[my.beId] = lkK; if (my.beId === myP) seen.resvL = lkK; changed = true;
+      if (!base) notifyUser(lkW ? "AX 라운지 시간이 바뀌었어요" : "AX 라운지 시간이 확정됐어요", (resvRng(my) ? resvRng(my) + " · " : "") + resvPlace(my), "dap");
     }
-  }
+  });
+  if (changed) seen.resvLs = lkS;
   if (my && my.status === "canceled" && seen.resvX !== my.id + ":canceled") {
     seen.resvX = my.id + ":canceled"; changed = true;
     if (!base) notifyUser("AX 라운지 신청 취소", "", "dap");
@@ -200,7 +204,20 @@ function beSync(after) {
     if (res.my) {
       if ("din" in res.my && typeof dinSrv === "function") dinSrv(res.my.din, sentT);   /* 261020 추첨 체크인 = 서버 기록(옛 서버는 din 없음 · 폰 값 그대로) */
       var all = resvAll();
-      if (res.my.resv) {
+      if (Array.isArray(res.my.resvs)) {   /* 261022 (사용자 「한 사람 여러 과제」) 새 서버 = 내 상담 모두 · 상담 ID(beId)로 넣고 고침 · ord = 서버 순서 · 목록에 없는 진행 중 줄 = 취소(30초 뒤) · resv_pick = 옛 화면이 보는 한 건 */
+        var map2 = { "신청": "requested", "승인": "approved", "체크인": "checked", "완료": "done", "노쇼": "noshow", "취소": "canceled" }, ids2 = {}, ch2 = false;
+        res.my.resvs.forEach(function (rv, i) {
+          var st2 = map2[rv.status]; if (!st2) return; ids2[rv.id] = 1;
+          var rx2 = { slot: rv.slot ? hhmm(rv.slot) : "", to: rv.to ? hhmm(rv.to) : "", rng: String(rv.rng || ""), seat: +rv.seat || 0, place: String(rv.place || ""), day: String(rv.day || ""), dl: String(rv.dl || ""), lk: rv.lk === 0 ? 0 : 1, ord: i };
+          var m2 = all.find(function (r) { return r.mine && r.beId === rv.id; });
+          if (!m2) { if (RESV_HOLD.indexOf(st2) >= 0) { all.push(Object.assign({ id: uid(), beId: rv.id, room: 2, name: u.name || "", dept: S.get("dept", null) || "미지정", status: st2, mine: true, ts: Date.now() }, rx2)); ch2 = true; } }
+          else if (m2.status !== st2 || ["slot", "to", "rng", "seat", "place", "day", "dl", "lk", "ord"].some(function (k) { return (m2[k] == null ? "" : String(m2[k])) !== String(rx2[k] == null ? "" : rx2[k]); })) { m2.status = st2; Object.assign(m2, rx2); ch2 = true; }
+        });
+        all.forEach(function (r) { if (r.mine && r.beId && !ids2[r.beId] && (RESV_HOLD.indexOf(r.status) >= 0 || r.ord != null) && Date.now() - (r.ts || 0) > 30000) { if (RESV_LIVE.indexOf(r.status) >= 0) r.status = "canceled"; delete r.ord; ch2 = true; } });
+        var pk2 = res.my.resv ? String(res.my.resv.id) : "";
+        if (S.get("resv_pick", "") !== pk2) S.put("resv_pick", pk2);
+        if (ch2) S.set("resv", all);
+      } else if (res.my.resv) {
         var map = { "신청": "requested", "승인": "approved", "체크인": "checked", "완료": "done", "노쇼": "noshow", "취소": "canceled" };
         var stt = map[res.my.resv.status];
         var mine = all.find(function (r) { return r.mine && (r.beId === res.my.resv.id); });

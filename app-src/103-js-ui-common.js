@@ -779,8 +779,15 @@ function resvRemain() {
   return n;
 }
 function myResv() {
-  var mine = resvAll().filter(function (r) { return r.mine; });
+  var mine = resvAll().filter(function (r) { return r.mine; }), pk = S.get("resv_pick", "");   /* 261022 (사용자 「한 사람 여러 과제」) pk = 서버 my.resv id(진행 중 가장 이른 줄) · 옛 서버 = 없음 = 예전처럼 마지막 */
+  if (pk) { var hit = mine.filter(function (r) { return String(r.beId) === String(pk); })[0]; if (hit) return hit; }
   return mine.length ? mine[mine.length - 1] : null;
+}
+/* 261022 내 라운지 상담 모두(취소 · 없어진 줄 뺌) · 서버 my.resvs 순서(날짜 · 시간 순 ord) · 옛 서버 = myResv 한 건 */
+function myResvAll() {
+  var a = resvAll().filter(function (r) { return r.mine && RESV_HOLD.indexOf(r.status) >= 0; });
+  if (!a.some(function (r) { return r.ord != null; })) { var one = myResv(); return one && RESV_HOLD.indexOf(one.status) >= 0 ? [one] : []; }
+  return a.filter(function (r) { return r.ord != null; }).sort(function (x, y) { return x.ord - y.ord; });
 }
 var DAPSEL = null;
 function dapPick(t) { if (resvTaken(t)) return; DAPSEL = DAPSEL === t ? null : t; App.render(); }

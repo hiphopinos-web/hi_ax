@@ -152,6 +152,7 @@ function mtCard(M, x, no){
     if(x.pend&&!("lk" in x)) tags.push(tag(x.pend.st==="매칭"?"알림 다시 필요":"알림 전","warn"));   /* 261022 새 서버 = 잠금 표시(mlock.js)가 맡는다 */
   }
   var stt0=mtTagSt(M.p, x); if(stt0) tags.unshift(stt0);
+  if(!cc&&num(x.mt)>1) tags.push(tag(x.mt+"건 중 "+x.mn,"off"));   /* 261022 (사용자 「한 사람 여러 과제」) 같은 사람 줄 · 날짜 · 시간 순 몇째 */
   if(M.today&&k&&(!cc||k===x._s)){   /* 261022 칸 날짜가 오늘이면 왔음 · 노쇼 · 종료 · 커피챗 초안으로 옮긴(저장 전) 카드는 빼고 */
     var r0=mins(mtKp(k)[0]), nm=mtNowMin();
     if(!inn&&!done&&!ns&&nm>=r0+5&&nm<r0+M.len) tags.unshift(tag("늦음","warn"));   /* 261021 라운지 = 고른 날짜가 오늘일 때만 */
@@ -317,7 +318,7 @@ function mtDrop(p, k, to, before){
   if(to==="q"&&!r._k){ var qs=M.q.map(function(x){ return jq(x.emp); }).filter(function(x){ return x!==k; }), at=before?qs.indexOf(before):-1; if(at<0) qs.push(k); else qs.splice(at,0,k); MT.ord=qs; MT.ordD=1; mtSave(); paint(); return; }
   mtCcDraftDrop(k, to, before);   /* 261022 놓는 즉시 반영하던 당일 길 없앰 · 당일에 칸 바꾸기 = 잠금 풀고 옮기기 → 저장 → 잠금 */
 }
-var MT_MVWHY={ taken:"그 칸은 다 찼습니다", seat:"그 미팅룸은 다른 사람 자리입니다", same:"지금과 같은 자리입니다", closed:"운영 시간 밖입니다", slot:"칸 시각이 맞지 않습니다", day:"라운지 날짜가 아닙니다" };
+var MT_MVWHY={ self:"같은 사람이 그 날 그 시간에 이미 있습니다", taken:"그 칸은 다 찼습니다", seat:"그 미팅룸은 다른 사람 자리입니다", same:"지금과 같은 자리입니다", closed:"운영 시간 밖입니다", slot:"칸 시각이 맞지 않습니다", day:"라운지 날짜가 아닙니다" };
 function mtLnDrop(id, to){
   var L=mtLnM(); if(!L) return; var x=L.by[id]; if(!x) return;
   if(to==="q"){ toast("라운지는 칸 미정으로 되돌리지 않습니다 · 다른 칸으로 옮깁니다"); return; }
@@ -403,7 +404,8 @@ function mtDetRe(first){
     h+='<div class="fld cc-fld">상담 내용 · 원문</div><div class="mtg-orig">'+(x.text?esc(x.text):'<span class="cap">'+esc(x.tag?"관심 "+x.tag+" · 글 없음":"글 없음")+'</span>')+'</div>';
     h+='<dl class="cc-kv"><dt>희망 시간</dt><dd>'+esc(ccPrefTx(x))+'</dd><dt>배정</dt><dd>'+(k?esc(mtKp(k).join(" · 테이블 ")):"대기 줄"+(mtQno(x)?" "+mtQno(x)+"번":""))+'</dd><dt>스탬프</dt><dd>아이디어 한 줄 · 신청 때 · 프로그램 참여 1개 · '+(st==="완료"?"받음":"상담 끝나면")+'</dd></dl>';
   } else {
-    h+='<dl class="cc-kv"><dt>날짜</dt><dd>'+(x.day?esc(mtDl(x.day)):"-")+'</dd><dt>시간</dt><dd>'+(k?esc(mtKp(k)[0]):"칸 미정")+'</dd><dt>미팅룸</dt><dd>'+(k?esc(mtKp(k)[1]):"-")+'</dd><dt>명단</dt><dd>'+(/^사전 명단/.test(x.memo||"")?"사전 명단":esc(x.memo||"사전 명단"))+'</dd><dt>스탬프</dt><dd>프로그램 참여 2개 · '+(st==="완료"?"받음":"상담 끝나면")+'</dd></dl>';
+    var oth=num(x.mt)>1&&typeof laAll==="function"?laAll(x.emp).filter(function(y){ return String(y.id)!==String(x.id); }):[];   /* 261022 같은 사람 다른 줄 */
+    h+='<dl class="cc-kv">'+(oth.length?'<dt>상담</dt><dd>'+esc(x.mt+"건 중 "+x.mn+" · 다른 줄 "+oth.map(laAt).join(" · "))+'</dd>':'')+'<dt>날짜</dt><dd>'+(x.day?esc(mtDl(x.day)):"-")+'</dd><dt>시간</dt><dd>'+(k?esc(mtKp(k)[0]):"칸 미정")+'</dd><dt>미팅룸</dt><dd>'+(k?esc(mtKp(k)[1]):"-")+'</dd><dt>명단</dt><dd>'+(/^사전 명단/.test(x.memo||"")?"사전 명단":esc(x.memo||"사전 명단"))+'</dd><dt>스탬프</dt><dd>프로그램 참여 2개 · '+(st==="완료"?"받음":"상담 끝나면")+'</dd></dl>';
   }
   if(nOk) h+='<div class="fld">운영자 메모 <span class="cap">참가자에게 보이지 않음 · 500자</span></div><textarea class="mtg-memo" id="mtMemo" maxlength="500" aria-label="운영자 메모">'+esc(MT.memo!=null?MT.memo:(n&&n.memo||""))+'</textarea>'+
     '<div class="btns mt"><span class="cap" style="flex:1;align-self:center">'+(n&&n.at?esc((n.by||"")+" · "+fmtD(n.at)+" 저장"):"")+'</span><button class="btn sm pri" type="button" id="mtMemoGo" onclick="mtMemoSave()">메모 저장</button></div>';
