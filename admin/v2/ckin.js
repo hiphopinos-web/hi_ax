@@ -138,6 +138,7 @@ function ckiCardPaint(){
   else if(ckiTgt(c)){ kBig='<b class="cki-big off">전</b>'; kSt=tag("체크인 전",""); }
   else { kBig='<b class="cki-big off">-</b>'; kSt=tag("체크인 명단 밖","off"); }
   if(both) kBtn='<button class="btn sm" type="button" onclick="ckiGive(\'kit\')"'+(CKI.busy?' disabled':'')+'>체크인만</button>';
+  if(c.ck&&isTop()) kBtn+='<button class="btn sm dng" type="button" onclick="ckiUndoCk()"'+(CKI.busy?' disabled':'')+'>체크인 되돌리기</button>';   /* 261023 슈퍼관리자 · 서버 ck_undo(스캔기록에 되돌림 줄 · 지우지 않음) */
   var kitB='<div class="cki-blk"><div class="cki-bh">체크인</div><div class="cki-bv">'+kBig+'</div><div class="cki-bst">'+kSt+'</div>'+(kBtn?'<div class="cki-bb">'+kBtn+'</div>':'')+'</div>';
   /* 참여상 칸 */
   var fBig=fx.rk?'<b class="cki-big">'+n0(fx.rk)+'<small>번째</small></b>':'<b class="cki-big off">'+n0(c.n||0)+'<small>/6</small></b>';
@@ -205,6 +206,15 @@ function ckiUndoFx(){
     run:function(){ return call("fcfs_undo",{ emp:c.emp, why:String((el("ckiW")||{}).value||"").trim()||"콘솔 체크인 탭" }); },
     fail:function(r){ return r&&r.reason==="notgot"?"받은 기록이 없습니다":""; },
     done:function(){ CKI.msg={ c:"warn", t:"참여상 수령을 되돌렸습니다", s:"" }; toast("되돌렸습니다 · "+(c.name||c.emp)); ckiOpen(c.emp, true); } });
+}
+function ckiUndoCk(){
+  var c=CKI.card; if(!c||!c.ck||!isTop()) return;
+  confirmBox({ t:"체크인을 되돌릴까요?", who:(c.name||"")+" · "+c.emp+(c.no?" · "+c.no:""), sub:"체크인 "+fmtD(c.ck)+" · 체크인 전으로 돌아감 · 기록은 지우지 않고 되돌림 줄을 남김 · 다시 찍으면 첫 체크인", ok:"체크인 되돌리기", danger:1,
+    body:'<label class="fld">사유(필수 · 2자 이상)<input class="in" id="ckiUW" maxlength="40" autocomplete="off" oninput="gateUpd()"></label>', focus:"ckiUW",
+    gate:function(){ return String((el("ckiUW")||{}).value||"").trim().length>=2; },
+    run:function(){ return call("ck_undo",{ emp:c.emp, why:String(el("ckiUW").value).trim() }); },
+    fail:function(r){ return r&&r.reason==="nock"?"체크인 기록이 없습니다":""; },
+    done:function(){ CKI.msg={ c:"warn", t:"체크인을 되돌렸습니다", s:"체크인 전" }; toast("체크인 되돌림 · "+(c.name||c.emp)); ckiOpen(c.emp, true); } });
 }
 function ckiVoid(){
   var c=CKI.card; if(!c||!c.fx||!c.fx.rk) return;
