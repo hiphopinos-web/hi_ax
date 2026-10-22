@@ -1,5 +1,7 @@
 /* ════════════════ v4.02 AX 올림픽 점수 체계 v2 (사용자 확정 260919 · 설계 정본 「AX 올림픽 점수 체계 v2.md」) ════════════════
    종목 점수 = 게임 화면에 보이는 행동 점수 그대로 · 종목 최고 한 판 · 종목 상한 3,000 · 종합 = 미니 게임 세 종목 최고 점수의 합(만점 9,000).
+   v8.47 (261022 사용자 「점수 상한을 굳이 둬야 할 목적이 있는지 모르겠어 · 없애도 되면 없애줘」) 상한 폐지 · 서버 순위판 nocap 1 이면 상한 없이 세고(olyNoCap) 점프 · 테트리스도 3,000에서 끝내지 않는다 ·
+   nocap 이 없으면(옛 서버 · 순위판을 아직 못 받음) 예전처럼 상한 · 지난 기록은 서버가 그때 점수 그대로 · 종합 동점 = 합계를 먼저 만든 순(서버 olyOvCmp_).
    AX 팡 = 80칸 완주 시간 환산(1000 × (기준 초 / 완주 초)^지수) · 점프 = 장애물 40 · 코인 5 · AI 상식 100 ·
    테트리스 = 블록 10(60개까지) · 줄 50(30줄까지, 그 뒤 10) · 동시 삭제 보너스.
    계수는 서버 설정 「올림픽_점수」가 정본 · oly_board 응답의 rule 을 받아 쓴다 · 받기 전에는 아래 OLY_RULE(서버 기본값과 같은 값 · 검사 60절이 대조).
@@ -105,12 +107,15 @@ function olyRule() {
     r.ox && r.ox.sec > 0 && r.ox.base && r.ox.base.length === 3 && r.ox.per && r.ox.per.length === 3 && r.ox.lives > 0 && r.ox.rowT && r.ox.rowT.length === 2 && r.ox.lead && r.ox.lead.length === 3 ? r : OLY_RULE;
 }
 function olyCap() { return olyRule().cap; }
+/* v8.47 상한 폐지 서버인가(oly_board · oly_result 의 nocap) · src = 그 응답(없으면 순위판) */
+function olyNoCap(src) { var b = src || OLY.board; return !!(b && b.nocap); }
 function olyMax(src) { return olyOvKeys(src).length * olyCap(); }   /* v4.83 미니 게임 3 × 3,000 = 9,000(옛 서버는 다섯 종목 15,000) */
 function olyEv(key) { return OLY_EVENTS.filter(function (e) { return e.key === key; })[0]; }
 function olyFmt(n) { return Math.round(Number(n) || 0).toLocaleString(); }
 /* 점수 계산 · 서버 olyScore_ 와 글자 그대로 같은 식 (검사 60절이 같은 parts 로 대조) */
-function olyScore(game, p, rule) {
+function olyScore(game, p, rule, nocap) {
   rule = rule || olyRule();
+  if (nocap == null) nocap = olyNoCap();   /* v8.47 상한 폐지 서버면 상한 없이 */
   var R = rule[game], n = function (k) { return Number(p && p[k]) || 0; }, s = 0, i;
   if (!R) return 0;
   if (game === "pang") {
@@ -124,7 +129,7 @@ function olyScore(game, p, rule) {
   } else if (game === "ox") {
     s = qzIsCard(p && p.ql) ? qzTally(p.ql).pts : oxTally(p && p.ql, R, oxGold(p && p.tk)).pts;   /* v4.96 판 퀴즈(정답 × 100) · 유리다리 */
   }
-  return Math.max(0, Math.min(rule.cap, s));
+  return Math.max(0, nocap ? s : Math.min(rule.cap, s));
 }
 /* v4.12 AI O/X 유리다리 채점 · 서버 oxTally_ 와 글자 그대로 같은 식(검사 68·70절) · ql = 「id.답.시간」 · 답 O|X|P(판자)|T(발판이 아래 끝에 닿아 떨어짐) · 시간 1/100초 · gold = 황금 자리
    다리는 문제가 떠 있는 동안 흘러내린다 · 문제마다 한도 lim = ceil(여유 × 줄 시간 / 100) · 한도 안에 답한다 · T 는 한도에 정확히 · 답하면 한 줄 올라가 여유 +100
@@ -177,9 +182,9 @@ function oxGold(tk) {
 }
 /* 규칙 한 줄 · 시작 화면·순위판 종목 탭 */
 function olyRuleLine(key) {
-  var R = olyRule()[key], cap = olyFmt(olyCap());
-  if (key === "pang") return R.goal + "칸 완주가 빠를수록 점수 · " + R.base + "초 = 1,000점 · 종목 최대 " + cap;
-  if (key === "jump") return "넘은 장애물 " + R.obs + " · 코인 " + R.coin + " · AX 상식 " + R.fact + " · 종목 최대 " + cap;
+  var R = olyRule()[key], cap = olyNoCap() ? "" : " · 종목 최대 " + olyFmt(olyCap());   /* v8.47 상한 폐지 서버면 상한 줄 없음 */
+  if (key === "pang") return R.goal + "칸 완주가 빠를수록 점수 · " + R.base + "초 = 1,000점" + cap;
+  if (key === "jump") return "넘은 장애물 " + R.obs + " · 코인 " + R.coin + " · AX 상식 " + R.fact + cap;
   if (key === "tetris") return "블록 " + R.block + "점(" + R.blockMax + "개까지) · 줄 " + R.line + "점 · 한 번에 여러 줄 보너스";   /* v4.28 「시간은 점수가 아니에요」 설명 문장은 결과 접힘의 참고 기록 표가 대신한다 */
   if (key === "ox") return "정답 " + R.base[0] + "~" + R.base[2] + " · 빠르면 +" + R.speed + " · " + R.feverAt + "연속마다 피버 ×" + R.feverMul + " · 황금 발판 ×" + R.goldMul + " · 도착 +" + R.arrive + " · 오답·떨어짐 −" + R.pen;
   return "";
@@ -291,7 +296,7 @@ function olyPosText(p) {
 /* 종목 한 줄 · 「테트리스 5위 · 동메달까지 320점」 · 만점이면 「만점 3,000 · 먼저 달성한 순서로 2위」 */
 function olyEvPos(key, v) {
   if (!v || !v.rank || !olyMe().sv) return "";
-  if (v.best >= olyCap() && v.rank > 1) return "만점 " + olyFmt(olyCap()) + " · 먼저 달성한 순서로 " + v.rank + "위";
+  if (!olyNoCap() && v.best >= olyCap() && v.rank > 1) return "만점 " + olyFmt(olyCap()) + " · 먼저 달성한 순서로 " + v.rank + "위";
   var t = olyPosText(v);
   return olyEv(key).short + " " + v.rank + "위" + (t ? " · " + t : "");
 }
@@ -336,7 +341,7 @@ function olyBreakHtml(key, p, score) {
   return '<table class="oly-brk">' + olyRowsFor(key, p).map(function (r) {
     return "<tr><th>" + esc(r.l) + (r.note ? "<small>" + esc(r.note) + "</small>" : "") + "</th><td>" + esc(r.d) + '</td><td class="n">' + (r.v < 0 ? "−" + olyFmt(-r.v) : olyFmt(r.v)) + "</td></tr>";
   }).join("") +
-    '<tr class="sum"><th>합계</th><td>' + (raw < 0 ? "최저 0 · " : "") + "종목 최대 " + olyFmt(olyCap()) + '</td><td class="n">' + olyFmt(score) + "</td></tr></table>";   /* v4.28 설명 문장 대신 짧은 값 */
+    '<tr class="sum"><th>합계</th><td>' + (raw < 0 ? "최저 0" + (olyNoCap() ? "" : " · ") : "") + (olyNoCap() ? "" : "종목 최대 " + olyFmt(olyCap())) + '</td><td class="n">' + olyFmt(score) + "</td></tr></table>";   /* v4.28 설명 문장 대신 짧은 값 */
 }
 /* v4.28 결과 둘째 줄 · 이번 판이 내 최고를 넘었으면 「신기록!」 · 아니면 「내 최고 N점」(이 기기 최고와 서버 최고 중 큰 쪽) */
 function olyResCmp(key) {
@@ -384,13 +389,13 @@ function olyHubHtml() {
   var me = olyMe(), op = me.left ? "종합 순위까지 " + me.left + "종목" : olyOverallPos(me), nm = olyOvName();   /* v4.95 남은 종목 이름은 바로 아래 세 행이 보여 준다(375px 한 줄) */
   var p4got = S.get("stamps", []).indexOf("p4") >= 0;   /* v5.16 받은 뒤 = 「스탬프 받음 · 순위는 종목 최고 기록」(다시 해도 스탬프는 그대로) */
   return stampLineHtml("p4", '<p class="ax-meta">' + (p4got ? "스탬프 받음 · 순위는 종목 최고 기록" : stampV2() ? "팡 · 점프 · 테트리스 · 종목마다 한 판" : "서로 다른 " + MG_NEED + "종목 · 종목마다 한 판") + "</p>") +   /* v4.70 스탬프 조건 + 도장(n/3) */
-    '<section class="ax-card oly-sum"><div><p class="ax-meta">내 ' + nm + " 총점</p><p class=\"oly-sum-n\">" + olyFmt(me.total) + "<small> / " + olyFmt(olyMax()) + "</small></p></div>" +
-    '<p class="ax-meta oly-sum-r">종목 ' + me.done + "/" + olyOvKeys().length + (op ? "<br>" + esc(op) : "") + "</p></section>" +
+    '<section class="ax-card oly-sum"><div><p class="ax-meta">내 ' + nm + " 총점</p><p class=\"oly-sum-n\">" + olyFmt(me.total) + (olyNoCap() ? "" : "<small> / " + olyFmt(olyMax()) + "</small>") + "</p></div>" +
+    '<p class="ax-meta oly-sum-r">종목 ' + me.done + "/" + olyOvKeys().length + (op ? "<br>" + segHtml(esc(op)) : "") + "</p></section>" +   /* v8.47 큰 점수 차이면 「 · 」 자리에서 나눈다 */
     olyKeysEvents(OLY_MINI_KEYS).map(function (e) {
       var v = me.ev[e.key], lw = v && v.medal ? olyLw(v.medal, 48) : "";
       return rcHtml({ cls: v ? " done" : "", onclick: "App.go('" + e.view + "')", link: true, left: lw ? '<span class="oly-lwbox">' + lw + "</span>" : tokBadge(e.short, v ? "mine" : ""),
         title: esc(e.name),
-        sub: v ? "최고 " + olyFmt(v.best) + (me.sv && v.rank ? " · 종목 " + v.rank + "위" : "") : "",
+        sub: v ? segHtml("최고 " + olyFmt(v.best) + (me.sv && v.rank ? " · 종목 " + v.rank + "위" : "")) : "",   /* v8.47 5 ~ 6자리 점수 · 넘치면 「 · 」 자리에서 나눈다 */
         right: '<span class="st">' + (v ? olyFmt(v.best) : "-") + "</span>" });
     }).join("") +
     '<button type="button" class="ax-button ax-button-weak oly-rank-go" onclick="App.go(\'oly_rank\')">' + (nm === "미니 게임" ? "미니 게임 순위" : "AX 올림픽 순위판") + "</button>" +

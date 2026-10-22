@@ -1773,9 +1773,9 @@ function olyAwardHtml() {
     }).join("") + "</div>"
       : top.length ? '<div class="awp-stage">' + [top[1], top[0], top[2]].map(function (x, k) {
         var r = [2, 1, 3][k];
-        return '<div class="awp r' + r + '">' + (x ? olyLw(r, r === 1 ? 240 : 180) + "<b>" + esc(x.nick || "익명 참가자") + "</b>" + (hide ? "" : "<small>" + esc(x.name || "") + (x.dept ? " · " + esc(x.dept) : "") + "</small>") + "<span>" + olyFmt(x.total) + "<em> / " + olyFmt(olyMax(d)) + "</em></span>" : "") + "<i>" + r + "</i></div>";
+        return '<div class="awp r' + r + '">' + (x ? olyLw(r, r === 1 ? 240 : 180) + "<b>" + esc(x.nick || "익명 참가자") + "</b>" + (hide ? "" : "<small>" + esc(x.name || "") + (x.dept ? " · " + esc(x.dept) : "") + "</small>") + "<span>" + olyFmt(x.total) + (olyNoCap(d) ? "" : "<em> / " + olyFmt(olyMax(d)) + "</em>") + "</span>" : "") + "<i>" + r + "</i></div>";
       }).join("") + "</div>" : '<p style="padding:24px 4px;opacity:0.7">' + (d ? "아직 전 종목 완주자가 없습니다" : "불러오는 중") + "</p>") +
-    '<p class="tytv-foot">명예 시상 · 경품 없음 · 전 종목 완주자만 · 동점은 전 종목 완료가 이른 쪽</p></div>';
+    '<p class="tytv-foot">명예 시상 · 경품 없음 · 전 종목 완주자만 · ' + (olyNoCap(d) ? "동점은 합계를 먼저 만든 쪽" : "동점은 전 종목 완료가 이른 쪽") + "</p></div>";
 }
 /* 시상 화면 데이터 · 관리코드 type_result */
 var TYAW = { data: null, t: 0 };

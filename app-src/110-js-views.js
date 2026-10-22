@@ -135,10 +135,10 @@ var Views = {
       '<div class="row" style="gap:6px">' + tvBtns() + (admPhoneOk() ? '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="App.go(\'admin\')">← 콘솔</button>' : "") + "</div></div>" +
       /* v4.83 (261001) 종합 = 미니 게임 세 종목(옛 서버면 다섯 종목 · 순위판 oev 로 고른다) · AX 퀴즈는 TV 순위에 없다 */
       '<p class="tytv-k">' + (oly ? olyOvName() + " · 종합 순위" : oly2 ? olyOvName() + " · 종목별 1~3위" : "AX 단어 소나기 · 1F 현장 타자왕전") + "</p>" +
-      '<p class="tytv-t">' + (oly ? olyOvSum() + " 최고 점수 합계 · " + olyFmt(olyMax()) + "점 만점" : oly2 ? olyOvEvents().map(function (e) { return e.short; }).join(" · ") : "현장 타자왕전 상위 5") + "</p>" +
+      '<p class="tytv-t">' + (oly ? olyOvSum() + " 최고 점수 합계" + (olyNoCap() ? "" : " · " + olyFmt(olyMax()) + "점 만점") : oly2 ? olyOvEvents().map(function (e) { return e.short; }).join(" · ") : "현장 타자왕전 상위 5") + "</p>" +
       '<div class="tytv-seg"><span class="' + (site ? "on" : "") + '">현장 타자 5</span><span class="' + (oly ? "on" : "") + '">' + (olyOvName() === "미니 게임" ? "미니 게임" : "올림픽") + ' 종합</span><span class="' + (oly2 ? "on" : "") + '">' + (olyOvName() === "미니 게임" ? "미니 게임" : "올림픽") + " 종목별</span></div>" +
       (oly ? olyTvPodium() : oly2 ? olyTvEvents() : '<div class="tytv-list five">' + tyTvRows(r, 5) + "</div>") +
-      '<p class="tytv-foot">' + (oly || oly2 ? "종목마다 최고 한 판 · 종목 최대 " + olyFmt(olyCap()) + "점 · 명예 순위" : "운영 " + esc(winTxt) + " · 최고 기록 · 17:00 마감 · 1~10위 Closing Speech에서 순위 발표") + "</p></div>";   /* v4.16 가짜 닉네임 표기 삭제 · TV 는 항상 실서버 값 */
+      '<p class="tytv-foot">' + (oly || oly2 ? "종목마다 최고 한 판 · " + (olyNoCap() ? "" : "종목 최대 " + olyFmt(olyCap()) + "점 · ") + "명예 순위" : "운영 " + esc(winTxt) + " · 최고 기록 · 17:00 마감 · 1~10위 Closing Speech에서 순위 발표") + "</p></div>";   /* v4.16 가짜 닉네임 표기 삭제 · TV 는 항상 실서버 값 */
   },
   type_award: function () {
     if (S.get("tyaw_tab", "type") === "oly" && S.get("admin_authed", false)) return olyAwardHtml();

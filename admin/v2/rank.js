@@ -1,7 +1,7 @@
 /* AXF CONTROL v2 · 사람 › 게임 순위 (261017 사용자 「admin 페이지에서 게임 순위가 바로 보이지 않는다」)
  * 기준 = 앱 미니 게임 순위판(oly_rank)과 같다 · 종목 = 서버 oev(팡 · 점프 · 테트리스) · AX 퀴즈 · 옛 기억력은 순위 없음
  *   종목별 = 종목 최고 한 판 점수 높은 순 · 동점은 먼저 달성한 쪽 · 시험 사번 제외(서버 olyCompute_ perEvent 순서 그대로)
- *   종합 = 세 종목 모두 한 판 이상 · 세 종목 최고점 합 높은 순 · 동점은 세 종목을 먼저 마친 쪽 · 시험 사번 제외
+ *   종합 = 세 종목 모두 한 판 이상 · 세 종목 최고점 합 높은 순 · 동점은 합계를 먼저 만든 쪽(261022 상한 폐지 · 서버 sumAt = 세 종목 최고 기록 시각 중 가장 늦은 값 · 옛 서버 = 세 종목을 먼저 마친 쪽) · 시험 사번 제외
  *   기간 = 행사 전체(앱 순위판에 오늘 구분 없음) · 부문 합계 · 부문 순위 · 메달 없음(260917)
  * 읽기 = game_stats(관리코드 · 사번 · 이름 · 닉네임 · 최고점 · 판 수 · 마지막 판) · 소속은 명부(whoOf)
  *   종합 줄 = game_stats oly.rows 에서 세 종목 완주 + 종목 순위(시험 사번이 빠진 명단)에 있는 사람만 · 순위는 다시 센다
@@ -23,7 +23,7 @@ function grRows(d, ev){
   var orows=(d.oly&&d.oly.rows)||[], hasT=orows.some(function(r){ return r.test!=null; }), ok={}, first=d.games[mini[0]];
   if(!hasT) ((first&&first.rows)||[]).forEach(function(r){ ok[normE(r.emp)]=1; });   /* 옛 서버(test 칸 없음) = 시험 사번은 종목 순위에 없다 → 종합에서도 뺀다 */
   return orows.filter(function(r){ return Number(r.done)===mini.length&&(hasT?Number(r.test)!==1:ok[normE(r.emp)]); })   /* 261017 서버 oly.rows test 칸 */
-    .map(function(r,i){ return { rank:i+1, emp:r.emp, name:r.name, nick:grNick(r), hidden:!!r.hidden, score:Number(r.total)||0, at:r.doneAt||"", key:"" }; });
+    .map(function(r,i){ return { rank:i+1, emp:r.emp, name:r.name, nick:grNick(r), hidden:!!r.hidden, score:Number(r.total)||0, at:r.sumAt||r.doneAt||"", key:"" }; });   /* 261022 합계 시각(sumAt · 옛 서버 = 세 종목 완주 doneAt) */
 }
 function grGrid(ev){
   var id="grk_"+ev, all=ev==="all";
@@ -36,7 +36,7 @@ function grGrid(ev){
       { k:"score", t:all?"총점":"최고점", type:"num", w:90 },
       all?null:{ k:"key", t:"대표 기록", w:110 },
       all?null:{ k:"plays", t:"판 수", type:"num", w:64 },
-      { k:"at", t:all?"세 종목 완주":"최고점 시각", type:"date", w:110 }].filter(Boolean) });
+      { k:"at", t:all?"합계 시각":"최고점 시각", type:"date", w:110 }].filter(Boolean) });
 }
 function grChipsH(ev){ var d=S.data.grank, ok=d&&d.games;
   return GR_EV.map(function(x){ var on=x[0]===ev, n=ok?grRows(d,x[0]).length:null;
@@ -45,7 +45,7 @@ function grMount(vb, head){
   var ev=grEv(); grGrid(ev);
   vb.innerHTML=head+'<div class="card"><div class="chips" role="tablist" aria-label="게임" id="grChips">'+grChipsH(ev)+'</div><p class="cap mt4 gr-cap">'+grCapT(ev).split(" · ").map(function(t,i){ return '<span class="nw">'+(i?"· ":"")+esc(t)+'</span>'; }).join(" ")+'</p><div id="mg_grk_'+ev+'" class="mt"></div></div>';
 }
-function grCapT(ev){ return (ev==="all"?"세 종목 최고점 합 · 동점은 세 종목을 먼저 마친 순 · 세 종목 모두 한 판 이상":"최고 한 판 점수 · 동점은 먼저 달성한 순")+" · 시험 사번 제외 · 앱 순위판과 같은 순서"; }
+function grCapT(ev){ var nc=!!(S.data.grank&&S.data.grank.nocap); return (ev==="all"?"세 종목 최고점 합 · "+(nc?"동점은 합계를 먼저 만든 순":"동점은 세 종목을 먼저 마친 순")+" · 세 종목 모두 한 판 이상":"최고 한 판 점수 · 동점은 먼저 달성한 순")+" · 시험 사번 제외 · 앱 순위판과 같은 순서"; }
 function grPaint(){
   var ev=grEv(), c=el("grChips"); if(c) c.innerHTML=grChipsH(ev);
   gridPaint("grk_"+ev, "grank", "게임 순위", function(dd){ return grRows(dd, ev); });
