@@ -22,7 +22,7 @@ var SCR_URLS=[["추첨 화면","17F 대형 스크린 · 원격 모드","../../dr
 function lgSub(){ return subsOf(LG_SUBS,"log"); }
 SCREENS.log={
   title:"설정", desc:"",
-  need:function(){ var s=lgSub(); return s==="log"?[{ k:"alog", a:"act_log", p:{ n:200 }, ttl:30000 }]:s==="urgent"?[{ k:"ogs", a:"og_scope_state", ttl:30000 },{ k:"pst", a:"push_stats", ttl:30000 }]:s==="srv"?[{ k:"pst", a:"push_stats", ttl:60000 }]:s==="qr"?[{ k:"qal", a:"att_list", ttl:300000 },{ k:"qst", a:"stair_list", ttl:300000 },{ k:"qss", a:"stair_stats", ttl:60000 },{ k:"qqs", a:"qr_stats", ttl:60000 },{ k:"qa10", a:"att_stats", p:{ who:"1" }, ttl:60000 }]:[]; },
+  need:function(){ var s=lgSub(); return s==="log"?[{ k:"alog", a:"act_log", p:{ n:200 }, ttl:30000 }]:s==="urgent"?[{ k:"ogs", a:"og_scope_state", ttl:30000 },{ k:"pst", a:"push_stats", ttl:30000 }]:s==="srv"?[{ k:"pst", a:"push_stats", ttl:60000 }]:s==="qr"?[{ k:"qal", a:"att_list", ttl:300000 },{ k:"qst", a:"stair_list", ttl:300000 },{ k:"qss", a:"stair_stats", ttl:60000 },{ k:"qqs", a:"qr_stats", ttl:60000 },{ k:"qa10", a:"att_stats", p:{ who:"1" }, ttl:60000 },{ k:"draw", a:"draw_stats", ttl:15000 }]:[]; },
   mount:function(vb){
     var s=lgSub();
     el("phCap").textContent={ qr:"현장에 붙는 QR · 묶음별 그림 · 담긴 주소 · PNG · 찍힌 수", log:"오늘 누가 무엇을 했는지 · 줄을 누르면 상세 · 되돌리기", urgent:"룰렛 소진 안내 · 푸시 정지 · 앱 접속 범위 · 모두 확인 창 또는 되돌리기", srv:"서버 · 이 콘솔의 연결", urls:"현장 화면 주소 · 열기 · 복사" }[s];

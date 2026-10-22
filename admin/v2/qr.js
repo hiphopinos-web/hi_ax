@@ -6,7 +6,7 @@
 var QV_BASE="https://hiax.app/", QV_PX=2048, QV_CACHE={}, QV_ZIP={ busy:false };
 var QV_LEC=[["att_l1_in","l1","in","파트너사 강연 · AWS · 입장 QR","17F 입장 출석"],["att_l1_out","l1","out","파트너사 강연 · AWS · 끝 QR","17F 끝 출석"],["att_l2_in","l2","in","파트너사 강연 · MS · 입장 QR","17F 입장 출석"],["att_l2_out","l2","out","파트너사 강연 · MS · 끝 QR","17F 끝 출석"]];
 var QV_PL={ fld:"컨퍼런스룸", ta:"01 HEART", tb:"06 HEART", aws:"08 HEART", ms1:"07 HEART", ms2:"07 HEART" };
-var QV_GRP=[["app idea","1 · 앱 · 아이디어 한 줄","출력용 · 서버 코드 없음","앱아이디어"],["stair","2 · 계단실 · 층별","방화문 앞 · 층마다 1세트 · 양쪽 계단실에 같은 장","계단실"],["lec","3 · 17F 강의장 출석","오후 AWS · MS 입장 · 끝(PPT)","17F출석"],["lec10","4 · 10F 실습 세션 출석","A~E 입장 · 종료 · 스탬프 없음","10F출석"]];
+var QV_GRP=[["app idea","1 · 앱 · 아이디어 한 줄","출력용 · 서버 코드 없음","앱아이디어"],["stair","2 · 계단실 · 층별","방화문 앞 · 층마다 1세트 · 양쪽 계단실에 같은 장","계단실"],["lec","3 · 17F 강의장 출석","오후 AWS · MS 입장 · 끝(PPT)","17F출석"],["lec10","4 · 10F 실습 세션 출석","A~E 입장 · 종료 · 스탬프 없음","10F출석"],["ldraw","5 · 17F 럭키드로우 체크인","Closing 체크인 · 1 · 2 · 3등 추첨 통","럭키드로우"]];
 function qvStId(fl, r){ return "st"+("0"+fl).slice(-2)+"-"+r; }
 function qvItems(){
   var B=QV_BASE, al=S.data.qal, out=[];
@@ -15,6 +15,7 @@ function qvItems(){
   (((S.data.qst||{}).rows)||[]).slice().sort(function(a,b){ return a.fl-b.fl||a.r-b.r; }).filter(function(r){ return r.r===1; }).forEach(function(r){ out.push({ id:qvStId(r.fl,r.r), grp:"stair", fl:r.fl, r:r.r, label:"계단 이용 · "+r.fl+"F", sub:"출발 층 · 도착 층 QR을 찍으면 스탬프", one:true, acc:r.fl+"F", data:B+"#s="+r.code+"&fl="+r.fl+"&r="+r.r, off:!r.on }); });
   if(al&&al.ok&&al.code){ var pids=(al.progs||[]).map(function(p){ return p.id; }); QV_LEC.forEach(function(a){ if(pids.indexOf(a[1])<0) return; out.push({ id:a[0], grp:"lec", small:true, pid:a[1], k:a[2], label:a[3], sub:a[4], data:B+"#s="+al.code+"&p="+a[1]+"&k="+a[2] }); }); }
   if(al&&al.ok&&al.code10) (al.progs10||[]).forEach(function(x){ [["in","입장"],["out","종료"]].forEach(function(k){ out.push({ id:"att10_"+x.id+"_"+k[0], grp:"lec10", small:true, pid:x.id, k:k[0], label:x.n+" · "+k[1]+" QR", sub:"10F "+(QV_PL[x.id]||"")+" · "+k[1]+" 출석", data:B+"#s="+al.code10+"&p="+x.id+"&k="+k[0] }); }); });
+  var dr=S.data.draw; if(dr&&dr.code&&typeof dtQrData==="function") out.push({ id:"lucky_checkin", grp:"ldraw", label:"럭키드로우 체크인", sub:"1 · 2 · 3등 추첨 · 16:40부터", data:dtQrData(String(dr.code)) });
   return out;
 }
 /* 그림 · 지금 콘솔 qvCanvas 와 같은 규칙(모듈 정수 배율 · 조용한 영역 4 · 아래 글자는 PNG 에만) */
@@ -78,6 +79,7 @@ function qvCount(it){
     if(!ss) return ""; if(!x) return "기록 없음"; return (!x.n?"스캔 없음":x.mis>0?"불일치 "+x.mis+"건":"정상")+" · 누적 "+n0(x.n)+" · 오늘 "+n0(x.today); }
   if(it.grp==="lec"){ var qs=S.data.qqs, a=qs&&qs.ok?qs.att:null; return a?"17F 출석 오늘 "+n0(a.today)+"건 · "+n0(a.people)+"명(입장 · 끝 합계)":""; }
   if(it.grp==="lec10"){ var at=S.data.qa10, t=at&&at.ok?(at.ten||[]).filter(function(z){ return z.id===it.pid; })[0]:null; return t?(it.k==="in"?"입장 "+n0(t["in"]):"종료 "+n0(t.out))+" · 신청 "+n0(t.pre)+"명":""; }
+  if(it.grp==="ldraw"){ var dw=S.data.draw; return dw&&dw["in"]!=null?"체크인 "+n0(dw["in"])+"명"+(dw.closed?" · 마감":""):""; }
   return "";
 }
 function qvTile(it){
@@ -93,8 +95,8 @@ function qrPaint(){
   var b=el("qvB"); if(!b) return;
   if(typeof qrcode!=="function"){ b.innerHTML=band("bad","QR 그리기 파일(qrcode.js)을 받지 못했습니다 · 새로고침합니다"); return; }
   var all=qvItems();
-  b.innerHTML=QV_GRP.map(function(g){ var gs=" "+g[0]+" ", l=all.filter(function(x){ return gs.indexOf(" "+x.grp+" ")>=0; }), srv=g[0]==="stair"?"qst":g[0]==="app idea"?"":"qal";
-    var gate=srv?dataGate(srv,srv==="qst"?"계단 지점":"출석 코드"):null;
+  b.innerHTML=QV_GRP.map(function(g){ var gs=" "+g[0]+" ", l=all.filter(function(x){ return gs.indexOf(" "+x.grp+" ")>=0; }), srv=g[0]==="stair"?"qst":g[0]==="app idea"?"":g[0]==="ldraw"?"draw":"qal";
+    var gate=srv?dataGate(srv,srv==="qst"?"계단 지점":srv==="draw"?"추첨 코드":"출석 코드"):null;
     return '<div class="card mt"><h2>'+esc(g[1])+' <span class="cap">'+esc(g[2])+' · '+l.length+'장</span>'+(l.length>1?'<span class="r"><button class="btn sm" type="button" onclick="qvZipGrp(\''+g[0]+'\',\''+g[3]+'\')">'+l.length+'장 ZIP</button></span>':'')+'</h2>'+
-      (l.length?'<div class="qvg">'+l.map(qvTile).join("")+'</div>':gate||'<p class="cap">코드가 없습니다</p>')+'</div>'; }).join("");
+      (l.length?'<div class="qvg">'+l.map(qvTile).join("")+'</div>':gate||'<p class="cap">'+(g[0]==="ldraw"?"서버 추첨 코드 없음":"코드가 없습니다")+'</p>')+'</div>'; }).join("");
 }
