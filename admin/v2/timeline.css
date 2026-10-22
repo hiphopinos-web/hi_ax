@@ -29,6 +29,10 @@
 .tl-nl::after{content:"";flex:1;height:2px;background:var(--navy)}
 .tl-off{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;padding:6px 0;border-top:1px solid var(--line2);font-size:13px}
 .tl-off:first-of-type{border-top:0}
+/* 시간순 보기에서 옮겨 간 칸 잠깐 강조(추첨 설정 › 17F 입구 체크인 #dwsCl) · 1.6초 · 동작 줄이기면 즉시 */
+#dwsCl{transition:outline-color var(--t-out) var(--ease),box-shadow var(--t-out) var(--ease);outline:2px solid transparent;outline-offset:2px}
+#dwsCl.tl-hi{outline-color:var(--navy);box-shadow:0 0 0 4px var(--navy1);transition-duration:var(--t-in)}
+@media (prefers-reduced-motion:reduce){#dwsCl,#dwsCl.tl-hi{transition:none}}
 @media (max-width:640px){
   .tl-row,.tl-now{grid-template-columns:60px minmax(0,1fr)}
   .tl-tm{padding:12px 0 0 8px;font-size:14px}
