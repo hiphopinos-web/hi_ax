@@ -73,7 +73,7 @@ function apPaint(){
   else if(!apCan()) h+=band("info","이 브라우저는 알림을 받지 못합니다 · 크롬 · 삼성 인터넷 · 홈 화면 앱");
   if(typeof Notification!=="undefined"&&Notification.permission==="denied") h+=band("warn","이 브라우저에서 알림이 막혀 있습니다 · 폰 설정 › 알림 › AXF 관리 허용");
   var dis=function(x){ return x?" disabled":""; }, can=d.rt&&who&&apCan()&&!AP.busy;
-  h+='<div class="grid g2"><div class="card"><h2>이 기기</h2>'+
+  h+='<div class="grid g2 s1"><div class="card"><h2>이 기기</h2>'+
     '<div class="row"><div class="t"><b>'+(on?"관리자 알림 받는 중":"꺼짐")+'</b><span>'+esc(who||"받는 사람 아님")+'</span></div>'+stt(on?"ok":"off",on?"켜짐":"꺼짐")+'</div>'+
     '<div class="row"><div class="t"><b>이 사번에 켠 기기</b><span>'+(d.n?esc(String(d.n))+"대"+(d.last?" · 마지막 도착 "+esc(String(d.last).slice(5,16)):""):"없음")+'</span></div></div>'+
     '<div class="btns mt">'+(on?'<button type="button" class="btn" onclick="apOff()"'+dis(AP.busy)+'>'+(AP.busy==="off"?"끄는 중":"이 기기 끄기")+'</button>':'<button type="button" class="btn pri" onclick="apOn()"'+dis(!can)+'>'+(AP.busy==="on"?"켜는 중":"이 기기에서 켜기")+'</button>')+
