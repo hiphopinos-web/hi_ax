@@ -648,7 +648,7 @@ function stpProgListHtml() {
   var st0 = S.get("stamps", []), ten = (typeof tenMine === "function" && tenMine()) || st0.indexOf("p10") >= 0 || st0.indexOf("p10h") >= 0;   /* 261016 (사용자) 10F 실습 = 사전 신청자(10F 명단 · tenMine)에게만 · 받은 p10 · p10h */
   var rows = ["17F 오후 강연 시작 · 종료 출석체크 시 각 1개"].concat(ten ? ["10F 실습 시작 · 종료 출석체크 시 각 1개"] : [])
     .concat(r || st0.indexOf("ln") >= 0 ? ["1F AX 라운지 참석" + (r && r.status === "approved" && r.slot ? tm(resvRng(r)) : "")] : [])
-    .concat(["18F 커피챗 참석" + (c && c.status === "matched" && c.round && !S.get("cchat_att", false) ? tm(c.round + " 선정") : "")]);   /* v7.57 (사용자 261017 S6) 개수 지움(라운지 = 「AX 라운지」 이름 규칙 261007 「상담 뺌」 그대로) · 「합쳐 2개까지」는 줄 설명(stpMeta p3)으로 올림 · 17F · 10F 줄은 S2 그대로 */
+    .concat(["18F 커피챗 참석" + (c && c.status === "matched" && c.round && !S.get("cchat_att", false) ? tm(c.round + " 선정") : (S.get("cc_walk", null) || {}).st === "done" ? tm("현장 상담 완료 " + S.get("cc_walk", null).at) : "")]);   /* v7.57 (사용자 261017 S6) 개수 지움(라운지 = 「AX 라운지」 이름 규칙 261007 「상담 뺌」 그대로) · 「합쳐 2개까지」는 줄 설명(stpMeta p3)으로 올림 · 17F · 10F 줄은 S2 그대로 */
   return '<ul class="axs-stpl">' + rows.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
 }
 function stpRowHtml(s, i, st, full) {

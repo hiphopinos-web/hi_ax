@@ -225,6 +225,7 @@ var Views = {
   },
 
   ideas: function () {
+    ideaMineFetch();   /* v8.58 서버 idea_mine 합산(30초에 한 번) */
     var mine = S.get("ideas", []).filter(function (i) { return i.empId === (S.get("user", {}).empId); });
     /* v7.39 (사용자 261016 계획서 3-5 · 0-2) 아이디어 한 줄 = 쓰는 것으로 끝 · 제출 직후 「AX 커피챗에 참여하고 싶으세요?」(ask) · 완료 화면 「AX 커피챗 · 18F」 카드 · 「커피챗 희망하기」 단추 삭제 · 커피챗은 참여하기 칸에서 따로 신청 */
     if (IDEA.step === "done") {
@@ -250,7 +251,7 @@ var Views = {
       '<p class="ax-meta axs-saved" id="ideaSaved">' + esc(ideaSavedTxt(dr)) + "</p></div>" +   /* v6.07 자동 저장 · 이어 쓰기 한 줄 */
       '<label class="axs-check"><input type="checkbox" id="ideaAnon"' + (IDEA.anon ? " checked" : "") + ' onchange="IDEA.anon=this.checked">익명으로 표시 (시상 시에만 본인 확인)</label>' +
       (IDEA.err ? '<div class="axs-err" role="alert"><b>' + esc(IDEA.err) + "</b><span>쓴 내용은 그대로 있어요</span></div>" : "") +
-      (mine.length ? '<button type="button" class="ax-link axs-plain axs-self" onclick="App.go(\'ideas_mine\')">내가 낸 아이디어 ' + mine.length + "건</button>" : "") +
+      '<button type="button" class="ax-link axs-plain axs-self" id="ideaMineLnk" onclick="App.go(\'ideas_mine\')"' + (ideaMineTotal() ? "" : ' style="display:none"') + ">내가 낸 아이디어 " + ideaMineTotal() + "건</button>" +
       "</div>" +
       '<div class="ax-bottom axs-fix"><button type="button" class="ax-button" id="ideaGo" onclick="submitIdea()"' + (ideaOk(dr) ? "" : " disabled") + ">제출하기</button></div>";   /* v4.09 버튼 하나 · 나가기는 헤더 뒤로 */
   },
@@ -305,7 +306,7 @@ var Views = {
     sv.forEach(function (r) { if (!mine.some(function (i) { return i.id === r.id || String(i.text || "").trim() === String(r.text || "").trim(); })) mine.push({ id: r.id, empId: me, name: (S.get("user", {}) || {}).name, text: r.text, ch: r.ch, ts: Date.parse(String(r.ts || "").replace(" ", "T")) || 0, srv: 1 }); });
     if (!mine.length) return botHtml("아직 제출한 아이디어가 없어요");
     return mine.slice().sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); }).map(function (i) {
-      return '<div class="card soft mb8"><p class="axs-imtx" style="font-size:calc(15.5px * var(--fs));line-height:1.55">' + ideaMineTxt(i) + '</p><p class="axs-imeta" style="margin-top:6px;font-size:calc(12.5px * var(--fs));color:var(--faint)">' + (i.ch === "cchat" ? '<span class="axs-chip">커피챗 신청</span> ' : "") + (i.tag ? "#" + esc(i.tag) + " · " : "") + (i.anon ? "익명" : esc(i.name || "")) + (i.ts ? " · " + fmtTime(i.ts) : "") + "</p></div>";
+      return '<div class="card soft mb8"><p class="axs-imtx" style="font-size:calc(15.5px * var(--fs));line-height:1.55">' + ideaMineTxt(i) + '</p><p class="axs-imeta" style="margin-top:6px;font-size:calc(12.5px * var(--fs));color:var(--faint)">' + (i.ch === "cchat" ? '<span class="axs-chip">커피챗 신청</span> ' : i.ch === "ccw" ? '<span class="axs-chip">커피챗 현장 상담</span> ' : "") + (i.tag ? "#" + esc(i.tag) + " · " : "") + (i.anon ? "익명" : esc(i.name || "")) + (i.ts ? " · " + fmtTime(i.ts) : "") + "</p></div>";
     }).join("");
   },
 

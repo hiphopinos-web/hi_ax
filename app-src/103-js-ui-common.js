@@ -844,6 +844,13 @@ function ideaCcGo() { ccApplyGo(); }
 function ideaP5cc() { return S.get("stamps", []).indexOf("p5") >= 0 && (!!S.get("p5cc", 0) || !!(S.get("cchat_srv", null) || {}).p5cc); }
 /* v7.39 내가 낸 아이디어 서버 목록(idea_mine · 출처 src · 경로 ch cchat = 커피챗 신청) · 화면을 열 때 30초에 한 번 · 옛 서버(액션 없음) = 이 기기 기록만 */
 var IDEA_MINE = { e: "", at: 0, rows: [] };
+/* v8.58 (사용자 261023) 아이디어 한 줄 화면 「내가 낸 아이디어 n건」 = 이 기기 기록 + 서버 idea_mine(다른 기기 · 콘솔 현장 상담 글) · 같은 ID · 같은 글은 한 번 */
+function ideaMineTotal() {
+  var me = (S.get("user", {}) || {}).empId, mine = S.get("ideas", []).filter(function (i) { return i.empId === me; }), n = mine.length;
+  if (IDEA_MINE.e === me) IDEA_MINE.rows.forEach(function (r) { if (!mine.some(function (i) { return i.id === r.id || String(i.text || "").trim() === String(r.text || "").trim(); })) n++; });
+  return n;
+}
+function ideaMineLnkUpd() { var b = el("ideaMineLnk"), n = ideaMineTotal(); if (!b) return; b.style.display = n ? "" : "none"; b.textContent = "내가 낸 아이디어 " + n + "건"; }
 function ideaMineFetch() {
   var u = S.get("user", {}) || {};
   if (!BE.on || !u.empId || Date.now() - IDEA_MINE.at < 30000) return;
@@ -851,6 +858,7 @@ function ideaMineFetch() {
   beCall({ action: "idea_mine", emp: u.empId }, function (res) {
     if (!res || !res.ok || !Array.isArray(res.rows)) return;
     IDEA_MINE.e = u.empId; IDEA_MINE.rows = res.rows.filter(function (r) { return r && r.text; });
+    if (App.current === "ideas") ideaMineLnkUpd();   /* v8.58 아이디어 한 줄 화면 = 쓰는 칸은 건드리지 않고 링크 글자만 */
     if (App.current === "ideas_mine") App.render();
     else if (App.current === "cc_apply" && CCA.step === 1 && CCA.mode !== "new" && !CCA.busy && !(document.activeElement && document.activeElement.id === "ccText")) App.render();   /* v8.07 커피챗 신청 목록(v8.21 화면 1) · 쓰는 중이면 다시 그리지 않는다(한글 조합 보호) */
   }, function () {});

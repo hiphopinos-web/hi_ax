@@ -249,6 +249,8 @@ function beSync(after) {
       if (ccSrv && ccSrv.p5cc && !S.get("p5cc", 0)) S.put("p5cc", 1);
       var ccAtt = !!(res.my.cchat && (res.my.cchat.status === "참석" || res.my.cchat.status === "완료"));   /* v4.47 커피챗 참석 표시 · 18F 입장 스캔 또는 콘솔 참석 · 완료 */
       if (ccAtt !== !!S.get("cchat_att", false)) S.set("cchat_att", ccAtt);
+      var cw = res.my.ccw && res.my.ccw.st === "done" && /^\d{1,2}:\d\d$/.test(String(res.my.ccw.at || "")) ? { st: "done", at: String(res.my.ccw.at) } : null;   /* v8.58 콘솔 현장 상담 완료(sync my.ccw) */
+      if (JSON.stringify(cw) !== JSON.stringify(S.get("cc_walk", null))) S.set("cc_walk", cw);
       if (res.my.cchat && res.my.cchat.status === "매칭") {
         var c = S.get("cchat", null);
         var sr = hhmm(res.my.cchat.round), stb = String(res.my.cchat.table || "");

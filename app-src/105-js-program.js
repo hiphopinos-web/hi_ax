@@ -93,6 +93,8 @@ function myItems(withTest) {
   var cc = S.get("cchat", null), ccs = cchatSt();
   if (cc && cc.status === "matched")
     out.push({ place: "18F", min: sessStartMin(cc.round), go: "App.go('ev_cchat')", badge: cc.round, label: cc.round, title: "AX 커피챗", gTitle: "AX 커피챗", sub: "TABLE " + cc.table, gSub: "TABLE " + cc.table, kind: "cchat", iv: [sessStartMin(cc.round), sessStartMin(cc.round) + 20] });
+  else if (S.get("cc_walk", null) && S.get("cc_walk", null).st === "done")   /* v8.58 (사용자 261023) 콘솔 현장 상담 완료(sync my.ccw) = 신청 없이 18F 현장에서 상담한 사람도 남는다 */
+    out.push({ place: "18F", min: sessStartMin(S.get("cc_walk", null).at), go: "App.go('ev_cchat')", badge: "완료", label: S.get("cc_walk", null).at, title: "AX 커피챗", gTitle: "AX 커피챗", sub: "현장 상담 완료 " + S.get("cc_walk", null).at, gSub: "현장 상담 완료 " + S.get("cc_walk", null).at, kind: "ccw", t0x: S.get("cc_walk", null).at });
   else if (ccs === "wait" || ccs === "over")   /* v7.39 선정 전 · 마감(미선정)도 남긴다(옛 v6.07 「하루가 끝나면 조용히 걷는다」 · 다시 신청 · 문의를 막는다) · 시각이 없어 맨 뒤 */
     out.push({ place: "18F", min: 9998, go: "App.go('ev_cchat')", badge: ccs === "over" ? "마감" : "신청", label: ccs === "over" ? "선정 마감" : "선정 전", title: "AX 커피챗", gTitle: "AX 커피챗", sub: ccs === "over" ? "선정 마감" : "선정 전", gSub: ccs === "over" ? "선정 마감" : "신청 접수 · 선정되면 알림", kind: "cchat", iv: null });
   /* v4.26 · 앱에서 받는 세션 신청(옛 17F 좌석 신청)이 없어져 세션 항목은 내 일정에 올리지 않는다 · 10F 는 테스트 오버레이에서만 */
