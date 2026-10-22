@@ -2,7 +2,6 @@
  * 데이터 = draw_stats(code · win · day · closed · in · withT · att · winOn) + cfg_list(오픈_범위 · 창검사 · 행운권_참석조건 읽기)
  * 바꾸기 = draw_cfg(code AXD + 6자 · win 16:40-17:25 · day 비우면 매일 · closed 0 | 1) · 확인 창 · 코드를 바꾸면 인쇄물 QR 로는 체크인 안 됨
  * 행운권 참석조건은 운영 설정이라 보기만(바꾸기는 대화로)
- * 261022 시작 승인 = dstart.js(시작 전 · 시작됨 · 받는 중 · 슈퍼관리자만 「체크인 시작」)
  * 261021 체크인 2통 · 끝 시각은 쓰지 않음(마감은 단추) · 무대 공 넣기 뒤(draw_stats lock)에는 다시 열기 막음 · 당일 점검 칸 = dtwo.js */
 var DWS_WHY={ code:"코드는 AXD + 6자입니다(QR코드/codes.json 의 d17)", win:"시간 형식은 16:40-17:25 입니다(시작 < 끝)", day:"날짜 형식은 2026-10-26 입니다(비우면 매일)", closed:"마감 값이 올바르지 않습니다" };
 SG_SUBS.push(["set","추첨 설정"]);
@@ -21,13 +20,13 @@ function dwsPaint(){
       '<div class="nt-row"><label class="nt-f up-f">추첨 코드<input class="xg-q nt-in n" id="dwsCode" autocomplete="off" spellcheck="false" placeholder="AXD + 6자"></label>'+
       '<label class="nt-f up-f">체크인 시간<input class="xg-q nt-in n" id="dwsWin" placeholder="16:40-17:25"></label>'+
       '<label class="nt-f up-f">날짜(비우면 매일)<input class="xg-q nt-in n" id="dwsDay" placeholder="2026-10-26"></label></div>'+
-      '<div class="btns mt"><button class="btn pri" type="button" onclick="dwsSave()">저장</button><button class="btn" type="button" onclick="dwsFill(1)">지금 값으로</button></div><p class="cap mt">체크인 시간의 끝 시각은 쓰지 않음 · 시작은 슈퍼관리자 「체크인 시작」 · 마감은 「체크인 마감」 단추</p><p class="cap mt4" id="dwsNote"></p></div>'+
+      '<div class="btns mt"><button class="btn pri" type="button" onclick="dwsSave()">저장</button><button class="btn" type="button" onclick="dwsFill(1)">지금 값으로</button></div><p class="cap mt">체크인 시간의 끝 시각은 쓰지 않음 · 마감은 「체크인 마감」 단추</p><p class="cap mt4" id="dwsNote"></p></div>'+
       '<div class="col"><div class="card" id="dwsCl"></div><div class="card" id="dwsAt"></div><div class="card" id="dtChk"></div><div class="card" id="dtRh"></div><div class="card" id="dtQr"></div></div></div>';
     dwsFill(1);
   }
   el("dwsNote").innerHTML=(d.code?"":"<b>코드가 비어 있어 체크인을 받지 않습니다.</b> ")+"시간 · 날짜 검사 "+esc(dwsWin(d))+' · <span style="white-space:nowrap">기준 '+esc(fmtD(d.t))+'</span>';
-  var cs=d.closed?null:(typeof dsCk==="function"?dsCk(d,null,num(d["in"])):null);   /* 261022 시작 승인(dstart.js) · 옛 서버 = null = 아래 옛 표시 */
-  if(cs){ el("dwsCl").innerHTML='<h2>17F 입구 체크인</h2><div class="row"><div class="t"><b>'+esc(cs.t)+'</b><span>체크인 '+n0(d["in"])+'명 · 행운권 있음 '+n0(d.withT)+'</span></div>'+tag(cs.k==="wait"?"승인 필요":cs.k==="open"?"받는 중":cs.k==="pre"?"시작됨":"받지 않음",cs.k==="wait"?"warn":cs.k==="open"?"ok":"")+(cs.k==="open"?'<button class="btn dng" type="button" onclick="dwsClose(1)">체크인 마감</button>':'')+'</div><p class="cap mt4">'+esc(cs.s)+'</p>'+dsBtnH(cs); }
+  var cs=d.closed?null:(typeof lkuCk==="function"?lkuCk(d,null):null);   /* 261022 밤 받는 중 · 날짜 · 시간 전 · 받지 않음 = 행운권 첫 화면 2번 칸과 같은 판단(lkui.js) */
+  if(cs){ el("dwsCl").innerHTML='<h2>17F 입구 체크인</h2><div class="row"><div class="t"><b>'+esc(cs.t)+'</b><span>체크인 '+n0(d["in"])+'명 · 행운권 있음 '+n0(d.withT)+'</span></div>'+tag(cs.k==="open"?"받는 중":cs.k==="pre"?"받기 전":"받지 않음",cs.k==="open"?"ok":"")+(cs.k==="open"?'<button class="btn dng" type="button" onclick="dwsClose(1)">체크인 마감</button>':'')+'</div><p class="cap mt4">'+esc(cs.s)+'</p>'; }
   else el("dwsCl").innerHTML='<h2>17F 입구 체크인</h2>'+('closed' in d?'<div class="row"><div class="t"><b>'+(d.closed?"체크인 마감":"체크인 받는 중")+'</b><span>체크인 '+n0(d["in"])+'명 · 행운권 있음 '+n0(d.withT)+'</span></div>'+(d.closed?tag("마감","warn"):tag("받는 중","ok"))+'<button class="btn'+(d.closed?"":" dng")+'" type="button" '+(d.closed&&d.lock?'disabled ':'')+'onclick="dwsClose('+(d.closed?0:1)+')">'+(d.closed?"다시 열기":"체크인 마감")+'</button></div><p class="cap mt4">시작 '+esc(hm(String(d.win||"").split("-")[0])||"-")+' · 마감은 단추'+(d.closed&&d.lock?' · 무대 공 넣기 뒤에는 다시 열 수 없음, 다시 열면 통 숫자가 어긋남':'')+'</p>':laterH("체크인 마감"));
   if(el("dtChk")&&typeof dtChkH==="function") el("dtChk").innerHTML=dtChkH(d);
   if(el("dtRh")&&typeof dtRhH==="function") el("dtRh").innerHTML=dtRhH();
