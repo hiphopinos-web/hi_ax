@@ -6,7 +6,7 @@
  * 담당 지정 · 해제 = 설정 › 관리자 명단 › 콘솔 입장 명단 「커피챗 담당」 칸(roster.js 열 · 슈퍼관리자만 단추) · cc_owner_set */
 var CW={ open:"", dr:{}, q:"", fr:null, fbusy:0, f:"live", busy:{} };
 var CW_RES={ put:["줌","ok"], cap:["기록만 · 개수 그대로","off"], has:["이미 받음 · 건너뜀","off"], preday:["행사 전 · 건너뜀","warn"], later:["당일 첫 접속 때 줌","off"], noidea:["아이디어 없음 · 건너뜀","warn"], err:["못 줌","bad"] };
-var CW_FAIL={ owner:"커피챗 담당 · 슈퍼관리자가 합니다 · 설정 › 관리자 명단에서 지정", rate:"찾기를 너무 많이 했습니다 · 10분 뒤 다시", noros:"명부에 없는 사번입니다", "short":"아이디어 한 줄은 30자 이상입니다", "long":"글자 수가 너무 깁니다", done:"상담을 마친 뒤에는 아이디어 글을 고치지 않습니다", late:"아이디어 마감이 지나 받지 않습니다", param:"사번 또는 이름 2글자 이상을 넣습니다" };
+var CW_FAIL={ owner:"커피챗 담당 · 슈퍼관리자가 합니다 · 설정 › 관리자 명단에서 지정", rate:"찾기를 너무 많이 했습니다 · 10분 뒤 다시", noros:"명부에 없는 사번입니다", "short":"아이디어 한 줄은 30자 이상입니다", "long":"글자 수가 너무 깁니다", done:"상담을 마친 뒤에는 아이디어 글을 고치지 않습니다", late:"아이디어 마감이 지나 받지 않습니다", param:"사번 또는 이름 2글자 이상을 넣습니다", preday:"행사 전이라 커피챗 스탬프가 나가지 않습니다 · 완료하지 않고 그대로 둡니다 · 10/26에 다시 누릅니다" };
 function cwMay(){ var d=S.data.ccw; return !!(isTop()||(S.me&&S.me.co)||(d&&d.ok&&d.may)); }
 function cwRows(){ var d=S.data.ccw; return d&&d.ok&&d.rows||[]; }
 function cwRow(id){ return cwRows().filter(function(x){ return x.id===id; })[0]||null; }
@@ -131,7 +131,7 @@ function cwDoneAsk(id){
   cwSave(id, function(){
     call("ccw_done",{ id:id, dry:"1" }).then(function(pv){
       delete CW.busy["d"+id];
-      if(!pv||!pv.ok){ toast("미리 보지 못했습니다 · "+cwWhy(pv),{ bad:1, ms:5000 }); return; }
+      if(!pv||!pv.ok){ toast(pv&&pv.reason==="preday"?CW_FAIL.preday:"미리 보지 못했습니다 · "+cwWhy(pv),{ bad:1, ms:6000 }); return; }
       if(pv.again){ cwPut(pv.row); cwPaint(true); toast("이미 완료한 상담입니다"); return; }
       cwConfirm(id, pv);
     });
