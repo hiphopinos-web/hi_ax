@@ -151,10 +151,10 @@ var STAMP8=[["lg","01","최초 로그인"],["qz","02","AX 퀴즈"],["p4","03","�
 var PROG=[["p3","17F 강연"],["p10","10F 실습"],["ln","1F AX 라운지"],["cc","18F 커피챗"]];
 var PG_HALF={ p3:"p3h", p10:"p10h" };   /* 입장이나 끝 한쪽만 = 1개(서버 progUnits_ 와 같은 짝) */
 var GRANT_IDS=["p2","p3","st"];   /* 서버 REVOKE_FIELD_IDS(담당자 부여 = 현장 셋) · 앱 자동 · 설문은 앱에서만 */
-var PC={ emp:"", d:null, att:null, u:null, g:null, seq:0 };
+var PC={ emp:"", pgo:0, d:null, att:null, u:null, g:null, seq:0 };
 var RESV_TAG={ "신청":"warn", "승인":"", "체크인":"", "완료":"ok", "노쇼":"bad", "취소":"off" };
 function pcOpen(emp, g){ emp=normE(emp); if(!emp) return; if(!isTop()){ toast("한 사람 카드는 슈퍼관리자만 봅니다",{ bad:1 }); return; }   /* 261021 명단 보안(서버 person_card = admTop_) */
-  PC.emp=emp; PC.g=g||null; PC.d=null; PC.att=null; PC.u=null; pcDraw(); pcLoad(); }
+  PC.emp=emp; PC.pgo=0; PC.g=g||null; PC.d=null; PC.att=null; PC.u=null; pcDraw(); pcLoad(); }
 function pcLoad(){
   var e=PC.emp, s=++PC.seq; if(!e) return;
   call("person_card",{ emp:e, vn:10, tn:30 }).then(function(r){ if(s!==PC.seq) return; PC.d=r||{ ok:false }; pcDraw(); });
@@ -162,6 +162,7 @@ function pcLoad(){
   Promise.all([call("list_get",{ kind:"att10", q:e }), call("list_get",{ kind:"att17", q:e })]).then(function(a){ if(s!==PC.seq) return; PC.att=a; pcDraw(); });
   if(typeof pcUsrLoad==="function") pcUsrLoad(e, s);   /* 261017 게임 · 닉네임(pcgame.js) */
 }
+function pcPgTog(b){ PC.pgo=!PC.pgo; var bx=el("pcPgBox"); if(bx) bx.hidden=!PC.pgo; b.setAttribute("aria-expanded",PC.pgo?"true":"false"); b.textContent=PC.pgo?"접기":"펼치기"; }
 function pcClosed(){ PC.emp=""; PC.seq++; }
 function pcDraw(){
   var e=PC.emp; if(!e) return; var d=PC.d, k="pc:"+e, o={ g:PC.g, wide:1, label:"한 사람 카드", close:pcClosed };
@@ -187,17 +188,24 @@ function pcHtml(d){
     else if(!sm&&GRANT_IDS.indexOf(id)>=0&&d.acct) act='<button class="btn sm" type="button" aria-label="'+esc(no+" "+nm)+' 스탬프 부여" onclick="stGrantAsk(\''+J+'\',\''+id+'\')">부여</button>';
     var sub=sm?(pg?pg+"개":"-"):x?((x.at?fmtD(x.at):"받음")+(x.src&&x.src!=="본인"?" · "+(x.byName||x.src):"")+(rid==="p3h"?" · 한쪽":"")):"-";
     return '<div class="pc-c'+(got?" got":"")+'"><span class="no">'+esc(no)+'</span><b>'+esc(nm)+'</b><span class="cap">'+esc(sub)+'</span>'+act+'</div>'; };
-  var pgRow=function(id, nm){ var hf=PG_HALF[id], x=by[id]||(hf&&by[hf]?by[hf]:null), rid=!by[id]&&hf&&by[hf]?hf:id, act="";
-    if(x) act='<button class="btn sm dng" type="button" aria-label="07 '+esc(nm)+' 스탬프 취소" onclick="stRevokeAsk(\''+J+'\',\''+rid+'\')">취소</button>';
-    else if(id==="p3"&&d.acct) act='<button class="btn sm" type="button" aria-label="07 '+esc(nm)+' 스탬프 부여" onclick="stGrantAsk(\''+J+'\',\'p3\')">부여</button>';
-    var sub=x?((x.at?fmtD(x.at):"받음")+(x.src&&x.src!=="본인"?" · "+(x.byName||x.src):"")+(rid!==id?" · 한쪽":"")):"";
-    return '<div class="pc-pr'+(x?" got":"")+'"><span class="t"><b>'+esc(nm)+'</b>'+(sub?'<span class="cap">'+esc(sub)+'</span>':'')+'</span>'+(act||'<span class="cap">'+(x?"":"없음")+'</span>')+'</div>'; };
+  /* 261022 07 프로그램 참여 = 그리드 한 칸(01~08 순서) + 누르면 프로그램별 줄(받은 개수 · 시각 · 방식 · 기록만) */
+  var PGU={ p3:2, p3h:1, p10:2, p10h:1, ln:2, cc:1 }, PGM={ p3:"입장 + 끝", p3h:"입장 또는 끝 한쪽", p10:"입장 + 끝", p10h:"입장 또는 끝 한쪽", ln:"종료 스캔", cc:"종료 스캔" };
+  var pgs=PROG.map(function(p){ var hf=PG_HALF[p[0]], x=by[p[0]]||(hf&&by[hf]?by[hf]:null); return { id:p[0], nm:p[1], x:x, rid:x?x.id:p[0] }; });
+  var pgOrd=pgs.filter(function(q){ return q.x; }).sort(function(m,n){ return String(m.x.at||"").localeCompare(String(n.x.at||"")); }), rem=2;
+  pgOrd.forEach(function(q){ var u=PGU[q.rid]||1; q.u=u; q.take=Math.min(u,rem); rem-=q.take; });
+  var pgLast=pgOrd.reduce(function(m,q){ return q.x.at&&String(q.x.at)>m?String(q.x.at):m; },"");
+  var pgRow=function(q){ var x=q.x, act="";
+    if(x) act='<button class="btn sm dng" type="button" aria-label="07 '+esc(q.nm)+' 스탬프 취소" onclick="stRevokeAsk(\''+J+'\',\''+q.rid+'\')">취소</button>';
+    else if(q.id==="p3"&&d.acct) act='<button class="btn sm" type="button" aria-label="07 '+esc(q.nm)+' 스탬프 부여" onclick="stGrantAsk(\''+J+'\',\'p3\')">부여</button>';
+    var who=x?(x.src==="콘솔"?"콘솔 부여":x.src==="스태프"?"스태프 스캔":"본인")+(x.byName?" · "+x.byName:""):"";
+    var sub=x?[x.at?fmtD(x.at):"받음", PGM[q.rid]+(q.rid==="p3h"||q.rid==="p10h"?"":""), who].join(" · "):"";
+    var cnt=x?(q.take===0?tag("기록만","off"):'<b class="n">'+q.take+'개</b>'+(q.take<q.u?' <span class="cap">(상한으로 '+q.take+'/'+q.u+')</span>':'')):'<span class="cap">없음</span>';
+    return '<div class="pc-pr'+(x?" got":"")+'"><span class="t"><b>'+esc(q.nm)+'</b>'+(sub?'<span class="cap">'+esc(sub)+'</span>':'')+'</span>'+cnt+(act||'')+'</div>'; };
+  var pg07='<div class="pc-c pc-pg'+(pg?" got":"")+'"><span class="no">07</span><b>프로그램 참여</b><span class="cap">'+esc(pg+" / 2"+(pgLast?" · "+fmtD(pgLast):""))+'</span><button class="btn sm" type="button" aria-expanded="'+(PC.pgo?"true":"false")+'" aria-controls="pcPgBox" onclick="pcPgTog(this)">'+(PC.pgo?"접기":"펼치기")+'</button></div>';
+  var pgBox='<div class="pc-pgbox" id="pcPgBox"'+(PC.pgo?"":" hidden")+'><div class="cap">17F 강연 · 10F 실습 · 라운지 · 커피챗, 합쳐 최대 2개 · 시각이 빠른 순으로 셉니다</div>'+pgs.map(pgRow).join("")+'</div>';
   var rl=d.roulette||{};
   h+=pcSec('스탬프 <b class="n">'+Math.min(6,num(d.n))+' / 6</b> · 행운권 '+drN("lky", '<b class="n">'+n0(d.tickets||0)+'</b>', d.tickets)+'장',
-    '<div class="pc-st">'+STAMP8.filter(function(s){ return s[0]!=="p3"; }).map(function(s){ return cell(s[0],s[1],s[2]); }).join("")+
-    /* 261016 3단계 · 07 프로그램 참여 한 칸(세부 세 줄 · 상태 · 부여 · 취소 · 규칙 한 줄) */
-    '<div class="pc-c pc-pg'+(pg?" got":"")+'"><div class="pc-pgh"><span class="no">07</span><b>프로그램 참여</b><span class="n pc-pgn">'+pg+' / 2</span></div><div class="cap">17F 강연 · 10F 실습 · 라운지 · 커피챗, 합쳐 최대 2개</div>'+
-      PROG.map(function(p){ return pgRow(p[0],p[1]); }).join("")+'</div>'+(by.ck?cell("ck","0","옛 체크인(0개)"):"")+'</div>', 1);
+    '<div class="pc-st">'+STAMP8.map(function(s){ return s[0]==="p3"?pg07:cell(s[0],s[1],s[2]); }).join("")+(by.ck?cell("ck","0","옛 체크인(0개)"):"")+pgBox+'</div>', 1);
   /* 261017 게임 · 닉네임(pcgame.js) */
   if(typeof pcGameHtml==="function") h+=pcGameHtml(d);
   /* 경품 · 옷 */

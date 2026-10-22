@@ -375,9 +375,11 @@ details.memo summary{cursor:pointer;font-weight:600;min-height:32px;display:flex
 /* 261017 좁은 폭(600 이하) · 두 칸 카드를 한 열로(추첨 설정 · 관리자 명단) */
 @media (max-width:600px){ .g2.s1{grid-template-columns:minmax(0,1fr)} }
 /* 한 사람 카드 · 07 프로그램 참여 한 칸 */
-.pc-pg{grid-column:1/-1;gap:4px}
-.pc-pgh{display:flex;align-items:baseline;gap:8px}
-.pc-pgn{margin-left:auto;font-size:14px;font-weight:700}
+.pc-pg .btn{align-self:flex-start}
+.pc-pg>.cap{white-space:normal}
+.pc-pgbox{grid-column:1/-1;border:1px solid var(--line);border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:4px;background:var(--soft)}
+.pc-pgbox[hidden]{display:none}
+.pc-pr .cap{white-space:normal}
 .pc-pr{display:flex;align-items:center;gap:8px;border-top:1px solid var(--line2);padding-top:6px;margin-top:2px;min-width:0}
 .pc-pr .t{display:flex;flex-direction:column;min-width:0;flex:1}
 .pc-pr .t b{font-size:13px}
