@@ -35,7 +35,7 @@ function dsStart(v){
   if(!isTop()){ toast(DS_WHY.super,{ bad:1 }); return; }
   var i=dsInfo(S.data.draw,typeof lkuB==="function"?lkuB():null)||{ day:"", st:"16:40" }, md=dsMd(i.day), when=(md?md+" ":"")+i.st;
   confirmBox({ t:v?"체크인을 시작할까요?":"체크인 시작을 취소할까요?", who:"17F 입구 럭키드로우 체크인",
-    sub:v?"시작하면 지금부터 QR 체크인을 받습니다("+when+" 이후 · 날짜 · 시간 안일 때만)":"취소하면 다시 시작 전 · QR 을 찍어도 체크인되지 않음 · 체크인 0명일 때만", ok:v?"체크인 시작":"시작 취소", danger:!v,
+    sub:v?"시작하면 지금부터 QR 체크인을 받습니다"+("("+when+" 이후 · 날짜 · 시간 안일 때만)").replace(/ /g,"\u00a0"):"취소하면 다시 시작 전 · QR 을 찍어도 체크인되지 않음 · 체크인 0명일 때만", ok:v?"체크인 시작":"시작 취소", danger:!v,
     run:function(){ return call("draw_start",{ on:v?"1":"0" }); }, fail:function(r){ return r&&DS_WHY[r.reason]||""; },
     done:function(r){ dsAfter(r);
       toast(v?(r&&r.same?"이미 시작돼 있습니다":"체크인을 시작했습니다"):(r&&r.same?"이미 시작 전입니다":"체크인 시작을 취소했습니다"), r&&r.same?{}:{ undo:function(){ call("draw_start",{ on:v?"0":"1" }).then(function(x){ dsAfter(x); toast(x&&x.ok?"되돌렸습니다":"되돌리지 못했습니다 · "+(DS_WHY[(x||{}).reason]||why(x)),{ bad:!(x&&x.ok) }); }); } }); } });
