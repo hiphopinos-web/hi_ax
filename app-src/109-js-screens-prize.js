@@ -418,7 +418,7 @@ function fcfsGotRow() { var f = fcfsMy(), rk = f && f.st === "got" && f.rk > 0 ?
 /* 261014 선착순 참여상 요약 팝업도 경품 시트의 선착순 구역으로 바로(옛 받으려면 상자 + 경품 한 줄 + 닫기 · 자격이 없어졌을 때 수령 안내 시트(fcfsGotOpen)의 되돌림 길) */
 function fcfsInfoOpen() { prizeGo("fin"); }
 /* 행운권 참석 조건(sync lkcond · 옛 서버 = 조건 있음) · 룰렛 마감 시각(sync rcut) · 아이디어왕 인원 */
-function lkCond() { var v = S.get("lkcond", null); return v === null ? true : !!v; }
+function lkCond() { var v = S.get("lkcond", null); return v === null ? false : !!v; }   /* v8.55 (261022) sync 전 기본 = 조건 없음(운영 lkcond 0 · 첫 화면에 옛 시간 문구 안 비침) */
 function drawWhenTxt() { return lkCond() ? "Closing Speech 현장 추첨은 17F 입구 QR 체크인" : "17:00 Closing Speech 현장 추첨 · 당첨자 발표"; }
 function roulCutHm() { return String(S.get("rcut", "") || ""); }
 function roulCut() {
