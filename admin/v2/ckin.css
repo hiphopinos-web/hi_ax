@@ -1,12 +1,18 @@
 /* AXF CONTROL v2 · 체크인 탭(261020) · 큰 글씨 · 큰 단추 · 노트북 1024 · 태블릿 768 에서 카드 한 화면 · 색 = 네이비 + 상태 3색(v2.css 토큰) · 오렌지 없음 */
 .cki{display:grid;gap:0;min-width:0}
 .cki-find{padding:12px}
+/* 261022 맨 위 큰 2칸 전환 「체크인 | 선착순」 · 높이 52(폰 48) · 고른 칸 = 네이비 채움 · 표 안 찾기 칸은 숨김(위 찾기 칸 하나로 거름) */
+.cki-sw{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:4px;background:var(--sf);border:1px solid var(--line);border-radius:12px}
+.cki-sw button{height:52px;border-radius:9px;font-size:18px;font-weight:700;color:var(--tx2);display:flex;align-items:center;justify-content:center;gap:10px;min-width:0}
+.cki-sw button .c{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--tx3)}
+.cki-sw button.on{background:var(--navy);color:#fff}
+.cki-sw button.on .c{color:rgba(255,255,255,.78)}
+.cki-sw button:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+.cki .xg-q{display:none}
 .cki-fbar{display:flex;gap:8px;align-items:center;min-width:0}
 .cki-q{flex:1;min-width:0;height:56px;border:2px solid var(--line3);border-radius:10px;padding:0 16px;font-size:20px;font-weight:600;background:#fff;letter-spacing:0}
 .cki-q:focus{border-color:var(--navy);outline:none}
 .cki-go{height:56px;font-size:16px;min-width:88px}
-.cki-camb{height:56px;font-size:16px;gap:8px}
-.cki-camb svg{width:22px;height:22px}
 .cki-hits{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-top:8px}
 .cki-hit{position:relative;display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;align-items:center;text-align:left;min-height:64px;padding:8px 12px;border:1px solid var(--line3);border-radius:10px;background:#fff}
 .cki-hit b{font-size:17px}.cki-hit span{font-size:13px;color:var(--tx2);grid-column:1}
@@ -61,35 +67,22 @@
 .xg-t tr.cki-warn td:first-child{box-shadow:inset 4px 0 0 var(--warn)}
 .cki-sup .btns>.btn{flex:none}
 
-/* 카메라 */
-.cki-cam-bg{position:fixed;inset:0;z-index:90;background:rgba(10,14,24,.72);display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;transition:opacity var(--t-out) var(--ease)}
-.cki-cam-bg.on{opacity:1;transition:opacity var(--t-in) var(--ease)}
-.cki-cam{width:min(560px,100%);background:var(--sf);border-radius:var(--r);padding:12px;display:grid;gap:10px;transform:translateY(8px);transition:transform var(--t-out) var(--ease)}
-.cki-cam-bg.on .cki-cam{transform:none;transition:transform var(--t-in) var(--ease)}
-.cki-cam-v{position:relative;border-radius:10px;overflow:hidden;background:#000;aspect-ratio:4/3}
-.cki-cam-v video{width:100%;height:100%;object-fit:cover;display:block}
-.cki-cam-box{position:absolute;left:50%;top:50%;width:58%;aspect-ratio:1;transform:translate(-50%,-50%);border:3px solid #fff;border-radius:12px;box-shadow:0 0 0 999px rgba(0,0,0,.28)}
-#ckiCamTx{font-size:16px;font-weight:600;text-align:center;margin:0}
-@media (prefers-reduced-motion:reduce){.cki-cam-bg,.cki-cam-bg.on,.cki-cam,.cki-cam-bg.on .cki-cam{transition:none!important}}
 
 @media (max-width:700px){
   .cki-blks{grid-template-columns:minmax(0,1fr)}
-  .cki-camb{min-width:56px;padding:0 10px;font-size:0;gap:0}
-  .cki-camb svg{width:24px;height:24px}
   .cki-go{min-width:64px}
   .cki-fh b{font-size:24px}
   .cki-no{min-width:104px}.cki-no b{font-size:32px}
 }
-@media (max-width:900px){ .cki-k.g4{grid-template-columns:repeat(2,minmax(0,1fr))} }
 
-/* 휴대폰 글자 정돈(261021) · 찾기 칸 둘 같은 크기 · 숫자 카드 상태 글자 한 단계 작게 · 안내는 칩 줄 아래 · 명단 표는 세션 · 소속 · 앱 열을 접어(사번 · 소속 · 이름 순서 · 앱 열 6번째) 세션 번호 · 사번 · 이름 · 체크인이 첫 화면 */
+/* 휴대폰 글자 정돈(261021) · 찾기 칸 둘 같은 크기 · 숫자 카드 상태 글자 한 단계 작게 · 명단 표는 세션 · 소속 · 앱 열을 접어(사번 · 소속 · 이름 순서 · 앱 열 6번째) 세션 번호 · 사번 · 이름 · 체크인이 첫 화면 */
 @media (max-width:700px){
+  .cki-sw button{height:48px;font-size:17px;gap:8px}
+  .cki-sw button .c{font-size:14px}
   .cki-q{height:48px;font-size:16px;padding:0 12px}
-  .cki-go,.cki-camb{height:48px}
+  .cki-go{height:48px}
   .cki-k .kpi .l,.cki-k .kpi .s{font-size:12px}
-  .cki-k .kpi:nth-child(4) .v{font-size:20px;line-height:1.5;font-weight:700}
-  .cki .xg-q{font-size:16px}
-  #ckiV .cap{flex-basis:100%;font-size:12px;margin-top:-2px}
+  .cki-k.fc .kpi:nth-child(2) .v{font-size:20px;line-height:1.5;font-weight:700}
   .cki [data-xg="ckin_pre"] col:nth-child(2),.cki [data-xg="ckin_pre"] col:nth-child(4),.cki [data-xg="ckin_pre"] col:nth-child(6),
   .cki [data-xg="ckin_pre"] th:nth-child(2),.cki [data-xg="ckin_pre"] th:nth-child(4),.cki [data-xg="ckin_pre"] th:nth-child(6),
   .cki [data-xg="ckin_pre"] td:nth-child(2),.cki [data-xg="ckin_pre"] td:nth-child(4),.cki [data-xg="ckin_pre"] td:nth-child(6){display:none}
