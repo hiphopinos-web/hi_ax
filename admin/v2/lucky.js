@@ -140,7 +140,7 @@ function lkyPreview(){
 }
 /* ── 명단 표 ── */
 function lkyView(){ LKY.view=LKY.view==="no"?"emp":"no"; var g=MG[LKY.view==="no"?"lkyno":"lkyemp"]; var root=g&&XG.root?XG.root(g):null; if(root) root.remove(); paint(); }
-/* 261022 칩을 열면 바로 통을 받아 전체 표(줄 수 제한 없음) · 5초 갱신은 표를 다시 만들지 않음(번호가 늘었을 때만 본문 줄만 바꿔 스크롤 · 검색 유지) */
+/* 261022 칩을 열면 바로 통을 받아 전체 표(줄 수 상한 없음) · 5초 갱신은 표를 다시 만들지 않음(번호가 늘었을 때만 본문 줄만 바꿔 스크롤 · 검색 유지) */
 function lkyLoad(){
   if(!lkyTop()||LKY.busy||LKY.ld) return;
   var b=S.data.rfb, need=!LKY.rows?(Date.now()-LKY.ldAt>20000):(b&&b.ok&&num(b.m)!==LKY.rm&&Date.now()-LKY.ldAt>60000);
