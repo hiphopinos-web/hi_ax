@@ -8,8 +8,13 @@
  *   · 문서를 네트워크로 받은 뒤 20초(FRESH_MS) 동안은 하위 파일도 네트워크 먼저(새로 고침 · 앱의 최소 판 새로 고침 때 새 문서와 옛 하위 파일이 섞이지 않게).
  *   · 네트워크 오류 · 5xx 면 캐시 · 캐시도 없으면 오류 그대로 · 200 이 아닌 응답 · 다른 형식은 캐시에 넣지 않는다.
  *   · 새 서비스워커 설치 때 첫 문서와 하위 파일을 한 번 받아 넣어 둔다(실패해도 설치는 계속).
+ * 261022 (v8.46 · 앱 판 고착 보완) 이 주소가 더는 앱을 내주지 않으면(첫 문서 요청이 넘김 3xx · 예 hiax.app → github.io 302) 캐시 판을 내주지 않고 비운다.
+ *   · 261019 밤 hiax.app 이 github.io 로 넘기는 주소가 된 뒤, hiax.app 범위에 남은 서비스워커가 넘김 응답을 캐시에 넣지 못해(axfOkDoc 거부) 옛 문서(v8.08)를 계속 내줬다.
+ *   · activate 때 첫 문서를 redirect manual 로 한 번 확인(axfProbe) · 넘김이면 비우기(axfEvacuate) = 캐시 둘 삭제 · 열린 창을 같은 주소로 다시 열기(넘김을 따라 새 판) · 등록 해제.
+ *   · 캐시 판을 내준 뒤 뒤에서 받은 새 문서가 넘김이어도 같은 비우기 · 캐시가 없을 때의 넘김 응답은 그대로 돌려 브라우저가 따라간다(전과 같음).
+ *   · 네트워크 오류(오프라인)는 넘김이 아니다 · 아무것도 바꾸지 않는다 · github.io · 로컬 QA 처럼 200 을 주는 주소에서는 아무 일도 없다.
  * 나머지(admin · draw · typing · king · tv · interview · wall 등 다른 경로 · 미디어 · API)는 손대지 않는다(브라우저 기본 동작 · mp4 Range 그대로). */
-var SW_VERSION = "axf-2026-10-20-v816";   /* v8.16 · 아이디어왕 2등 2명 / v8.15 · 261020 캐시 먼저 + 뒤에서 새 판(문서 · 하위 파일 5개) · v5.20 261019 앱 첫 문서 캐시(네트워크 우선 3초) */
+var SW_VERSION = "axf-2026-10-22-v846";   /* v8.46 · 261022 넘김 주소면 캐시 비우기 · 등록 해제 / v8.16 · 아이디어왕 2등 2명 / v8.15 · 261020 캐시 먼저 + 뒤에서 새 판(문서 · 하위 파일 5개) · v5.20 261019 앱 첫 문서 캐시(네트워크 우선 3초) */
 var APP_CACHE = "axf-app-doc";            /* 이름을 바꾸지 않는다(서비스워커 판이 바뀌어도 첫 문서 캐시는 남아 다음 열기가 빠르다 · 내용은 네트워크가 늘 갈아 끼운다) */
 var SUB_CACHE = "axf-app-sub";            /* 하위 파일 5개 · activate 는 이 둘만 남긴다 */
 var SUB_FILES = ["design-handoff/design-system/tokens.css", "design-handoff/design-system/components.css", "assets/bot.js", "assets/rain-engine.js", "assets/server.js"];
@@ -29,6 +34,30 @@ function axfSubKey(u) {                    /* 하위 파일 5개면 캐시 열�
   return SUB_FILES.indexOf(u.pathname.slice(sc.pathname.length)) >= 0 ? sc.origin + u.pathname : "";
 }
 function axfOkDoc(r) { return !!r && r.status === 200 && r.type === "basic" && !r.redirected && /text\/html/i.test(r.headers.get("content-type") || ""); }
+/* 261022 첫 문서 요청이 넘김(3xx)으로 돌아왔다 = 이 주소는 더는 앱을 내주지 않는다(redirect manual = opaqueredirect · follow = redirected · 3xx 그대로) */
+function axfMoved(r) { return !!r && (r.type === "opaqueredirect" || r.redirected === true || (r.status >= 300 && r.status < 400)); }
+var EVAC = { on: false };
+/* 261022 비우기 · 캐시 둘 삭제 → 앱 첫 문서를 보고 있는 창만 같은 주소로 다시 연다(캐시가 없으니 네트워크 = 넘김을 따라 새 판) · 한 번만 · 실패해도 멈추지 않는다
+   등록은 풀지 않는다(이 주소에서 받던 푸시 구독 · 알림 누르기는 그대로 · 캐시가 없으니 다음 열기부터 늘 네트워크 = 넘김) · admin · draw · tv 창은 건드리지 않는다 */
+function axfEvacuate() {
+  if (EVAC.on) return Promise.resolve();
+  EVAC.on = true;
+  return Promise.all([caches.delete(APP_CACHE).catch(axfNoop), caches.delete(SUB_CACHE).catch(axfNoop)])
+    .then(function () { return self.clients.matchAll({ type: "window", includeUncontrolled: true }); })
+    .then(function (list) {
+      /* 다시 열기는 기다리지 않는다 · activate 안에서 기다리면 그 창의 새 요청(fetch)이 activate 가 끝나기를 기다려 서로 멈춘다(261022 헤드리스 실측) */
+      (list || []).forEach(function (c) {
+        if (c && typeof c.navigate === "function" && axfAppKey(new URL(c.url))) { try { c.navigate(c.url).catch(axfNoop); } catch (e) {} }
+      });
+    })
+    .catch(axfNoop);
+}
+/* 261022 첫 문서를 넘김을 따르지 않고 한 번 받아 본다 · 넘김이면 true · 네트워크 오류 · 그 밖은 false */
+function axfProbe() {
+  var key = axfAppKey(axfScope());
+  if (!key) return Promise.resolve(false);
+  return fetch(new Request(key, { cache: "no-store", credentials: "same-origin", redirect: "manual" })).then(axfMoved, function () { return false; });
+}
 function axfOkSub(r) { return !!r && r.status === 200 && r.type === "basic" && !r.redirected && /css|javascript/i.test(r.headers.get("content-type") || ""); }
 function axfGet(name, key) { return caches.open(name).then(function (c) { return c.match(key, { ignoreSearch: true, ignoreVary: true }); }).catch(axfNoop); }
 function axfPut(name, key, res) { return caches.open(name).then(function (c) { return c.put(key, res); }).catch(axfNoop); }
@@ -60,6 +89,8 @@ self.addEventListener("activate", function (event) {
       .then(function (keys) { return Promise.all(keys.filter(function (k) { return k !== APP_CACHE && k !== SUB_CACHE; }).map(function (k) { return caches.delete(k); })); })
       .then(function () { return self.clients.claim(); })
       .catch(function () { return self.clients.claim(); })
+      .then(function () { return axfProbe().then(function (moved) { return moved ? axfEvacuate() : null; }); })   /* 261022 이 주소가 넘김이면 옛 캐시를 비우고 열린 앱 창을 다시 연다 */
+      .catch(axfNoop)
   );
 });
 
@@ -88,8 +119,11 @@ function axfAppDoc(event, req, key) {
         return res;
       }, function (e) { if (old) return old; throw e; });
     }
-    /* 캐시 판을 곧바로 · 뒤에서 새 문서 + 하위 파일을 끝까지 받아 캐시만 바꾼다(다음 열기 = 새 판) */
-    event.waitUntil(fetch(req).then(function (res) { return axfOkDoc(res) ? axfPut(APP_CACHE, key, res) : null; }).then(axfSubWarm).catch(axfNoop));
+    /* 캐시 판을 곧바로 · 뒤에서 새 문서 + 하위 파일을 끝까지 받아 캐시만 바꾼다(다음 열기 = 새 판) · 261022 새 문서가 넘김이면 비우기(이 창도 다시 연다) */
+    event.waitUntil(fetch(req).then(function (res) {
+      if (axfMoved(res)) return axfEvacuate();
+      return (axfOkDoc(res) ? axfPut(APP_CACHE, key, res) : Promise.resolve()).then(axfSubWarm);
+    }).catch(axfNoop));
     return old;
   });
 }

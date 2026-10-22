@@ -7,6 +7,15 @@ if (BE.on) pollNext(beJit());   /* v4.57 첫 sync 0~5초 뒤 · 이후 pollNext 
 /* 서비스워커 · 안드로이드 홈 화면 설치창의 전제조건. 캐시 = 앱 첫 문서 하나(sw.js · 261019 네트워크 우선 3초 · 늦으면 폰에 저장된 판 · 끝까지 받아 다음 열기에 새 판) */
 if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(127\.0\.0\.1|localhost)$/.test(location.hostname))) {   /* v4.76 웹 푸시 · 로컬 QA 서버도 */
   try { navigator.serviceWorker.register("sw.js"); } catch (e) {}
+  /* 261022 v8.46 앱 판 고착 보완 · 화면으로 돌아올 때 서비스워커 새 판을 확인한다(브라우저는 주소를 다시 열 때만 sw.js 를 확인 · 닫지 않고 쓰는 탭은 며칠이 지나도 확인하지 않는다)
+     10분에 한 번 · sw.js 11KB(no-cache · 안 바뀌면 304) · 새 판이 있으면 설치 · 활성(skipWaiting) · 넘김 주소면 sw.js 가 캐시를 비우고 이 창을 다시 연다 · 현장 기기(#self · #tv=)는 건너뜀 */
+  var SWUP = { t: 0 };
+  function swPoke() {
+    if (document.hidden || Date.now() - SWUP.t < 600000 || /^#(self|tv=)/i.test(location.hash)) return;
+    SWUP.t = Date.now();
+    try { navigator.serviceWorker.getRegistration().then(function (r) { if (r) return r.update(); }).catch(function () {}); } catch (e) {}
+  }
+  document.addEventListener("visibilitychange", swPoke);
 }
 function counters() {
   return {
