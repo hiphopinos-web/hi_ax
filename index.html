@@ -1702,8 +1702,9 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-flg .axs-tt .rc .tr { flex-wrap: wrap; row-gap: 2px; }   /* v7.78 폭이 모자라면 「내 세션」 칩이 제목 아래 줄로 */
   .axs-flg .axs-tt .rc .rh .tt { white-space: normal; overflow: visible; text-overflow: clip; }   /* 큰 글씨에서 제목이 넘치면 말줄임 대신 「 · 」 자리에서 둘째 줄로 */
   /* v7.82 (사용자 261018 「시간 알약과 카드 높이가 너무 같아서 이상해 · A 세션 알약으로」) 시간 칸 = 카드 위 · 아래 · 왼쪽 6 여백을 둔 알약(높이 44 · 카드 모서리 20 − 6 = 14 동심) · 카드 높이 56(SE 6장이 탭 바 위에) · 제목 = 「A 세션」 알약 + 장소 */
-  .axs-flg .axs-tt .rc { --rc-h: 56px; --rc-gap: 10px; padding: 0 14px 0 6px; }
-  .axs-flg .axs-tt .rc .ls .tok { min-height: 44px; padding-top: 0; padding-bottom: 0; border-radius: 14px; }
+  .axs-flg .axs-tt .rc { --rc-h: 73px; --rc-gap: 10px; padding: 0 14px 0 6px; }
+  /* v7.8x (사용자 261022) 10F 실습형 세션 카드 높이 56 → 73(약 130%) · 시간 알약 44 → 61(위 · 아래 6 여백 그대로) */
+  .axs-flg .axs-tt .rc .ls .tok { min-height: 61px; padding-top: 0; padding-bottom: 0; border-radius: 14px; }
   .axs-flg .axs-tt .rc .tr .tt { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--ax-space-4); }
   .axs-sesspill { display: inline-flex; align-items: center; flex: none; min-height: 1.375rem; padding: 0 7px; margin-right: 2px; border-radius: 999px; background: var(--ax-color-canvas); color: var(--ax-color-body); font: 600 0.75rem/1 var(--ax-font); white-space: nowrap; }
   .axs-tt .rc.my .axs-sesspill { background: var(--ax-color-surface); }
