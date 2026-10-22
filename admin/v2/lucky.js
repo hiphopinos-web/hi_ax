@@ -4,7 +4,7 @@
  * 종이 대비 = 준비 점검표(이 PC) · 계산기 · 키트 받기 · 새 탭 미리 보기 · 선언 문구 복사
  * 진행 칩 = stage.js dc* 그대로 + 시험 페이지 링크 · 리허설 중(16:00 전) · 추첨 설정 접이식(drawset.js · dset.js 칸)
  * 마지막 받은 시각 · 대조 코드 = 이 PC(localStorage) */
-var LKY={ busy:"", rows:null, rt:"", rfp:"", rm:0, rn:0, view:"no", info:null, infoAt:0, dir:null, dirN:"", auto:null, autoAt:"", autoErr:"", setOpen:false };
+var LKY={ busy:"", ld:0, ldAt:0, ldErr:"", tkey:"", rows:null, rt:"", rfp:"", rm:0, rn:0, view:"no", info:null, infoAt:0, dir:null, dirN:"", auto:null, autoAt:"", autoErr:"", setOpen:false };
 var LKY_K={ xlsx:"엑셀", csv:"CSV", txt:"번호만", kit:"종이 추첨 키트" };
 /* 추첨 설정 칩은 진행 칩 안 접이식으로(drawset.js 가 넣은 칩을 뺀다 · 옛 주소 #stage/set = 진행 · 설정 펼침) */
 (function(){ for(var i=SG_SUBS.length-1;i>=0;i--) if(SG_SUBS[i][0]==="set") SG_SUBS.splice(i,1); })();
@@ -77,7 +77,7 @@ function lkyMount(s){
 function lkyPaint(s){
   var b=S.data.rfb, gt=dataGate("rfb","행운권 현황");
   var dl=el("lkyDl"); if(dl) dl.innerHTML=lkyDlRow(s==="paper"?["kit"]:s==="list"?["xlsx","csv","txt","kit"]:["xlsx","csv","kit"], s==="paper");
-  if(s==="list"){ lkyTable(); lkyAutoPaint(); }
+  if(s==="list"){ lkyTable(); lkyAutoPaint(); lkyLoad(); }
   if(s==="paper"){ lkyPaperPaint(b&&b.ok?b:null); }
   var bd=el("lkyBand"); if(!bd) return;
   if(gt){ bd.innerHTML=gt; return; }
@@ -140,26 +140,44 @@ function lkyPreview(){
 }
 /* ── 명단 표 ── */
 function lkyView(){ LKY.view=LKY.view==="no"?"emp":"no"; var g=MG[LKY.view==="no"?"lkyno":"lkyemp"]; var root=g&&XG.root?XG.root(g):null; if(root) root.remove(); paint(); }
+/* 261022 칩을 열면 바로 통을 받아 전체 표(줄 수 제한 없음) · 5초 갱신은 표를 다시 만들지 않음(번호가 늘었을 때만 본문 줄만 바꿔 스크롤 · 검색 유지) */
+function lkyLoad(){
+  if(!lkyTop()||LKY.busy||LKY.ld) return;
+  var b=S.data.rfb, need=!LKY.rows?(Date.now()-LKY.ldAt>20000):(b&&b.ok&&num(b.m)!==LKY.rm&&Date.now()-LKY.ldAt>60000);
+  if(!need) return; LKY.ld=1; LKY.ldAt=Date.now();
+  call("roster_export",{ kind:"raffle" },60000).then(function(r){
+    LKY.ld=0;
+    if(r&&r.ok){ LKY.ldErr=""; lkyTake(r); } else LKY.ldErr=why(r);
+    if(el("lkyTb")) lkyTable(); }, function(){ LKY.ld=0; LKY.ldErr="연결 실패"; if(el("lkyTb")) lkyTable(); });
+}
+function lkyTier(c){ return c>=3?"스탬프 6개 · 3장":c===2?"스탬프 5개 · 2장":"스탬프 4개 · 1장"; }
 function lkyTable(){
   var box=el("lkyTb"); if(!box) return;
   el("lkyVw").textContent=LKY.view==="no"?"사람 단위":"번호 단위";
-  el("lkyRt").textContent=LKY.rows?"기준 "+fmtD(LKY.rt)+" · "+n0(LKY.rm)+"장 · "+n0(LKY.rn)+"명 · 대조 코드 "+LKY.rfp:"받기 단추를 누르면 같은 데이터가 표로 나옴";
-  if(!LKY.rows){ box.innerHTML='<p class="cap">아직 받지 않았습니다</p>'; return; }
+  el("lkyRt").textContent=LKY.rows?"기준 "+fmtD(LKY.rt)+" · "+n0(LKY.rm)+"장 · "+n0(LKY.rn)+"명 · 대조 코드 "+LKY.rfp:"";
+  if(!LKY.rows){ box.innerHTML='<p class="cap">'+(!lkyTop()?"슈퍼관리자가 받습니다":LKY.ldErr?"불러오지 못했습니다 · "+esc(LKY.ldErr)+" · 곧 다시 시도":"불러오는 중")+'</p>'; LKY.tkey=""; return; }
+  var key=LKY.view+"|"+LKY.rt+"|"+LKY.rm, id=LKY.view==="no"?"lkyno":"lkyemp", g=MG[id], root=g&&XG.root?XG.root(g):null;
+  if(root&&LKY.tkey===key&&box.contains(root)) return;   /* 같은 데이터 · 같은 보기 = 그대로 둠 */
   var cnt={}; LKY.rows.forEach(function(o){ cnt[o.emp]=(cnt[o.emp]||0)+1; });
   var chips=[["all","전체",null],["c1","1장",function(r){ return r.c===1; }],["c2","2장",function(r){ return r.c===2; }],["c3","3장",function(r){ return r.c>=3; }],["win","당첨 표시",function(r){ return !!r.win; }]];
   var onRow=function(k){ var e=String(k).split(":")[0]; if(typeof pcOpen==="function") pcOpen(e); };
+  var tier={ k:"c", t:"장수 구분", w:150, v:function(r){ return lkyTier(r.c); } };
+  var rows, spec;
   if(LKY.view==="no"){
-    gridOf("lkyno",{ file:"행운권 명단", key:function(r){ return r.emp+":"+r.no; }, sort:{ k:"no", d:1 }, onRow:onRow, chips:chips,
-      cols:[{ k:"no", t:"행운권 번호", w:100 },{ k:"emp", t:"사번", w:90 },{ k:"name", t:"이름", w:100 },{ k:"dept", t:"소속", w:200 },{ k:"pos", t:"직위", w:70 },{ k:"c", t:"장", type:"num", w:48 },{ k:"win", t:"당첨", w:110 }],
-      empty:"번호가 없습니다", h:520 });
-    box.innerHTML='<div id="mg_lkyno"></div>';
-    XG.set(MG.lkyno, LKY.rows.map(function(o){ return { no:String(o.no), emp:o.emp, name:o.name, dept:o.dept, pos:o.pos||"", c:cnt[o.emp], win:o.win||"" }; }), el("mg_lkyno")); return; }
-  var P={}, ord=[]; LKY.rows.forEach(function(o){ var p=P[o.emp]; if(!p){ p=P[o.emp]={ emp:o.emp, name:o.name, dept:o.dept, pos:o.pos||"", nos:[], win:"" }; ord.push(p); } p.nos.push(String(o.no)); if(o.win&&!p.win) p.win=o.win; });
-  gridOf("lkyemp",{ file:"행운권 보유자", key:function(r){ return r.emp; }, sort:{ k:"c", d:-1 }, onRow:onRow, chips:chips,
-    cols:[{ k:"emp", t:"사번", w:90 },{ k:"name", t:"이름", w:100 },{ k:"dept", t:"소속", w:200 },{ k:"pos", t:"직위", w:70 },{ k:"c", t:"장", type:"num", w:48 },{ k:"nos", t:"행운권 번호", w:170 },{ k:"win", t:"당첨", w:110 }],
-    empty:"번호가 없습니다", h:520 });
-  box.innerHTML='<div id="mg_lkyemp"></div>';
-  XG.set(MG.lkyemp, ord.map(function(p){ return { emp:p.emp, name:p.name, dept:p.dept, pos:p.pos, c:p.nos.length, nos:p.nos.join(" · "), win:p.win }; }), el("mg_lkyemp"));
+    rows=LKY.rows.map(function(o){ return { no:String(o.no), emp:o.emp, name:o.name, dept:o.dept, pos:o.pos||"", c:cnt[o.emp], win:o.win||"" }; });
+    spec={ file:"행운권 명단", ph:"번호 · 사번 · 이름 찾기", key:function(r){ return r.emp+":"+r.no; }, sort:{ k:"no", d:1 }, onRow:onRow, chips:chips, all:1,
+      cols:[{ k:"no", t:"행운권 번호", w:100 },{ k:"emp", t:"사번", w:90 },{ k:"name", t:"이름", w:100 },{ k:"dept", t:"소속", w:200 },tier,{ k:"win", t:"당첨", w:110 }],
+      empty:"번호가 없습니다", h:640 };
+  } else {
+    var P={}, ord=[]; LKY.rows.forEach(function(o){ var p=P[o.emp]; if(!p){ p=P[o.emp]={ emp:o.emp, name:o.name, dept:o.dept, pos:o.pos||"", nos:[], win:"" }; ord.push(p); } p.nos.push(String(o.no)); if(o.win&&!p.win) p.win=o.win; });
+    rows=ord.map(function(p){ return { emp:p.emp, name:p.name, dept:p.dept, pos:p.pos, c:p.nos.length, nos:p.nos.join(" · "), win:p.win }; });
+    spec={ file:"행운권 보유자", ph:"번호 · 사번 · 이름 찾기", key:function(r){ return r.emp; }, sort:{ k:"c", d:-1 }, onRow:onRow, chips:chips, all:1,
+      cols:[{ k:"emp", t:"사번", w:90 },{ k:"name", t:"이름", w:100 },{ k:"dept", t:"소속", w:200 },tier,{ k:"nos", t:"행운권 번호", w:170 },{ k:"win", t:"당첨", w:110 }],
+      empty:"번호가 없습니다", h:640 }; }
+  g=gridOf(id, spec); g.o=Object.assign({ id:id }, spec);
+  if(root&&box.contains(root)){ XG.set(g, rows); }   /* 틀 · 스크롤 · 검색 칸 유지 · 본문 줄만 */
+  else { box.innerHTML='<div id="mg_'+id+'"></div>'; XG.set(g, rows, el("mg_"+id)); }
+  LKY.tkey=key;
 }
 /* ── 폴더 자동 보관(D7 · 크롬 계열 폴더 권한 · 이 탭이 열려 있는 동안 10분마다 · 이름에 「자동」 · 최근 8세트만) ── */
 function lkyDirOk(){ return typeof window.showDirectoryPicker==="function"; }
