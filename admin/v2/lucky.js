@@ -14,6 +14,8 @@ var LKY_K={ xlsx:"엑셀", csv:"CSV", txt:"번호만", kit:"종이 추첨 키트
   return f0(tab, sub); }; })();
 (function(){ var m=String(location.hash||"").replace(/^#/,"").split("/"); if(m[0]==="stage"&&m[1]){ var rf=routeFix("stage",m[1]); if(rf){ S.tab=rf[0]; S.sub[rf[0]]=rf[1]; try{ history.replaceState(null,"","#"+rf[0]+"/"+rf[1]); }catch(e){} } } })();
 function lkyNeed(s){ return [{ k:"rfb", a:"raffle_board", ttl:5000 }]; }
+/* 행운권 명단 받기는 이 함수 한 곳(받기 단추 · 키트 · 미리 보기 · 표 자동 받기 · 폴더 보관 모두) */
+function lkyRoster(){ return call("roster_export",{ kind:"raffle" },60000); }
 function lkyTop(){ return typeof isTop==="function"?isTop():false; }
 function lkyLast(k){ var v=lsGet("lky_"+(k||"any"),null); return v&&v.ts?v:null; }
 function lkyAgo(ts){ var m=Math.floor((Date.now()-ts)/60000); return m<1?"방금":m+"분 전"; }
@@ -101,7 +103,7 @@ function lkyGet(k){
   if(!lkyTop()){ toast("슈퍼관리자가 받습니다",{ bad:1 }); return; }
   if(LKY.busy) return;
   LKY.busy=k; paint();
-  call("roster_export",{ kind:"raffle" },60000).then(function(r){
+  lkyRoster().then(function(r){
     LKY.busy="";
     if(!(r&&r.ok)){ paint(); var L=lkyLast(); toast("받지 못했습니다 · "+why(r)+(L?" · 마지막 받은 파일 "+L.at:""),{ bad:1, ms:6000 }); return; }
     var x=lkyTake(r);
@@ -132,7 +134,7 @@ function lkyPreview(){
   if(!lkyTop()){ toast("슈퍼관리자가 받습니다",{ bad:1 }); return; }
   var w=window.open("","_blank"); if(!w){ toast("새 탭이 막혔습니다 · 팝업 허용",{ bad:1 }); return; }
   try{ w.document.write('<p style="font:14px sans-serif;padding:16px">불러오는 중</p>'); }catch(e){}
-  call("roster_export",{ kind:"raffle" },60000).then(function(r){
+  lkyRoster().then(function(r){
     if(!(r&&r.ok)){ try{ w.close(); }catch(e){} toast("받지 못했습니다 · "+why(r),{ bad:1 }); return; }
     var x=lkyTake(r), u=URL.createObjectURL(new Blob([lkKitHtml(lkyKitData(r, x))],{ type:"text/html;charset=utf-8" }));
     try{ w.location.href=u; }catch(e){} setTimeout(function(){ URL.revokeObjectURL(u); },60000); paint();
@@ -145,7 +147,7 @@ function lkyLoad(){
   if(!lkyTop()||LKY.busy||LKY.ld) return;
   var b=S.data.rfb, need=!LKY.rows?(Date.now()-LKY.ldAt>20000):(b&&b.ok&&num(b.m)!==LKY.rm&&Date.now()-LKY.ldAt>60000);
   if(!need) return; LKY.ld=1; LKY.ldAt=Date.now();
-  call("roster_export",{ kind:"raffle" },60000).then(function(r){
+  lkyRoster().then(function(r){
     LKY.ld=0;
     if(r&&r.ok){ LKY.ldErr=""; lkyTake(r); } else LKY.ldErr=why(r);
     if(el("lkyTb")) lkyTable(); }, function(){ LKY.ld=0; LKY.ldErr="연결 실패"; if(el("lkyTb")) lkyTable(); });
@@ -194,7 +196,7 @@ function lkyAutoOn(){
 function lkyAutoOff(){ clearInterval(LKY.auto); LKY.auto=null; LKY.dir=null; paint(); toast("자동 보관을 껐습니다"); }
 function lkyAutoRun(){
   var d=LKY.dir; if(!d||!lkyTop()) return;
-  call("roster_export",{ kind:"raffle" },60000).then(function(r){
+  lkyRoster().then(function(r){
     if(!(r&&r.ok)){ LKY.autoErr=why(r); paint(); return; }
     var x=lkyTake(r), fs=[lkyFile("xlsx",r,x), lkyFile("kit",r,x)];
     fs.forEach(function(f){ f.name=f.name.replace(/^(행운권명단|행운권키트)_/,"$1_자동_"); });
