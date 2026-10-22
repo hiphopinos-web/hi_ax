@@ -5,7 +5,7 @@
  *   명단 = 10F 사전 신청자 전원 + 명단 밖 줄 · 17F 찍은 사람 · 구분 칩(전체 · 입장만 · 종료만 · 둘 다 · 없음 · 명단 밖) · 검색 · 엑셀
  * 처리 = 고른 줄 「입장 처리」 · 「종료 처리」(표 위) · 줄마다 「입장」 · 「종료」 → att_mark dry=1(미리 보기 · 쓰지 않음) → 확인 창(몇 명 · 스탬프 몇 개 · 막히는 사람 이유)
  *   → att_mark(rid) = QR 을 찍은 것과 같은 출석 기록 + 같은 스탬프 판정(서버) · 참가자 알림 없음 · 토스트 「되돌리기」 = roll_undo(그날 · 활동 기록에서도)
- *   권한 = 슈퍼관리자(지금 수기 부여 두 길과 같다 · 서버 admTop_) · 다른 입장 = 보기만 */
+ *   권한 = 슈퍼관리자 또는 출석 담당(261022 밤 · 설정 › 관리자 명단 「출석 담당」 칸 · 지정 · 해제 = 슈퍼관리자 · att_owner_set) · 다른 입장 = 보기만 */
 var AT_SUBS=[["all","전체"],["l1","17F AWS"],["l2","17F MS"],["fld","10F A"],["ta","10F B"],["tb","10F C"],["aws","10F D"],["ms1","10F E 1회차"],["ms2","10F E 2회차"]];
 var AT_META={
   l1:{ h:"17F · AWS", t:"Agentic AI 시대 일하는 방식의 변화", w:"AWS 구태훈", p:"17F 대강당" },
@@ -22,7 +22,7 @@ var AT_UWHY={ later:"그 뒤 종료까지 받음", changed:"그 뒤 다시 받�
 var AT_X={ notpre:"명단 밖", other:"다른 세션", round:"E 다른 회차" };
 function atSub(){ return subsOf(AT_SUBS,"all"); }
 function atTen(id){ return id!=="l1"&&id!=="l2"; }
-function atCan(){ return isTop(); }
+function atCan(){ return !!(isTop()||(S.me&&S.me.ao)); }   /* 261022 밤 슈퍼관리자 또는 출석 담당(서버 atMay_ 와 같은 기준) */
 function atM(s){ var m=String(s||"").match(/(\d{1,2}):(\d{2})/); return m?Number(m[1])*60+Number(m[2]):NaN; }
 function atWin(s){ var a=String(s||"").split("~"); return { a:atM(a[0]), b:atM(a[1]) }; }
 /* 지금 상태 · 서버 창 글자(wIn · wOut)와 지금 시각(서버 시각 기준) */
@@ -81,7 +81,7 @@ function atGrid(s){
   gridOf(id,{ file:ten?"10F 출석":"17F 출석", key:function(r){ return r.emp; }, sort:{ k:ten?"no":"in", d:1 }, h:520, select:true, unit:"명", chips:chips, cols:cols,
     empty:ten?"사전 신청자가 없습니다":"아직 찍은 사람이 없습니다 · 사번을 넣어 처리합니다",
     topAct:function(g, n){ return atCan()&&!ten?'<button class="btn sm" type="button" onclick="atAddAsk()">사번으로 처리</button>':""; },
-    pickAct:function(g, n){ if(!atCan()) return '<span class="cap">수기 처리는 슈퍼관리자</span>'; return '<button class="btn sm pri" type="button" onclick="atPickAsk(\'in\')">입장 처리 '+n0(n)+'명</button><button class="btn sm pri" type="button" onclick="atPickAsk(\'out\')">종료 처리 '+n0(n)+'명</button>'; },
+    pickAct:function(g, n){ if(!atCan()) return '<span class="cap">수기 처리 = 슈퍼관리자 · 출석 담당</span>'; return '<button class="btn sm pri" type="button" onclick="atPickAsk(\'in\')">입장 처리 '+n0(n)+'명</button><button class="btn sm pri" type="button" onclick="atPickAsk(\'out\')">종료 처리 '+n0(n)+'명</button>'; },
     onRow:function(k2){ if(typeof pcOpen==="function"&&isTop()) pcOpen(k2, MG[id]); } });
 }
 function atPickAsk(k){ var s=atSub(), g=MG[atTen(s)?"atn10":"atn17"]; if(!g) return; var e=xgPicked(g).map(function(r){ return r.emp; }); if(e.length) atAsk(k, e); }   /* 명단 밖 줄도 보내 확인 창에 막힌 이유를 보인다(서버 판정) */
@@ -93,12 +93,12 @@ function atAddAsk(){
     run:function(){ var q=el("atEmps"), e=q.value.split(/[\s,;]+/).map(normE).filter(Boolean), kk=(document.querySelector('input[name="atK"]:checked')||{}).value||"in"; setTimeout(function(){ atAsk(kk, e); },220); return Promise.resolve({ ok:true }); } });
 }
 function atAsk(k, emps){
-  if(!atCan()){ toast("수기 처리는 슈퍼관리자가 합니다",{ bad:1 }); return; }
+  if(!atCan()){ toast("수기 처리는 슈퍼관리자 · 출석 담당이 합니다",{ bad:1 }); return; }
   var s=atSub(); if(s==="all"||!emps.length) return;
   if(emps.length>300){ toast("한 번에 300명까지 · 지금 "+n0(emps.length)+"명",{ bad:1, ms:4000 }); return; }
   toast("미리 보는 중");
   call("att_mark",{ sid:s, k:k, emps:emps.join(","), dry:"1" }).then(function(pv){
-    if(!pv||!pv.ok){ toast("미리 보지 못했습니다 · "+(pv&&pv.reason==="super"?"슈퍼관리자만 합니다":why(pv)),{ bad:1, ms:5000 }); return; }
+    if(!pv||!pv.ok){ toast("미리 보지 못했습니다 · "+(pv&&pv.reason==="owner"?"슈퍼관리자 · 출석 담당만 합니다":why(pv)),{ bad:1, ms:5000 }); return; }
     atConfirm(s, k, emps, pv);
   });
 }
@@ -120,7 +120,7 @@ function atConfirm(s, k, emps, pv){
     body:body, ok:kn+" 처리 "+n0(sm.ok)+"명", danger:!!sm.put,
     gate:function(){ return sm.ok>0; },
     run:function(){ return call("att_mark",{ sid:s, k:k, emps:ok.map(function(x){ return x.emp; }).join(","), rid:"a"+Date.now().toString(36)+Math.random().toString(36).slice(2,6) },30000); },
-    fail:function(r){ return r&&r.reason==="super"?"슈퍼관리자만 합니다":""; },
+    fail:function(r){ return r&&r.reason==="owner"?"슈퍼관리자 · 출석 담당만 합니다":""; },
     done:function(r){ atDone(s, k, r); } });
 }
 function atDone(s, k, r){
@@ -134,5 +134,21 @@ function atDone(s, k, r){
 function atUndo(b){
   call("roll_undo",{ batch:b }).then(function(x){ reload(["atb"]);
     var sk=(x&&x.skip||[]), wm={}; sk.forEach(function(y){ var w=AT_UWHY[y.why]||y.why; wm[w]=(wm[w]||0)+1; });
-    toast(x&&x.ok?"되돌렸습니다 · "+n0(x.done)+"명"+(sk.length?" · 건너뜀 "+Object.keys(wm).map(function(w){ return w+" "+wm[w]; }).join(" · "):""):"되돌리지 못했습니다 · "+why(x),{ bad:!(x&&x.ok), ms:sk.length?6000:0 }); });
+    toast(x&&x.ok?"되돌렸습니다 · "+n0(x.done)+"명"+(sk.length?" · 건너뜀 "+Object.keys(wm).map(function(w){ return w+" "+wm[w]; }).join(" · "):""):"되돌리지 못했습니다 · "+(x&&x.reason==="owner"?"슈퍼관리자 · 출석 담당만 합니다":why(x)),{ bad:!(x&&x.ok), ms:sk.length?6000:0 }); });
 }
+/* ── 261022 밤 출석 담당 · 설정 › 관리자 명단(콘솔 입장) 「출석 담당」 칸 · AX 라운지 담당(lngstamp.js lsmOwnCell)과 같은 모양 ── */
+function atOwnCell(r){
+  if(r.ao==null) return '<span class="cap">서버 갱신 뒤</span>';
+  var h=r.ao?tag("담당","ok"):'<span class="cap">-</span>';
+  if(typeof adrTop==="function"&&adrTop()) h+=' <button class="btn sm" type="button" onclick="atOwnAsk(\''+jq(r.emp)+'\','+(r.ao?0:1)+')">'+(r.ao?"해제":"지정")+'</button>';
+  return h;
+}
+function atOwnRow(emp){ var d=S.data.admr; return d&&d.ok?(((d.c||{}).rows||[]).filter(function(x){ return x.emp===emp; })[0]||null):null; }
+function atOwnAsk(emp, on){
+  var r=atOwnRow(emp)||{ emp:emp };
+  confirmBox({ t:on?"출석 담당으로 지정할까요?":"출석 담당을 해제할까요?", who:personLine(r), sub:on?"출석 탭에서 입장 · 종료 처리 · 되돌리기를 할 수 있음 · 활동 기록에 남음":"이 사람의 출석 탭 처리 단추가 꺼짐 · 활동 기록에 남음", ok:on?"지정":"해제", danger:!on,
+    run:function(){ return call("att_owner_set",{ emp:emp, on:on?"1":"0" }); },
+    fail:function(x){ return x&&x.reason==="notfound"?"콘솔 입장 명단에 먼저 넣습니다":x&&x.reason==="super"?"슈퍼관리자만 합니다":""; },
+    done:function(x){ atOwnAfter(emp, on); toast((on?"지정했습니다 · ":"해제했습니다 · ")+(r.name||emp), x.same?{}:{ undo:function(){ call("att_owner_set",{ emp:emp, on:on?"0":"1" }).then(function(y){ if(y&&y.ok) atOwnAfter(emp, !on); toast(y&&y.ok?"되돌렸습니다":"되돌리지 못했습니다 · "+why(y),{ bad:!(y&&y.ok) }); }); } }); } });
+}
+function atOwnAfter(emp, on){ var r=atOwnRow(emp); if(r) r.ao=on?1:0; if(S.me&&normE(S.me.emp)===normE(emp)) S.me.ao=on?1:0; paint(); reload(["admr"]); }
