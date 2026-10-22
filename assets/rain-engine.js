@@ -1237,8 +1237,7 @@ function rgDraw(ctx, now) {
   else if (RG.cd > 0) rgCdDraw(ctx, L, now);
   else if (RG.goT > 0 && !RG.ending && !RG.bonus) rgBnsPop(ctx, L.W / 2, Math.round(L.floor * 0.42), RAIN_BNS_GO, Math.min(1, (now - RG.goAt) / 1000 / RAIN_CLOUD.go) * 0.85, L.big ? 96 : 64, true);   /* 261012 1 이 사라진 뒤 · 판 시작과 함께 */
   ctx.restore();
-  if (L.pan && L.port) rgPortHud(ctx, L, now);   /* v8.50 세로 = 위 한 줄 HUD */
-  else if (L.pan) { rgLeftDraw(ctx, L); if (RG.race) rgRaceDraw(ctx, L, now); else rgSideDraw(ctx, L); }   /* v4.32 3단 · 흔들림 밖 · v5.12 1F 타자왕 = 오른쪽 판이 추월 레이스 */
+  if (L.pan) { rgLeftDraw(ctx, L); if (RG.race) rgRaceDraw(ctx, L, now); else rgSideDraw(ctx, L); }   /* v4.32 3단 · 흔들림 밖 · v5.12 1F 타자왕 = 오른쪽 판이 추월 레이스 · v8.50 세로(L.pan.hud)는 셋 다 그리지 않는다(위 HUD = rgFrameDraw) */
   if (RG.bonus) rgTransDraw(ctx, L);   /* v5.30 보너스 들어갈 때 · 나올 때 전체 화면 전환 · 제목 카드 */
 }
 /* v4.23 어두운 이름표 배너 · 주황 도트 글자 */
@@ -1319,6 +1318,7 @@ function rgBnsFit(ctx, text, maxW, fp0) {
 /* v4.51 게임판 틀 · 셋 중 유일한 전체 높이 · 양옆 판(나무 이중 테두리)보다 한 단계 강하게 · 바깥 먹 3 → O100 4 → 안 먹 3(= RAIN_FRAME)
    위 모서리는 계단(rtStep) · 아래는 캔버스 끝까지 열어 둔다(입력칸 틀이 같은 세 겹으로 이어 받는다 · 화면 쪽 CSS) */
 function rgFrameDraw(ctx, L) {
+  if (L.port) rgPortHud(ctx, L);   /* v8.50 세로 = 판 틀과 함께 위 한 줄 HUD(판과 겹치지 않는다) */
   var f = L.fr, x = L.ox - f, w = Math.round(L.W * (L.z || 1)) + 2 * f, h = L.CH + 8;   /* 261022 세로 = 판 폭 × L.z · 정보 줄 아래(L.fy)부터 · 가로는 그대로(z 1 · fy 0) */
   if (L.fy) { ctx.save(); ctx.translate(0, L.fy); }
   rtStep(ctx, x, 0, w, h, 2, RAIN_PAL.ink);
@@ -1397,7 +1397,7 @@ function rgLeftDraw(ctx, L) {
    RG.top = null(불러오는 중) · [](기록 없음) · [{ no, name, val, me }] · 제목 = RG.topT(화면 쪽) 또는 「TOP 10」 · 넓은 판(폭 400 이상 · 높이 700 이상)은 32
    v4.51(260925 사용자) 왼쪽 상자와 다른 순위표 문법 · 먹 테두리(계단 모서리) + 오렌지 머리띠(제목) + 줄무늬 행(어두운 판 두 톤) · 판 높이보다 짧게(행 수만큼) */
 function rgSideDraw(ctx, L) {
-  var P = L.pan; if (!P) return;
+  var P = L.pan; if (!P || P.hud) return;
   var cmp = !P.big && P.h < 720, hp = cmp ? 16 : 32, rf = (P.big || P.h >= 700) && P.w >= 400 ? 32 : 16, rh = rf === 32 ? 46 : cmp ? 30 : 36, bh = cmp ? 40 : 60, b = 3;
   var top = RG.top, n = top && top.length ? Math.min(10, top.length) : 1;
   while (n > 1 && 3 * b + bh + n * rh > P.h) n--;
@@ -1430,7 +1430,7 @@ function rgSideDraw(ctx, L) {
    칸 = 도전자 · 점수 · 목숨 · 단계 · 순위 · 칸마다 라벨(16 · 나무색) 위 · 값(32 · 주황) 아래 · 칸 사이 나무 세로줄 · 오른쪽 끝 RAIN_PORT.bgm = 음악 단추 자리(DOM)
    순위 = 추월 레이스와 같은 셈(rgRaceRank · RG.race) 「21위 · 다음까지 724점」 · 1위 = 「· 질주 중」 · 기록 없음 = 「· 첫 기록에 도전 중」 · 넘는 순간 순위 칸이 주황 이름표 「21위 → 20위」(RG.racePops 1.6초 · 효과음은 rgRaceTick 그대로)
    칸 폭은 큰 값 기준으로 잡아 숫자가 늘어도 옆 칸이 움직이지 않는다 · 도전자 칸 = 남는 폭(좁으면 목숨 하트를 한 단계 작게 · 닉네임은 32 → 16 → 줄임) · 판 안은 가리지 않는다 */
-function rgPortHud(ctx, L, now) {
+function rgPortHud(ctx, L) {
   var P = L.pan; if (!P) return;
   var b = 3, x0 = P.x, w = P.w, h = P.h, ix = x0 + b + 14, right = x0 + w - b - 14 - RAIN_PORT.bgm, ly = Math.round(h * 0.3), vy = Math.round(h * 0.66), sep = 28;
   var list = (RG.race && RG.race.list) || [], rank = RG.race ? rgRaceRank(RG.score) : 0, goal = rank > 1 ? list[rank - 2] : null;
@@ -2073,7 +2073,7 @@ function rgRaceTick(dt) {
 }
 /* 오른쪽 판 · 머리띠 「추월 레이스」 · 지금 순위 크게 · 다음 목표까지 남은 점수 · 세로 줄(위 = 앞사람 · 가운데 = 나 · 아래 = 넘은 사람) + 왼쪽 길(미니맵) · 넘을 때 튀어오름 */
 function rgRaceDraw(ctx, L, now) {
-  var P = L.pan; if (!P) return;
+  var P = L.pan; if (!P || P.hud) return;
   var list = (RG.race && RG.race.list) || [], cmp = !P.big && P.h < 720, b = 3, bh = cmp ? 40 : 60, hp = cmp ? 16 : 32, rf = P.w >= 360 && !cmp ? 32 : 16, rh = rf === 32 ? 46 : 32;
   var rank = rgRaceRank(RG.score), ahead = rank - 1, total = list.length + 1;
   var ix = P.x + b + 14, right = P.x + P.w - b - 14;
