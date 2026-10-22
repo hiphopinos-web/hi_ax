@@ -45,7 +45,7 @@ function grMount(vb, head){
   var ev=grEv(); grGrid(ev);
   vb.innerHTML=head+'<div class="card"><div class="chips" role="tablist" aria-label="게임" id="grChips">'+grChipsH(ev)+'</div><p class="cap mt4 gr-cap">'+grCapT(ev).split(" · ").map(function(t,i){ return '<span class="nw">'+(i?"· ":"")+esc(t)+'</span>'; }).join(" ")+'</p><div id="mg_grk_'+ev+'" class="mt"></div></div>';
 }
-function grCapT(ev){ var nc=!!(S.data.grank&&S.data.grank.nocap); return (ev==="all"?"세 종목 최고점 합 · "+(nc?"동점은 합계를 먼저 만든 순":"동점은 세 종목을 먼저 마친 순")+" · 세 종목 모두 한 판 이상":"최고 한 판 점수 · 동점은 먼저 달성한 순")+" · 시험 사번 제외 · 앱 순위판과 같은 순서"; }
+function grCapT(ev){ var nc=!!(S.data.grank&&(S.data.grank.nocap||S.data.grank.capN));   /* 261022 저녁 capN(상한 4,000) 서버도 합계 먼저 */ return (ev==="all"?"세 종목 최고점 합 · "+(nc?"동점은 합계를 먼저 만든 순":"동점은 세 종목을 먼저 마친 순")+" · 세 종목 모두 한 판 이상":"최고 한 판 점수 · 동점은 먼저 달성한 순")+" · 시험 사번 제외 · 앱 순위판과 같은 순서"; }
 function grPaint(){
   var ev=grEv(), c=el("grChips"); if(c) c.innerHTML=grChipsH(ev);
   gridPaint("grk_"+ev, "grank", "게임 순위", function(dd){ return grRows(dd, ev); });

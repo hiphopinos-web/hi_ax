@@ -479,7 +479,7 @@ function jpUpdate(dt, now) {
   });
   JP.items = JP.items.filter(function (it) { return !it.got && it.x > -14; });
   JP.score = olyScore("jump", jpParts());   /* v4.02 넘은 장애물 × 40 + 코인 × 5 + AI 상식 × 100 · 버틴 시간은 점수 아님 */
-  if (!olyNoCap() && JP.score >= olyCap() && !JP.ending) jpEnd("full");   /* 만점 3,000 · 결승 · v8.47 상한 폐지 서버면 하트 3개를 다 잃을 때까지 */
+  if (!olyNoCap() && JP.score >= olyCap() && !JP.ending) jpEnd("full");   /* 만점(서버 상한 · v8.48 4,000) · 결승 · v8.47 상한 폐지 서버면 하트 3개를 다 잃을 때까지 */
 }
 function jpEnd(why) {
   if (!JP.on || JP.ending) return;

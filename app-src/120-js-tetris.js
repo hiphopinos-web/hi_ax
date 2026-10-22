@@ -174,7 +174,7 @@ function ttScore(s0, n) {
   if (n) TT.pops.push({ x: x, y: 40, text: n + "줄 +" + d, t: 0.9, c: RAIN_PAL.o100 });
   if (n >= 2) ttLineMsg(n);   /* v4.21 점수(위 줄)를 다 계산한 뒤 표시만 얹는다 */
   else if (d > 0) TT.pops.push({ x: x, y: 58, text: "+" + d, t: 0.5, c: RAIN_PAL.ink });
-  if (!olyNoCap() && TT.score >= olyCap() && !TT.ending) ttEnd("full");   /* v8.47 상한 폐지 서버면 게임 오버까지 */
+  if (!olyNoCap() && TT.score >= olyCap() && !TT.ending) ttEnd("full");   /* 만점(서버 상한 · v8.48 4,000) · v8.47 상한 폐지 서버면 게임 오버까지 */
 }
 function ttCollapse() {
   var rows = TT.flash.rows;

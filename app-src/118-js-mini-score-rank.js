@@ -106,16 +106,18 @@ function olyRule() {
   return r && r.cap > 0 && r.pang && r.jump && r.tetris && r.tetris.multi && r.tetris.multi.length === 5 &&
     r.ox && r.ox.sec > 0 && r.ox.base && r.ox.base.length === 3 && r.ox.per && r.ox.per.length === 3 && r.ox.lives > 0 && r.ox.rowT && r.ox.rowT.length === 2 && r.ox.lead && r.ox.lead.length === 3 ? r : OLY_RULE;
 }
-function olyCap() { return olyRule().cap; }
-/* v8.47 상한 폐지 서버인가(oly_board · oly_result 의 nocap) · src = 그 응답(없으면 순위판) */
-function olyNoCap(src) { var b = src || OLY.board; return !!(b && b.nocap); }
-function olyMax(src) { return olyOvKeys(src).length * olyCap(); }   /* v4.83 미니 게임 3 × 3,000 = 9,000(옛 서버는 다섯 종목 15,000) */
+/* v8.48 (261022 저녁 사용자 「4천점으로 상한선 막아줘」) 서버가 주는 새 상한 capN(4,000) · 0 = 옛 서버(rule.cap 3,000) */
+function olyCapN(src) { var b = src || OLY.board; return b && b.capN > 0 ? Number(b.capN) : 0; }
+function olyCap(src) { return olyCapN(src) || olyRule().cap; }
+/* v8.47 상한 폐지 서버인가(oly_board · oly_result 의 nocap · capN 이 없을 때만) · src = 그 응답(없으면 순위판) */
+function olyNoCap(src) { var b = src || OLY.board; return !!(b && b.nocap && !(b.capN > 0)); }
+function olyMax(src) { return olyOvKeys(src).length * olyCap(src); }   /* v4.83 미니 게임 3 × 3,000 = 9,000(옛 서버는 다섯 종목 15,000) */
 function olyEv(key) { return OLY_EVENTS.filter(function (e) { return e.key === key; })[0]; }
 function olyFmt(n) { return Math.round(Number(n) || 0).toLocaleString(); }
 /* 점수 계산 · 서버 olyScore_ 와 글자 그대로 같은 식 (검사 60절이 같은 parts 로 대조) */
-function olyScore(game, p, rule, nocap) {
+function olyScore(game, p, rule, cap) {
   rule = rule || olyRule();
-  if (nocap == null) nocap = olyNoCap();   /* v8.47 상한 폐지 서버면 상한 없이 */
+  if (cap == null) cap = olyNoCap() ? Infinity : olyCapN();   /* v8.48 서버 상한 capN(4,000) · v8.47 서버(nocap)면 상한 없이 · 옛 서버면 rule.cap */
   var R = rule[game], n = function (k) { return Number(p && p[k]) || 0; }, s = 0, i;
   if (!R) return 0;
   if (game === "pang") {
@@ -129,7 +131,7 @@ function olyScore(game, p, rule, nocap) {
   } else if (game === "ox") {
     s = qzIsCard(p && p.ql) ? qzTally(p.ql).pts : oxTally(p && p.ql, R, oxGold(p && p.tk)).pts;   /* v4.96 판 퀴즈(정답 × 100) · 유리다리 */
   }
-  return Math.max(0, nocap ? s : Math.min(rule.cap, s));
+  return Math.max(0, Math.min(cap > 0 ? cap : rule.cap, s));
 }
 /* v4.12 AI O/X 유리다리 채점 · 서버 oxTally_ 와 글자 그대로 같은 식(검사 68·70절) · ql = 「id.답.시간」 · 답 O|X|P(판자)|T(발판이 아래 끝에 닿아 떨어짐) · 시간 1/100초 · gold = 황금 자리
    다리는 문제가 떠 있는 동안 흘러내린다 · 문제마다 한도 lim = ceil(여유 × 줄 시간 / 100) · 한도 안에 답한다 · T 는 한도에 정확히 · 답하면 한 줄 올라가 여유 +100

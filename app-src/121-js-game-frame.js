@@ -69,7 +69,7 @@ function onEnter(e, fn) {
    본 기록 = gs_how(사람별 · STORE_PERSON · S 저장이 try/catch 라 저장이 막힌 기기는 메모리만 · 다시 열면 또 펼쳐 보인다)
    게임은 START 를 눌러야 시작한다(3 · 2 · 1 카운트다운 그대로) · 게임 규칙 · 점수 · 완주(gameClear) 판정 · 서버 호출은 바꾸지 않는다 */
 var GS_HOW = {
-  jump: { goal: "장애물을 넘고 코인 · 글자 블록을 모아요", end: "하트 3개를 다 잃으면 끝 · 시간 제한 없음",
+  jump: { goal: "장애물을 넘고 코인 · 글자 블록을 모아요", end: function () { return olyNoCap() ? "하트 3개를 다 잃으면 끝 · 시간 제한 없음" : "하트 3개를 다 잃거나 " + olyFmt(olyCap()) + "점이면 끝 · 시간 제한 없음"; },   /* v8.48 상한 = 서버 값(4,000) */
     cells: [["tap", "탭", "점프"], ["dbl", "두 번 탭", "2단 점프"], ["hold", "꾸욱", "엎드리기"]] },
   pang: { goal: "같은 그림 3개를 한 줄로 맞춰 80칸을 터뜨려요 · 빨리 끝낼수록 높은 점수", end: "80칸을 다 터뜨리면 끝 · 최대 2분",
     cells: [["swipe", "밀기", "옆 칸과 바꾸기"], ["tap2", "탭 · 탭", "옆 칸과 바꾸기"]] },
@@ -93,7 +93,7 @@ function gsHowHtml(key, dk, id, hide) {
   return '<div class="gsh' + (dk ? " dk" : "") + '"' + (id ? ' id="' + id + '"' : "") + (hide ? " hidden" : "") + ">" +
     row("목표", esc(h.goal)) +
     '<div class="gsh-r"><span class="gsh-k">조작</span><div class="gsh-cells' + (key === "tetris" ? " ic" : "") + '" style="--n:' + h.cells.length + '">' + cells + "</div></div>" +
-    row("끝", esc(h.end)) + row("완주", esc(GS_HOW_DONE)) + "</div>";
+    row("끝", esc(typeof h.end === "function" ? h.end() : h.end)) + row("완주", esc(GS_HOW_DONE)) + "</div>";
 }
 /* 시작 화면 · 두 번째부터 「설명 보기」 · 펼치면 조작 한 줄(gs-ctl)은 CSS 가 숨긴다(같은 정보 한 번) */
 function gsHowToggle() {
