@@ -12037,7 +12037,7 @@ function pushExHtml(ctx, opt) {
   var t = "포토부스 입장하세요", b = "1F · " + (opt.no || 14) + "번 · 10분 안에 입장";   /* v4.78 A10 실제 푸시 문구와 같게(제목에 주제어) */
   if (ctx === "cchat" || ctx === "first") { t = "커피챗에 선정됐어요"; b = "18F · 15:00 · TABLE A"; }   /* v7.52 테이블 A · B */   /* v5.05 포토부스 대기 폐지면 처음 안내 예시도 커피챗 */
   if (ctx === "dap") { t = "AX 라운지 시간 안내"; b = "14:20~14:40 · 1F AX 라운지"; }   /* v5.83 실제 알림(notifyUser)과 같은 말 · v7.39 사전 신청 시간 안내(시간 · 상담석) */
-  if (ctx === "kit") { t = "기념품 옷 수령 안내"; b = kitStaff(kitMy()) ? "수령 방법 안내" : "10/26(월) 08:00부터 · 1F 주차장 체크인존"; }   /* 261006 키트 사이즈 정한 직후 · 261008 스태프 = 수령 방법 안내 */
+  if (ctx === "kit") { t = "기념품 옷 수령 안내"; b = kitStaff(kitMy()) ? "수령 방법 안내" : kitGetTxt(kitMy()); }   /* 261006 키트 사이즈 정한 직후 · 261008 스태프 = 수령 방법 안내 */
   if (ctx === "crowd") { t = opt.tgt === "lobby" ? "1F 로비 혼잡이 풀렸어요" : "엘리베이터 혼잡이 풀렸어요"; b = (opt.tgt === "lobby" ? "1F 로비" : "1F 승강기 홀") + " · 15:07"; }
   return '<div class="axs-pex" aria-hidden="true"><img src="icons/icon-192.png" alt=""><div><b>' + esc(t) + "</b><span>" + esc(b) + "</span></div></div>";
 }
@@ -12507,7 +12507,14 @@ function kitGa(z) { var l = kitLbl(z); return l + (/^[ABCD]$/.test(l) || /S$/.te
 function kitCanSet(k) { return !!k && k.st === "pick" && (k.ph === "open" || k.ph === "chg"); }
 function kitSeenKey(k) { return k ? k.st + ":" + k.ph + ":" + (k.sz || "") : ""; }
 /* 받는 곳 한 줄 · 사전 신청 = 체크인존(에코백과 함께) · 스태프 = 따로 안내 */
-function kitGetTxt(k) { return kitStaff(k) ? KIT_GET_ST : KIT_GET; }
+/* 261022 (사용자) 사전 신청자 옷 수령 = 10F 각자 세션 강의장(시간 없음) · 세션 글자 = my.ckz.no 앞 글자(A-3 → A) · 없으면 내 10F 세션(tenMine · 테스트 미리 보기 포함) · 모르면 강의장 표기 생략 */
+function kitGetTxt(k) {   /* 검사 샌드박스 때문에 함수 하나에 담는다 · 사전 신청 = 「10F D 세션 · 08 HEART」 · 세션을 모르면 「10F 세션 강의장에서 나눠 드려요」 */
+  if (kitStaff(k)) return KIT_GET_ST;
+  var room = { A: "컨퍼런스룸", B: "01 HEART", C: "06 HEART", D: "08 HEART", E: "07 HEART" }, tl = { fld: "A", ta: "B", tb: "C", aws: "D", ms1: "E", ms2: "E" };
+  var z = typeof ckzMy === "function" ? ckzMy() : null, m = z && z.pre && /^([A-E])-/.exec(z.no || ""), l = m ? m[1] : "";
+  if (!l && typeof tenMine === "function") { var t = tenMine(); l = t && tl[t.id] || ""; }
+  return l ? "10F " + l + " 세션 · " + room[l] : "10F 세션 강의장에서 나눠 드려요";
+}
 /* 홈 카드 · 고르는 기간에 아직 안 고름 · 자동 배정 뒤 변경 기간(한 번 열어 보면 사라짐) · 라운지 초과 안내(한 번 열어 보면 사라짐) */
 /* 261016 (사용자 스태프 QR 정리) 체크인 번호표 · 홈 맨 위 「내 번호」 카드(ckqIn · ckqCardHtml · 서버 my.ckq · 소켓 ckq)는 걷었다 · 창구 체계 폐기 */
 /* 261015 (사용자 확정) 체크인 번호 · 가나다순 고정(서버 my.ckno · 키트명단에 있고 번호를 매긴 사람만) · 없으면 "" = 화면 그대로
@@ -12777,7 +12784,7 @@ function kitProdHtml(k) {
 /* 신청 완료 · 세션 번호(261020 · 옛 신청번호 자리) · 사이즈 · 변경 기한 · 수령 */
 function kitDoneHtml(k) {
   /* 261008 받는 방법 상자(사용자 「중요한 정보이니 신청 완료 시 수령 방법 안내를 따로 주자」) · 체크 바로 아래 · 스태프 = 행사 전 미리 전달(사용자 결정) · 사전 신청 = 당일 체크인존 · 검사 샌드박스 때문에 함수로 빼지 않는다 */
-  var st0 = kitStaff(k), gm = st0 ? "따로 전달해 드려요" : "10/26(월) 08:00부터 · 1F 주차장 체크인존", gs = st0 ? "" : "내 QR을 보여 주면 바로 드려요";
+  var st0 = kitStaff(k), gm = kitGetTxt(k), gs = !st0 && /^10F [A-E] 세션/.test(gm) ? "세션 강의장에서 나눠 드려요" : "";
   var gb = '<div class="axs-pz-need axs-kitget" role="group" aria-label="받는 방법"><p class="k" aria-hidden="true">받는 방법</p><ul><li><span class="i" aria-hidden="true">' + (typeof PZ_ICO === "object" ? PZ_ICO.box : "") + '</span><span class="x"><b>' + esc(gm) + "</b>" + (gs ? "<span>" + esc(gs) + "</span>" : "") + "</span></li></ul></div>";   /* 261008 받으려면 상자와 같은 틀 · 같은 CSS(needBoxHtml 과 같은 마크업 · 함수를 부르지 않는 까닭은 위 줄) */
   var chg = k.ph === "open" ? kitWhen(k.close) + "까지 변경 가능" : k.ph === "chg" ? kitWhen(k.chg) + "까지 · 남은 사이즈만" : "마감", sn = kitSessNo(k);
   return '<section class="axs-kitok"><span class="ok" aria-hidden="true">' + CHECK_SVG + "</span>" +
@@ -12798,7 +12805,7 @@ function kitSheet() {
   }
   var msg = (k.test ? '<p class="ax-meta axs-kitnote axs-kittest">' + segHtml("테스트 계정 미리 보기 · 서버에 저장하지 않아요") + "</p>" : "") + (KIT.msg ? '<p class="axs-kitmsg" role="alert">' + esc(KIT.msg) + "</p>" : "");   /* 261008 테스트 사번 미리 보기 표시 */
   if (k.sz && !KIT.edit) return { name: nm, body: msg + kitDoneHtml(k), foot: kitCanSet(k) ? progBtn("사이즈 변경", "kitEdit(1)", "ax-button-weak") : "" };
-  var ph = k.ph, note = ph === "before" ? esc(kitWhen(k.open)) + "부터 신청할 수 있어요" : ph === "end" ? "신청 기간이 끝났어요" + (kitStaff(k) ? "" : " · 사이즈는 체크인존에서 남은 것으로 드려요") :
+  var ph = k.ph, note = ph === "before" ? esc(kitWhen(k.open)) + "부터 신청할 수 있어요" : ph === "end" ? "신청 기간이 끝났어요" + (kitStaff(k) ? "" : " · 사이즈는 세션 강의장에서 남은 것으로 드려요") :
     ph === "open" ? "" : esc(kitWhen(k.chg)) + (k.sz ? "까지 남은 사이즈로만 바꿀 수 있어요" : "까지 남은 사이즈 중에서 고를 수 있어요");   /* 261008 사용자 「고르는 기준 · 품절 순서 안내 없어도 될 것 같아」 · 열림 중에는 안내 줄 없음 */
   var chips = '<section class="axs-kitsz"><div class="axs-kitszh"><h3 class="ax-type-t5-strong">사이즈</h3>' + (ph === "open" ? '<span class="ax-meta">마감 ' + esc(kitWhen(k.close)) + "</span>" : "") + "</div>" +
     '<div class="axs-kitcs" role="radiogroup" aria-label="사이즈">' + KIT_SIZES.map(function (x) { return kitChipHtml(x, k); }).join("") + "</div>" +
