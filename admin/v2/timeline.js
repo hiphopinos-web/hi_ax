@@ -27,11 +27,18 @@ function tlChk(k, ty, o){ o=o||{}; var r=tlC(k), w=[], RX={ hm:/^\d{1,2}:\d{2}$/
   return w; }
 function tlA(l, js){ return [l, js]; }
 function tlCfgA(k){ return tlA("설정 보기","tlCfg('"+jq(k)+"')"); }
-/* 추첨 설정 › 17F 입구 체크인 칸(drawset.js #dwsCl) · 진행 칩 · 설정 펼침(lucky.js routeFix stage/set) → 칸이 그려지면 가운데로 스크롤 · 1.6초 테두리 · 동작 줄이기면 즉시 · 그 사이 칸을 다시 그려도 강조 유지 */
-function tlDrawSet(){ var n=0, rm=window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches; go("stage","set");
-  var hi=function(until){ var c=el("dwsCl"); if(c&&!c.classList.contains("tl-hi")) c.classList.add("tl-hi"); if(Date.now()<until) setTimeout(function(){ hi(until); },200); else if(c) c.classList.remove("tl-hi"); };
-  var tick=function(){ var c=el("dwsCl"); if(c&&c.querySelector("h2")&&tlD("draw")){ setTimeout(function(){ var c2=el("dwsCl"); if(!c2) return; c2.scrollIntoView({ block:"center", behavior:rm?"auto":"smooth" }); hi(Date.now()+1600); },rm?0:80); return; } if(++n<60&&S.tab==="stage") setTimeout(tick,100); };
+/* 시간순 보기 › 화면 안 칸으로 이동 · 칸이 그려지면 가운데로 스크롤 · 1.6초 테두리 · 동작 줄이기면 즉시 · 그 사이 칸을 다시 그려도 강조 유지
+ * 추첨 설정 › 17F 입구 체크인(drawset.js #dwsCl) · 행운권 › 럭키드로우 › 2. 체크인(lkui.js #lkuCk) */
+function tlJump(tab, sub, id, ok){ var n=0, rm=window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches; go(tab,sub);
+  var hi=function(until){ var c=el(id), on=Date.now()<until; if(c){ if(id==="dwsCl") c.classList.toggle("tl-hi",on); else { c.style.outline=on?"2px solid var(--navy)":""; c.style.outlineOffset=on?"2px":""; c.style.boxShadow=on?"0 0 0 4px var(--navy1)":""; c.style.borderRadius=on?"8px":""; } } if(on) setTimeout(function(){ hi(until); },200); };
+  var tick=function(){ var c=el(id); if(c&&ok(c)&&tlD("draw")){ setTimeout(function(){ var c2=el(id); if(!c2) return; c2.scrollIntoView({ block:"center", behavior:rm?"auto":"smooth" }); hi(Date.now()+1600); },rm?0:80); return; } if(++n<60&&S.tab===tab) setTimeout(tick,100); };
   setTimeout(tick,30); }
+function tlDrawSet(){ tlJump("stage","set","dwsCl",function(c){ return !!c.querySelector("h2"); }); }
+function tlDrawCk(){ tlJump("stage","lk","lkuCk",function(c){ return !c.querySelector(".skel"); }); }
+/* 17F 추첨 체크인 시작 줄 상태 글 · 행운권 탭 「2. 체크인」과 같은 문구 · 서버가 옛 판(startAt 없음)이면 null */
+function tlDrawSt(dr){ if(!dr||!("startAt" in dr)||typeof dsCk!=="function") return null;
+  if(dr.closed) return { t:"마감"+(dr.closedAt?" · "+hm(String(dr.closedAt).slice(11,16)):""), warn:0 };
+  var c=dsCk(dr,null,num(dr["in"])); return c?{ t:c.t, warn:c.k==="wait" }:null; }
 function tlCfg(k){ var r=tlC(k), q=(r&&r.n)||k, n=0; go("log","cfg");   /* 운영 설정 표 = 이름으로 찾고 그 줄 상세를 연다(표 검색은 이름 · 설명만 본다) */
   var tick=function(){ var g=MG.cfgv; if(g&&lgSub()==="cfg"){ if(g.q!==q){ g.q=q; var i=document.querySelector("#mg_cfgv .xg-q"); if(i) i.value=q; XG.paint(g); } if((g.rows||[]).length){ rowDetail(g,k,{ title:function(x){ return x.k; } }); return; } } if(++n<40&&S.tab==="log") setTimeout(tick,100); };
   setTimeout(tick,30); }
@@ -111,7 +118,8 @@ function tlRows(){
   if(!dr) dW.push("추첨 상태를 읽지 못함 · 기본 시작 "+tlWin(TL_DEF.draw)[0]);
   /* 261022 기획담당자(현장 문서 「럭키드로우 현장 1장」) · 서버 창은 시작 시각 · 날짜만 · 끝 시각 없음 · 마감 = 추첨 설정 › 17F 입구 체크인 「체크인 마감」 · 17:13쯤 사회자 신호 뒤 · 무대 공 넣기(첫 Space) 때 서버가 한 번 더 닫음 */
   var dSet=tlA("추첨 설정 › 17F 입구 체크인","tlDrawSet()");
-  add(dw[0],"open","17F 추첨 체크인 시작 · 럭키드로우","17F 입구 QR 체크인 받기 시작"+(dr&&dr.closed?" · 지금 마감됨":"")+(dr&&dr.day?" · 날짜 "+tlMD(dr.day):"")+" · 행운권 참석 조건 "+tlV("행운권_참석조건","OFF"),[dSet,tlA("현장 QR","go('log','qr')")],dW);
+  var dSt=tlDrawSt(dr), dCk=tlA("행운권 › 럭키드로우 › 2. 체크인","tlDrawCk()");
+  add(dw[0],"open","17F 추첨 체크인 시작 · 슈퍼관리자가 누름","슈퍼관리자가 체크인 시작(16:40 전) → 16:40부터 받음"+(dSt&&!dSt.warn?" · "+dSt.t:"")+(dr&&dr.closed?" · 지금 마감됨":"")+(dr&&dr.day?" · 날짜 "+tlMD(dr.day):"")+" · 행운권 참석 조건 "+tlV("행운권_참석조건","OFF"),[dCk,tlA("현장 QR","go('log','qr')")],dW.concat(dSt&&dSt.warn?[dSt.t]:[]));
   add("17:13","open","17F 추첨 체크인 마감 · 사람이 누름","추첨 설정 › 17F 입구 체크인 「체크인 마감」 · 사회자 신호 뒤 콘솔 관리자가 누름 · 무대 공 넣기 때 서버가 한 번 더 자동으로 닫음",[dSet,tlA("행운권 › 진행","go('stage','draw')")],[],{ approx:1 });
   var c17=function(k, ti, d, a){ var v=tlV(k,""); add(hm(v)||"17:00","open",ti,d,a.concat([tlCfgA(k)]),tlChk(k,"dt")); };
   c17("선착순_마감","선착순 참여상 마감","뒤로는 지급 안 함 · 앱 「선착순 마감」",[tlA("체크인 탭","go('ckin')")]);
