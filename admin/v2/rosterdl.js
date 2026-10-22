@@ -51,8 +51,8 @@ function rdlSheet(k, r, st){
   var rows=r.rows||[], day=st.s.slice(0,10);
   if(k==="raffle") return { name:"행운권 전체 명단", file:"행운권 전체 명단",
     title:"행운권 전체 명단 · 기준 시각 "+st.s+" · 총 "+n0(r.n)+"명 · 행운권 "+n0(r.m)+"장"+(r.wins!=null?" · 당첨 "+n0(r.wins)+"명"+(num(r.absent)?" · 부재 "+n0(r.absent)+"명":""):"")+(r.fp?" · 대조 코드 "+r.fp:""),
-    head:["사번","소속","직위","성명","행운권 번호","당첨"], w:[11,34,8,11,12,15], kind:["c","t","c","c","b","c"],
-    rows:rows.map(function(x){ return [x.emp, x.dept, x.pos||"", x.name, x.no, x.win||""]; }) };
+    head:["사번","소속","직위","성명","행운권 번호","당첨","발급 시각"], w:[11,30,8,11,12,15,12], kind:["c","t","c","c","b","c","c"],
+    rows:rows.map(function(x){ return [x.emp, x.dept, x.pos||"", x.name, x.no, x.win||"", x.at||""]; }) };
   var ok=r.m-num(r.wait);
   /* 261020 후속 · 체크인존에서 출력해 손으로 확인 · 서명 · 줄 높이 2배(36) · 서명 칸 넓게 · 옛 서버(got 없음)면 수령 시각 빈칸 */
   return { name:"선착순 명부", file:"선착순 명부", ht:36,

@@ -124,7 +124,7 @@ function lkyTake(r){
 function lkyFile(k, r, x){
   var st=x.st, base=st.f+"_"+x.m+"장";
   if(k==="xlsx"){ var rr={}; for(var q in r) rr[q]=r[q]; rr.fp=x.fp; var sh=rdlSheet("raffle", rr, st); return { name:"행운권명단_"+base+".xlsx", blob:new Blob([rdlXlsx(sh)],{ type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }) }; }
-  if(k==="csv"){ var t="\ufeff사번,소속,직위,성명,행운권 번호,당첨\r\n"+(r.rows||[]).map(function(o){ return [o.emp,o.dept,o.pos||"",o.name,o.no,o.win||""].map(lkyCsvQ).join(","); }).join("\r\n")+"\r\n";
+  if(k==="csv"){ var t="\ufeff사번,소속,직위,성명,행운권 번호,당첨,발급 시각\r\n"+(r.rows||[]).map(function(o){ return [o.emp,o.dept,o.pos||"",o.name,o.no,o.win||"",o.at||""].map(lkyCsvQ).join(","); }).join("\r\n")+"\r\n";
     return { name:"행운권명단_"+base+".csv", blob:new Blob([t],{ type:"text/csv;charset=utf-8" }) }; }
   if(k==="txt"){ return { name:"행운권번호_"+base+".txt", blob:new Blob([(r.rows||[]).map(function(o){ return o.no; }).join("\r\n")+"\r\n"],{ type:"text/plain;charset=utf-8" }) }; }
   return { name:"행운권키트_"+base+".html", blob:new Blob([lkKitHtml(lkyKitData(r, x))],{ type:"text/html;charset=utf-8" }) };
@@ -152,6 +152,7 @@ function lkyLoad(){
     if(r&&r.ok){ LKY.ldErr=""; lkyTake(r); } else LKY.ldErr=why(r);
     if(el("lkyTb")) lkyTable(); }, function(){ LKY.ld=0; LKY.ldErr="연결 실패"; if(el("lkyTb")) lkyTable(); });
 }
+/* 261022 발급 시각 열 = 서버 roster_export raffle at(MM-DD HH:mm) · 번호 단위 = 그 번호 · 사람 단위 = 마지막 발급 */
 function lkyTier(c){ return c>=3?"스탬프 6개 · 3장":c===2?"스탬프 5개 · 2장":"스탬프 4개 · 1장"; }
 function lkyTable(){
   var box=el("lkyTb"); if(!box) return;
@@ -166,15 +167,15 @@ function lkyTable(){
   var tier={ k:"c", t:"장수 구분", w:150, v:function(r){ return lkyTier(r.c); } };
   var rows, spec;
   if(LKY.view==="no"){
-    rows=LKY.rows.map(function(o){ return { no:String(o.no), emp:o.emp, name:o.name, dept:o.dept, pos:o.pos||"", c:cnt[o.emp], win:o.win||"" }; });
+    rows=LKY.rows.map(function(o){ return { no:String(o.no), emp:o.emp, name:o.name, dept:o.dept, pos:o.pos||"", c:cnt[o.emp], win:o.win||"", at:o.at||"" }; });
     spec={ file:"행운권 명단", ph:"번호 · 사번 · 이름 찾기", key:function(r){ return r.emp+":"+r.no; }, sort:{ k:"no", d:1 }, onRow:onRow, chips:chips, all:1,
-      cols:[{ k:"no", t:"행운권 번호", w:100 },{ k:"emp", t:"사번", w:90 },{ k:"name", t:"이름", w:100 },{ k:"dept", t:"소속", w:200 },tier,{ k:"win", t:"당첨", w:110 }],
+      cols:[{ k:"no", t:"행운권 번호", w:100 },{ k:"emp", t:"사번", w:90 },{ k:"name", t:"이름", w:100 },{ k:"dept", t:"소속", w:200 },tier,{ k:"win", t:"당첨", w:110 },{ k:"at", t:"발급 시각", w:100 }],
       empty:"번호가 없습니다", h:640 };
   } else {
-    var P={}, ord=[]; LKY.rows.forEach(function(o){ var p=P[o.emp]; if(!p){ p=P[o.emp]={ emp:o.emp, name:o.name, dept:o.dept, pos:o.pos||"", nos:[], win:"" }; ord.push(p); } p.nos.push(String(o.no)); if(o.win&&!p.win) p.win=o.win; });
-    rows=ord.map(function(p){ return { emp:p.emp, name:p.name, dept:p.dept, pos:p.pos, c:p.nos.length, nos:p.nos.join(" · "), win:p.win }; });
+    var P={}, ord=[]; LKY.rows.forEach(function(o){ var p=P[o.emp]; if(!p){ p=P[o.emp]={ emp:o.emp, name:o.name, dept:o.dept, pos:o.pos||"", nos:[], win:"", at:"" }; ord.push(p); } p.nos.push(String(o.no)); if(o.win&&!p.win) p.win=o.win; if(o.at&&o.at>p.at) p.at=o.at; });
+    rows=ord.map(function(p){ return { emp:p.emp, name:p.name, dept:p.dept, pos:p.pos, c:p.nos.length, nos:p.nos.join(" · "), win:p.win, at:p.at }; });
     spec={ file:"행운권 보유자", ph:"번호 · 사번 · 이름 찾기", key:function(r){ return r.emp; }, sort:{ k:"c", d:-1 }, onRow:onRow, chips:chips, all:1,
-      cols:[{ k:"emp", t:"사번", w:90 },{ k:"name", t:"이름", w:100 },{ k:"dept", t:"소속", w:200 },tier,{ k:"nos", t:"행운권 번호", w:170 },{ k:"win", t:"당첨", w:110 }],
+      cols:[{ k:"emp", t:"사번", w:90 },{ k:"name", t:"이름", w:100 },{ k:"dept", t:"소속", w:200 },tier,{ k:"nos", t:"행운권 번호", w:170 },{ k:"win", t:"당첨", w:110 },{ k:"at", t:"발급 시각", w:100 }],
       empty:"번호가 없습니다", h:640 }; }
   g=gridOf(id, spec); g.o=Object.assign({ id:id }, spec);
   if(root&&box.contains(root)){ XG.set(g, rows); }   /* 틀 · 스크롤 · 검색 칸 유지 · 본문 줄만 */
