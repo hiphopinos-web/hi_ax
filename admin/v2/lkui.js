@@ -41,10 +41,11 @@ function lkuB(){ var b=S.data.dbd; return b&&b.ok&&Array.isArray(b.rows)?b:null;
 function lkuRows(b){ var dp=b.dps||[]; return (b.rows||[]).map(function(r){ return { nm:String(r[0]||""), dp:String(dp[r[1]]||""), c:num(r[2]), at:String(r[3]||"") }; }); }
 function lkuMd(day){ var m=String(day||"").match(/^\d{4}-(\d{2})-(\d{2})$/); return m?(+m[1])+"/"+(+m[2]):""; }
 function lkuToday(){ var t=srvNow(); return t.getFullYear()+"-"+("0"+(t.getMonth()+1)).slice(-2)+"-"+("0"+t.getDate()).slice(-2); }
-/* 체크인 상태 · pre 시작 전 · open 받는 중 · after 날짜 지남 · closed 마감 */
+/* 체크인 상태 · wait 시작 승인 전(261022) · pre 시작됨 · 날짜 · 시간 전 · open 받는 중 · after 날짜 지남 · closed 마감 */
 function lkuCk(d, b){
   var closed=d&&"closed" in d?d.closed:b.closed, n=b?num(b.inAll):num(d["in"]), day=(b?b.day:d.day)||"", st=(b?b.start:hm(String(d.win||"").split("-")[0]))||"16:40", on=b?!!b.winOn:!!d.winOn;
   if(closed) return { k:"closed", t:"마감"+(b&&b.closed&&b.closedAt?" · "+hm(String(b.closedAt).slice(11,16)):""), s:"체크인 "+n0(n)+"명에서 멈춤", n:n };
+  var c0=typeof dsCk==="function"?dsCk(d,b,n):null; if(c0) return c0;   /* 261022 시작 승인(dstart.js · 서버 startAt · why · recv) · 옛 서버면 아래 옛 판단 */
   var td=lkuToday(), t=srvNow(), m=t.getHours()*60+t.getMinutes();
   if(on&&day&&(td<day||(td===day&&m<mins(st)))) return { k:"pre", t:lkuMd(day)+" "+st+"부터 받음", s:"끝 시각 없음 · 17:13쯤 「체크인 마감」", n:n };
   if(on&&day&&td>day) return { k:"after", t:"받지 않음", s:"체크인 날짜 "+lkuMd(day), n:n };
@@ -69,7 +70,8 @@ function lkuTop(d, b){
 function lkuCkPaint(d, b){
   var c=lkuCk(d,b), k=d.lock, h='<div class="lku-st '+c.k+'"><b>'+esc(c.t)+'</b><span class="cap">'+esc(c.s)+'</span></div>';
   if(c.k==="closed") h+='<div class="btns mt"><button class="btn sm" type="button" style="flex:none" onclick="lkuClose(0)"'+(k?" disabled":"")+'>다시 열기</button></div><p class="cap mt4">'+(k?"무대 공 넣기 뒤라 다시 열 수 없음":"무대 공 넣기 전까지 다시 열 수 있음")+'</p>';
-  else h+='<button class="btn dng big mt lku-go" type="button" onclick="lkuClose(1)"'+(c.k==="open"?"":" disabled")+'>체크인 마감</button><p class="cap mt4">'+(c.k==="open"?"누르면 확인 창 · 마감 뒤 찍는 사람은 3 · 2 · 1등 통 밖":"체크인을 받는 동안 켜짐")+'</p>';
+  else if(c.k==="wait") h+=dsBtnH(c,1);   /* 261022 시작 전 = 마감 단추 없음 · 슈퍼관리자만 「체크인 시작」 */
+  else h+='<button class="btn dng big mt lku-go" type="button" onclick="lkuClose(1)"'+(c.k==="open"?"":" disabled")+'>체크인 마감</button><p class="cap mt4">'+(c.k==="open"?"누르면 확인 창 · 마감 뒤 찍는 사람은 3 · 2 · 1등 통 밖":"체크인을 받는 동안 켜짐")+'</p>'+(typeof dsBtnH==="function"?dsBtnH(c):"");
   lkuSet("lkuCk","ck",h);
   if(LKU.qr) lkuSet("lkuQrB","qr",typeof dtQrH==="function"?dtQrH(d):"");
 }
