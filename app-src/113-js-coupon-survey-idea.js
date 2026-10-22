@@ -243,8 +243,8 @@ var KIT_WASH = ["30도 이하 찬물 세탁", "이염 방지를 위한 단독 �
 var KIT_NOTE = ["염색된 의류는 세탁 시 물 빠짐이 발생할 수 있습니다.", "세탁 방법에 따라 제품이 변형되거나 수축될 수 있습니다.", "마찰이 잦은 활동 시 보풀이 생길 수 있습니다.", "프린트 부위는 다림질을 피하거나, 반드시 천을 덧대어 다려 주시기 바랍니다.", "폴리에스터 혼방 소재는 열에 약하므로, 다림질 시 반드시 천을 덧대고 저온으로 다려 주시기 바랍니다."];
 var KIT_IMG = "assets/kit/fleece.webp";   /* 261008 상품 사진(홍보부 원본 후리스자켓.png · 블랙 · 가슴 ME to WE · 4:3 · 800px · 옛 제조사 네이비 사진 대체) */
 /* 261008 테스트 사번 미리 보기(사용자 261008) · 테스트 계정(testEmp)이 명단에 없으면 이 기기에서만 보이는 신청 화면 · 서버 재고 · 신청번호를 쓰지 않는다(dry) · 고른 사이즈 = 기기 키 kit_t · 「테스트」 표시
-   기간 = 운영 설정과 같은 값(열림 10/08 09:00 · 마감 10/21 18:00 · 변경 마감 10/23 18:00) · 앱 「지금」(appNow · 「시각 바꿔 보기」)으로 판정 · 남은 수 = 기본 수량 · 명단에 있으면 서버 my.kit 그대로(일반 참가자 규칙) */
-var KIT_T = { open: "2026-10-08 09:00", close: "2026-10-21 18:00", chg: "2026-10-23 18:00", qty: { SS: 50, L: 105, "2XL": 45, "3XL": 20 } };
+   기간 = 운영 설정과 같은 값(열림 10/08 09:00 · 마감 10/21 18:00 · 변경 마감 10/24 15:00 · 261022 연장) · 앱 「지금」(appNow · 「시각 바꿔 보기」)으로 판정 · 남은 수 = 기본 수량 · 명단에 있으면 서버 my.kit 그대로(일반 참가자 규칙) */
+var KIT_T = { open: "2026-10-08 09:00", close: "2026-10-21 18:00", chg: "2026-10-24 15:00", qty: { SS: 50, L: 105, "2XL": 45, "3XL": 20 } };
 function kitTestOn() { return typeof testEmp === "function" && testEmp(); }
 function kitTestAt(c) { var m = /^(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/.exec(c); return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]); }
 function kitTest() {
@@ -300,6 +300,7 @@ function kitCardHtml() {
   if (!k) return "";
   var sn = kitSessNo(k), seen = S.get("kit_seen", "") === kitSeenKey(k), t = "", m = "", a = "보기", no = sn ? sn + " · " : "";
   if (k.st === "pick" && k.ph === "open" && !k.sz) { t = "기념품 옷 사이즈 선택하기"; m = "마감 " + kitWhen(k.close); a = "선택"; }
+  else if (k.st === "pick" && k.ph === "chg" && !k.sz) { t = "기념품 옷 사이즈 선택하기"; m = kitWhen(k.chg) + "까지 · 남은 사이즈만"; a = "선택"; }   /* 261022 변경 마감 연장(10/24 15:00) · 마감(open) 뒤에도 못 고른 사람은 남은 사이즈 안에서 고른다 */
   else if (k.st === "pick" && k.ph === "open" && k.sz) { t = kitRo(k.sz) + " 신청 완료"; m = no + "마감 전 변경 가능"; }   /* 261008 고른 뒤 = 결과 한 장(신청번호) · 마감 뒤에는 자동 배정 안내만 */
   else if (k.st === "pick" && k.ph === "chg" && k.how === "auto" && !seen) { t = kitRo(k.sz) + " 배정됐어요"; m = no + "변경 " + kitWhen(k.chg) + "까지 · 남은 사이즈만"; }
   else if (k.st === "hum" && (k.ph === "open" || k.ph === "chg") && !seen) { t = "AX 라운지 사전 신청 키트 안내"; m = "1F 주차장 체크인존에서 가습기로 드려요"; }
@@ -313,7 +314,7 @@ function kitCardHtml() {
 function kitMyRowHtml() {
   var k = kitMy();
   if (!k) return "";
-  var sn = kitSessNo(k), t = k.st === "hum" ? "사전 신청 키트 · 가습기" : k.sz ? "기념품 옷 " + kitLbl(k.sz) + (sn ? " · " + sn : "") : "기념품 옷 사이즈 선택하기", d = k.st === "hum" ? "1F 주차장 체크인존" : k.sz ? kitGetTxt(k) : "마감 " + kitWhen(k.close);
+  var sn = kitSessNo(k), t = k.st === "hum" ? "사전 신청 키트 · 가습기" : k.sz ? "기념품 옷 " + kitLbl(k.sz) + (sn ? " · " + sn : "") : "기념품 옷 사이즈 선택하기", d = k.st === "hum" ? "1F 주차장 체크인존" : k.sz ? kitGetTxt(k) : k.ph === "chg" ? kitWhen(k.chg) + "까지 · 남은 사이즈만" : "마감 " + kitWhen(k.close);
   return '<div class="axs-list">' + axDest(esc(t), esc(d), lnkChev(k.st === "pick" && !k.sz && kitCanSet(k) ? "선택" : "보기"), "kitOpen()") + "</div>";
 }
 function kitFsRow() {
@@ -558,7 +559,7 @@ function kitSheet() {
   var msg = (k.test ? '<p class="ax-meta axs-kitnote axs-kittest">' + segHtml("테스트 계정 미리 보기 · 서버에 저장하지 않아요") + "</p>" : "") + (KIT.msg ? '<p class="axs-kitmsg" role="alert">' + esc(KIT.msg) + "</p>" : "");   /* 261008 테스트 사번 미리 보기 표시 */
   if (k.sz && !KIT.edit) return { name: nm, body: msg + kitDoneHtml(k), foot: kitCanSet(k) ? progBtn("사이즈 변경", "kitEdit(1)", "ax-button-weak") : "" };
   var ph = k.ph, note = ph === "before" ? esc(kitWhen(k.open)) + "부터 신청할 수 있어요" : ph === "end" ? "신청 기간이 끝났어요" + (kitStaff(k) ? "" : " · 사이즈는 체크인존에서 남은 것으로 드려요") :
-    ph === "open" ? "" : esc(kitWhen(k.chg)) + "까지 남은 사이즈로만 바꿀 수 있어요";   /* 261008 사용자 「고르는 기준 · 품절 순서 안내 없어도 될 것 같아」 · 열림 중에는 안내 줄 없음 */
+    ph === "open" ? "" : esc(kitWhen(k.chg)) + (k.sz ? "까지 남은 사이즈로만 바꿀 수 있어요" : "까지 남은 사이즈 중에서 고를 수 있어요");   /* 261008 사용자 「고르는 기준 · 품절 순서 안내 없어도 될 것 같아」 · 열림 중에는 안내 줄 없음 */
   var chips = '<section class="axs-kitsz"><div class="axs-kitszh"><h3 class="ax-type-t5-strong">사이즈</h3>' + (ph === "open" ? '<span class="ax-meta">마감 ' + esc(kitWhen(k.close)) + "</span>" : "") + "</div>" +
     '<div class="axs-kitcs" role="radiogroup" aria-label="사이즈">' + KIT_SIZES.map(function (x) { return kitChipHtml(x, k); }).join("") + "</div>" +
     (note ? '<p class="ax-meta axs-kitnote">' + segHtml(note) + "</p>" : "") + "</section>";
