@@ -49,8 +49,8 @@ function checkMyState(base) {
     seen.fcfs = "got"; changed = true;
     if (!base) notice({ key: "fcfs:got", first: true, run: function () { fcfsGotOpen(); } });   /* v5.97 (사용자 261006 밤) 팝업 대신 수령 안내 시트 · 스탬프 연출 뒤 · 쌓인 행운권 상자보다 먼저(first) */
   }
-  /* 261022 (사용자 확정) 1F 체크인존 체크인 환영 팝업 · 사전 신청자 · 이 기기 한 번(noti_seen.ckin) · 앱을 닫아 두었다 처음 연 sync(base)에도 띄운다 · 대기열(다른 시트 · 팝업이 닫힌 뒤) */
-  if (typeof ckinOn === "function" && ckinOn() && seen.ckin !== 1) { seen.ckin = 1; changed = true; notice({ key: "ckin", first: true, run: ckinWelOpen }); }
+  /* 261022 (사용자 확정) 1F 체크인존 체크인 환영 팝업 · 사전 신청자 · 이 기기 한 번(noti_seen.ckin · 실제로 뜬 순간 ckinWelOpen 이 적는다 · 미루는 동안 앱을 닫으면 다음에 뜬다) · 앱을 닫아 두었다 처음 연 sync(base)에도 띄운다 · 대기열(다른 시트 · 팝업이 닫힌 뒤) */
+  if (typeof ckinOn === "function" && ckinOn() && seen.ckin !== 1) { notice({ key: "ckin", first: true, hold: function () { return typeof nbOn === "function" && nbOn(); }, run: ckinWelOpen }); }   /* hold = 앱을 연 · 로그인한 뒤 10초(NB 창) 동안 미룬다 · 그 사이 오는 스탬프 연출(SPOP)이 팝업 위에 겹치지 않게 · 그 뒤 연출이 돌고 있으면 noticeBusy 가 기다린다
   /* 261017 (사용자 확정 「럭키드로우 푸시 · 당첨자 안내 모두 걷어 내」) 럭키드로우 당첨 · 7등 당첨 안내 팝업 걷음 */
   if (changed) S.set("noti_seen", seen);
 }

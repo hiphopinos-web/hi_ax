@@ -604,6 +604,7 @@ function ckinWelHtml() {
     '<button type="button" class="btn mint" onclick="modalClose()">확인</button></div>';
 }
 function ckinWelOpen() {
+  var sn = S.get("noti_seen", {}) || {}; sn.ckin = 1; S.set("noti_seen", sn);   /* 본 표시 = 뜬 순간 */
   modalOpen(ckinWelHtml(), "");
   var d = el("modal"); if (!d) return;
   d.classList.add("axs-ckwm"); d.setAttribute("data-notice", "ckin");
