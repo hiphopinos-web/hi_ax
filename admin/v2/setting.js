@@ -4,7 +4,7 @@
  * 급한 단추 3개 = 룰렛 소진 안내(roulette_out · 되돌리기 토스트) · 푸시 정지(push_cfg · 알림 탭과 같은 함수) · 앱 접속 범위(og_scope_set · 확인 창)
  * 서버 상태 = now_board · 이 콘솔의 최근 호출(NET) · 화면 주소 = 추첨 · 타자왕 TV · 타자왕 체험 · (테스트) 참가자 설문(열기 · 복사 · 261021 테스트 성격 줄은 이름 앞 「(테스트)」) · 261016 체크인 창구 · 대기판 걷음 · 261017 스탬프 월 걷음(사이니지 폐기)
  * 스태프 코드 = adm_roster.staffCode(설정됨 · 비어 있음만 · 값은 받지도 그리지도 않음) · 바꾸기 · 비우기 = adm_code_set(POST · 확인 창) · 운영 설정 76개 「바꾸기」는 넣지 않는다(결정 · 대화로 처리) */
-var LG_SUBS=[["log","활동 기록"],["ntf","알림"],["urgent","급한 단추"],["srv","서버 상태"],["urls","화면 주소"],["qr","현장 QR"]];   /* 261017 「스태프 코드」 칩은 관리자 명단 화면 오른쪽(앱 스태프 폰 권한 아래)으로 옮김 · scPaint 는 그대로(roster.js 가 부른다) */
+var LG_SUBS=[["log","활동 기록"],["tl","시간순 보기"],["ntf","알림"],["urgent","급한 단추"],["srv","서버 상태"],["urls","화면 주소"],["qr","현장 QR"]];   /* 261017 「스태프 코드」 칩은 관리자 명단 화면 오른쪽(앱 스태프 폰 권한 아래)으로 옮김 · scPaint 는 그대로(roster.js 가 부른다) */
 var LOG_CAT=[["all","전체",null],["p","사람",function(r){ return r.cat==="p"; }],["r","명단",function(r){ return r.cat==="r"; }],["s","스탬프 · 경품",function(r){ return r.cat==="s"; }],["n","알림",function(r){ return r.cat==="n"; }],["c","설정",function(r){ return r.cat==="c"; }],["x","스캔",function(r){ return r.cat==="x"; }],["ck","체크인존",function(r){ return r.k==="ck_gate"; }],["u","되돌릴 수 있음",function(r){ return !!(r.undo&&r.undo.ok&&!r.undo.done&&!LG_DONE[r.ref]); }],["f","실패",function(r){ return /^x:/.test(r.res||""); }]];
 var BYK_N={ "콘솔":"콘솔", "스태프":"스태프 폰", "기기":"코드 기기", "서버":"서버 자동" };
 var GEN_UNDO={ roll_undo:"명단 넣기 · 빼기 되돌리기", resv_set:"라운지 상담 상태 되돌리기", cchat_status:"커피챗 상태 되돌리기", stamp_revoke:"담당자 스탬프 취소", inv_undo:"교환 기록 되돌리기", pre10_undo:"10F 묶음 넣기 되돌리기",
