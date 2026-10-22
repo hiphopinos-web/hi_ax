@@ -1,0 +1,26 @@
+/* AXF CONTROL v2 · 지금 › 서버 맥박 (261022) · 색 = v2.css 토큰만 · 숫자 tabular-nums · 상태 글자 = 정상 · 주의 · 위험 3색 · 선은 네이비, 위험만 --bad */
+.pu-h{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.pu-h h2{font-size:16px}
+.pu-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,360px);gap:16px;align-items:start}
+.pu-plot{min-width:0;display:flex;flex-direction:column}
+.pu-cv{position:relative;height:176px;border-bottom:1px solid var(--line3)}
+.pu-cv canvas{position:absolute;inset:0;display:block;width:100%;height:100%}
+.pu-ax{display:flex;justify-content:space-between;font-size:12px;color:var(--tx3);margin-top:4px}
+.pu-side{min-width:0;display:flex;flex-direction:column;gap:10px}
+.pu-st{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--tx3)}
+.pu-st i{width:10px;height:10px;border-radius:50%;background:var(--line3);flex:none}
+.pu-st b{font-size:28px;line-height:1.1;font-weight:700}
+.pu-st.ok{color:var(--ok)}.pu-st.ok i{background:var(--ok)}
+.pu-st.warn{color:var(--warn)}.pu-st.warn i{background:var(--warn)}
+.pu-st.bad{color:var(--bad)}.pu-st.bad i{background:var(--bad)}
+.pu-st .cap{font-size:13px;color:var(--tx2)}
+.pu-nums{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.pu-n{min-width:0;display:flex;flex-direction:column;gap:2px;padding:8px 10px;border-radius:var(--r-s);background:var(--soft);border:1px solid var(--line2)}
+.pu-n b{font-size:22px;line-height:1.2;font-weight:700;color:var(--tx);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pu-n b small{font-size:13px;font-weight:600;color:var(--tx3);margin-left:2px}
+.pu-n.hit .cap:first-child{color:var(--tx);font-weight:700}
+.pu-n .cap{font-size:12px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:900px){
+  .pu-body{grid-template-columns:minmax(0,1fr)}
+  .pu-cv{height:132px}
+}

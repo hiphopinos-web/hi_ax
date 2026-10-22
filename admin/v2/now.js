@@ -43,7 +43,7 @@ function nbKinds(kinds){ var m={}; kinds.forEach(function(k){ m[k.id]=k; }); ret
 SCREENS.now={
   title:"지금", desc:"앱 사용 · 지금까지 · 이상 신호 · 지금 단계 · 스탬프 · 경품",
   need:function(){ return [usNeed(),sfNeed(),{ k:"rst", a:"roll_stat", ttl:60000 },{ k:"inv", a:"inv_state", ttl:60000 },{ k:"kss", a:"kit_size_state", ttl:60000 }]; },
-  mount:function(vb){ dxMount(); vb.innerHTML='<div id="nwPda"></div><div id="nwTop"></div><div id="nwErr"></div><div id="nwUseA"></div><div id="nwSfA"></div><div class="grid g4 mb" id="nwSig"></div><div id="nwUseB"></div><div id="nwMid"></div><div id="nwPz"></div><div id="nwSfB"></div>'; },
+  mount:function(vb){ dxMount(); vb.innerHTML='<div id="nwPulse"></div><div id="nwPda"></div><div id="nwTop"></div><div id="nwErr"></div><div id="nwUseA"></div><div id="nwSfA"></div><div class="grid g4 mb" id="nwSig"></div><div id="nwUseB"></div><div id="nwMid"></div><div id="nwPz"></div><div id="nwSfB"></div>'; if(typeof puTick==="function") setTimeout(puTick,0); },   /* 261022 서버 맥박(pulse.js) · 맨 위 */
   paint:function(){
     if(typeof pdaBand==="function") el("nwPda").innerHTML=pdaBand();   /* 261020 행사 전 스탬프 점검(preday.js) · 맨 위 · 진행판보다 먼저 */
     var b=S.data.nb, g=dataGate("nb","진행판");
