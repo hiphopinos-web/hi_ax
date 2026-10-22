@@ -94,7 +94,7 @@ function svGoId(id) {
 function svNext() {
   var d = svDraft(), fl = svFlow(d), i = svCur(d, fl), q = fl[i];
   if (q && svAsk(q) && !q.optional && svEmpty(q, d.a[q.id])) { toast("답을 골라 주세요"); return; }
-  if (q && q.type === "intro" && BE.on && !testMode()) beSync();   /* 시작하면 참석 목록(my.svPre)을 한 번 받아 둔다 · Q2-0 까지 문항 셋 */
+  if (q && q.type === "intro" && BE.on && !testMode()) { SV.seen = Date.now(); beSync(); }   /* 시작하면 참석 목록(my.svPre)을 한 번 받아 둔다 · Q2-0 까지 문항 셋 */
   if (i + 1 < fl.length) svGoId(fl[i + 1].id);
 }
 function svPrev() { var d = svDraft(), fl = svFlow(d), i = svCur(d, fl); clearTimeout(SV.adv); SV.pend = 0; if (i > 0) svGoId(fl[i - 1].id); }   /* 자동 넘김 기다리는 중 「이전」 = 넘김 취소 */
