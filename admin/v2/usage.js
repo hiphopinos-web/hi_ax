@@ -2,7 +2,8 @@
  * 261022 대시보드 모양(dashfx.js) · 지표 칸 4개(접속한 사람 = 고른 칸 · 꺾은선 = 당일 10분 칸 · 그 밖 날짜별) · 지금 칸 빗금 · 면적 그래프 = 거르기 알약 + 꺾은선 + 비교(서버 prev)
  * 데이터 = usage_stats(관리코드 · per pre | all | day · 당일 1분 · 그 밖 5분) · 사람 이름 · 사번 · 부문 없음 · 5 미만 칸 = -1
  * 기간 = 이 브라우저에만 기억(localStorage · 실패해도 기본값) · 기본 = 사전 오픈 날 pre · 행사일 day · 그 밖 all
- * 그리는 곳 = now.js(지금 탭) · 당일 08:00~17:30 이면 이상 신호 아래, 그 밖은 맨 위(D6) */
+ * 261023 처음부터(full · 10/19~27 누적 · 서버 cum = 그날까지 한 번이라도 연 사람) · 칸 이름 「처음부터」(「전체 오픈」 · 거르기 알약 「전체」와 헷갈리지 않게)
+ * 그리는 곳 = now.js(홈 탭 · 주소 #now 그대로) · 당일 08:00~17:30 이면 이상 신호 아래, 그 밖은 맨 위(D6) */
 var US={ per:"", am:"h", rs:0, ag:"all", cmp:false };   /* 261022 ag = 면적 그래프 거르기(all · 화면 · etc) · cmp = 전날 같은 시간대 비교 */
 var US_LS=skey("axf_usage_p");
 var US_PROG=[["09:30","Opening · Keynote"],["13:30","AWS"],["15:10","MS"],["17:00","Closing"]];
@@ -11,7 +12,7 @@ function usDay(ymd, n){ var a=String(ymd||"").split("-"); if(a.length<3) return 
 function usMd(ymd){ var s=String(ymd||""); return s.length>=10?Number(s.slice(5,7))+"/"+Number(s.slice(8,10)):""; }
 function usEv(){ var b=S.data.nb; return b&&b.ev?String(b.ev):"2026-10-26"; }
 function usPerDef(){ var b=S.data.nb||{}, d=String(b.day||""), ev=usEv(); if(!d) return "day"; if(d===ev) return "day"; if(d<usDay(ev,-4)) return "pre"; return "all"; }
-function usPer(){ if(US.per) return US.per; var v=""; try{ v=localStorage.getItem(US_LS)||""; }catch(e){ v=""; } return /^(pre|all|day)$/.test(v)?v:usPerDef(); }
+function usPer(){ if(US.per) return US.per; var v=""; try{ v=localStorage.getItem(US_LS)||""; }catch(e){ v=""; } return /^(pre|all|day|full)$/.test(v)?v:usPerDef(); }
 function usNeed(){ var p=usPer(); return { k:"use", a:"usage_stats", p:{ per:p }, ttl:p==="day"?60000:300000 }; }
 function usSet(p){ US.per=p; try{ localStorage.setItem(US_LS,p); }catch(e){} paint(); load(false); }
 function usSetAm(m){ US.am=m; usAreaDraw(); }
@@ -23,14 +24,15 @@ function usHm(t, add){ var m=Number(String(t).slice(0,2))*60+Number(String(t).sl
 /* 당일 08:00~17:30 = 이상 신호 아래(D6) */
 function usBelow(){ var b=S.data.nb; if(!b||String(b.day||"")!==usEv()) return false; var t=mins(hm(srvNow().toTimeString())); return t>=mins("08:00")&&t<mins("17:30"); }
 function usSegH(per){
-  var ev=usEv(), L={ pre:usMd(usDay(ev,-7))+"~"+usMd(usDay(ev,-5)).split("/")[1], all:usMd(usDay(ev,-4))+"~"+usMd(usDay(ev,1)).split("/")[1], day:usMd(ev) };
-  return '<div class="dx-seg" role="tablist" aria-label="기간">'+[["pre","사전 오픈"],["all","전체 오픈"],["day","행사 당일"]].map(function(x){ var on=x[0]===per; return '<button type="button" role="tab" aria-selected="'+(on?"true":"false")+'" class="'+(on?"on":"")+'" onclick="usSet(\''+x[0]+'\')">'+x[1]+'<small>'+esc(L[x[0]])+'</small></button>'; }).join("")+'</div>';
+  var ev=usEv(), L={ pre:usMd(usDay(ev,-7))+"~"+usMd(usDay(ev,-5)).split("/")[1], all:usMd(usDay(ev,-4))+"~"+usMd(usDay(ev,1)).split("/")[1], day:usMd(ev), full:usMd(usDay(ev,-7))+"~"+usMd(usDay(ev,1)).split("/")[1] };
+  return '<div class="dx-seg us-per" role="tablist" aria-label="기간">'+[["pre","사전 오픈"],["all","전체 오픈"],["day","행사 당일"],["full","처음부터"]].map(function(x){ var on=x[0]===per; return '<button type="button" role="tab" aria-selected="'+(on?"true":"false")+'" class="'+(on?"on":"")+'" onclick="usSet(\''+x[0]+'\')">'+x[1]+'<small>'+esc(L[x[0]])+'</small></button>'; }).join("")+'</div>';
 }
 /* 261022 접속한 사람 꺾은선 · 당일 = 10분 칸(지금까지) · 그 밖 = 날짜별(오늘까지) · 5 미만 칸(-1) = 빈 칸 */
 function usSeries(d){
   if(d.per==="day"){ var B=d.bars||{ n:[] }, a=B.n||[], cur=B.now?Math.round((mins(B.now)-mins("07:00"))/10):-1; if(cur<0) return null; a=a.slice(0,cur+1); return { a:a.map(function(v){ return Number(v)<0?null:num(v); }), t:"직전 10분 칸" }; }
   var days=d.days||[], dn=d.daysN||[], n=0; days.forEach(function(x,i){ if(!d.today||x<=d.today) n=i+1; });
-  if(n<1) return null; return { a:dn.slice(0,n).map(function(v){ return Number(v)<0?null:num(v); }), t:"전날" };
+  if(n<1) return null; if(d.per==="full"&&d.cum) return { a:d.cum.slice(0,n).map(function(v){ return Number(v)<0?null:num(v); }), t:"전날 누적" };
+  return { a:dn.slice(0,n).map(function(v){ return Number(v)<0?null:num(v); }), t:"전날" };
 }
 function nwUsage(b){
   var per=usPer(), d=S.data.use, g=dataGate("use","앱 사용"), live=d&&d.ok&&d.per===per;
@@ -48,7 +50,7 @@ function nwUsage(b){
     dxTile({ k:"u:med", ic:DX_IC.clock, l:"1인 체류 중앙값", v:num(k.med), u:"분", sub:"합계 <b>"+n0(k.sumH)+"</b>시간" })+
     dxTile({ k:"u:opens", ic:DX_IC.open, l:"앱 연 횟수", v:num(k.opens), u:"회", sub:"1인 <b>"+(k.opp||0)+"</b>회" })+
     dxTile(k4)+'</div>';
-  h+='<div class="grid g32 mb"><div class="card dx-a'+stale+'" data-dxc="u:time">'+(per==="day"?usTimeDay(d):usTimeDays(d))+'</div><div class="card dx-a'+stale+'" data-dxc="u:scr">'+usScr(d)+'</div></div>';
+  h+='<div class="grid g32 mb"><div class="card dx-a'+stale+'" data-dxc="u:time">'+(per==="day"?usTimeDay(d):per==="full"&&d.cum?usTimeCum(d):usTimeDays(d))+'</div><div class="card dx-a'+stale+'" data-dxc="u:scr">'+usScr(d)+'</div></div>';
   h+='<div class="card mb dx-area dx-a'+stale+'" data-dxc="u:area"><div id="usArea"></div></div>';
   h+='<div class="grid g32 mb"><div class="card dx-a'+stale+'" data-dxc="u:floor">'+usFloor(d)+'</div><div class="card dx-a'+stale+'" data-dxc="u:route">'+usRoute(d)+'</div></div>';
   return h+usAccLine(b);
@@ -86,6 +88,27 @@ function usTimeDays(d){
   days.forEach(function(x,i){ g+='<span class="rl">'+usMd(x)+'</span>'; hrs.forEach(function(t){ var v=(heat[i]||[])[t]; var m=Number(v)<0; g+='<i class="c'+(m?" m":"")+'" style="'+(m||!num(v)?"":"opacity:"+(0.12+0.88*num(v)/hm2).toFixed(2))+'" title="'+usMd(x)+' '+t+'시 · '+usN(v)+'"></i>'; }); });
   return h+g+'</div><div class="us-lg"><span>칸 색 = 그 시간에 앱을 본 사람(진할수록 많음) · 연한 회색 = 5 미만</span></div>';
 }
+/* 261023 처음부터 · 누적선(그날까지 한 번이라도 연 사람) + 옅은 날짜 막대(그날 연 사람) · 오늘 뒤 날은 비움 · 날짜 × 시 열지도는 다른 기간과 같다 */
+function usTimeCum(d){
+  var cu=d.cum||[], days=d.days||[];
+  var h='<h2>처음부터 누적 접속 <span class="cap">그날까지 한 번이라도 앱을 연 사람</span></h2>';
+  if(!cu.some(function(v){ return num(v)>0; })) return h+emptyH("아직 기록이 없습니다 · "+usMd(days[0])+" 00:00 부터","");
+  return h+'<div class="dx-area" id="usCum"></div>';
+}
+function usCumDraw(){
+  var box=el("usCum"), d=S.data.use; if(!box||!d||!d.ok||!d.cum) return;
+  var days=d.days||[], dn=d.daysN||[], cu=d.cum, n=0; days.forEach(function(x,i){ if(!d.today||x<=d.today) n=i+1; });
+  var mob=usMob(), W=Math.max(260,box.clientWidth), H=mob?170:200, T=16, B=22, N=days.length, mx=Math.max.apply(null,[1].concat(cu.slice(0,n).map(num))), top=usNice(mx);
+  var cx=function(i){ return (i+.5)*W/N; }, bw=W/N*.56, y=function(v){ return T+(H-T-B)*(1-v/top); };
+  var gl=[.5,1].map(function(f){ var v=Math.round(top*f); return '<line x1="0" x2="'+W+'" y1="'+y(v).toFixed(1)+'" y2="'+y(v).toFixed(1)+'" class="gl"/><text x="'+(W-2)+'" y="'+(y(v)-4).toFixed(1)+'" text-anchor="end">'+n0(v)+'</text>'; }).join("");
+  var bars=dn.slice(0,n).map(function(v,i){ var hv=Number(v)<0?0:num(v); return '<rect x="'+(cx(i)-bw/2).toFixed(1)+'" y="'+y(hv).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(0,y(0)-y(hv)).toFixed(1)+'" rx="2" class="bd"><title>'+usMd(days[i])+' 그날 '+usN(v)+'</title></rect>'; }).join("");
+  var pts=[]; for(var i=0;i<n;i++){ if(Number(cu[i])>=0) pts.push(cx(i).toFixed(1)+","+y(num(cu[i])).toFixed(1)); }
+  var lp=pts.length?pts[pts.length-1].split(","):null;
+  var ax=days.map(function(x,i){ return (!mob||i%2===0)?'<text x="'+cx(i).toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle">'+usMd(x)+'</text>':''; }).join("");
+  box.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" role="img" aria-label="처음부터 누적 접속 꺾은선">'+gl+bars+
+    (pts.length>1?'<polyline points="'+pts.join(" ")+'" class="ln"/>':'')+(lp?'<circle cx="'+lp[0]+'" cy="'+lp[1]+'" r="4" class="pt"/>':'')+'<line x1="0" x2="'+W+'" y1="'+(H-B)+'" y2="'+(H-B)+'" class="ax"/>'+ax+'</svg>'+
+    '<div class="dx-lg"><span><b style="background:var(--navy)"></b>누적 '+(n?usN(cu[n-1])+(Number(cu[n-1])>=0?"명":""):"-")+'</span><span><b style="background:var(--navy1)"></b>그날 연 사람</span></div>';
+}
 /* 화면별 총 체류 · 1위만 빗금 · 스태프 화면은 맨 아래 따로 */
 function usScr(d){
   var all=(d.scr||[]), rows=all.filter(function(x){ return x.g!=="a"&&(num(x.sec)>0||num(x.n)!==0); }).sort(function(a,b){ return num(b.sec)-num(a.sec); }), st=all.filter(function(x){ return x.g==="a"; })[0];
@@ -102,6 +125,7 @@ function usRank(d){ return (d.scr||[]).filter(function(x){ return x.g!=="a"&&num
 function usSetAg(g){ US.ag=g; if(g==="all"&&US.am==="p") US.am="h"; usAreaDraw(); }
 function usSetCmp(){ US.cmp=!US.cmp; usAreaDraw(); }
 function usAreaDraw(){
+  usCumDraw();   /* 261023 처음부터 누적선 · 폭에 맞춰 그림(같은 때 · 창 크기 바뀔 때) */
   var box=el("usArea"), d=S.data.use; if(!box||!d||!d.ok||!d.area) return;
   var A=d.area, rank=usRank(d), n=A.n, mob=usMob(), pv=d.prev&&d.prev.g?d.prev.g:null;
   var nm=function(g){ return ((d.grp||{})[g])||g; }, other=Object.keys(A.g).filter(function(g){ return g!=="a"&&rank.indexOf(g)<0&&(d.scr||[]).some(function(s){ return s.g===g&&num(s.sec)>0; }); });

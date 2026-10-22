@@ -41,7 +41,7 @@ var STN={ ok:"정상", warn:"주의", bad:"위험" };
 var NB_KIND=[["lg","최초 로그인"],["qz","AX 퀴즈"],["p4","미니 게임"],["p5","아이디어 한 줄"],["p2","AX PLAY"],["st","계단 이용"],["p3","17F 강연(2개)"],["p3h","17F 강연 한쪽(1개)"],["p10","10F 실습(2개)"],["p10h","10F 실습 한쪽(1개)"],["ln","AX 라운지 완료(2개)"],["cc","18F 커피챗 완료(1개)"],["sv","설문 참여"]];
 function nbKinds(kinds){ var m={}; kinds.forEach(function(k){ m[k.id]=k; }); return NB_KIND.map(function(x){ var k=m[x[0]]; return { id:x[0], n:x[1], c:k?k.c:null }; }); }
 SCREENS.now={
-  title:"지금", desc:"앱 사용 · 지금까지 · 이상 신호 · 지금 단계 · 스탬프 · 경품",
+  title:"홈", desc:"앱 사용 · 지금까지 · 이상 신호 · 지금 단계 · 스탬프 · 경품",
   need:function(){ return [usNeed(),sfNeed(),{ k:"rst", a:"roll_stat", ttl:60000 },{ k:"inv", a:"inv_state", ttl:60000 },{ k:"kss", a:"kit_size_state", ttl:60000 }]; },
   mount:function(vb){ dxMount(); vb.innerHTML='<div id="nwPulse"></div><div id="nwPda"></div><div id="nwTop"></div><div id="nwErr"></div><div id="nwUseA"></div><div id="nwSfA"></div><div class="grid g4 mb" id="nwSig"></div><div id="nwUseB"></div><div id="nwMid"></div><div id="nwPz"></div><div id="nwSfB"></div>'; if(typeof puTick==="function") setTimeout(puTick,0); },   /* 261022 서버 맥박(pulse.js) · 맨 위 */
   paint:function(){

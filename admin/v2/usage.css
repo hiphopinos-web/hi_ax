@@ -79,3 +79,5 @@ details.sf-blk>summary{margin-bottom:8px}
   .us-fl .hs{display:none}
   .sf-blk .g2{grid-template-columns:minmax(0,1fr)}
 }
+/* 261023 처음부터 누적 · 옅은 날짜 막대 */
+#usCum .bd{fill:var(--navy1)}

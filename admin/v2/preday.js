@@ -26,7 +26,7 @@ topPaint=function(){
   PDA_TOP0();
   var n=pdaCount(), b=el("topL")&&el("topL").querySelector('button[onclick="go(\'now\')"]');
   if(b){ b.classList.toggle("pda-b",n>0); if(n) b.setAttribute("aria-label","이상 "+sigCount()+" · 행사 전 스탬프 이상 "+n+"건"); else b.removeAttribute("aria-label"); }
-  if(n>PDA.seen){ toast("행사 전 스탬프 이상 "+n+"건 · 지금 탭 맨 위에서 확인",{ bad:1, ms:6000 }); }
+  if(n>PDA.seen){ toast("행사 전 스탬프 이상 "+n+"건 · 홈 맨 위에서 확인",{ bad:1, ms:6000 }); }
   PDA.seen=n;
 };
 /* 지금 탭 맨 위(now.js nwPda) */
