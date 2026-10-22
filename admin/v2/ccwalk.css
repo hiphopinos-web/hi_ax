@@ -1,0 +1,46 @@
+/* AXF CONTROL v2 · 미팅 › 18F 커피챗 › 현장 상담(ccwalk.js · 261022) · 색 = v2.css 토큰만 */
+.cw .mt8{margin-top:8px}
+.cw-hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.cw-hd h2{font-size:16px}
+.cw-hd .mtg-seg button{height:32px;padding:0 12px}
+.cw-hd .c{margin-left:4px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--tx3)}
+.cw-hd button.on .c{color:var(--navy)}
+.cw-qf{display:flex;gap:8px}
+.cw-in{flex:1;min-width:0;height:44px;border:1px solid var(--line3);border-radius:8px;padding:0 12px;font-size:16px;background:#fff}
+.cw-fr,.cw-ls{list-style:none}
+.cw-fr{margin-top:8px;border-top:1px solid var(--line2)}
+.cw-fr li{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line2)}
+.cw-fr .w,.cw-row .w{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px}
+.cw-fr .w b,.cw-row .w b{font-size:14px}
+.cw-fr .w>span:last-child,.cw-row .d{flex-basis:100%;font-size:12px;color:var(--tx3);font-variant-numeric:tabular-nums}
+.cw-ls{border-top:1px solid var(--line2)}
+.cw-it{border-bottom:1px solid var(--line2)}
+.cw-row{width:100%;display:flex;align-items:center;gap:8px;padding:12px 0;text-align:left;min-height:56px}
+.cw-cv{width:10px;height:10px;border-right:2px solid var(--tx3);border-bottom:2px solid var(--tx3);transform:rotate(45deg);margin:0 6px 4px;flex:none;transition:transform var(--t-out) var(--ease)}
+.cw-it.on .cw-cv{transform:rotate(-135deg);margin-bottom:-4px}
+.cw-it.cw-dn .cw-row b{color:var(--tx2)}
+.cw-ed{padding:0 0 14px}
+.cw-st{display:block;font-size:12px;color:var(--tx2);font-variant-numeric:tabular-nums;margin-bottom:6px}
+.cw-lab{display:block;font-size:13px;font-weight:700;color:var(--tx);margin-top:10px}
+.cw-lab .cap{font-weight:400;margin-left:4px}
+.cw-ta{display:block;width:100%;margin-top:4px;border:1px solid var(--line3);border-radius:8px;background:#fff;padding:8px 10px;font-size:16px;line-height:1.5;resize:vertical;min-height:84px}
+.cw-ta[readonly]{background:var(--soft);color:var(--tx2)}
+.cw-ro{margin-top:4px;padding:8px 10px;border-radius:8px;background:var(--soft);font-size:14px;white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere}
+.cw-cnt{font-size:12px;color:var(--tx3);text-align:right;margin-top:2px;font-variant-numeric:tabular-nums}
+.cw-cnt.bad{color:var(--warn)}
+.cw-acts{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+.cw-acts .btn[aria-disabled="true"]{opacity:.5;pointer-events:none}
+.cw-res{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:2px 0 4px}
+.cw-rt{display:inline-flex;align-items:center;gap:6px;font-size:13px}
+.cw-rt .l,.cw-pl .l{color:var(--tx2)}
+.cw-pl{list-style:none;margin-top:10px;display:grid;gap:8px}
+.cw-pl li{display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;font-size:14px}
+.cw-pl .l{min-width:96px}
+@media (max-width:599px){
+  .mtg-hd .mtg-seg{max-width:100%;overflow-x:auto;scrollbar-width:none}   /* 폰 · 보기 칸이 넘치면 옆으로 밀어 봄(현장 상담 칸 더한 뒤) */
+}
+@media (min-width:900px){
+  .cw{max-width:880px}
+  .cw-ed{display:grid;grid-template-columns:1fr 1fr;column-gap:16px}
+  .cw-ed>:not(.cw-f){grid-column:1/-1}
+}

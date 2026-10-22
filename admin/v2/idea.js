@@ -5,7 +5,7 @@
  * 아이디어왕 고르기는 무대 › 아이디어왕
  * 261021 운영자 메모(사용자 「아이디어(신청자)처럼 · 리스트에서도」) = 한 줄(아이디어 ID)마다 · meet_note_list · meet_note_set prog id(신청자 메모 cc 와 따로)
  *   데이터 idm = meet.js need 에 id2Mount 가 한 줄 덧붙인다(meet.js 는 그대로) · 서버가 모르면(param) 메모 열 · 칩 · 칸을 숨긴다 */
-var ID2_CH={ app:"앱", booth:"부스", board:"보드", lounge_pre:"라운지 사전", lounge_day:"라운지 당일", chat:"커피챗" };
+var ID2_CH={ app:"앱", booth:"부스", board:"보드", lounge_pre:"라운지 사전", lounge_day:"라운지 당일", chat:"커피챗", ccw:"커피챗" };
 var ID2M={ k:null };
 function id2MemoOk(){ var d=S.data.idm; return !!(d&&d.ok&&Array.isArray(d.rows)); }
 function id2Memo(r){ var d=S.data.idm, id=String(r&&r.id||""); if(!id||!id2MemoOk()) return null;

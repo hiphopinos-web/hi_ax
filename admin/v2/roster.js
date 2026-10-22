@@ -68,6 +68,7 @@ function adrGrid(sc){
   if(sc==="c"){
     o.cols.push({ k:"lo", t:"AX 라운지 담당", w:130, v:function(r){ return r.lo?"담당":""; }, f:function(r){ return typeof lsmOwnCell==="function"?lsmOwnCell(r):(r.lo?tag("담당","ok"):""); } });   /* 261021 라운지 스탬프 일괄 부여 권한(lngstamp.js) */
     o.cols.push({ k:"ao", t:"출석 담당", w:120, v:function(r){ return r.ao?"담당":""; }, f:function(r){ return typeof atOwnCell==="function"?atOwnCell(r):(r.ao?tag("담당","ok"):""); } });   /* 261022 출석 탭 입장 · 종료 처리 권한(attn.js) */
+    o.cols.push({ k:"co", t:"커피챗 담당", w:120, v:function(r){ return r.co?"담당":""; }, f:function(r){ return typeof cwOwnCell==="function"?cwOwnCell(r):(r.co?tag("담당","ok"):""); } });   /* 261022 현장 상담(ccwalk.js · 설정 커피챗_담당) */
     o.cols.push({ k:"pw", t:"비밀번호", w:170, v:adrPwTx, f:adrPwTag });
     o.cols.push({ k:"_a", t:"", w:96, act:function(r){ return adrTop()&&r.pw!=null?'<button class="btn sm" type="button" onclick="adrIssueAsk(\''+jq(r.emp)+'\')">'+(r.pw==="set"||r.pw==="code"?"초기화":"설정 코드")+'</button>':""; } });
   }

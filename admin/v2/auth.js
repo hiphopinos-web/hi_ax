@@ -86,7 +86,7 @@ function lockMsg(r, kind){
   if(kind==="code") return (r.cs==="code"?"설정 코드가 맞지 않아요":"사번 또는 설정 코드가 맞지 않아요")+left;
   return "사번 또는 비밀번호가 맞지 않아요"+left;
 }
-function meOf(r, e){ return { emp:r.emp||e, name:r.name||"", top:num(r.top), pw:num(r.pw), lo:num(r.lo), ao:num(r.ao) }; }   /* 261021 lo = AX 라운지 담당(설정 라운지_담당) · 261022 ao = 출석 담당(설정 출석_담당 · attn.js) */
+function meOf(r, e){ return { emp:r.emp||e, name:r.name||"", top:num(r.top), pw:num(r.pw), lo:num(r.lo), ao:num(r.ao), co:num(r.co) }; }   /* 261021 lo = AX 라운지 담당(설정 라운지_담당) · 261022 ao = 출석 담당(설정 출석_담당 · attn.js) */
 function lockIn(r, e){ setAemp(e); setTok(r.tok||""); S.me=meOf(r,e); PWM.set=null; PWM.kind="pw"; el("lock").hidden=true; el("lockErr").textContent=""; start(); }
 /* 들어가기 · 관리코드(옛 서버 · OFF 동안) 또는 비밀번호(설정 코드도 이 칸으로 된다) */
 function unlock(){
