@@ -102,10 +102,10 @@ function tlRows(){
   add(hm(idE)||"16:00","open","아이디어 한 줄 마감","마감 뒤 제출 = "+(tlV("아이디어_마감후","받음")==="받음"?"받음 · 스탬프 인정 · 심사 제외 표시":tlV("아이디어_마감후","")),[tlA("미팅 › 아이디어","go('meet','cc-ideaall')"),tlCfgA("아이디어_마감")],tlChk("아이디어_마감","dt"));
   /* 17F 럭키드로우 · 17:00 마감들 */
   var dwv=(dr&&dr.win)||tlV("추첨_창",TL_DEF.draw), dw=tlWin(dwv)||tlWin(TL_DEF.draw), dW=[];
-  if(dr&&dr.win&&dr.win!==TL_DEF.draw) dW.push("기본값과 다름 · 기본 "+TL_DEF.draw);
+  /* 261022 사용자 「추첨 체크인 마감 = 담당자가 접수 마감을 누를 때」 · 설정 끝 시각은 늦게 닫히지 않게 둔 값이라 경고하지 않는다 */
   if(dr&&dr.day&&dr.day!==ev) dW.push("추첨 날짜 "+dr.day+" · 행사일과 다름");
   if(!dr) dW.push("추첨 상태를 읽지 못함 · 기본값 "+TL_DEF.draw);
-  add(dw[0],"open","17F 추첨 체크인 QR 열림 · 럭키드로우","창 "+dw.join("-")+(dr&&dr.day?" · 날짜 "+tlMD(dr.day):"")+" · 행운권 참석 조건 "+tlV("행운권_참석조건","OFF"),[tlA("행운권 › 진행","go('stage','draw')"),tlA("현장 QR","go('log','qr')")],dW);
+  add(dw[0],"open","17F 추첨 체크인 시작 · 럭키드로우","마감 = 담당자가 행운권 › 진행에서 「접수 마감」을 누를 때(설정 끝 "+dw[1]+"는 늦게 닫히지 않게 둔 값)"+(dr&&dr.closed?" · 지금 접수 마감됨":"")+(dr&&dr.day?" · 날짜 "+tlMD(dr.day):"")+" · 행운권 참석 조건 "+tlV("행운권_참석조건","OFF"),[tlA("행운권 › 진행","go('stage','draw')"),tlA("현장 QR","go('log','qr')")],dW);
   var c17=function(k, ti, d, a){ var v=tlV(k,""); add(hm(v)||"17:00","open",ti,d,a.concat([tlCfgA(k)]),tlChk(k,"dt")); };
   c17("선착순_마감","선착순 참여상 마감","뒤로는 지급 안 함 · 앱 「선착순 마감」",[tlA("체크인 탭","go('ckin')")]);
   c17("룰렛_마감","룰렛 마감","뒤로는 룰렛 차감 거절",[tlA("급한 단추","go('log','urgent')")]);
