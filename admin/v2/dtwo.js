@@ -25,6 +25,9 @@ function dtKpi(L){
 /* 추첨 설정 › 당일 점검 칸(읽기 전용) */
 function dtChkH(d){
   var rows=[], pre=dtToday(d)&&dtToday(d)<DT_DAY, p=dtPool(d), mk=function(t,sub,tg){ rows.push('<div class="row"><div class="t"><b>'+esc(t)+'</b><span>'+esc(sub)+'</span></div>'+tg+'</div>'); };
+  var si=typeof dsInfo==="function"?dsInfo(d,null):null;   /* 261022 시작 승인 · 시작 전이면 경고 · 16:40 전에 슈퍼관리자가 「체크인 시작」 */
+  if(si) mk("체크인 시작",si.at?"시작됨 · 승인 "+hm(si.at)+(si.recv?" · 지금 받는 중":""):"시작 전 · "+si.st+" 전에 슈퍼관리자가 「체크인 시작」",si.at?tag("시작됨","ok"):tag("시작 전","warn"));
+  else mk("체크인 시작","서버 갱신 뒤",tag("확인 중",""));
   if(p){ var inc=num(p.inN)!==num(d.withT)||num(p.inBalls)!==num(d.balls);
     mk("통 숫자","전체 "+n0(p.n)+"명 · "+n0(p.balls)+"장 · 체크인 "+n0(p.inN)+"명 · "+n0(p.inBalls)+"장"+(inc?" · 다른 집계 길 "+n0(d.withT)+"명 · "+n0(d.balls)+"장":""),inc?tag("집계 다름","warn"):tag("일치","ok")); }
   else mk("통 숫자","체크인 통 숫자는 서버 갱신 뒤",tag("확인 중",""));
