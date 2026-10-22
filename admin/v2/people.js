@@ -23,7 +23,7 @@ var PP_LG={
   att17:{ kind:"att17", file:"17F 출석", cap:"17F 강연 입장 · 종료", sort:{ k:"pn", d:1 }, chips:lgChipsOf("pn",[["out","종료"]]) }
 };
 var PP_APM={ visit:1, gate:1, staff:1, pre10:1, test:1 };   /* 261017 「앱」 열을 붙이는 명단 */
-function ppSub(){ return subsOf(PP_SUBS,"find"); }
+function ppSub(){ return subsOf(PP_SUBS,"roll"); }   /* 261022 첫 화면 = 목록(사용자 · 운영 실측 가입자 323줄 44KB 0.2~0.6초) · 위 「사번 · 이름 찾기」 · 지표 → 찾기는 go("people","find") 로 명시 */
 function ppKind(){ var k=S.ui.ppk||lsGet("axf_v2_ppk","visit"); return PP_KINDS.some(function(x){ return x[0]===k; })?k:"visit"; }
 function ppAtt(){ var k=S.ui.ppa||"att10"; return PP_ATTS.some(function(x){ return x[0]===k; })?k:"att10"; }
 function ppList(s){ return s==="roll"?ppKind():s==="att"?ppAtt():""; }   /* 목록 · 출석 = 고른 구분의 list_get 종류 */
