@@ -49,6 +49,8 @@ function checkMyState(base) {
     seen.fcfs = "got"; changed = true;
     if (!base) notice({ key: "fcfs:got", first: true, run: function () { fcfsGotOpen(); } });   /* v5.97 (사용자 261006 밤) 팝업 대신 수령 안내 시트 · 스탬프 연출 뒤 · 쌓인 행운권 상자보다 먼저(first) */
   }
+  /* 261022 (사용자 확정) 1F 체크인존 체크인 환영 팝업 · 사전 신청자 · 이 기기 한 번(noti_seen.ckin · 실제로 뜬 순간 ckinWelOpen 이 적는다 · 미루는 동안 앱을 닫으면 다음에 뜬다) · 앱을 닫아 두었다 처음 연 sync(base)에도 띄운다 · 대기열(다른 시트 · 팝업이 닫힌 뒤) */
+  if (typeof ckinOn === "function" && ckinOn() && seen.ckin !== 1) { notice({ key: "ckin", first: true, hold: function () { return typeof nbOn === "function" && nbOn(); }, run: ckinWelOpen }); }   /* hold = 앱을 연 · 로그인한 뒤 10초(NB 창) 동안 미룬다 · 그 사이 오는 스탬프 연출(SPOP)이 팝업 위에 겹치지 않게 · 그 뒤 연출이 돌고 있으면 noticeBusy 가 기다린다
   /* 261017 (사용자 확정 「럭키드로우 푸시 · 당첨자 안내 모두 걷어 내」) 럭키드로우 당첨 · 7등 당첨 안내 팝업 걷음 */
   if (changed) S.set("noti_seen", seen);
 }
@@ -290,6 +292,7 @@ function beSync(after) {
       if (JSON.stringify(kt9) !== JSON.stringify(S.get("kit", null))) S.set("kit", kt9);
       var kn9 = ckNoVal(res.my.ckno); if (kn9 !== ckNoVal(S.get("ckno", ""))) S.set("ckno", kn9);   /* 261015 체크인 번호(가나다순 고정) · 261016 세션별 「A-1」 글자(옛 서버 숫자도) · 없으면 "" */
       var kz9 = ckzVal(res.my.ckz); if (JSON.stringify(kz9) !== JSON.stringify(S.get("ckz", null))) S.set("ckz", kz9);   /* 261017 체크인존 명단(사전 신청자 · 스태프) · 인사 · 나의 QR 두 줄 · 없으면 null(일반 직원 · 옛 서버) */
+      var ki9 = res.my.ckin ? 1 : 0; if (ki9 !== (S.get("ckin", 0) ? 1 : 0)) S.set("ckin", ki9);   /* 261022 체크인존 체크인 환영 팝업 · 사전 신청자 첫 체크인(서버 my.ckin) · 옛 서버 = 없음 = 0 */
       /* v3.21 B 포토부스 번호표 · 서버가 정본(없으면 null) · 바뀐 경우에만 저장해 불필요한 재렌더를 막는다 */
       /* v3.35 · v3.99 서버 스탬프 목록에 설문(sv)이 있을 때만 · 관리자가 08 을 취소하면 답이 남아 있어도 다시 제출할 수 있다(GAS @74) */
       if (res.my.survey === true && !S.get("survey_done", false) && !testEmp() && (res.my.stamps || []).indexOf("sv") >= 0) S.set("survey_done", true);

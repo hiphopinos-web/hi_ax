@@ -269,11 +269,12 @@ function kitCanSet(k) { return !!k && k.st === "pick" && (k.ph === "open" || k.p
 function kitSeenKey(k) { return k ? k.st + ":" + k.ph + ":" + (k.sz || "") : ""; }
 /* 받는 곳 한 줄 · 사전 신청 = 체크인존(에코백과 함께) · 스태프 = 따로 안내 */
 /* 261022 (사용자) 사전 신청자 옷 수령 = 10F 각자 세션 강의장(시간 없음) · 세션 글자 = my.ckz.no 앞 글자(A-3 → A) · 없으면 내 10F 세션(tenMine · 테스트 미리 보기 포함) · 모르면 강의장 표기 생략 */
-function kitGetTxt(k) {   /* 검사 샌드박스 때문에 함수 하나에 담는다 · 사전 신청 = 「10F D 세션 · 08 HEART」 · 세션을 모르면 「10F 세션 강의장에서 나눠 드려요」 */
-  if (kitStaff(k)) return KIT_GET_ST;
+function kitGetTxt(k, rm) {   /* 검사 샌드박스 때문에 함수 하나에 담는다 · 사전 신청 = 「10F D 세션 · 08 HEART」 · 세션을 모르면 「10F 세션 강의장에서 나눠 드려요」 · 261022 rm = 강의장 이름만(「08 HEART」 · 모르면 "") · 체크인 환영 팝업(ckinWelOpen)이 같은 판정을 쓴다 */
+  if (!rm && kitStaff(k)) return KIT_GET_ST;
   var room = { A: "컨퍼런스룸", B: "01 HEART", C: "06 HEART", D: "08 HEART", E: "07 HEART" }, tl = { fld: "A", ta: "B", tb: "C", aws: "D", ms1: "E", ms2: "E" };
   var z = typeof ckzMy === "function" ? ckzMy() : null, m = z && z.pre && /^([A-E])-/.exec(z.no || ""), l = m ? m[1] : "";
   if (!l && typeof tenMine === "function") { var t = tenMine(); l = t && tl[t.id] || ""; }
+  if (rm) return l ? room[l] : "";
   return l ? "10F " + l + " 세션 · " + room[l] : "10F 세션 강의장에서 나눠 드려요";
 }
 /* 홈 카드 · 고르는 기간에 아직 안 고름 · 자동 배정 뒤 변경 기간(한 번 열어 보면 사라짐) · 라운지 초과 안내(한 번 열어 보면 사라짐) */
@@ -584,3 +585,69 @@ Views.kit = function () { var sp = kitSheet(); return '<div class="ax-stack">' +
 App.PARENT.kit = "my";
 App.TITLES.kit = "기념품 옷 사이즈";
 PUSH_T.kit = "받을 때 알려 드려요";   /* 가치 순간 · 정한 직후(10/26 체크인존 안내) */
+/* ═══ 261022 (사용자 확정) 1F 체크인존 체크인 환영 팝업 · 사전 신청자 ═══
+ * 신호 = 서버 sync my.ckin(사전 신청자 · 스캔기록 ck_gate 첫 체크인이 있으면 1 · 그 밖 = 없음) · 소켓 개인 사건 scan { s: "ckin" } 은 곧바로 sync 만(푸시 없음)
+ * 한 번 = 이 기기 noti_seen.ckin · 체크인을 취소했다 다시 해도 다시 뜨지 않는다 · 앱을 닫아 두었으면 체크인된 상태로 처음 연 sync 에서 한 번(첫 동기화 base 도 띄운다)
+ * 띄우기 = 알림 대기열(notice · 다른 시트 · 팝업이 닫힌 뒤) · 닫기 = 「확인」 하나 · 묻는 것(알림 허용 · 설치) 없음 · 폭죽 = 열릴 때 한 번 약 2초(캔버스 · 동작 줄이기면 없음) · 소리 · 진동 없음 */
+function ckinRoomTxt() {
+  var r = kitGetTxt(null, 1);
+  if (!r) return "10층 세션 강의장으로 이동하셔서 선물 키트를 수령하세요.";
+  return "10층 " + r + (/룸$/.test(r) ? "으로" : "로") + " 이동하셔서 선물 키트를 수령하세요.";
+}
+function ckinOn() { var z = ckzMy(); return !!(z && z.pre && S.get("ckin", 0)); }
+function ckinWelHtml() {
+  var u = S.get("user", {}) || {}, z = ckzMy(), nm = (z && z.nm) || u.name || "";
+  return '<div class="axs-ckw">' + (nm ? '<p class="nm">' + esc(nm) + " 님</p>" : "") +
+    '<p class="t">AX Festival에 오신 것을 환영합니다.</p>' +
+    '<p class="b">' + esc(ckinRoomTxt()).replace(" 선물 키트를 수령하세요.", ' <span class="nw">선물 키트를 수령하세요.</span>') + "</p>" +   /* 둘째 줄은 「선물 키트를 수령하세요.」 통째로 */
+    '<p class="s">명찰과 사원증을 패용하세요.</p>' +
+    '<button type="button" class="btn mint" onclick="modalClose()">확인</button></div>';
+}
+function ckinWelOpen() {
+  var sn = S.get("noti_seen", {}) || {}; sn.ckin = 1; S.set("noti_seen", sn);   /* 본 표시 = 뜬 순간 */
+  modalOpen(ckinWelHtml(), "");
+  var d = el("modal"); if (!d) return;
+  d.classList.add("axs-ckwm"); d.setAttribute("data-notice", "ckin");
+  var h = d.querySelector(".axs-mhead"); if (h) h.remove();   /* 닫기 = 「확인」 하나 */
+  var c = d.querySelector(".mcard"); if (c) { c.setAttribute("aria-label", "체크인 환영"); c.removeAttribute("aria-labelledby"); }
+  ckinFx();
+}
+/* 폭죽 · 캔버스 하나(#frame 안 · 누름 없음) · 두 군데에서 터지고 떨어지며 사라짐 · 약 2.2초 뒤 캔버스를 지운다 · 동작 줄이기 = 없음 */
+var CKFX = { raf: 0, cv: null };
+function ckinFxStop() { if (CKFX.raf) cancelAnimationFrame(CKFX.raf); CKFX.raf = 0; if (CKFX.cv) CKFX.cv.remove(); CKFX.cv = null; }
+function ckinFx() {
+  ckinFxStop();
+  if (AXM.rm()) return;
+  var fr = el("frame"); if (!fr || !window.requestAnimationFrame) return;
+  var md = el("modal"), cv = document.createElement("canvas"), W = (md && md.clientWidth) || window.innerWidth || 390, H = (md && md.clientHeight) || window.innerHeight || 844, dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.className = "axs-ckfx"; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.setAttribute("aria-hidden", "true");
+  fr.appendChild(cv); CKFX.cv = cv;
+  var g = cv.getContext("2d"); if (!g) { ckinFxStop(); return; }
+  g.scale(dpr, dpr);
+  var COL = ["#FF7E31", "#FF7E31", "#FFB284", "#FFD8C1", "#FFFFFF", "#FFEBE0"], P = [], DUR = 2200;
+  [[0.28, 0.30, 0], [0.72, 0.24, 180], [0.5, 0.40, 420]].forEach(function (b) {
+    for (var i = 0; i < 46; i++) {
+      var a = Math.PI * 2 * i / 46 + Math.random() * 0.2, v = 2.2 + Math.random() * 3.2;
+      P.push({ x: W * b[0], y: H * b[1], vx: Math.cos(a) * v, vy: Math.sin(a) * v - 1, d: b[2], c: COL[i % COL.length], r: 2 + Math.random() * 2.2, l: 1100 + Math.random() * 600 });
+    }
+  });
+  var t0 = performance.now(), last = t0;
+  function step(now) {
+    var t = now - t0, k = Math.min(3, (now - last) / 16.7); last = now;
+    g.clearRect(0, 0, W, H);
+    var live = 0;
+    P.forEach(function (p) {
+      var a = t - p.d; if (a < 0) { live++; return; }
+      if (a > p.l) return;
+      live++;
+      p.vx *= Math.pow(0.97, k); p.vy = p.vy * Math.pow(0.97, k) + 0.07 * k; p.x += p.vx * k; p.y += p.vy * k;
+      g.globalAlpha = Math.max(0, 1 - a / p.l);
+      g.fillStyle = p.c; g.beginPath(); g.arc(p.x, p.y, p.r, 0, Math.PI * 2); g.fill();
+      if (p.c === "#FFFFFF") { g.strokeStyle = "#FFB284"; g.lineWidth = 0.8; g.stroke(); }   /* 흰 점은 흰 시트 위에서도 보이게 옅은 주황 테 */
+    });
+    g.globalAlpha = 1;
+    if (!live || t > DUR + 600 || !cv.isConnected) { ckinFxStop(); return; }
+    CKFX.raf = requestAnimationFrame(step);
+  }
+  CKFX.raf = requestAnimationFrame(step);
+}
