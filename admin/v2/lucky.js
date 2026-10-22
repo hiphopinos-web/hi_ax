@@ -62,7 +62,7 @@ function lkyDlRow(kinds, big){
   var top=lkyTop();
   var bt=kinds.map(function(k,i){ var on=LKY.busy===k, L=lkyLast(k);
     return '<div class="lky-dl"><button type="button" class="btn'+(i===0?" pri":"")+(big?" big":"")+'" onclick="lkyGet(\''+k+'\')"'+(top&&!LKY.busy?"":" disabled")+'>'+(on?"받는 중":esc(LKY_K[k]))+'</button><span class="cap n">'+(L?esc(L.at)+" · "+n0(L.m)+"장 · "+esc(L.fp||""):"아직 받지 않음")+'</span></div>'; }).join("");
-  return '<div class="lky-dls">'+bt+'</div>'+(top?'':'<p class="cap mt4">슈퍼관리자가 받습니다</p>');
+  return '<div class="lky-dls">'+bt+'</div>'+(typeof rdlPathH==="function"?'<p class="cap mt4">'+rdlPathH("lky","cap")+'</p>':'')+(top?'':'<p class="cap mt4">슈퍼관리자가 받습니다</p>');
 }
 function lkyMount(s){
   if(s==="list") return '<div id="lkyBand"></div><div class="card"><h2>명단 받기 <span class="cap">무대 추첨 통과 같은 번호 · 받는 순간 서버 한 번</span></h2><div id="lkyDl"></div></div>'+
@@ -111,9 +111,10 @@ function lkyGet(k){
     var f=lkyFile(k, r, x); rdlSave(f.blob, f.name);
     var now=new Date(), p=function(n){ return ("0"+n).slice(-2); }, rec={ ts:Date.now(), at:p(now.getHours())+":"+p(now.getMinutes()), fp:x.fp, m:x.m, n:x.n, k:k };
     lsSet("lky_"+k, rec); lsSet("lky_any", rec);
+    if(typeof rdlNote==="function") rdlNote("lky", f.name);
     paint();
     var b=S.data.rfb, warn=r.cond?" · 참석조건 ON":b&&b.ok&&b.fp&&b.fp!==x.fp&&b.m===x.m?" · 현황 대조 코드와 다름":"";
-    toast("받았습니다 · "+f.name+" · "+n0(x.m)+"장 · "+n0(x.n)+"명"+warn,{ ms:6000, bad:!!warn });
+    toast("받았습니다 · "+f.name+" · "+n0(x.m)+"장 · "+n0(x.n)+"명"+warn+(typeof RDL_WHERE==="string"?" · "+RDL_WHERE:""),{ ms:9000, bad:!!warn });
   });
 }
 function lkyTake(r){

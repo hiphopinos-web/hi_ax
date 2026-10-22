@@ -5,23 +5,31 @@
  *   선착순 명부 = 순번 · 사번 · 소속 · 직위 · 성명 · 구분 · 달성 시점 · 수령 시각 · 서명(순번 오름차순 · 취소 줄 없음 · 대기마감 줄 있음 · 줄 높이 2배 · 261020 후속)
  *   행운권 전체 명단 = 사번 · 소속 · 직위 · 성명 · 행운권 번호 · 당첨(번호 한 장 = 한 줄 · 번호 오름차순 · 무대 추첨 풀과 같은 원천 · 당첨 = N등 · N등 부재 · 다른 번호 당첨 · 다른 번호 부재)
  *   직위 = 서버 명부직위(x.pos · 261021 명단 › 명단 올리기 › 직위 올리기 · 없으면 빈칸 · 종이에 손으로 적을 수 있게 열은 남긴다)
- * 마지막 내려받기 시각 = 이 PC(localStorage) */
+ * 마지막 내려받기 시각 = 이 PC(localStorage)
+ * 261022 저장 위치 안내 = 웹 페이지는 실제 경로를 알 수 없어 「이 PC의 다운로드 폴더(Ctrl+J로 열기)」를 쓴다 · 마지막 파일 이름 · 시각은 이 PC 에 남겨 카드 안에 보인다(rdlNote · rdlPathH) */
 var RDL={ busy:"" };
 var RDL_K={ fcfs:{ n:"선착순 명부", f:"선착순명부" }, raffle:{ n:"행운권 전체 명단", f:"행운권명단" } };
 function rdlTop(){ return typeof adrTop==="function"?adrTop():!!(S.me&&S.me.top); }
 function rdlLast(k){ var v=lsGet("rdl_"+k,""); return v?String(v):""; }
+/* 261022 저장 위치 안내 · 마지막 파일(이름 · 시각)은 이 브라우저에만 기억 */
+var RDL_WHERE="저장 위치 : 이 PC의 다운로드 폴더(Ctrl+J로 열기)";
+function rdlNote(k, name){ var d=new Date(), p=function(n){ return ("0"+n).slice(-2); }; lsSet("rdlf_"+k,{ name:String(name||""), at:p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes()) }); }
+function rdlNoteGet(k){ var v=lsGet("rdlf_"+k,null); return v&&v.name?v:null; }
+function rdlPathH(k, cls){ var f=rdlNoteGet(k);
+  return '<span class="'+(cls||"cap")+'" id="rdlP_'+k+'">'+(f?'마지막 내려받기 '+esc(f.at)+' · '+esc(f.name)+'<br>':'')+esc(RDL_WHERE).replace("(Ctrl+J","<span style=\"white-space:nowrap\">(Ctrl+J")+'</span></span>'; }
 function rdlCard(){
   var top=rdlTop(), b=function(k){ var on=RDL.busy===k, L=rdlLast(k);
     return '<div><button type="button" class="btn big" id="rdlB_'+k+'" onclick="rdlGo(\''+k+'\')"'+(top&&!RDL.busy?"":" disabled")+'>'+(on?"받는 중":RDL_K[k].n)+'</button>'+
-      '<p class="cap mt4" id="rdlAt_'+k+'">마지막 내려받기 '+(L?esc(L):"-")+'</p></div>'; };
+      (rdlNoteGet(k)?'':'<p class="cap mt4" id="rdlAt_'+k+'">마지막 내려받기 '+(L?esc(L):"-")+'</p>')+'<p class="cap mt4">'+rdlPathH(k,"cap")+'</p></div>'; };
   return '<div class="card mt"><h2>명부 내려받기 <span class="cap">엑셀 · 1시간마다 · 추첨 서버가 멈추면 출력해 손으로 뽑기</span></h2>'+
     '<div class="grid g2">'+b("fcfs")+b("raffle")+'</div>'+
     (top?'':'<p class="cap mt">슈퍼관리자가 내려받습니다</p>')+'</div>';
 }
-function rdlPaint(){ var x=el("rdlBox"); if(x) x.innerHTML=rdlCard(); var f=el("rdlFc"); if(f){ f.remove(); rdlFcfsMount(); var bt=el("rdlB_fcfs"); if(bt&&RDL.busy){ bt.disabled=true; bt.textContent="받는 중"; } } }
+function rdlPaint(){ var x=el("rdlBox"); if(x) x.innerHTML=rdlCard(); var f=el("rdlFc"); if(f){ f.remove(); var nt=el("rdlFcNote"); if(nt) nt.remove(); rdlFcfsMount(); var bt=el("rdlB_fcfs"); if(bt&&RDL.busy){ bt.disabled=true; bt.textContent="받는 중"; } } }
 /* 261021 행운권 탭 개편 · 행운권 전체 명단 받기 = 행운권 › 명단 칩(lucky.js) · 선착순 명부 = 경품 · 재고 › 옷 · 재고 칩의 선착순 가습기 명단 카드 머리(rdlFcfsMount) */
 function rdlFcfsMount(){ var c=el("pzFL"); if(!c||el("rdlFc")) return; var h=c.parentNode&&c.parentNode.querySelector("h2"); if(!h) return;
-  var L=rdlLast("fcfs"), top=rdlTop(); h.insertAdjacentHTML("beforeend",'<span class="r" id="rdlFc"><button type="button" class="btn sm" id="rdlB_fcfs" onclick="rdlGo(\'fcfs\')"'+(top?"":" disabled")+'>선착순 명부 엑셀</button><span class="cap" id="rdlAt_fcfs" style="align-self:center">'+(L?"마지막 "+esc(L):"")+'</span></span>'); }
+  var L=rdlLast("fcfs"), top=rdlTop(); h.insertAdjacentHTML("beforeend",'<span class="r" id="rdlFc"><button type="button" class="btn sm" id="rdlB_fcfs" onclick="rdlGo(\'fcfs\')"'+(top?"":" disabled")+'>선착순 명부 엑셀</button><span class="cap" id="rdlAt_fcfs" style="align-self:center">'+(L?"마지막 "+esc(L):"")+'</span></span>');
+  h.insertAdjacentHTML("afterend",'<p class="cap mt4" id="rdlFcNote">'+rdlPathH("fcfs","cap")+'</p>'); }
 function rdlStamp(t){ var m=String(t||"").match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/); if(!m){ var d=srvNow(), p=function(n){ return ("0"+n).slice(-2); }; return { f:p(d.getMonth()+1)+p(d.getDate())+"_"+p(d.getHours())+p(d.getMinutes()), s:d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes()), hm:p(d.getHours())+":"+p(d.getMinutes()) }; }
   return { f:m[2]+m[3]+"_"+m[4]+m[5], s:m[1]+"-"+m[2]+"-"+m[3]+" "+m[4]+":"+m[5], hm:m[4]+":"+m[5] }; }
 function rdlGo(k){
@@ -36,11 +44,12 @@ function rdlGo(k){
     rdlSave(new Blob([bytes],{ type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), name);
     var now=new Date(), p=function(n){ return ("0"+n).slice(-2); };
     lsSet("rdl_"+k, p(now.getHours())+":"+p(now.getMinutes()));
+    rdlNote(k, name);
     rdlPaint();
     var warn="";
     if(k==="raffle"&&r.cond) warn=" · 참석 조건 ON · 무대 풀과 다를 수 있습니다";
     else if(k==="raffle"&&r.pool&&(r.pool.balls!==r.m||r.pool.n!==r.n)) warn=" · 무대 풀 "+n0(r.pool.balls)+"장과 다릅니다";
-    toast("내려받았습니다 · "+name+" · "+(k==="raffle"?n0(r.n)+"명 · 행운권 "+n0(r.m)+"장":n0(r.m)+"명")+warn,{ ms:6000, bad:!!warn });
+    toast("내려받았습니다 · "+name+" · "+(k==="raffle"?n0(r.n)+"명 · 행운권 "+n0(r.m)+"장":n0(r.m)+"명")+warn+" · "+RDL_WHERE,{ ms:9000, bad:!!warn });
   });
 }
 function rdlSave(blob, file){ var a=document.createElement("a"), u=URL.createObjectURL(blob); a.href=u; a.download=file; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(u); a.remove(); },1500); }
