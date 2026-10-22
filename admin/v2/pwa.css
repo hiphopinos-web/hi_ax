@@ -1,0 +1,6 @@
+/* AXF CONTROL v2 · 홈 화면에 추가 안내 띠(261022 · pwa.js) · .band.info 바탕 · 설치 가능할 때만 · 설치한 앱에서는 없음 */
+.a2hs{gap:8px;flex-wrap:nowrap}
+.a2hs .t{flex:1;min-width:0}
+.a2hs .t b{font-weight:700}
+.a2hs .btn{margin-left:0}
+.a2hs .x{height:36px;min-width:44px;padding:0 8px;border-radius:var(--r-s);color:var(--tx3);font-size:13px;font-weight:600}

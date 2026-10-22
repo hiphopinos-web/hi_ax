@@ -7,6 +7,14 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <title>AXF CONTROL</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#00205B">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/adm-192.png">
+<link rel="apple-touch-icon" href="icons/adm-apple-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="AXF 관리">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="stylesheet" href="v2.css?v=26102240">
 <link rel="stylesheet" href="meet.css?v=26102250">
 <link rel="stylesheet" href="usage.css?v=26101730">
@@ -17,6 +25,7 @@
 <link rel="stylesheet" href="ntf.css?v=26102170">
 <link rel="stylesheet" href="ntpv.css?v=26102240">
 <link rel="stylesheet" href="lucky.css?v=26102210">
+<link rel="stylesheet" href="pwa.css?v=26102260">
 </head>
 <body>
 <!-- AXF CONTROL v2 · 콘솔 재구축(261016) · 탭 8개 고정(261016 밤 미팅 탭) · 3단계 = 재고 장부 · 사이즈 교환 · 체크인 번호 · 현장 QR · 4단계 = 아이디어 · 예약 · 설문 · 접속 거부 · 추첨 설정 · 관리자 명단 · 한 사람 넣기 빼기 -->
@@ -45,7 +54,7 @@
 <div class="toasts" id="toasts" aria-live="polite"></div>
 <script src="../../assets/server.js"></script>
 <script src="../qrcode.js"></script>
-<script src="core.js?v=26102221"></script>
+<script src="core.js?v=26102260"></script>
 <script src="auth.js?v=26102191"></script>
 <script src="table.js?v=26102192"></script>
 <script src="more.js?v=2610171"></script>
@@ -92,6 +101,8 @@
 <script src="lucky.js?v=26102211"></script>
 <script src="bkview.js?v=26102230"></script>
 <script src="bkup.js?v=26102230"></script>
+<script src="pwa.js?v=26102260"></script>
+<script src="back.js?v=26102260"></script>
 <script>boot();</script>
 </body>
 </html>

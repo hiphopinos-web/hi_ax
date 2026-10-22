@@ -237,14 +237,15 @@ function routeFix(tab, sub){
 function isTop(){ return typeof adrTop==="function"?adrTop():!!(S.me&&S.me.top); }   /* 슈퍼관리자 본인(서버 admTop_ 와 같은 기준) */
 function go(tab, sub){ var rf=routeFix(tab, sub); if(rf){ tab=rf[0]; sub=rf.length>1?rf[1]:""; } if(!SCREENS[tab]) tab="now"; if(sub!=null) S.sub[tab]=sub; var ch=S.tab!==tab; S.tab=tab; hashSet(); render(); load(false); if(ch) el("main").scrollTop=0; }
 function goSub(sub){ if(S.tab==="log"&&S.sub.log==="ntf"&&typeof NT_SUBS!=="undefined"&&NT_SUBS.some(function(x){ return x[0]===sub; })){ S.sub.notify=sub; hashSet(); render(); load(false); return; } go(S.tab, sub); }   /* 261021 설정 › 알림 안 칩 = S.sub.notify */
-function hashSet(){ var h="#"+S.tab+(S.sub[S.tab]?"/"+S.sub[S.tab]:"")+(S.tab==="log"&&S.sub.log==="ntf"&&S.sub.notify?"/"+S.sub.notify:""); if(location.hash!==h) try{ history.replaceState(null,"",h); }catch(e){} }
+function hashOf(){ return "#"+S.tab+(S.sub[S.tab]?"/"+S.sub[S.tab]:"")+(S.tab==="log"&&S.sub.log==="ntf"&&S.sub.notify?"/"+S.sub.notify:""); }
+function hashSet(){ var h=hashOf(); if(location.hash===h) return; if(typeof bkNav==="function") bkNav(h); else try{ history.replaceState(history.state,"",h); }catch(e){} }   /* 261022 기기 뒤로 가기 = back.js(탭 · 칩 바꿈은 누른 직후 한 칸 · 같은 탭 · 갱신은 칸 안 늘어남) */
 function routeFromHash(){ var m=String(location.hash||"").replace(/^#/,"").split("/");
   if(m[0]==="inbox"&&(m[1]==="cchat"||m[1]==="lounge")){ m=["meet",m[1]==="cchat"?"cc":"ln"]; try{ history.replaceState(null,"","#meet/"+m[1]); }catch(e){} }   /* 261016 밤 옛 처리함 커피챗 · 라운지 주소 = 미팅 탭 */
   if(m[0]==="people"&&m[1]==="idea"){ m=["meet","cc-ideaall"]; try{ history.replaceState(null,"","#meet/cc-ideaall"); }catch(e){} }   /* 261021 옛 사람 › 아이디어 한 줄 주소 = 미팅 › 아이디어(전체) */
   var rf=routeFix(m[0], m[1]?decodeURIComponent(m[1]):""); if(rf){ m=[rf[0], rf[1]||""]; try{ history.replaceState(null,"","#"+m[0]+(m[1]?"/"+m[1]:"")); }catch(e){} }
   if(m[0]==="log"&&m[1]==="ntf"&&m[2]) S.sub.notify=decodeURIComponent(m[2]);
   if(SCREENS[m[0]]){ S.tab=m[0]; if(m[1]) S.sub[m[0]]=decodeURIComponent(m[1]); } }
-window.addEventListener("hashchange",function(){ routeFromHash(); render(); load(false); });
+window.addEventListener("hashchange",function(){ if(typeof bkHcSkip==="function"&&bkHcSkip()) return; routeFromHash(); render(); load(false); });
 function stageDim(){ var t=srvNow(); return !(S.data.nb&&S.data.nb.day===S.data.nb.ev&&t.getHours()>=16); }
 function tabsPaint(){
   var bdOf={ people:pwCount(), meet:typeof meetCount==="function"?meetCount():0 };
