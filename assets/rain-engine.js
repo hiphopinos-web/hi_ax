@@ -109,7 +109,8 @@ var RAIN_FRAME = 10;                          /* v4.51 3단 · 게임판 틀 두
    m = 좌우 여백 · top = 정보 줄 높이(왼쪽 두 상자 · NEXT 두 줄까지) · gap = 정보 줄과 판 틀 사이 */
 /* v8.50 (261022 사용자 「세로면 오락실 테트리스처럼 길쭉한 느낌 · 지금은 위가 다 막혀 있고 판 크기가 가로와 크게 다르지 않다」) 위 정보 줄(도전자 표 · NEXT · 추월 레이스 494) → 한 줄 HUD(top 80 · rgPortHud) · 판 = 화면 높이의 대부분
    판 안 배치 폭 ew 720 · 레인 3 · 낙하 시간(초) · 등장 간격 · 동시 단어 · 점수 = 가로와 같다 · 판 높이만 길다(같은 시간에 긴 판을 내려온다) · bgm = HUD 오른쪽 끝 음악 단추 자리(DOM .tsf-bgm.port) */
-var RAIN_PORT = { ew: 720, m: 16, top: 80, gap: 10, min: 600, bgm: 56 };
+/* v8.51 (261022 사용자 「권장대로」 · B) cfr = 구름 단어 시간 기준 판 · 가로 1920 × 1080 100% 셀프 판의 낙하 거리(L.fallPx 770) · 세로만 구름 단어 시간 = 이 판에서 같은 구름 높이일 때의 비율(가로 100% 와 같은 초) · 가로 · 송출은 그대로 */
+var RAIN_PORT = { ew: 740, m: 16, top: 80, gap: 10, min: 600, bgm: 56, cfr: 770 };   /* v8.51 ew 720 → 740 = 가로 1920 × 1080 100% 판 폭(L.W 740) 그대로 · 레인 3 · 구름 크기 · 단어 자리가 가로와 같다 */
 var RAIN_FONT = '"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif';
 var RAIN_PAL = { o100: "#FF7E31", o60: "#FFA46E", o50: "#FFB284", o30: "#FFCFB0", o25: "#FFD8C1", o10: "#FFEBE0", deep: "#D64524", ink: "#000000", w: "#FFFFFF", gray: "#B8AEA6", dim: "#8A817B", soil: "#7A3E1C", soil2: "#6A3417", trunk: "#5E3218" };
 /* ═══ v4.23 레트로 틀 · 게임판 안 공용 한 벌 (260923 사용자 확정 · design.md A-5 5-16 · 정본 시안 「레트로 시안/시안.html」) ═══
@@ -308,7 +309,7 @@ function rgGapWait(f) {
 /* 261012 속도 = 화면 위 픽셀 속도 하나 · 판 높이(L.fallPx)를 rgFallSec 초에 내려오는 빠르기 · 구름 단어는 구름 아래(y0)에서 나와 거리가 짧은 만큼 시간도 짧다(옛 = 같은 시간이라 구름 단어만 느렸다)
    흔들림(0.94~1.06배)은 대전(race · 시드)만 · 솔로(app · site)는 단어마다 같은 빠르기 · 그래서 빠르기는 단계 · 램프로만 오른다(단조 증가) · 느려지는 때는 목숨을 잃은 직후(RAIN_SITE.hurt)뿐 */
 function rgJit(r) { return RG.mode === "race" ? 0.94 + r * 0.12 : 1; }
-function rgClDist(y0) { var L = RG.L; return Math.max(10, L.floor - L.boxH - y0); }
+function rgClDist(y0) { var L = RG.L; if (L.port && RAIN_PORT.cfr > 0) return L.fallPx * Math.max(10, RAIN_PORT.cfr + L.top - y0) / RAIN_PORT.cfr; return Math.max(10, L.floor - L.boxH - y0); }   /* v8.51 세로 = 구름 단어 시간 비율을 가로 100% 판(cfr)에 맞춘다 · 그리기 거리(rgWordY)는 그대로 */
 function rgClY0(L, now) { var G = rgCloudGeo(L, now); return Math.max(L.top, G.bottom - L.boxH); }
 function rgSpawnFall(sec, now) { var f = rgFallSec(RG.stage, sec), L = RG.L; return RG.cloud && L ? f * rgClDist(rgClY0(L, now)) / L.fallPx : f; }
 /* 판 단어끼리 자모 앞부분이 겹치면(가 · 감) 자동 클리어가 짧은 쪽을 먼저 터뜨린다 · 뽑을 때 건너뛴다 */
