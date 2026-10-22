@@ -6,18 +6,21 @@
  *   아이디어왕 = ideaking_state · ideaking_list · ideaking_pick · ideaking_unpick · 타자왕 = type_result(n=10) · 7등 굿즈 = lk7_state · lk7_lock · lk7_draw · lk7_verify · lk7_void · lk7_export
  * 261016 PIN 없음 · 7등 추첨은 확인 문구 「추첨」 */
 var SG_SUBS=[["now","현황"],["list","명단"],["paper","종이 대비"],["draw","진행"],["rec","당첨 기록"]];
-function sgSub(){ return subsOf(SG_SUBS,"now"); }
+function sgSub(){ return subsOf(SG_SUBS,SG_SUBS[0][0]); }   /* 261022 첫 칩 = 럭키드로우(lkui.js 가 앞에 넣음) */
+/* 261022 옛 칩 = 「럭키드로우」 다음에 「고급」 글자 뒤로 */
+function sgChipsH(s){ var h=chipsH(SG_SUBS,s); return SG_SUBS[0][0]==="lk"?h.replace("</button>",'</button><span class="cap" style="align-self:center">고급</span>'):h; }
 SCREENS.stage={
   title:"행운권", desc:"",
   need:function(){ var s=sgSub();
-    if(s==="draw") return [{ k:"fin", a:"fin_state", ttl:60000 },{ k:"cfgl", a:"cfg_list", ttl:60000 }];
+    if(s==="draw") return [{ k:"fin", a:"fin_state", ttl:60000 },{ k:"cfgl", a:"cfg_list", ttl:60000 }].concat(DC.open?[]:[{ k:"draw", a:"draw_stats", ttl:15000 }]);   /* 261022 원격 진행 접힘이면 설정 칸 숫자는 여기서 */
     if(s==="rec") return [{ k:"draw", a:"draw_stats", p:{ who:"1" }, ttl:15000 }];
     return lkyNeed(s); },
   mount:function(vb){
     var s=sgSub();
-    el("phCap").textContent={ now:"발급 현황 · 추첨 통 기준 · 5초마다", list:"명단 받기 · 엑셀 · CSV · 번호만 · 종이 추첨 키트 · 이 PC 백업", paper:"서버가 멈추면 키트 한 파일로 쪽지 인쇄부터 당첨 기록까지 · 인터넷 없이", draw:"17F Closing Speech 행운권 1~6등 · 진행은 무대 노트북(Space) · 이 판은 보기", rec:"추첨 화면이 보낸 당첨 · 부재(3 · 2 · 1등만) · 취소 · 실명은 상품 전달용" }[s];
-    var h=chipsH(SG_SUBS,s);
-    if(s==="draw"){ vb.innerHTML=h+lkyDrawTop()+'<div id="dcRoot">'+skel()+'</div>'+lkyDrawSet(); DC.sig=""; dcStart(); lkyDrawSetMount(); return; }
+    el("phCap").textContent={ now:"발급 현황 · 추첨 통 기준 · 5초마다", list:"명단 받기 · 엑셀 · CSV · 번호만 · 종이 추첨 키트 · 이 PC 백업", paper:"서버가 멈추면 키트 한 파일로 쪽지 인쇄부터 당첨 기록까지 · 인터넷 없이", draw:"17F 입구 체크인 코드 · 시간 · 날짜 · 당일 점검 · 원격 진행(무대는 받지 않음)", rec:"추첨 화면이 보낸 당첨 · 부재(3 · 2 · 1등만) · 취소 · 실명은 상품 전달용" }[s];
+    var h=sgChipsH(s);
+    /* 261022 추첨 설정 칩 = 설정 먼저 · 원격 진행(draw_cmd)은 맨 아래 접힘 · 무대는 콘솔 원격 명령을 받지 않는다(261016 E1) · 펼칠 때만 draw_stats 2~5초 */
+    if(s==="draw"){ vb.innerHTML=h+lkyDrawSet()+'<details class="memo card mt" id="dcDet"'+(DC.open?" open":"")+' ontoggle="DC.open=this.open;DC.sig=null;if(this.open)dcStart()"><summary>원격 진행 · 무대는 원격 명령을 받지 않음</summary><p class="cap mt4">추첨 진행은 무대 노트북(Space) · 여기 단추를 눌러도 무대 화면은 바뀌지 않음</p><div class="mt">'+lkyDrawTop()+'<div id="dcRoot">'+skel()+'</div></div></details>'; DC.sig=""; if(DC.open) dcStart(); lkyDrawSetMount(); return; }
     if(s==="rec"){
       gridOf("drawrec",{ file:"추첨 당첨 기록", key:function(r){ return r.id+":"+r.st; }, sort:{ k:"t", d:-1 }, onRow:function(k){ rowDetail(MG.drawrec,k); },
         chips:[["all","전체",null],["win","당첨",function(r){ return r.st==="win"&&r.live; }],["absent","부재 · 3 · 2 · 1등",function(r){ return r.st==="absent"&&(dcAbsOk(r)||!dcRk(r)); }],["undo","취소",function(r){ return !r.live||r.st==="undo"; }],["inw","체크인 없음",function(r){ return r.warn==="in"&&r.live; }],["fb","전체 통 이어 뽑기",function(r){ return !!r.fb&&r.live; }]],
@@ -89,10 +92,10 @@ var DC_NAME={}; DC_BTN.forEach(function(b){ DC_NAME[b.c]=b.n; });
 var DC_STEPS=[["추첨 준비",["idle","intro","checkin"]],["행운권 6등 → 1등",["closed","card","mix","spin","tension","exit","reveal"]],["결과판",["board"]],["완주 경품",["fin"]],["끝",["end"]]];
 var DC_WHY={ busy:"연출 중이었습니다", scene:"지금 장면에서는 받지 않습니다", drawing:"뽑는 중이었습니다", same:"이미 그 화면입니다", done:"인트로는 이미 틀었습니다", notclosed:"체크인 마감 전입니다",
   round:"없는 등수입니다", loading:"공을 넣는 중이었습니다", full:"이 등수 인원이 다 찼습니다", empty:"통에 공이 없습니다", none:"취소할 당첨이 없습니다", id:"다른 당첨이었습니다", arg:"완주 경품 추첨 숫자가 없습니다", stale:"30초 넘게 늦게 도착해 실행하지 않았습니다", unknown:"화면이 모르는 명령입니다", error:"화면 오류" };
-var DC={ on:false, ws:null, st:"off", t:null, fails:0, give:false, ping:null, pongAt:0, poll:null, scr:null, scrAt:0, cmd:null, sent:null, busy:"", arm:null, rejOff:0, sig:"", more:false };
+var DC={ open:false, on:false, ws:null, st:"off", t:null, fails:0, give:false, ping:null, pongAt:0, poll:null, scr:null, scrAt:0, cmd:null, sent:null, busy:"", arm:null, rejOff:0, sig:"", more:false };
 var DRAW_SCR_GONE=120;
 function finOn(){ var f=S.data.fin; return !!(f&&f.ok); }
-function dcOn(){ return authed()&&S.tab==="stage"&&sgSub()==="draw"; }
+function dcOn(){ return authed()&&S.tab==="stage"&&sgSub()==="draw"&&DC.open; }
 function dcStart(){ if(!DC.on){ DC.on=true; DC.give=false; DC.fails=0; dcOpen(); } dcPull(); }
 setInterval(function(){ var on=dcOn(); if(on&&!DC.on) dcStart(); else if(!on&&DC.on){ DC.on=false; dcClose(); clearTimeout(DC.poll); DC.poll=null; } if(DC.on) dcAge(); },1000);
 function dcUrl(){ return /^https:\/\/[a-z0-9-]+\.[a-z0-9-]+\.workers\.dev\/exec$/.test(BE)?BE.replace(/^https:/,"wss:").replace(/\/exec$/,"/ws?r=draw"):""; }

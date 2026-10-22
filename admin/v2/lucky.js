@@ -4,7 +4,7 @@
  * 종이 대비 = 준비 점검표(이 PC) · 계산기 · 키트 받기 · 새 탭 미리 보기 · 선언 문구 복사
  * 진행 칩 = stage.js dc* 그대로 + 시험 페이지 링크 · 리허설 중(16:00 전) · 추첨 설정 접이식(drawset.js · dset.js 칸)
  * 마지막 받은 시각 · 대조 코드 = 이 PC(localStorage) */
-var LKY={ busy:"", ld:0, ldAt:0, ldErr:"", tkey:"", rows:null, rt:"", rfp:"", rm:0, rn:0, view:"no", info:null, infoAt:0, dir:null, dirN:"", auto:null, autoAt:"", autoErr:"", setOpen:false };
+var LKY={ busy:"", ld:0, ldAt:0, ldErr:"", tkey:"", rows:null, rt:"", rfp:"", rm:0, rn:0, view:"no", info:null, infoAt:0, dir:null, dirN:"", auto:null, autoAt:"", autoErr:"", setOpen:true };   /* 261022 추첨 설정 칩 = 설정 칸 펼친 채로(원격 진행이 맨 아래 접힘) */
 var LKY_K={ xlsx:"엑셀", csv:"CSV", txt:"번호만", kit:"종이 추첨 키트" };
 /* 추첨 설정 칩은 진행 칩 안 접이식으로(drawset.js 가 넣은 칩을 뺀다 · 옛 주소 #stage/set = 진행 · 설정 펼침) */
 (function(){ for(var i=SG_SUBS.length-1;i>=0;i--) if(SG_SUBS[i][0]==="set") SG_SUBS.splice(i,1); })();
