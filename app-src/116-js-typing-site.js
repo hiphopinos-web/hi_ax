@@ -48,10 +48,11 @@ function rgPlayClose() { RGP.on = false; gsOverlayClose("type"); }
 /* v4.51(260925 사용자) 넓은 화면 3단 · 입력칸 = 가운데 판 폭(틀 포함) · 판 바로 아래 · 엔진 배치(RG.L)를 따른다(판 틀 L.fr 과 같은 세 겹) · 옆판이 없으면(휴대폰 · 좁은 창) 옛 모양 그대로 */
 function rgFormFit() {
   var d = el("rgPlay"), L = RG.L, on = !!(L && L.pan); if (!d) return;
-  d.classList.toggle("side", on);
+  d.classList.toggle("side", on); d.classList.toggle("port", !!(L && L.port));   /* 261022 세로 배치 · 입력칸 크게 */
   ["rgForm", "rgTip"].forEach(function (id) {
     var n = el(id); if (!n) return;
     n.style.marginLeft = on ? L.ox - L.fr + "px" : ""; n.style.width = on ? L.W + 2 * L.fr + "px" : "";
+    if (on && L.z && L.z !== 1) n.style.width = Math.round(L.W * L.z) + 2 * L.fr + "px";   /* 261022 세로 = 판을 L.z 배로 그린다 */
   });
 }
 function rgFormHtml() {
@@ -457,11 +458,12 @@ function tsfAdmin() {
   modalOpen('<div class="ax-stack-tight axs-gap12"><label class="ax-sr-only" for="tsfOffCode">관리코드</label>' +
     '<input id="tsfOffCode" class="ax-field" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="관리코드" onkeydown="onEnter(event, tsfOffGo)">' +
     '<p class="ax-meta" id="tsfOffMsg">효과음 ' + (on ? "켜짐" : "꺼짐") + " · 배경 음악 기본 " + (S.get("site_bgm_def", true) === true ? "켜짐" : "꺼짐") + (TSF_CAM ? " · 카메라 " + (C.stream ? "켜짐 " + esc(C.res) : "꺼짐") + " · 한 번 읽기 " + Math.round(TSF.sc.ms) + "ms" : "") + " · 접속 QR " + (TSF.lk.tok ? "켜짐" : "꺼짐" + (tsfLinkWhy() ? "(" + esc(tsfLinkWhy()) + ")" : "")) + (TSF.lk.hold ? " · 폰 로그인 중" : "") +
-    " · 송출 " + (tvlSeat() ? "자리 " + tvlSeat() + (TVL.st === "ok" ? " 연결됨" : "") : "끔") + "</p>" +   /* 261017 실시간 송출 자리 */
+    " · 송출 " + (tvlSeat() ? "자리 " + tvlSeat() + (TVL.st === "ok" ? " 연결됨" : "") : "끔") + " · 화면 " + (tsfOrient() === "port" ? "세로" : "가로") + "</p>" +   /* 261017 실시간 송출 자리 */
     '<p class="ax-meta" id="tsfQLn">' + esc(tsfQLine()) + "</p>" +   /* v7.66 이 노트북 대기열 · 마지막 실패 */
     '<button type="button" class="ax-button" onclick="tsfOffGo()">셀프 모드 끄기</button>' +
     '<button type="button" class="ax-button ax-button-weak" onclick="tsfSndGo()">효과음 ' + (on ? "끄기" : "켜기") + "</button>" +
-    '<button type="button" class="ax-button ax-button-weak" onclick="tsfBgmGo()">배경 음악 기본값 ' + (S.get("site_bgm_def", true) === true ? "끄기" : "켜기") + "</button>" +   /* 261017 기기 저장 site_bgm · 오른쪽 위 단추 · F4 와 같은 값 */
+    '<button type="button" class="ax-button ax-button-weak" onclick="tsfBgmGo()">배경 음악 기본값 ' + (S.get("site_bgm_def", true) === true ? "끄기" : "켜기") + "</button>" +
+    '<button type="button" class="ax-button ax-button-weak" onclick="tsfOriGo()">화면 가로 · 세로 · ' + (tsfOrient() === "port" ? "가로로" : "세로로") + " 바꾸기</button>" +   /* 261022 이 노트북 저장(site_orient) · F8 과 같은 값 */   /* 261017 기기 저장 site_bgm · 오른쪽 위 단추 · F4 와 같은 값 */
     (tsfQ().length ? '<button type="button" class="ax-button ax-button-weak" onclick="tsfQGo()">못 보낸 기록 지금 보내기</button>' : "") +
     (tsfStaff() ? '<button type="button" class="ax-button ax-button-weak" onclick="tsfSeatGo()">송출 ' + ["자리 1로", "자리 2로", "자리 3으로", "끄기"][tvlSeat()] + "</button>" : "") +
     (TSF_CAM ? '<button type="button" class="ax-button ax-button-weak" onclick="tsfStaffView()">카메라 전체 보기(20초)</button>' : "") +
@@ -892,14 +894,14 @@ function tsfRacePull() {
    v5.61 3단 = 왼쪽(방법 2 접속 QR · 도전자 · 다음 도전자) / 가운데 판(▲ 카메라 · 방법 1 안내 · 폰 창) / 오른쪽 HIGH SCORE · 영상(tsfVid)은 보이지 않는 원본(읽기 전용)
    261006 3단 = 왼쪽(규칙 · 도전자 · 다음 도전자) / 가운데 판(대기 = 큰 접속 QR) / 오른쪽 HIGH SCORE · ▲ 카메라 · 폰 창은 TSF_CAM 일 때만 */
 function tsfHtml() {
-  return '<div class="tsf ph-' + TSF.ph + '"><video id="tsfVid" class="tsf-vsrc" muted playsinline autoplay aria-hidden="true"></video><div class="tsf-grid" style="--tsf-bw:' + tsfBw() + 'px">' +
+  return '<div class="tsf ph-' + TSF.ph + (tsfOrient() === "port" ? " port" : "") + '"><video id="tsfVid" class="tsf-vsrc" muted playsinline autoplay aria-hidden="true"></video><div class="tsf-grid" style="--tsf-bw:' + tsfBw() + 'px">' +
     '<div class="tsf-l" id="tsfLx">' + tsfLeftHtml() + "</div>" +
     '<section class="tsf-c"><canvas id="tsfCv" aria-hidden="true"></canvas><div class="tsf-ov" id="tsfOv">' + tsfOvHtml() + "</div>" +
     (TSF_CAM ? '<div class="tsf-camtag" aria-hidden="true"><i></i><b>카메라</b></div>' +
     '<div class="tsf-scan" id="tsfScan" aria-live="polite"><div class="tsf-sw"><canvas id="tsfScanCv" aria-hidden="true"></canvas><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></div>' +
     '<p class="tsf-sm" id="tsfScanMsg"></p><p class="tsf-sh" id="tsfScanHint"></p><div class="tsf-bar" id="tsfBar"><i></i><i></i><i></i><i></i><i></i></div><p class="tsf-bl"><span>멀어요</span><span>좋아요</span><span>가까워요</span></p></div>' : "") + "</section>" +
     '<section class="tsf-r" id="tsfR">' + tsfRightHtml() + "</section>" +
-    '</div><button type="button" class="tsf-adm" tabindex="-1" onclick="tsfAdmin()">관리</button></div>';
+    '</div><button type="button" class="tsf-adm" tabindex="-1" onclick="tsfAdmin()">관리</button><p class="tsf-ori" id="tsfOri" hidden></p></div>';
 }
 /* 왼쪽 · 대기 · 안내 · 시간 밖 = 규칙(261006 접속 QR 은 가운데로) · 도전자 = 닉네임 · 남은 도전 · 내 최고 · 키 · 결과 = 다음 도전자 */
 function tsfLeftHtml() {
@@ -1011,7 +1013,8 @@ function tsfPaint() {
   if (typeof bgmBtn === "function") bgmBtn(tsfOn());   /* 261017 배경 음악 단추 · 대기 · 결과에도 */
   var root = document.querySelector(".tsf"); if (!root) return;
   var cl = tsfClosed();
-  root.className = "tsf ph-" + TSF.ph + (TSF.sc.on ? " scan-on" : "") + (cl ? " closed" : "");
+  root.className = "tsf ph-" + TSF.ph + (tsfOrient() === "port" ? " port" : "") + (TSF.sc.on ? " scan-on" : "") + (cl ? " closed" : "");
+  tsfOriHint();
   TSF.closedK = cl ? "c" + cl.next : "";
   var lx = el("tsfLx"), lk = TSF.ph + "|" + TSF.closedK + "|" + (TSF.info ? TSF.nick + TSF.info.used : "") + (TSF.ph === "result" ? "|" + TSF.send : "");
   if (lx && lx._k !== lk) { lx._k = lk; lx.innerHTML = tsfLeftHtml(); tsfLinkPaint(); }
@@ -1148,7 +1151,7 @@ function tsfMount() {
   if (!TSF.phAt) TSF.phAt = performance.now();
   if (!TSF.raf) TSF.raf = requestAnimationFrame(tsfFrame);
   TSF.sc.on = false;
-  tsfCamStart(); tsfRankPull(); tsfCfgPull(); tsfLinkPaint(); tvlUrlSeat();
+  tsfCamStart(); tsfRankPull(); tsfCfgPull(); tsfLinkPaint(); tvlUrlSeat(); tsfOriHint();
   if (TSF.ph === "nick") tsfNickFocus();
   if (typeof BOT_DOT !== "undefined" && !BOT_DOT.ok && typeof botDotLoad === "function") botDotLoad(tsfPrevDraw);
 }
@@ -1525,6 +1528,45 @@ function tsfSeatGo(ok) {
   if (!v) tvlOff(); else if (TVL.ws) { tvlOff(); tvlOpen(); }   /* 자리를 바꾸면 기기 이름이 바뀐다 · 새 이름으로 다시 */
   modalClose();
 }
+/* 261022 (사용자 「타자왕 게임」 · 플랜 B 스탠바이미 세로) 화면 가로 · 세로 · 이 노트북 저장(site_orient · 기본 가로 · 새로 고침 · 재부팅해도 그대로)
+   바꾸는 곳 = F8(판 밖에서만 · 판 도중에는 키를 삼키고 그대로) · 관리(F2) 「화면 가로 · 세로」 · 주소 o=port · o=land(실행 아이콘 · 읽으면 저장하고 주소에서 지운다 · 그 뒤 새로 고침은 저장값)
+   세로 = 위 정보 줄(규칙 · 도전자 / 순위) · 아래 가운데 판(폭 전부) · 게임 = 엔진 세로 배치(rgLayout RG.port) · 점수 · 난이도 · 판정 · 서버 · 송출 화면은 그대로
+   창 비율이 설정과 다르면 왼쪽 아래 「관리」 옆에 작은 한 줄(F8)만 보인다 · 저절로 바꾸지 않는다 */
+function tsfOriUrl() {
+  if (TSF.oriUrl) return; TSF.oriUrl = true;
+  try {
+    var h = String(location.hash || ""), m = /[?&#]o=(port|land)(?![A-Za-z0-9])/.exec(location.search + "&" + h.replace(/^#/, ""));
+    if (!m) return;
+    S.put("site_orient", m[1]);
+    var h2 = h.replace(/&o=(port|land)(?![A-Za-z0-9])/, "");
+    if (h2 !== h) history.replaceState(history.state, "", location.pathname + location.search + h2);
+  } catch (e) {}
+}
+function tsfOrient() { tsfOriUrl(); return S.get("site_orient", "land") === "port" ? "port" : "land"; }
+function rgPortWant() { return App.current === "type_site" && tsfOn() && tsfOrient() === "port"; }   /* 엔진 rgStart 가 판 시작 때 한 번 묻는다(1F 셀프만) */
+function tsfOriSet(v) {
+  S.put("site_orient", v === "port" ? "port" : "land");
+  if (App.current !== "type_site" || !tsfOn() || RG.on) return;
+  tsfPaint();
+  var g = document.querySelector(".tsf-grid"); if (g) g.style.setProperty("--tsf-bw", tsfBw() + "px");
+  tsfPrevDraw(); tsfLinkPaint();
+}
+function tsfOriFlip() { var v = tsfOrient() === "port" ? "land" : "port"; TSF.oriMsgT = Date.now() + 2500; tsfOriSet(v); setTimeout(tsfOriHint, 2600); }   /* 바꾼 직후 2.5초 · 왼쪽 아래 한 줄 「화면 세로 · F8」 */
+function tsfOriGo(ok) { if (ok !== true && !tsfCodeOk(tsfOriGo)) return; modalClose(); tsfOriFlip(); }
+function tsfOriHint() {
+  var n = el("tsfOri"); if (!n) return;
+  var o = tsfOrient(), tall = window.innerHeight > window.innerWidth * 1.15, wide = window.innerWidth > window.innerHeight * 1.15;
+  var t = Date.now() < (TSF.oriMsgT || 0) ? "화면 " + (o === "port" ? "세로" : "가로") + " · F8" : o === "land" && tall ? "세로 창 · F8 세로 배치" : o === "port" && wide ? "가로 창 · F8 가로 배치" : "";
+  if (n.textContent !== t) n.textContent = t;
+  n.hidden = !t;
+}
+/* F8 · 셀프 화면에서만 · 판 도중 = 삼키기만(입력칸 · 판 그대로) · 관리 창이 열려 있으면 그대로 둔다 */
+document.addEventListener("keydown", function (e) {
+  if (e.key !== "F8" || App.current !== "type_site" || !tsfOn() || el("modal")) return;
+  e.preventDefault(); e.stopPropagation();
+  if (e.repeat || RG.on) return;
+  tsfPoke(); tsfOriFlip();
+}, true);
 function tsfResHtml() {
   var r = TSF.res || {}, x = TSF.sub || {};
   /* v4.50(260925) 테스트 사번도 실제로 저장되어 dry 가 없다 · TSF.emp 가 테스트 사번이면 줄 끝에만 표시 */
@@ -1602,7 +1644,7 @@ document.addEventListener("pointerdown", function (e) {
   if (TSF.ph === "ad") { e.preventDefault(); if (!TSF.unl && S.get("site_sound", true) === true) { TSF.unl = true; sfxUnlock(); } tsfWake(); }
   else if (TSF.ph === "attract") tsfPoke();
 }, true);
-window.addEventListener("resize", function () { if (App.current === "type_site" && tsfOn() && !RG.on) { var g = document.querySelector(".tsf-grid"); if (g) g.style.setProperty("--tsf-bw", tsfBw() + "px"); tsfPrevDraw(); tsfLinkPaint(); } });
+window.addEventListener("resize", function () { if (App.current === "type_site" && tsfOn() && !RG.on) { var g = document.querySelector(".tsf-grid"); if (g) g.style.setProperty("--tsf-bw", tsfBw() + "px"); tsfPrevDraw(); tsfLinkPaint(); tsfOriHint(); } });
 
 /* ── 1F TV 순위판 · 로그인 없음 · 앱 상위 10 ↔ 현장 상위 5 번갈아(12초) · 닉네임만 · 30초마다 새로 받음 ── */
 var TYTV = { app: null, site: null, show: "site", pullT: 0, flip: null, fix: "" };   /* v4.59 fix = "site" 이면 부스 판(hsHtml) · 주소 #tv=type&fix=site 에서만 */

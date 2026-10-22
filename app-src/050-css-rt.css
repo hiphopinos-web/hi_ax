@@ -310,6 +310,17 @@
   .rt .tsf-row i { font-style: normal; color: var(--rt-dim); }
   .rt .tsf-adm { position: absolute; left: 12px; bottom: 2px; z-index: 5; padding: 2px 8px; border: 0; background: transparent; color: var(--rt-dim); font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; opacity: 0.5; cursor: pointer; }
   /* v5.61 (261004 사용자 결정) 1F 타자왕 무인 진입 · 영상 원본은 보이지 않게(읽기 전용 · v5.24 얼굴을 비추지 않는다) · 가운데 = ▲ 카메라 + 방법 1 안내 · 폰이 오면 폰 둘레만 창 · 왼쪽 = 방법 2 접속 QR */
+  /* 261022 (사용자 「타자왕 게임」 · 플랜 B 스탠바이미 세로) 세로 배치(.tsf.port · F8 · 관리 「화면 가로 · 세로」) · 위 정보 줄(왼쪽 규칙 · 도전자 / 오른쪽 HIGH SCORE) · 아래 가운데 판(폭 전부) · 가로 배치 규칙은 그대로 */
+  .rt .tsf.port .tsf-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "l r" "c c"; gap: 12px; padding: 60px 16px 28px; }   /* 위 60 = 오른쪽 위 음악 단추 자리 */
+  .rt .tsf.port .tsf-l { grid-area: l; align-self: start; }
+  .rt .tsf.port .tsf-r { grid-area: r; }
+  .rt .tsf.port .tsf-c { grid-area: c; display: block; }   /* 960 미만 폭(세로 1080 · 배율 125% = 864)에서도 판을 숨기지 않는다(아래 휴대폰 규칙보다 앞섬) */
+  .rt .tsf.port { height: 100vh; height: 100dvh; overflow: hidden; }
+  .rt .tsf.port .tsf-qbig { width: min(560px, 72cqw, calc(100cqh - 404px)); }   /* 세로는 판이 높아 QR 을 한 단계 크게(가로 440 그대로) */
+  .rt .tsf-ori { position: absolute; left: 76px; bottom: 6px; z-index: 5; margin: 0; padding: 0 8px; font-family: var(--rt-font); font-size: var(--rt-f16); line-height: var(--rt-l16); color: var(--rt-tan); background: var(--rt-bark); box-shadow: var(--rt-line); }   /* 창 비율이 설정과 다를 때만 · 저절로 바꾸지 않는다 */
+  .rt .tsf-ori[hidden] { display: none; }
+  #rgPlay.rt.side.port .rg-form .input { height: 72px; font-size: 32px; }   /* 세로 판 아래 입력칸 · 한 단계 크게 */
+  #rgPlay.rt.side.port .rg-form .btn.mint { height: 72px; min-width: 128px; font-size: 24px; }
   .rt .tsf-vsrc { position: fixed; left: 0; top: 0; width: 160px; height: 90px; opacity: 0; pointer-events: none; z-index: -1; }
   .rt .tsf-c { container-type: size; }
   .rt .tsf-chip { align-self: flex-start; margin: 0; padding: 2px 12px; background: var(--rt-o100); color: var(--rt-night); box-shadow: var(--rt-line); }

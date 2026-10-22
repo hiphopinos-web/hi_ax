@@ -104,6 +104,10 @@ var RAIN_BANDS = [[330, 2, 3], [420, 3, 4], [520, 4, 5], [1e9, 5, 5]];   /* [판
 var RAIN_SIDE_MIN = 960;                      /* v4.29 옆판을 붙이는 캔버스 최소 폭 · v4.32 3단(왼쪽 판 + 게임판 + 오른쪽 판) · 이보다 좁으면 옛 배치 그대로 */
 var RAIN_SIDE_GAP = 28;                       /* v4.51 3단 · 게임판과 양옆 판 사이 틈(틀 10 + 빈 18) */
 var RAIN_FRAME = 10;                          /* v4.51 3단 · 게임판 틀 두께(먹 3 · O100 4 · 먹 3) · 입력칸 틀도 같은 두께 */
+/* 261022 (사용자 「타자왕 게임」 · 플랜 B 스탠바이미 세로) 1F 셀프 세로 배치(RG.port · 화면 쪽이 rgStart opt.port 로 켠다) · 위 = 정보 줄(왼쪽 도전자 · NEXT / 오른쪽 추월 레이스) · 아래 = 게임판(폭 전부) · 입력칸
+   ew = 판 안 배치 폭(엔진 좌표 · 가로 1920 × 1080 판 폭 744 와 거의 같다 · 레인 3 · 글자 · 낙하 시간 · 판정 그대로) · 화면 판 폭이 더 넓으면 그만큼 키워 그린다(L.z)
+   m = 좌우 여백 · top = 정보 줄 높이(왼쪽 두 상자 · NEXT 두 줄까지) · gap = 정보 줄과 판 틀 사이 */
+var RAIN_PORT = { ew: 720, m: 16, top: 494, gap: 12, min: 600 };
 var RAIN_FONT = '"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif';
 var RAIN_PAL = { o100: "#FF7E31", o60: "#FFA46E", o50: "#FFB284", o30: "#FFCFB0", o25: "#FFD8C1", o10: "#FFEBE0", deep: "#D64524", ink: "#000000", w: "#FFFFFF", gray: "#B8AEA6", dim: "#8A817B", soil: "#7A3E1C", soil2: "#6A3417", trunk: "#5E3218" };
 /* ═══ v4.23 레트로 틀 · 게임판 안 공용 한 벌 (260923 사용자 확정 · design.md A-5 5-16 · 정본 시안 「레트로 시안/시안.html」) ═══
@@ -181,8 +185,15 @@ function rgBotDraw(ctx, cx, gy, dw, dh, u) {
    v4.51(260925 사용자) 가운데 게임판만 전체 높이 · 테두리 한 단계 강하게(먹 3 · O100 4 · 먹 3 = RAIN_FRAME) · 틀은 판과 양옆 판 사이 틈(RAIN_SIDE_GAP) 안에 그린다
      판은 틀 두께만큼 아래로(L.oy) · L.H = 판 높이(캔버스 높이 L.CH − 틀) · 아래 틀은 입력칸(화면 쪽 DOM)이 이어 받는다 · 양옆 판 상자는 내용만큼(rgLeftDraw · rgSideDraw) */
 function rgLayout(W, H, big, side) {
-  var L = { W: W, H: H, CH: H, big: big, CW: W, ox: 0, oy: 0, fr: 0, pan: null, lp: null };
-  if (side && big && W >= RAIN_SIDE_MIN) {
+  var L = { W: W, H: H, CH: H, big: big, CW: W, ox: 0, oy: 0, fr: 0, pan: null, lp: null, z: 1, fy: 0 };
+  if (side && big && RG.port && W >= RAIN_PORT.min) {   /* 261022 세로 · 정보 줄 위 · 판 아래(폭 전부) */
+    var Q = RAIN_PORT, qw = Math.floor((W - 2 * Q.m - Q.gap) / 2), bpx = W - 2 * Q.m - 2 * RAIN_FRAME, ew = Math.min(Q.ew, bpx), z = bpx / ew;
+    L.port = true; L.z = z; L.fr = RAIN_FRAME; L.fy = Q.top + Q.gap;
+    L.ox = Q.m + RAIN_FRAME; L.oy = L.fy + RAIN_FRAME;
+    L.W = W = ew; L.H = H = Math.max(240, Math.floor((L.CH - L.oy) / z));
+    L.lp = { x: Q.m, y: 0, w: qw, h: Q.top, big: true };
+    L.pan = { x: Q.m + qw + Q.gap, y: 0, w: L.CW - 2 * Q.m - qw - Q.gap, h: Q.top, big: true };
+  } else if (side && big && W >= RAIN_SIDE_MIN) {
     var gap = RAIN_SIDE_GAP, bw = Math.max(440, Math.min(760, Math.round(H * 0.8))), pw = Math.floor((W - bw - 4 * gap) / 2);
     if (pw < 200) { pw = 200; bw = W - 2 * pw - 4 * gap; }
     pw = Math.min(420, pw);
@@ -712,6 +723,7 @@ function rgStart(mode, opt) {
   RG.cloudTestN = opt.cloudN > 0 ? Math.max(1, Math.min(14, Math.round(opt.cloudN))) : 0;   /* 261017 시험 손잡이 · 첫 구름 단어 수(화면 쪽이 테스트 사번 · 주소 bns=2 일 때만 준다) */
   rgSiteReset();   /* 261003 숨 돌리기 · 보너스 입력 막기 */
   RG.big = RG.mode !== "app" || (!rgTouch() && window.innerWidth >= 700);
+  RG.port = RG.mode === "site" && typeof rgPortWant === "function" && !!rgPortWant();   /* 261022 1F 셀프 세로 배치(rgLayout) · 화면 쪽(앱 tsfOrient)이 정한다 · 판 도중에는 바꾸지 않는다 · 송출 화면 · 선수 화면은 함수가 없어 늘 가로 */
   RG.wait = opt.wait != null ? !!opt.wait : (RG.mode !== "race" && !rgTouch() && !RGP.go);
   RGP.go = false;
   RG.next = null; RG.top = null; RG.hk = false;
@@ -1176,7 +1188,8 @@ function rgDraw(ctx, now) {
     rgFrameDraw(ctx, L);
   }
   ctx.save();
-  if (L.pan) { ctx.translate(L.ox, L.oy); ctx.beginPath(); ctx.rect(0, 0, L.W, L.H); ctx.clip(); }
+  if (L.pan && L.z !== 1) { ctx.translate(L.ox, L.oy); ctx.scale(L.z, L.z); ctx.beginPath(); ctx.rect(0, 0, L.W, L.H); ctx.clip(); }   /* 261022 세로 = 판을 L.z 배로 키워 그린다 */
+  else if (L.pan) { ctx.translate(L.ox, L.oy); ctx.beginPath(); ctx.rect(0, 0, L.W, L.H); ctx.clip(); }
   if (RG.shake > 0) ctx.translate(Math.round((Math.random() - 0.5) * 6), Math.round((Math.random() - 0.5) * 6));
   if (RG.bonus && rgBonusScene(RG.bonus.ph)) rgBonusBg(ctx, L, now);   /* v5.30 보너스 무대(평소 판과 다른 밤 무대) */
   else {
@@ -1304,17 +1317,19 @@ function rgBnsFit(ctx, text, maxW, fp0) {
 /* v4.51 게임판 틀 · 셋 중 유일한 전체 높이 · 양옆 판(나무 이중 테두리)보다 한 단계 강하게 · 바깥 먹 3 → O100 4 → 안 먹 3(= RAIN_FRAME)
    위 모서리는 계단(rtStep) · 아래는 캔버스 끝까지 열어 둔다(입력칸 틀이 같은 세 겹으로 이어 받는다 · 화면 쪽 CSS) */
 function rgFrameDraw(ctx, L) {
-  var f = L.fr, x = L.ox - f, w = L.W + 2 * f, h = L.CH + 8;
+  var f = L.fr, x = L.ox - f, w = Math.round(L.W * (L.z || 1)) + 2 * f, h = L.CH + 8;   /* 261022 세로 = 판 폭 × L.z · 정보 줄 아래(L.fy)부터 · 가로는 그대로(z 1 · fy 0) */
+  if (L.fy) { ctx.save(); ctx.translate(0, L.fy); }
   rtStep(ctx, x, 0, w, h, 2, RAIN_PAL.ink);
   rtStep(ctx, x + 3, 3, w - 6, h, 2, RAIN_PAL.o100);
   ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(x + 7, 7, w - 14, h);
+  if (L.fy) ctx.restore();
 }
 /* 왼쪽 판 · v4.51(260925 사용자) 테트리스 HOLD · NEXT 칸 문법 · 위쪽에 작은 상자 두 개만 · 아래는 비운다(시선은 가운데 판)
    ① 도전자(현장 셀프 · RG.who · 「도전 중」) + 점수 · 목숨 · 단계  ② NEXT(첫 칸 크게 · 뒤 두 칸 작게 한 줄 · 넘치면 다음 줄) · 게임 전(대기) = 시작 안내
    상자 = 나무 이중 테두리(rtPanel) · 내용만큼의 높이 · 판 높이 720 미만(1366×768 등)은 줄 간격만 줄인다 · 글자는 16 · 32 */
 function rgLeftDraw(ctx, L) {
   var P = L.lp; if (!P) return;
-  var s = 2, cmp = P.h < 720, bp = 4 * s + (cmp ? 8 : 12), rh = cmp ? 34 : 44, hp = cmp ? 16 : 32, tp = cmp ? 16 : 32, gap = 12;
+  var s = 2, cmp = !P.big && P.h < 720, bp = 4 * s + (cmp ? 8 : 12), rh = cmp ? 34 : 44, hp = cmp ? 16 : 32, tp = cmp ? 16 : 32, gap = 12;
   var ix = P.x + bp, right = P.x + P.w - bp, iw = right - ix, y = P.y, cy;
   ctx.save();
   ctx.textBaseline = "middle"; ctx.textAlign = "left";
@@ -1381,7 +1396,7 @@ function rgLeftDraw(ctx, L) {
    v4.51(260925 사용자) 왼쪽 상자와 다른 순위표 문법 · 먹 테두리(계단 모서리) + 오렌지 머리띠(제목) + 줄무늬 행(어두운 판 두 톤) · 판 높이보다 짧게(행 수만큼) */
 function rgSideDraw(ctx, L) {
   var P = L.pan; if (!P) return;
-  var cmp = P.h < 720, hp = cmp ? 16 : 32, rf = P.h >= 700 && P.w >= 400 ? 32 : 16, rh = rf === 32 ? 46 : cmp ? 30 : 36, bh = cmp ? 40 : 60, b = 3;
+  var cmp = !P.big && P.h < 720, hp = cmp ? 16 : 32, rf = (P.big || P.h >= 700) && P.w >= 400 ? 32 : 16, rh = rf === 32 ? 46 : cmp ? 30 : 36, bh = cmp ? 40 : 60, b = 3;
   var top = RG.top, n = top && top.length ? Math.min(10, top.length) : 1;
   while (n > 1 && 3 * b + bh + n * rh > P.h) n--;
   var H = 3 * b + bh + n * rh, ix = P.x + b + 14, right = P.x + P.w - b - 14, iw = right - ix, ry = P.y + 2 * b + bh;
@@ -2008,7 +2023,7 @@ function rgRaceTick(dt) {
 /* 오른쪽 판 · 머리띠 「추월 레이스」 · 지금 순위 크게 · 다음 목표까지 남은 점수 · 세로 줄(위 = 앞사람 · 가운데 = 나 · 아래 = 넘은 사람) + 왼쪽 길(미니맵) · 넘을 때 튀어오름 */
 function rgRaceDraw(ctx, L, now) {
   var P = L.pan; if (!P) return;
-  var list = (RG.race && RG.race.list) || [], cmp = P.h < 720, b = 3, bh = cmp ? 40 : 60, hp = cmp ? 16 : 32, rf = P.w >= 360 && !cmp ? 32 : 16, rh = rf === 32 ? 46 : 32;
+  var list = (RG.race && RG.race.list) || [], cmp = !P.big && P.h < 720, b = 3, bh = cmp ? 40 : 60, hp = cmp ? 16 : 32, rf = P.w >= 360 && !cmp ? 32 : 16, rh = rf === 32 ? 46 : 32;
   var rank = rgRaceRank(RG.score), ahead = rank - 1, total = list.length + 1;
   var ix = P.x + b + 14, right = P.x + P.w - b - 14;
   ctx.save();
