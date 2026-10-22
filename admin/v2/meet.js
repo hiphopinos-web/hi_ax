@@ -12,7 +12,7 @@
  * 261021 (사용자 확정) 라운지 날짜 탭 = lng_board days(사전 면담 10/22 · 10/23 + 당일 10/26) · 탭마다 같은 칸 · 놓기 = resv_move day · 다른 날짜로 옮기기 = 「옮기기」(고르기) → 날짜 탭 → 칸 · 칸 미정은 날짜 공통 */
 var MT_REST_DEF=["12:00","12:30"], CC_SEAT_MAX=3, CC_SEAT_TX="한 칸 최대 "+CC_SEAT_MAX+"명입니다";
 function mtAt(M, k){ var x=M.at[k]; return M.p==="cc"?(x||[]):x?[x]:[]; }   /* 칸에 놓인 사람들(커피챗 = 배열 · 라운지 = 한 명) */
-var MT={ ov:lsGet("axf_v2_meet_ov",{})||{}, ord:lsGet("axf_v2_meet_ord",[])||[], ordD:lsGet("axf_v2_meet_ordd",0)?1:0, day:0,   /* 261022 당일 모드 없앰 · 저장값(axf_v2_meet_day) 무시 · 0 고정(자동 배정 단추 줄은 손대지 않아 그대로 둔다) */
+var MT={ ov:lsGet("axf_v2_meet_ov",{})||{}, ord:lsGet("axf_v2_meet_ord",[])||[], ordD:lsGet("axf_v2_meet_ordd",0)?1:0, day:0,   /* 261022 당일 모드 없앰 · 저장값(axf_v2_meet_day) 무시 · 0 고정 */
   pick:null, past:0, ns:{}, log:{}, fail:null, det:null, qno:{}, nowT:null, memo:null, jd:0, qb:{}, lnD:lsGet("axf_v2_meet_lnd","")||"" };
 var MTD=null;
 function mtSave(){ lsSet("axf_v2_meet_ov",MT.ov); lsSet("axf_v2_meet_ord",MT.ord); lsSet("axf_v2_meet_ordd",MT.ordD); }
@@ -30,7 +30,7 @@ function mtNote(p, emp){ var d=mtNoteD(p); if(!d||!d.ok||!Array.isArray(d.rows))
 function mtNotePatch(p, emp, o){ var d=mtNoteD(p); if(!d||!d.ok||!Array.isArray(d.rows)) return; var n=mtNote(p, emp); if(!n){ n={ prog:p, emp:normE(emp) }; d.rows.push(n); } for(var k in o) n[k]=o[k]; }
 
 /* ── 2. 커피챗 모양 · 서버 칸 + 이 기기 초안(MT.ov = 사번 → { to 칸 | "" 대기 줄, base 초안 만들 때 서버 칸 }) ── */
-/* 261021 (사용자 「콘솔 시간표 9:00~16:00 · 앱은 13:00 그대로」) 시간표 회차 = 오전 칸(cchat_list am · 운영진 배정 전용) + 앱 신청 회차(ccCfg) · 옛 서버(am 없음)면 오전 칸 없음 · 자동 배정은 앱 신청 회차만 */
+/* 261021 (사용자 「콘솔 시간표 9:00~16:00 · 앱은 13:00 그대로」) 시간표 회차 = 오전 칸(cchat_list am · 운영진 배정 전용) + 앱 신청 회차(ccCfg) · 옛 서버(am 없음)면 오전 칸 없음 */
 function mtCcRounds(cf){ var d=S.data.cc, am=d&&d.ok&&Array.isArray(d.am)?d.am.map(hm).filter(Boolean):[], seen={};
   return am.concat(cf.rounds).filter(function(t){ if(seen[t]) return false; seen[t]=1; return true; }).sort(); }
 function mtSrvK(r){ return CC_ON.indexOf(r.status)>=0&&hm(r.round)&&r.table?hm(r.round)+":"+r.table:""; }
@@ -194,7 +194,7 @@ function mtBoardH(p){
   /* 왼쪽 · 대기 줄(커피챗) · 칸 미정(라운지) */
   var q=M.q, qn=cc?q.length:q.length;
   h+='<div class="mtg-wrap"><section class="card mtg-q" aria-label="'+(cc?"대기 줄":"칸 미정")+'"><h2>'+(cc?"대기 줄":"칸 미정")+' <span class="cap n">'+n0(qn)+'명</span><span class="sp"></span>'+
-    (cc&&!MT.day?'<button class="btn sm" type="button" onclick="mtAuto()">자동 배정 채우기</button>':'')+'</h2>'+
+    '</h2>'+   /* 261022 (사용자 결정) 「자동 배정 채우기」 단추 · mtAuto 걷음 · 서버 전용 액션 없음(콘솔 안 계산이었다) */
     '<p class="cap" style="margin-bottom:6px">'+(cc?"신청 순서 · 끌어서 칸에 놓기":"시간 없는 사람 · 끌어서 칸에 놓기")+'</p>'+
     '<div class="mtg-ql" data-drop="q"'+(MT.pick&&cc?' tabindex="0"':'')+'>'+q.map(function(x,i){ return mtCard(M, x, cc?i+1:0); }).join("")+(q.length?'':'<span class="cap" style="padding:8px 4px">'+(cc?"대기 줄 비어 있음":"칸 미정 없음")+'</span>')+'</div>'+
     (M.out.length?'<h2 class="mt">칸 밖 <span class="cap n">'+M.out.length+'명</span></h2><p class="cap" style="margin-bottom:6px">'+(cc?"지금 회차 · 테이블 설정에 없는 칸":"운영 시간 밖 칸")+' · 칸으로 끌어 놓기</p><div class="mtg-ql">'+M.out.map(function(x){ return mtCard(M, x, 0); }).join("")+'</div>':'')+
@@ -234,16 +234,6 @@ function mtCcDraftDrop(e, to, before){
   if(from===to) return;
   if(mtAt(M, to).length>=CC_SEAT_MAX){ toast(CC_SEAT_TX+" · 다른 칸에 놓습니다",{ bad:1 }); return; }
   mtOvSet(r, to); mtSave(); paint();
-}
-/* 자동 배정 · 대기 줄 순서대로 · 그 사람이 고른 시간 중 가장 이른 빈 칸(테이블 A 먼저) · 고른 시간이 없으면 모든 회차(앱 신청 회차 M.cf.rounds · 오전 칸 안 씀) · 놓인 사람은 그대로 · 미선정 알림 받은 사람은 건너뜀 */
-function mtAuto(){
-  var M=mtCcM(), used={}, n=0; Object.keys(M.at).forEach(function(k){ used[k]=1; });
-  M.q.forEach(function(r){
-    if(r.status!=="대기"&&r.status!=="매칭"||r.overAt||M.conf.indexOf(jq(r.emp))>=0) return;
-    var pl=r.pref?String(r.pref).split(",").map(hm).filter(function(t){ return M.cf.rounds.indexOf(t)>=0; }):[]; if(!pl.length) pl=M.cf.rounds; pl=pl.slice().sort();
-    for(var i=0;i<pl.length;i++) for(var j=0;j<M.tables.length;j++){ var k=pl[i]+":"+M.tables[j]; if(!used[k]){ used[k]=1; mtOvSet(r,k); n++; return; } }
-  });
-  mtSave(); paint(); toast(n?"대기 줄 순서대로 "+n+"명을 고른 시간 안의 빈 칸에 놓았습니다 · 저장 전 초안":"고른 시간에 빈 칸이 없습니다");
 }
 function mtUndoAsk(){
   var M=mtCcM(), n=M.chg.length+(mtOrdChanged()?1:0);
