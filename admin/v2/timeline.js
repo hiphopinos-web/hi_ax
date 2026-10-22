@@ -102,10 +102,12 @@ function tlRows(){
   add(hm(idE)||"16:00","open","아이디어 한 줄 마감","마감 뒤 제출 = "+(tlV("아이디어_마감후","받음")==="받음"?"받음 · 스탬프 인정 · 심사 제외 표시":tlV("아이디어_마감후","")),[tlA("미팅 › 아이디어","go('meet','cc-ideaall')"),tlCfgA("아이디어_마감")],tlChk("아이디어_마감","dt"));
   /* 17F 럭키드로우 · 17:00 마감들 */
   var dwv=(dr&&dr.win)||tlV("추첨_창",TL_DEF.draw), dw=tlWin(dwv)||tlWin(TL_DEF.draw), dW=[];
-  /* 261022 사용자 「추첨 체크인 마감 = 담당자가 접수 마감을 누를 때」 · 설정 끝 시각은 늦게 닫히지 않게 둔 값이라 경고하지 않는다 */
   if(dr&&dr.day&&dr.day!==ev) dW.push("추첨 날짜 "+dr.day+" · 행사일과 다름");
-  if(!dr) dW.push("추첨 상태를 읽지 못함 · 기본값 "+TL_DEF.draw);
-  add(dw[0],"open","17F 추첨 체크인 시작 · 럭키드로우","마감 = 담당자가 행운권 › 진행에서 「접수 마감」을 누를 때(설정 끝 "+dw[1]+"는 늦게 닫히지 않게 둔 값)"+(dr&&dr.closed?" · 지금 접수 마감됨":"")+(dr&&dr.day?" · 날짜 "+tlMD(dr.day):"")+" · 행운권 참석 조건 "+tlV("행운권_참석조건","OFF"),[tlA("행운권 › 진행","go('stage','draw')"),tlA("현장 QR","go('log','qr')")],dW);
+  if(!dr) dW.push("추첨 상태를 읽지 못함 · 기본 시작 "+tlWin(TL_DEF.draw)[0]);
+  /* 261022 기획담당자(현장 문서 「럭키드로우 현장 1장」) · 서버 창은 시작 시각 · 날짜만 · 끝 시각 없음 · 마감 = 추첨 설정 › 17F 입구 체크인 「체크인 마감」 · 17:13쯤 사회자 신호 뒤 · 무대 공 넣기(첫 Space) 때 서버가 한 번 더 닫음 */
+  var dSet=tlA("추첨 설정 › 17F 입구 체크인","go('stage','set')");
+  add(dw[0],"open","17F 추첨 체크인 시작 · 럭키드로우","17F 입구 QR 체크인 받기 시작"+(dr&&dr.closed?" · 지금 마감됨":"")+(dr&&dr.day?" · 날짜 "+tlMD(dr.day):"")+" · 행운권 참석 조건 "+tlV("행운권_참석조건","OFF"),[dSet,tlA("현장 QR","go('log','qr')")],dW);
+  add("17:13","open","17F 추첨 체크인 마감 · 사람이 누름","추첨 설정 › 17F 입구 체크인 「체크인 마감」 · 사회자 신호 뒤 콘솔 관리자가 누름 · 무대 공 넣기 때 서버가 한 번 더 자동으로 닫음",[dSet,tlA("행운권 › 진행","go('stage','draw')")],[],{ approx:1 });
   var c17=function(k, ti, d, a){ var v=tlV(k,""); add(hm(v)||"17:00","open",ti,d,a.concat([tlCfgA(k)]),tlChk(k,"dt")); };
   c17("선착순_마감","선착순 참여상 마감","뒤로는 지급 안 함 · 앱 「선착순 마감」",[tlA("체크인 탭","go('ckin')")]);
   c17("룰렛_마감","룰렛 마감","뒤로는 룰렛 차감 거절",[tlA("급한 단추","go('log','urgent')")]);
@@ -148,7 +150,7 @@ function tlPaint(){
   V.forEach(function(r){
     if(!nowDone&&!r.allDay&&tlM(r.t)>=nowM){ h+='<div class="tl-now" role="separator"><span class="tl-tm n">'+tlHM(nowM)+'</span><span class="tl-nl">지금</span></div>'; nowDone=true; prev=""; }
     var k=TL_K[r.k]||["",""], same=r.t===prev; prev=r.t;
-    h+='<div class="tl-row'+(r.k==="chg"?" chg":"")+(r.off?" dim":"")+(same?" same":"")+'"><div class="tl-tm n">'+(same?"":esc(r.t)+(r.allDay?'<span class="tl-ad">하루 종일</span>':''))+'</div>'+
+    h+='<div class="tl-row'+(r.k==="chg"?" chg":"")+(r.off?" dim":"")+(same?" same":"")+'"><div class="tl-tm n">'+(same?"":esc(r.t)+(r.allDay?'<span class="tl-ad">하루 종일</span>':r.approx?'<span class="tl-ad">쯤</span>':''))+'</div>'+
       '<div class="tl-bd"><div class="tl-tx"><div class="tl-ti"><span class="tag '+k[1]+'">'+esc(k[0])+'</span>'+(r.pc?'<span class="tag off">이 PC 예약</span>':'')+(r.st&&r.st!=="대기"?tag(r.st,r.st==="완료"?"ok":r.st==="꺼짐"?"off":"bad"):'')+'<b>'+tlNw(r.ti)+'</b></div>'+
       (r.d?'<div class="tl-d">'+tlNw(r.d)+'</div>':'')+r.w.map(function(w){ return '<div class="tl-w"><span class="tag warn">확인</span>'+esc(w)+'</div>'; }).join("")+'</div>'+
       (r.a.length?'<div class="tl-ac">'+r.a.map(function(a){ return '<button class="btn sm" type="button" onclick="'+a[1]+'">'+esc(a[0])+'</button>'; }).join("")+'</div>':'')+'</div></div>'; });
