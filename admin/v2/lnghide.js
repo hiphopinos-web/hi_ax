@@ -26,9 +26,10 @@ function lhAsk(){
   var go=rows.filter(function(r){ return !lhWhy(r); }), no=rows.filter(function(r){ return !!lhWhy(r); }), wk={};
   no.forEach(function(r){ var w=lhWhy(r); wk[w]=(wk[w]||0)+1; });
   var wt=Object.keys(wk).map(function(k){ return LH_WHY[k]+" "+n0(wk[k]); }).join(" · ");
-  var cx=go.filter(function(r){ return r.status!=="취소"; }).length;
+  var cx=go.filter(function(r){ return r.status!=="취소"; }).length, all=(S.data.resv&&S.data.resv.rows)||[];
+  var one=go.filter(function(r){ return (r.status==="신청"||r.status==="승인")&&!all.some(function(y){ return y.id!==r.id&&normE(y.emp)===normE(r.emp)&&y.status!=="취소"; }); }).length;   /* 그 사람의 하나뿐인 줄 · 다음 명단 올리기 때 다시 생길 수 있음 */
   var tr=function(r){ var w=lhWhy(r); return '<tr><td>'+esc(r.name||"-")+'</td><td>'+esc(r.emp||"-")+'</td><td style="white-space:nowrap">'+esc(lhWhenS(r))+'</td><td>'+tag(lnView(r), RV_TAG[r.status])+'</td><td style="white-space:nowrap">'+(w?tag("막힘 · "+LH_WHY[w],"off"):tag(r.status==="취소"?"숨김":"취소 후 숨김","warn"))+'</td></tr>'; };
-  var body=band("warn",cx?"· 줄을 지우지 않고 숨깁니다 · 명단 · 시간표 · 참가자 앱에서 빠집니다<br>· 배정 · 노쇼 "+n0(cx)+"건은 취소로 바뀝니다":"줄을 지우지 않고 숨깁니다 · 명단 · 시간표 · 참가자 앱에서 빠집니다")+
+  var body=band("warn",(cx||one?"· ":"")+"줄을 지우지 않고 숨깁니다 · 명단 · 시간표 · 참가자 앱에서 빠집니다"+(cx?"<br>· 배정 · 노쇼 "+n0(cx)+"건은 취소로 바뀝니다":"")+(one?"<br>· 하나뿐인 줄 "+n0(one)+"건은 다음 명단 올리기 때 다시 생길 수 있습니다":""))+
     '<dl class="cc-kv mt4"><dt>고른 줄</dt><dd>'+n0(rows.length)+'건</dd><dt>삭제할 줄</dt><dd><b>'+n0(go.length)+'건</b></dd><dt>막히는 줄</dt><dd>'+n0(no.length)+'건'+(wt?' <span class="cap">'+esc(wt)+'</span>':'')+'</dd></dl>'+
     '<div class="xg-wrap mt4" style="--xg-h:220px"><table class="tb xg-fail"><thead><tr><th scope="col">이름</th><th scope="col">사번</th><th scope="col">상담</th><th scope="col">상태</th><th scope="col">처리</th></tr></thead><tbody>'+go.concat(no).map(tr).join("")+'</tbody></table></div>'+(no.length?'<p class="cap mt4">'+LH_HOW.map(function(x){ return "· "+esc(x); }).join("<br>")+'</p>':'')+
     '<label class="fld">확인 문구 · 「'+LH_W+'」를 그대로 입력합니다<input class="in" id="lhQ" autocomplete="off" oninput="gateUpd()"></label>';

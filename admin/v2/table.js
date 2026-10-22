@@ -10,6 +10,7 @@
  *   o.select = 맨 왼쪽 선택 칸(머리 칸 = 보이는 줄 전체) · o.onAdd() = 표 위 오른쪽 「추가」(엑셀 다운로드 옆)
  *   o.cancel = { kind | kind() · keys(rows) 서버 열쇠(기본 사번) · what 명단 이름 · sub 영향 한 줄 · opts() 확인 창 추가 html · part() · after(res) 다시 읽기 }
  *   「선택 n명 삭제」 = 확인 창 → list_rows_cancel(취소 처리 · 기록 남음) → 못 한 줄은 이유 표 · 토스트 「되돌리기」 = roll_undo(batch)
+ * o.cxVerb = 「선택 n명 삭제」 단추 · 확인 창 · 토스트의 동사(기본 삭제 · 261022 라운지 명단 = 취소)
  * o.topAct(g, n) = 고른 줄이 없어도 늘 맨 앞에 서는 단추 html(261022 · 예 라운지 「대상자 삭제」 lnghide.js)
  * o.rowCls(r) = 줄 class(261017 · 예 dim)
  * o.pickAct(g, n) = 고른 줄이 있을 때 「선택 n명 삭제」 앞에 붙는 단추 html(261021 · 예 라운지 「스탬프 부여」 lngstamp.js)
@@ -92,7 +93,7 @@ function xgPicked(g){ return (g.rows||[]).filter(function(r){ return g.pick[xgKe
 /* 오른쪽 단추 칸 · 선택 n명 삭제(고른 줄이 있을 때) · 추가 · 엑셀 다운로드 · 머리 칸 체크 상태 */
 function xgActs(g){
   var root=XG.root(g); if(!root) return; var o=g.o, a=root.querySelector('[data-c="acts"]'), n=o.select?xgPicked(g).length:0, id=g.id;
-  if(a) a.innerHTML=(o.topAct?o.topAct(g,n):'')+(o.pickAct&&n&&!g.busy?o.pickAct(g,n):'')+(n||g.busy?'<button class="btn sm dng" type="button" onclick="XG.cxAsk(\''+id+'\')"'+(g.busy?' disabled aria-disabled="true"':'')+'>'+(g.busy?"처리 중":"선택 "+n0(n)+(o.unit||"명")+" 삭제")+'</button>':'')+
+  if(a) a.innerHTML=(o.topAct?o.topAct(g,n):'')+(o.pickAct&&n&&!g.busy?o.pickAct(g,n):'')+(n||g.busy?'<button class="btn sm dng" type="button" onclick="XG.cxAsk(\''+id+'\')"'+(g.busy?' disabled aria-disabled="true"':'')+'>'+(g.busy?"처리 중":"선택 "+n0(n)+(o.unit||"명")+" "+(o.cxVerb||"삭제"))+'</button>':'')+
     (o.onAdd?'<button class="btn sm" type="button" onclick="XG.addBy(\''+id+'\')"'+(g.busy?' disabled':'')+'>추가</button>':'')+
     (o.noDl?'':'<button class="btn sm xg-dl" type="button" onclick="XG.dl(\''+id+'\')">엑셀 다운로드</button>');
   var all=root.querySelector('[data-c="all"]');
@@ -116,7 +117,7 @@ XG.cxAsk=function(id){
   if(selfR.length){ rows=rows.filter(function(r){ return normE(r.emp)!==me; }); n=rows.length; if(!n){ toast(c.noSelf,{ bad:1 }); return; } }
   if(n>XG.CXMAX){ toast("한 번에 "+XG.CXMAX+"명까지 삭제합니다 · 지금 "+n0(n)+"명 선택",{ bad:1, ms:4000 }); return; }
   var nm=rows.slice(0,3).map(xgWho).join(", ")+(n>3?" 외 "+n0(n-3)+"명":"");
-  confirmBox({ t:"선택한 "+n0(n)+(o.unit||"명")+"을 삭제할까요?", who:(c.what||o.file||"명단")+" · "+nm, sub:c.sub||"", ok:"선택 삭제", danger:true, gate:c.gate,
+  confirmBox({ t:"선택한 "+n0(n)+(o.unit||"명")+"을 "+(o.cxVerb||"삭제")+"할까요?", who:(c.what||o.file||"명단")+" · "+nm, sub:c.sub||"", ok:"선택 "+(o.cxVerb||"삭제"), danger:true, gate:c.gate,
     body:(c.opts?c.opts(rows):"")+(selfR.length?band("warn",esc(c.noSelf)+" · 선택에서 뺐습니다"):"")+'<p class="cap mt4">취소로 남고 활동 기록에서 되돌릴 수 있음</p>',
     run:function(){
       var kind=typeof c.kind==="function"?c.kind(rows):c.kind, keys=c.keys?c.keys(rows,kind):rows.map(function(r){ return r.emp; }), p={ kind:kind, keys:keys.join(","), rid:"x"+Date.now().toString(36)+Math.random().toString(36).slice(2,6) };
@@ -131,7 +132,7 @@ function xgCxDone(g, r){
   var c=g.o.cancel, bad=(r.rows||[]).filter(function(x){ return !x.ok; }), dn=num(r.done), u=g.o.unit||"명";
   var byK={}; (r._rows||[]).forEach(function(x){ byK[x.emp]=x; byK[xgKey(g,x)]=x; if(x.id!=null) byK[x.id]=x; });
   if(c.after) c.after(r); else XG.paint(g);
-  toast(dn?"삭제했습니다 · "+n0(dn)+u+(bad.length?" · 못 함 "+n0(bad.length):""):"삭제하지 못했습니다", dn&&r.batch?{ undo:function(){ XG.undo(g.id, r.batch); } }:{ bad:!dn });
+  var vb=g.o.cxVerb||"삭제"; toast(dn?vb+"했습니다 · "+n0(dn)+u+(bad.length?" · 못 함 "+n0(bad.length):""):vb+"하지 못했습니다", dn&&r.batch?{ undo:function(){ XG.undo(g.id, r.batch); } }:{ bad:!dn });
   if(!bad.length) return;
   setTimeout(function(){ confirmBox({ t:n0(dn)+u+" 삭제 · "+n0(bad.length)+u+" 못 함", who:c.what||g.o.file||"명단", sub:"못 한 줄은 그대로 남았습니다", ok:"확인",
     body:'<div class="xg-wrap" style="--xg-h:280px"><table class="tb xg-fail"><thead><tr><th scope="col">사번</th><th scope="col">소속</th><th scope="col">이름</th><th scope="col">이유</th></tr></thead><tbody>'+

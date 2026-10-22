@@ -44,7 +44,8 @@ function lgPaint(){
     chips:[["all","전체",null],["none","칸 미정",function(r){ return r.status!=="취소"&&!hm(r.slot); }],["in","왔음",function(r){ return r.status==="체크인"; }],["dn","끝",function(r){ return r.status==="완료"; }],["no","노쇼",function(r){ return r.status==="노쇼"; }],["cx","취소",function(r){ return r.status==="취소"; }]],
     cols:[{ k:"day", t:"날짜", w:80, v:function(r){ return (r.day||"")+" "+(hm(r.slot)||"99"); }, f:function(r){ return r.day&&typeof mtDl==="function"?esc(mtDl(r.day)):"-"; } },{ k:"slot", t:"시간", w:70, v:function(r){ return hm(r.slot)||"칸 미정"; } },{ k:"seat", t:"미팅룸", w:60 },{ k:"name", t:"이름", w:110 },{ k:"emp", t:"사번", w:90 },{ k:"dept", t:"부서", w:130 },{ k:"status", t:"상태", w:80, v:lnView, f:function(r){ return tag(lnView(r), RV_TAG[r.status]); } },
       { k:"mm", t:"운영 메모", w:160, v:function(r){ var n=typeof mtNote==="function"?mtNote("ln",r.emp):null; return n&&n.memo?String(n.memo).slice(0,20):""; } },{ k:"memo", t:"명단 표지", w:150 },{ k:"ts", t:"신청 시각", type:"date", w:110 },{ k:"cxAt", t:"취소 시각", type:"date", w:110 }],
-    src:{ a:"resv_list", p:{} }, h:520, select:1, onAdd:function(){ paOpen(laSp()); }, cancel:laCx(), pickAct:function(g, n){ return typeof lsmBtn==="function"?lsmBtn(g, n):""; }, topAct:function(g, n){ return typeof lhBtn==="function"?lhBtn(g, n):""; } });   /* 261022 「대상자 삭제」 = 고른 줄 숨김(lnghide.js) */   /* 261021 고른 줄 스탬프 부여(lngstamp.js · AX 라운지 담당자) */
+    src:{ a:"resv_list", p:{} }, h:520, select:1, cxVerb:"취소",   /* 261022 「선택 n명 취소」(대상자 삭제와 구분) */
+    onAdd:function(){ paOpen(laSp()); }, cancel:laCx(), pickAct:function(g, n){ return typeof lsmBtn==="function"?lsmBtn(g, n):""; }, topAct:function(g, n){ return typeof lhBtn==="function"?lhBtn(g, n):""; } });   /* 261022 「대상자 삭제」 = 고른 줄 숨김(lnghide.js) */   /* 261021 고른 줄 스탬프 부여(lngstamp.js · AX 라운지 담당자) */
   XG.set(LG.g, rows, box);
   if(typeof lhPaint==="function") lhPaint();
 }
