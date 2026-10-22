@@ -47,6 +47,31 @@ function dtRhH(){
     return '<div class="row"><div class="t"><b>'+esc(x[0])+(x[2]&&BE_QA?' '+tag("지금 이 화면","ok"):'')+'</b><span style="word-break:break-all;user-select:all">'+esc(x[1])+'</span></div><span class="btns"><a class="btn sm" href="'+esc(x[1])+'" target="_blank" rel="noopener">열기</a><button class="btn sm" type="button" onclick="copyTx(DT_RH['+i+'][1])">복사</button></span></div>';
   }).join("")+'<p class="cap mt4">시험 서버 기록은 운영과 무관 · 10/26 당일 무대는 운영 서버만</p>';
 }
+/* 261022 추첨 설정 › 체크인 QR 칸(읽기 전용) · 서버 추첨 코드(draw_stats.code)로 QR 을 그림 · 장식 없는 일반 QR(검정 정사각 · 흰 바탕 · ECC Q · 여백 4칸)
+ * 내용 = DQ_BASE + "#s=" + 코드 (인쇄물 QR코드/6_럭키드로우 체크인/ 과 같은 주소) · 코드 글자는 화면에 쓰지 않고 QR 그림만 · 새 쓰기 0 */
+var DQ_BASE="https://hiphopinos-web.github.io/hi_ax/", DQ_PX=1600, DQ_CACHE={};
+function dtQrData(code){ return DQ_BASE+"#s="+code; }
+function dtQrCanvas(code, px){
+  var q=qrcode(0,"Q"); q.addData(dtQrData(code)); q.make();
+  var n=q.getModuleCount(), T=n+8, s=px/T, c=document.createElement("canvas"); c.width=px; c.height=px;
+  var g=c.getContext("2d"); g.fillStyle="#FFFFFF"; g.fillRect(0,0,px,px); g.fillStyle="#000000";
+  for(var r=0;r<n;r++) for(var k=0;k<n;k++) if(q.isDark(r,k)){ var x0=Math.round((k+4)*s), x1=Math.round((k+5)*s), y0=Math.round((r+4)*s), y1=Math.round((r+5)*s); g.fillRect(x0,y0,x1-x0,y1-y0); }
+  return c;
+}
+function dtQrSrc(code){ if(!DQ_CACHE[code]) DQ_CACHE[code]=dtQrCanvas(code,480).toDataURL("image/png"); return DQ_CACHE[code]; }
+function dtQrH(d){
+  var h='<h2>체크인 QR <span class="cap">읽기 전용</span></h2>', code=d&&d.code?String(d.code):"";
+  if(!code) return h+'<div class="row"><div class="t"><b>서버 추첨 코드 없음</b><span>위 「추첨 코드」를 저장하면 QR 이 나옵니다</span></div>'+tag("코드 없음","warn")+'</div>';
+  if(typeof qrcode!=="function") return h+'<p class="cap">QR 그리기 파일(qrcode.js)을 받지 못했습니다</p>';
+  return h+'<div class="row"><div class="t"><img alt="럭키드로우 체크인 QR" src="'+dtQrSrc(code)+'" style="display:block;width:220px;max-width:100%;height:auto;image-rendering:pixelated;background:#fff;border:1px solid #E5E7EB;border-radius:8px"></div></div>'+
+    '<div class="btns mt"><button class="btn sm" type="button" onclick="dtQrDl()">PNG 내려받기</button></div><p class="cap mt4">서버 코드로 그림 · 인쇄물과 같은지 확인</p>';
+}
+function dtQrDl(){
+  var d=S.data.draw||{}; if(!d.code||typeof qrcode!=="function"){ toast("서버 추첨 코드가 없습니다",{ bad:1 }); return; }
+  dtQrCanvas(String(d.code),DQ_PX).toBlob(function(b){ if(!b){ toast("QR 그림을 만들지 못했습니다",{ bad:1 }); return; }
+    var a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="lucky_checkin_qr.png"; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },600);
+    toast("내려받았습니다 · QR 만 "+DQ_PX+"px"); },"image/png");
+}
 /* 무대 머리 · 추첨 대상 칸 아래 글 */
 function dtPoolSub(d,aOff){ var p=dtPool(d); return aOff?(p?"행운권 전체 "+n0(p.balls)+"장 · 17F 체크인 "+n0(p.inN)+"명 · "+n0(p.inBalls)+"장":"행운권 번호 전체"):"17F 체크인 "+n0(d["in"])+"명"+(d.closed?" · 마감":""); }
 /* 당첨 기록 표 */

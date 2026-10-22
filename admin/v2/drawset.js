@@ -21,13 +21,14 @@ function dwsPaint(){
       '<label class="nt-f up-f">체크인 시간<input class="xg-q nt-in n" id="dwsWin" placeholder="16:40-17:25"></label>'+
       '<label class="nt-f up-f">날짜(비우면 매일)<input class="xg-q nt-in n" id="dwsDay" placeholder="2026-10-26"></label></div>'+
       '<div class="btns mt"><button class="btn pri" type="button" onclick="dwsSave()">저장</button><button class="btn" type="button" onclick="dwsFill(1)">지금 값으로</button></div><p class="cap mt">체크인 시간의 끝 시각은 쓰지 않음 · 마감은 「체크인 마감」 단추</p><p class="cap mt4" id="dwsNote"></p></div>'+
-      '<div class="col"><div class="card" id="dwsCl"></div><div class="card" id="dwsAt"></div><div class="card" id="dtChk"></div><div class="card" id="dtRh"></div></div></div>';
+      '<div class="col"><div class="card" id="dwsCl"></div><div class="card" id="dwsAt"></div><div class="card" id="dtChk"></div><div class="card" id="dtRh"></div><div class="card" id="dtQr"></div></div></div>';
     dwsFill(1);
   }
   el("dwsNote").innerHTML=(d.code?"":"<b>코드가 비어 있어 체크인을 받지 않습니다.</b> ")+"시간 · 날짜 검사 "+esc(dwsWin(d))+' · <span style="white-space:nowrap">기준 '+esc(fmtD(d.t))+'</span>';
   el("dwsCl").innerHTML='<h2>17F 입구 체크인</h2>'+('closed' in d?'<div class="row"><div class="t"><b>'+(d.closed?"체크인 마감":"체크인 받는 중")+'</b><span>체크인 '+n0(d["in"])+'명 · 행운권 있음 '+n0(d.withT)+'</span></div>'+(d.closed?tag("마감","warn"):tag("받는 중","ok"))+'<button class="btn'+(d.closed?"":" dng")+'" type="button" '+(d.closed&&d.lock?'disabled ':'')+'onclick="dwsClose('+(d.closed?0:1)+')">'+(d.closed?"다시 열기":"체크인 마감")+'</button></div><p class="cap mt4">시작 '+esc(hm(String(d.win||"").split("-")[0])||"-")+' · 마감은 단추'+(d.closed&&d.lock?' · 무대 공 넣기 뒤에는 다시 열 수 없음, 다시 열면 통 숫자가 어긋남':'')+'</p>':laterH("체크인 마감"));
   if(el("dtChk")&&typeof dtChkH==="function") el("dtChk").innerHTML=dtChkH(d);
   if(el("dtRh")&&typeof dtRhH==="function") el("dtRh").innerHTML=dtRhH();
+  if(el("dtQr")&&typeof dtQrH==="function") el("dtQr").innerHTML=dtQrH(d);
   el("dwsAt").innerHTML='<h2>행운권 참석조건</h2><div class="row"><div class="t"><b>'+(av==null?"서버 갱신 뒤":av==="OFF"?"OFF · 번호 전체가 풀":"ON · 17F 입구 체크인한 사람만")+'</b><span>무대 추첨 풀 · 바꾸기는 대화로</span></div>'+(av==null?"":tag(av,av==="OFF"?"":"warn"))+'</div>'+(ac?'<p class="cap mt4">운영 설정 「행운권_참석조건」 = '+esc(String(ac.v))+'</p>':'');
 }
 function dwsFill(force){ var d=S.data.draw||{}; [["dwsCode",d.code],["dwsWin",d.win],["dwsDay",d.day]].forEach(function(x){ var i=el(x[0]); if(i&&(force||!i.value)) i.value=x[1]||""; }); }
