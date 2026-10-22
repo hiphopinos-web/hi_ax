@@ -120,14 +120,15 @@ function usAreaDraw(){
     '<button type="button" class="dx-cmp" aria-pressed="'+(US.cmp&&pv?"true":"false")+'"'+(pv?' onclick="usSetCmp()"':' disabled')+'><i></i>비교<span class="cap">전날 같은 시간대</span></button></span></div>';
   if(!T0.some(function(x){ return x>0; })){ box.innerHTML=head+pills+emptyH("아직 화면 기록이 없습니다",""); return; }
   var cut=-1; if(d.per==="day"&&A.unit===10&&d.bars&&d.bars.now) cut=Math.round((mins(d.bars.now)-mins("07:00"))/10);
+  else if(A.unit===60&&d.t){ var di=(d.days||[]).indexOf(String(d.t).slice(0,10)); if(di>=0) cut=di*24+Number(String(d.t).slice(11,13)); }   /* 261022 지금 뒤 칸은 선을 긋지 않는다 */
   var val=function(a,TT,i){ return pct?(TT[i]?a[i]/TT[i]:0):a[i]; };
   var P=null, PT=null; if(US.cmp&&pv){ P=pick(pv); PT=tot(pv); }
   var mxV=0; for(var i=0;i<n;i++){ if(cut<0||i<=cut) mxV=Math.max(mxV,val(cur,T0,i)); if(P) mxV=Math.max(mxV,val(P,PT,i)); }
-  var W=Math.max(280,box.clientWidth), H=mob?190:230, T=14, B=24, top=pct?Math.min(1,Math.ceil(mxV*10)/10||1):usNice(Math.max(1,mxV)/3600)*3600;
+  var W=Math.max(280,box.clientWidth), H=mob?190:230, T=14, B=24, top=pct?Math.min(1,Math.ceil(mxV*10)/10||1):mxV<3600?usNice(Math.max(1,mxV/60))*60:usNice(mxV/3600)*3600;
   var x=function(i){ return i*W/Math.max(1,n-1); }, y=function(v){ return T+(H-T-B)*(1-v/top); };
   var line=function(a,TT,lim){ var p=[]; for(var i=0;i<n;i++){ if(lim>=0&&i>lim) break; p.push(x(i).toFixed(1)+","+y(val(a,TT,i)).toFixed(1)); } return p; };
   var pc=line(cur,T0,cut), last=pc.length?pc[pc.length-1].split(","):null;
-  var gr=[.5,1].map(function(f){ var v=top*f; return '<line x1="0" x2="'+W+'" y1="'+y(v)+'" y2="'+y(v)+'" class="gl"/><text x="'+(W-2)+'" y="'+(y(v)-4)+'" text-anchor="end">'+(pct?Math.round(v*100)+"%":(Math.round(v/360)/10)+"시간")+'</text>'; }).join("");
+  var gr=[.5,1].map(function(f){ var v=top*f; return '<line x1="0" x2="'+W+'" y1="'+y(v)+'" y2="'+y(v)+'" class="gl"/><text x="'+(W-2)+'" y="'+(y(v)-4)+'" text-anchor="end">'+(pct?Math.round(v*100)+"%":v<3600?Math.round(v/60)+"분":(Math.round(v/360)/10)+"시간")+'</text>'; }).join("");
   var ax="";
   if(A.unit===10){ for(var t=7;t<=19;t++){ if(mob&&t%2) continue; var ix=(t-7)*6; ax+='<text x="'+Math.min(W-8,Math.max(8,x(ix)))+'" y="'+(H-6)+'" text-anchor="middle">'+("0"+t).slice(-2)+'</text>'; } }
   else (d.days||[]).forEach(function(dy,di){ var ix=di*24; if(di) ax+='<line x1="'+x(ix)+'" x2="'+x(ix)+'" y1="'+T+'" y2="'+(H-B)+'" class="gl"/>'; if(!mob||di%2===0||(d.days||[]).length<=3) ax+='<text x="'+(x(ix)+(di?4:0))+'" y="'+(H-6)+'" text-anchor="start">'+usMd(dy)+'</text>'; });
