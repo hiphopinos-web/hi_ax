@@ -40,11 +40,11 @@ function tlCfg(k){ var r=tlC(k), q=(r&&r.n)||k, n=0; go("log","cfg");   /* 운�
 function tlDT(v){ var m=String(v||"").match(/^(\d{4}-\d{2}-\d{2})[ T](\d{1,2}:\d{2})/); return m?{ d:m[1], t:hm(m[2]) }:null; }
 function tlDay(d, n){ var m=String(d||"").match(/^(\d{4})-(\d{2})-(\d{2})$/); if(!m) return ""; var x=new Date(Number(m[1]),Number(m[2])-1,Number(m[3])+(n||0)); return x.getFullYear()+"-"+("0"+(x.getMonth()+1)).slice(-2)+"-"+("0"+x.getDate()).slice(-2); }
 function tlDayH(d){ var m=String(d||"").match(/^(\d{4})-(\d{2})-(\d{2})$/); if(!m) return d; var wd="일월화수목금토".charAt(new Date(Number(m[1]),Number(m[2])-1,Number(m[3])).getDay()); return Number(m[2])+"월 "+Number(m[3])+"일 ("+wd+")"; }
-/* 행운권 탭 「2. 체크인」과 같은 상태 · 짧은 글 */
-function tlDrawPill(dr){ if(!dr||!("startAt" in dr)||typeof dsCk!=="function") return null;
+/* 17F 추첨 체크인 줄 상태 · 받는 중 · 마감만 · dsCk(dstart.js)가 있을 때만 부름 */
+function tlDrawPill(dr){ if(!dr) return null;
   if(dr.closed) return { t:"마감" };
-  var c=dsCk(dr,null,num(dr["in"])); if(!c) return null;
-  return { t:{ wait:"시작 전", pre:"시작됨", open:"받는 중", after:"받지 않음" }[c.k]||"", w:c.k==="wait" }; }
+  var c=typeof dsCk==="function"?dsCk(dr,null,num(dr["in"])):null;
+  return c&&c.k==="open"?{ t:"받는 중" }:null; }
 function tlRows(){
   var R=[], ev=tlEv(), pst=tlD("pst"), sch=tlD("sched"), al=tlD("qal"), dr=tlD("draw"), W=[];
   var add=function(d, t, ti, js, x){ x=x||{}; R.push({ d:d||ev, t:hm(t)||String(t||""), ti:ti, js:js||"", pill:x.pill||null, auto:!!x.auto }); if(x.w&&x.w.length) x.w.forEach(function(w){ if(w) W.push({ ti:ti, w:w, js:x.cfg?"tlCfg('"+jq(x.cfg)+"')":(js||"") }); }); };
