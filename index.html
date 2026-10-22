@@ -2969,6 +2969,16 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #axsSheet .axs-grab, #axsSheet .axs-mhead, #modal .axs-mhead { touch-action: none; }
   /* v7.86 (사용자 261018) 하이디큐 공식 앰블럼 · 「HiDI」 대문자 높이 = 옆 글자 대문자 높이(v7.87 · 1.6em → 1.05em) · 기준선은 글자 기준선에 맞춤 */
   .hdq-emb { display: inline-block; height: 1.05em; width: auto; vertical-align: -0.22em; margin: 0 .04em; }
+  /* 261022 (사용자 확정) 1F 체크인존 체크인 환영 팝업(ckinWelHtml) · 이름 크게 · 환영 한 줄 · 강의장 한 줄 · 작은 글씨 한 줄 · 「확인」 하나 · 폭죽 캔버스(ckinFx · 누름 없음 · 시트 위) */
+  #modal.axs-ckwm .mcard { text-align: center; }
+  .axs-ckw { padding-top: var(--ax-space-16); }
+  .axs-ckw .nm { margin: 0; font: var(--ax-type-t2); font-size: 1.875rem; line-height: 1.3; font-weight: 800; color: var(--ax-color-ink); word-break: keep-all; }
+  .axs-ckw .t { margin: var(--ax-space-12) 0 0; font: var(--ax-type-t4); font-weight: 700; color: var(--ax-color-ink); word-break: keep-all; }
+  .axs-ckw .b { margin: var(--ax-space-8) 0 0; font: var(--ax-type-t5); color: var(--ax-color-body); word-break: keep-all; }
+  .axs-ckw .s { margin: var(--ax-space-16) 0 0; font: var(--ax-type-t6); color: var(--ax-color-muted); word-break: keep-all; }
+  .axs-ckw .btn { width: 100%; margin-top: var(--ax-space-24); }
+  .axs-ckw .nw { white-space: nowrap; }
+  .axs-ckfx { position: fixed; inset: 0; z-index: 97; width: 100%; height: 100%; pointer-events: none; }
 </style>
 <style id="prizeCss">
   /* ═══════ v5.04 경품 안내 · 사진 (261002 사용자 확정 · CLAUDE.md 「경품 앱 공개」 · 설계안 「디자인 시안/완주 경품 추첨/설계안.md」 6장)
@@ -3268,16 +3278,6 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-kitkv dd { margin: 0; min-width: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); word-break: keep-all; }
   .axs-kitnote { margin: 0 var(--ax-space-4); word-break: keep-all; }
   .axs-kitmsg { margin: 0; padding: var(--ax-space-12) var(--ax-space-16); border-radius: var(--ax-radius-12); background: var(--ax-color-errorSoft); color: var(--ax-color-ink); font: var(--ax-type-t6-strong); word-break: keep-all; }
-  /* 261022 (사용자 확정) 1F 체크인존 체크인 환영 팝업(ckinWelHtml) · 이름 크게 · 환영 한 줄 · 강의장 한 줄 · 작은 글씨 한 줄 · 「확인」 하나 · 폭죽 캔버스(ckinFx · 누름 없음 · 시트 위) */
-  #modal.axs-ckwm .mcard { text-align: center; }
-  .axs-ckw { padding-top: var(--ax-space-16); }
-  .axs-ckw .nm { margin: 0; font: var(--ax-type-t2); font-size: 1.875rem; line-height: 1.3; font-weight: 800; color: var(--ax-color-ink); word-break: keep-all; }
-  .axs-ckw .t { margin: var(--ax-space-12) 0 0; font: var(--ax-type-t4); font-weight: 700; color: var(--ax-color-ink); word-break: keep-all; }
-  .axs-ckw .b { margin: var(--ax-space-8) 0 0; font: var(--ax-type-t5); color: var(--ax-color-body); word-break: keep-all; }
-  .axs-ckw .s { margin: var(--ax-space-16) 0 0; font: var(--ax-type-t6); color: var(--ax-color-muted); word-break: keep-all; }
-  .axs-ckw .btn { width: 100%; margin-top: var(--ax-space-24); }
-  .axs-ckw .nw { white-space: nowrap; }
-  .axs-ckfx { position: fixed; inset: 0; z-index: 97; width: 100%; height: 100%; pointer-events: none; }
   /* ═══════ 계단 동행 (사용자 261009 · 3차 · 128-js-stair-buddy.js · 출발 QR 뒤 진행 화면 stair) ═══════
      말풍선(둥근 흰 면 · 꼬리 · 새 말이면 톡 · 다 쓰면 ▼ · 줄바꿈 글자 그대로) · 무대 = 정면 계단 6:5 · 3D 캔버스(.stb-cv · 그림은 JS 가 그린다)가 있으면(.is3d) 평면 그림을 숨긴다
      평면 그림(받는 동안 · 못 그리는 기기) = 같은 시점 정면 계단(디딤판 · 챌판 · 앞 띠) + 원본 BOT_SVG(자리는 JS 가 3D 카메라 계산으로 넣는다) · 뒷모습(눈 숨김)으로 콩콩 · 돌아서면 땀 · 눈웃음
@@ -12529,71 +12529,6 @@ function kitGetTxt(k, rm) {   /* 검사 샌드박스 때문에 함수 하나에 
   if (rm) return l ? room[l] : "";
   return l ? "10F " + l + " 세션 · " + room[l] : "10F 세션 강의장에서 나눠 드려요";
 }
-/* ═══ 261022 (사용자 확정) 1F 체크인존 체크인 환영 팝업 · 사전 신청자 ═══
- * 신호 = 서버 sync my.ckin(사전 신청자 · 스캔기록 ck_gate 첫 체크인이 있으면 1 · 그 밖 = 없음) · 소켓 개인 사건 scan { s: "ckin" } 은 곧바로 sync 만(푸시 없음)
- * 한 번 = 이 기기 noti_seen.ckin · 체크인을 취소했다 다시 해도 다시 뜨지 않는다 · 앱을 닫아 두었으면 체크인된 상태로 처음 연 sync 에서 한 번(첫 동기화 base 도 띄운다)
- * 띄우기 = 알림 대기열(notice · 다른 시트 · 팝업이 닫힌 뒤) · 닫기 = 「확인」 하나 · 묻는 것(알림 허용 · 설치) 없음 · 폭죽 = 열릴 때 한 번 약 2초(캔버스 · 동작 줄이기면 없음) · 소리 · 진동 없음 */
-function ckinRoomTxt() {
-  var r = kitGetTxt(null, 1);
-  if (!r) return "10층 세션 강의장으로 이동하셔서 선물 키트를 수령하세요.";
-  return "10층 " + r + (/룸$/.test(r) ? "으로" : "로") + " 이동하셔서 선물 키트를 수령하세요.";
-}
-function ckinOn() { var z = ckzMy(); return !!(z && z.pre && S.get("ckin", 0)); }
-function ckinWelHtml() {
-  var u = S.get("user", {}) || {}, z = ckzMy(), nm = (z && z.nm) || u.name || "";
-  return '<div class="axs-ckw">' + (nm ? '<p class="nm">' + esc(nm) + " 님</p>" : "") +
-    '<p class="t">AX Festival에 오신 것을 환영합니다.</p>' +
-    '<p class="b">' + esc(ckinRoomTxt()).replace(" 선물 키트를 수령하세요.", ' <span class="nw">선물 키트를 수령하세요.</span>') + "</p>" +   /* 둘째 줄은 「선물 키트를 수령하세요.」 통째로 */
-    '<p class="s">명찰과 사원증을 패용하세요.</p>' +
-    '<button type="button" class="btn mint" onclick="modalClose()">확인</button></div>';
-}
-function ckinWelOpen() {
-  modalOpen(ckinWelHtml(), "");
-  var d = el("modal"); if (!d) return;
-  d.classList.add("axs-ckwm"); d.setAttribute("data-notice", "ckin");
-  var h = d.querySelector(".axs-mhead"); if (h) h.remove();   /* 닫기 = 「확인」 하나 */
-  var c = d.querySelector(".mcard"); if (c) { c.setAttribute("aria-label", "체크인 환영"); c.removeAttribute("aria-labelledby"); }
-  ckinFx();
-}
-/* 폭죽 · 캔버스 하나(#frame 안 · 누름 없음) · 두 군데에서 터지고 떨어지며 사라짐 · 약 2.2초 뒤 캔버스를 지운다 · 동작 줄이기 = 없음 */
-var CKFX = { raf: 0, cv: null };
-function ckinFxStop() { if (CKFX.raf) cancelAnimationFrame(CKFX.raf); CKFX.raf = 0; if (CKFX.cv) CKFX.cv.remove(); CKFX.cv = null; }
-function ckinFx() {
-  ckinFxStop();
-  if (AXM.rm()) return;
-  var fr = el("frame"); if (!fr || !window.requestAnimationFrame) return;
-  var md = el("modal"), cv = document.createElement("canvas"), W = (md && md.clientWidth) || window.innerWidth || 390, H = (md && md.clientHeight) || window.innerHeight || 844, dpr = Math.min(2, window.devicePixelRatio || 1);
-  cv.className = "axs-ckfx"; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.setAttribute("aria-hidden", "true");
-  fr.appendChild(cv); CKFX.cv = cv;
-  var g = cv.getContext("2d"); if (!g) { ckinFxStop(); return; }
-  g.scale(dpr, dpr);
-  var COL = ["#FF7E31", "#FF7E31", "#FFB284", "#FFD8C1", "#FFFFFF", "#FFEBE0"], P = [], DUR = 2200;
-  [[0.28, 0.30, 0], [0.72, 0.24, 180], [0.5, 0.40, 420]].forEach(function (b) {
-    for (var i = 0; i < 46; i++) {
-      var a = Math.PI * 2 * i / 46 + Math.random() * 0.2, v = 2.2 + Math.random() * 3.2;
-      P.push({ x: W * b[0], y: H * b[1], vx: Math.cos(a) * v, vy: Math.sin(a) * v - 1, d: b[2], c: COL[i % COL.length], r: 2 + Math.random() * 2.2, l: 1100 + Math.random() * 600 });
-    }
-  });
-  var t0 = performance.now(), last = t0;
-  function step(now) {
-    var t = now - t0, k = Math.min(3, (now - last) / 16.7); last = now;
-    g.clearRect(0, 0, W, H);
-    var live = 0;
-    P.forEach(function (p) {
-      var a = t - p.d; if (a < 0) { live++; return; }
-      if (a > p.l) return;
-      live++;
-      p.vx *= Math.pow(0.97, k); p.vy = p.vy * Math.pow(0.97, k) + 0.07 * k; p.x += p.vx * k; p.y += p.vy * k;
-      g.globalAlpha = Math.max(0, 1 - a / p.l);
-      g.fillStyle = p.c; g.beginPath(); g.arc(p.x, p.y, p.r, 0, Math.PI * 2); g.fill();
-      if (p.c === "#FFFFFF") { g.strokeStyle = "#FFB284"; g.lineWidth = 0.8; g.stroke(); }   /* 흰 점은 흰 시트 위에서도 보이게 옅은 주황 테 */
-    });
-    g.globalAlpha = 1;
-    if (!live || t > DUR + 600 || !cv.isConnected) { ckinFxStop(); return; }
-    CKFX.raf = requestAnimationFrame(step);
-  }
-  CKFX.raf = requestAnimationFrame(step);
-}
 /* 홈 카드 · 고르는 기간에 아직 안 고름 · 자동 배정 뒤 변경 기간(한 번 열어 보면 사라짐) · 라운지 초과 안내(한 번 열어 보면 사라짐) */
 /* 261016 (사용자 스태프 QR 정리) 체크인 번호표 · 홈 맨 위 「내 번호」 카드(ckqIn · ckqCardHtml · 서버 my.ckq · 소켓 ckq)는 걷었다 · 창구 체계 폐기 */
 /* 261015 (사용자 확정) 체크인 번호 · 가나다순 고정(서버 my.ckno · 키트명단에 있고 번호를 매긴 사람만) · 없으면 "" = 화면 그대로
@@ -12902,6 +12837,71 @@ Views.kit = function () { var sp = kitSheet(); return '<div class="ax-stack">' +
 App.PARENT.kit = "my";
 App.TITLES.kit = "기념품 옷 사이즈";
 PUSH_T.kit = "받을 때 알려 드려요";   /* 가치 순간 · 정한 직후(10/26 체크인존 안내) */
+/* ═══ 261022 (사용자 확정) 1F 체크인존 체크인 환영 팝업 · 사전 신청자 ═══
+ * 신호 = 서버 sync my.ckin(사전 신청자 · 스캔기록 ck_gate 첫 체크인이 있으면 1 · 그 밖 = 없음) · 소켓 개인 사건 scan { s: "ckin" } 은 곧바로 sync 만(푸시 없음)
+ * 한 번 = 이 기기 noti_seen.ckin · 체크인을 취소했다 다시 해도 다시 뜨지 않는다 · 앱을 닫아 두었으면 체크인된 상태로 처음 연 sync 에서 한 번(첫 동기화 base 도 띄운다)
+ * 띄우기 = 알림 대기열(notice · 다른 시트 · 팝업이 닫힌 뒤) · 닫기 = 「확인」 하나 · 묻는 것(알림 허용 · 설치) 없음 · 폭죽 = 열릴 때 한 번 약 2초(캔버스 · 동작 줄이기면 없음) · 소리 · 진동 없음 */
+function ckinRoomTxt() {
+  var r = kitGetTxt(null, 1);
+  if (!r) return "10층 세션 강의장으로 이동하셔서 선물 키트를 수령하세요.";
+  return "10층 " + r + (/룸$/.test(r) ? "으로" : "로") + " 이동하셔서 선물 키트를 수령하세요.";
+}
+function ckinOn() { var z = ckzMy(); return !!(z && z.pre && S.get("ckin", 0)); }
+function ckinWelHtml() {
+  var u = S.get("user", {}) || {}, z = ckzMy(), nm = (z && z.nm) || u.name || "";
+  return '<div class="axs-ckw">' + (nm ? '<p class="nm">' + esc(nm) + " 님</p>" : "") +
+    '<p class="t">AX Festival에 오신 것을 환영합니다.</p>' +
+    '<p class="b">' + esc(ckinRoomTxt()).replace(" 선물 키트를 수령하세요.", ' <span class="nw">선물 키트를 수령하세요.</span>') + "</p>" +   /* 둘째 줄은 「선물 키트를 수령하세요.」 통째로 */
+    '<p class="s">명찰과 사원증을 패용하세요.</p>' +
+    '<button type="button" class="btn mint" onclick="modalClose()">확인</button></div>';
+}
+function ckinWelOpen() {
+  modalOpen(ckinWelHtml(), "");
+  var d = el("modal"); if (!d) return;
+  d.classList.add("axs-ckwm"); d.setAttribute("data-notice", "ckin");
+  var h = d.querySelector(".axs-mhead"); if (h) h.remove();   /* 닫기 = 「확인」 하나 */
+  var c = d.querySelector(".mcard"); if (c) { c.setAttribute("aria-label", "체크인 환영"); c.removeAttribute("aria-labelledby"); }
+  ckinFx();
+}
+/* 폭죽 · 캔버스 하나(#frame 안 · 누름 없음) · 두 군데에서 터지고 떨어지며 사라짐 · 약 2.2초 뒤 캔버스를 지운다 · 동작 줄이기 = 없음 */
+var CKFX = { raf: 0, cv: null };
+function ckinFxStop() { if (CKFX.raf) cancelAnimationFrame(CKFX.raf); CKFX.raf = 0; if (CKFX.cv) CKFX.cv.remove(); CKFX.cv = null; }
+function ckinFx() {
+  ckinFxStop();
+  if (AXM.rm()) return;
+  var fr = el("frame"); if (!fr || !window.requestAnimationFrame) return;
+  var md = el("modal"), cv = document.createElement("canvas"), W = (md && md.clientWidth) || window.innerWidth || 390, H = (md && md.clientHeight) || window.innerHeight || 844, dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.className = "axs-ckfx"; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.setAttribute("aria-hidden", "true");
+  fr.appendChild(cv); CKFX.cv = cv;
+  var g = cv.getContext("2d"); if (!g) { ckinFxStop(); return; }
+  g.scale(dpr, dpr);
+  var COL = ["#FF7E31", "#FF7E31", "#FFB284", "#FFD8C1", "#FFFFFF", "#FFEBE0"], P = [], DUR = 2200;
+  [[0.28, 0.30, 0], [0.72, 0.24, 180], [0.5, 0.40, 420]].forEach(function (b) {
+    for (var i = 0; i < 46; i++) {
+      var a = Math.PI * 2 * i / 46 + Math.random() * 0.2, v = 2.2 + Math.random() * 3.2;
+      P.push({ x: W * b[0], y: H * b[1], vx: Math.cos(a) * v, vy: Math.sin(a) * v - 1, d: b[2], c: COL[i % COL.length], r: 2 + Math.random() * 2.2, l: 1100 + Math.random() * 600 });
+    }
+  });
+  var t0 = performance.now(), last = t0;
+  function step(now) {
+    var t = now - t0, k = Math.min(3, (now - last) / 16.7); last = now;
+    g.clearRect(0, 0, W, H);
+    var live = 0;
+    P.forEach(function (p) {
+      var a = t - p.d; if (a < 0) { live++; return; }
+      if (a > p.l) return;
+      live++;
+      p.vx *= Math.pow(0.97, k); p.vy = p.vy * Math.pow(0.97, k) + 0.07 * k; p.x += p.vx * k; p.y += p.vy * k;
+      g.globalAlpha = Math.max(0, 1 - a / p.l);
+      g.fillStyle = p.c; g.beginPath(); g.arc(p.x, p.y, p.r, 0, Math.PI * 2); g.fill();
+      if (p.c === "#FFFFFF") { g.strokeStyle = "#FFB284"; g.lineWidth = 0.8; g.stroke(); }   /* 흰 점은 흰 시트 위에서도 보이게 옅은 주황 테 */
+    });
+    g.globalAlpha = 1;
+    if (!live || t > DUR + 600 || !cv.isConnected) { ckinFxStop(); return; }
+    CKFX.raf = requestAnimationFrame(step);
+  }
+  CKFX.raf = requestAnimationFrame(step);
+}
 /* ═══ 261014 (사용자 확정) 참가자 설문 검토용 미리보기 · survey-review/ 가 index.html?svreview=1 을 연다 ═══
    설문 고도화 작업자가 로그인 없이 끝까지 반복해 보고 화면마다 의견을 남긴다 · 의견은 서버 「설문검토」 시트(sv_review_add) · 콘솔 기록 › 숫자 · 설문 › 설문 맨 아래 「검토 의견」
    화면 · 전환 · 자동 넘김 · 문항 필터 = 앱 설문 코드 그대로(Views.survey · svFlow · svChoose · svSubmit 의 시험 모드 길) · 앱 설문을 고치면 여기에도 그대로 보인다

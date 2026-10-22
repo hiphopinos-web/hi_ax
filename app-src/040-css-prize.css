@@ -295,13 +295,3 @@
   .axs-kitkv dd { margin: 0; min-width: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); word-break: keep-all; }
   .axs-kitnote { margin: 0 var(--ax-space-4); word-break: keep-all; }
   .axs-kitmsg { margin: 0; padding: var(--ax-space-12) var(--ax-space-16); border-radius: var(--ax-radius-12); background: var(--ax-color-errorSoft); color: var(--ax-color-ink); font: var(--ax-type-t6-strong); word-break: keep-all; }
-  /* 261022 (사용자 확정) 1F 체크인존 체크인 환영 팝업(ckinWelHtml) · 이름 크게 · 환영 한 줄 · 강의장 한 줄 · 작은 글씨 한 줄 · 「확인」 하나 · 폭죽 캔버스(ckinFx · 누름 없음 · 시트 위) */
-  #modal.axs-ckwm .mcard { text-align: center; }
-  .axs-ckw { padding-top: var(--ax-space-16); }
-  .axs-ckw .nm { margin: 0; font: var(--ax-type-t2); font-size: 1.875rem; line-height: 1.3; font-weight: 800; color: var(--ax-color-ink); word-break: keep-all; }
-  .axs-ckw .t { margin: var(--ax-space-12) 0 0; font: var(--ax-type-t4); font-weight: 700; color: var(--ax-color-ink); word-break: keep-all; }
-  .axs-ckw .b { margin: var(--ax-space-8) 0 0; font: var(--ax-type-t5); color: var(--ax-color-body); word-break: keep-all; }
-  .axs-ckw .s { margin: var(--ax-space-16) 0 0; font: var(--ax-type-t6); color: var(--ax-color-muted); word-break: keep-all; }
-  .axs-ckw .btn { width: 100%; margin-top: var(--ax-space-24); }
-  .axs-ckw .nw { white-space: nowrap; }
-  .axs-ckfx { position: fixed; inset: 0; z-index: 97; width: 100%; height: 100%; pointer-events: none; }
