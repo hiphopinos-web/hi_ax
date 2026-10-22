@@ -152,7 +152,7 @@ function mtCard(M, x, no){
     if(x.pend&&!("lk" in x)) tags.push(tag(x.pend.st==="매칭"?"알림 다시 필요":"알림 전","warn"));   /* 261022 새 서버 = 잠금 표시(mlock.js)가 맡는다 */
   }
   var stt0=mtTagSt(M.p, x); if(stt0) tags.unshift(stt0);
-  if(!cc&&num(x.mt)>1) tags.push(tag(x.mt+"건 중 "+x.mn,"off"));   /* 261022 (사용자 「한 사람 여러 과제」) 같은 사람 줄 · 날짜 · 시간 순 몇째 */
+  if(!cc&&num(x.mt)>1) tags.push('<span class="tag off mtg-mn" title="'+esc(x.mt+"건 중 "+x.mn+"번째")+'"><span class="lg">'+esc(x.mt+"건 중 "+x.mn)+'</span><span class="sm">'+esc(x.mn+"/"+x.mt+"건")+'</span></span>');   /* 261022 (사용자 「한 사람 여러 과제」) 같은 사람 줄 · 날짜 · 시간 순 몇째 */
   if(M.today&&k&&(!cc||k===x._s)){   /* 261022 칸 날짜가 오늘이면 왔음 · 노쇼 · 종료 · 커피챗 초안으로 옮긴(저장 전) 카드는 빼고 */
     var r0=mins(mtKp(k)[0]), nm=mtNowMin();
     if(!inn&&!done&&!ns&&nm>=r0+5&&nm<r0+M.len) tags.unshift(tag("늦음","warn"));   /* 261021 라운지 = 고른 날짜가 오늘일 때만 */

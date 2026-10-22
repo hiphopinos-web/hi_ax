@@ -122,7 +122,10 @@
 .mtg.dayon .mtg-sl{min-height:calc(var(--pc-h) + var(--pc-act) + 3px)}
 .mtg.dayon .mtg-sl .mtg-pc{height:calc(var(--pc-h) + var(--pc-act))}
 .mtg-sl .mtg-pc .l1{flex-wrap:nowrap;overflow:hidden;height:20px}
-.mtg-sl .mtg-pc .nm{overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto}
+.mtg-sl .mtg-pc .nm{overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 0 auto;max-width:calc(100% - 26px)}   /* 261022 이름이 먼저 · 꼬리표가 줄어든다(「2건 중 1」 등) */
 .mtg-sl .mtg-pc .l1t{display:inline-flex;gap:3px;flex:0 1 auto;min-width:0;overflow:hidden}
-.mtg-sl .mtg-pc .l1t .tag{height:18px;padding:0 6px;font-size:12px;font-weight:600;flex:none}
+.mtg-sl .mtg-pc .l1t .tag{height:18px;padding:0 6px;font-size:12px;font-weight:600;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mtg-sl .mtg-pc .dp{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:16px;line-height:16px}
+/* 261022 (사용자 「한 사람 여러 과제」) 같은 사람 몇째 꼬리표 · 넓은 화면 「2건 중 1」 · 좁은 화면(760 이하) 「1/2건」 */
+.mtg-mn .sm{display:none}
+@media (max-width:760px){ .mtg-mn .lg{display:none} .mtg-mn .sm{display:inline} }
