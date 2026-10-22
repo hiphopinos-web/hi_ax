@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>추첨 계산 보기</title>
+<meta name="robots" content="noindex">
+<!-- 261021 럭키드로우 추첨 계산 보기 · 확률 실험실(사용자 「계산이 어떤 식으로 되는지 눈으로 보고 싶다」)
+     무대 화면(stage.html)을 ?sandbox=1&lab=1 로 작게 품고 그 안의 추첨 함수 객체(window.__axs.pick = PICK)를 그대로 부른다 · 이 페이지에 추첨 함수 사본 없음
+     가짜 이름 · 서버 호출 0 · 저장하지 않는다(설정 숫자만 이 브라우저에) -->
+<link rel="icon" href="../icons/icon-192.png">
+<style>
+  @font-face { font-family: "AXP"; src: url("assets/PretendardVariable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+  :root { --o: #FF7E31; --o75: #FF963E; --o50: #FFB284; --o25: #FFD8C1; --bg: #0b0b0b; --card: #151515; --line: rgba(255,255,255,.14); --txt: #fff; --sub: rgba(255,255,255,.62); --dim: rgba(255,255,255,.4); --f: "AXP", "Pretendard Variable", Pretendard, "Malgun Gothic", sans-serif; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: var(--bg); color: var(--txt); font-family: var(--f); word-break: keep-all; }
+  .top { display: flex; align-items: center; gap: 18px; padding: 18px 24px 0; flex-wrap: wrap; }
+  .top h1 { font-size: 26px; font-weight: 800; }
+  .top p { font-size: 14px; color: var(--sub); }
+  .tabs { display: flex; gap: 8px; margin-left: auto; }
+  button { height: 40px; border-radius: 9px; border: 1px solid rgba(255,255,255,.3); background: #000; color: #fff; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; padding: 0 14px; }
+  button:hover { border-color: #fff; }
+  button:disabled { opacity: .4; cursor: default; }
+  button.on { background: #fff; color: #000; border-color: #fff; }
+  button.main { background: var(--o); border-color: var(--o); color: #000; }
+  .wrap { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; padding: 16px 24px 24px; align-items: start; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; min-width: 0; }
+  .card h2 { font-size: 15px; font-weight: 700; color: var(--sub); margin-bottom: 10px; display: flex; gap: 8px; align-items: baseline; }
+  .card h2 em { font-style: normal; font-weight: 500; font-size: 13px; color: var(--dim); margin-left: auto; }
+  .fld { display: grid; grid-template-columns: 112px minmax(0, 1fr); align-items: center; gap: 8px; margin-top: 8px; font-size: 14px; color: var(--sub); }
+  .fld:first-of-type { margin-top: 0; }
+  .three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .three input[type=number] { padding: 0 2px; text-align: center; }
+  input[type=number] { width: 100%; height: 34px; background: #000; color: #fff; border: 1px solid rgba(255,255,255,.3); border-radius: 8px; padding: 0 8px; font-family: inherit; font-size: 14px; font-variant-numeric: tabular-nums; }
+  .hint { font-size: 13px; color: var(--dim); line-height: 1.5; margin-top: 10px; }
+  .sum { font-size: 13px; color: var(--sub); line-height: 1.6; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+  .sum b { color: #fff; font-variant-numeric: tabular-nums; }
+  .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .btns .wide { grid-column: 1 / -1; }
+  .view { display: none; flex-direction: column; gap: 16px; min-width: 0; }
+  .view.on { display: flex; }
+  /* 계산 보기 */
+  .stage2 { display: grid; grid-template-columns: minmax(0, 1fr) 470px; gap: 16px; align-items: start; }
+  .step { font-size: 22px; font-weight: 700; line-height: 1.4; min-height: 62px; }
+  .step small { display: block; font-size: 15px; font-weight: 500; color: var(--sub); margin-top: 2px; }
+  .formula { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: 10px; min-height: 48px; }
+  .formula .u { color: var(--o); }
+  .formula .op { color: var(--dim); font-weight: 500; }
+  .formula .k { color: #fff; }
+  .formula .lab { font-size: 15px; font-weight: 600; color: var(--sub); }
+  #grid { display: block; width: 100%; height: auto; margin-top: 12px; background: #050505; border-radius: 10px; }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 13px; color: var(--sub); margin-top: 10px; }
+  .legend i { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: -2px; margin-right: 6px; }
+  .who { font-size: 20px; font-weight: 700; margin-top: 10px; min-height: 30px; }
+  .who b { color: var(--o); font-variant-numeric: tabular-nums; }
+  .ranks { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+  .rk { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; min-height: 92px; }
+  .rk.now { border-color: var(--o); }
+  .rk b { font-size: 16px; font-weight: 800; }
+  .rk p { font-size: 13px; color: var(--sub); margin-top: 2px; }
+  .rk ul { list-style: none; margin-top: 4px; font-size: 13px; line-height: 1.5; }
+  .rk li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rk li.ab { color: var(--dim); text-decoration: line-through; }
+  .rk li .n { color: var(--o); font-weight: 800; font-variant-numeric: tabular-nums; margin-right: 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: right; padding: 7px 6px; border-top: 1px solid var(--line); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--sub); font-weight: 500; font-size: 13px; }
+  td.hi { color: var(--o); font-weight: 800; }
+  tr.me td { background: rgba(255,126,49,.16); }
+  tr.no td { color: var(--dim); }
+  .ctl { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .ctl .gap { flex: 1; }
+  .pill { display: inline-block; border-radius: 6px; font-weight: 800; font-size: 12px; padding: 2px 8px; line-height: 1.5; }
+  .pill.p { border: 1px solid rgba(255,255,255,.5); color: #fff; }
+  .pill.f { background: var(--o); color: #000; }
+  .pill.w { border: 1px dashed rgba(255,255,255,.3); color: var(--dim); }
+  /* 확률 실험실 */
+  .bar { height: 6px; border-radius: 3px; background: #222; overflow: hidden; margin-top: 10px; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--o); }
+  .inv { list-style: none; font-size: 15px; line-height: 1.5; }
+  .inv li { display: flex; gap: 10px; padding: 7px 0; border-top: 1px solid var(--line); }
+  .inv li:first-child { border-top: 0; }
+  .inv .m { flex: none; width: 70px; }
+  .inv .d { margin-left: auto; color: var(--dim); font-size: 13px; text-align: right; }
+  .grid2 { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  .diff.ok { color: #fff; } .diff.ng { color: var(--o); font-weight: 800; }
+  .ext { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  #ldErr { color: var(--o); font-size: 14px; }
+  #fr { position: absolute; left: -2000px; top: 0; width: 320px; height: 180px; border: 0; }
+  @media (max-width: 1280px) { .stage2, .grid2 { grid-template-columns: 1fr; } .wrap { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>추첨 계산 보기 · 확률 실험실</h1>
+  <p>무대와 같은 추첨 함수(무대 화면 안의 PICK)를 그대로 부른다 · 가짜 이름 · 서버 호출 0 <span id="ldErr"></span></p>
+  <div class="tabs"><button id="tbView" type="button" class="on">계산 보기 · 한 판을 천천히</button><button id="tbLab" type="button">확률 실험실 · 여러 판</button></div>
+</div>
+<div class="wrap">
+  <div class="card">
+    <h2>통 설정<em>가짜 사람</em></h2>
+    <div class="fld"><span>전체 인원</span><input type="number" id="iN" min="0" max="3000" step="10"></div>
+    <div class="fld"><span>장수 1 · 2 · 3장 %</span><div class="three"><input type="number" id="i1" min="0" max="100"><input type="number" id="i2" min="0" max="100"><input type="number" id="i3" min="0" max="100"></div></div>
+    <div class="fld"><span>17F 체크인 %</span><input type="number" id="iCk" min="0" max="100" step="5"></div>
+    <div class="fld"><span>통 밖 인원</span><input type="number" id="iX" min="0" max="500" step="1"></div>
+    <div class="fld"><span>부재율 %</span><input type="number" id="iAb" min="0" max="100" step="5" title="3 · 2 · 1등 호명 때 자리에 없는 비율 · 다시 추첨"></div>
+    <div class="fld"><span>시드</span><input type="number" id="iSeed" min="1" max="2147483646" step="1"></div>
+    <div class="btns"><button class="main wide" id="bBuild" type="button">이 설정으로 통 만들기</button></div>
+    <p class="sum" id="pSum"></p>
+    <p class="hint">6 · 5 · 4등(3 · 2 · 2명) = 행운권 전체 통 · 3 · 2 · 1등(1명씩) = 17F 체크인한 사람의 행운권만 · 한 사람은 한 번만 · 체크인 통이 비면 그 등수부터 전체 통(운영 줄 단추 한 번) · 통 밖 인원 = 처음부터 통에 넣지 않는 칸(시험용)</p>
+  </div>
+
+  <div class="view on" id="vView">
+    <div class="stage2">
+      <div class="card">
+        <div class="ctl">
+          <button id="bStep" type="button" class="main">한 단계씩</button>
+          <button id="bSlow" type="button">천천히</button>
+          <button id="bFast" type="button">빠르게</button>
+          <button id="bStop" type="button">멈춤</button>
+          <span class="gap"></span>
+          <button id="bAgain" type="button">처음부터</button>
+        </div>
+        <p class="step" id="vStep" style="margin-top:14px"></p>
+        <div class="formula" id="vF"></div>
+        <canvas id="grid" width="1240" height="560"></canvas>
+        <div class="legend">
+          <span><i style="background:#FF7E31"></i><i style="background:#FFB284;margin-left:-4px"></i>남은 칸 · 한 장 = 한 칸 · 색 = 사람</span>
+          <span><i style="background:#3a3a3a"></i>통 밖</span>
+          <span><i style="background:#1d1d1d;border:1px solid #444"></i>빠진 칸(당첨 · 부재 · 나머지 칸)</span>
+          <span><i style="background:#262626;border:1px dashed #555"></i>3 · 2 · 1등 · 체크인 안 한 칸</span>
+          <span><i style="background:#fff"></i>뽑힌 칸</span>
+        </div>
+        <p class="who" id="vWho"></p>
+      </div>
+      <div class="card">
+        <h2>사람 한 명의 확률<em id="vMc"></em></h2>
+        <table id="vT"></table>
+        <p class="hint">다음 뽑기 = 내 칸 ÷ 지금 통의 칸 · 끝까지 = 지금 상태에서 남은 뽑기를 같은 추첨 함수로 1,000판 돌린 비율 · 같은 유형은 모두 같은 확률</p>
+      </div>
+    </div>
+    <div class="card"><h2>등수 진행</h2><div class="ranks" id="vR"></div></div>
+  </div>
+
+  <div class="view" id="vLab">
+    <div class="card">
+      <div class="ctl">
+        <button id="b1k" type="button" class="main">1,000판</button>
+        <button id="b10k" type="button">10,000판</button>
+        <span class="gap"></span>
+        <span style="font-size:14px;color:var(--sub)">극단</span>
+        <button id="bE0" type="button">체크인 0명</button>
+        <button id="bE1" type="button">체크인 1명</button>
+        <button id="bE2" type="button">체크인 2명</button>
+        <button id="bEab" type="button">부재 100% · 소진</button>
+      </div>
+      <div class="bar"><i id="pBar"></i></div>
+      <p class="hint" id="pNow">통을 만들고 판 수를 누른다</p>
+    </div>
+    <div class="grid2">
+      <div class="card"><h2>유형별 당첨 확률 · 계산값 대 실제 비율<em id="lMeta"></em></h2><table id="lT"></table>
+        <p class="hint">계산값 = 등수마다 「내 칸 ÷ 남은 칸」을 차례로 더한 근사(앞 등수 당첨 · 부재로 칸이 줄어드는 만큼 반영) · 실제 = 같은 추첨 함수로 여러 판을 돌린 비율 · 차이가 1.0%p 안이면 ✓(극단 설정에서는 근사가 맞지 않는다 · 실제 값과 불변 조건을 본다)</p></div>
+      <div class="card"><h2>불변 조건 · 판마다 자동 판정<em id="iMeta"></em></h2><ul class="inv" id="lInv"></ul></div>
+    </div>
+    <div class="card"><h2>등수별 통 크기 · 판 평균</h2><table id="lR"></table></div>
+  </div>
+</div>
+<iframe id="fr" src="stage.html?sandbox=1&amp;lab=1" title="추첨 함수" tabindex="-1" aria-hidden="true"></iframe>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var RN = ["6등", "5등", "4등", "3등", "2등", "1등"], CNT = [3, 2, 2, 1, 1, 1];
+  var K_CFG = "axfDraw.labcfg.v1";
+  var PK = null;   /* 무대 화면 안의 추첨 함수 객체(window.__axs.pick) · 그대로 부른다 */
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function nf(v) { return Number(v || 0).toLocaleString("en-US"); }
+  function pct(v, d) { return (v * 100).toFixed(d == null ? 2 : d) + "%"; }
+  function mul(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function unitsOf(r) { return function (n) { var o = new Float64Array(n); for (var i = 0; i < n; i++) o[i] = r(); return o; }; }
+  function cryptoU(n) { var a = new Uint32Array(n); crypto.getRandomValues(a); var o = new Float64Array(n); for (var i = 0; i < n; i++) o[i] = a[i] / 4294967296; return o; }
+  function clampI(v, a, b, d) { v = Math.floor(+v); return isFinite(v) ? Math.max(a, Math.min(b, v)) : d; }
+
+  /* ─────────────── 설정 · 가짜 통 ─────────────── */
+  var DEF = { n: 500, p1: 50, p2: 30, p3: 20, ck: 35, x: 10, ab: 20, seed: 20261026 };
+  var CF = DEF; try { CF = Object.assign({}, DEF, JSON.parse(localStorage.getItem(K_CFG) || "{}")); } catch (e) { CF = Object.assign({}, DEF); }
+  function form(c) { $("iN").value = c.n; $("i1").value = c.p1; $("i2").value = c.p2; $("i3").value = c.p3; $("iCk").value = c.ck; $("iX").value = c.x; $("iAb").value = c.ab; $("iSeed").value = c.seed; }
+  function read() { return { n: clampI($("iN").value, 0, 3000, 500), p1: clampI($("i1").value, 0, 100, 50), p2: clampI($("i2").value, 0, 100, 30), p3: clampI($("i3").value, 0, 100, 20), ck: clampI($("iCk").value, 0, 100, 35), x: clampI($("iX").value, 0, 500, 0), ab: clampI($("iAb").value, 0, 100, 20), seed: clampI($("iSeed").value, 1, 2147483646, 1), ckN: null }; }
+  var SUR = "김이박최정강조윤장임한오서신권황안송류홍전고문양손배백허유남심노하곽성차주우구민진나".split(""), GIV = "민서준우지현수아은도윤하예진연주원시영태경가채유호재성다온나혜인소희동건규빈승환".split("");
+  /* G = { pool(무대 draw_pool 과 같은 모양 · 통 밖 = 번호 없는 줄), arrived, people: [{pk, k, in, x}] } */
+  function build(c) {
+    var r = mul(c.seed), rin = mul((c.seed ^ 0x13579B) >>> 0 || 3), P = { people: {}, order: [] }, list = [], used = {}, no = 0, tot = c.p1 + c.p2 + c.p3 || 1;
+    var nAll = c.n + c.x;
+    for (var i = 0; i < nAll; i++) {
+      var u = r() * tot, k = u < c.p1 ? 1 : u < c.p1 + c.p2 ? 2 : 3, nm = SUR[Math.floor(r() * SUR.length)] + GIV[Math.floor(r() * GIV.length)] + GIV[Math.floor(r() * GIV.length)];
+      var pk = "L" + i, nos = [];
+      for (var j = 0; j < k; j++) { do { no = 1 + Math.floor(r() * 9999); } while (used[no]); used[no] = 1; nos.push(("000" + no).slice(-4)); }
+      list.push({ pk: pk, k: k, in: false, x: false, nm: nm, nos: nos });
+    }
+    var idx = list.map(function (q, j) { return j; });
+    for (i = idx.length - 1; i > 0; i--) { var q = Math.floor(r() * (i + 1)), t = idx[i]; idx[i] = idx[q]; idx[q] = t; }
+    idx.slice(0, c.x).forEach(function (j) { list[j].x = true; });   /* 통 밖 = 서버가 번호를 주지 않는 사람(번호 없는 줄) */
+    var cand = list.filter(function (p) { return !p.x; });
+    if (c.ckN != null) { var ci = cand.map(function (p, j) { return j; }); for (i = ci.length - 1; i > 0; i--) { var q2 = Math.floor(rin() * (i + 1)), t2 = ci[i]; ci[i] = ci[q2]; ci[q2] = t2; } ci.slice(0, c.ckN).forEach(function (j) { cand[j].in = true; }); }
+    else cand.forEach(function (p) { p.in = rin() * 100 < c.ck; });
+    list.forEach(function (p) { P.people[p.pk] = { nos: p.x ? [] : p.nos.slice(), in: p.x ? false : p.in, nm: p.nm }; P.order.push(p.pk); });
+    var own = { ppl: 0, tks: 0, inPpl: 0, inTks: 0 };   /* 이 페이지가 따로 센 두 통(고정 숫자 대조용) */
+    list.forEach(function (p) { if (p.x) return; own.ppl++; own.tks += p.k; if (p.in) { own.inPpl++; own.inTks += p.k; } });
+    return { cfg: c, pool: P, arrived: P.order.slice(), list: list, own: own, ab: c.ab / 100 };
+  }
+  function typeOf(p) { return (p.k) + (p.in ? "i" : "o"); }
+  var TYPES = ["1i", "2i", "3i", "1o", "2o", "3o"];
+  function typeName(t) { return t.charAt(0) + "장 · " + (t.charAt(1) === "i" ? "체크인" : "체크인 안 함"); }
+
+  /* ─────────────── 한 판 · 무대와 같은 함수(PK.roundPool · PK.pick · PK.check) ───────────────
+   *   s = { out, won, ri, left, fb } 에서 끝까지 · on(ev) = 당첨 · 부재 · fb · 이상 */
+  function playRest(G, s, U, R, on) {
+    var out = Object.assign({}, s.out), won = Object.assign({}, s.won), fb = !!s.fb;
+    for (var ri = s.ri; ri < 6; ri++) {
+      var top = ri >= 3, need = ri === s.ri && s.left != null ? s.left : CNT[ri];
+      if (!top) {
+        if (need <= 0) continue;
+        var rp = PK.roundPool(G.pool, G.arrived, out, won, false, fb);
+        if (!rp.tk.length) { on && on({ t: "short", ri: ri, n: need }); continue; }
+        var pb = PK.pick(rp.tk, need, U), bad = PK.check(pb.list, G.pool, G.arrived, out, won, rp.useIn);
+        if (bad) on && on({ t: "bad", why: bad });
+        if (pb.list.length < need) on && on({ t: "short", ri: ri, n: need - pb.list.length });
+        pb.list.forEach(function (x) { out[x.pk] = "win"; won[x.no] = 1; on && on({ t: "win", ri: ri, pk: x.pk, no: x.no, useIn: rp.useIn, fb: false, size: rp.tk.length }); });
+        continue;
+      }
+      while (need > 0) {
+        var rq = PK.roundPool(G.pool, G.arrived, out, won, true, fb);
+        if (rq.why === "emptyin") { fb = true; on && on({ t: "fb", ri: ri }); continue; }
+        if (rq.why === "empty") { on && on({ t: "short", ri: ri, n: need }); break; }
+        var pq = PK.pick(rq.tk, 1, U), x1 = pq.list[0], bad2 = PK.check(pq.list, G.pool, G.arrived, out, won, rq.useIn);
+        if (bad2) on && on({ t: "bad", why: bad2 });
+        if (R() < G.ab) { out[x1.pk] = "absent"; on && on({ t: "abs", ri: ri, pk: x1.pk, no: x1.no, useIn: rq.useIn, fb: fb }); }
+        else { out[x1.pk] = "win"; won[x1.no] = 1; need--; on && on({ t: "win", ri: ri, pk: x1.pk, no: x1.no, useIn: rq.useIn, fb: fb, size: rq.tk.length }); }
+      }
+    }
+  }
+  /* 지금 상태에서 끝까지 M 판 · 사람별 「어느 등수든 당첨」 비율 */
+  function mcFrom(G, s, M, seed) {
+    var r = mul(seed), U = unitsOf(r), hit = {};
+    for (var m = 0; m < M; m++) playRest(G, s, U, r, function (e) { if (e.t === "win") hit[e.pk] = (hit[e.pk] || 0) + 1; });
+    return hit;
+  }
+
+  /* ─────────────── 계산값(근사) · 유형별 생존 확률을 등수마다 갱신 ─────────────── */
+  function approx(G) {
+    var cls = {}, ab = G.ab;
+    G.list.forEach(function (p) { if (p.x) return; var t = typeOf(p); (cls[t] || (cls[t] = { k: p.k, in: p.in, n: 0, S: 1, low: 0, top: 0 })).n++; });
+    var keys = Object.keys(cls), fb = false;
+    function T(inOnly) { var s = 0; keys.forEach(function (t) { var c = cls[t]; if (!inOnly || c.in) s += c.n * c.S * c.k; }); return s; }
+    for (var ri = 0; ri < 3; ri++) for (var d = 0; d < CNT[ri]; d++) {
+      var Ta = T(false); if (Ta <= 0) break;
+      keys.forEach(function (t) { var c = cls[t], p = c.S * c.k / Ta; c.low += p; c.S -= p; });
+    }
+    for (ri = 3; ri < 6; ri++) {
+      var q = 1;
+      for (var a = 0; a < 60 && q > 1e-9; a++) {
+        if (!fb && T(true) < 0.5) fb = true;   /* 체크인 통이 바닥나면 전체 통(근사) */
+        var Tt = T(!fb); if (Tt <= 0) break;
+        keys.forEach(function (t) { var c = cls[t]; if (!fb && !c.in) return; var p = q * c.S * c.k / Tt; c.top += p * (1 - ab); c.S -= p; });
+        q *= ab;
+      }
+    }
+    var o = {}; keys.forEach(function (t) { var c = cls[t]; o[t] = { n: c.n, low: c.low, top: c.top, any: c.low + c.top }; });
+    return o;
+  }
+
+  /* ─────────────── 계산 보기 ─────────────── */
+  var V = null, TONE = ["#FF7E31", "#FFB284", "#FF963E", "#FFD8C1"];   /* 오렌지 사다리만 · 흰색 = 뽑힌 칸 */
+  function vNew() {
+    var G = GG;
+    V = { G: G, out: {}, won: {}, ri: 0, left: CNT[0], fb: false, ph: "start", steps: 0, xOut: false, inCut: false, pick: null, scan: null, last: null, hist: [], mc: null, mcKey: "" };
+    G.list.forEach(function (p) { if (p.x) V.out[p.pk] = "x"; });   /* 통 밖 = 처음부터 통에 없다(그림에서만 보이고 빠진다) */
+    V.xOutShown = false;
+    vStepText("통 만들기", "행운권 전체 " + nf(allCells().length) + "칸 · 한 장 = 한 칸 · 같은 색 덩어리 = 한 사람");
+    setF(""); $("vWho").textContent = ""; vDraw(); vRanks(); vTable();
+  }
+  function allCells() { var a = []; V.G.list.forEach(function (p) { p.nos.forEach(function (no) { a.push([p.pk, no]); }); }); return a; }
+  function cellsNow() { return PK.roundPool(V.G.pool, V.G.arrived, V.out, V.won, V.ri >= 3, V.fb); }
+  function setF(h) { $("vF").innerHTML = h; }
+  function vStepText(a, b) { $("vStep").innerHTML = esc(a) + (b ? "<small>" + esc(b) + "</small>" : ""); }
+  function personOf(pk) { for (var i = 0; i < V.G.list.length; i++) if (V.G.list[i].pk === pk) return V.G.list[i]; return null; }
+  /* 다음 한 단계 · 상태 기계 */
+  function vNext() {
+    if (!V) return;
+    var G = V.G, sh = V.ph;
+    if (sh === "start") { V.ph = "x"; V.xOutShown = true; var xc = 0, xp = 0; G.list.forEach(function (p) { if (p.x) { xp++; xc += p.k; } }); vStepText("통 밖 칸 빠짐", "통 밖 " + xp + "명 · " + xc + "칸 빠짐 → 남은 " + nf(cellsNow().tk.length) + "칸"); vDraw(); return true; }
+    if (sh === "x" || sh === "after") {
+      if (V.ri >= 6) { V.ph = "end"; vStepText("끝", "6 · 5 · 4등 7명 · 3 · 2 · 1등 3명"); setF(""); vDraw(); return false; }
+      if (V.ri >= 3 && !V.inCut && !V.fb) { V.inCut = true; V.ph = "cut"; var nin = 0; cellsNow().tk.forEach(function () { nin++; }); var all = PK.roundPool(G.pool, G.arrived, V.out, V.won, false, false).tk.length; vStepText("3등부터 · 17F 체크인 통", "체크인 안 한 칸 " + nf(all - nin) + "칸 빠짐 → 남은 " + nf(nin) + "칸"); setF(""); vDraw(); vTable(); return true; }
+      var rp = cellsNow();
+      if (rp.why === "emptyin") { V.fb = true; V.ph = "after"; vStepText(RN[V.ri] + " · 체크인 통 소진", "운영 줄 「전체 통에서 이어 뽑기」 · 이 등수부터 행운권 전체 · 끝까지 전체 통"); vDraw(); vTable(); return true; }
+      if (rp.why === "empty") { V.ph = "end"; vStepText(RN[V.ri] + " · 남은 행운권 없음", "무대 멈춤 · 사회자 수동 발표"); vDraw(); return false; }
+      /* 뽑기 · PK.pick 한 장 · 난수를 기록해 식으로 보인다 */
+      var rec = []; var U = function (n) { var o = cryptoU(n); for (var i = 0; i < n; i++) rec.push(o[i]); return o; };
+      var pb = PK.pick(rp.tk, 1, U), x = pb.list[0], u = rec[0], len = rp.tk.length, idx = -1;
+      for (var i = 0; i < len; i++) if (rp.tk[i][0] === x.pk && rp.tk[i][1] === x.no) { idx = i; break; }
+      var bad = PK.check(pb.list, G.pool, G.arrived, V.out, V.won, rp.useIn);
+      V.pick = { pk: x.pk, no: x.no, idx: idx, u: u, len: len, ok: idx === Math.floor(u * len) && !bad, tk: rp.tk, useIn: rp.useIn };
+      V.ph = "scan"; V.scanT0 = performance.now(); V.scanDur = SPEED.scan;
+      vStepText(RN[V.ri] + " · " + (CNT[V.ri] - V.left + 1) + "번째 · " + (rp.useIn ? "17F 체크인 통" : "행운권 전체 통"), "남은 칸 중 한 칸을 암호 난수로 고른다 · 칸이 많은 사람일수록 뽑힐 확률이 크다");
+      setF('<span class="lab">암호 난수</span><span class="u">' + u.toFixed(4) + '</span><span class="op">×</span><span class="lab">남은</span><span class="k">' + nf(len) + '칸</span><span class="op">=</span><span class="k">' + nf(idx + 1) + '번째 칸</span>' + (V.pick.ok ? '<span class="pill p">함수 결과와 같음</span>' : '<span class="pill f">다름</span>'));
+      $("vWho").textContent = "";
+      requestAnimationFrame(vDraw);
+      return true;
+    }
+    if (sh === "scan") { V.scanDur = 0; vDraw(); return true; }
+    if (sh === "hit") {
+      var pk = V.pick.pk, p = personOf(pk), top = V.ri >= 3, abs = top && rndAb() < G.ab;
+      if (abs) { V.out[pk] = "absent"; V.hist.push({ ri: V.ri, pk: pk, no: V.pick.no, st: "absent", fb: V.fb }); vStepText(RN[V.ri] + " · 자리에 없음 · 다시 추첨", "그 사람의 칸 " + p.k + "칸 모두 빠짐(부재 · 다음 등수에서도 빠진다)"); }
+      else {
+        V.out[pk] = "win"; V.won[V.pick.no] = 1; V.left--; V.hist.push({ ri: V.ri, pk: pk, no: V.pick.no, st: "win", fb: V.fb });
+        vStepText(RN[V.ri] + " 당첨 · 그 사람의 나머지 칸 빠짐", (p.k > 1 ? "나머지 " + (p.k - 1) + "칸 빠짐" : "한 장뿐") + " → 남은 " + nf(Math.max(0, V.pick.len - p.k)) + "칸 · 한 사람은 한 번만");
+        if (V.left <= 0) { V.ri++; V.left = V.ri < 6 ? CNT[V.ri] : 0; }
+      }
+      V.ph = "after"; V.pick = null; vDraw(); vRanks(); vTable(); return true;
+    }
+    return false;
+  }
+  var abR = mul(7); function rndAb() { return abR(); }
+  /* 그림 · 칸 격자(한 장 = 한 칸 · 사람 덩어리 사이 작은 틈) */
+  var GL = null;
+  function vLayout() {
+    var cv = $("grid"), W = cv.width, H = cv.height, cells = [], n = 0;
+    V.G.list.forEach(function (p) { n += p.nos.length; });
+    var gaps = V.G.list.length, cs = Math.floor(Math.sqrt((W * H) / (n * 1.25 + gaps * 0.5)));
+    cs = Math.max(4, Math.min(28, cs));
+    var x = 8, y = 8, gap = Math.max(1, Math.round(cs * 0.12)), sep = Math.max(2, Math.round(cs * 0.4));
+    V.G.list.forEach(function (p, pi) {
+      p.nos.forEach(function (no, j) {
+        if (x + cs > W - 8) { x = 8; y += cs + gap; }
+        cells.push({ pk: p.pk, no: no, x: x, y: y, pi: pi });
+        x += cs + gap;
+      });
+      x += sep - gap;
+    });
+    GL = { cs: cs, cells: cells, h: y + cs + 8 };
+    if (GL.h > H) { cv.height = Math.min(1400, GL.h); }
+    var map = {}; cells.forEach(function (c, i) { map[c.pk + "|" + c.no] = i; }); GL.map = map;
+  }
+  function vDraw() {
+    if (!V) return;
+    if (!GL || GL.n !== V.G.list.length) { vLayout(); GL.n = V.G.list.length; }
+    var cv = $("grid"), g = cv.getContext("2d"), cs = GL.cs, top = V.ri >= 3 && V.inCut && !V.fb;
+    g.fillStyle = "#050505"; g.fillRect(0, 0, cv.width, cv.height);
+    var rp = cellsNow(), live = {}; rp.tk.forEach(function (t) { live[t[0] + "|" + t[1]] = 1; });
+    var scanCell = -1, hitCell = -1;
+    if (V.pick) {
+      if (V.ph === "scan") { var u = V.scanDur ? Math.min(1, (performance.now() - V.scanT0) / V.scanDur) : 1, e = 1 - Math.pow(1 - u, 3), total = V.pick.len * 2 + V.pick.idx, pos = Math.floor(e * total) % V.pick.len; if (u >= 1) pos = V.pick.idx; var tc = V.pick.tk[pos]; scanCell = GL.map[tc[0] + "|" + tc[1]]; if (u >= 1) { V.ph = "hit"; hitCell = scanCell; vWho(); } }
+      else hitCell = GL.map[V.pick.pk + "|" + V.pick.no];
+    }
+    GL.cells.forEach(function (c, i) {
+      var p = V.G.pool.people[c.pk], key = c.pk + "|" + c.no, o = V.out[c.pk];
+      var col, line = null;
+      if (o === "x") col = V.xOutShown ? "#141414" : "#3a3a3a";
+      else if (o === "win" || o === "absent" || V.won[c.no]) { col = "#1d1d1d"; line = "#3c3c3c"; }
+      else if (top && !p.in) { col = "#1a1a1a"; line = "#4a4a4a"; }
+      else col = TONE[c.pi % TONE.length];
+      if (V.pick && V.pick.pk === c.pk && i !== hitCell && i !== scanCell && V.ph === "hit") line = "#ffffff";   /* 같은 사람의 다른 칸 = 흰 테두리 */
+      if (i === scanCell) col = "#ffffff";
+      g.fillStyle = col; g.fillRect(c.x, c.y, cs, cs);
+      if (line) { var lw = line === "#ffffff" ? 3 : 1; g.strokeStyle = line; g.lineWidth = lw; g.strokeRect(c.x + lw / 2, c.y + lw / 2, cs - lw, cs - lw); }
+      if (i === hitCell) { g.fillStyle = "#fff"; g.fillRect(c.x - 2, c.y - 2, cs + 4, cs + 4); g.strokeStyle = "#FF7E31"; g.lineWidth = 3; g.strokeRect(c.x - 3.5, c.y - 3.5, cs + 7, cs + 7); }
+    });
+    if (V.ph === "scan") requestAnimationFrame(vDraw);
+  }
+  function vWho() {
+    var p = personOf(V.pick.pk);
+    $("vWho").innerHTML = "뽑힌 칸 · 행운권 <b>" + esc(V.pick.no) + "</b> · " + esc(p.nm) + "(가짜) · " + p.k + "장 중 1장 · " + (p.in ? "체크인함" : "체크인 안 함");
+    vTable();
+  }
+  function vRanks() {
+    var h = "";
+    for (var ri = 0; ri < 6; ri++) {
+      var rows = V.hist.filter(function (x) { return x.ri === ri; });
+      h += '<div class="rk' + (ri === V.ri ? " now" : "") + '"><b>' + RN[ri] + "</b><p>" + CNT[ri] + "명 · " + (ri < 3 ? "행운권 전체" : "17F 체크인") + "</p><ul>" +
+        rows.map(function (x) { var p = personOf(x.pk); return '<li class="' + (x.st === "absent" ? "ab" : "") + '"><span class="n">' + esc(x.no) + "</span>" + esc(p.nm) + (x.fb ? " · 전체 통" : "") + "</li>"; }).join("") + "</ul></div>";
+    }
+    $("vR").innerHTML = h;
+  }
+  /* 유형별 표 · 다음 뽑기(내 칸 ÷ 지금 통) · 끝까지(같은 함수 1,000판) */
+  function vTable() {
+    if (!V) return;
+    var rp = cellsNow(), len = rp.tk.length, G = V.G, me = V.pick ? typeOf(personOf(V.pick.pk)) : "";
+    var key = JSON.stringify([V.out, V.won, V.ri, V.left, V.fb]);
+    if (V.mcKey !== key) { V.mcKey = key; V.mc = mcFrom(G, { out: V.out, won: V.won, ri: V.ri, left: V.left, fb: V.fb }, 1000, 99 + V.hist.length); }
+    var by = {};
+    G.list.forEach(function (p) { if (p.x || V.out[p.pk]) return; var t = typeOf(p), b = by[t] || (by[t] = { n: 0, k: p.k, in: p.in, hit: 0 }); b.n++; b.hit += (V.mc[p.pk] || 0) / 1000; });
+    var h = "<tr><th>유형</th><th>남은 사람</th><th>다음 뽑기 · 한 사람</th><th>끝까지 · 한 사람</th></tr>";
+    TYPES.forEach(function (t) {
+      var b = by[t]; if (!b) { h += '<tr class="no"><td>' + typeName(t) + "</td><td>0</td><td>-</td><td>-</td></tr>"; return; }
+      var elig = rp.useIn ? b.in : true, pn = elig && len ? b.k / len : 0;
+      h += '<tr class="' + (t === me ? "me" : !elig ? "no" : "") + '"><td>' + typeName(t) + "</td><td>" + nf(b.n) + "</td><td" + (elig ? ' class="hi"' : "") + ">" + (elig ? b.k + " ÷ " + nf(len) + " = " + pct(pn, 3) : "0(체크인 통 밖)") + "</td><td>" + pct(b.hit / b.n, 1) + "</td></tr>";
+    });
+    $("vT").innerHTML = h;
+    $("vMc").textContent = "지금 통 " + (rp.useIn ? "17F 체크인" : "행운권 전체") + " " + nf(len) + "칸";
+  }
+  var SPEED = { scan: 2400 }, AUTO = { on: false, tm: null, gap: 1400 };
+  function autoGo(scan, gap) { SPEED.scan = scan; AUTO.gap = gap; AUTO.on = true; $("bSlow").classList.toggle("on", scan > 1000); $("bFast").classList.toggle("on", scan <= 1000); tick(); }
+  function tick() {
+    clearTimeout(AUTO.tm); if (!AUTO.on || !V) return;
+    if (V.ph === "scan") { AUTO.tm = setTimeout(tick, 120); return; }
+    var more = vNext(); if (!more) { AUTO.on = false; $("bSlow").classList.remove("on"); $("bFast").classList.remove("on"); return; }
+    AUTO.tm = setTimeout(tick, V.ph === "scan" ? SPEED.scan + 200 : AUTO.gap);
+  }
+  $("bStep").onclick = function () { AUTO.on = false; SPEED.scan = 1600; vNext(); if (V && V.ph === "scan") vDraw(); };
+  $("bSlow").onclick = function () { autoGo(2400, 1500); if (V && V.ph === "scan") vDraw(); };
+  $("bFast").onclick = function () { autoGo(380, 260); if (V && V.ph === "scan") vDraw(); };
+  $("bStop").onclick = function () { AUTO.on = false; clearTimeout(AUTO.tm); $("bSlow").classList.remove("on"); $("bFast").classList.remove("on"); };
+  $("bAgain").onclick = function () { AUTO.on = false; GL = null; abR = mul(7); vNew(); };
+
+  /* ─────────────── 확률 실험실 ─────────────── */
+  var LB = { busy: false };
+  function labRun(M, cfgOver) {
+    if (LB.busy || !PK) return;
+    var c = Object.assign(read(), cfgOver || {}), G = build(c);
+    LB.busy = true; lockBtns(true);
+    var r = mul(c.seed + 1), U = unitsOf(r), m = 0, ap = approx(G);
+    var A = { games: 0, low: {}, top: {}, any: {}, inv: { x: 0, topOut: 0, dupP: 0, dupN: 0, cnt: 0, abWin: 0, bad: 0, lock: 0 }, fbGames: 0, fbN: 0, shortGames: 0, size: [0, 0, 0, 0, 0, 0], sizeN: [0, 0, 0, 0, 0, 0], first: { 1: 0, 2: 0, 3: 0 } };
+    var nType = {}; G.list.forEach(function (p) { if (!p.x) nType[typeOf(p)] = (nType[typeOf(p)] || 0) + 1; });
+    var px = {}; G.list.forEach(function (p) { px[p.pk] = p; });
+    var cnt = PK.count(G.pool, null), lockOk = cnt.ppl === G.own.ppl && cnt.tks === G.own.tks && cnt.inPpl === G.own.inPpl && cnt.inTks === G.own.inTks;
+    var tkByK = { 1: 0, 2: 0, 3: 0 }; G.list.forEach(function (p) { if (!p.x) tkByK[p.k] += p.k; });
+    var t0 = performance.now();
+    (function chunk() {
+      var end = Math.min(M, m + 120);
+      for (; m < end; m++) {
+        var seenP = {}, seenN = {}, abs = {}, perR = [0, 0, 0, 0, 0, 0], fbOn = false, first = true, short = false, gotLow = {}, gotTop = {};
+        playRest(G, { out: {}, won: {}, ri: 0, left: null, fb: false }, U, r, function (e) {
+          if (e.t === "fb") { if (!fbOn) A.fbGames++; fbOn = true; A.fbN++; return; }
+          if (e.t === "short") { short = true; return; }
+          if (e.t === "bad") { A.inv.bad++; return; }
+          var p = px[e.pk];
+          if (e.t === "abs") { abs[e.pk] = 1; return; }
+          if (p.x) A.inv.x++;
+          if (e.ri >= 3 && !e.fb && !p.in) A.inv.topOut++;
+          if (seenP[e.pk]) A.inv.dupP++; seenP[e.pk] = 1;
+          if (seenN[e.no]) A.inv.dupN++; seenN[e.no] = 1;
+          if (abs[e.pk]) A.inv.abWin++;
+          perR[e.ri]++;
+          A.size[e.ri] += e.size; A.sizeN[e.ri]++;
+          if (first) { A.first[p.k]++; first = false; }
+          var t = typeOf(p); if (e.ri < 3) gotLow[t] = (gotLow[t] || 0) + 1; else gotTop[t] = (gotTop[t] || 0) + 1;
+        });
+        if (!short && perR.some(function (v, i) { return v !== CNT[i]; })) A.inv.cnt++;
+        if (short) A.shortGames++;
+        Object.keys(gotLow).forEach(function (t) { A.low[t] = (A.low[t] || 0) + gotLow[t]; });
+        Object.keys(gotTop).forEach(function (t) { A.top[t] = (A.top[t] || 0) + gotTop[t]; });
+        A.games++;
+      }
+      $("pBar").style.width = (m / M * 100).toFixed(1) + "%";
+      $("pNow").textContent = nf(m) + " / " + nf(M) + "판 · " + ((performance.now() - t0) / 1000).toFixed(1) + "초";
+      if (m < M) { setTimeout(chunk, 0); return; }
+      A.lockOk = lockOk; A.cnt = cnt; A.own = G.own; A.tkByK = tkByK; A.nType = nType; A.ap = ap; A.c = c; A.sec = (performance.now() - t0) / 1000;
+      LB.last = A; labPaint(A); LB.busy = false; lockBtns(false);
+      window.__axLab = { done: true, res: labSummary(A) };
+    })();
+  }
+  function lockBtns(b) { ["b1k", "b10k", "bE0", "bE1", "bE2", "bEab", "bBuild"].forEach(function (id) { $(id).disabled = b; }); }
+  function labSummary(A) {
+    var rows = TYPES.filter(function (t) { return A.nType[t]; }).map(function (t) { var n = A.nType[t] * A.games, lo = (A.low[t] || 0) / n, tp = (A.top[t] || 0) / n, ap = A.ap[t] || { low: 0, top: 0, any: 0 }; return { t: t, n: A.nType[t], low: lo, top: tp, any: lo + tp, aLow: ap.low, aTop: ap.top, aAny: ap.any }; });
+    var totFirst = A.first[1] + A.first[2] + A.first[3], totTk = A.tkByK[1] + A.tkByK[2] + A.tkByK[3];
+    var wErr = [1, 2, 3].map(function (k) { return totFirst ? Math.abs(A.first[k] / totFirst - A.tkByK[k] / totTk) : 0; });
+    var se = [1, 2, 3].map(function (k) { var p = A.tkByK[k] / totTk; return totFirst ? Math.sqrt(p * (1 - p) / totFirst) : 1; });
+    var wOk = wErr.every(function (e, i) { return e <= Math.max(0.01, 4 * se[i]); });
+    var inv = [
+      ["통 밖 인원 당첨 0", A.inv.x === 0, A.inv.x],
+      ["체크인 안 한 3 · 2 · 1등 0(전체 통 이어 뽑기 판은 셈에서 뺌)", A.inv.topOut === 0, A.inv.topOut],
+      ["같은 사람 두 번 · 같은 번호 두 번 0", A.inv.dupP + A.inv.dupN === 0, A.inv.dupP + A.inv.dupN],
+      ["등수별 인원(3 · 2 · 2 · 1 · 1 · 1) = 그대로(통이 바닥난 판은 셈에서 뺌)", A.inv.cnt === 0, A.inv.cnt],
+      ["장수 가중 · 첫 당첨 1 · 2 · 3장 비율 = 칸 비율", wOk, wErr.map(function (e) { return (e * 100).toFixed(2) + "%p"; }).join(" · ")],
+      ["부재로 빠진 사람 다시 당첨 0", A.inv.abWin === 0, A.inv.abWin],
+      ["고정 숫자 = 따로 센 두 통(무대 셈 PICK.count)", A.lockOk, A.cnt.ppl + "." + A.cnt.tks + "." + A.cnt.inPpl + "." + A.cnt.inTks + " / " + A.own.ppl + "." + A.own.tks + "." + A.own.inPpl + "." + A.own.inTks],
+      ["공개 전 자기 검사 어긋남 0", A.inv.bad === 0, A.inv.bad]
+    ];
+    return { games: A.games, rows: rows, inv: inv, pass: inv.every(function (x) { return x[1]; }), fbGames: A.fbGames, fbN: A.fbN, shortGames: A.shortGames, sec: A.sec, size: A.size.map(function (s, i) { return A.sizeN[i] ? s / A.sizeN[i] : 0; }) };
+  }
+  function labPaint(A) {
+    var S = labSummary(A), ext = A.c.ckN != null || A.c.ab >= 100;
+    var h = "<tr><th>유형</th><th>사람</th><th>6 · 5 · 4등 계산</th><th>실제</th><th>3 · 2 · 1등 계산</th><th>실제</th><th>어느 등수든 계산</th><th>실제</th><th>차이</th></tr>";
+    S.rows.forEach(function (r) {
+      var d = (r.any - r.aAny) * 100, ok = Math.abs(d) <= 1.0; if (Math.abs(d) < 0.005) d = 0;
+      h += "<tr><td>" + typeName(r.t) + "</td><td>" + nf(r.n) + "</td><td>" + pct(r.aLow) + '</td><td class="hi">' + pct(r.low) + "</td><td>" + pct(r.aTop) + '</td><td class="hi">' + pct(r.top) + "</td><td>" + pct(r.aAny) + '</td><td class="hi">' + pct(r.any) + '</td><td class="diff ' + (ok || ext ? "ok" : "ng") + '">' + (d >= 0 ? "+" : "") + d.toFixed(2) + "%p " + (ext ? "" : ok ? "✓" : "✕") + "</td></tr>";
+    });
+    $("lT").innerHTML = h;
+    $("lMeta").textContent = nf(S.games) + "판 · " + S.sec.toFixed(1) + "초";
+    $("lInv").innerHTML = S.inv.map(function (x) { return '<li><span class="m"><span class="pill ' + (x[1] ? "p" : "f") + '">' + (x[1] ? "통과" : "실패") + "</span></span><span>" + esc(x[0]) + '</span><span class="d">' + esc(String(x[2])) + "</span></li>"; }).join("") +
+      '<li><span class="m"><span class="pill w">기록</span></span><span>전체 통 이어 뽑기가 켜진 판</span><span class="d">' + nf(S.fbGames) + "판 · 통이 바닥난 판 " + nf(S.shortGames) + "</span></li>";
+    $("iMeta").textContent = S.pass ? "전부 통과" : "실패 있음";
+    var rh = "<tr><th>등수</th>" + RN.map(function (n) { return "<th>" + n + "</th>"; }).join("") + "</tr><tr><td>뽑을 때 통(칸) 평균</td>" + S.size.map(function (v, i) { return "<td>" + nf(Math.round(v)) + (i >= 3 ? " · 체크인" : " · 전체") + "</td>"; }).join("") + "</tr>";
+    $("lR").innerHTML = rh;
+    $("pNow").textContent = "끝 · " + nf(S.games) + "판 · " + S.sec.toFixed(1) + "초 · 체크인 " + nf(A.cnt.inPpl) + "명 · " + nf(A.cnt.inTks) + "장 / 전체 " + nf(A.cnt.ppl) + "명 · " + nf(A.cnt.tks) + "장" + (A.c.ckN != null ? " · 극단 체크인 " + A.c.ckN + "명" : "") + (A.c.ab >= 100 ? " · 극단 부재 100%" : "");
+  }
+  $("b1k").onclick = function () { labRun(1000); };
+  $("b10k").onclick = function () { labRun(10000); };
+  $("bE0").onclick = function () { labRun(1000, { ckN: 0 }); };
+  $("bE1").onclick = function () { labRun(1000, { ckN: 1 }); };
+  $("bE2").onclick = function () { labRun(1000, { ckN: 2 }); };
+  $("bEab").onclick = function () { labRun(1000, { ab: 100 }); };
+
+  /* ─────────────── 공통 ─────────────── */
+  var GG = null;
+  function sumTxt(G) { var c = PK.count(G.pool, null), xn = G.list.filter(function (p) { return p.x; }).length; $("pSum").innerHTML = "행운권 전체 <b>" + nf(c.ppl) + "</b>명 · <b>" + nf(c.tks) + "</b>장<br>17F 체크인 <b>" + nf(c.inPpl) + "</b>명 · <b>" + nf(c.inTks) + "</b>장<br>통 밖 <b>" + xn + "</b>명 · 부재율 <b>" + G.cfg.ab + "</b>%"; }
+  function rebuild() { var c = read(); try { localStorage.setItem(K_CFG, JSON.stringify(c)); } catch (e) {} GG = build(c); sumTxt(GG); GL = null; abR = mul(c.seed + 7); vNew(); }
+  $("bBuild").onclick = function () { AUTO.on = false; rebuild(); };
+  function tab(v) { $("vView").classList.toggle("on", v === "view"); $("vLab").classList.toggle("on", v === "lab"); $("tbView").classList.toggle("on", v === "view"); $("tbLab").classList.toggle("on", v === "lab"); }
+  $("tbView").onclick = function () { tab("view"); }; $("tbLab").onclick = function () { tab("lab"); };
+  form(CF);
+  var tries = 0;
+  (function wait() {
+    var w = null; try { w = $("fr").contentWindow; } catch (e) { w = null; }
+    if (w && w.__axs && w.__axs.pick) { PK = w.__axs.pick; rebuild(); window.__axLabReady = true; if (/[?&]tab=lab/.test(location.search)) tab("lab"); return; }
+    if (++tries > 150) { $("ldErr").textContent = "· 무대 화면(추첨 함수)을 못 열었다 · 새로 고침"; return; }
+    setTimeout(wait, 100);
+  })();
+  window.__axLabApi = { run: labRun, next: function () { return vNext(); }, state: function () { return V; }, tab: tab, auto: autoGo, summary: function () { return LB.last ? labSummary(LB.last) : null; } };
+})();
+</script>
+</body>
+</html>

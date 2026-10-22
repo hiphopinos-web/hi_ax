@@ -9,7 +9,10 @@
      무대 화면(stage.html)을 ?sandbox=1 로 품는다 · 데모 고정 · 가짜 이름 · 서버 호출 0 · 저장 키 따로(axfDraw.state.v1.test · 무대 노트북의 진짜 기록과 섞이지 않는다)
      261019 넓힘(사용자 「소량 데모로 실제처럼 · 당첨되면 빠지는지 · 같은 번호 다시 안 나오는지 · 숫자를 테스트자가 · 가정 상황」)
        풀 설정(사람 수 · 장수 · 등수별 인원 · 번호 시작값 · 이름) = 이 창 메모리 __axTestCfg() 를 무대(sandbox)가 읽는다 · 붙여 넣은 이름은 저장 · 전송하지 않는다
-       자동 판정(당첨마다 PASS · FAIL) · 가정 상황 카드 · 결과 내보내기(CSV · 복사 · 이름 없음) -->
+       자동 판정(당첨마다 PASS · FAIL) · 가정 상황 카드 · 결과 내보내기(CSV · 복사 · 이름 없음)
+     261021 체크인 2통(3 · 2 · 1등 = 체크인 통) · 풀 설정 「체크인 %」 · 판정 「체크인」 열 · 가정 상황 12 ~ 22
+       가짜 서버(__axFakeSrv · 이 창 메모리 · 네트워크 0) = 무대를 ?sandbox=1&fake=1 로 열어 라이브 길(닫기 → 전체 읽기 → 고정 · 확인표 · 노트북 교체 · 경고)을 시험한다
+       추첨 계산 보기 · 확률 실험실 = lab.html(같은 추첨 함수 객체 __axs.pick) -->
 <link rel="icon" href="../icons/icon-192.png">
 <style>
   @font-face { font-family: "AXP"; src: url("assets/PretendardVariable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
@@ -106,7 +109,8 @@
   function clampI(v, a, b, d) { v = Math.floor(+v); return isFinite(v) ? Math.max(a, Math.min(b, v)) : d; }
   function norm(tc) {
     var o = { n: clampI(tc.n, 0, 300, 12), tk: ["1", "2", "3", "mix"].indexOf(String(tc.tk)) >= 0 ? String(tc.tk) : "mix", counts: DEFC.slice(), start: clampI(tc.start, 1, 9999, 1),
-      num: tc.num === "rand" ? "rand" : "seq", names: tc.names === "paste" ? "paste" : "fake", seed: clampI(tc.seed, 1, 2147483646, 0) || newSeed() };
+      num: tc.num === "rand" ? "rand" : "seq", names: tc.names === "paste" ? "paste" : "fake", seed: clampI(tc.seed, 1, 2147483646, 0) || newSeed(),
+      ck: clampI(tc.ck, 0, 100, 100), ckN: tc.ckN == null || tc.ckN === "" ? -1 : clampI(tc.ckN, 0, 300, -1) };   /* 261021 체크인 % · ckN = 정확히 n명(가정 상황) */
     for (var i = 0; i < 6; i++) o.counts[i] = clampI(tc.counts && tc.counts[i], 1, 12, DEFC[i]);
     return o;
   }
@@ -127,7 +131,9 @@
     var ks = list.map(function () { return tc.tk === "mix" ? 1 + Math.floor(r() * 3) : +tc.tk; }), tot = ks.reduce(function (a, b) { return a + b; }, 0);
     if (tc.num === "seq" && tc.start + tot - 1 > 9999) return { err: "번호가 9999를 넘습니다 · 시작값을 " + Math.max(1, 10000 - tot) + " 이하로" };
     if (tot > 9999) return { err: "행운권이 9999장을 넘습니다" };
-    var used = {}, nx = tc.start, people = {}, order = [];
+    var used = {}, nx = tc.start, people = {}, order = [], rin = mul((tc.seed ^ 0x2468ACE) >>> 0 || 7), inSet = {};
+    if (tc.ckN >= 0) { var idx = list.map(function (x, j) { return j; }); for (i = idx.length - 1; i > 0; i--) { var q = Math.floor(rin() * (i + 1)), t0 = idx[i]; idx[i] = idx[q]; idx[q] = t0; } idx.slice(0, tc.ckN).forEach(function (j) { inSet[j] = 1; }); }
+    else list.forEach(function (x, j) { if (rin() * 100 < tc.ck) inSet[j] = 1; });
     list.forEach(function (x, j) {
       var nos = [];
       for (var k = 0; k < ks[j]; k++) {
@@ -137,10 +143,11 @@
         nos.push(pad(no, 4));
       }
       var pk = "t" + pad(j + 1, 3);
-      people[pk] = { nm: mask(x.nm), dp: x.dp, fn: x.nm, fd: x.dp, nos: nos, lb: "사람 " + (j + 1) };
+      people[pk] = { nm: mask(x.nm), dp: x.dp, fn: x.nm, fd: x.dp, nos: nos, lb: "사람 " + (j + 1), in: !!inSet[j] };
       order.push(pk);
     });
-    return { counts: tc.counts.slice(), pool: { people: people, order: order }, n: order.length, tks: tot };
+    var inN = 0, inT = 0; order.forEach(function (pk) { if (people[pk].in) { inN++; inT += people[pk].nos.length; } });
+    return { counts: tc.counts.slice(), pool: { people: people, order: order }, n: order.length, tks: tot, inN: inN, inT: inT };
   }
   var tc0 = null; try { tc0 = JSON.parse(lsGet(K_CFG) || "null"); } catch (e) { tc0 = null; }
   var TC = norm(tc0 || {}), lost = false;
@@ -149,7 +156,7 @@
   /* 운영 저장 키(axfDraw.* 중 .test · 시험 페이지 키가 아닌 것) · 시험 전 모습 */
   function liveKeys() {
     var o = {};
-    try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (/^axfDraw\./.test(k) && !/\.test$/.test(k) && k !== K_CFG && k !== "axfDraw.testrun.v1") o[k] = localStorage.getItem(k); } } catch (e) {}
+    try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (/^axfDraw\./.test(k) && !/\.test(\.fake|\.lab)?$/.test(k) && k !== K_CFG && k !== "axfDraw.testrun.v1") o[k] = localStorage.getItem(k); } } catch (e) {}
     return JSON.stringify(Object.keys(o).sort().map(function (k) { return [k, o[k]]; }));
   }
   var CUR = build(TC, null);
@@ -158,6 +165,82 @@
   window.__AXT = { RN: RN, DEFC: DEFC, K_CFG: K_CFG, K_ST: K_ST, norm: norm, build: build, parseNames: parseNames, newSeed: newSeed, lsGet: lsGet, lsSet: lsSet, lsDel: lsDel,
     TC: TC, CUR: CUR, PASTED: null, lost: lost, live0: liveKeys(), liveKeys: liveKeys };
   window.__axTestCfg = function () { var c = window.__AXT.CUR; return c && !c.err ? { counts: c.counts, pool: c.pool } : null; };
+})();
+/* 261021 가짜 서버 · 이 창 메모리(네트워크 0) · 무대 ?sandbox=1&fake=1 이 jsonp 대신 부른다 · 형식 = 기획 문서/럭키드로우 체크인 2통 인터페이스_261021.md
+ *   사람 = 풀 설정(AX.CUR) · 체크인 = 사람마다 in(가짜 서버 FS.ins) · 닫힌 뒤 새 체크인은 거절 · 알림 호출 길 없음(호출 목록에 draw_* 밖 액션이 오면 FS.other 로 센다)
+ *   고장 넣기 = FS.fail[액션] = n(그 수만큼 실패) · FS.ms[액션] = 지연(ms) · FS.warnAll = 3 · 2 · 1등 기록마다 warn in */
+(function () {
+  "use strict";
+  var FS = null;
+  function nowT() { var d = new Date(Date.now() + 9 * 3600000); return "2026-10-24 " + d.toISOString().slice(11, 19); }   /* 리허설 날 시각(행사일 규칙이 끼지 않게) */
+  function mask(n) { n = String(n || ""); if (n.length <= 1) return n; if (n.length === 2) return n.charAt(0) + "*"; return n.charAt(0) + new Array(n.length - 1).join("*") + n.charAt(n.length - 1); }
+  function reset() {
+    var c = window.__AXT.CUR, ins = {}, order = c && c.pool ? c.pool.order.slice() : [];
+    order.forEach(function (pk) { if (c.pool.people[pk].in) ins[pk] = "16:5" + (order.indexOf(pk) % 10); });
+    FS = { closed: 0, lock: null, log: [], scrs: {}, fail: {}, ms: {}, calls: [], other: 0, ins: ins, warnAll: false, late: 0, lateRej: 0, failFull: 0 };
+    return FS;
+  }
+  function people() { var c = window.__AXT.CUR; return c && c.pool ? c.pool : { people: {}, order: [] }; }
+  function live() { var m = {}; FS.log.forEach(function (r) { if (r.st === "undo") { var t = m[r.pk]; if (t && t.id === r.id) delete m[r.pk]; return; } if (r.st === "absent") { m[r.pk] = { id: r.id, st: "absent" }; return; } if (r.st === "win") { var cur = m[r.pk]; if (!cur || cur.st !== "win") m[r.pk] = { id: r.id, st: "win" }; } }); return m; }
+  function counts() {
+    var P = people(), n = 0, b = 0, inN = 0, inB = 0;
+    P.order.forEach(function (pk) { var p = P.people[pk], k = p.nos.length; if (!k) return; n++; b += k; if (FS.ins[pk]) { inN++; inB += k; } });
+    return { n: n, balls: b, inN: inN, inBalls: inB };
+  }
+  function cursor() { return "a" + people().order.length + "d" + Object.keys(FS.ins).length; }
+  function stats() {
+    var c = counts(), L = live();
+    var recs = FS.log.map(function (r) { var o = { id: r.id, round: r.round, slot: r.slot, no: r.no, pk: r.pk, st: r.st, at: r.at }; if (r.warn) o.warn = r.warn; if (/f$/.test(r.slot)) o.fb = 1; return o; });
+    var scrs = Object.keys(FS.scrs).map(function (k) { var s = FS.scrs[k]; return { sid: k, scene: s.scene, age: (Date.now() - s.t) / 1000 }; });
+    return { ok: true, att: "OFF", pool: c, withT: c.inN, balls: c.inBalls, in: Object.keys(FS.ins).length, inRows: Object.keys(FS.ins).length, closed: FS.closed, lock: FS.lock ? JSON.parse(JSON.stringify(FS.lock)) : null,
+      wins: Object.keys(L).filter(function (k) { return L[k].st === "win"; }).length, recs: recs.slice(-60).reverse(), scrs: scrs, t: nowT() };
+  }
+  function handle(p) {
+    if (!FS) reset();
+    var a = p.action; FS.calls.push({ a: a, since: p.since, closed: p.closed, lock: p.lock, t: Date.now() });
+    var ms = FS.ms[a] || 0;
+    if (FS.fail[a] > 0) { FS.fail[a]--; return { ok: false, reason: "network", __ms: ms || 60 }; }
+    if (a === "draw_pool" && p.since === "" && FS.failFull > 0) { FS.failFull--; return { ok: false, reason: "timeout", __ms: 200 }; }   /* 전체 읽기만 실패 */
+    var r = act(p); if (ms) r.__ms = ms; return r;
+  }
+  function act(p) {
+    var a = p.action, P = people();
+    if (a === "draw_stats") return stats();
+    if (a === "draw_pool") {
+      var cur = cursor(), inc = p.since && p.since === cur, L = live(), rows = [];
+      if (!inc) P.order.forEach(function (pk) { var x = P.people[pk], o = { pk: pk, nm: mask(x.fn), dp: x.fd, no: x.nos.slice(), in: !!FS.ins[pk], at: FS.ins[pk] || "" }; if (L[pk]) o.x = L[pk].st; rows.push(o); });
+      var c = counts();
+      return { ok: true, rows: rows, cursor: cur, full: !inc, balls: c.balls, inn: c.inN, inb: c.inBalls, closed: FS.closed, all: 1, t: nowT() };
+    }
+    if (a === "draw_state") return { ok: true, rows: FS.log.map(function (r) { var o = JSON.parse(JSON.stringify(r)); if (/f$/.test(r.slot)) o.fb = 1; return o; }), n: FS.log.length, t: nowT() };
+    if (a === "draw_cfg") {
+      if (p.closed != null && p.closed !== "") FS.closed = +p.closed === 1 ? 1 : 0;   /* 멱등 · 이미 닫혀 있어도 성공 */
+      if (p.lock != null && p.lock !== "") {
+        if (!/^\d+\.\d+\.\d+\.\d+$/.test(String(p.lock))) return { ok: false, reason: "lock" };
+        if (FS.closed !== 1) return { ok: false, reason: "notclosed" };
+        var v = String(p.lock).split(".").map(Number); FS.lock = { n: v[0], balls: v[1], inN: v[2], inBalls: v[3], at: nowT() };
+      }
+      return stats();
+    }
+    if (a === "draw_log") {
+      var L2 = live(), id = String(p.id), st = String(p.st), pk = String(p.pk || "");
+      for (var i = 0; i < FS.log.length; i++) if (FS.log[i].id === id && FS.log[i].st === st) return { ok: true, again: 1, id: id, st: st, warn: FS.log[i].warn };
+      if (st === "win" && L2[pk] && L2[pk].st === "win" && L2[pk].id !== id) return { ok: false, reason: "dup", id: L2[pk].id };
+      var slot = String(p.slot || "1"); if (String(p.fb) === "1" && !/f$/.test(slot)) slot += "f";
+      var row = { id: id, round: String(p.round), slot: slot, no: String(p.no), pk: pk, st: st, prize: p.prize || "", at: p.at || "", nm: P.people[pk] ? mask(P.people[pk].fn) : "" };
+      if (st === "win" && +p.round >= 3 && !/f$/.test(slot) && (!FS.ins[pk] || FS.warnAll)) row.warn = "in";   /* D5 B' · 기록하고 경고만 */
+      FS.log.push(row);
+      var res = { ok: true, id: id, st: st }; if (row.warn) res.warn = row.warn; return res;
+    }
+    if (a === "draw_scr") { FS.scrs[p.sid || "x"] = { scene: (function () { try { return JSON.parse(p.s).scene; } catch (e) { return ""; } })(), t: Date.now() }; return { ok: true, cmd: null, t: Date.now() }; }
+    if (a === "draw_who") return { ok: true, rows: String(p.pk || "").split(",").filter(Boolean).map(function (pk) { var x = P.people[pk]; return x ? { pk: pk, nm: x.fn, dp: x.fd } : null; }).filter(Boolean) };
+    if (a === "fin_state") return { ok: true, off: 1 };
+    FS.other++; return { ok: false, err: "unknown action" };
+  }
+  /* 앱 체크인 흉내 · 닫힌 뒤 새 사람은 거절 */
+  function checkin(pk) { if (!FS) reset(); if (FS.ins[pk]) return "dup"; if (FS.closed) { FS.lateRej++; return "closed"; } FS.ins[pk] = nowT().slice(11, 16); FS.late++; return "ok"; }
+  window.__axFakeSrv = handle;
+  window.__axFake = { reset: reset, st: function () { return FS || reset(); }, checkin: checkin, counts: function () { return counts(); } };
 })();
 </script>
 </head>
@@ -175,7 +258,7 @@
     <div class="card" id="cScn">
       <h2>가정 상황<em id="sSum"></em></h2>
       <div class="btns" style="grid-template-columns: 1fr 1fr 1fr; margin-bottom: 12px">
-        <button id="bAll" type="button">전부 자동으로 · 약 20분</button>
+        <button id="bAll" type="button">전부 자동으로 · 약 40분</button>
         <button id="bCopy" type="button">결과 복사</button>
         <button id="bCsv" type="button">CSV 저장</button>
       </div>
@@ -190,6 +273,7 @@
       <div class="fld"><span>행운권 장수</span><select id="iTk"><option value="1">1장씩</option><option value="2">2장씩</option><option value="3">3장씩</option><option value="mix">섞기 · 1 ~ 3장</option></select></div>
       <div class="fld"><span>번호</span><div class="two"><select id="iNum"><option value="seq">차례</option><option value="rand">무작위 · 1 ~ 9999</option></select><input type="number" id="iStart" min="1" max="9999" step="1" title="시작값"></div></div>
       <div class="fld"><span>이름</span><select id="iNames"><option value="fake">가짜 이름 · 스태프 01</option><option value="paste">붙여 넣기</option></select></div>
+      <div class="fld"><span>체크인 %</span><input type="number" id="iCk" min="0" max="100" step="5" title="17F 체크인한 사람 비율 · 3 · 2 · 1등은 이 사람들 중에서"></div>
       <textarea id="iPaste" placeholder="한 줄에 한 사람 · 이름 또는 「이름, 부서」" style="display:none"></textarea>
       <p class="hint" id="pasteNote" style="display:none">붙여 넣은 이름은 이 탭 메모리에만 · 새로 고치거나 닫으면 지움 · 서버로 보내지 않음 · 내보내기에는 「사람 N」으로</p>
       <div style="margin-top:12px; font-size:14px; color:var(--sub)">등수별 경품 수</div>
@@ -208,6 +292,8 @@
         <button id="bKeys" type="button">키 오작동 시험</button>
         <button id="bSpam" type="button">Space 연타 10번</button>
         <button id="bRestart" type="button">처음부터</button>
+        <button id="bFake" type="button" title="이 창 메모리 가짜 서버 · 라이브 확인표 · 공 넣기 순서 · 노트북 교체 시험">가짜 서버로 열기</button>
+        <button id="bLab" type="button" onclick="window.open('lab.html','_blank')">추첨 계산 보기 · 확률 실험실</button>
       </div>
       <label>자동 진행 중 다시 추첨 · <input type="checkbox" id="cR3" checked> 3등 <input type="checkbox" id="cR2"> 2등 <input type="checkbox" id="cR1" checked> 1등</label>
     </div>
@@ -247,13 +333,13 @@
   /* ─────────────── 1. 풀 설정 ─────────────── */
   (function () { var h = ""; for (var i = 0; i < 6; i++) h += '<label style="margin:0;display:block"><span>' + RN[i] + '</span><input type="number" id="iC' + i + '" min="1" max="12" step="1"></label>'; $("iCnt").innerHTML = h; })();
   function formFrom(tc) {
-    $("iN").value = tc.n; $("iTk").value = tc.tk; $("iNum").value = tc.num; $("iStart").value = tc.start; $("iNames").value = tc.names;
+    $("iN").value = tc.n; $("iTk").value = tc.tk; $("iNum").value = tc.num; $("iStart").value = tc.start; $("iNames").value = tc.names; $("iCk").value = tc.ck;
     for (var i = 0; i < 6; i++) $("iC" + i).value = tc.counts[i];
     namesUi();
   }
   function formRead() {
     var c = []; for (var i = 0; i < 6; i++) c.push($("iC" + i).value);
-    return AX.norm({ n: $("iN").value, tk: $("iTk").value, num: $("iNum").value, start: $("iStart").value, names: $("iNames").value, counts: c, seed: AX.newSeed() });
+    return AX.norm({ n: $("iN").value, tk: $("iTk").value, num: $("iNum").value, start: $("iStart").value, names: $("iNames").value, counts: c, seed: AX.newSeed(), ck: $("iCk").value });
   }
   function namesUi() { var p = $("iNames").value === "paste"; $("iPaste").style.display = p ? "" : "none"; $("pasteNote").style.display = p ? "" : "none"; $("iN").disabled = p; }
   $("iNames").onchange = namesUi;
@@ -262,6 +348,7 @@
     var nos = []; c.pool.order.forEach(function (pk) { nos = nos.concat(c.pool.people[pk].nos); });
     var tot = c.counts.reduce(function (a, b) { return a + b; }, 0), tc = AX.TC;
     setH("pSum", "지금 풀 <b>" + c.n + "</b>명 · 행운권 <b>" + c.tks + "</b>장 · 번호 " + (nos.length ? (tc.num === "seq" ? "<b>" + nos[0] + " ~ " + nos[nos.length - 1] + "</b>" : "무작위") : "-") +
+      " · <span style=\"white-space:nowrap\">17F 체크인 <b>" + c.inN + "</b>명 · <b>" + c.inT + "</b>장</span>" +
       " · <span style=\"white-space:nowrap\">경품 <b>" + tot + "</b>개(" + c.counts.join(" · ") + ")</span>" + (tc.names === "paste" ? " · 붙여 넣은 이름" : ""));
     setH("sub", "데모 · " + RN.map(function (n, i) { return n + " " + c.counts[i]; }).join(" → "));
   }
@@ -282,10 +369,18 @@
     var my = ++FRESH;
     jReset();
     fr.src = "about:blank";
-    setTimeout(function () { if (my !== FRESH) return; AX.lsDel(AX.K_ST); AX.lsDel("axfDraw.cfg.v1.test"); fr.src = "stage.html?sandbox=1"; }, 200);
+    if (window.__axFake) window.__axFake.reset();   /* 261021 가짜 서버도 새 풀로 */
+    setTimeout(function () { if (my !== FRESH) return; AX.lsDel(AX.K_ST); AX.lsDel(AX.K_ST + ".fake"); AX.lsDel("axfDraw.cfg.v1.test"); AX.lsDel("axfDraw.q.none.test"); fr.src = "stage.html?sandbox=1" + (A.fake ? "&fake=1" : ""); }, 200);
+  }
+  /* 261021 노트북 교체 흉내 · 이 기기 무대 기록을 비우고 다시 연다(가짜 서버 기록은 그대로) */
+  function swapNotebook() {
+    return new Promise(function (res) {
+      jReset(); fr.src = "about:blank";
+      setTimeout(function () { AX.lsDel(AX.K_ST + ".fake"); AX.lsDel(AX.K_ST); fr.src = "stage.html?sandbox=1&fake=1"; waitFor(function () { var y = X(); return y && y.scene && y.scene() === "start" ? y : null; }, 20000).then(res); }, 250);
+    });
   }
   $("bApply").onclick = function () {
-    var tc = formRead(), pasted = null;
+    var tc = formRead(), pasted = null; A.fake = false;
     if (tc.names === "paste") { pasted = AX.parseNames($("iPaste").value); if (!pasted.length) { setH("pErr", "붙여 넣은 이름이 없습니다"); return; } }
     applyTc(tc, pasted);
   };
@@ -298,33 +393,40 @@
   function jReset() { J = { rows: {}, ord: [], board: null, exhaust: {} }; }
   jReset();
   /* 계산 · prev(앞 기록)을 뺀 남은 사람 · 행운권(1인 1회 · 부재 제외 · 이미 당첨된 번호 제외) · 이 창의 풀 설정으로 따로 센다 */
-  function elig(st, prev) {
+  /* 261021 inOnly = 3 · 2 · 1등 체크인 통(이 창의 풀 설정 in 으로 따로 센다 · 무대 함수를 쓰지 않는다) */
+  function elig(st, prev, inOnly) {
     var out = {}, used = {}, n = 0, ppl = 0, pp = P().people;
     prev.forEach(function (q) { out[q.pk] = 1; if (q.st === "win") used[q.no] = 1; });
-    (st.arrived || []).forEach(function (pk) { if (out[pk]) return; var p = pp[pk]; if (!p) return; var c = 0; p.nos.forEach(function (no) { if (!used[no]) c++; }); if (c) { n += c; ppl++; } });
+    (st.arrived || []).forEach(function (pk) { if (out[pk]) return; var p = pp[pk]; if (!p || (inOnly && !p.in)) return; var c = 0; p.nos.forEach(function (no) { if (!used[no]) c++; }); if (c) { n += c; ppl++; } });
     return { tks: n, ppl: ppl };
   }
+  /* 261021 노트북 교체 · 이어받은 무대는 이미 당첨 · 부재인 사람을 공으로 다시 넣지 않는다(ST.out) · 판정은 기록에 있는 사람도 그때 풀에 있던 것으로 센다 · 서버에서 이어받은 기록(srv)은 그때 풀 장수가 없어(0) 장수 판정을 건너뛴다 */
+  function stJ(st, L) { var a = (st.arrived || []).slice(), s0 = {}; a.forEach(function (pk) { s0[pk] = 1; }); L.forEach(function (r) { if (!s0[r.pk]) { s0[r.pk] = 1; a.push(r.pk); } }); return { arrived: a }; }
+  function topR(ri) { return parseInt(RN[ri], 10) <= 3; }
+  function inOnlyOf(r) { return topR(r.round) && !r.fb; }
   function batchStart(L, i) { var b = i; while (b > 0 && L[b - 1].at === L[i].at && L[b - 1].round === L[i].round) b--; return b; }
   function batchEnd(L, i) { var e = i; while (e < L.length - 1 && L[e + 1].at === L[i].at && L[e + 1].round === L[i].round) e++; return e; }
   function judge(st, L, i) {
-    var r = L[i], prev = L.slice(0, i), b0 = batchStart(L, i), p = P().people[r.pk], outB = {}, c = {};
+    var r = L[i], prev = L.slice(0, i), b0 = batchStart(L, i), p = P().people[r.pk], outB = {}, c = {}; st = stJ(st, L);
     prev.forEach(function (q) { outB[q.pk] = 1; });
     c.no = !prev.some(function (q) { return q.no === r.no; });
     c.one = !prev.some(function (q) { return q.st === "win" && q.pk === r.pk; });
     c.abs = !prev.some(function (q) { return q.st === "absent" && q.pk === r.pk; });
     c.pool = !!p && p.nos.indexOf(String(r.no)) >= 0 && (st.arrived || []).indexOf(r.pk) >= 0 && !outB[r.pk];
-    c.cnt = r.pool == null ? null : elig(st, L.slice(0, b0)).tks === +r.pool;
+    c.cnt = r.pool == null || (r.srv && !+r.pool) ? null : elig(st, L.slice(0, b0), inOnlyOf(r)).tks === +r.pool;
+    c.inn = topR(r.round) ? (r.fb ? true : !!p && p.in === true) : null;   /* 261021 3 · 2 · 1등 = 체크인한 사람(전체 통 이어 뽑기 fb 는 예외) */
     c.left = null; c.scr = null; c.top = null;
-    return { id: r.id, round: r.round, no: String(r.no), pk: r.pk, st: r.st, c: c, pool: r.pool, at: hms(), shown: "" };
+    return { id: r.id, round: r.round, no: String(r.no), pk: r.pk, st: r.st, c: c, pool: r.pool, at: hms(), shown: "", fb: !!r.fb };
   }
   function verdict(row) {
-    var c = row.c, v = [c.no, c.one, c.abs, c.pool, c.cnt, c.left, c.scr];
+    var c = row.c, v = [c.no, c.one, c.abs, c.pool, c.cnt, c.left, c.scr, c.inn];
     if (row.st === "absent") v.push(c.top);
     if (v.some(function (q) { return q === false; })) return "FAIL";
     return "PASS";
   }
   function judgeTick(x) {
     var st = x.state(), L = liveRes(st), have = {};
+    if (L.length && !(st.arrived || []).length) return;   /* 261021 노트북 교체 · 기록은 왔고 풀은 아직(읽는 중) = 판정 미룸 */
     L.forEach(function (r) { have[r.id] = 1; });
     if (J.ord.some(function (id) { return !have[id]; })) { jReset(); log("무대 기록이 비었다 · 판정 처음부터"); }
     L.forEach(function (r, i) {
@@ -339,7 +441,7 @@
       var last = st.batch[st.batch.length - 1], idx = -1;
       L.forEach(function (r, i) { if (r.id === last) idx = i; });
       if (idx >= 0 && J.rows[last] && J.rows[last].c.left == null && L[idx].st === "win") {
-        var e = elig(st, L.slice(0, idx + 1)), got = x.info().tickets;
+        var e = elig(stJ(st, L), L.slice(0, idx + 1), inOnlyOf(L[idx])), got = x.info().tickets;
         st.batch.forEach(function (id) { var rw = J.rows[id]; if (rw) { rw.c.left = e.tks === got; rw.left = got + "/" + e.tks; } });
         if (e.tks !== got) log("FAIL · 남은 행운권 무대 " + got + " · 계산 " + e.tks);
       }
@@ -367,7 +469,7 @@
   function failTxt(row) {
     var c = row.c, t = [];
     if (c.no === false) t.push("번호 중복"); if (c.one === false) t.push("1인 1회"); if (c.abs === false) t.push("부재자 재당첨"); if (c.pool === false) t.push("그때 풀 밖");
-    if (c.cnt === false) t.push("그때 풀 장수 " + row.pool); if (c.left === false) t.push("남은 장수 " + row.left); if (c.scr === false) t.push("화면 다름"); if (c.top === false) t.push("6 · 5 · 4등 다시 추첨");
+    if (c.cnt === false) t.push("그때 풀 장수 " + row.pool); if (c.left === false) t.push("남은 장수 " + row.left); if (c.scr === false) t.push("화면 다름"); if (c.top === false) t.push("6 · 5 · 4등 다시 추첨"); if (c.inn === false) t.push("체크인 안 한 3 · 2 · 1등");
     return t.join(" · ");
   }
   function mk(v) { return v === true ? '<span class="y">✓</span>' : v === false ? '<span class="x">✕</span>' : '<span class="w">·</span>'; }
@@ -375,13 +477,13 @@
     var rows = J.ord.map(function (id) { return J.rows[id]; }), f = 0, p = 0;
     rows.forEach(function (r) { if (verdict(r) === "FAIL") f++; else p++; });
     setH("jSum", rows.length ? "PASS " + p + " · FAIL " + f : "");
-    setH("jt", "<tr><th>#</th><th>등수</th><th>번호</th><th>사람(가짜)</th><th>상태</th><th class=\"c\">번호 중복</th><th class=\"c\">1인 1회</th><th class=\"c\">부재자</th><th class=\"c\">그때 풀</th><th class=\"c\">장수</th><th class=\"c\">남음</th><th class=\"c\">화면</th><th>판정</th></tr>" +
+    setH("jt", "<tr><th>#</th><th>등수</th><th>번호</th><th>사람(가짜)</th><th>상태</th><th class=\"c\">번호 중복</th><th class=\"c\">1인 1회</th><th class=\"c\">부재자</th><th class=\"c\">그때 풀</th><th class=\"c\">장수</th><th class=\"c\">남음</th><th class=\"c\">화면</th><th class=\"c\">체크인</th><th>판정</th></tr>" +
       (rows.length ? rows.map(function (r, i) {
         var v = verdict(r), c = r.c;
         return '<tr class="' + (r.st === "absent" ? "ab" : "") + '"><td>' + (i + 1) + "</td><td>" + esc(RN[r.round] || "") + '</td><td class="n">' + esc(r.no) + "</td><td>" + esc(who(r.pk)) + "</td><td>" + (r.st === "absent" ? "다시 추첨" : "당첨") +
           '</td><td class="c">' + mk(c.no) + '</td><td class="c">' + mk(c.one) + '</td><td class="c">' + mk(c.abs) + '</td><td class="c">' + mk(c.pool) + '</td><td class="c" title="그때 풀 ' + esc(r.pool) + '장">' + mk(c.cnt) +
-          '</td><td class="c" title="' + esc(r.left || "") + '">' + mk(c.left) + '</td><td class="c" title="' + esc(r.shown) + '">' + mk(c.scr) + '</td><td><span class="pf ' + (v === "FAIL" ? "f" : "p") + '">' + v + "</span></td></tr>";
-      }).join("") : '<tr><td colspan="13" style="color:var(--dim)">아직 당첨 없음</td></tr>'));
+          '</td><td class="c" title="' + esc(r.left || "") + '">' + mk(c.left) + '</td><td class="c" title="' + esc(r.shown) + '">' + mk(c.scr) + '</td><td class="c" title="' + (r.fb ? "전체 통 이어 뽑기" : "") + '">' + (r.fb ? '<span class="w">fb</span>' : mk(c.inn)) + '</td><td><span class="pf ' + (v === "FAIL" ? "f" : "p") + '">' + v + "</span></td></tr>";
+      }).join("") : '<tr><td colspan="14" style="color:var(--dim)">아직 당첨 없음</td></tr>'));
   }
   function summary(x) {
     var st = x.state(), L = liveRes(st), rs = rounds(x), wins = L.filter(function (r) { return r.st === "win"; }), abs = L.filter(function (r) { return r.st === "absent"; });
@@ -393,7 +495,8 @@
     rs.forEach(function (r, i) { var n = wins.filter(function (w) { return w.round === i; }).length; if (i < st.round && n !== r.count) pastBad.push(r.name); if (i <= st.round && J.exhaust[i] && n < r.count) pastEx.push(r.name); });
     var rows = J.ord.map(function (id) { return J.rows[id]; });
     function all(k) { var v = rows.map(function (r) { return r.c[k]; }); return v.some(function (q) { return q === false; }) ? false : v.some(function (q) { return q === true; }) ? true : null; }
-    var net = x.net(), e = elig(st, L), tk = x.info().tickets, ext = extReq();
+    var curR = { round: st.round, fb: !!st.fb }, net = x.net(), e = elig(st, L, inOnlyOf(curR)), tk = x.info().tickets, ext = extReq();
+    var topOut = wins.filter(function (w) { var p = P().people[w.pk]; return topR(w.round) && !w.fb && !(p && p.in); }).length;
     var cfgOk = rs.every(function (r, i) { return r.count === AX.CUR.counts[i]; }) && JSON.stringify(st.pool && st.pool.order || []) === JSON.stringify(P().order);
     return [
       ["무대 풀 · 등수별 인원 = 설정", cfgOk, cfgOk ? "" : "무대가 옛 설정 · 적용 다시"],
@@ -403,13 +506,14 @@
       ["등수별 인원을 넘지 않음", !over, ""],
       ["지난 등수 당첨 수 = 설정", pastBad.length ? false : st.round > 0 || pastEx.length ? true : null, pastBad.join(" · ") + (pastEx.length ? " 풀 소진 " + pastEx.join(" · ") : "")],
       ["6 · 5 · 4등 다시 추첨 0", lowAbs === 0, ""],
+      ["체크인 안 한 3 · 2 · 1등 당첨 0(전체 통 이어 뽑기 제외)", topOut === 0, topOut ? topOut + "건" : ""],
       ["당첨 번호 = 그때 풀 안", all("pool"), ""],
       ["그때 풀 장수 = 계산(당첨자 나머지 행운권 빠짐)", all("cnt"), ""],
       ["남은 행운권 = 계산", tk === e.tks, "무대 " + tk + " · 계산 " + e.tks],
       ["무대 번호 · 이름 · 부서 = 기록", all("scr"), ""],
       ["결과판 번호 = 기록", J.board, ""],
-      ["서버 호출 0(데모)", net.calls === 0 && !net.live && ext === 0, ext ? "밖으로 나간 요청 " + ext : ""],
-      ["시험 저장 키 · 데모 고정", net.sandbox && net.mode === "demo", ""],
+      ["서버 호출 0(데모)", net.calls === 0 && (!net.live || net.isFake) && ext === 0, (ext ? "밖으로 나간 요청 " + ext : "") + (net.isFake ? " 가짜 서버 " + net.fake + "회(이 창 메모리)" : "")],
+      ["시험 저장 키 · 데모 고정(가짜 서버 시험은 라이브 흉내)", net.sandbox && (net.mode === "demo" || net.isFake), ""],
       ["운영 저장 키 그대로", AX.liveKeys() === AX.live0, ""]
     ];
   }
@@ -429,9 +533,10 @@
     var x = X(); if (!x || !x.state) { setH("now", "무대 화면 여는 중"); return; }
     var st = x.state(), rs = rounds(x), s = x.scene(), r = rs[Math.min(st.round, rs.length - 1)], L = liveRes(st);
     var w = L.filter(function (q) { return q.st === "win"; }).length, a = L.filter(function (q) { return q.st === "absent"; }).length, tot = rs.reduce(function (t, q) { return t + q.count; }, 0);
-    var e = elig(st, L), kb = x.ui.kb ? x.ui.kb() : { txt: "" };
+    var ck0 = x.ck ? x.ck() : {}, e = elig(st, L, inOnlyOf({ round: st.round, fb: !!st.fb })), kb = x.ui.kb ? x.ui.kb() : { txt: "" };
     setH("now", "장면 <b>" + esc(SCN[s] || s) + "</b> · 등수 <b>" + esc(r.name) + "</b> · 당첨 <b>" + w + "</b> / " + tot + " · 다시 추첨 <b>" + a + "</b><br>남은 사람 <b>" + e.ppl + "</b>명 · 행운권 <b>" + e.tks + "</b>장(무대 " + x.info().tickets + ")" +
-      (kb.txt ? "<br>스태프 표시줄 · " + esc(kb.txt) : "") + (A.on ? "<br>자동 진행 중" : "") + (typeof x.shown !== "function" ? '<br><b style="color:var(--o)">무대 파일이 옛 판 · Ctrl+F5</b>' : ""));
+      (kb.txt ? "<br>스태프 표시줄 · " + esc(kb.txt) : "") + (A.on ? "<br>자동 진행 중" : "") + (typeof x.shown !== "function" ? '<br><b style="color:var(--o)">무대 파일이 옛 판 · Ctrl+F5</b>' : "") +
+      "<br>지금 통 · " + (ck0.useIn ? "17F 체크인" : "행운권 전체") + (st.fb ? " · 전체 통 이어 뽑기 중" : "") + (ck0.why ? " · " + esc(ck0.why === "emptyin" ? "체크인 통 소진" : "남은 행운권 없음") : "") + (x.net().isFake ? " · 가짜 서버 " + x.net().fake + "회" : ""));
     setH("ck", summary(x).map(function (c) { var m = c[1] === true ? ["y", "✓"] : c[1] === false ? ["x", "✕"] : ["w", "·"]; return '<li><span class="m ' + m[0] + '">' + m[1] + "</span><span>" + esc(c[0]) + "</span>" + (c[2] ? '<span class="d">' + esc(c[2]) + "</span>" : "") + "</li>"; }).join(""));
     setH("tb", "<tr><th>등수</th><th>번호</th><th>이름 · 부서(가짜)</th><th>상태</th></tr>" + st.results.filter(function (q) { return q.st !== "undone"; }).map(function (q) {
       return "<tr><td>" + esc(rs[q.round] ? rs[q.round].name : "") + "</td><td class=\"n\">" + esc(q.no) + "</td><td>" + esc((q.fn || q.nm || "") + (q.fd ? " · " + q.fd : "")) + "</td><td>" + (q.st === "win" ? "당첨" : "다시 추첨") + "</td></tr>";
@@ -448,7 +553,9 @@
     var st = x.state(), rs = rounds(x), r = rs[Math.min(st.round, rs.length - 1)], top = parseInt(r.name, 10) <= 3;
     if ((s === "idle" || s === "closed" || s === "board") && dt > 900) { x.act("next"); A.wait = Date.now() + 600; }
     else if (s === "mix" && dt > 1800) {
-      if (x.info().tickets === 0) { A.on = false; log("남은 행운권 0 · 자동 진행 멈춤 · Space 로 무대 표시 확인"); return; }
+      var ckm = x.ck ? x.ck() : {};
+      if (ckm.fbShow && A.fbAuto) { A.fbN++; x.ui.op("fb"); setTimeout(function () { var y = X(); if (y) y.ui.op("fb"); }, 450); log("체크인 통 소진 · 운영 줄 「전체 통에서 이어 뽑기」 두 번"); A.wait = Date.now() + 1200; return; }
+      if (x.info().tickets === 0) { A.on = false; log((ckm.why === "emptyin" ? "체크인 통 소진" : "남은 행운권 0") + " · 자동 진행 멈춤 · Space 로 무대 표시 확인"); return; }
       x.act("next"); A.wait = Date.now() + 600;
     }
     else if (s === "reveal" && dt > 2800) {
@@ -473,6 +580,7 @@
   $("bRedo").onclick = function () { var x = X(); if (!x) return; x.ui.redo(); log(x.scene() === "reveal" ? "다시 추첨 단추 한 번(한 번 더 누르면 다시 추첨)" : "지금은 다시 추첨 단추가 없다(3 · 2 · 1등 공개 중에만)"); };
   function restart() { var x = X(); if (!x) return; A.on = false; x.ui.op("restart"); setTimeout(function () { var y = X(); if (y) y.ui.op("restart"); }, 450); log("처음부터"); }
   $("bRestart").onclick = restart;
+  $("bFake").onclick = function () { A.fake = true; applyTc(AX.TC, AX.PASTED); log("가짜 서버로 열기 · 무대 시작 화면에서 「라이브」 → 확인표 → 「라이브 시작」"); };
   /* 새로 고침 · 무대 iframe 만 다시 연다(같은 시험 기록 · 같은 풀) */
   function reloadStage() {
     return new Promise(function (res) {
@@ -520,15 +628,32 @@
   var RUN = { busy: false }, SR = {};
   try { SR = JSON.parse(AX.lsGet(K_RUN) || "{}") || {}; } catch (e) { SR = {}; }
   function srSave() { AX.lsSet(K_RUN, JSON.stringify(SR)); }
-  function setCfg(o) { var tc = AX.norm(Object.assign({ n: 12, tk: "1", num: "seq", start: 1, names: "fake", counts: AX.DEFC.slice() }, o, { seed: AX.newSeed() })); formFrom(tc); return applyTc(tc, null); }
-  async function prep(o) { if (!setCfg(o)) return null; await sleep(400); var x = await waitFor(function () { var y = X(); return y && y.scene && y.scene() === "idle" ? y : null; }, 20000); await sleep(600); return x; }
+  function setCfg(o) { A.fake = !!(o && o.fake); A.fbAuto = !!(o && o.fbAuto); A.fbN = 0; var tc = AX.norm(Object.assign({ n: 12, tk: "1", num: "seq", start: 1, names: "fake", counts: AX.DEFC.slice(), ck: 100 }, o, { seed: AX.newSeed() })); formFrom(tc); return applyTc(tc, null); }
+  async function prep(o) {
+    if (!setCfg(o)) return null; await sleep(400);
+    if (o && o.fake) return await liveIn();
+    var x = await waitFor(function () { var y = X(); return y && y.scene && y.scene() === "idle" ? y : null; }, 20000); await sleep(600); return x;
+  }
+  /* 261021 가짜 서버 · 시작 화면 → 라이브 → 확인표(sum) → 라이브 시작 · 확인표가 잠기면 null */
+  async function liveIn(noGo) {
+    var x = await waitFor(function () { var y = X(); return y && y.scene && y.scene() === "start" ? y : null; }, 20000); if (!x) return null;
+    await sleep(300); x.ui.live();
+    var y = await waitFor(function () { var z = X(); return z && z.ui.lv().step === "sum" ? z : null; }, 20000); if (!y) return null;
+    A.sum = y.ui.lv(); if (noGo) return y;
+    if (A.sum.why.length) { log("확인표 잠김 · " + A.sum.why.join(" · ")); return null; }
+    y.ui.go();
+    return await waitFor(function () { var z = X(); return z && ["idle", "closed", "reveal", "mix"].indexOf(z.scene()) >= 0 ? z : null; }, 20000);
+  }
   async function autoTo(pred, ms, redo) { A.redo = redo || {}; A.on = true; var ok = await waitFor(function () { var y = X(); return y && y.state && pred(y) ? y : null; }, ms, 120); A.on = false; return ok; }
+  function FK() { return window.__axFake.st(); }
+  function topWins(x) { return W(x).filter(function (r) { return topR(r.round); }); }
+  function topNotIn(x) { return topWins(x).filter(function (r) { var p = P().people[r.pk]; return !r.fb && !(p && p.in); }).length; }
   function W(x, ri) { return liveRes(x.state()).filter(function (r) { return r.st === "win" && (ri == null || r.round === ri); }); }
   function AB(x, ri) { return liveRes(x.state()).filter(function (r) { return r.st === "absent" && (ri == null || r.round === ri); }); }
   function where() { var y = X(); if (!y || !y.state) return " · 무대 없음"; var st = y.state(); return " · 멈춘 곳 " + (SCN[y.scene()] || y.scene()) + " · " + ((y.cfg().rounds[st.round] || {}).name || "") + " · 당첨 " + W(y).length + " · 표시줄 " + ((y.ui.kb() || {}).txt || ""); }
   function noFail() { return J.ord.every(function (id) { return verdict(J.rows[id]) !== "FAIL"; }); }
   async function pressSee(x) { await sleep(400); x.act("next"); await sleep(300); var kb = x.ui.kb(); return kb.txt || ""; }
-  function cfgTxt(o) { var c = o.counts || AX.DEFC; return (o.n === 0 ? "0명" : (o.n || 12) + "명") + " · " + ({ 1: "1장씩", 2: "2장씩", 3: "3장씩", mix: "1 ~ 3장 섞기" }[o.tk || "1"]) + " · 등수별 " + c.join(" · "); }
+  function cfgTxt(o) { var c = o.counts || AX.DEFC; return (o.n === 0 ? "0명" : (o.n || 12) + "명") + " · " + ({ 1: "1장씩", 2: "2장씩", 3: "3장씩", mix: "1 ~ 3장 섞기" }[o.tk || "1"]) + " · 등수별 " + c.join(" · ") + " · 체크인 " + (o.ckN != null ? o.ckN + "명" : (o.ck == null ? 100 : o.ck) + "%") + (o.fake ? " · 가짜 서버" : ""); }
   var SC_LIST = [
     { id: "s1", t: "행운권 3장인 사람이 당첨", cfg: { n: 8, tk: "3", counts: [3, 1, 1, 1, 1, 1] },
       steps: ["「이 설정으로 준비」", "Space 로 6등 공개까지", "「지금」 남은 행운권 · 판정 표 「남음」 확인", "Space 로 5등 공개 · 판정 표 「장수」 확인"],
@@ -682,6 +807,143 @@
         await sleep(500); var nw = W(x, 3)[0];
         var ok = a1 && a2 && !!nw && !!old && nw.pk !== old.pk && W(x, 3).length === 1 && W(x, 4).length === 1 && noFail();
         return [ok, "되돌리기 → 3등 공개 " + (a1 ? "✓" : "✕") + " · 다시 추첨 " + (a2 ? "✓ 부재 1" : "✕") + " · 새 3등 " + (nw ? nw.no : "-") + (old ? "(앞 " + old.no + ")" : "") + " · 2등 " + W(x, 4).length];
+      } },
+    /* ── 261021 체크인 2통 ── */
+    { id: "s12", t: "3 · 2 · 1등은 체크인한 사람만 · 3 · 2 · 1등 카드 「체크인한 n명 중에서」", cfg: { n: 40, tk: "mix", ck: 40 },
+      steps: ["「이 설정으로 준비」(40명 · 체크인 40%)", "Space 로 끝까지", "3 · 2 · 1등 카드 아래 줄 「체크인한 n명 중에서」 · 6 · 5 · 4등 카드에는 없음", "판정 표 「체크인」 열"],
+      exp: "3 · 2 · 1등 당첨 3명 모두 체크인한 사람 · 6 · 5 · 4등은 전체에서 · 3 · 2 · 1등 카드 n = 그 순간 체크인 통에 남은 사람 수(이 창이 따로 센 값 · 앞 등수 당첨자가 빠져 하나씩 줄어듦) · 4등 카드 줄 없음",
+      run: async function () {
+        var x = await prep(this.cfg); if (!x) return [false, "준비 실패"];
+        x = await autoTo(function (y) { return y.scene() === "card" && y.state().round === 2; }, 150000); if (!x) return [false, "4등 카드까지 못 감" + where()];
+        await sleep(300); var card4 = x.ck().card, cards = [], wants = [];
+        for (var ri = 3; ri <= 5; ri++) {
+          x = await autoTo(function (y) { return y.scene() === "card" && y.state().round === ri; }, 150000); if (!x) return [false, RN[ri] + " 카드까지 못 감" + where()];
+          await sleep(300); var st = x.state(); wants.push("체크인한 " + elig(st, liveRes(st), true).ppl + "명 중에서"); cards.push(x.ck().card);
+        }
+        x = await autoTo(function (y) { return y.scene() === "board" || y.scene() === "end"; }, 150000); if (!x) return [false, "결과판까지 못 감" + where()];
+        var tw = topWins(x), ok = JSON.stringify(cards) === JSON.stringify(wants) && card4 === "" && tw.length === 3 && topNotIn(x) === 0 && W(x).length === 10 && noFail();
+        return [ok, "3 · 2 · 1등 카드 「" + cards.join("」 「") + "」(계산 " + wants.map(function (t) { return t.replace(/\D/g, ""); }).join(" · ") + "명) · 4등 카드 「" + card4 + "」 · 3 · 2 · 1등 " + tw.length + "명 · 체크인 안 한 3 · 2 · 1등 " + topNotIn(x)];
+      } },
+    { id: "s13", t: "체크인 0명 · 소진 → 전체 통 이어 뽑기(한 번 누르면 끝까지)", cfg: { n: 12, tk: "1", ckN: 0 },
+      steps: ["「이 설정으로 준비」(12명 · 체크인 0명)", "6 · 5 · 4등 확정 → 3등 부저 화면에서 Space", "표시줄 「체크인 통에 남은 행운권 없음」 · 운영 줄 「전체 통에서 이어 뽑기」 두 번", "3 · 2 · 1등 끝까지(다시 누르지 않음)"],
+      exp: "3등 Space = 뽑지 않음(멈춤) · 운영 줄 단추 = 그때만 · 누른 뒤 3 · 2 · 1등 전체 통 · 2 · 1등 카드 「체크인한 n명」 줄 숨김 · 기록 fb · 단추 누름 1번 · 당첨 10",
+      run: async function () {
+        var x = await prep(this.cfg); if (!x) return [false, "준비 실패"];
+        x = await autoTo(function (y) { return y.scene() === "mix" && y.state().round === 3 && !A.on; }, 150000); if (!x) x = X();
+        A.on = false; await sleep(2200); var show0 = x.ck().fbShow, kb = await pressSee(x), w3a = W(x, 3).length, sc = x.scene();
+        x.ui.op("fb"); await sleep(450); x.ui.op("fb"); await sleep(600); var fbOn = !!x.ck().fb;
+        A.fbAuto = true; A.fbN = 0; var fbCards = [];
+        for (var ri = 4; ri <= 5; ri++) {
+          x = await autoTo(function (y) { return y.scene() === "card" && y.state().round === ri; }, 150000); if (!x) return [false, RN[ri] + " 카드까지 못 감" + where()];
+          await sleep(300); fbCards.push(x.ck().card);
+        }
+        x = await autoTo(function (y) { return y.scene() === "board" || y.scene() === "end"; }, 150000); if (!x) return [false, "결과판까지 못 감" + where()];
+        var tw = topWins(x), allFb = tw.every(function (r) { return !!r.fb; }), hid = fbCards.every(function (t) { return t === ""; });
+        var ok = show0 && /체크인 통에 남은 행운권 없음/.test(kb) && w3a === 0 && sc === "mix" && fbOn && A.fbN === 0 && tw.length === 3 && allFb && hid && W(x).length === 10 && noFail();
+        return [ok, "소진 단추 " + (show0 ? "보임" : "없음") + " · Space 표시줄 「" + kb + "」 · 켬 " + fbOn + " · 그 뒤 다시 누름 " + A.fbN + " · 이어 뽑기 중 2 · 1등 카드 줄 " + (hid ? "숨김 ✓" : "✕ " + JSON.stringify(fbCards)) + " · 3 · 2 · 1등 " + tw.length + "명(fb " + tw.filter(function (r) { return r.fb; }).length + ")"];
+      } },
+    { id: "s14", t: "체크인 1명 · 2명 · 부재가 이어져 소진", cfg: { n: 12, tk: "1", ckN: 1, fbAuto: true }, cfg2: { n: 12, tk: "1", ckN: 2, fbAuto: true }, cfg2t: "체크인 2명으로 준비",
+      steps: ["「이 설정으로 준비」 = 체크인 1명 · 3등 공개마다 「다시 추첨」 한 번", "「체크인 2명으로 준비」 = 같은 순서"],
+      exp: "체크인한 사람이 남아 있으면 그 사람 · 없으면 그때부터 전체 통(단추 1번) · fb 아닌 3 · 2 · 1등 = 모두 체크인한 사람 · 부재자 재당첨 0",
+      run: async function () {
+        var out = [], okAll = true, cfgs = [this.cfg, this.cfg2];
+        for (var i = 0; i < 2; i++) {
+          var x = await prep(cfgs[i]); if (!x) return [false, "준비 실패"];
+          x = await autoTo(function (y) { return y.scene() === "board" || y.scene() === "end"; }, 240000, { "3등": 1 }); if (!x) return [false, "결과판까지 못 감" + where()];
+          var tw = topWins(x), ok = topNotIn(x) === 0 && A.fbN <= 1 && tw.length === 3 && W(x).length === 10 && noFail();
+          okAll = okAll && ok; out.push("체크인 " + cfgs[i].ckN + "명 · 단추 " + A.fbN + "번 · 3 · 2 · 1등 fb " + tw.filter(function (r) { return r.fb; }).length + "/3 · 체크인 안 한 fb 아닌 당첨 " + topNotIn(x));
+        }
+        return [okAll, out.join(" / ")];
+      } },
+    { id: "s15", t: "자기 검사 · 체크인 안 한 공이 섞여도 공개하지 않고 다시 뽑기", cfg: { n: 20, tk: "1", ck: 50 },
+      steps: ["「이 설정으로 준비」", "3등 부저 화면에서 시험 고장 넣기(다음 뽑기 첫 칸 = 체크인 안 한 사람)", "Space"],
+      exp: "자기 검사가 잡고 다시 뽑음(검사 다시 뽑기 1번 이상) · 공개된 3등 = 체크인한 사람 · 판정 FAIL 0",
+      run: async function () {
+        var x = await prep(this.cfg); if (!x) return [false, "준비 실패"];
+        x = await autoTo(function (y) { return y.scene() === "mix" && y.state().round === 3; }, 150000); if (!x) return [false, "3등 부저까지 못 감" + where()];
+        await sleep(1500); var r0 = x.ck().redo; x.fault(1);
+        x = await autoTo(function (y) { return y.scene() === "reveal" && y.state().round === 3; }, 60000); if (!x) return [false, "3등 공개까지 못 감" + where()];
+        var w = W(x, 3)[0], p = w && P().people[w.pk], ok = !!w && !!p && p.in === true && x.ck().redo > r0 && noFail();
+        return [ok, "검사 다시 뽑기 " + (x.ck().redo - r0) + "번 · 3등 " + (w ? w.no + " · 체크인 " + (p && p.in ? "함" : "안 함") : "-")];
+      } },
+    { id: "s16", t: "가짜 서버 · 공 넣기 순서(닫기 → 전체 읽기 → 공 → 고정 → 고정 숫자 보관)", cfg: { n: 30, tk: "mix", ck: 40, fake: true },
+      steps: ["「이 설정으로 준비」(가짜 서버 · 라이브 확인표 → 라이브 시작)", "대기 화면에서 한 명 체크인(받아짐) → Space", "서버가 닫힌 직후 한 명 더 체크인(거절)"],
+      exp: "호출 순서 = draw_cfg closed 1 → draw_pool since 빈 값 → draw_cfg lock · 고정은 전체 읽기 뒤 · 닫힌 뒤 체크인 거절 · 무대 체크인 통 = 가짜 서버 체크인 통 · 고정 숫자 서버 = 무대",
+      run: async function () {
+        var x = await prep(this.cfg); if (!x) return [false, "준비 실패 · 확인표 " + (A.sum ? A.sum.why.join(" · ") : "")];
+        var P0 = P(), outs = P0.order.filter(function (pk) { return !FK().ins[pk]; }), early = outs[0], late = outs[1];
+        var e1 = window.__axFake.checkin(early); await sleep(3600);   /* 대기 화면 폴링(3초)이 새 체크인을 싣는다 */
+        var c0 = FK().calls.length, lateRes = "";
+        var watch = setInterval(function () { if (FK().closed && !lateRes) lateRes = window.__axFake.checkin(late); }, 20);
+        x.act("next");
+        x = await waitFor(function () { var y = X(); return y && y.scene() === "closed" ? y : null; }, 40000); clearInterval(watch); if (!x) return [false, "고정까지 못 감" + where()];
+        await sleep(1500);
+        var calls = FK().calls.slice(c0), iClose = -1, iRead = -1, iLock = -1;
+        calls.forEach(function (c, i) { if (c.a === "draw_cfg" && String(c.closed) === "1" && iClose < 0) iClose = i; if (c.a === "draw_pool" && c.since === "" && iClose >= 0) iRead = i; if (c.a === "draw_cfg" && c.lock) iLock = i; });
+        var ck = x.ck(), fc = window.__axFake.counts(), stIn = x.state().arrived.filter(function (pk) { var p = x.state().pool.people[pk]; return p && p.in; }).length;
+        var lk = FK().lock, lkS = lk ? [lk.n, lk.balls, lk.inN, lk.inBalls].join(".") : "";
+        var ok = e1 === "ok" && lateRes === "closed" && iClose >= 0 && iRead > iClose && iLock > iRead && stIn === fc.inN && lkS === ck.lock.all && ck.lockSaved === lkS && !!x.state().pool.people[early].in && !x.state().pool.people[late].in;
+        return [ok, "순서 닫기 " + iClose + " → 전체 읽기 " + iRead + " → 보관 " + iLock + " · 앞 체크인 " + e1 + " · 닫힌 뒤 " + lateRes + " · 무대 체크인 " + stIn + "명 = 서버 " + fc.inN + " · 고정 " + ck.lock.all + " · 서버 " + lkS];
+      } },
+    { id: "s17", t: "가짜 서버 · 닫기 실패 2번 · 전체 읽기 실패 2번", cfg: { n: 20, tk: "1", ck: 50, fake: true },
+      steps: ["「이 설정으로 준비」", "닫기 2번 실패 넣고 Space", "닫힌 뒤 전체 읽기 2번 실패"],
+      exp: "닫기가 될 때까지 5초마다 다시 · 그동안 읽기 · 공 · 고정 없음 · 읽기가 될 때까지 5초마다 다시 · 그 뒤 고정 · 단추 누름 없음",
+      run: async function () {
+        var x = await prep(this.cfg); if (!x) return [false, "준비 실패"];
+        FK().fail.draw_cfg = 2; FK().failFull = 2; var c0 = FK().calls.length, closedEarly = false, seenTxt = {};
+        var watch = setInterval(function () { var y = X(); if (!y) return; if (y.state().closed && (!FK().closed || FK().failFull > 0)) closedEarly = true; var t = y.ui.kb().txt; if (/다시/.test(t)) seenTxt[t.replace(/\d+/g, "n")] = 1; }, 50);
+        x.act("next");
+        x = await waitFor(function () { var y = X(); return y && y.scene() === "closed" ? y : null; }, 60000); clearInterval(watch); if (!x) return [false, "고정까지 못 감" + where()];
+        var calls = FK().calls.slice(c0), nClose = calls.filter(function (c) { return c.a === "draw_cfg" && String(c.closed) === "1"; }).length, nRead = calls.filter(function (c) { return c.a === "draw_pool" && c.since === ""; }).length;
+        var ok = nClose === 3 && nRead >= 3 && !closedEarly && x.state().closed && !!x.ck().lock;
+        return [ok, "닫기 호출 " + nClose + "번 · 전체 읽기 " + nRead + "번 · 실패 중 고정 " + (closedEarly ? "있음 ✕" : "없음") + " · 표시줄 " + Object.keys(seenTxt).join(" / ")];
+      } },
+    { id: "s18", t: "가짜 서버 · 서버 경고(warn in) · 무대는 멈추지 않음", cfg: { n: 20, tk: "1", ck: 60, fake: true },
+      steps: ["「이 설정으로 준비」 · 가짜 서버가 3 · 2 · 1등 기록마다 warn in", "3등 공개"],
+      exp: "3등 공개 그대로 · 표시줄 「서버 경고 · 체크인 기록 없음」 · 운영 줄 경고 1 · 기록에 warn · Space 두 번으로 2등 이어서",
+      run: async function () {
+        var x = await prep(this.cfg); if (!x) return [false, "준비 실패"];
+        FK().warnAll = true; var seen = "";
+        var watch = setInterval(function () { var y = X(); if (y && /체크인 기록 없음/.test(y.ui.kb().txt)) seen = y.ui.kb().txt; }, 50);
+        x = await autoTo(function (y) { return y.scene() === "reveal" && y.state().round === 3 && y.ck().warnIn >= 1; }, 150000); if (!x) { clearInterval(watch); return [false, "3등 경고까지 못 감" + where()]; }
+        await sleep(1200); clearInterval(watch);
+        var w = W(x, 3)[0], sc = x.scene();
+        x = await autoTo(function (y) { return y.scene() === "reveal" && y.state().round === 4; }, 90000);
+        var ok = !!w && w.warn === "in" && sc === "reveal" && !!seen && !!x && W(x, 3).length === 1;
+        return [ok, "3등 기록 warn " + (w && w.warn) + " · 표시줄 「" + seen + "」 · 장면 " + (SCN[sc] || sc) + " · 2등 이어서 " + (x ? "✓" : "✕")];
+      } },
+    { id: "s19", t: "가짜 서버 · 노트북 교체 뒤 두 통 · 고정 숫자 대조 · 새로 고침 복원", cfg: { n: 30, tk: "mix", ck: 40, fake: true },
+      steps: ["「이 설정으로 준비」 → 5등 확정까지", "노트북 교체(이 기기 기록 비우고 다시 열기) → 확인표 두 통 · 고정 숫자 확인 → 라이브 시작", "3등 공개 중 새로 고침 · 끝까지", "서버 고정 숫자를 바꿔 놓고 한 번 더 교체 → 확인표 경고(빨강) · 잠기지 않음"],
+      exp: "교체 뒤 확인표 = 두 통 일치 · 고정 숫자 일치 · 이어서 4등부터 · 3등 공개 새로 고침 = 같은 당첨 · 3 · 2 · 1등 체크인한 사람만 · 고정 숫자가 다르면 경고만",
+      run: async function () {
+        var x = await prep(this.cfg); if (!x) return [false, "준비 실패"];
+        x = await autoTo(function (y) { return y.scene() === "mix" && y.state().round === 2 && W(y).length === 5; }, 150000); if (!x) return [false, "4등 부저까지 못 감" + where()];
+        await sleep(500); var all0 = x.ck().lock && x.ck().lock.all;
+        await swapNotebook(); var y = await liveIn(true); if (!y) return [false, "교체 뒤 확인표 못 엶"];
+        var s1 = A.sum.sum, a1 = s1 && s1.inSame && s1.same && !s1.warn.length && s1.lockStr === s1.mine && s1.mine === all0 && !A.sum.why.length;
+        y.ui.go(); await sleep(1500);
+        x = await autoTo(function (z) { return z.scene() === "reveal" && z.state().round === 3; }, 150000); if (!x) return [false, "3등 공개까지 못 감" + where()];
+        var b3 = JSON.stringify(x.state().batch), o = await reloadStage(); x = X(); var a2 = o && o.same && x.scene() === "reveal" && JSON.stringify(x.state().batch) === b3;
+        x = await autoTo(function (z) { return z.scene() === "board" || z.scene() === "end"; }, 200000); if (!x) return [false, "결과판까지 못 감" + where()];
+        var a3 = W(x).length === 10 && topNotIn(x) === 0 && noFail(), d3 = "당첨 " + W(x).length + " · 체크인 안 한 " + topNotIn(x) + " · 판정 FAIL " + J.ord.filter(function (id) { return verdict(J.rows[id]) === "FAIL"; }).join(",");
+        FK().lock.inN += 1; await swapNotebook(); y = await liveIn(true);
+        var s2 = A.sum && A.sum.sum, a4 = !!s2 && s2.warn.some(function (t) { return /다름/.test(t); }) && !A.sum.why.length;
+        if (y && a4) { y.ui.go(); await sleep(1500); }   /* 경고만 = 시작할 수 있음 */
+        var ok = a1 && a2 && a3 && a4;
+        return [ok, "교체 확인표 두 통 " + (a1 ? "✓ " + (s1 && s1.mine) : "✕ " + JSON.stringify(s1 && { why: A.sum.why, warn: s1.warn, lk: s1.lockStr, mine: s1.mine, all0: all0 })) + " · 3등 공개 새로 고침 " + (a2 ? "✓" : "✕") + " · 끝까지 " + (a3 ? "✓ 10명" : "✕ " + d3) + " · 고정 숫자 다름 경고 " + (a4 ? "✓ 잠기지 않음" : "✕ " + JSON.stringify(A.sum && A.sum.why))];
+      } },
+    { id: "s20", t: "가짜 서버 · 당첨 기록 뒤 알림 호출 0", cfg: { n: 15, tk: "1", ck: 60, fake: true },
+      steps: ["「이 설정으로 준비」 → 3등 공개까지", "가짜 서버 호출 목록 확인"],
+      exp: "무대가 부른 액션 = draw_stats · draw_pool · draw_state · draw_cfg · draw_log · draw_scr · draw_who · fin_state 뿐 · 그 밖(알림 · 푸시 등) 0 · 네트워크 요청 0",
+      run: async function () {
+        var x = await prep(this.cfg); if (!x) return [false, "준비 실패"];
+        x = await autoTo(function (y) { return y.scene() === "reveal" && y.state().round === 3; }, 150000); if (!x) return [false, "3등 공개까지 못 감" + where()];
+        await sleep(1500);
+        var ok0 = { draw_stats: 1, draw_pool: 1, draw_state: 1, draw_cfg: 1, draw_log: 1, draw_scr: 1, draw_who: 1, fin_state: 1 }, used = {};
+        FK().calls.forEach(function (c) { used[c.a] = (used[c.a] || 0) + 1; });
+        var bad = Object.keys(used).filter(function (k) { return !ok0[k]; }), logs = used.draw_log || 0, net = x.net();
+        var ok = bad.length === 0 && FK().other === 0 && logs >= 8 && net.calls === 0 && extReq() === 0;
+        return [ok, "부른 액션 " + Object.keys(used).sort().map(function (k) { return k + " " + used[k]; }).join(" · ") + " · 그 밖 " + bad.length + " · 네트워크 " + net.calls];
       } }
   ];
   function scnPaint() {
@@ -695,7 +957,7 @@
         "<ol>" + s.steps.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ol>" +
         '<p class="exp"><b>예상 · </b>' + esc(s.exp) + "</p>" +
         '<p class="res">' + (au ? "<b>자동 확인 · " + (r.autoOk ? "통과" : "실패") + "</b> · " + esc(au) + (r.at ? " · " + esc(r.at) : "") : "") + "</p>" +
-        '<div class="row">' + (s.cfg ? '<button type="button" data-a="prep" data-s="' + s.id + '">이 설정으로 준비</button>' : "") + (s.cfg2 ? '<button type="button" data-a="prep2" data-s="' + s.id + '">0명으로 준비</button>' : "") +
+        '<div class="row">' + (s.cfg ? '<button type="button" data-a="prep" data-s="' + s.id + '">이 설정으로 준비</button>' : "") + (s.cfg2 ? '<button type="button" data-a="prep2" data-s="' + s.id + '">' + esc(s.cfg2t || "0명으로 준비") + '</button>' : "") +
         '<button type="button" data-a="run" data-s="' + s.id + '">자동으로 해 보기</button><span class="gap"></span>' +
         '<button type="button" class="pass' + (man === "통과" ? " on" : "") + '" data-a="pass" data-s="' + s.id + '">통과</button><button type="button" class="fail' + (man === "실패" ? " on" : "") + '" data-a="fail" data-s="' + s.id + '">실패</button></div></div>';
     }).join("");
@@ -752,7 +1014,8 @@
     function fb() { var ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); } catch (e) {} ta.remove(); }
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function () { log("결과 복사 · 표 붙여 넣기 가능"); }, function () { fb(); log("결과 복사"); }); else { fb(); log("결과 복사"); }
   };
-  window.__axt = { scn: SC_LIST.map(function (s) { return s.id; }), run: function (id) { return runOne(scnById(id)); }, sr: function () { return SR; }, j: function () { return J; }, rows: rowsOut };
+  window.__axt = { scn: SC_LIST.map(function (s) { return s.id; }), run: function (id) { return runOne(scnById(id)); }, sr: function () { return SR; }, j: function () { return J; }, rows: rowsOut,
+    cap: { prep: prep, liveIn: liveIn, autoTo: autoTo, setCfg: setCfg, A: function () { return A; } } };   /* 261021 캡처용(헤드리스) · 무대를 움직이는 길은 가정 상황과 같다 */
 })();
 </script>
 </body>
