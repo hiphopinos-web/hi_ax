@@ -721,7 +721,7 @@ function pushExHtml(ctx, opt) {
   var t = "포토부스 입장하세요", b = "1F · " + (opt.no || 14) + "번 · 10분 안에 입장";   /* v4.78 A10 실제 푸시 문구와 같게(제목에 주제어) */
   if (ctx === "cchat" || ctx === "first") { t = "커피챗에 선정됐어요"; b = "18F · 15:00 · TABLE A"; }   /* v7.52 테이블 A · B */   /* v5.05 포토부스 대기 폐지면 처음 안내 예시도 커피챗 */
   if (ctx === "dap") { t = "AX 라운지 시간 안내"; b = "14:20~14:40 · 1F AX 라운지"; }   /* v5.83 실제 알림(notifyUser)과 같은 말 · v7.39 사전 신청 시간 안내(시간 · 상담석) */
-  if (ctx === "kit") { t = "기념품 옷 수령 안내"; b = kitStaff(kitMy()) ? "수령 방법 안내" : "10/26(월) 08:00부터 · 1F 주차장 체크인존"; }   /* 261006 키트 사이즈 정한 직후 · 261008 스태프 = 수령 방법 안내 */
+  if (ctx === "kit") { t = "기념품 옷 수령 안내"; b = kitStaff(kitMy()) ? "수령 방법 안내" : kitGetTxt(kitMy()); }   /* 261006 키트 사이즈 정한 직후 · 261008 스태프 = 수령 방법 안내 */
   if (ctx === "crowd") { t = opt.tgt === "lobby" ? "1F 로비 혼잡이 풀렸어요" : "엘리베이터 혼잡이 풀렸어요"; b = (opt.tgt === "lobby" ? "1F 로비" : "1F 승강기 홀") + " · 15:07"; }
   return '<div class="axs-pex" aria-hidden="true"><img src="icons/icon-192.png" alt=""><div><b>' + esc(t) + "</b><span>" + esc(b) + "</span></div></div>";
 }
