@@ -30,9 +30,10 @@
 .tl-off{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;padding:6px 0;border-top:1px solid var(--line2);font-size:13px}
 .tl-off:first-of-type{border-top:0}
 @media (max-width:640px){
-  .tl-row,.tl-now{grid-template-columns:56px minmax(0,1fr)}
-  .tl-tm{padding:12px 0 0 10px;font-size:14px}
-  .tl-now .tl-tm{padding-left:10px}
+  .tl-row,.tl-now{grid-template-columns:60px minmax(0,1fr)}
+  .tl-tm{padding:12px 0 0 8px;font-size:14px}
+  .tl-ad{white-space:nowrap}
+  .tl-now .tl-tm{padding-left:8px}
   .tl-bd{flex-direction:column;gap:8px;padding:10px 10px 10px 8px}
   .tl-ac{justify-content:flex-start;max-width:none}
 }
