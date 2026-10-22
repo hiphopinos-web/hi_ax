@@ -163,7 +163,8 @@ function dlgGo(){
     DLG.busy=false; no.removeAttribute("aria-disabled"); card.removeAttribute("aria-busy");
     if(res&&res.ok){ var d=o.done; dlgClose(true); d&&d(res); return; }
     ok.textContent=lab;
-    el("dlgErr").textContent=(o.fail?o.fail(res):"")||("처리하지 못했습니다 · "+why(res)); gateUpd();
+    var em=(o.fail?o.fail(res):"")||("처리하지 못했습니다 · "+why(res));
+    el("dlgErr").textContent=em; toast(em,{ bad:1, ms:6000 }); gateUpd();
   };
   Promise.resolve(o.run({})).then(fin,function(){ fin({ ok:false, reason:"network" }); });
 }
