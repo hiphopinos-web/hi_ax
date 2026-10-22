@@ -405,10 +405,10 @@ function attSpec() {
     var x = attProg(r.id) || { nm: r.id };
     var more = !r.dup && r.pg === 1 && r.k === "in" && P3_PM.indexOf(r.id) >= 0 && !attShut(x) ? '<p class="ax-meta">종료 출석체크 시 1개 더</p>' : "";   /* v5.94 스탬프는 오후 파트너 강연만 */
     if (!r.stamp && (!attUi(r.id) || r.nost || r.remote)) return { id: "att", title: r.dup ? "이미 기록됐어요" : "출석이 기록됐어요", lead: "<b>" + esc(x.nm) + "</b>",   /* v5.96 오전 강연 · 송출 · 서버 범위 밖(nost) = 기록만 · 스탬프 기대를 만들지 않게 담담하게 · 오류로 만들지 않는다 */
-      body: (r.pre ? '<p class="ax-meta">스탬프 · 행사 당일(10/26) 적립</p>' : "") + (r.test ? '<p class="ax-meta">테스트 계정 · 테스트 기록</p>' : ""), go: "sheetClose()", goLbl: "확인" };
+      body: (r.pre ? '<p class="ax-meta">스탬프 · 행사 당일(10/26) 적립</p>' : "") + (r.test ? '<p class="ax-meta">테스트 계정 · 테스트 기록</p>' : "") + endSvLn(r), go: "sheetClose()", goLbl: "확인" };
     return { id: "att", title: r.dup ? "이미 출석했어요" : "출석했어요", lead: "<b>" + esc(x.nm) + "</b><br>" + (r.k === "out" ? "종료 " : "시작 ") + esc(r.at) + (r.remote ? " · 유튜브 송출 출석" : ""),
       body: (r.stamp ? '<div class="ax-inset axs-attok"><p class="ax-card-title">스탬프 「프로그램 참여」 ' + (r.add > 1 ? r.add + "개" : "1개") + ' 적립</p><p class="ax-description">현재 스탬프 ' + r.stamp + " / " + STAMP_DENOM + "개</p></div>" : r.pre ? '<p class="ax-meta">스탬프 · 행사 당일(10/26) 적립</p>' : !r.dup && r.pg >= 2 && P3_PM.indexOf(r.id) >= 0 ? '<p class="ax-meta">프로그램 참여 스탬프 2개 받음</p>' : "") + (r.pre ? "" : more) +   /* 261013 오후 묶음이 이미 2개(커피챗 · 라운지 · 다른 강연) = 출석만 · 받은 상태 한 줄 */
-        (r.test ? '<p class="ax-meta">테스트 계정 · 출석은 테스트 기록 · 스탬프는 이 기기에만</p>' : ""),
+        (r.test ? '<p class="ax-meta">테스트 계정 · 출석은 테스트 기록 · 스탬프는 이 기기에만</p>' : "") + endSvLn(r),
       go: "sheetClose()", goLbl: "확인" };
   }
   if (ATT.fix) { var fx = attProg(ATT.fix);   /* 강연별 QR · 고르기 없음 · 실패하면 「다시 시도하기」 */
@@ -460,8 +460,10 @@ function attDone(res) {
   S.set("att_mine", m);
   var sn = attStamp(res);
   ATT.res = { id: res.prog, at: m[key], dup: !!res.dup, k: k0, remote: !!res.remote, stamp: sn, add: res.stamp && !res.stamp.dry ? res.stamp.add || 0 : sn ? 1 : 0, pg: res.pg || 0, nost: !!res.nost, test: !!res.test, pre: res.no === "preday" || res.no === "postday" };   /* 261016 pre = 서버 preday 가드 · 출석만 기록 · 261022 postday(행사 뒤 · 출석 QR 스탬프는 행사일에만)도 같은 한 줄 */
+  ATT.res.sv = endSvWant(k0, ATT.res.pre);   /* 261022 종료 QR → 설문(endSv · 10F 와 같은 규칙) */
   attRepaint();
   App.render();   /* 뒤의 강연 상세 · 시간표 행이 출석 상태로 바뀐다 */
+  if (ATT.res.sv) endSvArm("att");
 }
 /* 17F 스탬프 · 서버 목록이 정본(boothDone 과 같은 순서) · 테스트(dry)는 이 기기에만 · 새로 받았으면 현재 개수(없으면 0)
    v5.68 id = p3h(17F 한쪽 · 1개) | p3(2개째 · 또는 이미 있음) · add = 이번에 더한 개수(0이면 기록만) */
@@ -510,7 +512,7 @@ function attStampHtml(r) {
 function att10Spec() {
   var s = sessById(ATT10.sid) || { ttl: ATT10.sid }, r = ATT10.res, f = ATT10.info;
   if (r) return { id: "att10", title: r.dup ? "이미 기록됐어요" : "출석이 기록됐어요", lead: "<b>" + esc(s.ttl) + "</b> " + att10K() + " 확인 · " + esc(r.at),   /* 261016 담백한 한 줄(기록만) */
-    body: attStampHtml(r) + (r.test ? '<p class="ax-meta">테스트 계정 · 테스트 기록</p>' : ""),
+    body: attStampHtml(r) + (r.test ? '<p class="ax-meta">테스트 계정 · 테스트 기록</p>' : "") + endSvLn(r),
     go: "sheetClose()", goLbl: "확인" };
   if (f) return { id: "att10", title: f.t, lead: f.l, go: "sheetClose()", goLbl: "확인" };
   var tmRow = testMode() ? '<label class="axs-attt">테스트 · 시각<input type="time" value="' + esc(attTm()) + '" onchange="att10TmSet(this.value)"></label>' : "";
@@ -552,8 +554,48 @@ function att10Done(res) {
   S.set("att_mine", m);
   var sn = attStamp(res);   /* 261016 (사용자) 10F 실습 = 입장 1 + 끝 1 스탬프(서버 p10h · p10 · 묶음 「프로그램 참여」) · 행사 전 = 기록만(no preday) */
   ATT10.res = { at: m[key], dup: !!res.dup, test: !!res.test, stamp: sn, add: res.stamp && !res.stamp.dry ? res.stamp.add || 0 : sn ? 1 : 0, pg: res.pg || 0, pre: res.no === "preday" || res.no === "postday" };   /* 261022 postday = 행사 뒤 · 기록만 · 같은 한 줄 */
+  ATT10.res.sv = endSvWant(ATT10.k, ATT10.res.pre);   /* 261022 종료 QR → 설문(아래 endSv) */
   att10Repaint();
   App.render();   /* 뒤의 세션 상세 · 시간표 · 나의 일정이 출석 상태로 바뀐다 */
+  if (ATT10.res.sv) endSvArm("att10");
+}
+/* ═══ 261022 (사용자 확정 261022 오후 「10층 · 17층 모두 똑같게 · 입장 QR = 스탬프 · 종료 QR = 스탬프 + 설문으로 날아가서 자연스럽게 설문」) 종료 QR 결과 → 앱 설문 ═══
+   대상 = 10F · 17F 종료 QR(k out · 17F 송출 끝 · k 없는 QR 은 서버가 고른 k) 의 ok 결과(처음 · dup) · 입장 QR · 실패(other · window · notpre) · 행사 전 · 뒤(no preday · postday) = 지금 그대로
+   조건 = 설문 열림 + 아직 안 냄(surveyLock · surveyDone = 서버 sync sv_open · survey_done · 시험 모드 = 이 기기 규칙) · 결과 시트에 한 줄 「설문으로 이동합니다」
+   2초 = 스탬프 팝(#spop) · 안내 창(#modal)이 끝난 뒤부터 센다 · 그사이 화면을 누르거나(키 포함) 시트를 닫으면 이동하지 않는다(한 줄은 자리를 지키고 숨김 · 단추가 밀리지 않게)
+   이동 = 시트 닫고 App.go("survey")(초안이 있으면 이어서) · 서버면 sync 한 번(설문 화면이라 sv 1 · Q2-0 미리 체크 = 방금 찍은 출석까지) */
+var ENDSV = { id: "", t: 0, iv: 0, off: null, ms: 2000 };
+function endSvWant(k, pre) { return k === "out" && !pre && !surveyDone() && !surveyLock(); }
+function endSvLn(r) { return r && r.sv ? '<p class="ax-meta" id="endSvLn">설문으로 이동합니다</p>' : ""; }
+function endSvRes(id) { return id === "att10" ? ATT10.res : id === "att" ? ATT.res : null; }
+function endSvLive(id) { var r = endSvRes(id); return !!(el("axsSheet") && SHEET.spec && SHEET.spec.id === id && r && r.sv); }
+function endSvStop(hide) {
+  clearTimeout(ENDSV.t); clearInterval(ENDSV.iv); ENDSV.t = 0; ENDSV.iv = 0;
+  if (ENDSV.off) { ENDSV.off(); ENDSV.off = null; }
+  var r = endSvRes(ENDSV.id); if (r) r.sv = false;
+  ENDSV.id = "";
+  var l = el("endSvLn"); if (l && hide) l.style.visibility = "hidden";
+}
+function endSvArm(id) {
+  endSvStop(false);
+  ENDSV.id = id;
+  var cx = function (e) { var sp = el("spop"); if (sp && e && e.target && sp.contains(e.target)) return; endSvStop(true); };   /* 결과가 뜬 순간부터 · 도장 팝을 눌러 넘기는 것만 취소가 아니다 */
+  window.addEventListener("pointerdown", cx, true); window.addEventListener("keydown", cx, true);
+  ENDSV.off = function () { window.removeEventListener("pointerdown", cx, true); window.removeEventListener("keydown", cx, true); };
+  ENDSV.iv = setInterval(function () {
+    if (!endSvLive(id)) { endSvStop(true); return; }
+    if (SPOP.cur || SPOP.q.length || el("spop") || el("modal")) return;   /* 도장 팝 · 안내 창이 끝날 때까지 기다린 뒤 2초를 센다 */
+    clearInterval(ENDSV.iv); ENDSV.iv = 0;
+    ENDSV.t = setTimeout(function () { endSvGo(id); }, ENDSV.ms);
+  }, 150);
+}
+function endSvGo(id) {
+  var ok = endSvLive(id) && !surveyDone() && !surveyLock();
+  endSvStop(!ok);
+  if (!ok) return;
+  sheetClose(true);
+  App.go("survey");
+  if (BE.on && !testMode()) beSync();
 }
 
 /* ═══ 스캔 대기열 · 통신이 약한 곳(계단 복도 등) · 찍은 순서대로 보낸다 ═══
