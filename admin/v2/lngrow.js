@@ -39,10 +39,23 @@ function laSp(){
           sh+='<button type="button" role="radio" aria-checked="'+on2+'" class="chip'+(on2?" on":"")+'"'+(busy?' disabled aria-disabled="true"':'')+' onclick="laSeat('+s+')">미팅룸 '+s+(busy?' <span class="c">'+esc(personLine(o))+'</span>':'')+'</button>'; }
         h+='<div class="nt-f"><div class="nt-l">미팅룸</div><div class="chips" role="radiogroup" aria-label="미팅룸">'+sh+'</div></div>'; }
       return h+'<label class="nt-f"><span class="nt-l">메모(선택)</span><input class="xg-q" id="laMemo" maxlength="60" autocomplete="off" placeholder="60자까지" aria-label="메모" value="'+esc(LA.memo)+'" oninput="LA.memo=this.value" style="width:100%;max-width:360px"></label>'; },
-    run:function(p){ var e=normE(p.emp), t=LA.time, s=t&&LA.seat?LA.seat:0, memo=String(LA.memo||"").trim().slice(0,60); return call("lng_pre_row_add",{ emp:e, time:t||null, seat:s?String(s):null, memo:memo||null, day:LA.day||null, more:laAll(e).length?"1":null }); },   /* 261022 more = 추가 상담 줄 */
+    run:function(p){ var e=normE(p.emp), t=LA.time, s=t&&LA.seat?LA.seat:0, memo=String(LA.memo||"").trim().slice(0,60), q={ emp:e, time:t||null, seat:s?String(s):null, memo:memo||null, day:LA.day||null, more:laAll(e).length?"1":null };
+      return call("lng_pre_row_add",q).then(function(r){ return r&&r.reason==="dup"?{ ok:true, ask:1, q:q, dup:r }:r; }); },   /* 261022 more = 추가 상담 줄 · 261023 dup = 막지 않고 묻는다(laMore) */
     fail:laFail,
-    done:function(r, p){ var e=normE(p.emp); LA.time=""; LA.seat=0; LA.memo=""; reload(["resv","lgb"]);
-      toast("넣었습니다 · "+(r.name||p.name||e)+" · "+(r.dl?r.dl+" ":"")+(r.slot?r.slot+(r.seat?" · 미팅룸 "+r.seat:""):"칸 미정")+(r.rv==="more"?" · 추가 상담 · 이 사람 "+r.mine+"건":"")+(r.over?" · 정원 넘음":"")+(r.gate==="add"?" · 접속 허용 명단에도 넣음":""), { undo:function(){ if(r.rv==="more") laDelOne(e, r.id); else laDel(e, 1); } }); } };
+    done:function(r, p){ LA.time=""; LA.seat=0; LA.memo="";
+      if(r.ask){ laMore(r.q, r.dup, p); return; }
+      laAdded(r, p); } };
+}
+/* 넣은 뒤 토스트 · 되돌리기 */
+function laAdded(r, p){ var e=normE(p.emp); reload(["resv","lgb"]);
+  toast("넣었습니다 · "+(r.name||p.name||e)+" · "+(r.dl?r.dl+" ":"")+(r.slot?r.slot+(r.seat?" · 미팅룸 "+r.seat:""):"칸 미정")+(r.rv==="more"?" · 추가 상담 · 이 사람 "+r.mine+"건":"")+(r.over?" · 정원 넘음":"")+(r.gate==="add"?" · 접속 허용 명단에도 넣음":""), { undo:function(){ if(r.rv==="more") laDelOne(e, r.id); else laDel(e, 1); } }); }
+/* 261023 (사용자 「막지 말고 묻는다」) 서버가 dup = 이미 명단에 있음 · 그 줄들을 보이고 [한 건 더 넣기] = more 1 로 다시 · [닫기] = 그대로 */
+function laMore(q, d, p){
+  var rs=(d&&d.rows)||[], n=num(d&&d.have)||rs.length, at=rs.map(function(x){ return (x.dl?x.dl+" ":"")+(hm(x.slot)||"칸 미정"); }).join(" · ");
+  confirmBox({ t:"한 건 더 넣을까요?", who:(p.name||q.emp)+" 님은 이미 라운지 명단에 있습니다("+n+"건"+(at?" · "+at:"")+")", sub:"한 건 더 넣으면 추가 상담 줄 · 같은 날 같은 시간은 안 됨", ok:"한 건 더 넣기",
+    run:function(){ var q2={}; for(var k in q) q2[k]=q[k]; q2.more="1"; return call("lng_pre_row_add",q2); },
+    fail:laFail,
+    done:function(r){ laAdded(r, p); } });
 }
 /* 선택 삭제 · 상담 줄 취소(kind lounge · 줄 id) · 「사전 명단에서도 뺌」을 고르면 kind lounge_pre(사번 · 명단 · 라운지시간에서 빠지고 신청 · 승인 줄 취소) */
 function laCx(){
