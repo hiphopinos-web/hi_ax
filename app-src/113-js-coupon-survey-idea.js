@@ -302,6 +302,7 @@ function kitCardHtml() {
   if (k.st === "pick" && k.ph === "open" && !k.sz) { t = "기념품 옷 사이즈 선택하기"; m = "마감 " + kitWhen(k.close); a = "선택"; }
   else if (k.st === "pick" && k.ph === "chg" && !k.sz) { t = "기념품 옷 사이즈 선택하기"; m = kitWhen(k.chg) + "까지 · 남은 사이즈만"; a = "선택"; }   /* 261022 변경 마감 연장(10/23 15:00) · 마감(open) 뒤에도 못 고른 사람은 남은 사이즈 안에서 고른다 */
   else if (k.st === "pick" && k.ph === "open" && k.sz) { t = kitRo(k.sz) + " 신청 완료"; m = no + "마감 전 변경 가능"; }   /* 261008 고른 뒤 = 결과 한 장(신청번호) · 마감 뒤에는 자동 배정 안내만 */
+  else if (k.st === "pick" && k.ph === "chg" && k.sz && k.how !== "auto") { t = kitRo(k.sz) + " 신청 완료"; m = no + kitWhen(k.chg) + "까지 남은 사이즈로 변경 가능"; a = "변경"; }   /* 261022 변경 기간(chg)에 이미 고른 사람(사전 신청자 · 스태프)도 홈에서 바꿀 곳 */
   else if (k.st === "pick" && k.ph === "chg" && k.how === "auto" && !seen) { t = kitRo(k.sz) + " 배정됐어요"; m = no + "변경 " + kitWhen(k.chg) + "까지 · 남은 사이즈만"; }
   else if (k.st === "hum" && (k.ph === "open" || k.ph === "chg") && !seen) { t = "AX 라운지 사전 신청 키트 안내"; m = "1F 주차장 체크인존에서 가습기로 드려요"; }
   if (!t) return "";
