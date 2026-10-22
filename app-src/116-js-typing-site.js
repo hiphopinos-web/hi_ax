@@ -24,12 +24,13 @@ function rgTopHtml() {
 }
 function rgPlayOpen() {
   RGP.on = true; RGP.touch = rgTouch();   /* 입력창 안내 문구가 기기에 맞게 나오게 먼저 켠다 */
-  gsOverlayOpen({ key: "type", title: "AX 단어 소나기", top: rgTopHtml(), fill: true, cls: "rain" + (RG.big ? " big" : "") + (RG.mode === "site" ? " site" : ""), cw: 180, ch: 300, canvasId: "rgCv", bottom: rgFormHtml(),
+  gsOverlayOpen({ key: "type", title: "AX 단어 소나기", top: rgTopHtml(), fill: true, cls: "rain" + (RG.big ? " big" : "") + (RG.mode === "site" ? " site" : "") + (RG.port ? " side port" : ""), cw: 180, ch: 300, canvasId: "rgCv", bottom: rgFormHtml(),
     down: function (e) { e.preventDefault(); if (RG.wait) rgBegin(); rgFocus(); },   /* v4.29 대기 화면은 판을 눌러도 시작 */
     resized: function (cv, w, h) { rgFit(cv, w, h); rgFormFit(); },
     running: function () { return RG.on && !RG.paused && !RG.ending; }, isPaused: function () { return !!RG.paused; },
     pause: rgPause, resume: rgResume, quit: rgQuit });
   if (RG.mode === "site" && typeof bgmArm === "function") { bgmArm(); bgmBtn(true); }   /* 261017 배경 음악 · 오른쪽 위 단추 */
+  rgBgmPort();   /* v8.50 세로 = HUD 안 작은 아이콘 */
   rgSideTopPull();
 }
 /* v4.29 넓은 화면 옆판 · 서버 순위판(type_rank) 읽기만 · v5.29 (사용자 261003) 앱 솔로도 1F 현장 순위 · 앱(폰) 순위(mode app)는 받지도 보이지도 않는다
@@ -44,11 +45,14 @@ function rgSideTopPull() {
   if (!BE.on) { if (!c) RG.top = []; return; }
   beCall({ action: "type_rank", mode: "site", emp: TSF.emp, n: 10 }, function (r) { if (r && r.ok && RG.on) RG.top = conv(r); }, function () { if (RG.on && !RG.top) RG.top = []; });
 }
-function rgPlayClose() { RGP.on = false; gsOverlayClose("type"); }
+function rgPlayClose() { RGP.on = false; gsOverlayClose("type"); rgBgmPort(); }
+/* v8.50 음악 단추 · 판 도중 세로 배치(엔진 L.port)만 HUD 오른쪽 끝 작은 아이콘(.port) · 판 밖(대기 · QR · 결과) · 가로는 그대로 */
+function rgBgmPort() { var b = el("tsfBgm"); if (b) b.classList.toggle("port", !!(RGP.on && RG.L && RG.L.port)); }
 /* v4.51(260925 사용자) 넓은 화면 3단 · 입력칸 = 가운데 판 폭(틀 포함) · 판 바로 아래 · 엔진 배치(RG.L)를 따른다(판 틀 L.fr 과 같은 세 겹) · 옆판이 없으면(휴대폰 · 좁은 창) 옛 모양 그대로 */
 function rgFormFit() {
   var d = el("rgPlay"), L = RG.L, on = !!(L && L.pan); if (!d) return;
   d.classList.toggle("side", on); d.classList.toggle("port", !!(L && L.port));   /* 261022 세로 배치 · 입력칸 크게 */
+  rgBgmPort();
   ["rgForm", "rgTip"].forEach(function (id) {
     var n = el(id); if (!n) return;
     n.style.marginLeft = on ? L.ox - L.fr + "px" : ""; n.style.width = on ? L.W + 2 * L.fr + "px" : "";

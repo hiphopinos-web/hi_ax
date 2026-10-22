@@ -107,7 +107,9 @@ var RAIN_FRAME = 10;                          /* v4.51 3단 · 게임판 틀 두
 /* 261022 (사용자 「타자왕 게임」 · 플랜 B 스탠바이미 세로) 1F 셀프 세로 배치(RG.port · 화면 쪽이 rgStart opt.port 로 켠다) · 위 = 정보 줄(왼쪽 도전자 · NEXT / 오른쪽 추월 레이스) · 아래 = 게임판(폭 전부) · 입력칸
    ew = 판 안 배치 폭(엔진 좌표 · 가로 1920 × 1080 판 폭 744 와 거의 같다 · 레인 3 · 글자 · 낙하 시간 · 판정 그대로) · 화면 판 폭이 더 넓으면 그만큼 키워 그린다(L.z)
    m = 좌우 여백 · top = 정보 줄 높이(왼쪽 두 상자 · NEXT 두 줄까지) · gap = 정보 줄과 판 틀 사이 */
-var RAIN_PORT = { ew: 720, m: 16, top: 494, gap: 12, min: 600 };
+/* v8.50 (261022 사용자 「세로면 오락실 테트리스처럼 길쭉한 느낌 · 지금은 위가 다 막혀 있고 판 크기가 가로와 크게 다르지 않다」) 위 정보 줄(도전자 표 · NEXT · 추월 레이스 494) → 한 줄 HUD(top 80 · rgPortHud) · 판 = 화면 높이의 대부분
+   판 안 배치 폭 ew 720 · 레인 3 · 낙하 시간(초) · 등장 간격 · 동시 단어 · 점수 = 가로와 같다 · 판 높이만 길다(같은 시간에 긴 판을 내려온다) · bgm = HUD 오른쪽 끝 음악 단추 자리(DOM .tsf-bgm.port) */
+var RAIN_PORT = { ew: 720, m: 16, top: 80, gap: 10, min: 600, bgm: 56 };
 var RAIN_FONT = '"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif';
 var RAIN_PAL = { o100: "#FF7E31", o60: "#FFA46E", o50: "#FFB284", o30: "#FFCFB0", o25: "#FFD8C1", o10: "#FFEBE0", deep: "#D64524", ink: "#000000", w: "#FFFFFF", gray: "#B8AEA6", dim: "#8A817B", soil: "#7A3E1C", soil2: "#6A3417", trunk: "#5E3218" };
 /* ═══ v4.23 레트로 틀 · 게임판 안 공용 한 벌 (260923 사용자 확정 · design.md A-5 5-16 · 정본 시안 「레트로 시안/시안.html」) ═══
@@ -187,12 +189,11 @@ function rgBotDraw(ctx, cx, gy, dw, dh, u) {
 function rgLayout(W, H, big, side) {
   var L = { W: W, H: H, CH: H, big: big, CW: W, ox: 0, oy: 0, fr: 0, pan: null, lp: null, z: 1, fy: 0 };
   if (side && big && RG.port && W >= RAIN_PORT.min) {   /* 261022 세로 · 정보 줄 위 · 판 아래(폭 전부) */
-    var Q = RAIN_PORT, qw = Math.floor((W - 2 * Q.m - Q.gap) / 2), bpx = W - 2 * Q.m - 2 * RAIN_FRAME, ew = Math.min(Q.ew, bpx), z = bpx / ew;
+    var Q = RAIN_PORT, bpx = W - 2 * Q.m - 2 * RAIN_FRAME, ew = Math.min(Q.ew, bpx), z = bpx / ew;
     L.port = true; L.z = z; L.fr = RAIN_FRAME; L.fy = Q.top + Q.gap;
     L.ox = Q.m + RAIN_FRAME; L.oy = L.fy + RAIN_FRAME;
     L.W = W = ew; L.H = H = Math.max(240, Math.floor((L.CH - L.oy) / z));
-    L.lp = { x: Q.m, y: 0, w: qw, h: Q.top, big: true };
-    L.pan = { x: Q.m + qw + Q.gap, y: 0, w: L.CW - 2 * Q.m - qw - Q.gap, h: Q.top, big: true };
+    L.pan = { x: Q.m, y: 0, w: L.CW - 2 * Q.m, h: Q.top, big: true, hud: true };   /* v8.50 위 한 줄 HUD(rgPortHud) · 왼쪽 판(L.lp) 없음 */
   } else if (side && big && W >= RAIN_SIDE_MIN) {
     var gap = RAIN_SIDE_GAP, bw = Math.max(440, Math.min(760, Math.round(H * 0.8))), pw = Math.floor((W - bw - 4 * gap) / 2);
     if (pw < 200) { pw = 200; bw = W - 2 * pw - 4 * gap; }
@@ -1236,7 +1237,8 @@ function rgDraw(ctx, now) {
   else if (RG.cd > 0) rgCdDraw(ctx, L, now);
   else if (RG.goT > 0 && !RG.ending && !RG.bonus) rgBnsPop(ctx, L.W / 2, Math.round(L.floor * 0.42), RAIN_BNS_GO, Math.min(1, (now - RG.goAt) / 1000 / RAIN_CLOUD.go) * 0.85, L.big ? 96 : 64, true);   /* 261012 1 이 사라진 뒤 · 판 시작과 함께 */
   ctx.restore();
-  if (L.pan) { rgLeftDraw(ctx, L); if (RG.race) rgRaceDraw(ctx, L, now); else rgSideDraw(ctx, L); }   /* v4.32 3단 · 흔들림 밖 · v5.12 1F 타자왕 = 오른쪽 판이 추월 레이스 */
+  if (L.pan && L.port) rgPortHud(ctx, L, now);   /* v8.50 세로 = 위 한 줄 HUD */
+  else if (L.pan) { rgLeftDraw(ctx, L); if (RG.race) rgRaceDraw(ctx, L, now); else rgSideDraw(ctx, L); }   /* v4.32 3단 · 흔들림 밖 · v5.12 1F 타자왕 = 오른쪽 판이 추월 레이스 */
   if (RG.bonus) rgTransDraw(ctx, L);   /* v5.30 보너스 들어갈 때 · 나올 때 전체 화면 전환 · 제목 카드 */
 }
 /* v4.23 어두운 이름표 배너 · 주황 도트 글자 */
@@ -1422,6 +1424,55 @@ function rgSideDraw(ctx, L) {
     while (nm.length > 1 && ctx.measureText(nm).width > mw) nm = nm.slice(0, -1);
     ctx.textAlign = "left"; rtText(ctx, nm, nx, yy, rf, x.me ? RAIN_PAL.o100 : RT_PAL.cream, null);
   }
+  ctx.restore();
+}
+/* v8.50 (261022 사용자 「세로면 오락실 테트리스처럼」) 세로 배치 위 한 줄 HUD · 오락실 세로 캐비닛 점수 띠(먹 계단 테두리 · 어두운 판 · 아래 주황 띠 = 판 틀과 같은 색)
+   칸 = 도전자 · 점수 · 목숨 · 단계 · 순위 · 칸마다 라벨(16 · 나무색) 위 · 값(32 · 주황) 아래 · 칸 사이 나무 세로줄 · 오른쪽 끝 RAIN_PORT.bgm = 음악 단추 자리(DOM)
+   순위 = 추월 레이스와 같은 셈(rgRaceRank · RG.race) 「21위 · 다음까지 724점」 · 1위 = 「· 질주 중」 · 기록 없음 = 「· 첫 기록에 도전 중」 · 넘는 순간 순위 칸이 주황 이름표 「21위 → 20위」(RG.racePops 1.6초 · 효과음은 rgRaceTick 그대로)
+   칸 폭은 큰 값 기준으로 잡아 숫자가 늘어도 옆 칸이 움직이지 않는다 · 도전자 칸 = 남는 폭(좁으면 목숨 하트를 한 단계 작게 · 닉네임은 32 → 16 → 줄임) · 판 안은 가리지 않는다 */
+function rgPortHud(ctx, L, now) {
+  var P = L.pan; if (!P) return;
+  var b = 3, x0 = P.x, w = P.w, h = P.h, ix = x0 + b + 14, right = x0 + w - b - 14 - RAIN_PORT.bgm, ly = Math.round(h * 0.3), vy = Math.round(h * 0.66), sep = 28;
+  var list = (RG.race && RG.race.list) || [], rank = RG.race ? rgRaceRank(RG.score) : 0, goal = rank > 1 ? list[rank - 2] : null;
+  var sub = !RG.race ? "" : goal ? " · 다음까지 " + Math.max(1, goal.score - RG.score + 1).toLocaleString() + "점" : list.length ? " · 질주 중" : " · 첫 기록에 도전 중";
+  ctx.save();
+  rtStep(ctx, x0, 0, w, h, 2, RAIN_PAL.ink);
+  ctx.fillStyle = RT_PAL.night; ctx.fillRect(x0 + b, b, w - 2 * b, h - 2 * b);
+  ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(x0 + b, h - b - 4, w - 2 * b, 4);
+  ctx.fillStyle = RAIN_PAL.deep; ctx.fillRect(x0 + b, h - b - 1, w - 2 * b, 1);
+  ctx.textBaseline = "middle"; ctx.textAlign = "left";
+  var mw = function (t, px) { ctx.font = rtFont(px); return Math.ceil(ctx.measureText(t).width); };
+  var k = 4, htW = function () { var n = RG.lives0 || RAIN_LIVES; return n * 8 * k - k; };
+  var wSc = Math.max(mw("점수", 16), mw("00,000", 32)), wSt = Math.max(mw("단계", 16), mw("00", 32));
+  var wRk = RG.race ? Math.max(mw("순위", 16), mw("00위", 32) + mw(" · 다음까지 0,000점", 16)) : 0;
+  var fixed = function () { return wSc + Math.max(mw("목숨", 16), htW()) + wSt + (RG.race ? wRk + sep : 0) + 3 * sep; };
+  if (right - ix - fixed() < 160) k = 3;
+  var wWho = Math.max(48, right - ix - fixed()), who = String(RG.who || "나"), wp = 32;
+  if (mw(who, 32) > wWho) { wp = 16; while (who.length > 1 && mw(who, 16) > wWho) who = who.slice(0, -1); }
+  var cells = [["도전자", wWho], ["점수", wSc], ["목숨", Math.max(mw("목숨", 16), htW())], ["단계", wSt]].concat(RG.race ? [["순위", wRk]] : []), x = ix;
+  cells.forEach(function (c, i) {
+    if (i) { ctx.fillStyle = RT_PAL.wood; ctx.fillRect(Math.round(x - sep / 2 - 1), 14, 2, h - 30); }
+    rtText(ctx, c[0], x, ly, 16, RT_PAL.tan, null);
+    if (i === 0) rtText(ctx, who, x, vy, wp, RAIN_PAL.o100, RAIN_PAL.ink);
+    else if (i === 1) rtText(ctx, RG.score.toLocaleString(), x, vy, 32, RAIN_PAL.o100, RAIN_PAL.ink);
+    else if (i === 2) rgSideHearts(ctx, x + htW(), vy, k);
+    else if (i === 3) rtText(ctx, String(RG.stage), x, vy, 32, RAIN_PAL.o100, RAIN_PAL.ink);
+    else {
+      var pop = RG.racePops.length ? RG.racePops[RG.racePops.length - 1] : null;
+      if (pop) {
+        var t = pop.from + "위 → " + pop.to + "위", tw = Math.min(c[1] + 8, mw(t, 32) + 24), th = 44;
+        ctx.globalAlpha = pop.t < 0.4 ? pop.t / 0.4 : 1;
+        rtTag(ctx, x - 6, Math.round(h / 2 - th / 2) - 2, tw, th, RAIN_PAL.o100, RAIN_PAL.o60, RAIN_PAL.deep);
+        rtText(ctx, t, x + 6, Math.round(h / 2) - 2, 32, RT_PAL.night, null);
+        ctx.globalAlpha = 1;
+      } else {
+        var rt = rank + "위", rw = mw(rt, 32);
+        rtText(ctx, rt, x, vy, 32, RAIN_PAL.o100, RAIN_PAL.ink);
+        rtText(ctx, sub, x + rw, vy + 4, 16, goal ? RT_PAL.cream : RAIN_PAL.o60, null);
+      }
+    }
+    x += c[1] + sep;
+  });
   ctx.restore();
 }
 /* 옆판 하트 · 앱 HUD 하트와 같은 7×6 도트 · 남은 목숨 O100 · 잃은 목숨 진한 나무 · 오른쪽 끝 맞춤 */

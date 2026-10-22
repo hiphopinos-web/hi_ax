@@ -321,6 +321,10 @@
   .rt .tsf-ori[hidden] { display: none; }
   #rgPlay.rt.side.port .rg-form .input { height: 72px; font-size: 32px; }   /* 세로 판 아래 입력칸 · 한 단계 크게 */
   #rgPlay.rt.side.port .rg-form .btn.mint { height: 72px; min-width: 128px; font-size: 24px; }
+  /* v8.50 (261022 사용자 「세로면 오락실 테트리스처럼 길쭉하게」) 판 도중 세로 = 위 DOM 줄(시간 · 도전 횟수) 없음 · 캔버스 맨 위 한 줄 HUD(엔진 rgPortHud · 높이 RAIN_PORT.top 80) · 음악 단추 = HUD 오른쪽 끝 작은 아이콘(글자 없음 · 40 × 40) · 대기 · QR · 결과 화면은 그대로 */
+  #rgPlay.rt.side.port .rgp-top { display: none; }
+  .rt.tsf-bgm.port { top: 20px; right: 33px; width: 40px; height: 40px; padding: 0; gap: 0; justify-content: center; }
+  .rt.tsf-bgm.port span { display: none; }
   .rt .tsf-vsrc { position: fixed; left: 0; top: 0; width: 160px; height: 90px; opacity: 0; pointer-events: none; z-index: -1; }
   .rt .tsf-c { container-type: size; }
   .rt .tsf-chip { align-self: flex-start; margin: 0; padding: 2px 12px; background: var(--rt-o100); color: var(--rt-night); box-shadow: var(--rt-line); }
