@@ -7,15 +7,20 @@
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#FFFFFF">
 <script>
-/* 영상이 올라오면 아래 한 줄의 따옴표 안에 영상 주소만 넣는다(비우면 준비 중 화면). 다른 줄은 고치지 않는다. */
-var VIDEO_URL = "";
-(function () {
+/* 영상 주소(VIDEO_URL)와 공개 시각(OPEN_AT · 2026-10-26 13:30 KST = UTC 04:30 · 폰 시간대와 무관). 공개 전이면 준비 중 화면, 공개 뒤면 영상으로 넘긴다. 다른 줄은 고치지 않는다. */
+var VIDEO_URL = "https://www.youtube.com/watch?v=OtsmHcrPpwA";
+var OPEN_AT = Date.UTC(2026, 9, 26, 4, 30);
+var TRY_FLAG = /(^|[?&])t=1(&|$)/.test(location.search.slice(1)) || location.hash === "#test";   /* 시험 장치(261023 · 사용자 확인 뒤 이 줄과 아래 TRY_FLAG 를 지운다) · 주소 뒤 ?t=1 이면 시각과 상관없이 영상으로 */
+function goVideo() {
   var u = (typeof VIDEO_URL === "string" ? VIDEO_URL : "").replace(/^\s+|\s+$/g, "");
-  if (!/^https?:\/\//i.test(u)) return;
+  if (!/^https?:\/\//i.test(u)) return false;
+  if (!TRY_FLAG && Date.now() < OPEN_AT) return false;
   document.documentElement.style.visibility = "hidden";
   try { var m = document.createElement("meta"); m.httpEquiv = "refresh"; m.content = "0;url=" + u; document.head.appendChild(m); } catch (e) {}
   location.replace(u);
-})();
+  return true;
+}
+if (!goVideo()) { var GO_T = setInterval(function () { if (goVideo()) clearInterval(GO_T); }, 15000); }   /* 공개 전에 열어 둔 화면도 13:30 이 지나면 넘어간다 */
 </script>
 <style>
 :root{--bg:#FFFFFF;--tx:#1A1A1A;--sub:#6B6B6B;--line:#E6E6E6;--o100:#FF7E31;--o10:#FFEBE0;--o5:#FFF6F0}
@@ -38,7 +43,7 @@ p{font-size:18px;color:var(--tx);margin-top:14px}
   <div class="ev">AX Festival 2026</div>
   <h1>AI 활용 현장 인터뷰</h1>
   <span class="st">영상 준비 중</span>
-  <p>영상은 10월 26일에 공개됩니다.</p>
+  <p>영상은 10월 26일 13:30에 공개됩니다.</p>
   <div class="ft"><b>ME to WE</b> : 나의 경험을 우리의 가능성으로</div>
 </main>
 </body>

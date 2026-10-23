@@ -354,17 +354,34 @@ var IV_PLAY_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6.8v1
    VIDS_HIDE = 파일(src · page) 없는 줄 숨김 스위치(사용자 결정 261017 D15 = false · 「준비 중」 꺼진 줄) · 단추 숫자 = 보이는 줄 수(「영상 보기 3」) · 보일 줄이 없으면 묶음째 없음
    옛 v7.05 큰 썸네일 + [영상 보기] 카드(axs-ivc · axs-ivth)는 이 묶음 줄로 바뀌었다 · 재생은 그대로(ivAsk 소리 확인 창 → ivPlay 전체 화면 · page 면 새 창) */
 var VIDS_HIDE = false;   /* 사용자 결정 261017 D15 = 숨기지 않고 「준비 중」(누를 수 없음 · 회색) · true = 파일 없는 줄 숨김 */
+/* v8.63 (사용자 261023) 현장 인터뷰 = 유튜브 영상 · 공개 시각 IV_AT = 2026-10-26 13:30 KST(UTC 04:30 · 폰 시간대와 무관한 절대 시각)
+   판정 vidAt = appNow()(서버 시계 보정 toff · 테스트 계정의 시험 시각 tt) · 공개 전 = 회색 「10/26 13:30 공개」(누를 수 없음) · 공개 뒤 = 누르면 유튜브 새 창
+   켜진 화면은 vidTick 이 15초마다 줄만 다시 그린다(앱 재배포 · 새로 고침 없이 13:30 에 바뀜) · 인쇄 QR 페이지 interview/index.html 도 같은 시각에 유튜브로 넘긴다 */
+var IV_YT = "https://www.youtube.com/watch?v=OtsmHcrPpwA";
+var IV_AT = Date.UTC(2026, 9, 26, 4, 30);   /* 10/26 13:30 KST */
+function vidAt(t) {
+  if (typeof testEmp === "function" && testEmp() && !ttGet()) return true;   /* 시험 장치(261023 · 사용자 확인 뒤 이 줄만 지운다) · 테스트 사번 = 시험 시각을 고르지 않았으면 미리 열림 · 일반 참가자는 해당 없음 */
+  return appNow().getTime() >= t;
+}
 var VIDS = [
-  { t: "AI 활용 현장 인터뷰", s: "현장 인터뷰", len: "", v: { src: "", poster: "", loop: false, page: "" } },   /* v8.20 (사용자 261021) 다른 두 줄과 같은 「준비 중」(회색 빈 칸 · 누를 수 없음) · 영상 연결 비움(옛 v: IV_VIDEO · 파일 assets/interview/ 는 그대로) */
+  { t: "AI 활용 현장 인터뷰", s: "현장 인터뷰", len: "", at: IV_AT, v: { src: "", poster: "", loop: false, page: IV_YT } },   /* v8.63 공개 시각(at) 뒤 유튜브 · v8.20 (사용자 261021) 다른 두 줄과 같은 「준비 중」(회색 빈 칸 · 누를 수 없음) · 파일 assets/interview/ 는 그대로 */
   { t: "HiDI Q", s: "AX PLAY", len: "", v: { src: "", poster: "", loop: false, page: "" } },
   { t: "Hi-Helper", s: "AX PLAY", len: "", v: { src: "", poster: "", loop: false, page: "" } }
 ];
-var VIDS_PEND = { 0: "10/26 13:30 공개" };   /* v8.59 (사용자 261023) 현장 인터뷰 최종 영상 = 10/26 13:30 공개 · 그때 v.src 연결 · 다른 줄은 「준비 중」 */
+var VIDS_PEND = { 0: "10/26 13:30 공개" };   /* v8.59 (사용자 261023) 현장 인터뷰 최종 영상 = 10/26 13:30 공개 · v8.63 그때 저절로 열림(IV_AT · vidAt) · 다른 줄은 「준비 중」 */
 var VFOLD = { open: false };
-function vidOk(x) { return !!(x && x.v && (x.v.src || x.v.page)); }
+function vidOk(x) { return !!(x && x.v && (x.v.src || x.v.page) && (!x.at || vidAt(x.at))); }
+function vidTick() {   /* v8.63 공개 시각이 지나면 켜진 화면의 줄만 바꾼다(접힘 · 스크롤 그대로) */
+  var z = document.getElementById("zoneVid"); if (!z) return;
+  [].forEach.call(z.querySelectorAll(".vr[data-vi]"), function (b) {
+    var i = +b.getAttribute("data-vi"), x = VIDS[i];
+    if (x && b.disabled === vidOk(x)) b.outerHTML = vidRowHtml(x, i);
+  });
+}
+setInterval(vidTick, 15000);
 function vidRowHtml(x, i) {
   var ok = vidOk(x), th = '<span class="tb">' + (ok && x.v.poster ? '<img src="' + esc(x.v.poster) + '" alt="" width="1280" height="720" loading="lazy" decoding="async">' : "") + '<span class="pl">' + IV_PLAY_SVG + "</span>" + (x.len ? "<em>" + esc(x.len) + "</em>" : "") + "</span>";
-  return '<button type="button" class="vr"' + (ok ? ' onclick="ivAsk(this, ' + i + ')" aria-label="' + esc(x.t) + ' 영상 보기"' : " disabled") + ">" + th +
+  return '<button type="button" class="vr" data-vi="' + i + '"' + (ok ? ' onclick="ivAsk(this, ' + i + ')" aria-label="' + esc(x.t) + ' 영상 보기"' : " disabled") + ">" + th +
     '<span class="x"><b>' + hdqHtml(esc(x.t)) + "</b><span>" + (ok ? esc(x.s) : segHtml(esc(x.s + " · " + (VIDS_PEND[i] || "준비 중")))) + "</span></span>" + (ok ? '<span class="cv">' + CHEV_SVG + "</span>" : "") + "</button>";
 }
 function vidPre() { return typeof evPreDay === "function" && evPreDay() && !(typeof testEmp === "function" && testEmp()); }   /* v8.20 (사용자 261021 「당일에 오픈 · 일단 메뉴 자체를 숨겨」) 10/26 전 = 「영상 보기」 칸째 없음 · 테스트 사번은 미리 보임 */
@@ -384,6 +401,7 @@ function vFoldTog(b) {
 var IVP = { on: false, el: null, v: null, y: 0, from: null, fs: false, t: 0, vd: null, vt: "" };
 function ivAsk(b, i) {   /* v7.67 i = 영상 표(VIDS) 줄 · 없으면 첫 줄(IV_VIDEO) */
   var x = VIDS[i || 0] || VIDS[0], V = x.v || IV_VIDEO;
+  if (!vidOk(x)) { vidTick(); return; }   /* v8.63 공개 전에 그려진 줄 · 판정이 바뀐 줄은 다시 그린다 */
   if (V.page) { try { window.open(V.page, "_blank", "noopener"); } catch (e) { location.href = V.page; } return; }
   IVP.vd = V; IVP.vt = x.t;
   IVP.from = b || null;
