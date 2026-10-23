@@ -18,7 +18,7 @@ function lkuMount(vb){
   el("phCap").textContent="17F Closing Speech 행운권 1~6등 · 추첨 진행은 무대 노트북";
   LKU.sig={};
   vb.innerHTML='<div class="chips" role="tablist"><button type="button" role="tab" aria-selected="true" class="chip on">럭키드로우</button><button type="button" class="chip" onclick="lkuAdvGo()">고급</button></div>'+
-    '<div id="lkuBand"></div>'+
+    '<div id="lkuMon"></div><div id="lkuBand"></div>'+
     '<div class="lku">'+
     '<section class="card"><h2>1. 추첨 대상</h2><div id="lkuT">'+skel()+'</div>'+
       '<details class="lku-det" id="lkuLs"'+(LKU.open?" open":"")+' ontoggle="lkuOpen(this.open)"><summary>대상 명단 보기</summary>'+
@@ -59,6 +59,7 @@ function lkuCk(d, b){
 function lkuPaint(){
   if(!el("lkuT")) return;
   var gt=dataGate("draw","행운권 추첨"), d=S.data.draw, b=lkuB(), gb=dataGate("dbd","체크인한 사람 실명 목록");
+  lkuSet("lkuMon","mon",d&&d.ok&&d.mon&&typeof dmonLine==="function"?dmonLine(d.mon):"");   /* 261023 무대 감시 한 줄(서버 판정 mon · 10초 · 서버가 모르면 비움) */
   lkuSet("lkuBand","band",errTop("draw")+errTop("dbd")+(d&&d.ok&&(String(d.att||"").toUpperCase()==="ON"||(b&&b.cond))?band("warn","행운권 참석조건 ON · 6 · 5 · 4등도 체크인한 사람만"):""));
   if(gt){ ["lkuT","lkuCk","lkuW"].forEach(function(id){ lkuSet(id,id,gt); }); }
   else { lkuTop(d,b); lkuCkPaint(d,b); lkuWin(d); }

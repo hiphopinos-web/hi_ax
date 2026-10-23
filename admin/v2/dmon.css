@@ -1,0 +1,17 @@
+/* 261023 럭키드로우 무대 감시(dmon.js) · 색 = v2.css 토큰만 · 정상 초록 · 멈춤 의심 주의색 · 오류 · 끊김 = --bad 면 · 꺼짐 회색 */
+.dmon-line{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 10px;padding:10px 14px;margin-bottom:10px;border-radius:var(--r);border:1px solid var(--line2);background:var(--sf)}
+.dmon-line i{width:10px;height:10px;border-radius:50%;background:var(--line3);flex:none;align-self:center}
+.dmon-line b{font-size:16px;font-weight:700;color:var(--tx3);white-space:nowrap;font-variant-numeric:tabular-nums}
+.dmon-line .cap{font-size:13px;color:var(--tx2);font-variant-numeric:tabular-nums}
+.dmon-er{flex-basis:100%;padding-left:20px;font-size:13px;color:var(--tx2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dmon-line.ok i{background:var(--ok)}.dmon-line.ok b{color:var(--ok)}
+.dmon-line.warn{background:var(--warn-bg);border-color:var(--warn-ln)}.dmon-line.warn i{background:var(--warn)}.dmon-line.warn b{color:var(--warn)}
+.dmon-line.bad{background:var(--bad-bg);border-color:var(--bad-ln)}.dmon-line.bad i{background:var(--bad)}.dmon-line.bad b,.dmon-line.bad .dmon-er{color:var(--bad)}
+.dmon-mini{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;min-width:0;padding:8px 10px;border-radius:var(--r-s);border:1px solid var(--line2);background:var(--soft);text-align:left;cursor:pointer;font:inherit;color:var(--tx)}
+.dmon-mini .cap{font-size:12px;color:var(--tx3);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dmon-mv{display:flex;align-items:center;gap:6px}
+.dmon-mv i{width:8px;height:8px;border-radius:50%;background:var(--line3);flex:none}
+.dmon-mv b{font-size:16px;font-weight:700;color:var(--tx3);white-space:nowrap;font-variant-numeric:tabular-nums}
+.dmon-mini.ok .dmon-mv i{background:var(--ok)}.dmon-mini.ok .dmon-mv b{color:var(--ok)}
+.dmon-mini.warn{background:var(--warn-bg);border-color:var(--warn-ln)}.dmon-mini.warn .dmon-mv i{background:var(--warn)}.dmon-mini.warn .dmon-mv b{color:var(--warn)}
+.dmon-mini.bad{background:var(--bad-bg);border-color:var(--bad-ln)}.dmon-mini.bad .dmon-mv i{background:var(--bad)}.dmon-mini.bad .dmon-mv b,.dmon-mini.bad .dmon-ms{color:var(--bad)}

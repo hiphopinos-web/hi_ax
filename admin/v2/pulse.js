@@ -13,12 +13,13 @@ var PU_LV=[["ok","보통"],["warn","주의"],["bad","위험"]];
 function puBuild(box){
   box.innerHTML='<div class="card mb pu-card"><div class="pu-h"><h2>서버 맥박</h2><span class="cap" id="puCap">불러오는 중</span></div>'+
     '<div class="pu-body"><div class="pu-plot"><div class="pu-cv"><canvas id="puCv" aria-label="최근 5분 초당 요청 흐름" role="img"></canvas></div><div class="pu-ax"><span>5분 전</span><span>지금</span></div></div>'+
-    '<div class="pu-side"><div class="pu-st" id="puSt"><i></i><b>-</b><span class="cap" id="puWhy"></span></div><div class="pu-nums" id="puNums"></div></div></div></div>';
+    '<div class="pu-side"><div id="puDm"></div><div class="pu-st" id="puSt"><i></i><b>-</b><span class="cap" id="puWhy"></span></div><div class="pu-nums" id="puNums"></div></div></div></div>';
   PU.cv=el("puCv"); PU.w=0; puText(); puDraw();
 }
 function puText(){
   var d=PU.d, st=el("puSt"); if(!st) return;
-  var cap=el("puCap");
+  var cap=el("puCap"), dm=el("puDm");
+  if(dm){ var dh=d&&d.dm&&typeof dmonMini==="function"?dmonMini(d.dm):""; if(dm._h!==dh){ dm._h=dh; dm.innerHTML=dh; } }   /* 261023 럭키드로우 무대 감시 작은 칸(srv_pulse dm · 같은 5초) */
   if(PU.unk){ cap.textContent="이 서버는 아직 서버 맥박을 모릅니다 · 서버 갱신 뒤 나옵니다"; }
   else if(!d){ cap.textContent=PU.err?"서버 응답이 없습니다 · 5초 뒤 다시":"불러오는 중"; }
   else { var t=new Date(d.now); cap.textContent="10초 칸 · 최근 5분 · "+("0"+t.getHours()).slice(-2)+":"+("0"+t.getMinutes()).slice(-2)+":"+("0"+t.getSeconds()).slice(-2)+(PU.err?" · 응답 없음 · 마지막 값":"")+(d.src==="min"?" · 분 단위 오류만(서버 갱신 전)":""); }

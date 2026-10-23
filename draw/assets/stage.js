@@ -235,6 +235,27 @@
   var SRV = { status: "", polling: null, since: "", queue: load(QKEY, []) };
   /* 261016 서버 문 한 곳 · 데모 · 시험 페이지 = 호출 0(읽기도 보내지 않는다) · 라이브 연결 상자에서는 읽기만 · 쓰기(draw_log · draw_cfg · draw_scr · draw_cmd)는 라이브로 시작한 뒤에만 */
   var NET = { connect: false, calls: 0, blocked: 0, fake: 0 }, WRITES = { draw_log: 1, draw_cfg: 1, draw_scr: 1, draw_cmd: 1 };
+  /* 261023 무대 건강 · 상태 보고(draw_scr s.h)에 싣는다 · 콘솔 「무대 정상 · 멈춤 의심 · 오류 · 보고 끊김」 · 진행 · 당첨 셈 · 그림은 읽기만
+   *   er = 최근 오류 3건(글 120자) · en = 오류 수 · 프레임 = 보고 사이 최대 간격 · 1초 넘는 끊김 수 · 보고 사이 fps · 키 · 단추 · 거부 = 마지막 것과 그 뒤 초 */
+  var HL = { er: [], en: 0, flashT: 0, k: "", kt: 0, bn: "", bt: 0, rj: "", rt: 0, nf: 0, lastF: 0, mx: 0, sl: 0, slt: 0, fN: 0, fT0: 0, hid: false, t0: Date.now() };
+  function hlErr(m) {
+    try {
+      HL.en++; m = String(m == null ? "오류" : m).replace(/[\u0000-\u001f]+/g, " ").replace(/\s+/g, " ").slice(0, 120);
+      HL.er.unshift({ m: m, t: Date.now() }); if (HL.er.length > 3) HL.er.length = 3;
+      if (Date.now() - HL.flashT > 30000) { HL.flashT = Date.now(); if (cv) kbFlash("info", "화면 오류 · 진행은 계속 · " + m.slice(0, 40), 6); }   /* 스태프 표시줄만 · 대형 화면 가운데에는 띄우지 않는다 */
+    } catch (e) {}
+  }
+  function hlRej(t) { HL.rj = String(t || "").slice(0, 80); HL.rt = Date.now(); }
+  window.addEventListener("error", function (e) { hlErr((e && e.message || "오류") + (e && e.filename ? " @" + String(e.filename).split("/").pop() + ":" + e.lineno : "")); });   /* 그림 · 소리 파일 못 읽음은 여기 오지 않는다(거품 없음) */
+  window.addEventListener("unhandledrejection", function (e) { var r = e && e.reason; hlErr("약속 거부 · " + (r && (r.message || r.name) || String(r))); });
+  document.addEventListener("visibilitychange", function () { HL.hid = true; });
+  function hlState() {
+    var now = Date.now(), pn = performance.now(), ago = function (t) { return t ? Math.round((now - t) / 100) / 10 : -1; }, sec = HL.fT0 ? (pn - HL.fT0) / 1000 : 0;
+    var h = { fa: HL.lastF ? Math.round(pn - HL.lastF) : -1, mx: Math.round(HL.mx), sl: HL.sl, sla: ago(HL.slt), fps: sec > 0.2 ? Math.round(HL.fN / sec * 10) / 10 : -1, hid: document.hidden ? 1 : 0,
+      k: HL.k, ka: ago(HL.kt), bn: HL.bn, ba: ago(HL.bt), rj: HL.rj, ra: ago(HL.rt), en: HL.en, er: HL.er.map(function (x) { return { m: x.m, a: ago(x.t) }; }), nf: HL.nf, q: SRV.queue.length, up: Math.round((now - HL.t0) / 1000) };
+    HL.mx = 0; HL.fN = 0; HL.fT0 = pn;
+    return h;
+  }
   function netWhy(action) {
     if (SANDBOX && !FAKE) return "sandbox";
     if (WRITES[action]) return isLive() ? "" : "demo";
@@ -246,6 +267,7 @@
     if (!url) { done({ ok: false, reason: "noserver" }); return; }
     if (FAKE) { NET.fake++; var fp = Object.assign({}, params, { action: action }); var res = null; try { res = FAKE(fp); } catch (e) { res = { ok: false, reason: "fake" }; } res = res || { ok: false, reason: "network" }; var ms = +res.__ms || 30; delete res.__ms; setTimeout(function () { done(JSON.parse(JSON.stringify(res))); }, ms); return; }   /* 261021 가짜 서버 · 부모 창 메모리 · 네트워크 0 */
     NET.calls++;
+    var done0 = done; done = function (res) { if (res && (res.reason === "network" || res.reason === "timeout")) HL.nf++; done0(res); };   /* 261023 무대 건강 · 네트워크 실패 수 */
     var name = "__axs" + Math.floor(Math.random() * 1e9), sc = document.createElement("script"), q = [];
     params = Object.assign({}, params, { action: action, callback: name, _: Date.now() });
     var code = sessionKey(); if (code) params.key = code;
@@ -1048,7 +1070,7 @@
   }
   function runNext() {
     var nx = nextCmd(), nm = kbName(nx, true);
-    if (!nx.c) { if (nx.n === "잠시만") kbNo(); else { KB.noN++; kbNote(nx.n); } return; }   /* 261016 버려진 누름도 스태프 표시줄에 보인다(소리 없이 버리지 않는다) */
+    if (!nx.c) { if (nx.n === "잠시만") kbNo(); else { KB.noN++; hlRej(nx.n); kbNote(nx.n); } return; }   /* 261016 버려진 누름도 스태프 표시줄에 보인다(소리 없이 버리지 않는다) */
     if (nx.c === "skip") { if (SC === "intro") { vidCut("intro"); lock(0.5); kbOk(nm); } else if (canSkipMix()) { skipMix(); kbOk(nm); } else kbNo(); return; }
     if (nx.c === "confirm" && topRank() && cmdWhy("confirm", nx.arg)) return keyFail(cmdWhy("confirm", nx.arg));   /* 공개 1.4초 안 = 첫 누름으로 세지 않는다 */
     if (nx.c === "confirm" && topRank()) return twice("confirm", curRound().name + " 확정 · Space 한 번 더", function () { keyRun("confirm", nx.arg, nm); });   /* 261016 3 · 2 · 1등 = 두 번 눌러 확정(부재면 그 사이 「다시 추첨」) */
@@ -1068,7 +1090,7 @@
   function keyFail(why) {
     var w = String(why).split(":"), t = w[0] === "mixing" ? "섞는 중 · " + w[1] + "초 뒤 뽑기" : WHY_TXT[w[0]];
     if (w[0] === "busy" || w[0] === "drawing" || !t) { kbNo(); return; }
-    KB.noN++; kbNote(t);
+    KB.noN++; hlRej(t); kbNote(t);
   }
   var FINREQ = false;
   function finFromServer() {
@@ -1764,9 +1786,9 @@
     return w > 0.05 ? w : 0;
   }
   function kbOk(nm) { KB.okN++; kbFlash("ok", "다음 · " + nm, 1.4); }
-  function kbNo() { KB.noN++; kbFlash("no", "", Math.max(1.6, kbWait() + 0.2)); }
+  function kbNo() { KB.noN++; hlRej(kbWait() < 0 ? "안 받음 · 뽑는 중" : "안 받음 · 연출 중"); kbFlash("no", "", Math.max(1.6, kbWait() + 0.2)); }
   function kbNote(msg) { kbFlash("info", msg, 2.6); }
-  function kbFast() { KB.noN++; kbFlash("fast", "안 받음 · 두 번째가 너무 빠름 · 0.4초쯤 뒤 한 번 더", 1.2); }
+  function kbFast() { KB.noN++; hlRej("안 받음 · 두 번째가 너무 빠름"); kbFlash("fast", "안 받음 · 두 번째가 너무 빠름 · 0.4초쯤 뒤 한 번 더", 1.2); }
   function kbFlash(k, msg, sec) { KB.k = k; KB.msg = msg; KB.until = T + sec; kbPaint(true); }
   function kbView() {
     if (KB.k === "fast" && T < KB.until) return { cls: "no", txt: KB.msg };
@@ -2135,6 +2157,7 @@
     $("redoBtn").addEventListener("click", redoClick);
     $("backBtn").addEventListener("click", backClick);
     document.addEventListener("mousemove", mouseSeen);
+    document.addEventListener("click", function (e) { var b = e.target && e.target.closest ? e.target.closest("button") : null; if (b) { HL.bn = String(b.id || "button").slice(0, 16); HL.bt = Date.now(); } }, true);   /* 261023 무대 건강 · 마지막 단추(id 만) */
   }
 
   /* ─────────────── 원격 조종(관리 콘솔 → 서버 → 이 화면) · 옛 화면 규약 그대로 ───────────────
@@ -2221,13 +2244,16 @@
       ready: CONSOLE_CTL && SC !== "start" ? CMDS.filter(function (c) { return c !== "reset_screen" && !cmdWhy(c, ""); }) : [],   /* 261016 빈 목록 = 콘솔 진행 단추가 꺼진다(보기만) */ closed: !!ST.closed, last: last, rej: CMD.rej, seq: cmdSeqOf("srv"), msg: CMD.msg, ver: "drum1", remote: remote(), fb: ST.fb ? 1 : 0 };
   }
   function scrPush(now) {
-    if (!now && T < CMD.scrT) return;
-    CMD.scrT = T + (CMD.scrNo ? 15 : CMD.scrEvery);
-    var s = scrState();
+    var rt = Date.now();   /* 261023 보고 간격 = 실제 시계 2초(화면 시계 T 는 느린 프레임에서 늦게 가 보고가 띄엄띄엄 됐다) */
+    if (!now && rt < CMD.scrT) return;
+    CMD.scrT = rt + (CMD.scrNo ? 15 : CMD.scrEvery) * 1000;
+    var s; try { s = scrState(); } catch (e) { hlErr("상태 보고 · " + (e && e.message || e)); s = { scene: SC, ver: "drum1", remote: remote() }; }   /* 261023 보고 글이 깨져도 장면 · 건강은 보낸다 */
     try { RBC && RBC.postMessage({ axr: 1, t: "scr", s: s }); } catch (e) {}
     if (CFG.mode !== "server" || !sessionKey() || CMD.scrBusy) return;
     CMD.scrBusy = true;
+    s.h = hlState();
     var js = JSON.stringify(s); if (js.length > 3000) { s.last = s.last ? { id: s.last.id, no: s.last.no, st: s.last.st } : null; s.msg = ""; js = JSON.stringify(s); }
+    if (js.length > 3000) { s.h.er = s.h.er.slice(0, 1); s.ready = []; js = JSON.stringify(s); }
     jsonp("draw_scr", { s: js, sid: SID }, function (res) {
       CMD.scrBusy = false; CMD.scrNo = res && res.err === "unknown action" ? 1 : 0;
       if (!res || !res.ok) return;
@@ -2258,6 +2284,7 @@
     if (CMD.pollT) clearInterval(CMD.pollT);
     CMD.pollT = setInterval(function () { if (remote()) cmdPoll(); }, 30000);
     if (remote()) { wsdOpen(); scrPush(true); }
+    if (!CMD.hbT) CMD.hbT = setInterval(function () { try { scrPush(false); } catch (e) {} }, 1000);   /* 261023 프레임이 멈춰도(창 숨김 · 굳음) 보고는 이어진다 · 간격은 scrPush 가 2초로 거른다 */
   }
   var WSD = { ws: null, st: "off", fails: 0, give: false, t: null, ping: null, dev: "drm" + Math.floor(Math.random() * 1e9).toString(36) };
   function wsdUrl() { var u = SERVER_URL; return /^https:\/\/[a-z0-9-]+\.[a-z0-9-]+\.workers\.dev\/exec$/.test(u) ? u.replace(/^https:/, "wss:").replace(/\/exec$/, "/ws?r=draw") : ""; }
@@ -2285,7 +2312,7 @@
     /* 261016 키 = 다음(Space · Enter · PageDown · → · 프레젠터 리모컨) · F 전체 화면 · M 소리 · 그 밖 키는 없다 · 시작 화면에서는 F · M 만 */
     var map = { " ": "next", Enter: "next", PageDown: "next", ArrowRight: "next", m: "mute", M: "mute", f: "fs", F: "fs" };
     if (e.ctrlKey || e.altKey || e.metaKey) return;
-    if (map[k]) { e.preventDefault(); act(map[k]); }
+    if (map[k]) { HL.k = k === " " ? "Space" : k.slice(0, 12); HL.kt = Date.now(); e.preventDefault(); act(map[k]); }
   }
 
   /* ─────────────── 매 프레임 ─────────────── */
@@ -2348,13 +2375,20 @@
     if (dt > 1 / 30) PERF.long++; if (dt > PERF.worst) PERF.worst = dt;
   }
   var lastNow = 0;
+  /* 261023 프레임 재기 · 무대 건강(보고 사이 최대 간격 · 1초 넘는 끊김 · fps) · 창이 숨었다 돌아온 간격은 끊김으로 세지 않는다 */
+  function hlFrame() {
+    var pn = performance.now();
+    if (HL.lastF) { var g = pn - HL.lastF; if (HL.hid || document.hidden) HL.hid = false; else { if (g > HL.mx) HL.mx = g; if (g > 1000) { HL.sl++; HL.slt = Date.now(); } } }
+    HL.lastF = pn; HL.fN++; if (!HL.fT0) HL.fT0 = pn;
+  }
   function loop(now) {
+    requestAnimationFrame(loop);   /* 261023 다음 프레임을 먼저 건다 · 이 프레임에서 예외가 나도 화면 전체가 굳지 않는다 */
     var raw = lastNow ? (now - lastNow) / 1000 : 1 / 60; lastNow = now;
+    try { hlFrame(); } catch (e) {}
     FPS.n++; FPS.frames++; FPS.t += raw; if (FPS.t >= 0.5) { FPS.v = FPS.n / FPS.t; FPS.n = 0; FPS.t = 0; }
     if (raw < 1) perfNote(raw);
-    update(Math.min(raw, 1 / 30));
-    render();
-    requestAnimationFrame(loop);
+    try { update(Math.min(raw, 1 / 30)); render(); }
+    catch (e) { hlErr("프레임 · " + (e && e.message || e)); if (HL.en <= 3) { try { console.error("프레임 오류", e); } catch (x) {} } }   /* 진행 · 당첨 셈은 그대로 · 오류는 스태프 표시줄 · 상태 보고에만 */
   }
 
   /* ─────────────── 시작 ─────────────── */
