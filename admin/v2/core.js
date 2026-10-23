@@ -359,10 +359,10 @@ function whoRepaint(){ if(WHO.pt) return; WHO.pt=setTimeout(function(){ WHO.pt=0
 function whoPoolGet(kind){
   if(PP_KIND_IDS[kind]&&!isTop()) return { busy:0, m:{} };   /* 261021 목록(가입자 등)은 슈퍼관리자만 · 다른 입장은 명부 찾기로 */
   var P=WHO.pool[kind]; if(P&&(P.busy||Date.now()-P.at<300000)) return P.busy?P:P.ok?P:{ busy:0, m:{} };
-  WHO.pool[kind]={ busy:1, at:Date.now(), ok:P&&P.ok, m:P&&P.m };
-  call("list_get",{ kind:kind }).then(function(r){ var m={};
-    if(r&&r.ok&&Array.isArray(r.rows)) r.rows.forEach(function(x){ var k=wNm(x.name), e=normE(x.emp); if(!k||!e) return; m[k]=m[k]||[]; if(m[k].indexOf(e)<0) m[k].push(e); });
-    WHO.pool[kind]={ busy:0, at:Date.now(), ok:!!(r&&r.ok), m:m }; whoRepaint(); });
+  WHO.pool[kind]={ busy:1, at:Date.now(), ok:P&&P.ok, m:P&&P.m, c:P&&P.c };
+  call("list_get",{ kind:kind }).then(function(r){ var m={}, c={};   /* 261023 c = 신청번호(cno) → 사번 · 체크인 번호 표(ck_no_list · 사번 없음)는 이름 대신 번호로 맞춘다(동명이인) */
+    if(r&&r.ok&&Array.isArray(r.rows)) r.rows.forEach(function(x){ var k=wNm(x.name), e=normE(x.emp); if(!e) return; if(k){ m[k]=m[k]||[]; if(m[k].indexOf(e)<0) m[k].push(e); } var no=String(x.cno||"").trim(); if(no&&!c[no]) c[no]=e; });
+    WHO.pool[kind]={ busy:0, at:Date.now(), ok:!!(r&&r.ok), m:m, c:c }; whoRepaint(); });
   return P&&P.ok?P:null;
 }
 function whoByName(n, pool){
@@ -375,7 +375,9 @@ function whoByName(n, pool){
 function whoOf(r){
   r=r||{}; var e=normE(r.emp||""), n=String(r.name||r.nm||"").trim(), d=String(r.dept||"").trim(), dup=0;
   if(!whoOkE(e)) e="";
-  if(!e&&n&&!r._noNm){ var hit=whoByName(n, r._wp); if(hit&&hit.length===1) e=hit[0]; else if(hit&&hit.length>1) dup=hit.length; }
+  var byNo=!e&&r._wp&&r.no!=null&&String(r.no).trim()!=="";   /* 261023 번호(no)가 있는 줄 = 같은 명단의 신청번호로 사번을 찾는다 · 이름으로는 찾지 않는다(동명이인) */
+  if(byNo){ var PN=whoPoolGet(r._wp); if(PN&&!PN.busy&&PN.c&&PN.c[String(r.no).trim()]) e=PN.c[String(r.no).trim()]; }
+  else if(!e&&n&&!r._noNm){ var hit=whoByName(n, r._wp); if(hit&&hit.length===1) e=hit[0]; else if(hit&&hit.length>1) dup=hit.length; }
   var o=e?WHO.e[e]:null;
   /* 소속은 명부 부서를 쓰는 명단(list_get · 찾기)의 값이 먼저 · 줄에 딸린 부서(부문일 수 있음)는 그다음
    * 없으면 먼저 접속 명단(가입한 사람 전부 · 5분에 한 번) · 거기도 없으면 명부 찾기(한 사람 한 번) · 이름을 사람이 넣는 명단(PIN 분실)은 바로 명부 찾기 */
