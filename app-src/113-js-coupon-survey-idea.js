@@ -62,7 +62,7 @@ function svOpenPeek() {
   SV.peek = t;
   setTimeout(function () { beSync(); }, 0);
 }
-/* Q2-0 미리 체크 · 서버가 준 참석 목록(sync my.svPre) · 옛 서버 · 시험 모드 = 이 기기 스탬프(p2 · ln) + 17F 출석(l1 AWS · l2 MS) */
+/* Q2-0 미리 체크 · 서버가 준 참석 목록(sync my.svPre) · 옛 서버 · 시험 모드 = 이 기기 스탬프(p2 · ln · cc) + 17F 출석(l1 AWS · l2 MS) */
 function svPreIds() {
   var ok = SV_PROGS.map(function (p) { return p.id; }), sp = S.get("sv_pre", null);
   if (!testMode() && Array.isArray(sp)) return ok.filter(function (id) { return sp.indexOf(id) >= 0; });

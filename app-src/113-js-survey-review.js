@@ -6,7 +6,7 @@
    위 띠(고정) 「검토용 미리보기 · 답은 저장되지 않습니다」 + 「이 화면 의견」(바텀 시트 · 화면 id · 문항 글 자동) · 이름은 선택 · 이 기기에 기억(axsvr_name · 앱 저장소 axf_ 와 따로)
    참가자 앱은 주소에 svreview 가 없으면 이 코드가 아무것도 하지 않는다 */
 var SVR = { on: false, url: "", pre: false, busy: false, txt: "", all: "", scr: null };
-var SVR_PRE = ["q2_3", "q2_5", "q2_6"];   /* 미리 체크 예시 = 참석 기록이 남는 프로그램 셋(AX PLAY · AI 상담소 · 17F AWS) · v8.60 새 설문안(커피챗 q2_8 걷음) */
+var SVR_PRE = ["q2_3", "q2_5", "q2_6"];   /* 미리 체크 예시 = 참석 기록이 남는 프로그램 셋(AX PLAY · AX 라운지 · 17F AWS) · v8.60 새 설문안 · v8.61 커피챗 q2_8 다시 */
 var SVR_MAX = 500, SVR_NAME = 20;
 function svrMode() { return /[?&]svreview(=|&|$)/.test(location.search); }
 function svrLs(k, v) {
