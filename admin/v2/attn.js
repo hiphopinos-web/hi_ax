@@ -167,7 +167,7 @@ function atDelConfirm(s, emps, pv, old){
   var m=AT_META[s]||{ h:s }, sm=pv.sum||{}, all=!emps&&!old, rows=pv.rows||[];
   var days=Object.keys(sm.days||{}).sort().map(function(d){ return d.slice(5).replace("-","/")+" "+n0(sm.days[d])+"줄"; }).join(" · ");
   var wk=Object.keys(sm.why||{}).map(function(w){ return (AT_DWHY[w]||w)+" "+n0(sm.why[w]); }).join(" · ");
-  var body=band(sm.rev?"warn":"info",sm.rev?"10/26 기록으로 받은 프로그램 참여 스탬프를 거둡니다 · 거둔 사람은 되돌리기 없음":"출석 숫자 · 명단 · 엑셀 · 스탬프 셈에서 빠짐 · 원래 줄은 서버에 남음")+
+  var body=band(sm.rev?"warn":"info",sm.rev?"10/26 기록으로 받은 프로그램 참여 스탬프를 거둡니다 · 거둔 사람은 되돌리기 없음":"출석 숫자 · 명단 · 엑셀 · 스탬프 셈에서 빠짐 · 원래 줄은 서버에 남음")+(sm.rev?'<div class="cap mt4">잘못 거뒀으면 이 세션 「입장 처리」 · 「종료 처리」로 기록과 스탬프를 다시 줍니다</div>':'')+
     '<dl class="cc-kv mt4"><dt>지움</dt><dd><b>'+n0(sm.ok)+'명</b> <span class="cap">'+n0(sm.lines)+'줄'+(days?' · '+esc(days):'')+'</span></dd><dt>스탬프</dt><dd>거둠 <b>'+n0(sm.rev)+'명</b></dd><dt>막힘</dt><dd>'+n0(sm.deny)+'명'+(wk?' <span class="cap">'+esc(wk)+'</span>':'')+'</dd></dl>'+
     atDelTable(rows)+(all?'<label class="fld mt4">확인 · 「지우기」 입력<input class="in" id="atDelW" autocomplete="off" oninput="gateUpd()"></label>':'');
   confirmBox({ t:old?m.h+" 다른 날 기록을 지울까요?":all?m.h+" 기록을 전부 지울까요?":m.h+" 출석 기록을 지울까요?", who:old?String(pv.skip||"").slice(5).replace("-","/")+" 기록은 그대로 · "+n0(sm.ok)+"명 "+n0(sm.lines)+"줄":all?"이 세션 기록 전부 · "+n0(sm.ok)+"명 "+n0(sm.lines)+"줄":"고른 "+n0(sm.n)+"명 · 지움 "+n0(sm.ok)+"명 · 막힘 "+n0(sm.deny)+"명",
