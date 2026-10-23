@@ -106,7 +106,8 @@ function adrSp(sc){
 /* 설정 코드 발급 · 초기화(슈퍼관리자 · 확인 창 · 활동 기록 adm_pw) · 성공 = 코드를 한 번만 보이는 창(복사) */
 function adrIssueAsk(emp){
   var r=adrRows("c").filter(function(x){ return x.emp===emp; })[0]||{ emp:emp }, has=r.pw==="set"||r.pw==="code", had=r.pw==="set"||num(r.had);
-  confirmBox({ t:has?"비밀번호를 초기화할까요?":"설정 코드를 발급할까요?", who:personLine(r), sub:had?"지금 비밀번호와 열려 있는 콘솔 입장이 바로 끊김 · 다음 입장 때 넣는 비밀번호가 새 비밀번호가 됩니다(24시간 · 한 번)":has?"지금 비밀번호와 열려 있는 콘솔 입장이 바로 끊김 · 새 설정 코드(6자리 · 24시간 · 한 번만 보임)":"설정 코드(6자리 · 24시간 · 한 번만 보임) · 그 사람이 「설정 코드로 처음 입장」에서 비밀번호를 정합니다",
+  confirmBox({ t:has?"비밀번호를 초기화할까요?":"설정 코드를 발급할까요?", who:personLine(r), sub:had?"지금 비밀번호와 열려 있는 콘솔 입장이 바로 끊김 · 다음 입장 때 넣는 비밀번호가 새 비밀번호가 됩니다":has?"지금 비밀번호와 열려 있는 콘솔 입장이 바로 끊김 · 새 설정 코드(6자리 · 24시간 · 한 번만 보임)":"설정 코드(6자리 · 24시간 · 한 번만 보임) · 그 사람이 「설정 코드로 처음 입장」에서 비밀번호를 정합니다",
+    body:had?'<p class="cap">초기화 뒤 24시간 안 · 한 번 · 지나면 다시 초기화</p>':"",
     ok:has?"초기화":"설정 코드 발급", danger:has,
     run:function(){ return call("adm_pw_issue",{ emp:emp },25000); }, fail:function(x){ return x&&ADR_WHY[x.reason]||""; },
     done:function(x){ reload(["admr"]); if(num(x.rs)){ toast("초기화했습니다 · 다음 입장 때 넣는 비밀번호가 새 비밀번호 · "+fmtD(x.exp)+" 까지",{ ms:6000 }); return; } adrCodeShow(x, r); } });
