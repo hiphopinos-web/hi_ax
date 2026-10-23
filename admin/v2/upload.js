@@ -233,7 +233,7 @@ var LNG_UP={
   kpis:function(pv, rows, mode){
     var R=pv.resv||{}, d=pv.diff||{}, bad=rows.filter(function(r){ return r.k!=="ok"; }).length;
     return '<div class="grid up-kp">'+
-      kpi({ l:"올릴 사람", v:n0(pv.n), u:"명", s:"사은품 쿼터 "+n0(pv.quota)+(pv.over?" · 넘음 "+n0(pv.over):"") ,st:pv.over?"warn":"" })+
+      kpi({ l:"올릴 사람", v:n0(pv.n), u:"명", s:"명단 줄 수" })+
       kpi({ l:"새 승인", v:n0(R.add), u:"명", s:"상담 줄 새로" })+
       kpi({ l:"시간 바꿈", v:n0(R.move), u:"명", s:"그대로 "+n0(R.keep)+" · 칸 미정 "+n0(R.none) })+
       kpi({ l:"빠지는 사람", v:mode==="replace"?n0(d.del):"0", u:"명", s:mode==="replace"?"상담 줄이 남는 사람 "+n0(R.left):"추가만 · 빠짐 없음", st:mode==="replace"&&num(d.del)>0?"warn":"" })+

@@ -2,14 +2,14 @@
  * 왼쪽 = 옷 한 화면(숫자 카드 4 → 구분 칩 → 사이즈 표) · 오른쪽 = 룰렛 5등급 · 선착순 가습기 · 지급품(커피 박스)
  * 명단(옷 · 선착순 가습기 수령)은 카드 아래 전체 폭 한 칸 · 줄을 누르면 오른쪽 서랍(261016 2단계 · 모든 명단 같은 규칙)
  * 재고 장부(inv_state 품목 표 · 맞추기 · 총수량 · 입고 · 되돌리기) = stock.js(261016 3단계)
- * 데이터 = kit_size_state · roll_list(kit · lounge) · inv_state(kit.givenStaff = 체크인존 스태프 옷 지급) · fcfs_list · lk7_state · 읽기 · 쓰기 PIN 없음(261016)
+ * 데이터 = kit_size_state · roll_list(kit) · inv_state(kit.givenStaff = 체크인존 스태프 옷 지급) · fcfs_list · lk7_state · 읽기 · 쓰기 PIN 없음(261016)
  * 룰렛 소진 안내 = L1(바로 · 되돌리기 토스트) · 17:00 잔여 입력 = L2(확인 창) */
 var PZ={ chip:"all", g:null, gf:null };
-var PZ_CH=[["all","전체"],["pre","사전 신청자"],["staff","스태프"],["lng","라운지 사전"]];
+var PZ_CH=[["all","전체"],["pre","사전 신청자"],["staff","스태프"]];   /* 261023 라운지 사전 칩 걷음(라운지 사전 신청 = 옷 · 가습기 없음 · 사용자) */
 var LK_ROUL=[["r1","1등 텀블러"],["r2","2등 커피 + 키캡 키링"],["r3","3등 컵받침"],["r4","4등 판스티커"],["r5","5등 볼펜"]];
 SCREENS.prize={
   title:"경품 · 재고", desc:"옷 · 키트 / 룰렛 / 선착순 / 지급품",
-  need:function(){ return [{ k:"kb", a:"kit_board", ttl:60000 },{ k:"kss", a:"kit_size_state", ttl:60000 },{ k:"kit", a:"roll_list", p:{ list:"kit" }, ttl:60000, rd:1 },{ k:"lng", a:"roll_list", p:{ list:"lounge" }, ttl:60000, rd:1 },{ k:"inv", a:"inv_state", ttl:60000 },{ k:"fxl", a:"fcfs_list", p:{ page:1 }, ttl:30000 },{ k:"lk", a:"lk7_state", ttl:60000 }]; },
+  need:function(){ return [{ k:"kb", a:"kit_board", ttl:60000 },{ k:"kss", a:"kit_size_state", ttl:60000 },{ k:"kit", a:"roll_list", p:{ list:"kit" }, ttl:60000, rd:1 },{ k:"inv", a:"inv_state", ttl:60000 },{ k:"fxl", a:"fcfs_list", p:{ page:1 }, ttl:30000 },{ k:"lk", a:"lk7_state", ttl:60000 }]; },
   mount:function(vb){
     vb.innerHTML='<div class="grid g32"><div class="col"><div class="grid g4" id="pzK"></div><div class="chips" id="pzC" role="group" aria-label="구분" style="margin:0"></div><div class="card" id="pzT"></div></div>'+
       '<div class="col"><div class="card" id="pzR"></div><div class="card" id="pzF"></div><div class="card" id="pzB"></div></div></div>'+
@@ -20,11 +20,10 @@ SCREENS.prize={
   },
   paint:function(){ pzKpi(); pzTable(); pzPeople(); pzRoul(); pzFcfs(); pzBox(); pzFcfsList(); ivTable(el("pzIV")); if(typeof ckExtraPaint==="function"&&el("pzX")&&el("pzX").open) ckExtraPaint(); }
 };
-function pzPool(r){ return pzLng()[r.emp]?"lng":r.pool==="staff"?"staff":"pre"; }
-function pzLng(){ var d=S.data.lng, m={}; if(d&&d.ok) (d.rows||[]).forEach(function(r){ m[r.emp]=1; }); return m; }
+function pzPool(r){ return r.pool==="staff"?"staff":"pre"; }
 function pzRows(){ var d=S.data.kit; return d&&d.ok?(d.rows||[]):null; }
 function sum(o){ var t=0; for(var k in (o||{})) t+=num(o[k]); return t; }
-var KB_G={ pre:"pre10", staff:"staff", lng:"lounge" };   /* 서버 kit_board 구분 이름(pre10 · staff · lounge) */
+var KB_G={ pre:"pre10", staff:"staff" };   /* 서버 kit_board 구분 이름(pre10 · staff) */
 function kbOk(){ var k=S.data.kb; return k&&k.ok&&k.tot?k:null; }
 function pzKpi(){
   var kb=kbOk();
@@ -41,8 +40,8 @@ function pzKpi(){
     drKpiGo({ l:"신청", v:n0(pre+st), u:"명", s:"사전 "+n0(pre)+" · 스태프 "+n0(st) }, "kit:req")+
     drKpiGo({ l:"받음", v:n0(got), u:"명", s:pzStaffGot() }, "kit:got")+
     drKpiGo({ l:"미신청", v:n0(none), u:"명", st:none?"warn":"ok", stt:none?"주의":"정상", s:"사이즈 안 고름" }, "kit:none");
-  var rows=pzRows(), lg=pzLng(), cnt={ all:null, pre:null, staff:null, lng:null };
-  if(rows){ cnt.all=rows.length; cnt.pre=rows.filter(function(r){ return pzPool(r)==="pre"; }).length; cnt.staff=rows.filter(function(r){ return r.pool==="staff"; }).length; cnt.lng=Object.keys(lg).length; }
+  var rows=pzRows(), cnt={ all:null, pre:null, staff:null };
+  if(rows){ cnt.all=rows.length; cnt.pre=rows.filter(function(r){ return pzPool(r)==="pre"; }).length; cnt.staff=rows.filter(function(r){ return r.pool==="staff"; }).length; }
   el("pzC").innerHTML=PZ_CH.map(function(c){ return '<button type="button" class="chip'+(PZ.chip===c[0]?" on":"")+'" aria-pressed="'+(PZ.chip===c[0])+'" onclick="pzChip(\''+c[0]+'\')">'+esc(c[1])+' <span class="c">'+(cnt[c[0]]==null?"-":n0(cnt[c[0]]))+'</span></button>'; }).join("");
 }
 /* 261016 체크인존 스태프 옷 지급 = inv_state kit.givenStaff(옷 집계 「받음」은 사전 신청자만 셈) */
@@ -68,12 +67,12 @@ function pzTable(){
     '<p class="cap mt">남음 = 총량 − 받음 · 여유 = 총량 − 사전 · 스태프 신청 · 교환은 사이즈 교환 기록으로 반영'+(ch!=="all"&&!rows?" · 구분별 수는 명단을 받은 뒤":"")+'</p>';
 }
 var PZ_SES={ fld:"A", ta:"B", tb:"C", aws:"D", ms1:"E 1회차", ms2:"E 2회차" };   /* 261020 옷 명단 세션 열 · 10F 세션 글자(서버 sid) · 스태프 · 라운지 사전 · 옛 서버(sid 없음)는 빈칸 */
-function pzSes(r){ if(PZ_SES[r.sid]) return PZ_SES[r.sid]; if(r.cno&&/^[A-E]-/.test(r.cno)) return r.cno.charAt(0); return r.pool==="staff"?"스태프":pzPool(r)==="lng"?"라운지 사전":""; }
+function pzSes(r){ if(PZ_SES[r.sid]) return PZ_SES[r.sid]; if(r.cno&&/^[A-E]-/.test(r.cno)) return r.cno.charAt(0); return r.pool==="staff"?"스태프":""; }
 function pzPeople(){
   if(!PZ.g) PZ.g=XG.make({ id:"kit", file:"옷 명단", key:function(r){ return r.emp; }, sort:{ k:"cno", d:1 },
-    chips:[["all","전체",null],["pre","사전 신청자",function(r){ return pzPool(r)==="pre"; }],["staff","스태프",function(r){ return r.pool==="staff"; }],["lng","라운지 사전",function(r){ return pzPool(r)==="lng"; }],["none","미신청",function(r){ return !r.sz; }]],
+    chips:[["all","전체",null],["pre","사전 신청자",function(r){ return pzPool(r)==="pre"; }],["staff","스태프",function(r){ return r.pool==="staff"; }],["none","미신청",function(r){ return !r.sz; }]],
     onChip:function(c){ if(c!=="none"){ PZ.chip=c; paint(); } },
-    cols:[{ k:"name", t:"이름", w:100 },{ k:"emp", t:"사번", w:84 },{ k:"dept", t:"부서", w:120 },{ k:"pool", t:"구분", w:96, v:function(r){ var p=pzPool(r); return p==="staff"?"스태프":p==="lng"?"라운지 사전":"사전 신청자"; } },
+    cols:[{ k:"name", t:"이름", w:100 },{ k:"emp", t:"사번", w:84 },{ k:"dept", t:"부서", w:120 },{ k:"pool", t:"구분", w:96, v:function(r){ var p=pzPool(r); return p==="staff"?"스태프":"사전 신청자"; } },
       { k:"sid", t:"세션", w:90, v:pzSes },{ k:"cno", t:"세션 번호", w:84, v:function(r){ return r.cno||""; }, f:function(r){ return r.cno?'<b>'+esc(r.cno)+'</b>':r.cno==null?"":tag("없음","off"); } },
       { k:"sz", t:"사이즈", w:70, f:function(r){ return r.sz?'<b>'+esc(r.sz)+'</b>':tag("미신청","warn"); } },{ k:"how", t:"고른 방식", w:80, v:function(r){ return r.how==="auto"?"자동":r.how==="pick"?"직접":""; } },{ k:"at", t:"고른 시각", type:"date", w:100 },
       { k:"got", t:"받음", w:96, v:function(r){ return r.got||""; }, x:function(r){ return r.got?"받음 "+r.got:r.pool==="staff"?"따로 전달":"받기 전"; }, f:function(r){ return r.got?tag("받음 "+fmtD(r.got),"ok"):r.pool==="staff"?tag("따로 전달","off"):tag("받기 전","off"); } }],

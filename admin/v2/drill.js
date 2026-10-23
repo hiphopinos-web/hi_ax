@@ -86,7 +86,7 @@ function drDef(key){
     return { t:CC[0], s:"상태 = "+CC[1], sort:{ k:"ts", d:1 }, cols:[{ k:"st", t:"상태", w:64 },{ k:"round", t:"회차", w:60 },{ k:"table", t:"테이블", w:60 },{ k:"ts", t:"신청 시각", type:"date", w:100 }],
       src:function(){ return drLg("cchat").then(function(rr){ return rr.filter(function(r){ return CC[2](String(r.st||"")); }); }); } }; }
   if(k==="ln"){
-    if(x==="pre") return { t:"AX 라운지 사전 명단", s:"등록 순 · 수량 안 = 키트 · 넘으면 가습기", sort:{ k:"rk", d:1 }, cols:[{ k:"rk", t:"등록 순", type:"num", w:64 },{ k:"kit", t:"받을 것", w:64 },{ k:"sz", t:"사이즈", w:60 },{ k:"got", t:"받음", w:50 }],
+    if(x==="pre") return { t:"AX 라운지 사전 명단", s:"등록 순", sort:{ k:"rk", d:1 }, cols:[{ k:"rk", t:"등록 순", type:"num", w:64 }],
       src:function(){ return drLg("lounge_pre"); } };
     var st=x==="resv"?"":decodeURIComponent(y||x);
     return { t:x==="resv"?"AX 라운지 예약":"AX 라운지 "+st, s:x==="resv"?"취소 뺀 예약":"상태 = "+st, sort:{ k:"slot", d:1 }, cols:[{ k:"slot", t:"시간", w:60 },{ k:"st", t:"상태", w:64 },{ k:"ts", t:"신청 시각", type:"date", w:100 }],

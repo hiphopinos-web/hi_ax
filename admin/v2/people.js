@@ -88,10 +88,10 @@ function peopleQ(q){ q=String(q||"").trim(); S.ui.pq=q; S.ui.pqOpen=1; S.at.pfin
 function ppStale(){ Object.keys(S.at).forEach(function(k){ if(/^pl_|^pfind$/.test(k)) S.at[k]=0; }); }
 
 /* ── 261016 옷 · 10F 사전 신청 명단의 「옷」 열 · 「미선택」 칩 · 엑셀 둘째 시트 「옷 수량」(종류 · 사이즈 × 세션) ──
- * 옷 값 = list_get kit(옷 신청 · 사전 신청 키트 · 스태프 옷 · 라운지 사전)을 사번으로 붙인다 · 못 받았으면 pre10 줄의 size
+ * 옷 값 = list_get kit(옷 신청 · 사전 신청 키트 · 스태프 옷)을 사번으로 붙인다 · 못 받았으면 pre10 줄의 size
  * 스태프 명단은 그 줄의 의류 · 사이즈로 같은 모양 시트(열 = 합계) */
-var KIT_SZ=["SS","L","2XL","3XL"], KIT_GS=["pre10","staff","lounge"];
-var KIT_GN={ pre10:"키트", staff:"스태프 옷", lounge:"라운지 키트" }, KIT_GL={ pre10:"사전 신청 키트", staff:"스태프 옷", lounge:"라운지 사전 키트" };
+var KIT_SZ=["SS","L","2XL","3XL"], KIT_GS=["pre10","staff"];
+var KIT_GN={ pre10:"키트", staff:"스태프 옷" }, KIT_GL={ pre10:"사전 신청 키트", staff:"스태프 옷" };
 var KIT_SES=[["fld","세션 A"],["ta","세션 B"],["tb","세션 C"],["aws","세션 D"],["ms1","세션 E 1회차"],["ms2","세션 E 2회차"]];
 function ppKitMap(){ var d=S.data.pl_kit; if(!d||d.ok===false||!Array.isArray(d.rows)) return null; if(d._m) return d._m; var m={}; d.rows.forEach(function(r){ if(r.emp&&!m[r.emp]) m[r.emp]=r; }); d._m=m; return m; }
 /* 한 사람 옷 = { st:"sz"(고름) | "none"(미선택) | "out"(옷 명단 밖), g, sz, how } */
@@ -209,12 +209,11 @@ function pcHtml(d){
   /* 261017 게임 · 닉네임(pcgame.js) */
   if(typeof pcGameHtml==="function") h+=pcGameHtml(d);
   /* 경품 · 옷 */
-  var fx=d.fcfs, kit=d.kit, lg=d.lounge, gr=[];
+  var fx=d.fcfs, kit=d.kit, gr=[];   /* 261023 라운지 사전 신청 줄(키트 · 가습기) 걷음 · 라운지 사전 신청 = 받을 것 없음 */
   gr.push(rowH("룰렛", rl.used?"사용 "+fmtD(rl.at)+(rl.gn?" · "+rl.gn:""):"안 씀", rl.used?'<button class="btn sm" type="button" onclick="rlUndoAsk(\''+J+'\')">사용 취소</button>':tag("안 씀","off")));
   gr.push(rowH("선착순 가습기"+(fx&&fx.rk?" · 달성 "+n0(fx.rk)+"번째":""), !fx?"6개 전 · 달성순 · 17:00 마감":fx.st==="done"?"수령 "+fmtD(fx.gotAt)+(fx.gotBy?" · "+fx.gotBy:""):fx.st==="void"?"자격 취소됨":fx.st==="full"?"수량 넘음":"수령 전 · 17:00 마감", (fx&&fx.st==="done"?tag("받음","ok"):fx?tag("받기 전","off"):"")+(typeof pcFxBtns==="function"?pcFxBtns(d):"")));
   if(kit) gr.push(rowH(kit.pool==="staff"?"스태프 옷":"사전 신청 키트 · 옷", "사이즈 "+(kit.sz||"아직")+(kit.how==="auto"?"(자동)":""), kit.got?tag("받음 "+fmtD(kit.got),"ok"):tag("받기 전","off")));
-  if(lg) gr.push(rowH("라운지 사전 신청 "+n0(lg.rk)+"번째", lg.kit?"키트":"가습기", lg.got?tag("받음 "+fmtD(lg.got),"ok"):tag("받기 전","off")));
-  h+=pcSec("경품 · 옷 수령", gr.join(""));
+    h+=pcSec("경품 · 옷 수령", gr.join(""));
   /* 라운지 · 커피챗 */
   var ap=[];
   (d.resv||[]).forEach(function(r){ ap.push(rowH("AX 라운지 상담 "+hm(r.slot), r.memo||"", tag(r.st,RESV_TAG[r.st]))); });

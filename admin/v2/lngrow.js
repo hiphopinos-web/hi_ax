@@ -48,7 +48,7 @@ function laSp(){
 }
 /* 넣은 뒤 토스트 · 되돌리기 */
 function laAdded(r, p){ var e=normE(p.emp); reload(["resv","lgb"]);
-  toast("넣었습니다 · "+(r.name||p.name||e)+" · "+(r.dl?r.dl+" ":"")+(r.slot?r.slot+(r.seat?" · 미팅룸 "+r.seat:""):"칸 미정")+(r.rv==="more"?" · 추가 상담 · 이 사람 "+r.mine+"건":"")+(r.over?" · 정원 넘음":"")+(r.gate==="add"?" · 접속 허용 명단에도 넣음":""), { undo:function(){ if(r.rv==="more") laDelOne(e, r.id); else laDel(e, 1); } }); }
+  toast("넣었습니다 · "+(r.name||p.name||e)+" · "+(r.dl?r.dl+" ":"")+(r.slot?r.slot+(r.seat?" · 미팅룸 "+r.seat:""):"칸 미정")+(r.rv==="more"?" · 추가 상담 · 이 사람 "+r.mine+"건":"")+(r.gate==="add"?" · 접속 허용 명단에도 넣음":""), { undo:function(){ if(r.rv==="more") laDelOne(e, r.id); else laDel(e, 1); } }); }
 /* 261023 (사용자 「막지 말고 묻는다」) 서버가 dup = 이미 명단에 있음 · 그 줄들을 보이고 [한 건 더 넣기] = more 1 로 다시 · [닫기] = 그대로 */
 function laMore(q, d, p){
   var rs=(d&&d.rows)||[], n=num(d&&d.have)||rs.length, at=rs.map(function(x){ return (x.dl?x.dl+" ":"")+(hm(x.slot)||"칸 미정"); }).join(" · ");
@@ -60,7 +60,7 @@ function laMore(q, d, p){
 /* 선택 삭제 · 상담 줄 취소(kind lounge · 줄 id) · 「사전 명단에서도 뺌」을 고르면 kind lounge_pre(사번 · 명단 · 라운지시간에서 빠지고 신청 · 승인 줄 취소) */
 function laCx(){
   return { what:"AX 라운지 신청", sub:"상담 줄 상태 = 취소(이전 상태 남김) · 완료였으면 라운지 스탬프 거둠",
-    opts:function(){ LA.pre=0; return '<label class="nt-f" style="display:flex;gap:8px;align-items:center"><input type="checkbox" onchange="LA.pre=this.checked?1:0">사전 명단에서도 뺌(키트 · 가습기 대상에서 빠짐 · 체크인 · 완료한 사람은 못 함)</label>'; },
+    opts:function(){ LA.pre=0; return '<label class="nt-f" style="display:flex;gap:8px;align-items:center"><input type="checkbox" onchange="LA.pre=this.checked?1:0">사전 명단에서도 뺌(체크인 · 완료한 사람은 못 함)</label>'; },
     kind:function(){ return LA.pre?"lounge_pre":"lounge"; },
     keys:function(rows, kind){ var seen={}; return rows.map(function(r){ return kind==="lounge_pre"?normE(r.emp):String(r.id); }).filter(function(k){ if(seen[k]) return false; seen[k]=1; return true; }); },
     after:function(){ LG.sel=null; LG.mv=null; reload(["resv","lgb"]); } };
