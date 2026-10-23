@@ -15,7 +15,7 @@ button.atn-card:hover{border-color:var(--navy)}
 .atn-n.warn{background:var(--warn-bg);border-color:var(--warn-ln)}
 .atn-n.warn b{color:var(--warn)}
 .atn-go{align-self:flex-end}
-[data-xg="atn10"] .xg-acts .btn.dng,[data-xg="atn17"] .xg-acts .btn.dng{display:none}
+[data-xg="atn10"] .xg-acts .btn.dng:not(.atn-del),[data-xg="atn17"] .xg-acts .btn.dng:not(.atn-del){display:none}
 [data-xg="atn10"] .xg-acts,[data-xg="atn17"] .xg-acts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .atn-ns.f17{grid-template-columns:repeat(4,minmax(0,1fr))}
 @media (max-width:480px){.atn-ns{grid-template-columns:repeat(3,minmax(0,1fr))}.atn-ns.f17{grid-template-columns:repeat(4,minmax(0,1fr))}.atn-grid{grid-template-columns:1fr}.atn-n{padding:6px}}

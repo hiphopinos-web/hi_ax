@@ -37,7 +37,7 @@ SCREENS.att={
   mount:function(vb){
     var s=atSub();
     el("phCap").textContent=s==="all"?"세션을 누르면 명단 · 30초마다 새로":"고른 줄 입장 · 종료 처리 = QR 과 같은 기록 · 스탬프 · 슈퍼관리자";
-    vb.innerHTML=chipsH(AT_SUBS,s)+'<div id="atBar" class="atn-bar"></div><div id="atBand"></div>'+(s==="all"?'<div id="atCards" class="atn-grid"></div>':'<div id="atOne"></div><div class="card mt"><div id="mg_'+(atTen(s)?"atn10":"atn17")+'"></div></div>');
+    vb.innerHTML=chipsH(AT_SUBS,s)+'<div id="atBar" class="atn-bar"></div><div id="atBand"></div><div id="atRes">'+(AT_DRES.s===s?AT_DRES.h:"")+'</div>'+(s==="all"?'<div id="atCards" class="atn-grid"></div>':'<div id="atOne"></div><div class="card mt"><div id="mg_'+(atTen(s)?"atn10":"atn17")+'"></div></div>');
     if(s!=="all") atGrid(s);
   },
   paint:function(){
@@ -62,7 +62,7 @@ function atCard(c, one){
   var tagN='<'+(one?'div':'button type="button" onclick="goSub(\''+c.id+'\')" aria-label="'+esc(m.h)+' 명단 보기"')+' class="card atn-card'+(one?" one":"")+'">';
   return tagN+'<div class="atn-h"><b>'+esc(m.h)+'</b>'+tag(st[0],st[1])+'</div>'+
     '<div class="atn-t">'+esc(m.t)+'</div><div class="cap">'+esc(c.s)+'~'+esc(c.e)+' · '+esc(m.p)+'<br>찍는 시간 · 입장 '+esc(c.wIn)+' · 종료 '+esc(c.wOut)+'</div>'+
-    '<div class="atn-ns'+(ten?'':' f17')+'">'+nums+'</div>'+(ten&&c.xn?'<div class="cap">명단 밖 '+n0(c.xn)+'명 찍음(기록만)</div>':(!ten?'<div class="cap">자유 참석 · 신청 명단 없음</div>':''))+
+    '<div class="atn-ns'+(ten?'':' f17')+'">'+nums+'</div>'+(c.old?'<div class="cap">다른 날 기록 '+n0(c.old)+'줄 · 표에 없음</div>':'')+(ten&&c.xn?'<div class="cap">명단 밖 '+n0(c.xn)+'명 찍음(기록만)</div>':(!ten?'<div class="cap">자유 참석 · 신청 명단 없음</div>':''))+
     (one?'':'<span class="atn-go cap">명단 보기 ›</span>')+'</'+(one?'div':'button')+'>';
 }
 function atStampTx(r, ten){ return (r.u?n0(r.u)+"/2":"0/2")+" · 전체 "+n0(r.n); }
@@ -80,8 +80,8 @@ function atGrid(s){
       return (r.in?'':'<button class="btn sm" type="button" onclick="atAsk(\'in\',[\''+e+'\'])">입장</button> ')+(r.out?'':'<button class="btn sm" type="button" onclick="atAsk(\'out\',[\''+e+'\'])">종료</button>'); } });
   gridOf(id,{ file:ten?"10F 출석":"17F 출석", key:function(r){ return r.emp; }, sort:{ k:ten?"no":"in", d:1 }, h:520, select:true, unit:"명", chips:chips, cols:cols,
     empty:ten?"사전 신청자가 없습니다":"아직 찍은 사람이 없습니다 · 사번을 넣어 처리합니다",
-    topAct:function(g, n){ return atCan()&&!ten?'<button class="btn sm" type="button" onclick="atAddAsk()">사번으로 처리</button>':""; },
-    pickAct:function(g, n){ if(!atCan()) return '<span class="cap">수기 처리 = 슈퍼관리자 · 출석 담당</span>'; return '<button class="btn sm pri" type="button" onclick="atPickAsk(\'in\')">입장 처리 '+n0(n)+'명</button><button class="btn sm pri" type="button" onclick="atPickAsk(\'out\')">종료 처리 '+n0(n)+'명</button>'; },
+    topAct:function(g, n){ return (atCan()&&!ten?'<button class="btn sm" type="button" onclick="atAddAsk()">사번으로 처리</button>':"")+(atDelCan()?'<button class="btn sm dng atn-del" type="button" onclick="atDelAsk(null)">이 세션 기록 전부 지우기</button>':""); },
+    pickAct:function(g, n){ if(!atCan()) return '<span class="cap">수기 처리 = 슈퍼관리자 · 출석 담당</span>'; return '<button class="btn sm pri" type="button" onclick="atPickAsk(\'in\')">입장 처리 '+n0(n)+'명</button><button class="btn sm pri" type="button" onclick="atPickAsk(\'out\')">종료 처리 '+n0(n)+'명</button>'+(atDelCan()?'<button class="btn sm dng atn-del" type="button" onclick="atDelPick()">기록 지우기 '+n0(n)+'명</button>':""); },
     onRow:function(k2){ if(typeof pcOpen==="function"&&isTop()) pcOpen(k2, MG[id]); } });
 }
 function atPickAsk(k){ var s=atSub(), g=MG[atTen(s)?"atn10":"atn17"]; if(!g) return; var e=xgPicked(g).map(function(r){ return r.emp; }); if(e.length) atAsk(k, e); }   /* 명단 밖 줄도 보내 확인 창에 막힌 이유를 보인다(서버 판정) */
@@ -135,6 +135,63 @@ function atUndo(b){
   call("roll_undo",{ batch:b }).then(function(x){ reload(["atb"]);
     var sk=(x&&x.skip||[]), wm={}; sk.forEach(function(y){ var w=AT_UWHY[y.why]||y.why; wm[w]=(wm[w]||0)+1; });
     toast(x&&x.ok?"되돌렸습니다 · "+n0(x.done)+"명"+(sk.length?" · 건너뜀 "+Object.keys(wm).map(function(w){ return w+" "+wm[w]; }).join(" · "):""):"되돌리지 못했습니다 · "+(x&&x.reason==="owner"?"슈퍼관리자 · 출석 담당만 합니다":why(x)),{ bad:!(x&&x.ok), ms:sk.length?6000:0 }); });
+}
+/* ── 261023 출석 기록 지우기(att_del · 슈퍼관리자) · 고른 줄 · 이 세션 전부(「지우기」 입력) · 미리 보기 → 확인 창 → 결과 목록 · 토스트 되돌리기(스탬프를 거두지 않은 사람만)
+ *   서버 = 원래 줄은 남기고 세션 칸만 「지움:」 · 10/26 기록은 그 기록으로 받은 프로그램 참여 스탬프를 거둠 · 보상 · 추첨 통 고정이면 막힘(이유) ── */
+var AT_DWHY={ none:"지울 기록 없음", drawlock:"추첨 통 고정 뒤 · 10/26 기록", roulette:"룰렛 씀", tickets:"행운권 번호 나감", fin:"참여상 확정", fcfs:"선착순 참여상 받음", nostamp:"스탬프 없음", preday:"행사 전", err:"서버 오류" };
+var AT_DRES={ s:"", h:"" };
+function atDelCan(){ return !!isTop(); }
+function atDelPick(){ var s=atSub(), g=MG[atTen(s)?"atn10":"atn17"]; if(!g) return; var e=xgPicked(g).map(function(r){ return r.emp; }); if(e.length) atDelAsk(e); }
+function atDelQ(q, emps){ if(emps) q.emps=emps.join(","); else q.all="1"; return q; }
+function atDelAsk(emps){
+  if(!atDelCan()){ toast("기록 지우기는 슈퍼관리자가 합니다",{ bad:1 }); return; }
+  var s=atSub(); if(s==="all"||(emps&&!emps.length)) return;
+  if(emps&&emps.length>300){ toast("한 번에 300명까지 · 지금 "+n0(emps.length)+"명",{ bad:1, ms:4000 }); return; }
+  toast("미리 보는 중");
+  call("att_del",atDelQ({ sid:s, dry:"1" }, emps)).then(function(pv){
+    if(!pv||!pv.ok){ toast("미리 보지 못했습니다 · "+(pv&&pv.reason==="super"?"슈퍼관리자만 합니다":pv&&pv.reason==="rows"?"한 번에 "+n0(pv.max)+"명까지":why(pv)),{ bad:1, ms:5000 }); return; }
+    atDelConfirm(s, emps, pv);
+  });
+}
+function atDelTx(x){
+  if(x.why) return tag("막힘 · "+(AT_DWHY[x.why]||x.why),"warn");
+  if(x.st==="rev") return tag("지움 · 스탬프 거둠 "+n0(x.n0)+" → "+n0(x.n1)+"개","warn");
+  return tag("지움","")+(x.test?" "+tag("시험","off"):"");
+}
+function atDelTable(rows){
+  var ok=rows.filter(function(x){ return !x.why; }), no=rows.filter(function(x){ return x.why; });
+  return '<div class="xg-wrap mt4" style="--xg-h:220px"><table class="tb xg-fail"><thead><tr><th scope="col">이름</th><th scope="col">사번</th><th scope="col">줄</th><th scope="col">결과</th></tr></thead><tbody>'+
+    ok.concat(no).map(function(x){ return '<tr><td>'+esc(x.name||"-")+'</td><td>'+esc(x.emp)+'</td><td class="num">'+n0(x.n)+'</td><td>'+atDelTx(x)+'</td></tr>'; }).join("")+'</tbody></table></div>';
+}
+function atDelConfirm(s, emps, pv){
+  var m=AT_META[s]||{ h:s }, sm=pv.sum||{}, all=!emps, rows=pv.rows||[];
+  var days=Object.keys(sm.days||{}).sort().map(function(d){ return d.slice(5).replace("-","/")+" "+n0(sm.days[d])+"줄"; }).join(" · ");
+  var wk=Object.keys(sm.why||{}).map(function(w){ return (AT_DWHY[w]||w)+" "+n0(sm.why[w]); }).join(" · ");
+  var body=band(sm.rev?"warn":"info",sm.rev?"10/26 기록으로 받은 프로그램 참여 스탬프를 거둡니다 · 거둔 사람은 되돌리기 없음":"출석 숫자 · 명단 · 엑셀 · 스탬프 셈에서 빠짐 · 원래 줄은 서버에 남음")+
+    '<dl class="cc-kv mt4"><dt>지움</dt><dd><b>'+n0(sm.ok)+'명</b> <span class="cap">'+n0(sm.lines)+'줄'+(days?' · '+esc(days):'')+'</span></dd><dt>스탬프</dt><dd>거둠 <b>'+n0(sm.rev)+'명</b></dd><dt>막힘</dt><dd>'+n0(sm.deny)+'명'+(wk?' <span class="cap">'+esc(wk)+'</span>':'')+'</dd></dl>'+
+    atDelTable(rows)+(all?'<label class="fld mt4">확인 · 「지우기」 입력<input class="in" id="atDelW" autocomplete="off" oninput="gateUpd()"></label>':'');
+  confirmBox({ t:all?m.h+" 기록을 전부 지울까요?":m.h+" 출석 기록을 지울까요?", who:all?"이 세션 기록 전부 · "+n0(sm.ok)+"명 "+n0(sm.lines)+"줄":"고른 "+n0(sm.n)+"명 · 지움 "+n0(sm.ok)+"명 · 막힘 "+n0(sm.deny)+"명",
+    sub:"같은 사람이 다시 찍으면 새 기록 · 활동 기록에 남음", body:body, ok:"지우기 "+n0(sm.ok)+"명", danger:true, focus:all?"atDelW":"",
+    gate:function(){ if(!(sm.ok>0)) return false; if(!all) return true; var w=el("atDelW"); return !!w&&w.value.trim()==="지우기"; },
+    run:function(){ var q={ sid:s, rid:"d"+Date.now().toString(36)+Math.random().toString(36).slice(2,6) }; if(all){ q.all="1"; q.word=el("atDelW").value.trim(); } else q.emps=rows.filter(function(x){ return !x.why; }).map(function(x){ return x.emp; }).join(","); return call("att_del",q,30000); },
+    fail:function(r){ return r&&r.reason==="super"?"슈퍼관리자만 합니다":r&&r.reason==="word"?"「지우기」를 그대로 입력합니다":""; },
+    done:function(r){ atDelDone(s, r); } });
+}
+function atDelDone(s, r){
+  var g=MG[atTen(s)?"atn10":"atn17"], gone={}, sm=r.sum||{};
+  (r.rows||[]).forEach(function(x){ if(!x.why) gone[x.emp]=1; });
+  if(g){ g.pick={}; g.rows=(g.rows||[]).filter(function(row){ if(!gone[row.emp]) return true; if(atTen(s)&&!row.x){ row.in=""; row.out=""; return true; } return false; }); XG.paint(g); }   /* 처리한 줄만 바로 고침 · 이어서 다시 읽기 */
+  reload(["atb"]);
+  AT_DRES={ s:s, h:'<div class="card mt"><div class="atn-bar"><b>기록 지우기 결과 · '+esc(hm(r.t))+'</b><span class="sp"></span><button class="btn sm" type="button" onclick="atDelRes0()">닫기</button></div><div class="cap">지움 '+n0(sm.del)+'명 · 스탬프 거둠 '+n0(sm.rev)+'명 · 막힘 '+n0(sm.deny)+'명</div>'+atDelTable(r.rows||[])+'</div>' };
+  var re=el("atRes"); if(re) re.innerHTML=AT_DRES.h;
+  toast(r.done?"지웠습니다 · "+n0(r.done)+"명 "+n0(r.lines)+"줄"+(sm.rev?" · 스탬프 거둠 "+n0(sm.rev):"")+(sm.deny?" · 막힘 "+n0(sm.deny):""):"지운 기록이 없습니다", r.batch&&r.undo?{ undo:function(){ atDelUndo(r.batch); } }:{ bad:!r.done, ms:5000 });
+}
+function atDelRes0(){ AT_DRES={ s:"", h:"" }; var re=el("atRes"); if(re) re.innerHTML=""; }
+function atDelUndo(b){
+  call("roll_undo",{ batch:b }).then(function(x){ reload(["atb"]);
+    var sk=(x&&x.skip)||[];
+    if(x&&x.ok) atDelRes0();
+    toast(x&&x.ok?"되돌렸습니다 · "+n0(x.done)+"명 "+n0(x.lines)+"줄"+(sk.length?" · 건너뜀 "+n0(sk.length)+"(스탬프 거둠 · 바뀜)":""):"되돌리지 못했습니다 · "+(x&&x.reason==="super"?"슈퍼관리자만 합니다":why(x)),{ bad:!(x&&x.ok), ms:sk.length?6000:0 }); });
 }
 /* ── 261022 밤 출석 담당 · 설정 › 관리자 명단(콘솔 입장) 「출석 담당」 칸 · AX 라운지 담당(lngstamp.js lsmOwnCell)과 같은 모양 ── */
 function atOwnCell(r){
