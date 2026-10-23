@@ -114,7 +114,7 @@ function typeLinkGo(raw) {
   srShow(Object.assign({}, base, { lk: "wait" }));
   beCall({ action: "type_link_join", emp: u.empId, lt: lt }, function (r) {
     if (!(SR.st === "link" && SR.lt === lt)) return;
-    if (r && r.ok && r.inWin && r.left > 0) { srShow(Object.assign({}, base, { lk: "ok", nick: r.nick || "", used: r.used, left: r.left, limit: r.limit, test: !!r.test })); return; }   /* 261021 새 서버 left = 늘 남음(상한 없음) · 옛 서버 left 0 = limit */
+    if (r && r.ok && r.inWin && r.left > 0) { srShow(Object.assign({}, base, { lk: "ok", nick: r.nick || "", used: r.used, left: r.left, limit: r.limit, test: !!r.test, prac: !!r.prac })); return; }   /* 261023 prac = 연습판 명단 */   /* 261021 새 서버 left = 늘 남음(상한 없음) · 옛 서버 left 0 = limit */
     var why = !r ? "other" : r.ok ? (!r.inWin ? "window" : "limit") : r.reason === "busy" ? "net" : TLK_WHY[r.reason] ? r.reason : "other";
     srShow(Object.assign({}, base, { lk: why, win: (r && r.win) || [], test: !!(r && r.test) }));
   }, function () { if (SR.st === "link" && SR.lt === lt) srShow(Object.assign({}, base, { lk: "net" })); });
@@ -128,8 +128,8 @@ function typeLinkHtml(o) {
   if (o.lk === "ok") {
     h = bot + '<span class="axs-chip ok axs-self">1F 타자왕 · 노트북 연결됨</span><h1 class="ax-title">노트북 화면을<br>보세요</h1>' +
       '<section class="axs-res-card"><p class="ax-type-t7 axs-bt">SPACE로 시작</p><p class="axs-res-n">' + (o.nick ? esc(o.nick) : "새 도전자") + "</p>" +
-      '<p class="ax-description">' + tsfTry(o).n + "번째 도전</p>" + (o.nick ? "" : '<p class="ax-meta">닉네임은 노트북에서 정해요</p>') + "</section>" +   /* 261017 몇 번째 도전(노트북과 같은 셈 tsfTry) */
-      (o.test ? '<p class="ax-meta">테스트 사번 · 순위 외</p>' : "");
+      '<p class="ax-description">' + tsfTry(o).t + "</p>" + (o.nick ? "" : '<p class="ax-meta">닉네임은 노트북에서 정해요</p>') + "</section>" +   /* 261017 몇 번째 도전(노트북과 같은 셈 tsfTry) */
+      (o.prac ? '<p class="ax-meta">연습 · 순위 외</p>' : o.test ? '<p class="ax-meta">테스트 사번 · 순위 외</p>' : "");
     return { body: h, btn: ax2Btn("확인", "App.tab('home')") };
   }
   var w = TLK_WHY[o.lk] || TLK_WHY.other;   /* 261021 limit = 옛 서버뿐(스탬프 문구 없음) */
@@ -1237,6 +1237,7 @@ function scanHit(raw) {
   if (scanSeen(emp)) return;   /* v5.98 같은 사람 QR 이 카메라에 계속 비치면 3초를 다시 잰다(서명 QR 은 20초마다 글자가 바뀐다 · 사번으로 본다) · 치웠다가 3초 뒤 다시 대면 찍힌다 */
   if (raw === SCAN.last && Date.now() - SCAN.lastT < 3000) return;   /* v4.65 참가자 QR 이 아닌 것도 3초에 한 번 · 전에는 카메라가 보는 동안 0.12초마다 한 줄씩 기록을 밀어냈다 */
   SCAN.last = raw; SCAN.lastT = Date.now(); SCAN.lastE = emp || ""; SCAN.seenE = Date.now();
+  if (!emp && /#q=type\b/i.test(raw)) { typeLinkGo(raw); return; }   /* 261023 (사용자 「스태프 코드 계정도 타자왕」) 스태프 폰 연속 스캐너로 1F 타자왕 노트북 접속 QR = 참가자와 같은 길(그 폰 사번으로 노트북에 연결) · 스캐너는 화면을 떠나며 꺼진다 */
   var pq = emp ? 0 : pqrParse(raw);
   if (pq) { pqrHit(pq, scanSpot(SCAN.spot)); return; }   /* 261021 연습 QR · 서버 없이 정해 둔 답 */
   if (!emp) { scanLog("", "참가자 QR이 아니에요", false); scanShow("bad", "", "참가자 QR이 아니에요", "참가자 앱의 내 QR을 찍어 주세요"); return; }

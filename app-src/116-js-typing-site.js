@@ -17,7 +17,7 @@ function rgTopHtml() {
   return '<div class="rg-hud">' +
     (side ? "" : '<span class="rg-sc"><small>점수</small><b id="rgHudSc">0</b></span>') +
     '<span class="rg-tm" id="rgHudTm">0.0초</span>' +
-    (RG.mode === "site" && TSF.info ? '<span class="rg-try">' + tsfTry().n + "번째 도전</span>" : "") +   /* 261017 1F 셀프 · 몇 번째 도전 · 261021 기회 상한 없음(최대 칸 없음) */
+    (RG.mode === "site" && TSF.info ? '<span class="rg-try">' + tsfTry().t + "</span>" : "") +   /* 261017 1F 셀프 · 몇 번째 도전 · 261021 기회 상한 없음(최대 칸 없음) */
     (side ? "" : '<span class="rg-ht" id="rgHudHt">' + hearts + "</span>") +
     (RG.mode === "site" ? "" : sndBtnHtml(false) +
     '<button class="rg-ib rgp-x" type="button" data-on="계속" data-off="멈춤" aria-label="일시정지" onpointerdown="event.preventDefault()" onclick="gsPauseToggle()">멈춤</button>') + "</div>";
@@ -368,7 +368,7 @@ function tsfDev() {
 /* 옛 서버(261017 판)가 limit 으로 거절했을 때만 쓰는 문구 · 새 서버는 limit 거절이 없다 */
 function tsfLimitMsg() { return "오늘은 더 도전할 수 없어요"; }
 /* 261017 몇 번째 도전(n) · 261021 n = 쓴 판(used) + 1 · used 가 없는 옛 서버 = limit − left + 1 · 테스트 사번 = 늘 1번째 · 모든 화면이 이 셈 하나 */
-function tsfTry(i) { i = i || TSF.info || {}; var u = Number(i.used), lim = Number(i.limit) || 0, left = Number(i.left) || 0; return { n: i.test ? 1 : Math.max(1, i.used != null && u >= 0 ? u + 1 : lim - left + 1) }; }
+function tsfTry(i) { i = i || TSF.info || {}; var u = Number(i.used), lim = Number(i.limit) || 0, left = Number(i.left) || 0, n = i.test ? 1 : Math.max(1, i.used != null && u >= 0 ? u + 1 : lim - left + 1); return { n: n, t: i.prac ? "연습" : n + "번째 도전", prac: !!i.prac }; }   /* 261023 연습판 명단(서버 prac) = 「연습」 · 기록 · 순위 없음 */
 function typePts(v) { return Number(v || 0).toLocaleString() + "점"; }   /* v5.12 1F 타자왕(site) 기록 = 점수 · 앱(app)은 그대로 typeSec */
 function tsfDbg(k, v) {   /* v5.61 시험 훅 · 주소에 ?tsfdbg=1 일 때만 window.__tsf 에 쌓는다(운영 화면에는 영향 없음) */
   if (!TSF.dbg) return;
@@ -462,11 +462,12 @@ function tsfAdmin() {
   modalOpen('<div class="ax-stack-tight axs-gap12"><label class="ax-sr-only" for="tsfOffCode">관리코드</label>' +
     '<input id="tsfOffCode" class="ax-field" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="관리코드" onkeydown="onEnter(event, tsfOffGo)">' +
     '<p class="ax-meta" id="tsfOffMsg">효과음 ' + (on ? "켜짐" : "꺼짐") + " · 배경 음악 기본 " + (S.get("site_bgm_def", true) === true ? "켜짐" : "꺼짐") + (TSF_CAM ? " · 카메라 " + (C.stream ? "켜짐 " + esc(C.res) : "꺼짐") + " · 한 번 읽기 " + Math.round(TSF.sc.ms) + "ms" : "") + " · 접속 QR " + (TSF.lk.tok ? "켜짐" : "꺼짐" + (tsfLinkWhy() ? "(" + esc(tsfLinkWhy()) + ")" : "")) + (TSF.lk.hold ? " · 폰 로그인 중" : "") +
-    " · 송출 " + (tvlSeat() ? "자리 " + tvlSeat() + (TVL.st === "ok" ? " 연결됨" : "") : "끔") + " · 화면 " + (tsfOrient() === "port" ? "세로" : "가로") + "</p>" +   /* 261017 실시간 송출 자리 */
+    " · 송출 " + (tvlSeat() ? "자리 " + tvlSeat() + (TVL.st === "ok" ? " 연결됨" : "") : "끔") + " · 화면 " + (tsfOrient() === "port" ? "세로" : "가로") + " · 키 잠금 " + (!tsfKlockOk() ? "끔" : TSFK.on ? "켜짐" : "대기" + (TSFK.err ? "(" + esc(TSFK.err) + ")" : TSFK.held ? "(다음 판에)" : "")) + "</p>" +   /* 261017 실시간 송출 자리 */
     '<p class="ax-meta" id="tsfQLn">' + esc(tsfQLine()) + "</p>" +   /* v7.66 이 노트북 대기열 · 마지막 실패 */
     '<button type="button" class="ax-button" onclick="tsfOffGo()">셀프 모드 끄기</button>' +
     '<button type="button" class="ax-button ax-button-weak" onclick="tsfSndGo()">효과음 ' + (on ? "끄기" : "켜기") + "</button>" +
     '<button type="button" class="ax-button ax-button-weak" onclick="tsfBgmGo()">배경 음악 기본값 ' + (S.get("site_bgm_def", true) === true ? "끄기" : "켜기") + "</button>" +
+    '<button type="button" class="ax-button ax-button-weak" onclick="tsfKlockGo()">키 잠금 ' + (tsfKlockOk() ? "끄기 · 전체 화면 풀기" : "켜기") + "</button>" +   /* 261023 이 노트북 저장(self_klock) */
     '<button type="button" class="ax-button ax-button-weak" onclick="tsfOriGo()">화면 가로 · 세로 · ' + (tsfOrient() === "port" ? "가로로" : "세로로") + " 바꾸기</button>" +   /* 261022 이 노트북 저장(site_orient) · F8 과 같은 값 */   /* 261017 기기 저장 site_bgm · 오른쪽 위 단추 · F4 와 같은 값 */
     (tsfQ().length ? '<button type="button" class="ax-button ax-button-weak" onclick="tsfQGo()">못 보낸 기록 지금 보내기</button>' : "") +
     (tsfStaff() ? '<button type="button" class="ax-button ax-button-weak" onclick="tsfSeatGo()">송출 ' + ["자리 1로", "자리 2로", "자리 3으로", "끄기"][tvlSeat()] + "</button>" : "") +
@@ -491,6 +492,7 @@ function tsfOffGo(ok) {
   if (RG.on && RG.mode === "site") rgStop();
   tsfLinkDrop();
   S.set("self_on", false); S.set("self_key", ""); S.set("self_tok", ""); tsfTrialSet(""); TSF.trialPg = "";
+  tsfFsDrop();   /* 261023 키 잠금 · 문서 전체 화면 풀기 */
   modalClose(); tsfStop(); tsfReset(); App.go("type_site");
 }
 function tsfSndGo(ok) {
@@ -499,6 +501,14 @@ function tsfSndGo(ok) {
   S.set("site_sound", on);
   if (on) { sfxUnlock(); SFX.site = true; sfx("click"); }
   if (typeof bgmBtnSync === "function") bgmBtnSync();
+  modalClose();
+}
+function tsfKlockGo(ok) {   /* 261023 키 잠금 켜기 · 끄기(관리코드) · 끄면 전체 화면에서 나온다 · 켜면 다음 키 · 누름에서 다시 잡는다 */
+  if (ok !== true && !tsfCodeOk(tsfKlockGo)) return;
+  var on = !tsfKlockOk();
+  S.set("self_klock", on);
+  TSFK.held = false;
+  if (!on) tsfFsDrop();
   modalClose();
 }
 function tsfBgmGo(ok) {
@@ -793,7 +803,7 @@ function tsfCheckRes(r, via) {
   if (!r.inWin) { tsfErr(TSF_WHY.window, (r.win || []).join(" · ")); sfx("rgmiss"); return; }
   if (r.left <= 0) { tsfErr(tsfLimitMsg(), "", 6); sfx("rgmiss"); return; }   /* 261021 새 서버 left = 늘 남음(상한 없음) · 옛 서버만 0 */
   TSF.emp = r.emp; TSF.info = r; TSF.nick = r.nick || ""; TSF.via = via || "";
-  tsfRacePull();
+  if (r.prac) TSF.race = null; else tsfRacePull();   /* 261023 연습판 = 추월 레이스(지금 N위) 없음 · 오른쪽 판은 TOP 10 */
   if (typeof bgmReset === "function") bgmReset();   /* 261017 새 사람 = 배경 음악 기본값 */
   tsfPh("join"); sfx("rgjoin");
 }
@@ -912,7 +922,7 @@ function tsfLeftHtml() {
   var ph = TSF.ph, i = TSF.info;
   if ((ph === "join" || ph === "ready" || ph === "nick") && i) {
     return '<section class="tsf-p tsf-who"><p class="tsf-k">PLAYER</p><p class="tsf-big o">' + esc(TSF.nick || "닉네임 정하는 중") + "</p>" +
-      '<p class="tsf-try">' + tsfTry(i).n + "번째 도전</p>" + (i.best || tsfTry(i).n > 1 ? "<p>내 최고 " + typePts(i.best || 0) + "</p>" : "<p>첫 도전</p>") + "</section>" +   /* 261021 기회 상한 없음 · 몇 번째 도전 · 내 최고(2번째부터는 0점이어도 「첫 도전」 대신 내 최고) */
+      '<p class="tsf-try">' + tsfTry(i).t + "</p>" + (i.prac ? "<p>순위 외</p>" : i.best || tsfTry(i).n > 1 ? "<p>내 최고 " + typePts(i.best || 0) + "</p>" : "<p>첫 도전</p>") + "</section>" +   /* 261021 기회 상한 없음 · 몇 번째 도전 · 내 최고(2번째부터는 0점이어도 「첫 도전」 대신 내 최고) */
       '<section class="tsf-p tsf-rule">' + (ph === "nick" ? "<p>Enter 저장</p><p>Esc 처음으로</p>" : '<p class="tsf-hint go">SPACE 시작</p><p>Tab 닉네임 바꾸기</p><p>Esc 처음으로</p>') + "</section>";
   }
   /* 261007(사용자 「오른쪽 순위표 10등까지 · 일부 정보는 왼쪽으로」) 오른쪽 점수 설명을 왼쪽으로 · 방법 · 점수 두 묶음 · 엔터 없이 한 줄 */
@@ -1067,7 +1077,7 @@ function tsfPrevDraw() {
     var n = rtDotsN("PLAYER JOIN"), lit = !rm ? Math.floor(Math.min(1, el2 / 0.5) * n) : n;
     rtDots(ctx, "PLAYER JOIN", cx, y, dh, RAIN_PAL.o100, { align: "center", line: RAIN_PAL.ink, lit: lit });
     line("확인됐어요 · " + (TSF.nick ? TSF.nick + "님" : "새 도전자"), y + dh + 56, 32, RT_PAL.cream);
-    line(tsfTry().n + "번째 도전", y + dh + 104, 16, RT_PAL.tan2);   /* 261017 몇 번째 도전 · 261021 기회 상한 없음 */
+    line(tsfTry().t, y + dh + 104, 16, RT_PAL.tan2);   /* 261017 몇 번째 도전 · 261021 기회 상한 없음 */
   } else if (ph === "ready") {   /* 준비 화면 · QR 만으로는 시작하지 않는다(261003) · v5.30 규칙 세 줄 · v5.61 큰 SPACE 키 */
     veil(0.96);
     tsfReadyDraw(ctx, w, h, blink);
@@ -1124,8 +1134,8 @@ function tsfReadyDraw(ctx, w, h, blink) {
   var tot = 32 + th + (cmp ? 18 : 28) + kh + (cmp ? 14 : 20) + 32 + (cmp ? 16 : 26) + ph + (cmp ? 16 : 24) + 16 + 30;
   y = Math.max(cmp ? 70 : 96, Math.round((h - tot) / 2) + 16);
   line(TSF.nick || "새 도전자", y, 32, RT_PAL.cream);
-  line(T.n + "번째 도전", y + 52, 48, RAIN_PAL.o100);
-  line(i.best || T.n > 1 ? "내 최고 " + typePts(i.best || 0) : "첫 도전", y + 92, 16, RT_PAL.tan2);   /* 261021 2번째부터 「첫 도전」 없음 */
+  line(T.t, y + 52, 48, RAIN_PAL.o100);
+  line(i.prac ? "순위 외" : i.best || T.n > 1 ? "내 최고 " + typePts(i.best || 0) : "첫 도전", y + 92, 16, RT_PAL.tan2);   /* 261021 2번째부터 「첫 도전」 없음 */
   y += th + (cmp ? 18 : 28);
   tsfKeyDraw(ctx, cx - kw / 2, y, kw, kh, "SPACE", kd);
   y += kh + (cmp ? 14 : 20);
@@ -1216,6 +1226,7 @@ function tsfNickSave() {
 /* SPACE(READY) · 서버에 시작을 알리고(이때 1회를 쓴다) 바로 카운트다운 · 서버가 거절하면 판을 접는다 · v5.61 노트북 이름(dev) = 같은 사번 두 노트북 동시 진행 막기 */
 function tsfGo() {
   if (TSF.ph !== "ready" || !TSF.info || TSF.busy) return;
+  TSFK.held = false; tsfFsGrab();   /* 261023 새 판 = 스태프가 풀었던 키 잠금을 다시 잡는다(SPACE = 사용자 동작) */
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
   TSF.ph = "play"; TSF.res = null; TSF.sub = null; TSF.send = ""; TSF.ticket = ""; tsfDbg("ph", "play"); tsfLinkDrop(); tsfScanShow(false);
   var lv = tvlNew();   /* 261017 실시간 송출 · 이 판 번호표(응답이 늦게 와도 다른 판에 붙지 않게) · seat 없으면 null(보내지 않는다) */
@@ -1228,7 +1239,7 @@ function tsfGo() {
     }
   }, function () {});   /* 응답이 없으면 그대로 한다 · 제출 때 서버가 남은 횟수로 다시 본다 */
   var T = tsfTry(); TVL.tn = T.n; TVL.tm = 0;   /* 261017 송출 tn(시작 응답 전 값 · 응답이 오면 서버 값) · 261021 tm 0 = 최대 기회 없음 */
-  rgStart("site", { wait: false, bonus: true, race: TSF.race, cdSub: T.n + "번째 도전", cloudN: tsfBnsTest() });   /* 261017 첫 카운트다운에 한 번 크게(엔진 RG.cdSub) */
+  rgStart("site", { wait: false, bonus: true, race: TSF.race, cdSub: T.t, cloudN: tsfBnsTest() });   /* 261017 첫 카운트다운에 한 번 크게(엔진 RG.cdSub) */
 }
 /* 261017 시험 손잡이(「타자왕 개편 제안」 5절) · 주소에 bns=2 · 테스트 사번만 · 첫 구름 2단어(보너스 스테이지까지 빨리) */
 function tsfBnsTest() { try { return /[?&#]bns=2(&|$)/.test(String(location.search) + "#" + String(location.hash).replace(/^#/, "")) && TEST_EMP.indexOf(TSF.emp) >= 0 ? 2 : 0; } catch (e) { return 0; } }
@@ -1574,7 +1585,7 @@ document.addEventListener("keydown", function (e) {
 function tsfResHtml() {
   var r = TSF.res || {}, x = TSF.sub || {};
   /* v4.50(260925) 테스트 사번도 실제로 저장되어 dry 가 없다 · TSF.emp 가 테스트 사번이면 줄 끝에만 표시 */
-  var rank = TSF.send === "sending" ? "기록 저장 중" : TSF.send === "ok" ? (x.pb ? "신기록!" : "내 최고 " + typePts(x.best || 0)) + (x.me ? " · 현장 " + x.me.rank + "위" : "") + (TEST_EMP.indexOf(TSF.emp) >= 0 ? " · 테스트 사번" : "") :
+  var rank = TSF.send === "ok" && x.prac ? "연습 · 순위 외" : TSF.send === "sending" ? (TSF.info && TSF.info.prac ? "연습 · 순위 외" : "기록 저장 중") : TSF.send === "ok" ? (x.pb ? "신기록!" : "내 최고 " + typePts(x.best || 0)) + (x.me ? " · 현장 " + x.me.rank + "위" : "") + (TEST_EMP.indexOf(TSF.emp) >= 0 ? " · 테스트 사번" : "") :
     TSF.send === "retry" ? "저장하지 못했어요 · 자동으로 다시 보내는 중" :   /* v7.66 기록은 이 노트북 대기열에 있다 */
     "저장하지 못했어요 · " + (TSF.why === "limit" ? "도전 횟수를 넘었어요" : TSF_WHY[TSF.why] || TSF.why);
   var left = TSF.send === "ok" ? "다시 하려면 QR 찍기" : "";   /* 261021 기회 상한 없음 */
@@ -1591,6 +1602,7 @@ function tsfResHtml() {
 function tsfKeyDoc(e) {
   if (App.current !== "type_site" || !tsfOn() || RG.on || GS.cur || el("modal")) return;
   tsfPoke();
+  tsfFsGrab();   /* 261023 키 잠금 · 판 밖 첫 키(사용자 동작)에서 전체 화면 */
   if (!TSF.unl && S.get("site_sound", true) === true) { TSF.unl = true; sfxUnlock(); }
   if (e.key === "F2") { e.preventDefault(); tsfAdmin(); return; }
   var sp = e.code === "Space" || e.key === " ", ph = TSF.ph;
@@ -1642,10 +1654,54 @@ function tsfTabGuard(e) {
   else if (TSF.ph === "nick") tsfNickFocus();
 }
 window.addEventListener("keydown", tsfTabGuard, true);
+/* 261023 (사용자 「전체 화면에서 윈도우 키 잠금」 · 타자왕 게임 세션) 셀프 화면 키 잠금 · Keyboard Lock API(크롬 · 엣지)
+   크롬은 문서 전체 화면(requestFullscreen)일 때만 잠근다 · 실행 아이콘의 --start-fullscreen(F11 과 같은 창 전체 화면)만으로는 잠기지 않는다
+   그래서 판 밖 첫 키 · 누름 · SPACE 시작(사용자 동작)에서 문서 전체 화면을 한 번 요청하고 들어가면 TSF_KLOCK 을 잠근다 · 풀리면 unlock
+   잠근 키 = 윈도우 키 · Alt(Alt+Tab · Alt+F4) · Tab · F4 · Esc · F11 · 게임 입력(글자 · 한/영 · SPACE · Enter · F2 · F8 · F5)은 그대로 페이지로 온다
+   Esc = 짧게 누르면 페이지(처음으로) · 2초 길게 누르면 크롬이 전체 화면을 풀고 잠금도 풀린다(스태프가 나가는 길) · 그 뒤 다음 판 SPACE 시작까지 다시 잡지 않는다(TSFK.held)
+   스태프 「관리」(F2 · 관리코드) 「키 잠금 끄기」 = 이 노트북에 저장(self_klock · 기본 켬) · 전체 화면도 푼다 · 못 막는 키 = Ctrl+Alt+Del · 윈도우 키+L(OS 보안 키) */
+var TSF_KLOCK = ["MetaLeft", "MetaRight", "AltLeft", "AltRight", "Tab", "F4", "Escape", "F11"];
+var TSFK = { on: false, held: false, self: false, err: "" };
+function tsfKlockOk() { return S.get("self_klock", true) !== false; }
+function tsfFsEl() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
+function tsfFsGrab() {
+  if (App.current !== "type_site" || !tsfOn() || !tsfKlockOk() || TSFK.held || tsfFsEl()) return;
+  var d = document.documentElement, req = d.requestFullscreen || d.webkitRequestFullscreen;
+  if (!req) { TSFK.err = "nofs"; return; }
+  try { var p = req.call(d, { navigationUI: "hide" }); if (p && p.then) p.then(function () {}, function (e) { TSFK.err = "fs " + ((e && e.name) || ""); }); } catch (e) { TSFK.err = "fs"; }
+}
+function tsfKlock() {
+  var kb = navigator.keyboard;
+  if (!kb || !kb.lock) { TSFK.on = false; TSFK.err = "nolock"; return; }
+  kb.lock(TSF_KLOCK).then(function () { TSFK.on = !!tsfFsEl(); TSFK.err = ""; }, function (e) { TSFK.on = false; TSFK.err = "lock " + ((e && e.name) || ""); });
+}
+function tsfKunlock() { TSFK.on = false; try { if (navigator.keyboard && navigator.keyboard.unlock) navigator.keyboard.unlock(); } catch (e) {} }
+function tsfFsDrop() {   /* 스태프가 끄기 · 셀프 모드 끄기 = 잠금 풀고 문서 전체 화면에서 나온다(창 전체 화면은 그대로) */
+  tsfKunlock();
+  if (!tsfFsEl()) return;
+  TSFK.self = true;
+  var ex = document.exitFullscreen || document.webkitExitFullscreen;
+  try { var p = ex && ex.call(document); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+}
+["fullscreenchange", "webkitfullscreenchange"].forEach(function (t) {
+  document.addEventListener(t, function () {
+    if (tsfFsEl()) { if (App.current === "type_site" && tsfOn() && tsfKlockOk()) tsfKlock(); return; }
+    var was = TSFK.on;
+    tsfKunlock();
+    if (was && !TSFK.self) TSFK.held = true;   /* Esc 길게 · 그 밖의 바깥 해제 = 다음 판 SPACE 시작까지 다시 잡지 않는다 */
+    TSFK.self = false;
+  });
+});
+/* 잠긴 키가 페이지로 온다 · 브라우저 · 창 동작으로 새지 않게 기본 동작을 막는다(Alt+F4 · Alt 메뉴 · F11 · 윈도우 키) · 판 안팎 모두 · 글자 · F2 · F8 · Esc 처리는 그대로 */
+window.addEventListener("keydown", function (e) {
+  if (!TSFK.on || App.current !== "type_site") return;
+  var c = e.code || "";
+  if (c === "MetaLeft" || c === "MetaRight" || c === "F11" || c === "F4" || (e.altKey && (c === "Tab" || c === "Escape" || c === "AltLeft" || c === "AltRight"))) e.preventDefault();
+}, true);
 /* 261007 마우스 누름 · 터치도 깨운다(광고 화면 어디든 · 「관리」 단추는 그대로) · QR 화면에서 누르면 남은 시간이 다시 가득 */
 document.addEventListener("pointerdown", function (e) {
   if (App.current !== "type_site" || !tsfOn() || RG.on || el("modal") || !e.target || !e.target.closest || !e.target.closest(".tsf") || e.target.closest(".tsf-adm")) return;
-  if (TSF.ph === "ad") { e.preventDefault(); if (!TSF.unl && S.get("site_sound", true) === true) { TSF.unl = true; sfxUnlock(); } tsfWake(); }
+  if (TSF.ph === "ad") { e.preventDefault(); tsfFsGrab(); if (!TSF.unl && S.get("site_sound", true) === true) { TSF.unl = true; sfxUnlock(); } tsfWake(); }
   else if (TSF.ph === "attract") tsfPoke();
 }, true);
 window.addEventListener("resize", function () { if (App.current === "type_site" && tsfOn() && !RG.on) { var g = document.querySelector(".tsf-grid"); if (g) g.style.setProperty("--tsf-bw", tsfBw() + "px"); tsfPrevDraw(); tsfLinkPaint(); tsfOriHint(); } });
