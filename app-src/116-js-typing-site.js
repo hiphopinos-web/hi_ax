@@ -17,7 +17,7 @@ function rgTopHtml() {
   return '<div class="rg-hud">' +
     (side ? "" : '<span class="rg-sc"><small>점수</small><b id="rgHudSc">0</b></span>') +
     '<span class="rg-tm" id="rgHudTm">0.0초</span>' +
-    (RG.mode === "site" && TSF.info ? '<span class="rg-try">' + tsfTry().n + "번째 도전</span>" : "") +   /* 261017 1F 셀프 · 몇 번째 도전 · 261021 기회 상한 없음(최대 칸 없음) */
+    (RG.mode === "site" && TSF.info ? '<span class="rg-try">' + tsfTry().t + "</span>" : "") +   /* 261017 1F 셀프 · 몇 번째 도전 · 261021 기회 상한 없음(최대 칸 없음) */
     (side ? "" : '<span class="rg-ht" id="rgHudHt">' + hearts + "</span>") +
     (RG.mode === "site" ? "" : sndBtnHtml(false) +
     '<button class="rg-ib rgp-x" type="button" data-on="계속" data-off="멈춤" aria-label="일시정지" onpointerdown="event.preventDefault()" onclick="gsPauseToggle()">멈춤</button>') + "</div>";
@@ -368,7 +368,7 @@ function tsfDev() {
 /* 옛 서버(261017 판)가 limit 으로 거절했을 때만 쓰는 문구 · 새 서버는 limit 거절이 없다 */
 function tsfLimitMsg() { return "오늘은 더 도전할 수 없어요"; }
 /* 261017 몇 번째 도전(n) · 261021 n = 쓴 판(used) + 1 · used 가 없는 옛 서버 = limit − left + 1 · 테스트 사번 = 늘 1번째 · 모든 화면이 이 셈 하나 */
-function tsfTry(i) { i = i || TSF.info || {}; var u = Number(i.used), lim = Number(i.limit) || 0, left = Number(i.left) || 0; return { n: i.test ? 1 : Math.max(1, i.used != null && u >= 0 ? u + 1 : lim - left + 1) }; }
+function tsfTry(i) { i = i || TSF.info || {}; var u = Number(i.used), lim = Number(i.limit) || 0, left = Number(i.left) || 0, n = i.test ? 1 : Math.max(1, i.used != null && u >= 0 ? u + 1 : lim - left + 1); return { n: n, t: i.prac ? "연습" : n + "번째 도전", prac: !!i.prac }; }   /* 261023 연습판 명단(서버 prac) = 「연습」 · 기록 · 순위 없음 */
 function typePts(v) { return Number(v || 0).toLocaleString() + "점"; }   /* v5.12 1F 타자왕(site) 기록 = 점수 · 앱(app)은 그대로 typeSec */
 function tsfDbg(k, v) {   /* v5.61 시험 훅 · 주소에 ?tsfdbg=1 일 때만 window.__tsf 에 쌓는다(운영 화면에는 영향 없음) */
   if (!TSF.dbg) return;
@@ -803,7 +803,7 @@ function tsfCheckRes(r, via) {
   if (!r.inWin) { tsfErr(TSF_WHY.window, (r.win || []).join(" · ")); sfx("rgmiss"); return; }
   if (r.left <= 0) { tsfErr(tsfLimitMsg(), "", 6); sfx("rgmiss"); return; }   /* 261021 새 서버 left = 늘 남음(상한 없음) · 옛 서버만 0 */
   TSF.emp = r.emp; TSF.info = r; TSF.nick = r.nick || ""; TSF.via = via || "";
-  tsfRacePull();
+  if (r.prac) TSF.race = null; else tsfRacePull();   /* 261023 연습판 = 추월 레이스(지금 N위) 없음 · 오른쪽 판은 TOP 10 */
   if (typeof bgmReset === "function") bgmReset();   /* 261017 새 사람 = 배경 음악 기본값 */
   tsfPh("join"); sfx("rgjoin");
 }
@@ -922,7 +922,7 @@ function tsfLeftHtml() {
   var ph = TSF.ph, i = TSF.info;
   if ((ph === "join" || ph === "ready" || ph === "nick") && i) {
     return '<section class="tsf-p tsf-who"><p class="tsf-k">PLAYER</p><p class="tsf-big o">' + esc(TSF.nick || "닉네임 정하는 중") + "</p>" +
-      '<p class="tsf-try">' + tsfTry(i).n + "번째 도전</p>" + (i.best || tsfTry(i).n > 1 ? "<p>내 최고 " + typePts(i.best || 0) + "</p>" : "<p>첫 도전</p>") + "</section>" +   /* 261021 기회 상한 없음 · 몇 번째 도전 · 내 최고(2번째부터는 0점이어도 「첫 도전」 대신 내 최고) */
+      '<p class="tsf-try">' + tsfTry(i).t + "</p>" + (i.prac ? "<p>순위 외</p>" : i.best || tsfTry(i).n > 1 ? "<p>내 최고 " + typePts(i.best || 0) + "</p>" : "<p>첫 도전</p>") + "</section>" +   /* 261021 기회 상한 없음 · 몇 번째 도전 · 내 최고(2번째부터는 0점이어도 「첫 도전」 대신 내 최고) */
       '<section class="tsf-p tsf-rule">' + (ph === "nick" ? "<p>Enter 저장</p><p>Esc 처음으로</p>" : '<p class="tsf-hint go">SPACE 시작</p><p>Tab 닉네임 바꾸기</p><p>Esc 처음으로</p>') + "</section>";
   }
   /* 261007(사용자 「오른쪽 순위표 10등까지 · 일부 정보는 왼쪽으로」) 오른쪽 점수 설명을 왼쪽으로 · 방법 · 점수 두 묶음 · 엔터 없이 한 줄 */
@@ -1077,7 +1077,7 @@ function tsfPrevDraw() {
     var n = rtDotsN("PLAYER JOIN"), lit = !rm ? Math.floor(Math.min(1, el2 / 0.5) * n) : n;
     rtDots(ctx, "PLAYER JOIN", cx, y, dh, RAIN_PAL.o100, { align: "center", line: RAIN_PAL.ink, lit: lit });
     line("확인됐어요 · " + (TSF.nick ? TSF.nick + "님" : "새 도전자"), y + dh + 56, 32, RT_PAL.cream);
-    line(tsfTry().n + "번째 도전", y + dh + 104, 16, RT_PAL.tan2);   /* 261017 몇 번째 도전 · 261021 기회 상한 없음 */
+    line(tsfTry().t, y + dh + 104, 16, RT_PAL.tan2);   /* 261017 몇 번째 도전 · 261021 기회 상한 없음 */
   } else if (ph === "ready") {   /* 준비 화면 · QR 만으로는 시작하지 않는다(261003) · v5.30 규칙 세 줄 · v5.61 큰 SPACE 키 */
     veil(0.96);
     tsfReadyDraw(ctx, w, h, blink);
@@ -1134,8 +1134,8 @@ function tsfReadyDraw(ctx, w, h, blink) {
   var tot = 32 + th + (cmp ? 18 : 28) + kh + (cmp ? 14 : 20) + 32 + (cmp ? 16 : 26) + ph + (cmp ? 16 : 24) + 16 + 30;
   y = Math.max(cmp ? 70 : 96, Math.round((h - tot) / 2) + 16);
   line(TSF.nick || "새 도전자", y, 32, RT_PAL.cream);
-  line(T.n + "번째 도전", y + 52, 48, RAIN_PAL.o100);
-  line(i.best || T.n > 1 ? "내 최고 " + typePts(i.best || 0) : "첫 도전", y + 92, 16, RT_PAL.tan2);   /* 261021 2번째부터 「첫 도전」 없음 */
+  line(T.t, y + 52, 48, RAIN_PAL.o100);
+  line(i.prac ? "순위 외" : i.best || T.n > 1 ? "내 최고 " + typePts(i.best || 0) : "첫 도전", y + 92, 16, RT_PAL.tan2);   /* 261021 2번째부터 「첫 도전」 없음 */
   y += th + (cmp ? 18 : 28);
   tsfKeyDraw(ctx, cx - kw / 2, y, kw, kh, "SPACE", kd);
   y += kh + (cmp ? 14 : 20);
@@ -1239,7 +1239,7 @@ function tsfGo() {
     }
   }, function () {});   /* 응답이 없으면 그대로 한다 · 제출 때 서버가 남은 횟수로 다시 본다 */
   var T = tsfTry(); TVL.tn = T.n; TVL.tm = 0;   /* 261017 송출 tn(시작 응답 전 값 · 응답이 오면 서버 값) · 261021 tm 0 = 최대 기회 없음 */
-  rgStart("site", { wait: false, bonus: true, race: TSF.race, cdSub: T.n + "번째 도전", cloudN: tsfBnsTest() });   /* 261017 첫 카운트다운에 한 번 크게(엔진 RG.cdSub) */
+  rgStart("site", { wait: false, bonus: true, race: TSF.race, cdSub: T.t, cloudN: tsfBnsTest() });   /* 261017 첫 카운트다운에 한 번 크게(엔진 RG.cdSub) */
 }
 /* 261017 시험 손잡이(「타자왕 개편 제안」 5절) · 주소에 bns=2 · 테스트 사번만 · 첫 구름 2단어(보너스 스테이지까지 빨리) */
 function tsfBnsTest() { try { return /[?&#]bns=2(&|$)/.test(String(location.search) + "#" + String(location.hash).replace(/^#/, "")) && TEST_EMP.indexOf(TSF.emp) >= 0 ? 2 : 0; } catch (e) { return 0; } }
@@ -1585,7 +1585,7 @@ document.addEventListener("keydown", function (e) {
 function tsfResHtml() {
   var r = TSF.res || {}, x = TSF.sub || {};
   /* v4.50(260925) 테스트 사번도 실제로 저장되어 dry 가 없다 · TSF.emp 가 테스트 사번이면 줄 끝에만 표시 */
-  var rank = TSF.send === "sending" ? "기록 저장 중" : TSF.send === "ok" ? (x.pb ? "신기록!" : "내 최고 " + typePts(x.best || 0)) + (x.me ? " · 현장 " + x.me.rank + "위" : "") + (TEST_EMP.indexOf(TSF.emp) >= 0 ? " · 테스트 사번" : "") :
+  var rank = TSF.send === "ok" && x.prac ? "연습 · 순위 외" : TSF.send === "sending" ? (TSF.info && TSF.info.prac ? "연습 · 순위 외" : "기록 저장 중") : TSF.send === "ok" ? (x.pb ? "신기록!" : "내 최고 " + typePts(x.best || 0)) + (x.me ? " · 현장 " + x.me.rank + "위" : "") + (TEST_EMP.indexOf(TSF.emp) >= 0 ? " · 테스트 사번" : "") :
     TSF.send === "retry" ? "저장하지 못했어요 · 자동으로 다시 보내는 중" :   /* v7.66 기록은 이 노트북 대기열에 있다 */
     "저장하지 못했어요 · " + (TSF.why === "limit" ? "도전 횟수를 넘었어요" : TSF_WHY[TSF.why] || TSF.why);
   var left = TSF.send === "ok" ? "다시 하려면 QR 찍기" : "";   /* 261021 기회 상한 없음 */
