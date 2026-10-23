@@ -1105,10 +1105,13 @@
     if (INTRO_NEXT) { INTRO_NEXT = false; scene("idle"); startCheckin(); }
     else { scene("idle"); lock(0.4); }
   }
+  /* 261023 두 번 누름 사이 시간은 실제 시계(Date.now · 운영 줄 단추 armed 와 같다)로 잰다 · 화면 시계 T 는 프레임마다 1/30초까지만 가서 느린 노트북(30fps 아래)에서는 실제보다 느리게 흘러
+   *   실제 0.5초 간격 두 번도 「두 번째가 너무 빠름」으로 버려 3 · 2 · 1등 확정이 안 됐다(헤드리스 10fps 재현 · 리허설 1등 뒤 멈춤 의심 원인) · 규칙(350ms · 2.5초)은 그대로 */
   function twice(k, msg, fn) {
-    if (confirmKey === k && T - confirmT < TWICE_MIN / 1000) { kbFast(); return; }   /* 261017 D1 */
-    if (confirmKey === k && T - confirmT < 2.5) { confirmKey = null; fn(); return; }
-    confirmKey = k; confirmT = T; KB.arm = msg; KB.armN++; KB.k = ""; kbPaint(true);   /* 261016 첫 누름 = 스태프 표시줄 「한 번 더」 + 남은 시간(대형 화면 가운데에는 띄우지 않는다) */
+    var nowMs = Date.now();
+    if (confirmKey === k && nowMs - confirmT < TWICE_MIN) { kbFast(); return; }   /* 261017 D1 */
+    if (confirmKey === k && nowMs - confirmT < 2500) { confirmKey = null; fn(); return; }
+    confirmKey = k; confirmT = nowMs; KB.arm = msg; KB.armN++; KB.k = ""; kbPaint(true);   /* 261016 첫 누름 = 스태프 표시줄 「한 번 더」 + 남은 시간(대형 화면 가운데에는 띄우지 않는다) */
   }
   /* 261021 R1 · 공 넣기 = ① 서버 체크인 닫기(draw_cfg closed 1 · 성공 필수 · 이미 닫혀 있으면 서버가 성공) → ② 전체 읽기(draw_pool since "" · 성공 필수 · 폴링이 읽는 중이면 기다린다)
    *   → ③ 공 넣기 → ④ 고정(ST.closed · ST.lock) → ⑤ 고정 숫자 서버 보관(draw_cfg lock · 진행을 막지 않는다 · 저절로 다시)
@@ -1767,7 +1770,8 @@
   function kbFlash(k, msg, sec) { KB.k = k; KB.msg = msg; KB.until = T + sec; kbPaint(true); }
   function kbView() {
     if (KB.k === "fast" && T < KB.until) return { cls: "no", txt: KB.msg };
-    if (confirmKey && T - confirmT < 2.5) return { cls: "arm", txt: KB.arm + " · " + Math.max(0, 2.5 - (T - confirmT)).toFixed(1) + "초", p: Math.max(0, 1 - (T - confirmT) / 2.5) };
+    var armS = (Date.now() - confirmT) / 1000;   /* 261023 실제 시계 · twice 와 같은 잣대 */
+    if (confirmKey && armS < 2.5) return { cls: "arm", txt: KB.arm + " · " + Math.max(0, 2.5 - armS).toFixed(1) + "초", p: Math.max(0, 1 - armS / 2.5) };
     var w = kbWait(), nx = nextCmd();
     if (KB.k && T < KB.until) {
       if (KB.k === "no") return { cls: "no", txt: w < 0 ? "안 받음 · 뽑는 중" : w > 0 ? "안 받음 · 연출 중 · " + w.toFixed(1) + "초 뒤 다시" : "안 받음 · 지금 다시 · " + (nx.c ? kbName(nx) : nx.n) };
