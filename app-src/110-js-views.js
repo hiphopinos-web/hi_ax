@@ -257,8 +257,10 @@ var Views = {
   },
 
   /* ═══ v7.15 (사용자 확정 261013 밤) 오늘 한 판 설문 = 행사 사후 설문 · SURVEY_Q 흐름(svFlow) 한 화면 한 문항 ═══
-     v4.08 입력·제출 화면 형식 · 전체 화면 · 하단 메뉴 숨김 · 아래 고정(다음 · 제출하기 + 이전) · 답은 그대로 저장(survey_draft · 이어 하기)
-     진행 「n / 전체」 = 문항만(첫 화면 · 안내 제외) · 문항 위 줄 = 층 · 프로그램 이름(Q2-x) · 바뀐 문항은 svGoId 가 떠오름(AXM.rise) */
+     v8.60 (사용자 261023 새 설문안 · 정본 「설문조사/AXF_참가자설문_어플리케이션용.html」 LAYOUT 'single') 화면 = 정본 순서 · 색 · 글꼴 · 모서리 · 큰글씨 · 움직임 = 앱(design.md · mobile-popup-motion)
+     첫 화면 = 머리 줄 · 제목 두 줄 · 정보 표(소요시간 · 참여 선물) · 안내사항 칸 · 「설문 시작하기」
+     문항 · 안내 화면 = 진행 막대(보이는 화면 중 몇 번째) + 그룹 줄(Ⅰ. 전체 만족도) · 문항 = 번호 Q1 ~ · 층 줄(Q2-x) · 질문 · 안내 · 입력 · 아래 고정 [이전 | 다음 · 제출하기]
+     전체 화면 · 하단 메뉴 숨김 · 답은 그대로 저장(survey_draft · 이어 하기) · 바뀐 문항은 svGoId 가 떠오름(AXM.rise) · 그린 뒤 svMount(머리 높이 맞춤 · 보기 한 줄 맞춤) */
   survey: function () {
     var d = svDraft();
     if (surveyDone()) {
@@ -269,33 +271,35 @@ var Views = {
     if (surveyLock() === "nostamp") return '<div class="ax-stack">' + stampLineHtml("sv") + botHtml("스탬프를 하나 모으면 열려요") + '<button type="button" class="ax-button ax-button-weak" onclick="App.go(\'passport\')">스탬프 보기</button></div>';
     var fl = svFlow(d), i = svCur(d, fl), q = fl[i], last = i === fl.length - 1, prev = i > 0 && !SV.busy;
     if (q.id === "q2_0" && !Array.isArray(d.a.q2_0)) { d.a.q2_0 = svPreIds(); d.pre = 1; S.put("survey_draft", d); }   /* 초안이 Q2-0 에서 멈춘 옛 기기 · 미리 체크 한 번 */
+    setTimeout(svMount, 0);
     var bot = function (main) {
-      return '<div class="ax-bottom axs-fix">' + main + (i > 0 ? '<button type="button" class="ax-button ax-button-weak" onclick="svPrev()"' + (prev ? "" : " disabled") + ">이전</button>" : "") + "</div>";
+      return '<div class="ax-bottom axs-fix" id="svBot">' + (i > 0 ? '<button type="button" class="ax-button ax-button-weak" onclick="svPrev()"' + (prev ? "" : " disabled") + ">이전</button>" : "") + main + "</div>";
     };
     if (q.type === "intro") {
       return '<div class="ax-stack axs-form" id="svQ"><div class="ax-stack-tight axs-gap12 axs-sthost">' + stampTagHtml("sv") +
-        '<h1 class="ax-type-t3">' + esc(q.t) + '</h1><p class="ax-description axs-svlead">' + esc(q.q) + "</p></div>" +
+        '<p class="axs-svey">' + esc(q.ey) + '</p><h1 class="ax-type-t2 axs-svtt">' + q.t.map(esc).join("<br>") + "</h1></div>" +
         '<dl class="axs-svkv">' + q.kv.map(function (r) { return "<div><dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd></div>"; }).join("") + "</dl>" +
-        '<p class="ax-meta">' + esc(q.note) + "</p></div>" +
+        '<div class="axs-svnote"><b>' + esc(q.nh) + "</b>" + q.note.map(function (x) { return "<p>" + esc(x) + "</p>"; }).join("") + "</div></div>" +
         bot('<button type="button" class="ax-button" onclick="svNext()">설문 시작하기</button>');
     }
-    var asks = fl.filter(svAsk), n = asks.length, pos = 0;
-    for (var k = 0; k <= i; k++) if (svAsk(fl[k])) pos++;
-    var gauge = '<div class="axs-gauge" role="img" aria-label="' + pos + " / " + n + '"><i style="width:' + Math.round(pos / n * 100) + '%"></i></div>';
+    /* 진행 = 보이는 화면(첫 화면 제외 · 안내 포함) 중 지금 몇 번째(정본 · 최소 4%) · 번호 = 보이는 문항(안내 제외) 중 몇 번째 */
+    var pages = fl.filter(function (x) { return x.type !== "intro"; }), pi = pages.indexOf(q), pct = Math.max(4, Math.round((pi + 1) / pages.length * 100));
+    var g = SV_GROUPS[q.g] || SV_GROUPS[0];
+    var top = stampTagHtml("sv") + '<div class="axs-gauge" role="progressbar" aria-label="설문 진행" aria-valuemin="0" aria-valuemax="' + pages.length + '" aria-valuenow="' + (pi + 1) + '"><i style="width:' + pct + '%"></i></div>' +
+      '<p class="axs-svsec">' + g.no + ". " + esc(g.sec) + "</p>";
     if (q.type === "info") {
-      return '<div class="ax-stack axs-form" id="svQ"><div class="ax-stack-tight axs-gap12 axs-sthost">' + stampTagHtml("sv") + gauge +
-        '<h1 class="ax-type-t3">' + esc(q.t) + '</h1><p class="ax-description axs-svlead">' + esc(q.q) + "</p></div></div>" +
-        bot('<button type="button" class="ax-button" onclick="svNext()">다음</button>');
+      return '<div class="ax-stack axs-form" id="svQ"><div class="ax-stack-tight axs-gap12 axs-sthost">' + top + "</div>" +
+        '<div class="axs-svinfo"><p class="k">다음 영역</p><h1 class="ax-type-t2">' + esc(q.t) + '</h1><p class="tx">' + esc(q.q) + "</p></div></div>" +
+        bot('<button type="button" class="ax-button" id="svGo" onclick="svNext()">다음</button>');
     }
-    var pg = q.prog ? SV_PROGS.filter(function (p) { return p.id === q.prog; })[0] : null;
-    var ready = q.optional || !svEmpty(q, d.a[q.id]);
+    var num = fl.filter(svAsk).indexOf(q) + 1, ready = q.optional || !svEmpty(q, d.a[q.id]);
+    var skip = !last && q.optional && q.type === "text", goTx = skip && !String(d.a[q.id] || "").trim() ? "건너뛰기" : "다음";
     return '<div class="ax-stack axs-form" id="svQ">' +
-      '<div class="ax-stack-tight axs-gap12 axs-sthost">' + stampTagHtml("sv") + '<p class="ax-meta">' + pos + " / " + n + "</p>" + gauge +
-      (pg ? '<p class="axs-svsec">' + pg.fl + " · " + esc(pg.nm) + "</p>" : "") +
-      '<h1 class="ax-type-t3">' + esc(q.q) + (q.tag ? ' <span class="axs-chip off">' + esc(q.tag) + "</span>" : "") + (q.optional ? ' <span class="axs-chip off">선택</span>' : "") + "</h1></div>" +
+      '<div class="ax-stack-tight axs-gap12 axs-sthost">' + top + "</div>" +
+      '<div class="axs-svhd" id="svHead"' + (q.type === "multi" ? ' data-fit="0"' : "") + ">" + svHeadHtml(q, num, "svTitle") + "</div>" +   /* Q2-0(보기 8줄)은 머리 높이 맞춤 없이 바로 아래(한 화면에) */
       '<div class="axs-svin">' + svInputHtml(q, d.a[q.id]) + "</div></div>" +
-      bot(last ? '<button type="button" class="ax-button" ' + (SV.busy ? 'disabled aria-busy="true"' : "") + ' onclick="svSubmit()">' + (SV.busy ? "제출하는 중" : "제출하기") + "</button>"
-        : '<button type="button" class="ax-button" onclick="svNext()"' + (ready ? "" : " disabled") + ">다음</button>");
+      bot(last ? '<button type="button" class="ax-button axs-svgo' + (ready ? "" : " wait") + '" id="svGo" aria-disabled="' + !ready + '" ' + (SV.busy ? 'disabled aria-busy="true"' : "") + ' onclick="svSubmit()">' + (SV.busy ? "제출하는 중" : "제출하기") + "</button>"
+        : '<button type="button" class="ax-button axs-svgo' + (ready ? "" : " wait") + '" id="svGo" aria-disabled="' + !ready + '"' + (skip ? ' data-skip="1"' : "") + ' onclick="svNext()">' + goTx + "</button>");
   },
 
   ideas_mine: function () {

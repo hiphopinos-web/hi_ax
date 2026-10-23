@@ -1,7 +1,8 @@
 /* AXF CONTROL v2 · 기록 · 설정 › 설문 (261016 4단계 · 지금 콘솔 survey.js 집계 부분을 옮김)
  * 데이터 = survey_list(집계 · test=1 이면 시험 사번 포함 · 30초) · 사번이 든 원본 CSV 는 화면에 두지 않는다(대화로)
- * 위 = 시험 사번 빼고 | 포함 · 숫자 4칸 · Q1 넷(261021 Q1-4 추가 · 3점 만점 · 옛 응답은 빈 값) · Q2 프로그램 참여율 · 평균 + 분포 · Q3 셋 · 아래 = Q4 자유 의견(공통 표 · 엑셀 · 사번 없음) */
-var SVY_T={ q1_1:"전반 만족", q1_2:"행사 운영", q1_3:"재참여 · 추천", q1_4:"업무에 AI 활용 생각", q3_1:"AX 3개년 로드맵", q3_2:"Hi-Helper · HiDI Q 사용 계획", q3_3:"DAP" };
+ * 위 = 시험 사번 빼고 | 포함 · 숫자 4칸 · Q1 넷(261021 Q1-4 추가 · 3점 만점 · 옛 응답은 빈 값) · Q2 프로그램 참여율 · 평균 + 분포 · Q3 셋 · 아래 = Q4 자유 의견(공통 표 · 엑셀 · 사번 없음)
+ * v8.60 (사용자 261023 새 설문안) Q1-1~3 · Q2-x = 슬라이더 0.5 단위(분포 9칸 · 서버 opts 그대로) · 프로그램 7개 · 서버 설문 id post3(옛 post2 도 그대로 읽음) */
+var SVY_T={ q1_1:"전반 만족", q1_2:"행사 운영", q1_3:"재참여 · 추천", q1_4:"업무에 AI 활용 생각", q3_1:"AX 3개년 로드맵", q3_2:"Hi-헬퍼 · HiDi-Q 이해", q3_3:"DAP" };
 var SVY={ test:false };
 LG_SUBS.splice(1,0,["sv","설문"]);
 function svyPc(a,b){ return b>0?Math.round(a/b*1000)/10:0; }
@@ -26,7 +27,7 @@ function svyGrid(){
 function svyPaint(){
   var kb=el("svyK"), bx=el("svyB"), d=S.data.svl; if(!kb||!bx) return;
   var g=MG.svq4, gt=dataGate("svl","설문 집계");
-  if(!gt&&(d.sv!=="post2"||!d.progs)) gt=band("warn","서버가 옛 설문 형식으로 답합니다 · 사후 설문 서버 배포 뒤 채워집니다");
+  if(!gt&&(!/^post[23]$/.test(d.sv||"")||!d.progs)) gt=band("warn","서버가 옛 설문 형식으로 답합니다 · 사후 설문 서버 배포 뒤 채워집니다");
   if(gt){ kb.innerHTML=""; bx.innerHTML=gt; g.gate=""; XG.set(g, null, el("mg_svq4")); return; }
   var by={}; (d.qs||[]).forEach(function(q){ by[q.id]=q; });
   var q4=by.q4||{ n:0, lines:[] }, q11=by.q1_1||{}, n=d.n||0;
@@ -35,7 +36,7 @@ function svyPaint(){
   var grp=function(ids){ return '<div class="svy-g">'+ids.filter(function(id){ return by[id]; }).map(function(id){ return svyBlock(by[id], SVY_T[id]||id); }).join("")+'</div>'; };
   var pq=(d.progs||[]).filter(function(p){ return by[p.id]; }).map(function(p){ return svyBlock(by[p.id], p.fl+" "+p.nm); }).join("");
   bx.innerHTML=!n?'<div class="card">'+emptyH("아직 응답이 없습니다"+(!SVY.test&&d.nt?" · 시험 사번 응답 "+n0(d.nt)+"명은 「시험 사번 포함」에서":""))+'</div>':
-    '<div class="card"><h2>Q1 · 행사 전반 <span class="cap">점수 5 = 가장 좋음(Q1-4 는 3점 만점) · 오른쪽 위 = 평균</span></h2>'+grp(["q1_1","q1_2","q1_3","q1_4"])+'</div>'+
+    '<div class="card"><h2>Q1 · 행사 전반 <span class="cap">점수 5 = 가장 좋음(Q1-1~3 = 0.5 단위 · Q1-4 는 3점 만점) · 오른쪽 위 = 평균</span></h2>'+grp(["q1_1","q1_2","q1_3","q1_4"])+'</div>'+
     '<div class="card mt"><h2>Q2 · 프로그램 참여율 · 만족도 <span class="cap">참여율 = 고른 사람 ÷ 응답 '+n0(n)+'명</span></h2>'+svyProgs(d)+'<details class="memo mt"><summary>프로그램별 점수 분포</summary><div class="svy-g mt">'+pq+'</div></details></div>'+
     '<div class="card mt"><h2>Q3 · AX 이해도</h2>'+grp(["q3_1","q3_2","q3_3"])+'</div>';
   var lines=(q4.lines||[]).map(function(x,i){ return { i:i, t:x.t, line:x.line }; });
