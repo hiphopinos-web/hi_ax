@@ -1266,6 +1266,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #view[data-v="my"] .axs-mystamp .ax-description { margin: 0; }
   #view[data-v="home"] .sect { margin: 0; align-items: center; }
   #view[data-v="home"] .sect b { font: var(--ax-type-t4); color: var(--ax-color-ink); }
+  #view[data-v="home"] .sect b { margin-left: 2px; padding: 1px 0 1px 10px; border-left: 3px solid var(--ax-color-ink); }   /* v8.64 (사용자 261023) 홈 섹션 제목(스탬프 · 지금 현장 · 나의 일정) = 프로그램 탭 .axs-bar 와 같은 왼쪽 막대 */
   #view[data-v="home"] .sect span { display: inline-flex; align-items: center; min-height: var(--ax-touch-size); font: var(--ax-type-t6-strong); color: var(--ax-color-brandText); }
   #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail { margin: 0; padding: var(--ax-space-24); border-radius: var(--ax-radius-24); background: var(--ax-color-surface); }
   #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .hd .nm { font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
