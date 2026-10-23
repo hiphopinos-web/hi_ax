@@ -281,17 +281,18 @@ function lkPaint(){
   var act;
   if(dr){ var v=LK.ver;
     act='<div class="card"><h2>추첨 결과 <span class="cap">이름 없이 숫자만 · 명단은 엑셀</span></h2><dl class="cc-kv"><dt>추첨 번호</dt><dd>'+esc(dr.id||"-")+'</dd><dt>시각</dt><dd>'+esc(fmtD(dr.at||""))+(dr.by?" · "+esc(dr.by):"")+'</dd><dt>대상 · 당첨</dt><dd>'+n0(dr.N)+'명 · '+n0(dr.W)+'명</dd><dt>시드</dt><dd class="cap">'+esc(String(dr.seed||"").slice(0,24))+'</dd></dl>'+
-      '<div class="btns mt"><button class="btn" type="button" onclick="lkVerify()">재현 검증</button><button class="btn" type="button" onclick="lkXls()">사내 우편 엑셀</button></div>'+(v?(v.ok&&v.same?band("info","재현 같음 · 저장된 시드 · 대상으로 다시 계산해 기록과 같습니다"):band("bad","재현 결과가 다릅니다 · "+esc(v.ok?"다른 줄 "+(v.nDiff||"?")+"개":why(v)))):"")+
+      '<div class="btns mt"><button class="btn" type="button" onclick="lkVerify()">재현 검증</button>'+(lkCanTop()?'<button class="btn" type="button" onclick="lkXls()">사내 우편 엑셀</button>':'')+'</div>'+(v?(v.ok&&v.same?band("info","재현 같음 · 저장된 시드 · 대상으로 다시 계산해 기록과 같습니다"):band("bad","재현 결과가 다릅니다 · "+esc(v.ok?"다른 줄 "+(v.nDiff||"?")+"개":why(v)))):"")+
       '<div class="cc-fld mt">당첨 교체 · 발송 불가 · 자격 취소 · 예비 1순위가 이어받음</div><div class="nt-row mt4"><input class="xg-q" id="lkVE" style="width:120px" inputmode="numeric" placeholder="사번" value="'+esc(LK.vo.emp)+'" oninput="LK.vo.emp=this.value"><input class="xg-q" id="lkVW" maxlength="60" placeholder="사유 · 예: 퇴사 · 발송 불가" value="'+esc(LK.vo.why)+'" oninput="LK.vo.why=this.value"><button class="btn" type="button" onclick="lkVoidAsk()">미리 보기</button></div></div>';
   } else {
     var N=d.lock?num(d.lock.n):num(pool.n), ready=d.ph==="lock"&&!d.stale;
     act='<div class="card"><h2>대상 확정 · 추첨 '+tag(P[0],P[1])+'</h2><dl class="cc-kv"><dt>행운권 보유</dt><dd>'+n0(num(pool.n)+num(pool.lucky))+'명</dd><dt>1~6등 제외</dt><dd>'+n0(pool.lucky)+'명</dd><dt>대상</dt><dd><b>'+n0(N)+'명</b></dd><dt>당첨(예상)</dt><dd>'+n0(Math.min(N,qty))+'명</dd></dl>'+
       (d.stale?band("warn","확정 뒤 기록이 바뀌었습니다 · 다시 확정해야 추첨합니다"):"")+
-      '<div class="btns mt"><button class="btn pri" type="button" onclick="lkLockAsk()"'+(d.ph==="open"||!rem?' aria-disabled="true"':'')+'>'+(d.ph==="lock"?"다시 확정":"대상 확정")+'</button><button class="btn dng fill" type="button" onclick="lkDrawAsk()"'+(ready&&rem?'':' aria-disabled="true"')+'>7등 추첨 실행</button></div>'+
+      '<div class="btns mt">'+(lkCanTop()?'<button class="btn pri" type="button" onclick="lkLockAsk()"'+(d.ph==="open"||!rem?' aria-disabled="true"':'')+'>'+(d.ph==="lock"?"다시 확정":"대상 확정")+'</button>':'')+'<button class="btn dng fill" type="button" onclick="lkDrawAsk()"'+(ready&&rem?'':' aria-disabled="true"')+'>7등 추첨 실행</button></div>'+
       '<p class="cap mt4">'+(d.ph==="open"?esc(String(d.cut||"").slice(0,16))+" 뒤에 확정합니다":!rem?"17:00 룰렛 잔여 다섯 숫자를 먼저 저장합니다":d.ph==="lock"&&d.lock?"확정 "+esc(fmtD(d.lock.at||""))+" · "+n0(d.lock.n)+"명":"확정하면 대상이 기록에 남습니다")+'</p></div>';
   }
   b.innerHTML=h+'<div class="grid g2">'+act+remT+'</div>';
 }
+function lkCanTop(){ return isTop(); }   /* 261023 권한 QA · 7등 대상 확정 · 사내 우편 엑셀 = 슈퍼관리자(서버 lk7_lock · lk7_export admTop_) · 추첨 실행 · 재현 검증 · 교체는 그대로 */
 function lkLockAsk(){
   var d=S.data.lk||{}, pool=d.pool||{};
   if(d.ph==="open"){ toast("마감 시각 "+String(d.cut||"").slice(11,16)+" 뒤에 확정합니다"); return; }
