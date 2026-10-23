@@ -14497,6 +14497,7 @@ function scanHit(raw) {
   if (scanSeen(emp)) return;   /* v5.98 같은 사람 QR 이 카메라에 계속 비치면 3초를 다시 잰다(서명 QR 은 20초마다 글자가 바뀐다 · 사번으로 본다) · 치웠다가 3초 뒤 다시 대면 찍힌다 */
   if (raw === SCAN.last && Date.now() - SCAN.lastT < 3000) return;   /* v4.65 참가자 QR 이 아닌 것도 3초에 한 번 · 전에는 카메라가 보는 동안 0.12초마다 한 줄씩 기록을 밀어냈다 */
   SCAN.last = raw; SCAN.lastT = Date.now(); SCAN.lastE = emp || ""; SCAN.seenE = Date.now();
+  if (!emp && /#q=type\b/i.test(raw)) { typeLinkGo(raw); return; }   /* 261023 (사용자 「스태프 코드 계정도 타자왕」) 스태프 폰 연속 스캐너로 1F 타자왕 노트북 접속 QR = 참가자와 같은 길(그 폰 사번으로 노트북에 연결) · 스캐너는 화면을 떠나며 꺼진다 */
   var pq = emp ? 0 : pqrParse(raw);
   if (pq) { pqrHit(pq, scanSpot(SCAN.spot)); return; }   /* 261021 연습 QR · 서버 없이 정해 둔 답 */
   if (!emp) { scanLog("", "참가자 QR이 아니에요", false); scanShow("bad", "", "참가자 QR이 아니에요", "참가자 앱의 내 QR을 찍어 주세요"); return; }
