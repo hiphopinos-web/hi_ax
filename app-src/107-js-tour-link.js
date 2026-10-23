@@ -359,12 +359,13 @@ var VIDS = [
   { t: "HiDI Q", s: "AX PLAY", len: "", v: { src: "", poster: "", loop: false, page: "" } },
   { t: "Hi-Helper", s: "AX PLAY", len: "", v: { src: "", poster: "", loop: false, page: "" } }
 ];
+var VIDS_PEND = { 0: "10/26 13:30 공개" };   /* v8.59 (사용자 261023) 현장 인터뷰 최종 영상 = 10/26 13:30 공개 · 그때 v.src 연결 · 다른 줄은 「준비 중」 */
 var VFOLD = { open: false };
 function vidOk(x) { return !!(x && x.v && (x.v.src || x.v.page)); }
 function vidRowHtml(x, i) {
   var ok = vidOk(x), th = '<span class="tb">' + (ok && x.v.poster ? '<img src="' + esc(x.v.poster) + '" alt="" width="1280" height="720" loading="lazy" decoding="async">' : "") + '<span class="pl">' + IV_PLAY_SVG + "</span>" + (x.len ? "<em>" + esc(x.len) + "</em>" : "") + "</span>";
   return '<button type="button" class="vr"' + (ok ? ' onclick="ivAsk(this, ' + i + ')" aria-label="' + esc(x.t) + ' 영상 보기"' : " disabled") + ">" + th +
-    '<span class="x"><b>' + hdqHtml(esc(x.t)) + "</b><span>" + esc(ok ? x.s : x.s + " · 준비 중") + "</span></span>" + (ok ? '<span class="cv">' + CHEV_SVG + "</span>" : "") + "</button>";
+    '<span class="x"><b>' + hdqHtml(esc(x.t)) + "</b><span>" + (ok ? esc(x.s) : segHtml(esc(x.s + " · " + (VIDS_PEND[i] || "준비 중")))) + "</span></span>" + (ok ? '<span class="cv">' + CHEV_SVG + "</span>" : "") + "</button>";
 }
 function vidPre() { return typeof evPreDay === "function" && evPreDay() && !(typeof testEmp === "function" && testEmp()); }   /* v8.20 (사용자 261021 「당일에 오픈 · 일단 메뉴 자체를 숨겨」) 10/26 전 = 「영상 보기」 칸째 없음 · 테스트 사번은 미리 보임 */
 function progIvHtml() {
