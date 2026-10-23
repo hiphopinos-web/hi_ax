@@ -19,3 +19,4 @@ button.atn-card:hover{border-color:var(--navy)}
 [data-xg="atn10"] .xg-acts,[data-xg="atn17"] .xg-acts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .atn-ns.f17{grid-template-columns:repeat(4,minmax(0,1fr))}
 @media (max-width:480px){.atn-ns{grid-template-columns:repeat(3,minmax(0,1fr))}.atn-ns.f17{grid-template-columns:repeat(4,minmax(0,1fr))}.atn-grid{grid-template-columns:1fr}.atn-n{padding:6px}}
+.atn-old{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px}

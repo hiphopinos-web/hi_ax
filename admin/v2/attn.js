@@ -62,7 +62,7 @@ function atCard(c, one){
   var tagN='<'+(one?'div':'button type="button" onclick="goSub(\''+c.id+'\')" aria-label="'+esc(m.h)+' 명단 보기"')+' class="card atn-card'+(one?" one":"")+'">';
   return tagN+'<div class="atn-h"><b>'+esc(m.h)+'</b>'+tag(st[0],st[1])+'</div>'+
     '<div class="atn-t">'+esc(m.t)+'</div><div class="cap">'+esc(c.s)+'~'+esc(c.e)+' · '+esc(m.p)+'<br>찍는 시간 · 입장 '+esc(c.wIn)+' · 종료 '+esc(c.wOut)+'</div>'+
-    '<div class="atn-ns'+(ten?'':' f17')+'">'+nums+'</div>'+(c.old?'<div class="cap">다른 날 기록 '+n0(c.old)+'줄 · 표에 없음</div>':'')+(ten&&c.xn?'<div class="cap">명단 밖 '+n0(c.xn)+'명 찍음(기록만)</div>':(!ten?'<div class="cap">자유 참석 · 신청 명단 없음</div>':''))+
+    '<div class="atn-ns'+(ten?'':' f17')+'">'+nums+'</div>'+(c.old?'<div class="atn-old"><span class="cap">다른 날 기록 '+n0(c.old)+'줄 · 표에 없음</span>'+(one&&atDelCan()?'<button class="btn sm dng atn-del" type="button" onclick="atDelAsk(null,1)">다른 날 기록 지우기</button>':'')+'</div>':'')+(ten&&c.xn?'<div class="cap">명단 밖 '+n0(c.xn)+'명 찍음(기록만)</div>':(!ten?'<div class="cap">자유 참석 · 신청 명단 없음</div>':''))+
     (one?'':'<span class="atn-go cap">명단 보기 ›</span>')+'</'+(one?'div':'button')+'>';
 }
 function atStampTx(r, ten){ return (r.u?n0(r.u)+"/2":"0/2")+" · 전체 "+n0(r.n); }
@@ -142,15 +142,15 @@ var AT_DWHY={ none:"지울 기록 없음", drawlock:"추첨 통 고정 뒤 · 10
 var AT_DRES={ s:"", h:"" };
 function atDelCan(){ return !!isTop(); }
 function atDelPick(){ var s=atSub(), g=MG[atTen(s)?"atn10":"atn17"]; if(!g) return; var e=xgPicked(g).map(function(r){ return r.emp; }); if(e.length) atDelAsk(e); }
-function atDelQ(q, emps){ if(emps) q.emps=emps.join(","); else q.all="1"; return q; }
-function atDelAsk(emps){
+function atDelQ(q, emps, old){ if(old) q.old="1"; else if(emps) q.emps=emps.join(","); else q.all="1"; return q; }
+function atDelAsk(emps, old){
   if(!atDelCan()){ toast("기록 지우기는 슈퍼관리자가 합니다",{ bad:1 }); return; }
   var s=atSub(); if(s==="all"||(emps&&!emps.length)) return;
   if(emps&&emps.length>300){ toast("한 번에 300명까지 · 지금 "+n0(emps.length)+"명",{ bad:1, ms:4000 }); return; }
   toast("미리 보는 중");
-  call("att_del",atDelQ({ sid:s, dry:"1" }, emps)).then(function(pv){
+  call("att_del",atDelQ({ sid:s, dry:"1" }, emps, old)).then(function(pv){
     if(!pv||!pv.ok){ toast("미리 보지 못했습니다 · "+(pv&&pv.reason==="super"?"슈퍼관리자만 합니다":pv&&pv.reason==="rows"?"한 번에 "+n0(pv.max)+"명까지":why(pv)),{ bad:1, ms:5000 }); return; }
-    atDelConfirm(s, emps, pv);
+    atDelConfirm(s, emps, pv, old);
   });
 }
 function atDelTx(x){
@@ -163,17 +163,17 @@ function atDelTable(rows){
   return '<div class="xg-wrap mt4" style="--xg-h:220px"><table class="tb xg-fail"><thead><tr><th scope="col">이름</th><th scope="col">사번</th><th scope="col">줄</th><th scope="col">결과</th></tr></thead><tbody>'+
     ok.concat(no).map(function(x){ return '<tr><td>'+esc(x.name||"-")+'</td><td>'+esc(x.emp)+'</td><td class="num">'+n0(x.n)+'</td><td>'+atDelTx(x)+'</td></tr>'; }).join("")+'</tbody></table></div>';
 }
-function atDelConfirm(s, emps, pv){
-  var m=AT_META[s]||{ h:s }, sm=pv.sum||{}, all=!emps, rows=pv.rows||[];
+function atDelConfirm(s, emps, pv, old){
+  var m=AT_META[s]||{ h:s }, sm=pv.sum||{}, all=!emps&&!old, rows=pv.rows||[];
   var days=Object.keys(sm.days||{}).sort().map(function(d){ return d.slice(5).replace("-","/")+" "+n0(sm.days[d])+"줄"; }).join(" · ");
   var wk=Object.keys(sm.why||{}).map(function(w){ return (AT_DWHY[w]||w)+" "+n0(sm.why[w]); }).join(" · ");
   var body=band(sm.rev?"warn":"info",sm.rev?"10/26 기록으로 받은 프로그램 참여 스탬프를 거둡니다 · 거둔 사람은 되돌리기 없음":"출석 숫자 · 명단 · 엑셀 · 스탬프 셈에서 빠짐 · 원래 줄은 서버에 남음")+
     '<dl class="cc-kv mt4"><dt>지움</dt><dd><b>'+n0(sm.ok)+'명</b> <span class="cap">'+n0(sm.lines)+'줄'+(days?' · '+esc(days):'')+'</span></dd><dt>스탬프</dt><dd>거둠 <b>'+n0(sm.rev)+'명</b></dd><dt>막힘</dt><dd>'+n0(sm.deny)+'명'+(wk?' <span class="cap">'+esc(wk)+'</span>':'')+'</dd></dl>'+
     atDelTable(rows)+(all?'<label class="fld mt4">확인 · 「지우기」 입력<input class="in" id="atDelW" autocomplete="off" oninput="gateUpd()"></label>':'');
-  confirmBox({ t:all?m.h+" 기록을 전부 지울까요?":m.h+" 출석 기록을 지울까요?", who:all?"이 세션 기록 전부 · "+n0(sm.ok)+"명 "+n0(sm.lines)+"줄":"고른 "+n0(sm.n)+"명 · 지움 "+n0(sm.ok)+"명 · 막힘 "+n0(sm.deny)+"명",
+  confirmBox({ t:old?m.h+" 다른 날 기록을 지울까요?":all?m.h+" 기록을 전부 지울까요?":m.h+" 출석 기록을 지울까요?", who:old?String(pv.skip||"").slice(5).replace("-","/")+" 기록은 그대로 · "+n0(sm.ok)+"명 "+n0(sm.lines)+"줄":all?"이 세션 기록 전부 · "+n0(sm.ok)+"명 "+n0(sm.lines)+"줄":"고른 "+n0(sm.n)+"명 · 지움 "+n0(sm.ok)+"명 · 막힘 "+n0(sm.deny)+"명",
     sub:"같은 사람이 다시 찍으면 새 기록 · 활동 기록에 남음", body:body, ok:"지우기 "+n0(sm.ok)+"명", danger:true, focus:all?"atDelW":"",
     gate:function(){ if(!(sm.ok>0)) return false; if(!all) return true; var w=el("atDelW"); return !!w&&w.value.trim()==="지우기"; },
-    run:function(){ var q={ sid:s, rid:"d"+Date.now().toString(36)+Math.random().toString(36).slice(2,6) }; if(all){ q.all="1"; q.word=el("atDelW").value.trim(); } else q.emps=rows.filter(function(x){ return !x.why; }).map(function(x){ return x.emp; }).join(","); return call("att_del",q,30000); },
+    run:function(){ var q={ sid:s, rid:"d"+Date.now().toString(36)+Math.random().toString(36).slice(2,6) }; if(old) q.old="1"; else if(all){ q.all="1"; q.word=el("atDelW").value.trim(); } else q.emps=rows.filter(function(x){ return !x.why; }).map(function(x){ return x.emp; }).join(","); return call("att_del",q,30000); },
     fail:function(r){ return r&&r.reason==="super"?"슈퍼관리자만 합니다":r&&r.reason==="word"?"「지우기」를 그대로 입력합니다":""; },
     done:function(r){ atDelDone(s, r); } });
 }
