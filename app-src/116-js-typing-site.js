@@ -462,11 +462,12 @@ function tsfAdmin() {
   modalOpen('<div class="ax-stack-tight axs-gap12"><label class="ax-sr-only" for="tsfOffCode">관리코드</label>' +
     '<input id="tsfOffCode" class="ax-field" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="관리코드" onkeydown="onEnter(event, tsfOffGo)">' +
     '<p class="ax-meta" id="tsfOffMsg">효과음 ' + (on ? "켜짐" : "꺼짐") + " · 배경 음악 기본 " + (S.get("site_bgm_def", true) === true ? "켜짐" : "꺼짐") + (TSF_CAM ? " · 카메라 " + (C.stream ? "켜짐 " + esc(C.res) : "꺼짐") + " · 한 번 읽기 " + Math.round(TSF.sc.ms) + "ms" : "") + " · 접속 QR " + (TSF.lk.tok ? "켜짐" : "꺼짐" + (tsfLinkWhy() ? "(" + esc(tsfLinkWhy()) + ")" : "")) + (TSF.lk.hold ? " · 폰 로그인 중" : "") +
-    " · 송출 " + (tvlSeat() ? "자리 " + tvlSeat() + (TVL.st === "ok" ? " 연결됨" : "") : "끔") + " · 화면 " + (tsfOrient() === "port" ? "세로" : "가로") + "</p>" +   /* 261017 실시간 송출 자리 */
+    " · 송출 " + (tvlSeat() ? "자리 " + tvlSeat() + (TVL.st === "ok" ? " 연결됨" : "") : "끔") + " · 화면 " + (tsfOrient() === "port" ? "세로" : "가로") + " · 키 잠금 " + (!tsfKlockOk() ? "끔" : TSFK.on ? "켜짐" : "대기" + (TSFK.err ? "(" + esc(TSFK.err) + ")" : TSFK.held ? "(다음 판에)" : "")) + "</p>" +   /* 261017 실시간 송출 자리 */
     '<p class="ax-meta" id="tsfQLn">' + esc(tsfQLine()) + "</p>" +   /* v7.66 이 노트북 대기열 · 마지막 실패 */
     '<button type="button" class="ax-button" onclick="tsfOffGo()">셀프 모드 끄기</button>' +
     '<button type="button" class="ax-button ax-button-weak" onclick="tsfSndGo()">효과음 ' + (on ? "끄기" : "켜기") + "</button>" +
     '<button type="button" class="ax-button ax-button-weak" onclick="tsfBgmGo()">배경 음악 기본값 ' + (S.get("site_bgm_def", true) === true ? "끄기" : "켜기") + "</button>" +
+    '<button type="button" class="ax-button ax-button-weak" onclick="tsfKlockGo()">키 잠금 ' + (tsfKlockOk() ? "끄기 · 전체 화면 풀기" : "켜기") + "</button>" +   /* 261023 이 노트북 저장(self_klock) */
     '<button type="button" class="ax-button ax-button-weak" onclick="tsfOriGo()">화면 가로 · 세로 · ' + (tsfOrient() === "port" ? "가로로" : "세로로") + " 바꾸기</button>" +   /* 261022 이 노트북 저장(site_orient) · F8 과 같은 값 */   /* 261017 기기 저장 site_bgm · 오른쪽 위 단추 · F4 와 같은 값 */
     (tsfQ().length ? '<button type="button" class="ax-button ax-button-weak" onclick="tsfQGo()">못 보낸 기록 지금 보내기</button>' : "") +
     (tsfStaff() ? '<button type="button" class="ax-button ax-button-weak" onclick="tsfSeatGo()">송출 ' + ["자리 1로", "자리 2로", "자리 3으로", "끄기"][tvlSeat()] + "</button>" : "") +
@@ -491,6 +492,7 @@ function tsfOffGo(ok) {
   if (RG.on && RG.mode === "site") rgStop();
   tsfLinkDrop();
   S.set("self_on", false); S.set("self_key", ""); S.set("self_tok", ""); tsfTrialSet(""); TSF.trialPg = "";
+  tsfFsDrop();   /* 261023 키 잠금 · 문서 전체 화면 풀기 */
   modalClose(); tsfStop(); tsfReset(); App.go("type_site");
 }
 function tsfSndGo(ok) {
@@ -499,6 +501,14 @@ function tsfSndGo(ok) {
   S.set("site_sound", on);
   if (on) { sfxUnlock(); SFX.site = true; sfx("click"); }
   if (typeof bgmBtnSync === "function") bgmBtnSync();
+  modalClose();
+}
+function tsfKlockGo(ok) {   /* 261023 키 잠금 켜기 · 끄기(관리코드) · 끄면 전체 화면에서 나온다 · 켜면 다음 키 · 누름에서 다시 잡는다 */
+  if (ok !== true && !tsfCodeOk(tsfKlockGo)) return;
+  var on = !tsfKlockOk();
+  S.set("self_klock", on);
+  TSFK.held = false;
+  if (!on) tsfFsDrop();
   modalClose();
 }
 function tsfBgmGo(ok) {
@@ -1216,6 +1226,7 @@ function tsfNickSave() {
 /* SPACE(READY) · 서버에 시작을 알리고(이때 1회를 쓴다) 바로 카운트다운 · 서버가 거절하면 판을 접는다 · v5.61 노트북 이름(dev) = 같은 사번 두 노트북 동시 진행 막기 */
 function tsfGo() {
   if (TSF.ph !== "ready" || !TSF.info || TSF.busy) return;
+  TSFK.held = false; tsfFsGrab();   /* 261023 새 판 = 스태프가 풀었던 키 잠금을 다시 잡는다(SPACE = 사용자 동작) */
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
   TSF.ph = "play"; TSF.res = null; TSF.sub = null; TSF.send = ""; TSF.ticket = ""; tsfDbg("ph", "play"); tsfLinkDrop(); tsfScanShow(false);
   var lv = tvlNew();   /* 261017 실시간 송출 · 이 판 번호표(응답이 늦게 와도 다른 판에 붙지 않게) · seat 없으면 null(보내지 않는다) */
@@ -1591,6 +1602,7 @@ function tsfResHtml() {
 function tsfKeyDoc(e) {
   if (App.current !== "type_site" || !tsfOn() || RG.on || GS.cur || el("modal")) return;
   tsfPoke();
+  tsfFsGrab();   /* 261023 키 잠금 · 판 밖 첫 키(사용자 동작)에서 전체 화면 */
   if (!TSF.unl && S.get("site_sound", true) === true) { TSF.unl = true; sfxUnlock(); }
   if (e.key === "F2") { e.preventDefault(); tsfAdmin(); return; }
   var sp = e.code === "Space" || e.key === " ", ph = TSF.ph;
@@ -1642,10 +1654,54 @@ function tsfTabGuard(e) {
   else if (TSF.ph === "nick") tsfNickFocus();
 }
 window.addEventListener("keydown", tsfTabGuard, true);
+/* 261023 (사용자 「전체 화면에서 윈도우 키 잠금」 · 타자왕 게임 세션) 셀프 화면 키 잠금 · Keyboard Lock API(크롬 · 엣지)
+   크롬은 문서 전체 화면(requestFullscreen)일 때만 잠근다 · 실행 아이콘의 --start-fullscreen(F11 과 같은 창 전체 화면)만으로는 잠기지 않는다
+   그래서 판 밖 첫 키 · 누름 · SPACE 시작(사용자 동작)에서 문서 전체 화면을 한 번 요청하고 들어가면 TSF_KLOCK 을 잠근다 · 풀리면 unlock
+   잠근 키 = 윈도우 키 · Alt(Alt+Tab · Alt+F4) · Tab · F4 · Esc · F11 · 게임 입력(글자 · 한/영 · SPACE · Enter · F2 · F8 · F5)은 그대로 페이지로 온다
+   Esc = 짧게 누르면 페이지(처음으로) · 2초 길게 누르면 크롬이 전체 화면을 풀고 잠금도 풀린다(스태프가 나가는 길) · 그 뒤 다음 판 SPACE 시작까지 다시 잡지 않는다(TSFK.held)
+   스태프 「관리」(F2 · 관리코드) 「키 잠금 끄기」 = 이 노트북에 저장(self_klock · 기본 켬) · 전체 화면도 푼다 · 못 막는 키 = Ctrl+Alt+Del · 윈도우 키+L(OS 보안 키) */
+var TSF_KLOCK = ["MetaLeft", "MetaRight", "AltLeft", "AltRight", "Tab", "F4", "Escape", "F11"];
+var TSFK = { on: false, held: false, self: false, err: "" };
+function tsfKlockOk() { return S.get("self_klock", true) !== false; }
+function tsfFsEl() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
+function tsfFsGrab() {
+  if (App.current !== "type_site" || !tsfOn() || !tsfKlockOk() || TSFK.held || tsfFsEl()) return;
+  var d = document.documentElement, req = d.requestFullscreen || d.webkitRequestFullscreen;
+  if (!req) { TSFK.err = "nofs"; return; }
+  try { var p = req.call(d, { navigationUI: "hide" }); if (p && p.then) p.then(function () {}, function (e) { TSFK.err = "fs " + ((e && e.name) || ""); }); } catch (e) { TSFK.err = "fs"; }
+}
+function tsfKlock() {
+  var kb = navigator.keyboard;
+  if (!kb || !kb.lock) { TSFK.on = false; TSFK.err = "nolock"; return; }
+  kb.lock(TSF_KLOCK).then(function () { TSFK.on = !!tsfFsEl(); TSFK.err = ""; }, function (e) { TSFK.on = false; TSFK.err = "lock " + ((e && e.name) || ""); });
+}
+function tsfKunlock() { TSFK.on = false; try { if (navigator.keyboard && navigator.keyboard.unlock) navigator.keyboard.unlock(); } catch (e) {} }
+function tsfFsDrop() {   /* 스태프가 끄기 · 셀프 모드 끄기 = 잠금 풀고 문서 전체 화면에서 나온다(창 전체 화면은 그대로) */
+  tsfKunlock();
+  if (!tsfFsEl()) return;
+  TSFK.self = true;
+  var ex = document.exitFullscreen || document.webkitExitFullscreen;
+  try { var p = ex && ex.call(document); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+}
+["fullscreenchange", "webkitfullscreenchange"].forEach(function (t) {
+  document.addEventListener(t, function () {
+    if (tsfFsEl()) { if (App.current === "type_site" && tsfOn() && tsfKlockOk()) tsfKlock(); return; }
+    var was = TSFK.on;
+    tsfKunlock();
+    if (was && !TSFK.self) TSFK.held = true;   /* Esc 길게 · 그 밖의 바깥 해제 = 다음 판 SPACE 시작까지 다시 잡지 않는다 */
+    TSFK.self = false;
+  });
+});
+/* 잠긴 키가 페이지로 온다 · 브라우저 · 창 동작으로 새지 않게 기본 동작을 막는다(Alt+F4 · Alt 메뉴 · F11 · 윈도우 키) · 판 안팎 모두 · 글자 · F2 · F8 · Esc 처리는 그대로 */
+window.addEventListener("keydown", function (e) {
+  if (!TSFK.on || App.current !== "type_site") return;
+  var c = e.code || "";
+  if (c === "MetaLeft" || c === "MetaRight" || c === "F11" || c === "F4" || (e.altKey && (c === "Tab" || c === "Escape" || c === "AltLeft" || c === "AltRight"))) e.preventDefault();
+}, true);
 /* 261007 마우스 누름 · 터치도 깨운다(광고 화면 어디든 · 「관리」 단추는 그대로) · QR 화면에서 누르면 남은 시간이 다시 가득 */
 document.addEventListener("pointerdown", function (e) {
   if (App.current !== "type_site" || !tsfOn() || RG.on || el("modal") || !e.target || !e.target.closest || !e.target.closest(".tsf") || e.target.closest(".tsf-adm")) return;
-  if (TSF.ph === "ad") { e.preventDefault(); if (!TSF.unl && S.get("site_sound", true) === true) { TSF.unl = true; sfxUnlock(); } tsfWake(); }
+  if (TSF.ph === "ad") { e.preventDefault(); tsfFsGrab(); if (!TSF.unl && S.get("site_sound", true) === true) { TSF.unl = true; sfxUnlock(); } tsfWake(); }
   else if (TSF.ph === "attract") tsfPoke();
 }, true);
 window.addEventListener("resize", function () { if (App.current === "type_site" && tsfOn() && !RG.on) { var g = document.querySelector(".tsf-grid"); if (g) g.style.setProperty("--tsf-bw", tsfBw() + "px"); tsfPrevDraw(); tsfLinkPaint(); tsfOriHint(); } });
