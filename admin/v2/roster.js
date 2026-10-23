@@ -15,13 +15,14 @@ function dnyGrid(){
       { k:"open", t:"지금", w:120, v:function(r){ return r.open?"들어올 수 있음":"막힘"; }, f:function(r){ return r.open?tag("들어올 수 있음","ok"):tag("막힘","warn"); } },
       { k:"_a", t:"", w:96, act:function(r){ return r.open?"":'<button class="btn sm" type="button" onclick="dnyAdd([\''+jq(r.emp)+'\'])">넣기</button>'; } }] });
 }
+function dnyCan(){ return isTop(); }   /* 261023 권한 QA · 기록 비우기 = 슈퍼관리자(서버 og_deny_clear admTop_) · 넣기는 콘솔 사람 그대로 */
 function dnyShut(){ var d=S.data.dny; return d&&d.ok?(d.rows||[]).filter(function(x){ return !x.open; }):[]; }
 function dnyTop(){
   var b=el("dnyT"), d=S.data.dny; if(!b) return;
   if(!d||!d.ok){ b.innerHTML=""; return; }
   var sh=dnyShut();
   b.innerHTML=kpi({ l:"지금도 막힌 사람", v:n0(d.wait!=null?d.wait:sh.length), u:"명", st:sh.length?"warn":"", s:"명단 밖 · 지금 범위 기준" })+kpi({ l:"거부 기록", v:n0(d.n), u:"명", s:d.more?"앞 "+n0((d.rows||[]).length)+"줄만 표에":"마지막 시도 순" })+
-    '<div class="card"><div class="btns">'+(sh.length?'<button class="btn pri" type="button" onclick="dnyAdd(null)">막힌 '+n0(Math.min(500,sh.length))+'명 모두 넣기</button>':'')+'<button class="btn dng" type="button" onclick="dnyClearAsk()"'+(num(d.n)?"":" disabled")+'>기록 비우기</button></div><p class="cap mt4">넣기 = 접속 허용 명단에 넣음 · 되돌리기 7초 · 활동 기록에서 그날 안</p></div>';
+    '<div class="card"><div class="btns">'+(sh.length?'<button class="btn pri" type="button" onclick="dnyAdd(null)">막힌 '+n0(Math.min(500,sh.length))+'명 모두 넣기</button>':'')+(dnyCan()?'<button class="btn dng" type="button" onclick="dnyClearAsk()"'+(num(d.n)?"":" disabled")+'>기록 비우기</button>':'')+'</div><p class="cap mt4">넣기 = 접속 허용 명단에 넣음 · 되돌리기 7초 · 활동 기록에서 그날 안</p></div>';
 }
 function dnyAdd(emps){
   var all=!emps; if(all) emps=dnyShut().slice(0,500).map(function(x){ return x.emp; }); if(!emps.length) return;

@@ -1,12 +1,13 @@
 /* AXF CONTROL v2 · 재고 장부 · 사이즈 교환 · 체크인 번호 (261016 3단계 · 지금 콘솔에만 있던 재고 조정 · 입고 · 교환 기록 · 체크인 번호 명단 · 261016 창구 글자 걷음)
  * 경품 · 재고 › 재고 장부 = inv_state 품목 표(공통 명단 표) · 줄 누르면 서랍(남은 수 · 맞추기 · 총수량 · 입고 · 누가 받았나 inv_list · 기록 되돌리기 inv_undo)
- *   남은 수 맞추기 = inv_adjust(id · cnt · why · memo) · 총수량 · 입고 = inv_cfg(id · q · memo) · 확인 창만(PIN 없음 · 콘솔 사람 입장이면 서버가 받는다)
+ *   남은 수 맞추기 = inv_adjust(id · cnt · why · memo) · 총수량 · 입고 = inv_cfg(id · q · memo) · 확인 창만(PIN 없음) · 261023 권한 QA · 두 단추 = 슈퍼관리자에게만(서버 admTop_) · 다른 콘솔 사람은 남은 수 · 기록만 본다
  * 처리함 › 체크인존 = 사이즈 교환(inv_swap · 되돌리기 inv_undo) · 교환 기록(inv_state swap) · 명단 밖 지급(inv_list k1 · 명단 밖 줄)
  *   체크인 번호 = ck_no_state(세션별 현황) · 번호 매기기 ck_no_assign(확인 문구 「번호매기기」) · 체크인 번호 명단 ck_no_list(공통 명단 표 · 엑셀)
  * 금액 표시 없음 · 사번 · 이름만(부문 통계 없음). */
 var IV={ g:null, lat:{}, list:{}, gsw:null, gout:null, gno:null };
 var IV_KIND={ give:"나감", box:"박스 개봉", chk:"체크인", adj:"남은 수 맞추기", cfg:"품목 편집", "void":"되돌림", auto:"자동", swap:"사이즈 교환" };
 var IV_PLACE={ swap:"사이즈 교환", roulette:"룰렛", gate:"체크인존", box:"박스", console:"콘솔", lucky:"행운권", fin:"참여상 추첨", type:"타자왕", dap:"상담", fcfs:"선착순", lk7:"7등 굿즈", idea:"아이디어왕" };
+function ivCanEdit(){ return isTop(); }   /* 261023 권한 QA · 재고 맞추기 · 총수량 = 슈퍼관리자(서버 admTop_ 와 같은 기준) */
 var IV_WHY0=["분실","파손","추가 입고","세기 오류","기타"];
 var KS4=["SS","L","2XL","3XL"], KS4_AB={ SS:"A", L:"B", "2XL":"C", "3XL":"D" };
 function ivWhy(r){ r=r||{}; return { dup:"이 사번은 이미 받았습니다", notfound:"품목이나 기록을 찾지 못했습니다", already:"이미 되돌린 기록입니다", kind:"조정 · 편집 기록은 되돌리지 않습니다(다시 맞춥니다)", noq:"총수량이 정해진 품목만 맞춥니다", memo:"사유를 2~60자로 넣습니다", same:"바뀐 것이 없습니다", drawn:"참여상 추첨 뒤라 룰렛 · 가습기 수량은 바꾸지 않습니다", q:"총수량을 확인합니다", size:"두 사이즈를 다르게 고릅니다", word:"확인 문구가 다릅니다" }[r.reason]||why(r); }
@@ -37,7 +38,7 @@ function ivOpen(id){
   var s=ivSt(it), L=IV.list[id], J=jq(id);
   var h=drwHead(it.n, (it.how||"")+(it.q==null?" · 수량 미정":" · 처음 "+n0(it.q)+" · 나감 "+n0(it.out)), " "+tag(s[0],s[1]));
   h+='<div class="iv-big"><span class="cap">남은 수</span><b>'+(it.q==null?"-":n0(it.left))+'</b></div>';
-  h+='<div class="btns mt">'+(it.q!=null?'<button class="btn pri" type="button" onclick="ivAdjAsk(\''+J+'\')">남은 수 맞추기</button>':'')+'<button class="btn" type="button" onclick="ivCfgAsk(\''+J+'\')">총수량 · 입고</button></div>';
+  h+=ivCanEdit()?'<div class="btns mt">'+(ivCanEdit()&&it.q!=null?'<button class="btn pri" type="button" onclick="ivAdjAsk(\''+J+'\')">남은 수 맞추기</button>':'')+'<button class="btn" type="button" onclick="ivCfgAsk(\''+J+'\')">총수량 · 입고</button></div>':'<p class="cap mt">남은 수 맞추기 · 총수량 · 입고는 슈퍼관리자가 합니다</p>';
   h+='<dl class="cc-kv mt"><dt>최근 30분</dt><dd>'+n0(it.r30)+'</dd><dt>자동 나감</dt><dd>'+(it.auto?n0(it.auto):"-")+'</dd><dt>박스당</dt><dd>'+(it.box?n0(it.box)+"개":"-")+'</dd><dt>경고율</dt><dd>'+n0(it.w||15)+'%</dd>'+(it.note?'<dt>메모</dt><dd>'+esc(it.note)+'</dd>':'')+'</dl>';
   var rows=L&&L.ok?(L.rows||[]):[];
   h+='<h3 class="iv-h">누가 받았나'+(L&&L.ok?' · '+n0(rows.length)+'줄':'')+'</h3>';

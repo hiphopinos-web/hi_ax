@@ -5,8 +5,8 @@
  * 담당 지정 · 해제 = 설정 › 관리자 명단 › 콘솔 입장 명단 「AX 라운지 담당」 칸(roster.js 열 · 슈퍼관리자만 단추) · lng_owner_set(emp · on) · 활동 기록 lng_owner */
 var LSM_W="스탬프 부여", LSM_MAX=200;
 var LSM_WHY={ cancel:"취소된 줄", noshow:"노쇼", nomatch:"승인 전", done:"이미 끝(받음)", has:"이미 라운지 스탬프 있음", again:"같은 사람 다른 줄", preday:"행사 전 · 상담일이 오늘이 아님", notfound:"명단에 없음", emp:"사번 없음", state:"그 사이 상태가 바뀜", err:"서버 오류" };
-var LSM_FAIL={ owner:"AX 라운지 담당자만 합니다 · 설정 › 관리자 명단에서 지정", word:"확인 문구가 맞지 않습니다 · 「"+LSM_W+"」", rows:"한 번에 "+LSM_MAX+"줄까지입니다" };
-function lsmOwner(){ return !!(S.me&&S.me.lo); }
+var LSM_FAIL={ owner:"슈퍼관리자 · AX 라운지 담당자가 합니다 · 설정 › 관리자 명단에서 지정", word:"확인 문구가 맞지 않습니다 · 「"+LSM_W+"」", rows:"한 번에 "+LSM_MAX+"줄까지입니다" };
+function lsmOwner(){ return !!(S.me&&(S.me.lo||S.me.top)); }   /* 261023 권한 QA · 슈퍼관리자도(서버 lngHideOk_ 와 같은 기준) */
 function lsmBtn(g, n){
   if(lsmOwner()) return '<button class="btn sm pri" type="button" onclick="lsmAsk()">스탬프 부여 '+n0(n)+'명</button>';
   return '<span style="display:inline-flex;flex-direction:column;align-items:flex-end;gap:2px"><button class="btn sm" type="button" disabled aria-disabled="true">스탬프 부여</button><span class="cap">AX 라운지 담당자만 · 설정 › 관리자 명단에서 지정</span></span>';

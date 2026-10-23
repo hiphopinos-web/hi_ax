@@ -101,13 +101,14 @@ var OG_OPT=[["클로즈베타","클로즈 베타","접속 허용 명단 + 스태
 var OG_PH={ beta:"클로즈 베타", first:"사전 신청", all:"전체", end:"행사 종료", test:"클로즈 베타" };
 var OG_CNT={ "클로즈베타":"beta", "사전신청":"first", "전체":"all", "자동":"auto", "종료":"end" };
 function ogCur(){ var s=S.data.ogs, b=S.data.nb; return s&&s.ok?{ sc:s.sc, ph:s.ph, cnt:s.cnt, t1:s.t1, t2:s.t2 }:b&&b.ok&&b.og?{ sc:b.og.sc, ph:b.og.ph, cnt:null, t1:b.og.t1, t2:b.og.t2 }:null; }
+function ogCan(){ return isTop(); }   /* 261023 권한 QA · 앱 접속 범위 바꾸기 = 슈퍼관리자(서버 og_scope_set admTop_) */
 function ogPaint(){
   var c=ogCur(), box=el("ogC"); if(!box) return;
   if(!c){ box.innerHTML='<h2>앱 접속 범위</h2>'+(dataGate("ogs","앱 접속 범위")||skel()); return; }
   box.innerHTML='<h2>앱 접속 범위 <span class="cap">지금 들어올 수 있는 사람</span><span class="r">'+tag("지금 "+(OG_OPT.filter(function(o){ return o[0]===c.sc; })[0]||[0,c.sc])[1]+(c.sc==="자동"?" · "+(OG_PH[c.ph]||c.ph):""),c.sc==="종료"?"bad":"")+'</span></h2>'+
     OG_OPT.map(function(o){ var on=o[0]===c.sc, n=c.cnt&&c.cnt[OG_CNT[o[0]]];
-      return '<div class="row"><div class="t"><b>'+esc(o[1])+(on?' '+tag("지금","ok"):'')+'</b><span>'+esc(o[2])+(n!=null&&o[0]!=="종료"?" · 약 "+n0(n)+"명":"")+'</span></div>'+(on?'':'<button class="btn sm'+(o[0]==="종료"?" dng":"")+'" type="button" onclick="ogSet(\''+o[0]+'\')">'+esc(o[0]==="종료"?"행사 종료로":"이 범위로")+'</button>')+'</div>'; }).join("")+
-    '<p class="cap mt">자동 = '+esc(String(c.t1||"").slice(5,16))+' 사전 신청 · '+esc(String(c.t2||"").slice(5,16))+' 전체 · 행사 종료는 자동으로 바뀌지 않음</p>';
+      return '<div class="row"><div class="t"><b>'+esc(o[1])+(on?' '+tag("지금","ok"):'')+'</b><span>'+esc(o[2])+(n!=null&&o[0]!=="종료"?" · 약 "+n0(n)+"명":"")+'</span></div>'+(on||!ogCan()?'':'<button class="btn sm'+(o[0]==="종료"?" dng":"")+'" type="button" onclick="ogSet(\''+o[0]+'\')">'+esc(o[0]==="종료"?"행사 종료로":"이 범위로")+'</button>')+'</div>'; }).join("")+
+    (ogCan()?'':'<p class="cap mt">범위 바꾸기는 슈퍼관리자가 합니다</p>')+'<p class="cap mt">자동 = '+esc(String(c.t1||"").slice(5,16))+' 사전 신청 · '+esc(String(c.t2||"").slice(5,16))+' 전체 · 행사 종료는 자동으로 바뀌지 않음</p>';
 }
 function ogSet(sc){
   var c=ogCur()||{}, o=OG_OPT.filter(function(x){ return x[0]===sc; })[0], from=(OG_OPT.filter(function(x){ return x[0]===c.sc; })[0]||[0,c.sc])[1], n=c.cnt&&c.cnt[OG_CNT[sc]];
