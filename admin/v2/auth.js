@@ -5,6 +5,7 @@
  *     비밀번호 칸에 설정 코드를 넣어도 된다(서버가 줄 종류로 가름 → need set → 비밀번호 정하기)
  *     틀린 시도 응답 cs = code(설정 코드 걸림) → 설정 코드 6자리 + 새 비밀번호 화면(kind code · codeGo) · cs = exp → 만료 안내 · cs 없음 → 사번 또는 비밀번호 틀림 · 남은 시도
  *   설정 코드 통과 = need set + 코드 토큰 → 「비밀번호 정하기」(adm_pw_set · 새 비밀번호 두 번) → 입장 · 설정 코드 화면은 두 호출을 이어서(admin_check → adm_pw_set)
+ *   261023 초기화 뒤 첫 입장(비밀번호를 정한 적 있는 사람 · 초기화 뒤 24시간 · 한 번) = 서버 need set + rs 1 → 넣은 값으로 바로 adm_pw_set(규칙 검사 그대로) · 규칙에 안 맞으면 「비밀번호 정하기」 화면
  *   바꾸기 = 기록 · 설정 › 서버 상태 「비밀번호 바꾸기」(adm_pw_set · 지금 입장 토큰 · 개인 비밀번호로 들어온 입장만)
  *   규칙(서버 pwprep.js pwRule 과 같다) = 8~64자 · 사번과 같으면 안 됨 · 아주 흔한 값 · 같은 글자 반복 · 이어진 숫자 거절 · 조합 강제 없음 */
 var PWM={ mode:"old", on:0, kind:"pw", set:null, info:null };   /* mode old(관리코드) | pw · kind pw | code(설정 코드) | key(OFF 동안 관리코드) · set = { emp, tok } 정하기 단계 */
@@ -34,7 +35,7 @@ function lockUI(msg){
   var b=el("lockBody"); if(!b) return;
   var e=aemp(), set=PWM.set, pw=PWM.mode==="pw";
   if(set){
-    b.innerHTML='<p class="cap">사번 '+esc(set.emp)+' · 설정 코드로 들어왔어요 · 앞으로 쓸 비밀번호를 정해 주세요</p>'+
+    b.innerHTML='<p class="cap">사번 '+esc(set.emp)+' · '+(set.rs?'초기화 뒤 첫 입장이에요':'설정 코드로 들어왔어요')+' · 앞으로 쓸 비밀번호를 정해 주세요</p>'+
       '<label>새 비밀번호<input id="pw1" type="password" autocomplete="new-password" maxlength="64" placeholder="8자 이상" oninput="pwHint()"></label>'+
       '<label>다시 입력<input id="pw2" type="password" autocomplete="new-password" maxlength="64" oninput="pwHint()"></label>'+pwGuideHtml("pw")+
       '<button class="btn pri big" type="button" id="lockGo" onclick="pwSetGo()">비밀번호 정하기</button>'+
@@ -97,10 +98,21 @@ function unlock(){
   var p=k==="key"?{ key:v.trim(), aemp:e, asc:"c", tok:"" }:{ pw:v, aemp:e, asc:"c", tok:"" };
   call("admin_check",p,25000).then(function(r){
     el("key").value="";
+    if(r&&r.ok&&r.role==="admin"&&r.need==="set"&&num(r.rs)){ rstGo(e,v,r); return; }
     if(r&&r.ok&&r.role==="admin"&&r.need==="set"){ setAemp(e); PWM.set={ emp:e, tok:r.tok||"" }; lockUI(""); return; }
     if(r&&r.ok&&r.role==="admin"){ lockIn(r,e); return; }
     if(k==="pw"&&r&&r.reason==="auth"&&r.cs==="code"){ setAemp(e); PWM.kind="code"; lockUI(r.left!=null?"남은 시도 "+r.left+"번":""); return; }   /* 설정 코드가 걸린 사번에 옛 비밀번호 → 설정 코드 화면 */
     el("lockErr").textContent=lockMsg(r,k);
+  });
+}
+/* 261023 초기화 뒤 첫 입장 · 넣은 값이 규칙에 맞으면 그 값을 새 비밀번호로 저장 · 아니면 정하기 화면(안내 한 줄) */
+function rstGo(e, v, r){
+  setAemp(e); PWM.set={ emp:e, tok:r.tok||"", rs:1 };
+  var w=pwWhy(v,e); if(w){ lockUI(PW_WHY[w]+" · 새 비밀번호를 정해 주세요"); return; }
+  el("lockErr").textContent="저장 중";
+  call("adm_pw_set",{ aemp:e, tok:r.tok||"", pw:v },25000).then(function(s){
+    if(s&&s.ok){ lockIn(s,e); toast("초기화 뒤 첫 입장 · 넣은 비밀번호가 새 비밀번호가 됐어요",{ ms:6000 }); return; }
+    lockUI(pwSetFail(s));
   });
 }
 /* 설정 코드 화면 · 코드 확인(admin_check → need set) 다음 바로 새 비밀번호 저장(adm_pw_set) · 새 비밀번호 규칙을 먼저 봐서 코드 시도를 헛되이 쓰지 않는다 */

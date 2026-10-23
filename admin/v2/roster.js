@@ -60,8 +60,9 @@ var ADR_WHY={ emp:"사번 모양이 아닙니다", self:"맨 앞 사번(슈퍼�
 var ADR_PW={ set:["설정함","ok"], code:["설정 코드 대기",""], expired:["코드 만료","warn"], none:["없음","off"] };
 function adrTop(){ var d=S.data.admr; return !!((d&&d.ok&&d.top)||(S.me&&S.me.top)); }
 function adrRows(sc){ var d=S.data.admr; return d&&d.ok?((d[sc]||{}).rows||[]):[]; }
-function adrPwTx(r){ if(r.pw==null) return ""; var t=(ADR_PW[r.pw]||ADR_PW.none)[0]; if(r.lock>0) t+=" · 잠김 "+Math.ceil(r.lock/60)+"분"; if(r.pw==="code"&&r.exp) t+=" · "+fmtD(r.exp)+" 까지"; return t; }
-function adrPwTag(r){ if(r.pw==null) return '<span class="cap">서버 갱신 뒤</span>'; var a=ADR_PW[r.pw]||ADR_PW.none; return tag(a[0],a[1])+(r.lock>0?" "+tag("잠김 "+Math.ceil(r.lock/60)+"분","warn"):"")+(r.pw==="code"&&r.exp?' <span class="cap">'+esc(fmtD(r.exp))+' 까지</span>':''); }
+function adrPwA(r){ return r.pw==="code"&&num(r.had)?["초기화 · 첫 입장 대기",""]:ADR_PW[r.pw]||ADR_PW.none; }   /* 261023 정한 적 있는 사람의 초기화 = 다음 입장 값이 새 비밀번호 */
+function adrPwTx(r){ if(r.pw==null) return ""; var t=adrPwA(r)[0]; if(r.lock>0) t+=" · 잠김 "+Math.ceil(r.lock/60)+"분"; if(r.pw==="code"&&r.exp) t+=" · "+fmtD(r.exp)+" 까지"; return t; }
+function adrPwTag(r){ if(r.pw==null) return '<span class="cap">서버 갱신 뒤</span>'; var a=adrPwA(r); return tag(a[0],a[1])+(r.lock>0?" "+tag("잠김 "+Math.ceil(r.lock/60)+"분","warn"):"")+(r.pw==="code"&&r.exp?' <span class="cap">'+esc(fmtD(r.exp))+' 까지</span>':''); }
 function adrGrid(sc){
   var top=adrTop(), may=sc==="a"||top;
   var o={ file:ADR_SC[sc][0], key:function(r){ return r.emp; }, sort:{ k:"name", d:1 }, src:{ a:"adm_roster", p:{}, pick:function(res){ return (res[sc]||{}).rows||[]; } }, h:360, empty:"명단이 비어 있습니다", onRow:function(k){ pcOpen(k, MG["adr_"+sc]); },
@@ -104,11 +105,11 @@ function adrSp(sc){
 }
 /* 설정 코드 발급 · 초기화(슈퍼관리자 · 확인 창 · 활동 기록 adm_pw) · 성공 = 코드를 한 번만 보이는 창(복사) */
 function adrIssueAsk(emp){
-  var r=adrRows("c").filter(function(x){ return x.emp===emp; })[0]||{ emp:emp }, has=r.pw==="set"||r.pw==="code";
-  confirmBox({ t:has?"비밀번호를 초기화할까요?":"설정 코드를 발급할까요?", who:personLine(r), sub:has?"지금 비밀번호와 열려 있는 콘솔 입장이 바로 끊김 · 새 설정 코드(6자리 · 24시간 · 한 번만 보임)":"설정 코드(6자리 · 24시간 · 한 번만 보임) · 그 사람이 「설정 코드로 처음 입장」에서 비밀번호를 정합니다",
+  var r=adrRows("c").filter(function(x){ return x.emp===emp; })[0]||{ emp:emp }, has=r.pw==="set"||r.pw==="code", had=r.pw==="set"||num(r.had);
+  confirmBox({ t:has?"비밀번호를 초기화할까요?":"설정 코드를 발급할까요?", who:personLine(r), sub:had?"지금 비밀번호와 열려 있는 콘솔 입장이 바로 끊김 · 다음 입장 때 넣는 비밀번호가 새 비밀번호가 됩니다(24시간 · 한 번)":has?"지금 비밀번호와 열려 있는 콘솔 입장이 바로 끊김 · 새 설정 코드(6자리 · 24시간 · 한 번만 보임)":"설정 코드(6자리 · 24시간 · 한 번만 보임) · 그 사람이 「설정 코드로 처음 입장」에서 비밀번호를 정합니다",
     ok:has?"초기화":"설정 코드 발급", danger:has,
     run:function(){ return call("adm_pw_issue",{ emp:emp },25000); }, fail:function(x){ return x&&ADR_WHY[x.reason]||""; },
-    done:function(x){ reload(["admr"]); adrCodeShow(x, r); } });
+    done:function(x){ reload(["admr"]); if(num(x.rs)){ toast("초기화했습니다 · 다음 입장 때 넣는 비밀번호가 새 비밀번호 · "+fmtD(x.exp)+" 까지",{ ms:6000 }); return; } adrCodeShow(x, r); } });
 }
 function adrCodeShow(x, r){
   var code=String(x.code||"").replace(/\D/g,"").slice(0,6);
