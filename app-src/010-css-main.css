@@ -1832,6 +1832,8 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-safe { padding: var(--ax-space-16); border-radius: var(--ax-radius-16); background: var(--ax-color-surface); font: var(--ax-type-t6-strong); color: var(--ax-color-ink); text-align: center; }
   .axs-gauge { height: 8px; border-radius: var(--ax-radius-999); background: var(--ax-color-brandSoft); overflow: hidden; }
   .axs-gauge i { display: block; height: 100%; border-radius: var(--ax-radius-999); background: var(--ax-color-brand); }
+  #svQ > .axs-svtop { position: sticky; top: var(--sv-top, 0px); z-index: 4; margin: calc(-1 * var(--ax-space-12)) calc(-1 * var(--ax-page-inset)) calc(-1 * var(--ax-space-8)); padding: var(--ax-space-12) var(--ax-page-inset) var(--ax-space-8); background: var(--ax-color-canvas); }   /* v8.80 (사용자 261024) 설문 진행 바 줄 = 머리 아래에 붙음 · 여백을 안으로 옮겨 처음 자리는 그대로 */
+  #svQ > .axs-svtop > .axs-stag { top: calc(var(--ax-space-12) - 6px); right: var(--ax-page-inset); }
   .axs-fl6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   .axs-fl6 .axs-none { grid-column: 1 / -1; font: var(--ax-type-t6-strong); }
   /* v4.88 커피챗 선호 시간대 = 상담 시간 칸과 같은 칸 · 여러 개 고르기는 체크 표시로 알린다 · 「언제든 좋아요」는 한 줄 전체 */

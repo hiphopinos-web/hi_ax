@@ -25,12 +25,12 @@ function qrHtml() {
 /* v4.06 stampByCode · 대기열(scanQ*)은 「AX-TDS v1 3단계」 절로 옮겼다 (부스·계단 공용 · 찍은 순서대로) */
 /* ═══ v8.60 (사용자 261023 「이거 반영」) 참가자 설문 = 새 설문안(정본 「설문조사/AXF_참가자설문_어플리케이션용.html」 · LAYOUT 'single') ═══
    흐름 = 첫 화면 → Q1-1~3(슬라이더) → Q1-4 → 안내(프로그램별 만족도) → Q2-0 → 고른 프로그램만 Q2-x(슬라이더) → 안내(이해도) → Q3-1~3 → Q4(선택) → 완료(SURVEY_Q · svFlow)
-   한 화면 한 문항 · 보기 하나 문항은 고르면 AXM.PICK 뒤 자동으로 다음 · 「이전」으로 돌아온 화면은 자동 넘김 없음(정본 revisit) · 슬라이더 · 여러 개 · 글 = 「다음」 단추
+   한 화면 한 문항 · v8.80 (사용자 261024 「넘기기 방식을 하나로」) 모든 문항 = 「다음」 단추로 넘김(보기 하나도 고르면 그 화면에 머물고 고른 칸 표시 + 「다음」 켜짐 · 옛 자동 넘김 SV_AUTO · AXM.PICK 시계 걷음)
    진행 막대 = 보이는 화면(안내 포함 · 첫 화면 제외) 중 지금 몇 번째 · 머리 = 그룹(Ⅰ. 전체 만족도) · 문항 번호 Q1 ~ (안내 제외 · 보이는 문항만)
    답이 없는데 「다음」 = 단추는 흐린 채 눌리고 질문 글이 1.6초 빨강(정본 flagMissing)
    중간 이탈 = 이 기기 초안(survey_draft · v 2 · cur = 지금 화면 id)으로 이어 하기 · 1인 1회 · 제출하면 스탬프 1개(서버 survey_submit)
    답은 사번과 함께 저장한다(사용자 결정 261013) · 열림 판정 = 서버 sync my.svOpen(옛 서버 = 이 기기 시각 규칙) */
-var SV = { card: 0, busy: false, aggAt: 0, adv: 0, pend: 0, back: false, drag: 0 };
+var SV = { card: 0, busy: false, aggAt: 0, drag: 0 };
 /* ═══ 261024 (사용자 확정) 사전 신청자 설문 · 같은 [설문] 단추 · 같은 화면 코드 · 대상 = 서버 sync my.svK(sv_k) · 잠금 my.svW(sv_w) · 세션 미리 고름 my.svS(sv_s)
    테스트 사번 = 첫 화면 「테스트 · 설문 종류」(sv_kt · 이 기기) · 설문 테스트 페이지(?svreview) = SVR.kind · 초안은 종류마다 따로(survey_draft · survey_pdraft) */
 function svKind() {
@@ -63,7 +63,6 @@ function svKtHtml() {
   }).join("") + "</div>";
 }
 function svKtSet(k) { S.set("sv_kt", k === "pre" ? "pre" : "gen"); App.render(); }
-var SV_AUTO = true;   /* 보기를 고르면 자동으로 다음 문항(false = 「다음」 단추만) · 고른 표시를 AXM.PICK(450ms) 보여 준 뒤 「다음」 단추와 같은 svNext 로 넘긴다 */
 /* v3.52 설문 잠금 · "time" = 아직 닫힘 · "nostamp" = 다른 스탬프 0개 · "" = 열림 (서버 survey_submit 와 같은 조건) */
 function surveyLock() {
   if (!surveyOpen()) return "time";
@@ -122,10 +121,10 @@ function svEmpty(q, v) {
 /* 슬라이더 글 · 0.5 = 양옆 표현 이어 붙임(정본 scaleLabel · 4.5 → 「만족했다 ~ 매우 만족했다」) */
 function svScaleLabel(s, v) { var sc = svSc(s); return v % 1 ? sc[Math.floor(v) - 1] + " ~ " + sc[Math.ceil(v) - 1] : sc[v - 1]; }
 function svCur(d, fl) { fl = fl || svFlow(d); for (var i = 0; i < fl.length; i++) if (fl[i].id === d.cur) return i; return 0; }
-/* fwd = 앞으로(다음 · 자동 넘김) · 아니면 「이전」 = 그 화면은 자동 넘김 없음(SV.back) */
+/* fwd = 앞으로(다음) · 아니면 「이전」(v8.80 자동 넘김 없음 · 둘 다 같은 일) */
 function svGoId(id, fwd) {
-  var d = svDraft(); clearTimeout(SV.adv); SV.pend = 0;
-  d.cur = id; SV.back = !fwd;
+  var d = svDraft();
+  d.cur = id;
   if (id === "q2_0" && !Array.isArray(d.a.q2_0)) { d.a.q2_0 = svPre0(); d.pre = 1; }   /* 처음 열 때만 · 그 뒤로는 본인이 고른 그대로 */
   if (id === "session" && d.a.session === undefined) { var ss = svSessPre(); if (ss) { d.a.session = ss; d.spre = 1; } }   /* 261024 신청 세션 미리 고름(처음 열 때만 · 바꿀 수 있다) */
   svSave(d); SV.card = 0; App.render(); window.scrollTo(0, 0);
@@ -143,16 +142,12 @@ function svNext() {
   if (q && q.type === "intro" && BE.on && !testMode()) { SV.seen = Date.now(); beSync(); }   /* 시작하면 참석 목록(my.svPre)을 한 번 받아 둔다 · Q2-0 까지 문항 다섯 */
   if (i + 1 < fl.length) svGoId(fl[i + 1].id, true);
 }
-function svPrev() { var d = svDraft(), fl = svFlow(d), i = svCur(d, fl); clearTimeout(SV.adv); SV.pend = 0; if (i > 0) svGoId(fl[i - 1].id, false); }   /* 자동 넘김 기다리는 중 「이전」 = 넘김 취소 */
-/* 보기 하나 · 고른 표시(주황 테두리 · 점)를 먼저 그리고 AXM.PICK 뒤 「다음」 단추와 같은 svNext
-   넘기는 동안(SV.pend) 다른 보기 = 무시 · 「이전」 · 「다음」 = svPrev · svGoId 가 시계를 지움 · 동작 줄이기 = 기다림 없이 바로 · 「이전」으로 돌아온 화면(SV.back) = 넘기지 않음 */
+function svPrev() { var d = svDraft(), fl = svFlow(d), i = svCur(d, fl); if (i > 0) svGoId(fl[i - 1].id, false); }
+/* 보기 하나 · 고르면 저장하고 그 화면에 머문다(고른 칸 = 주황 테두리 · 점 · 「다음」 켜짐) · 넘기기 = 「다음」(v8.80 사용자 261024 · 옛 자동 넘김 걷음) */
 function svChoose(id, v) {
-  if (SV.busy || SV.pend) return;
+  if (SV.busy) return;
   var d = svDraft(); d.a[id] = v; svSave(d);
-  if (!SV_AUTO || SV.back) { App.render(); return; }
-  if (AXM.rm()) { svNext(); return; }
-  SV.pend = 1; App.render(); clearTimeout(SV.adv);
-  SV.adv = setTimeout(function () { SV.pend = 0; var d2 = svDraft(); if (App.current === "survey" && d2.cur === id && d2.a[id] === v) svNext(); }, AXM.PICK);
+  App.render();
 }
 /* Q2-0 · 여러 개 · none 은 단독(고르면 나머지 해제 · 다른 것을 고르면 none 해제) · 풀린 프로그램의 답은 지운다 */
 function svPick(pid) {
@@ -248,7 +243,7 @@ function svInputHtml(q, v) {
       var on = pv.indexOf(i + 1) >= 0;
       return '<button type="button" class="axs-svop multi" role="checkbox" aria-checked="' + on + '" onclick="svPk(\'' + id + '\', ' + (i + 1) + ')"><span class="lb">' + esc(o) + '</span><span class="rd" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></button>';
     }).join("") + "</div>" +
-      (etcOn ? '<input type="text" id="svEtc" class="ax-field axs-svetc" maxlength="' + q.etc.max + '" placeholder="' + esc(q.etc.ph) + '" aria-label="' + esc(q.etc.ph) + '" value="' + esc(ev) + '" onfocus="kbFocus(this)" oninput="svSet(\'' + q.etc.id + '\', this.value, false)">' : "");
+      (etcOn ? '<input type="text" id="svEtc" class="ax-field axs-svetc" maxlength="' + q.etc.max + '" placeholder="' + esc(q.etc.ph) + '" aria-label="' + esc(q.etc.ph) + '" value="' + esc(ev) + '" onfocus="svKbFocus(this)" oninput="svSet(\'' + q.etc.id + '\', this.value, false)">' : "");
   }
   if (q.type === "single") return '<div class="axs-svol" role="group" aria-label="' + esc(q.q) + '">' + svOl(q.o).map(function (o, i, all) {
     var val = all.length - i;   /* 점수 = 보기 수부터(5개 = 5 ~ 1 · Q1-4 3개 = 3 ~ 1) */
@@ -264,12 +259,12 @@ function svInputHtml(q, v) {
     return '<div class="axs-svol compact" role="group" aria-label="' + esc(q.q) + '">' + SV_PROGS.filter(function (p) { return !q.pids || q.pids.indexOf(p.id) >= 0; }).map(function (p) { return row(p.id, p.fl, p.lb); }).join("") + row("none", "", q.none, 1) + "</div>";   /* 261024 사전 설문 = 1층 5개(q.pids) */
   }
   if (q.type === "text" && q.line) {   /* 261024 한 줄 글(원본 text · 50자) */
-    return '<input type="text" id="svText_' + id + '" class="ax-field" maxlength="' + q.max + '" placeholder="' + esc(q.ph || "") + '" aria-label="' + esc(q.q) + '" value="' + esc(v || "") + '" onfocus="kbFocus(this)" oninput="svSet(\'' + id + '\', this.value, false); var c=el(\'svCnt\'); if (c) c.textContent=this.value.length; svTextBtn(this.value)">' +
+    return '<input type="text" id="svText_' + id + '" class="ax-field" maxlength="' + q.max + '" placeholder="' + esc(q.ph || "") + '" aria-label="' + esc(q.q) + '" value="' + esc(v || "") + '" onfocus="svKbFocus(this)" oninput="svSet(\'' + id + '\', this.value, false); var c=el(\'svCnt\'); if (c) c.textContent=this.value.length; svTextBtn(this.value)">' +
       '<p class="ax-meta axs-svcnt"><span id="svCnt">' + String(v || "").length + "</span> / " + q.max + "자</p>";
   }
   if (q.type === "text") {
     var n = String(v || "").length;
-    return '<textarea id="svText_' + id + '" class="ax-field axs-ta" rows="4" maxlength="' + (q.max || 300) + '" placeholder="' + esc(q.ph || "") + '" aria-label="' + esc(q.q) + '" onfocus="kbFocus(this)" oninput="svSet(\'' + id + '\', this.value, false); var c=el(\'svCnt\'); if (c) c.textContent=this.value.length; svTextBtn(this.value)">' + esc(v || "") + "</textarea>" +
+    return '<textarea id="svText_' + id + '" class="ax-field axs-ta" rows="4" maxlength="' + (q.max || 300) + '" placeholder="' + esc(q.ph || "") + '" aria-label="' + esc(q.q) + '" onfocus="svKbFocus(this)" oninput="svSet(\'' + id + '\', this.value, false); var c=el(\'svCnt\'); if (c) c.textContent=this.value.length; svTextBtn(this.value)">' + esc(v || "") + "</textarea>" +
       '<p class="ax-meta axs-svcnt"><span id="svCnt">' + n + "</span> / " + (q.max || 300) + "자</p>";
   }
   return "";
@@ -306,12 +301,35 @@ function svFitOpts() {
   var over = function () { for (var i = 0; i < lbs.length; i++) if (lbs[i].scrollWidth > lbs[i].clientWidth + 0.5) return true; return false; };
   while (size > min && over()) { size -= 0.5; ol.style.setProperty("--sv-opt-fs", size + "px"); }
 }
-function svMount() { if (App.current !== "survey") return; svHeadFit(); svFitOpts(); }
+function svMount() { if (App.current !== "survey") return; svTopSync(); svHeadFit(); svFitOpts(); svVv(); }
+/* v8.80 (사용자 261024 「글 입력 문항에 들어가면 화면이 살짝 내려가 진행 바가 안 보인다」) 진행 바 줄(.axs-svtop · 스탬프 표 · 진행 바 · 영역 이름) = 머리 아래에 붙음(sticky · 자리 = 머리 아래 끝 --sv-top)
+   글 칸 누름 = 옛 kbFocus(가운데로 스크롤 · 진행 바가 머리 밑으로 들어감) 대신 svKbFocus · 칸 첫 두 줄이 키보드 · 아래 단추 · 진행 바 줄에 가릴 때만 그만큼만 스크롤 */
+function svTopSync() { var h = el("topbar"); if (h) document.documentElement.style.setProperty("--sv-top", Math.round((parseFloat(getComputedStyle(h).top) || 0) + h.offsetHeight) + "px"); }
+function svKbFocus(n) {
+  setTimeout(function () {
+    if (typeof kbSync === "function") kbSync();
+    if (!n || !n.isConnected || document.activeElement !== n) return;
+    var vv = window.visualViewport, vb = vv ? vv.offsetTop + vv.height : window.innerHeight, bt = el("svBot"), tp = document.querySelector("#svQ > .axs-svtop");
+    if (bt && bt.offsetHeight) { var br = bt.getBoundingClientRect(); if (br.top < vb) vb = br.top; }
+    var r = n.getBoundingClientRect(), lim = tp ? tp.getBoundingClientRect().bottom : 0, need = Math.min(r.height, 64);
+    var dn = r.top + need + 12 - vb, up = lim + 8 - r.top;
+    if (dn > 0) window.scrollBy(0, dn); else if (up > 0) window.scrollBy(0, -up);
+  }, 320);
+}
+/* v8.80 (사용자 261024 「키보드가 올라와도 진행 바는 늘 화면 맨 위」) 아이폰 사파리 = 키보드가 열리면 보이는 창(visualViewport)만 아래로 밀려 머리 · 붙인 진행 바 줄이 창 위로 나간다
+   보이는 창 위 끝(offsetTop)이 진행 바 줄보다 아래면 그만큼 줄을 내려 보이는 창 맨 위에 둔다(transform 만) · 키보드가 닫히면 0 · 안드로이드 크롬(창이 줄어듦) = offsetTop 0 이라 그대로 */
+function svVv() {
+  var b = document.querySelector("#svQ > .axs-svtop"); if (!b) return;
+  var vv = window.visualViewport, off = vv && App.current === "survey" ? Math.max(0, vv.offsetTop) : 0;
+  b.style.transform = ""; if (!off) return;
+  var d = Math.round(off - b.getBoundingClientRect().top);
+  if (d > 0) b.style.transform = "translateY(" + d + "px)";
+}
+if (window.visualViewport) { window.visualViewport.addEventListener("resize", svVv); window.visualViewport.addEventListener("scroll", svVv); }
 if (window.addEventListener) window.addEventListener("resize", function () { if (App.current === "survey") { SV.hw = 0; svMount(); } });
 function svSubmit() {
   var d = svDraft(), fl = svFlow(d);
   if (SV.busy) return;
-  clearTimeout(SV.adv);
   for (var qi = 0; qi < fl.length; qi++) {
     var qq = fl[qi];
     if (svAsk(qq) && !qq.optional && svEmpty(qq, d.a[qq.id])) { svGoId(qq.id, false); svMiss(); return; }

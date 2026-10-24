@@ -74,6 +74,7 @@ function svrSheetBody() {
 }
 function svrOpen() {
   if (!SVR.on || SVR.busy) return;
+  if (surveyDone()) { svrAllOpen(); return; }   /* v8.80 완료 화면 = 설문 전체 의견 시트 하나 */
   var sc = svrScreen();
   if (!SVR.scr || SVR.scr.id !== sc.id) SVR.txt = "";   /* 다른 화면으로 옮겼으면 쓰던 글을 비운다 · 같은 화면에서 닫았다 열면 그대로 */
   SVR.scr = sc;
@@ -88,14 +89,15 @@ function svrSend(kind) {
   var sc = all ? { id: "all", q: "전체 의견" } : (SVR.scr || svrScreen()), nm = String(svrName() || "").trim().slice(0, SVR_NAME);
   svrLs("axsvr_name", nm); SVR.name = nm;
   SVR.busy = true;
-  if (all) App.render(); else { SHEET.spec.body = svrSheetBody(); sheetBusy(true); }
+  SHEET.spec.body = all ? svrAllBody() : svrSheetBody(); sheetBusy(true);   /* v8.80 전체 의견도 시트 */
   var end = function (msg) {
     SVR.busy = false;
     if (!msg) {
-      if (all) { svrSentAdd(t, nm); SVR.all = ""; App.render(); } else { SVR.txt = ""; sheetClose(true); }
+      if (all) { svrSentAdd(t, nm); SVR.all = ""; sheetClose(true); App.render(); toast("의견을 보냈습니다"); return; }
+      SVR.txt = ""; sheetClose(true);
       toast("저장됨"); return;
     }
-    if (all) { App.render(); toast(msg); } else { SHEET.spec.body = svrSheetBody(); sheetFail(msg); }
+    SHEET.spec.body = all ? svrAllBody() : svrSheetBody(); sheetFail(msg);
   };
   svrCall({ action: "sv_review_add", nm: nm, sid: sc.id, q: String(sc.q || "").slice(0, 80), txt: t, ver: APP_VER, dev: svrDev(), did: svrDid() }, function (res) {
     end(res && res.ok ? "" : (res && SVR_WHY[res.reason]) || "보내지 못했어요. 다시 눌러 주세요.");
@@ -135,13 +137,22 @@ function svrPreToggle() {
   }
   App.render();
 }
+/* v8.80 (사용자 261024 「완료 화면에 전체 의견 큰 칸이 펼쳐져 있어 내가 낸 답을 보여 주는 화면으로 헷갈렸다」) 완료 화면 = 참가자 완료 화면 그대로 + 작은 보조 단추 「설문 전체 의견 보내기」(테두리 · 채움 없음)
+   누르면 바닥 시트(앱 공통 sheetOpen · 아래에서 올라옴 · 끌어 닫기) = 전체 의견 칸(500자) · 이름(선택) · [의견 보내기] · 「보낸 의견 n건」 목록 · 보내면 시트 닫힘 + 토스트 「의견을 보냈습니다」
+   보낸 의견이 있으면 단추 옆 「보낸 의견 n건」 · 하단 「처음부터 다시」 그대로 · 완료 화면에서 위 띠 「이 화면 의견」 = 같은 시트 */
 function svrDoneHtml() {
-  return '<section class="ax-card svr-done" aria-labelledby="svrAllT"><div class="ax-stack-tight axs-gap12">' +
-    '<h2 class="ax-section-title" id="svrAllT">전체 의견</h2>' +
-    '<textarea id="svrAll" class="ax-field axs-ta" rows="5" maxlength="' + SVR_MAX + '" placeholder="설문 전체에 대한 의견" aria-label="전체 의견" oninput="SVR.all=this.value; var c=el(\'svrAllCn\'); if (c) c.textContent=this.value.length"' + (SVR.busy ? " disabled" : "") + ">" + esc(SVR.all) + "</textarea>" +
-    svrCnt("svrAllCn", SVR.all.length) + svrNameHtml("svrNmAll") +
-    '<button type="button" class="ax-button" onclick="svrSend(\'all\')"' + (SVR.busy ? ' disabled aria-busy="true"' : "") + ">" + (SVR.busy ? "보내는 중" : "의견 보내기") + "</button>" + svrSentHtml() + "</div></section>" +
+  var n = svrSent().length;
+  return '<div class="svr-allrow"><button type="button" class="svr-allbtn" id="svrAllBtn" onclick="svrAllOpen()">설문 전체 의견 보내기</button>' + (n ? '<span class="ax-meta svr-allcnt">보낸 의견 ' + n + "건</span>" : "") + "</div>" +
     '<div class="ax-bottom axs-fix"><button type="button" class="ax-button ax-button-weak" onclick="svrRestart()">처음부터 다시</button></div>';
+}
+function svrAllBody() {
+  return '<div class="ax-stack-tight axs-gap12">' +
+    '<textarea id="svrAll" class="ax-field axs-ta" rows="5" maxlength="' + SVR_MAX + '" placeholder="설문 전체에 대한 의견" aria-label="설문 전체 의견" oninput="SVR.all=this.value; var c=el(\'svrAllCn\'); if (c) c.textContent=this.value.length"' + (SVR.busy ? " disabled" : "") + ">" + esc(SVR.all) + "</textarea>" +
+    svrCnt("svrAllCn", SVR.all.length) + svrNameHtml("svrNmAll") + svrSentHtml() + "</div>";
+}
+function svrAllOpen() {
+  if (!SVR.on || SVR.busy) return;
+  sheetOpen({ id: "svrall", title: "설문 전체 의견", body: svrAllBody(), go: "svrSend('all')", goLbl: "의견 보내기", goBusy: "보내는 중", back: "svrAllBtn" });
 }
 function svrSeed() {
   S.set("stamps", ["lg"]); S.set("pp_seen", ["lg"]);
@@ -149,7 +160,7 @@ function svrSeed() {
 }
 function svrRestart() {
   if (SVR.busy) return;
-  clearTimeout(SV.adv); SV.pend = 0; SV.busy = false;
+  SV.busy = false;
   if (typeof testOverlayDrop === "function") testOverlayDrop(null);
   svrSeed(); SVR.all = ""; SVR.txt = ""; SVR.scr = null;
   App.render(); window.scrollTo(0, 0); AXM.rise(el("svQ"));
@@ -172,7 +183,10 @@ function svrCss() {
     ".svr-kind { display: flex; gap: 8px; margin: 0 0 12px; }" +
     ".svr-kind button { flex: 1; min-width: 0; height: 44px; border: 1px solid var(--axs-divider-strong); border-radius: 12px; background: var(--ax-color-surface); color: var(--ax-color-ink); font: 700 14px/1 var(--disp); cursor: pointer; }" +
     ".svr-kind button[aria-pressed=\"true\"] { background: var(--ax-color-ink); border-color: var(--ax-color-ink); color: #fff; }" +
-    ".svr-done { margin-top: 24px; }" +
+    ".svr-allrow { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px 12px; margin-top: 24px; }" +
+    ".svr-allbtn { flex: none; height: 40px; padding: 0 16px; border: 1px solid var(--axs-divider-strong); border-radius: 12px; background: var(--ax-color-surface); color: var(--ax-color-ink); font: 700 14px/1 var(--disp); cursor: pointer; }" +
+    ".svr-allbtn:active { background: var(--ax-color-canvas); }" +
+    ".svr-allcnt { margin: 0; white-space: nowrap; }" +
     ".svr-sent { margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--axs-divider-strong); }" +
     ".svr-sent-h { margin: 0 0 8px; color: var(--ax-color-ink); font: 700 14px/1.4 var(--disp); }" +
     ".svr-sent-i { padding: 10px 0; border-top: 1px solid var(--ax-color-divider, #E5E8EB); } .svr-sent-i:first-of-type { border-top: 0; padding-top: 0; }" +
