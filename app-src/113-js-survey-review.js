@@ -137,22 +137,22 @@ function svrPreToggle() {
   }
   App.render();
 }
-/* v8.80 (사용자 261024 「완료 화면에 전체 의견 큰 칸이 펼쳐져 있어 내가 낸 답을 보여 주는 화면으로 헷갈렸다」) 완료 화면 = 참가자 완료 화면 그대로 + 작은 보조 단추 「설문 전체 의견 보내기」(테두리 · 채움 없음)
+/* v8.80 (사용자 261024 「완료 화면에 전체 의견 큰 칸이 펼쳐져 있어 내가 낸 답을 보여 주는 화면으로 헷갈렸다」) 완료 화면 = 참가자 완료 화면 그대로 + 보조 단추 「추가 의견 보내기」(테두리 · 채움 없음 · v8.81 높이 48 · 글자 16 · 줄 가운데)
    누르면 바닥 시트(앱 공통 sheetOpen · 아래에서 올라옴 · 끌어 닫기) = 전체 의견 칸(500자) · 이름(선택) · [의견 보내기] · 「보낸 의견 n건」 목록 · 보내면 시트 닫힘 + 토스트 「의견을 보냈습니다」
-   보낸 의견이 있으면 단추 옆 「보낸 의견 n건」 · 하단 「처음부터 다시」 그대로 · 완료 화면에서 위 띠 「이 화면 의견」 = 같은 시트 */
+   보낸 의견이 있으면 단추 아래 다음 줄 가운데 「보낸 의견 n건」(작은 글자) · 하단 「처음부터 다시」 그대로 · 완료 화면에서 위 띠 「이 화면 의견」 = 같은 시트 */
 function svrDoneHtml() {
   var n = svrSent().length;
-  return '<div class="svr-allrow"><button type="button" class="svr-allbtn" id="svrAllBtn" onclick="svrAllOpen()">설문 전체 의견 보내기</button>' + (n ? '<span class="ax-meta svr-allcnt">보낸 의견 ' + n + "건</span>" : "") + "</div>" +
+  return '<div class="svr-allrow"><button type="button" class="svr-allbtn" id="svrAllBtn" onclick="svrAllOpen()">추가 의견 보내기</button>' + (n ? '<span class="ax-meta svr-allcnt">보낸 의견 ' + n + "건</span>" : "") + "</div>" +
     '<div class="ax-bottom axs-fix"><button type="button" class="ax-button ax-button-weak" onclick="svrRestart()">처음부터 다시</button></div>';
 }
 function svrAllBody() {
   return '<div class="ax-stack-tight axs-gap12">' +
-    '<textarea id="svrAll" class="ax-field axs-ta" rows="5" maxlength="' + SVR_MAX + '" placeholder="설문 전체에 대한 의견" aria-label="설문 전체 의견" oninput="SVR.all=this.value; var c=el(\'svrAllCn\'); if (c) c.textContent=this.value.length"' + (SVR.busy ? " disabled" : "") + ">" + esc(SVR.all) + "</textarea>" +
+    '<textarea id="svrAll" class="ax-field axs-ta" rows="5" maxlength="' + SVR_MAX + '" placeholder="설문에서 말하지 못한 의견" aria-label="추가 의견" oninput="SVR.all=this.value; var c=el(\'svrAllCn\'); if (c) c.textContent=this.value.length"' + (SVR.busy ? " disabled" : "") + ">" + esc(SVR.all) + "</textarea>" +
     svrCnt("svrAllCn", SVR.all.length) + svrNameHtml("svrNmAll") + svrSentHtml() + "</div>";
 }
 function svrAllOpen() {
   if (!SVR.on || SVR.busy) return;
-  sheetOpen({ id: "svrall", title: "설문 전체 의견", body: svrAllBody(), go: "svrSend('all')", goLbl: "의견 보내기", goBusy: "보내는 중", back: "svrAllBtn" });
+  sheetOpen({ id: "svrall", title: "추가 의견", body: svrAllBody(), go: "svrSend('all')", goLbl: "의견 보내기", goBusy: "보내는 중", back: "svrAllBtn" });
 }
 function svrSeed() {
   S.set("stamps", ["lg"]); S.set("pp_seen", ["lg"]);
@@ -183,10 +183,10 @@ function svrCss() {
     ".svr-kind { display: flex; gap: 8px; margin: 0 0 12px; }" +
     ".svr-kind button { flex: 1; min-width: 0; height: 44px; border: 1px solid var(--axs-divider-strong); border-radius: 12px; background: var(--ax-color-surface); color: var(--ax-color-ink); font: 700 14px/1 var(--disp); cursor: pointer; }" +
     ".svr-kind button[aria-pressed=\"true\"] { background: var(--ax-color-ink); border-color: var(--ax-color-ink); color: #fff; }" +
-    ".svr-allrow { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px 12px; margin-top: 24px; }" +
-    ".svr-allbtn { flex: none; height: 40px; padding: 0 16px; border: 1px solid var(--axs-divider-strong); border-radius: 12px; background: var(--ax-color-surface); color: var(--ax-color-ink); font: 700 14px/1 var(--disp); cursor: pointer; }" +
+    ".svr-allrow { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; margin-top: 24px; }" +
+    ".svr-allbtn { flex: none; max-width: 100%; min-height: 48px; padding: 0 24px; display: inline-flex; align-items: center; justify-content: center; text-align: center; white-space: nowrap; border: 1px solid var(--axs-divider-strong); border-radius: 12px; background: var(--ax-color-surface); color: var(--ax-color-ink); font: 700 calc(16px * var(--fs, 1))/1.2 var(--disp); cursor: pointer; }" +
     ".svr-allbtn:active { background: var(--ax-color-canvas); }" +
-    ".svr-allcnt { margin: 0; white-space: nowrap; }" +
+    ".svr-allcnt { margin: 0; white-space: nowrap; text-align: center; font-size: 12px; }" +
     ".svr-sent { margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--axs-divider-strong); }" +
     ".svr-sent-h { margin: 0 0 8px; color: var(--ax-color-ink); font: 700 14px/1.4 var(--disp); }" +
     ".svr-sent-i { padding: 10px 0; border-top: 1px solid var(--ax-color-divider, #E5E8EB); } .svr-sent-i:first-of-type { border-top: 0; padding-top: 0; }" +
