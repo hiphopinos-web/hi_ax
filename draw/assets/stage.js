@@ -2023,7 +2023,7 @@
       if (!r || !r.ok) {
         var why = r && (r.reason || r.err) || "응답 없음";
         if (why === "auth") { try { sessionStorage.removeItem("axfDraw.key"); } catch (e) {} LV.step = "key"; LV.err = "관리코드가 맞지 않습니다"; }
-        else { LV.step = "err"; LV.err = why === "unknown action" ? "이 서버에는 명부 데모가 없습니다 · 가짜 데모로" : "명부 읽기 실패 · " + why; }
+        else { LV.step = "err"; LV.err = why === "unknown action" ? "이 서버에는 명부 데모가 없습니다" : "명부 읽기 실패 · " + why; }
         startPaint(); return;
       }
       LV.dp = r; setSrvT(r.t); LV.step = "sum"; startPaint();
@@ -2034,7 +2034,7 @@
     var r = LV.dp || {}, ppl = 0, tks = 0, inP = 0, inT = 0, nm = r.num || null, block = [];
     (r.rows || []).forEach(function (x) { var n = (x && x.no || []).length; if (n) { ppl++; tks += n; if (x.in === true) { inP++; inT += n; } } });
     var same = ppl === +r.n && tks === +r.balls && inP === +r.inn && inT === +r.inb && (!nm || (ppl === +nm.n && tks === +nm.balls));
-    if (r.basis !== "pre" && r.basis !== "in") block.push("서버 판이 다릅니다 · 가짜 데모로");
+    if (r.basis !== "pre" && r.basis !== "in") block.push("서버 판이 다릅니다");
     if (!ppl) block.push("행운권이 0장입니다");
     if (!same) block.push("받은 수와 서버 집계가 다릅니다 · 다시 불러오기");
     return { ppl: ppl, tks: tks, inP: inP, inT: inT, same: same, basis: r.basis || "", pre: +r.pre || 0, now: srvNow(), block: block };
@@ -2235,7 +2235,6 @@
   var MOUSE = { tm: null };
   function mouseSeen() { document.body.classList.add("mouse"); clearTimeout(MOUSE.tm); MOUSE.tm = setTimeout(function () { document.body.classList.remove("mouse"); }, 4000); }
   function startBind() {
-    $("btnDemo").addEventListener("click", pickDemo);
     $("btnDemoR").addEventListener("click", function () { dOpen(false); });   /* 261024 명부 데모 */
     $("btnLive").addEventListener("click", function () { liveOpen(false); });
     $("lvBack").addEventListener("click", function () { LV.step = ""; LV.kind = ""; LV.dp = null; NET.connect = false; LV.err = ""; startPaint(); });
