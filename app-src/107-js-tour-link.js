@@ -359,7 +359,7 @@ var VIDS = [
   { id: "hq", t: "HiDI Q", s: "AX PLAY", len: "1:35", v: { src: "assets/vid/hidiq_v1.mp4", poster: "assets/vid/hidiq_v1.webp", loop: false, page: "" } },   /* v8.66 (사용자 261024) 원본 그대로(1080p · faststart) github.io 정적 파일 · 앱 안 플레이어(ivPlay · 누른 뒤에만 받음) · 바꿀 때는 _v2 새 이름 */
   { id: "hh", t: "Hi-Helper", s: "AX PLAY", len: "1:54", v: { src: "assets/vid/hihelper_v1.mp4", poster: "assets/vid/hihelper_v1.webp", loop: false, page: "" } }
 ];
-var VFOLD = { open: false };   /* 옛 접기 기억(v7.67) · 칸이 홈으로 옮겨 쓰지 않는다 · 라우터 · progSeg 의 되돌리기 줄이 남아 있어 이름만 둔다 */
+var VFOLD = { open: false };   /* v8.69 (사용자 261024) 홈 영상 칸 접기 기억 · 접힌 채 시작 · 다른 화면에서 홈으로 오면 다시 접힘(프로그램 탭 PFOLD 와 같은 방식 · 앱 메모리만) */
 function vidSw() { var o = S.get("vid_sw", null); return o && typeof o === "object" ? o : {}; }
 function vidTry() { return typeof testEmp === "function" && testEmp() && !ttGet(); }   /* 시험 장치(사용자 확인 뒤 이 줄만 지운다) · 테스트 사번 = 시험 시각을 고르지 않았으면 닫힌 영상도 미리 열림 · 일반 참가자는 해당 없음 */
 function vidOk(x) { return !!(x && x.v && (x.v.src || x.v.page) && (vidSw()[x.id] === 1 || vidTry())); }
@@ -370,8 +370,14 @@ function vidRowHtml(x, i) {
 }
 function vidHomeHtml() {   /* 줄 모양 = 판 문법 절(.axs-pan .axs-vids) 그대로 · 칸 그릇에 판 경계(axs-pan · 참여하기 칸과 같은 방식) */
   if (!VIDS.some(vidOk)) return "";   /* 셋 다 닫힘 = 칸째 없음 */
-  return '<section class="axs-sec axs-pan axs-vsec" id="zoneVid"><div class="sect"><b>영상 보기</b></div>' +
-    '<section class="ax-card axs-vids" aria-label="영상 보기">' + VIDS.map(vidRowHtml).join("") + "</section></section>";
+  return '<section class="axs-sec axs-pan axs-vsec" id="zoneVid"><div class="axs-sfd axs-vfd' + (VFOLD.open ? " open" : "") + '">' +   /* v8.69 접기 부품 axs-sfd · 머리 줄 = 홈 섹션 제목 모양 + 「자세히 보기」 셰브론(프로그램 탭 「선착순 이벤트」 axs-pfb 와 같은 부품 · 문구) */
+    '<button type="button" class="axs-sfdb axs-pfb" id="vFoldBtn" aria-expanded="' + VFOLD.open + '" aria-controls="vFoldBody" onclick="vFoldTog(this)"><b>영상 보기</b>' + lnkChev("자세히 보기") + "</button>" +
+    '<div class="axs-sfdp" id="vFoldBody"><div class="axs-sfdi"><div class="axs-sfdc"><section class="ax-card axs-vids" aria-label="영상 보기">' + VIDS.map(vidRowHtml).join("") + "</section></div></div></div></div></section>";
+}
+function vFoldTog(b) {
+  VFOLD.open = !VFOLD.open;
+  var w = b.closest(".axs-sfd"); if (w) w.classList.toggle("open", VFOLD.open);
+  b.setAttribute("aria-expanded", String(VFOLD.open));
 }
 var IVP = { on: false, el: null, v: null, y: 0, from: null, fs: false, t: 0, vd: null, vt: "" };
 function ivAsk(b, i) {   /* v7.67 i = 영상 표(VIDS) 줄 · 없으면 첫 줄(IV_VIDEO) */
