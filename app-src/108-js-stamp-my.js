@@ -76,6 +76,7 @@ function testOverlayDrop(id) {
    일반 사번은 이 단추가 없다(testMode) · 서버도 테스트 사번이 아니면 notest 로 거절한다(1인 1회 · 담당자 취소 뒤 재제출 규칙 그대로) */
 function svTestUndo() {
   S.set("survey_done", false); S.set("survey_draft", null); S.del("survey_mine");
+  S.set("survey_pdraft", null);   /* 261024 사전 설문 초안도 */
   if (typeof SV !== "undefined") { clearTimeout(SV.adv); SV.pend = 0; SV.busy = false; }
   var u = S.get("user", {}) || {};
   if (BE.on && testEmp() && u.empId) beCall({ action: "sv_test_reset", emp: u.empId }, function () {}, function () {});

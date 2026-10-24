@@ -354,6 +354,69 @@ var SURVEY_Q = [
   { id: "q4", g: 3, type: "text", optional: true, max: 300, ph: "자유롭게 적어주세요", hint: "선택 입력입니다. 비워두셔도 제출할 수 있어요.", q: "오늘 행사에서 가장 인상 깊었던 점이나 개선했으면 하는 점을 자유롭게 남겨주세요." }
 ]);
 var SURVEY_DONE = { t: "참여해 주셔서 감사합니다", q: "소중한 의견은 다음 AX 행사를 준비하는 데 반영하겠습니다.", meta: "스탬프 1개 적립" };   /* v8.28 meta = 완료 화면 아래 줄 · 설문 테스트 주소(?svreview)는 「테스트 · 저장하지 않음」 */
+/* ═══ 261024 (사용자 확정) 사전 신청자(10F 실습 세션 참석자) 설문 · 정본 = 「설문조사/AXF_사전신청자설문_원본_261024.html」(팀원 파일 · 문항 · 보기 · 척도 · 조건 · 안내 글자 그대로) ═══
+   대상 = 서버 sync my.svK(pre · gen) · svW(1 = 「실습 세션이 끝난 뒤 응답」 잠금) · svS(세션 글자 · 미리 고름) · 같은 [설문] 단추 · 같은 화면 코드(svQs · svGroups 가 고른다)
+   흐름 = 첫 화면 → PART 1(세션 · 직군 · 수준 · 교육 만족도 5 · 학습 효과 3 · 현업 적용 · 의견 2) → PART 2(Q1-1~3 · Q2-0 1층 5개 · 고른 프로그램 · Q3 셋 · Q4) → 인터뷰(연락처 칸 없음 · 사용자 261024)
+   원본과 다른 곳 = 세션 이름 공식 표기(SVP_SESS · 네임택) · 프로그램 이름 · 보기 글 = 앱 표기(SV_PROGS · Q2-5 「1:1 DAP 과제 상담」) · 인터뷰 연락처 칸 뺌 · 저장 = 운영 서버(구글 시트 Webhook 없음)
+   서버 칸 = 문항 id 그대로(PART 2 = 일반 설문과 같은 칸 · PART 1 = SVP_COLS) · 보기 점수 = 위에서부터 보기 수 ~ 1(서버가 보기 글로 저장) · 여러 개(pick) = o1 ~ o5 · 세션 = 글자 */
+var SURVEY_PRE = { id: "pre1" };
+var SVP_SCALE = {   /* 원본 AGREE · SAT_S · 첫 칸 = 1점 */
+  agree: ["전혀 그렇지 않다", "그렇지 않다", "보통이다", "그렇다", "매우 그렇다"],
+  satS: ["매우 불만족", "불만족", "보통", "만족", "매우 만족"]
+};
+var SVP_OPT = {   /* 첫 칸 = 가장 높은 점수(보기 수) · 서버 SVP_OPT 와 같다(검사 710절) */
+  job: ["영업·마케팅", "보상·손사", "기업보험", "본사후선", "기타"],
+  level: ["업무에 능숙하게 활용하는 수준", "업무에 때때로 활용하는 수준", "기본은 알지만 활용법 학습이 필요한 수준", "완전 처음부터 학습이 필요한 수준"],
+  apply: ["구체적으로 떠올랐다", "막연하게 떠올랐다", "아직 없다"],
+  cdata: ["필요 없다", "들어 있지만 빼고도 할 수 있다", "꼭 필요하다", "잘 모르겠다"],
+  interview: ["참여할 수 있다", "어렵다"],
+  parts: ["데이터 모으기·정리", "계산·집계", "분석 결과 해석", "자동화 도구 만들기", "기타"],
+  barriers: ["실습 내용이 내 업무와 거리가 있었다", "내 업무 자료를 쓸 수 없는 환경이다", "회사에서 써도 되는지 모르겠다", "아직 어떻게 쓸지 감이 안 온다", "기타"]
+};
+var SVP_SESS = [   /* 공식 표기(CLAUDE.md 2장 10F 표 · 네임택) · 서버 SVP_SESS 와 같다 */
+  { id: "A", nm: "영업 및 보상 현장 우수 사례" },
+  { id: "B", nm: "\"내 데이터\"로 만드는 통계 현황" },
+  { id: "C", nm: "\"내가 보는 자료\"로 만드는 외부자료 리서치 자동화" },
+  { id: "D", nm: "바이브 코딩 실습" },
+  { id: "E", nm: "MS Copilot을 활용한 문서 작성" }
+];
+var SVP_GROUPS = [{ lb: "PART 1 · 실습형 세션" }, { lb: "PART 1 · 참여 정보" }, { lb: "PART 1 · 교육 만족도" }, { lb: "PART 1 · 학습 효과" }, { lb: "PART 1 · 현업 적용" }, { lb: "PART 1 · 의견" },
+  { lb: "PART 2 · 행사 전반" }, { lb: "PART 2 · 전체 만족도" }, { lb: "PART 2 · 프로그램별 만족도" }, { lb: "PART 2 · 이해도" }, { lb: "PART 2 · 자유 의견" }, { lb: "마지막 질문" }];
+var SVP_PIDS = ["q2_1", "q2_2", "q2_3", "q2_4", "q2_5"];   /* 1층 5개(17층 강연 · 18F 커피챗은 사전 설문에 없다 · 원본 그대로) */
+var SVP_PQ = { q2_1: "우리 회사의 AX 로드맵 소개는 어떠했나요?", q2_2: "동료들이 만든 데이터분석 과제는 어떠했나요?", q2_3: "Hi-헬퍼, HiDi-Q 체험은 어떠했나요?", q2_4: "AI 포토부스, 프롬프트 챌린지는 어떠했나요?", q2_5: "1:1 DAP 과제 상담은 어떠했나요?" };
+var SURVEY_PQ = [
+  { id: "intro", type: "intro", ey: "AX Festival 2026", t: ["참가자", "만족도 조사"], kv: [["소요시간", "3~5분"], ["참여 선물", "스탬프 1개"]], nh: "안내사항", note: ["오늘 참여하신 실습형 세션과 AX Festival 행사 전반에 대한 의견을 듣고자 합니다. 응답 내용은 통계 목적으로만 활용됩니다."] },
+  { id: "p_1", g: 0, type: "info", k: "PART 1", t: "실습형 세션 만족도", q: "다음 설문은 금일 참여하신 실습형 세션에 대한 만족도 조사입니다." },
+  { id: "session", g: 1, type: "sess", q: "오늘 참여한 세션은 무엇인가요?" },
+  { id: "job", g: 1, type: "single", o: "job", q: "소속 직군은 무엇인가요?" },
+  { id: "level", g: 1, type: "single", o: "level", q: "세션을 듣기 전, 본인의 AI 활용 수준은 어느 정도였나요?" },
+  { id: "s_difficulty", g: 2, type: "slider", s: "agree", q: "교육 내용의 난이도는 적절하였나요?" },
+  { id: "s_instructor", g: 2, type: "slider", s: "agree", q: "강사(동료 강사 포함)의 설명이 이해하기 쉬웠나요?" },
+  { id: "s_pacing", g: 2, type: "slider", s: "agree", q: "실습 시간과 진행 속도는 적절하였나요?" },
+  { id: "s_env", g: 2, type: "slider", s: "agree", q: "실습 환경은 원활하였나요?", hint: "노트북, AI 도구, 계정 등" },
+  { id: "overall", g: 2, type: "slider", s: "satS", q: "오늘 참여한 실습형 세션의 전반적인 만족도는 어떠했나요?" },
+  { id: "e_skill", g: 3, type: "slider", s: "agree", q: "세션을 듣고 난 후, AI 활용 역량이 향상되었다고 느꼈나요?" },
+  { id: "e_share", g: 3, type: "slider", s: "agree", q: "오늘 배운 내용을 동료에게 공유할 의향이 있나요?" },
+  { id: "e_retake", g: 3, type: "slider", s: "agree", q: "유사한 심화 교육이 열리면 다시 참여할 의향이 있나요?" },
+  { id: "apply", g: 4, type: "single", o: "apply", q: "오늘 실습한 내용을 적용해 볼 업무가 떠올랐나요?" },
+  { id: "parts", g: 4, type: "pick", o: "parts", max: 2, wid: "apply", when: [3, 2], q: "그 업무에서 AI가 맡으면 좋을 부분은 무엇인가요?", hint: "최대 2개까지 선택할 수 있어요.", etc: { id: "parts_etc", max: 50, ph: "기타 내용을 적어 주세요 (선택)" } },
+  { id: "task_name", g: 4, type: "text", line: 1, optional: true, max: 50, wid: "apply", when: [3, 2], q: "그 업무는 무엇인가요?", hint: "한 줄로 적어 주세요. (선택)", ph: "예: 월별 실적 집계 보고" },
+  { id: "customer_data", g: 4, type: "single", o: "cdata", wid: "apply", when: [3, 2], q: "그 업무에 고객 정보가 담긴 자료가 필요한가요?", hint: "고객 정보: 이름, 연락처, 진단서, 사고 내용 등" },
+  { id: "barriers", g: 4, type: "pick", o: "barriers", max: 2, wid: "apply", when: [1], q: "내 업무에 연결하기 어려웠던 이유는 무엇인가요?", hint: "가장 가까운 것을 최대 2개까지 골라 주세요.", etc: { id: "barrier_etc", max: 50, ph: "기타 이유를 적어 주세요 (선택)" } },
+  { id: "good", g: 5, type: "text", optional: true, max: 500, q: "오늘 세션에서 좋았던 점이나 아쉬웠던 점을 자유롭게 적어 주세요.", hint: "선택 문항", ph: "예: 내 업무 데이터로 직접 만들어 본 점이 좋았어요 / 실습 시간이 조금 부족했어요" },
+  { id: "wish", g: 5, type: "text", optional: true, max: 500, q: "앞으로 듣고 싶은 AI 교육 주제가 있나요?", hint: "선택 문항", ph: "예: 데이터 분석 심화, 업무별 에이전트 개발" },
+  { id: "p_2", g: 6, type: "info", k: "PART 2", t: "행사 전반 만족도", q: "다음 설문은 금일 참여하신 행사 전반에 대한 만족도 조사입니다." },
+  { id: "q1_1", g: 7, type: "slider", s: "sat", q: "AX Festival 행사 전반에 만족했나요?" },
+  { id: "q1_2", g: 7, type: "slider", s: "run", q: "안내, 동선, 대기시간 등 행사 운영은 어떠했나요?" },
+  { id: "q1_3", g: 7, type: "slider", s: "again", q: "다음 AX 행사가 열린다면 다시 참여하거나 동료에게 추천할 의향이 있나요?" },
+  { id: "q2_0", g: 8, type: "multi", pids: SVP_PIDS, q: "오늘 참여하거나 관람한 프로그램을 모두 선택해 주세요.", hint: "복수 응답 가능", none: "참여한 프로그램이 없다" }
+].concat(SV_PROGS.filter(function (p) { return SVP_PIDS.indexOf(p.id) >= 0; }).map(function (p) { return { id: p.id, g: 8, type: "slider", s: "use", q: SVP_PQ[p.id], tag: p.fl + " · " + p.nm, prog: p.id }; })).concat([
+  { id: "q3_1", g: 9, type: "single", o: "know", q: "현대해상의 AX 3개년 로드맵에 대해 알고 있나요?" },
+  { id: "q3_2", g: 9, type: "single", o: "plan", q: "Hi-헬퍼와 HiDi-Q를 업무에 사용할 계획이 있나요?" },
+  { id: "q3_3", g: 9, type: "single", o: "know", q: "데이터분석프로젝트(DAP)에 대해 알고 있나요?" },
+  { id: "q4", g: 10, type: "text", optional: true, max: 300, q: "오늘 행사 전반에서 가장 인상 깊었던 점이나 개선했으면 하는 점을 자유롭게 적어 주세요.", hint: "선택 문항", ph: "자유롭게 적어 주세요" },
+  { id: "interview", g: 11, type: "single", o: "interview", q: "업무와 AI에 대한 짧은 인터뷰에 참여할 의향이 있나요?", hint: "30분 내외로 진행됩니다." }
+]);
 var DEFAULT_NOTICES = [
   { id: "n1", title: "AX Festival 2026에 오신 것을 환영합니다", body: "당일 운영 안내와 바뀐 내용이 올라와요.", ts: 0, pinned: true }
 ];

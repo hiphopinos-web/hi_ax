@@ -307,6 +307,10 @@ function beSync(after) {
       var vu9 = {}; ["iv"].forEach(function (k) { var u = res.my.vidu && res.my.vidu[k]; if (typeof u === "string" && /^https:\/\/[^\s"<>]+$/.test(u)) vu9[k] = u; });   /* v8.70 현장 인터뷰 주소 = 서버가 열린 영상만(my.vidu) · 옛 서버 · 닫힘 = 없음 = 준비 중 */
       if (JSON.stringify(vu9) !== JSON.stringify(S.get("vid_u", null))) S.set("vid_u", vu9);
       if (Array.isArray(res.my.svPre)) S.put("sv_pre", res.my.svPre);
+      if (res.my.svK === "pre" || res.my.svK === "gen") {   /* 261024 사전 신청자 설문 대상(서버 surveyKind_ · 명단 · 설문 화면 sync 에만 온다) · svW 1 = 「실습 세션이 끝난 뒤 응답」 · svS = 세션 미리 고름 · 없으면 이전 값 그대로 */
+        var sk9 = res.my.svK, sw9 = res.my.svW === 1 ? 1 : 0, ss9 = /^[A-E]$/.test(String(res.my.svS || "")) ? String(res.my.svS) : "";
+        if (sk9 !== S.get("sv_k", "") || sw9 !== S.get("sv_w", 0) || ss9 !== S.get("sv_s", "")) { S.set("sv_k", sk9); S.set("sv_w", sw9); S.set("sv_s", ss9); }
+      }
       if (res.my.queue) {
         var was = S.get("queue", {}), nowQ = res.my.queue, kq;
         for (kq in nowQ) {
