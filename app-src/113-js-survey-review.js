@@ -5,7 +5,7 @@
    열림 = survey_force(시험 모드) · 스탬프 lg 하나(잠금 풀림) · 완료 화면 = 전체 의견 칸 + 「처음부터 다시」 · Q2-0 미리 체크 = 기본 끔 · 첫 화면 · Q2-0 화면의 전환으로 예시를 켠다
    위 띠(고정) 「검토용 미리보기 · 답은 저장되지 않습니다」 + 「이 화면 의견」(바텀 시트 · 화면 id · 문항 글 자동) · 이름은 선택 · 이 기기에 기억(axsvr_name · 앱 저장소 axf_ 와 따로)
    참가자 앱은 주소에 svreview 가 없으면 이 코드가 아무것도 하지 않는다 */
-var SVR = { on: false, url: "", pre: false, busy: false, txt: "", all: "", scr: null };
+var SVR = { on: false, url: "", pre: false, busy: false, txt: "", all: "", scr: null, kind: "gen" };   /* 261024 kind = gen 일반 참여자 | pre 사전 참여자(첫 화면에서 고른다) */
 var SVR_PRE = ["q2_3", "q2_5", "q2_6"];   /* 미리 체크 예시 = 참석 기록이 남는 프로그램 셋(AX PLAY · AX 라운지 · 17F AWS) · v8.60 새 설문안 · v8.61 커피챗 q2_8 다시 */
 var SVR_MAX = 500, SVR_NAME = 20;
 function svrMode() { return /[?&]svreview(=|&|$)/.test(location.search); }
@@ -52,10 +52,10 @@ function svrSentHtml() {
 }
 function svrScreen() {
   if (surveyDone()) return { id: "done", q: SURVEY_DONE.t };
-  var d = svDraft(), fl = svFlow(d), q = fl[svCur(d, fl)] || SURVEY_Q[0];
+  var d = svDraft(), fl = svFlow(d), q = fl[svCur(d, fl)] || svQs()[0];
   return { id: q.id, q: q.type === "intro" || q.type === "info" ? q.t : q.q };
 }
-function svrLbl(id) { return /^q\d/.test(id) ? id.toUpperCase().replace("_", "-") : ({ intro: "첫 화면", i_prog: "안내", i_und: "안내", done: "완료 화면", all: "전체 의견" })[id] || id; }
+function svrLbl(id) { return (SVR.kind === "pre" && id !== "all" ? "사전 · " : "") + (/^q\d/.test(id) ? id.toUpperCase().replace("_", "-") : ({ intro: "첫 화면", i_prog: "안내", i_und: "안내", p_1: "안내", p_2: "안내", done: "완료 화면", all: "전체 의견" })[id] || id); }
 function svrCall(p, done, fail) {
   if (!SVR.url) { if (fail) fail("offline"); return; }
   var g = GAS_URL; GAS_URL = SVR.url;
@@ -101,17 +101,35 @@ function svrSend(kind) {
     end(res && res.ok ? "" : (res && SVR_WHY[res.reason]) || "보내지 못했어요. 다시 눌러 주세요.");
   }, function () { end("서버에 연결할 수 없어요. 다시 눌러 주세요."); });
 }
-/* Q2-0 미리 체크 예시 · 켜고 끄면 아직 손대지 않은 Q2-0 답(지금 예시 그대로)만 바꾼다 */
+/* 261024 (사용자 확정) 첫 화면 · 설문 고르기(일반 참여자 · 사전 참여자) · 고르면 그 설문 첫 화면(초안은 종류마다 따로) */
+function svrKindHtml() {
+  return '<div class="svr-kind" role="group" aria-label="설문 고르기">' + [["gen", "일반 참여자"], ["pre", "사전 참여자"]].map(function (x) {
+    return '<button type="button" aria-pressed="' + (SVR.kind === x[0]) + '" onclick="svrKind(\'' + x[0] + '\')">' + x[1] + "</button>";
+  }).join("") + "</div>";
+}
+function svrKind(k) { if (SVR.busy) return; SVR.kind = k === "pre" ? "pre" : "gen"; SV.hw = 0; App.render(); window.scrollTo(0, 0); }
+/* 261024 (사용자 「테스트 페이지에서 해 본 값을 저장해서 볼 수 있도록」) 제출 = 테스트 응답으로 서버에 따로 저장(sv_test_submit · 실제 응답 · 스탬프와 섞이지 않는다) */
+function svrTestSend(ans, pre) {
+  svrCall({ action: "sv_test_submit", kind: pre ? "pre" : "gen", ans: JSON.stringify(ans), nm: String(svrName() || "").trim().slice(0, SVR_NAME), did: svrDid() }, function (res) {
+    toast(res && res.ok ? "테스트 응답 저장됨" : "테스트 응답을 저장하지 못했어요");
+  }, function () { toast("서버에 연결할 수 없어 테스트 응답을 저장하지 못했어요"); });
+}
+/* Q2-0 미리 체크 예시 · 켜고 끄면 아직 손대지 않은 Q2-0 답(지금 예시 그대로)만 바꾼다 · 261024 사전 설문 = 세션 미리 고름(B)도 */
 function svrPreHtml() {
-  return '<div class="svr-pre"><span>Q2-0 미리 체크 예시<small>참석 기록이 있는 사람 화면</small><small>AX PLAY · AI 상담소 · 일하는 방식의 변화</small></span>' +
+  if (SVR.kind === "pre") return '<div class="svr-pre"><span>미리 고름 예시<small>신청 세션 · 참석 기록이 있는 사람 화면</small><small>세션 B · AX PLAY · AX 라운지</small></span>' +
+    '<button type="button" class="svr-sw" role="switch" aria-checked="' + SVR.pre + '" onclick="svrPreToggle()">' + (SVR.pre ? "켬" : "끔") + "</button></div>";
+  return '<div class="svr-pre"><span>Q2-0 미리 체크 예시<small>참석 기록이 있는 사람 화면</small><small>AX PLAY · AX 라운지 · 일하는 방식의 변화</small></span>' +
     '<button type="button" class="svr-sw" role="switch" aria-checked="' + SVR.pre + '" onclick="svrPreToggle()">' + (SVR.pre ? "켬" : "끔") + "</button></div>";
 }
+/* 261024 예시 = SVR_PRE 중 이 설문에 있는 프로그램(사전 = 1층 5개) */
+function svrPreList() { var q0 = svQs().filter(function (x) { return x.id === "q2_0"; })[0]; return SVR_PRE.filter(function (x) { return !(q0 && q0.pids) || q0.pids.indexOf(x) >= 0; }); }
 function svrPreToggle() {
-  var old = SVR.pre ? SVR_PRE.slice() : [];
+  var old = SVR.pre ? svrPreList() : [];
   SVR.pre = !SVR.pre;
   var d = svDraft(), cur = d.a.q2_0;
+  if (SVR.pre && d.a.session === undefined && d.cur !== "intro") { d.a.session = "B"; svSave(d); } else if (!SVR.pre && d.a.session === "B") { delete d.a.session; svSave(d); }   /* 261024 세션 예시(B) */
   if (Array.isArray(cur) && JSON.stringify(cur) === JSON.stringify(old)) {
-    d.a.q2_0 = SVR.pre ? SVR_PRE.slice() : [];
+    d.a.q2_0 = SVR.pre ? svrPreList() : [];
     SV_PROGS.forEach(function (p) { if (d.a.q2_0.indexOf(p.id) < 0) delete d.a[p.id]; });
     svSave(d);
   }
@@ -127,7 +145,7 @@ function svrDoneHtml() {
 }
 function svrSeed() {
   S.set("stamps", ["lg"]); S.set("pp_seen", ["lg"]);
-  S.set("survey_done", false); S.set("survey_draft", null); S.del("survey_mine");
+  S.set("survey_done", false); S.set("survey_draft", null); S.set("survey_pdraft", null); S.del("survey_mine");
 }
 function svrRestart() {
   if (SVR.busy) return;
@@ -151,6 +169,9 @@ function svrCss() {
     ".svr-pre small { display: block; margin-top: 1px; color: var(--ax-color-muted); font: 500 12px/1.4 var(--disp); word-break: keep-all; }" +
     ".svr-sw { flex: none; min-width: 52px; height: 32px; border-radius: 16px; border: 1px solid var(--axs-divider-strong); background: var(--ax-color-surface); color: var(--ax-color-ink); font: 700 13px/1 var(--disp); cursor: pointer; }" +
     ".svr-sw[aria-checked=\"true\"] { background: var(--ax-color-ink); border-color: var(--ax-color-ink); color: #fff; }" +
+    ".svr-kind { display: flex; gap: 8px; margin: 0 0 12px; }" +
+    ".svr-kind button { flex: 1; min-width: 0; height: 44px; border: 1px solid var(--axs-divider-strong); border-radius: 12px; background: var(--ax-color-surface); color: var(--ax-color-ink); font: 700 14px/1 var(--disp); cursor: pointer; }" +
+    ".svr-kind button[aria-pressed=\"true\"] { background: var(--ax-color-ink); border-color: var(--ax-color-ink); color: #fff; }" +
     ".svr-done { margin-top: 24px; }" +
     ".svr-sent { margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--axs-divider-strong); }" +
     ".svr-sent-h { margin: 0 0 8px; color: var(--ax-color-ink); font: 700 14px/1.4 var(--disp); }" +
@@ -169,7 +190,7 @@ function svrBoot(splash) {
   svrCss();
   stampVerSet(2);
   svrSeed();
-  SURVEY_DONE.meta = "테스트 · 저장하지 않음";   /* v8.28 (사용자 261021 설문 테스트 주소) 제출 = 완료 화면만 · 스탬프 연출 없음(svSubmit) · 서버 호출 0 */
+  SURVEY_DONE.meta = "테스트 응답 · 실제 통계와 따로 저장";   /* v8.28 (사용자 261021 설문 테스트 주소) 제출 = 완료 화면만 · 스탬프 연출 없음(svSubmit) · 서버 호출 0 */
   S.set("survey_force", true);   /* 시험 모드 열림(시각 · 클로즈베타 무관) */
   var pre0 = svPreIds;
   svPreIds = function () { return SVR.on ? (SVR.pre ? SVR_PRE.slice() : []) : pre0(); };
@@ -178,7 +199,7 @@ function svrBoot(splash) {
     var h = v0.apply(this, arguments);
     if (surveyDone()) return h + svrDoneHtml();
     var d = svDraft(), fl = svFlow(d), q = fl[svCur(d, fl)];
-    return (q && (q.type === "intro" || q.id === "q2_0") ? svrPreHtml() : "") + h;
+    return (q && q.type === "intro" ? svrKindHtml() : "") + (q && (q.type === "intro" || q.id === "q2_0" || q.id === "session") ? svrPreHtml() : "") + h;   /* 261024 첫 화면 = 설문 고르기 */
   };
   var go0 = App.go;
   App.go = function (v, isBack) {
@@ -187,7 +208,7 @@ function svrBoot(splash) {
   };
   var bd = document.createElement("div");
   bd.className = "svr-band"; bd.setAttribute("role", "note");
-  bd.innerHTML = '<span class="t">검토용 미리보기 · 답은 저장되지 않습니다</span><button type="button" class="svr-fb" id="svrFb" onclick="svrOpen()">이 화면 의견</button>';
+  bd.innerHTML = '<span class="t">검토용 미리보기 · 답은 테스트로 따로 저장</span><button type="button" class="svr-fb" id="svrFb" onclick="svrOpen()">이 화면 의견</button>';
   el("frame").appendChild(bd);
   splash.classList.add("gone");
   el("frame").classList.remove("splash-mode");
