@@ -101,7 +101,7 @@ function mySeg(g, b) { var go = function () { MY.seg = g === "rw" ? "rw" : "sche
    옛 경품 줄(axDest 「경품」) · 옛 내 보상 줄 · 옛 내 보상 화면 칩(사용 가능 · 사용 완료) · 경품 안내 입구(prizeGuideHtml)는 레일의 경품 보기 하나로 */
 function myRewardHtml() {
   var n = stampCount(), items = rewItems(), list = items.filter(function (x) { return !x.used; }).concat(items.filter(function (x) { return x.used; }));
-  var goal = n < STAMP_DENOM ? '<div class="axs-list">' + axDest(esc(stampGoalText(n)), "", lnkChev("스탬프 보기"), "App.tab('exp')") + "</div>" : "";
+  /* v8.68 (사용자 261024) 카드 아래 「다음 보상까지 · 스탬프 보기 ›」 줄은 걷었다 · 카드 안 다음 보상 줄과 같은 말 · 스탬프 탭 길은 하단 탭 「스탬프」와 홈 레일 바로가기 */
   var cards = list.map(function (x) {
     var big = x.k === "raffle" ? "" : x.big, why = x.k === "raffle" ? (lkCond() ? "17:00 Closing Speech 현장 추첨 · 17F 입구 QR 체크인" : "17:00 Closing Speech 현장 추첨 · 경품은 따로 전달") : x.why;   /* v5.92 (사용자 261006 「럭키드로우에서 체크인 요소는 일단은 없애 놓자」) 참석 조건 OFF = 체크인 문구 없음 */
     var tt = '<div class="ax-stack-tight"><h2 class="ax-section-title">' + x.nm + "</h2>" + (big ? '<p class="axs-big">' + big + "</p>" : "") + "</div>";
@@ -110,7 +110,7 @@ function myRewardHtml() {
       '<div class="axs-hr"></div><p class="ax-description">' + segHtml(why) + "</p>" +
       (x.go ? '<button type="button" class="ax-button ax-button-weak" onclick="' + x.go + '">' + (x.btn || "사용 방법 보기") + "</button>" : "") + "</section>";
   }).join("");
-  return '<section class="axs-sec axs-myrw">' + railHtml(n, false, null, false) + "</section>" + goal + kitMyRowHtml() +   /* 261006 키트 사이즈 · 명단 사번만 */
+  return '<section class="axs-sec axs-myrw">' + railHtml(n, false, null, false) + "</section>" + kitMyRowHtml() +   /* 261006 키트 사이즈 · 명단 사번만 */
     (cards ? '<section class="ax-stack-tight axs-gap12"><h2 class="ax-section-title">받은 보상</h2>' + cards + "</section>" : "");
 }
 /* 받은 보상 · 룰렛 1회권(3개) · 행운권(4개부터 자동) · 참여상 · 계산은 기존 상수·함수 그대로(REWARD_CAP · raffleTickets) */

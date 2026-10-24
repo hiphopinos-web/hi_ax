@@ -1276,6 +1276,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-sth b { margin-left: 2px; padding: 1px 0 1px 10px; border-left: 3px solid var(--ax-color-ink); font: var(--ax-type-t4); color: var(--ax-color-ink); }
   #view[data-v="my"] .axs-myrw { display: flex; flex-direction: column; gap: var(--ax-space-12); }
   #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .hd.axs-rhd { justify-content: flex-start; gap: var(--ax-space-8); }
+  #view[data-v="home"] .axs-railgo .rail .hd.axs-rhd { padding-left: var(--ax-space-4); }   /* 홈 카드만 안쪽 여백이 20 → 「모은 스탬프」 시작선을 스탬프 탭 · 나의 참여(24)와 맞춘다 */
   #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .hd.axs-rhd .nm { font: var(--ax-type-t6); color: var(--ax-color-muted); white-space: nowrap; }
   #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .hd.axs-rhd .cnt { font: var(--ax-type-t5-strong); white-space: nowrap; }
   #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .hd.axs-rhd .cnt small { font: var(--ax-type-t6); color: var(--ax-color-muted); }

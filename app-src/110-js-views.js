@@ -73,7 +73,7 @@ var Views = {
     return '<div class="ax-stack axs-stpv">' + testBar +   /* v7.94 (사용자 261018 「고정칸으로 하니 너무 다른 것들이 어렵다」) 광고 영상 칸 = 하단 탭 「스탬프」를 누를 때 팝업(reelPopMaybe · navTap) · 본문 = ② 현황 › ③ 스탬프 획득하기 */
       '<section class="axs-sec">' + railHtml(n, glow, null, false) + "</section>" +
       '<section class="axs-sec axs-stget" id="stpGet"><div class="axs-sfd axs-sgfd' + (sgo ? " open" : "") + '">' +
-      '<button type="button" class="axs-sfdb axs-sgb" id="stGetBtn" aria-expanded="' + sgo + '" aria-controls="stGetBody" onclick="stGetTog()"><b>스탬프 획득하기</b><span>' + STAMPS.length + "가지 중 " + STAMP_DENOM + "개까지</span>" + CHEV_SVG + "</button>" +   /* v7.92 머리 = 「스탬프 획득하기」(옛 「스탬프 모으는 방법」 · 광고 영상 끝 문구와 같게) · v7.57 (사용자 261017 S5 · S6) 오른쪽 = 늘 「8가지 중 6개까지」 */
+      '<button type="button" class="axs-sfdb axs-sgb" id="stGetBtn" aria-expanded="' + sgo + '" aria-controls="stGetBody" onclick="stGetTog()"><b>스탬프 획득하기</b><span>최대 ' + STAMP_DENOM + "개</span>" + CHEV_SVG + "</button>" +   /* v7.92 머리 = 「스탬프 획득하기」(옛 「스탬프 모으는 방법」 · 광고 영상 끝 문구와 같게) · v7.57 (사용자 261017 S5 · S6) 오른쪽 = 늘 「8가지 중 6개까지」 */
       '<div class="axs-sfdp" id="stGetBody"><div class="axs-sfdi"><div class="axs-sfdc">' + stpRkMove(stpBoardHtml(st, full)) + "</div></div></div></div>" +   /* v7.65 홈 접기 단추(stpBoardMine)도 같은 함수 · 같은 값 · 261013 오후 (사용자 확정) 하루 흐름 4단계 · 단계 제목 아래 줄 · 사전등록 체크인 줄은 1단계 아래(대상자만) */
       scanQNote() + "</section></div>";   /* 261017 (사용자) 스탬프 탭 → 미니 게임 순위(oly_rank · 뒤로 = 스탬프 탭) */   /* v8.24 (사용자 261021) 맨 아래 둘째 링크 없앰(화면 함수 · 서버는 그대로) · v6.83 (접근성 B-3 · B-6) p → button · 눌림 높이 44 · 키보드 */   /* v4.91 1F 타자왕(스탬프 아님)은 프로그램 탭 「상시 운영」로 옮겼다 */
   },

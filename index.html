@@ -1446,6 +1446,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-sth b { margin-left: 2px; padding: 1px 0 1px 10px; border-left: 3px solid var(--ax-color-ink); font: var(--ax-type-t4); color: var(--ax-color-ink); }
   #view[data-v="my"] .axs-myrw { display: flex; flex-direction: column; gap: var(--ax-space-12); }
   #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .hd.axs-rhd { justify-content: flex-start; gap: var(--ax-space-8); }
+  #view[data-v="home"] .axs-railgo .rail .hd.axs-rhd { padding-left: var(--ax-space-4); }   /* 홈 카드만 안쪽 여백이 20 → 「모은 스탬프」 시작선을 스탬프 탭 · 나의 참여(24)와 맞춘다 */
   #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .hd.axs-rhd .nm { font: var(--ax-type-t6); color: var(--ax-color-muted); white-space: nowrap; }
   #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .hd.axs-rhd .cnt { font: var(--ax-type-t5-strong); white-space: nowrap; }
   #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .hd.axs-rhd .cnt small { font: var(--ax-type-t6); color: var(--ax-color-muted); }
@@ -9738,7 +9739,7 @@ function mySeg(g, b) { var go = function () { MY.seg = g === "rw" ? "rw" : "sche
    옛 경품 줄(axDest 「경품」) · 옛 내 보상 줄 · 옛 내 보상 화면 칩(사용 가능 · 사용 완료) · 경품 안내 입구(prizeGuideHtml)는 레일의 경품 보기 하나로 */
 function myRewardHtml() {
   var n = stampCount(), items = rewItems(), list = items.filter(function (x) { return !x.used; }).concat(items.filter(function (x) { return x.used; }));
-  var goal = n < STAMP_DENOM ? '<div class="axs-list">' + axDest(esc(stampGoalText(n)), "", lnkChev("스탬프 보기"), "App.tab('exp')") + "</div>" : "";
+  /* v8.68 (사용자 261024) 카드 아래 「다음 보상까지 · 스탬프 보기 ›」 줄은 걷었다 · 카드 안 다음 보상 줄과 같은 말 · 스탬프 탭 길은 하단 탭 「스탬프」와 홈 레일 바로가기 */
   var cards = list.map(function (x) {
     var big = x.k === "raffle" ? "" : x.big, why = x.k === "raffle" ? (lkCond() ? "17:00 Closing Speech 현장 추첨 · 17F 입구 QR 체크인" : "17:00 Closing Speech 현장 추첨 · 경품은 따로 전달") : x.why;   /* v5.92 (사용자 261006 「럭키드로우에서 체크인 요소는 일단은 없애 놓자」) 참석 조건 OFF = 체크인 문구 없음 */
     var tt = '<div class="ax-stack-tight"><h2 class="ax-section-title">' + x.nm + "</h2>" + (big ? '<p class="axs-big">' + big + "</p>" : "") + "</div>";
@@ -9747,7 +9748,7 @@ function myRewardHtml() {
       '<div class="axs-hr"></div><p class="ax-description">' + segHtml(why) + "</p>" +
       (x.go ? '<button type="button" class="ax-button ax-button-weak" onclick="' + x.go + '">' + (x.btn || "사용 방법 보기") + "</button>" : "") + "</section>";
   }).join("");
-  return '<section class="axs-sec axs-myrw">' + railHtml(n, false, null, false) + "</section>" + goal + kitMyRowHtml() +   /* 261006 키트 사이즈 · 명단 사번만 */
+  return '<section class="axs-sec axs-myrw">' + railHtml(n, false, null, false) + "</section>" + kitMyRowHtml() +   /* 261006 키트 사이즈 · 명단 사번만 */
     (cards ? '<section class="ax-stack-tight axs-gap12"><h2 class="ax-section-title">받은 보상</h2>' + cards + "</section>" : "");
 }
 /* 받은 보상 · 룰렛 1회권(3개) · 행운권(4개부터 자동) · 참여상 · 계산은 기존 상수·함수 그대로(REWARD_CAP · raffleTickets) */
@@ -10409,7 +10410,7 @@ var Views = {
     return '<div class="ax-stack axs-stpv">' + testBar +   /* v7.94 (사용자 261018 「고정칸으로 하니 너무 다른 것들이 어렵다」) 광고 영상 칸 = 하단 탭 「스탬프」를 누를 때 팝업(reelPopMaybe · navTap) · 본문 = ② 현황 › ③ 스탬프 획득하기 */
       '<section class="axs-sec">' + railHtml(n, glow, null, false) + "</section>" +
       '<section class="axs-sec axs-stget" id="stpGet"><div class="axs-sfd axs-sgfd' + (sgo ? " open" : "") + '">' +
-      '<button type="button" class="axs-sfdb axs-sgb" id="stGetBtn" aria-expanded="' + sgo + '" aria-controls="stGetBody" onclick="stGetTog()"><b>스탬프 획득하기</b><span>' + STAMPS.length + "가지 중 " + STAMP_DENOM + "개까지</span>" + CHEV_SVG + "</button>" +   /* v7.92 머리 = 「스탬프 획득하기」(옛 「스탬프 모으는 방법」 · 광고 영상 끝 문구와 같게) · v7.57 (사용자 261017 S5 · S6) 오른쪽 = 늘 「8가지 중 6개까지」 */
+      '<button type="button" class="axs-sfdb axs-sgb" id="stGetBtn" aria-expanded="' + sgo + '" aria-controls="stGetBody" onclick="stGetTog()"><b>스탬프 획득하기</b><span>최대 ' + STAMP_DENOM + "개</span>" + CHEV_SVG + "</button>" +   /* v7.92 머리 = 「스탬프 획득하기」(옛 「스탬프 모으는 방법」 · 광고 영상 끝 문구와 같게) · v7.57 (사용자 261017 S5 · S6) 오른쪽 = 늘 「8가지 중 6개까지」 */
       '<div class="axs-sfdp" id="stGetBody"><div class="axs-sfdi"><div class="axs-sfdc">' + stpRkMove(stpBoardHtml(st, full)) + "</div></div></div></div>" +   /* v7.65 홈 접기 단추(stpBoardMine)도 같은 함수 · 같은 값 · 261013 오후 (사용자 확정) 하루 흐름 4단계 · 단계 제목 아래 줄 · 사전등록 체크인 줄은 1단계 아래(대상자만) */
       scanQNote() + "</section></div>";   /* 261017 (사용자) 스탬프 탭 → 미니 게임 순위(oly_rank · 뒤로 = 스탬프 탭) */   /* v8.24 (사용자 261021) 맨 아래 둘째 링크 없앰(화면 함수 · 서버는 그대로) · v6.83 (접근성 B-3 · B-6) p → button · 눌림 높이 44 · 키보드 */   /* v4.91 1F 타자왕(스탬프 아님)은 프로그램 탭 「상시 운영」로 옮겼다 */
   },
