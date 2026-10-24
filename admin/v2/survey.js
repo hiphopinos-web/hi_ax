@@ -7,7 +7,7 @@
  * 엑셀 = 집계(사번 없음 · 문항 · 프로그램 · 서술 · PART 1 · 세션) · 테스트 응답 행(survey_test_rows · 사번 없음)
  *        원본(survey_rows · 사번 · 이름 · 부문 · 슈퍼관리자만 · 확인 창) · 테스트 응답 지우기(sv_test_clear · 슈퍼관리자 · 확인 창) · 실제 응답 지우기는 없다
  * v8.60 (사용자 261023 새 설문안) Q1-1~3 · Q2-x = 슬라이더 0.5 단위(분포 9칸 · 서버 opts 그대로) · 프로그램 8개 · 서버 설문 id post3(옛 post2 도 그대로 읽음) */
-var SVY_T={ q1_1:"전반 만족", q1_2:"행사 운영", q1_3:"재참여 · 추천", q1_4:"업무에 AI 활용 생각", q3_1:"AX 3개년 로드맵", q3_2:"Hi-헬퍼 · HiDi-Q 이해", q3_3:"DAP" };
+var SVY_T={ q1_1:"전반 만족", q1_2:"행사 운영", q1_3:"재참여 · 추천", q1_4:"업무에 AI 활용 생각", q3_1:"AX 3개년 로드맵", q3_2:"Hi-헬퍼 · HiDi-Q 사용 계획", q3_3:"DAP" };
 var SVY_P1T={ session:"참여 세션", job:"소속 직군", level:"듣기 전 AI 활용 수준", s_difficulty:"교육 난이도", s_instructor:"강사 설명", s_pacing:"실습 시간 · 진행 속도", s_env:"실습 환경", overall:"세션 전반 만족",
   e_skill:"AI 활용 역량 향상", e_share:"동료에게 공유할 의향", e_retake:"심화 교육 재참여 의향", apply:"적용해 볼 업무", parts:"AI가 맡을 부분", task_name:"그 업무", customer_data:"고객 정보 자료 필요",
   barriers:"업무 연결이 어려운 이유", good:"좋았던 점 · 아쉬웠던 점", wish:"듣고 싶은 AI 교육 주제", interview:"인터뷰 참여 의향" };
