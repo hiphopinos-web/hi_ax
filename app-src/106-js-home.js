@@ -134,7 +134,7 @@ function myScheduleHtml() {
 /* 홈 · 스탬프 블록 (v3.2): 홈도 스탬프 탭과 같은 railHtml 공용 컴포넌트를 쓴다 (design.md 컴포넌트 일관성).
    홈용은 컴팩트 변형(캡션 축약 + 하단 CTA)일 뿐 레일의 시각 문법은 동일 · 마커 탭 동작(모달)도 동일하다. */
 function myCouponHtml() {
-  return '<div class="sect"><b>스탬프</b>' +
+  return '<div class="sect"><b>STAMP TOUR</b>' +   /* v8.68 (사용자 261024 안 B) 홈 머리 「스탬프」 → 「STAMP TOUR」 · 스탬프 탭 · 나의 참여 머리와 같은 이름 */
     '<span role="button" tabindex="0" aria-label="스탬프 바로가기" onclick="App.tab(\'exp\')">' + lnkChev("바로가기") + "</span></div>" +
     railHtml(stampCount(), false, null, true);
 }

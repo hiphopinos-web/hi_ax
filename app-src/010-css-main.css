@@ -1271,6 +1271,14 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail { margin: 0; padding: var(--ax-space-24); border-radius: var(--ax-radius-24); background: var(--ax-color-surface); }
   #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .hd .nm { font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
   #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .hd .cnt { font: var(--ax-type-t4); color: var(--ax-color-brandText); }
+  /* v8.68 (사용자 261024 안 B) 스탬프 카드 = 카드 밖 머리 「| STAMP TOUR」(스탬프 탭 「스탬프 획득하기」 머리와 같은 값) + 카드 안 맨 위 작은 줄 「모은 스탬프 1 / 6」(개수만 주황 · 「/ 6」은 무채색) */
+  .axs-sth { display: flex; align-items: center; min-height: var(--ax-touch-size); }
+  .axs-sth b { margin-left: 2px; padding: 1px 0 1px 10px; border-left: 3px solid var(--ax-color-ink); font: var(--ax-type-t4); color: var(--ax-color-ink); }
+  #view[data-v="my"] .axs-myrw { display: flex; flex-direction: column; gap: var(--ax-space-12); }
+  #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .hd.axs-rhd { justify-content: flex-start; gap: var(--ax-space-8); }
+  #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .hd.axs-rhd .nm { font: var(--ax-type-t6); color: var(--ax-color-muted); white-space: nowrap; }
+  #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .hd.axs-rhd .cnt { font: var(--ax-type-t5-strong); white-space: nowrap; }
+  #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .hd.axs-rhd .cnt small { font: var(--ax-type-t6); color: var(--ax-color-muted); }
   #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .hd .cnt small { font: var(--ax-type-t6); color: var(--ax-color-muted); }
   #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .rb { background: var(--ax-color-canvas); }
   #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .mk.act { background: var(--ax-color-brand); border-color: var(--ax-color-brand); color: var(--ax-color-onBrand); box-shadow: 0 0 0 var(--ax-space-4) var(--ax-color-brandSoft); }

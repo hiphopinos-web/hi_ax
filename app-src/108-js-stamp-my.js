@@ -446,8 +446,9 @@ function railHtml(n, glow, dispN, home) {
     lb += '<span class="' + (n >= m[0] ? "on" : m[0] === nextAt ? "next" : "") + '" style="left:' + pos + '">' + m[1] + "</span>";
   });
   var fx6 = home ? "" : fcfsRailHtml();   /* v5.96 (사용자 261006 밤) 스탬프 탭 · 나의 보상 = 선착순 두 줄을 6번 칸(3장) 아래로 · 홈은 옛 한 줄 그대로 */
-  return '<div class="rail">' +
-    '<div class="hd"><span class="nm">스탬프 보상</span><span class="cnt"><span id="ppCnt">' + shown + "</span><small> / " + STAMP_DENOM + "</small></span></div>" +
+  /* v8.68 (사용자 261024 안 B) 카드 안 「스탬프 보상」 제목 줄 + 오른쪽 큰 「1 / 6」을 걷는다 · 카드 밖 위에 「| STAMP TOUR」 머리(스탬프 탭 · 나의 참여 = 여기서, 홈 = 기존 .sect 머리가 맡는다) · 카드 안 맨 위 작은 줄 「모은 스탬프 1 / 6」 */
+  return (home ? "" : '<div class="axs-sth"><b>STAMP TOUR</b></div>') + '<div class="rail">' +
+    '<div class="hd axs-rhd"><span class="nm">모은 스탬프</span><span class="cnt"><span id="ppCnt">' + shown + "</span><small> / " + STAMP_DENOM + "</small></span></div>" +
     '<div class="rb"><i style="width:' + railPos(n).toFixed(1) + '%"></i>' + mk + "</div>" +
     '<div class="lbls' + (fx6 ? " fx6" : "") + '">' + lb + fx6 + "</div>" +
     stampNextHtml(dispN, home) +   /* v7.57 (사용자 261017 S1 · H5) 다음 보상 한 줄 · 옛 6개 캡션(다 모았다는 말 + 선착순 캡션)을 대신한다 · 홈 = 굵은 줄만 */
