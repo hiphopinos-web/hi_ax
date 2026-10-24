@@ -291,14 +291,14 @@ var Views = {
     var top = stampTagHtml("sv") + '<div class="axs-gauge" role="progressbar" aria-label="설문 진행" aria-valuemin="0" aria-valuemax="' + pages.length + '" aria-valuenow="' + (pi + 1) + '"><i style="width:' + pct + '%"></i></div>' +
       '<p class="axs-svsec">' + (g.lb ? esc(g.lb) : g.no + ". " + esc(g.sec)) + "</p>";
     if (q.type === "info") {
-      return '<div class="ax-stack axs-form" id="svQ"><div class="ax-stack-tight axs-gap12 axs-sthost">' + top + "</div>" +
+      return '<div class="ax-stack axs-form" id="svQ"><div class="ax-stack-tight axs-gap12 axs-sthost axs-svtop">' + top + "</div>" +
         '<div class="axs-svinfo"><p class="k">' + esc(q.k || "다음 영역") + '</p><h1 class="ax-type-t2">' + esc(q.t) + '</h1><p class="tx">' + esc(q.q) + "</p></div></div>" +
         bot('<button type="button" class="ax-button" id="svGo" onclick="svNext()">다음</button>');
     }
     var num = fl.filter(svAsk).indexOf(q) + 1, ready = q.optional || !svEmpty(q, d.a[q.id]);
     var skip = !last && q.optional && q.type === "text", goTx = skip && !String(d.a[q.id] || "").trim() ? "건너뛰기" : "다음";
     return '<div class="ax-stack axs-form" id="svQ">' +
-      '<div class="ax-stack-tight axs-gap12 axs-sthost">' + top + "</div>" +
+      '<div class="ax-stack-tight axs-gap12 axs-sthost axs-svtop">' + top + "</div>" +
       '<div class="axs-svhd" id="svHead"' + (q.type === "multi" ? ' data-fit="0"' : "") + ">" + svHeadHtml(q, num, "svTitle") + "</div>" +   /* Q2-0(보기 8줄)은 머리 높이 맞춤 없이 바로 아래(한 화면에) */
       '<div class="axs-svin">' + svInputHtml(q, d.a[q.id]) + "</div></div>" +
       bot(last ? '<button type="button" class="ax-button axs-svgo' + (ready ? "" : " wait") + '" id="svGo" aria-disabled="' + !ready + '" ' + (SV.busy ? 'disabled aria-busy="true"' : "") + ' onclick="svSubmit()">' + (SV.busy ? "제출하는 중" : "제출하기") + "</button>"

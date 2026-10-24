@@ -77,7 +77,7 @@ function testOverlayDrop(id) {
 function svTestUndo() {
   S.set("survey_done", false); S.set("survey_draft", null); S.del("survey_mine");
   S.set("survey_pdraft", null);   /* 261024 사전 설문 초안도 */
-  if (typeof SV !== "undefined") { clearTimeout(SV.adv); SV.pend = 0; SV.busy = false; }
+  if (typeof SV !== "undefined") SV.busy = false;
   var u = S.get("user", {}) || {};
   if (BE.on && testEmp() && u.empId) beCall({ action: "sv_test_reset", emp: u.empId }, function () {}, function () {});
 }

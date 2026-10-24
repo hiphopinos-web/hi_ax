@@ -4,7 +4,7 @@
 /* v5.37 (사용자 261003 「이것들이 수정되면 정식 앱에 올리자」) 둘러보기 v3 = 시험 페이지와 같은 공용 모듈(tour3.js · tour3.css · 캐릭터 걷기 · 40도 시점 · 왼손 패드 · 오른손 십자 · 작은 지도 · 스태프 챗봇 · 판 보기 · 돋보기 2개 · 움직임 줄이기 · 입장 암전)
    같은 약속 AXTour.open/close/back/isOpen · 옛 v2(tour.js · tour.css · 자동 둘러보기 · 평면 지도 · 구역 시트)로 되돌리려면 아래 목록의 tour3 두 개를 tour.css · tour.js 로 바꾸면 된다(파일은 그대로 둠) */
 /* v5.38 (사용자 261003) 둘러보기 손질 · 캐릭터 겹침(스태프 원 충돌) · 늘 카메라 쪽을 봄 · 조그 패드 · 안내데스크 깜빡임(겹친 면) · 정문 회전문 또렷하게 · 로비 음악(Web Audio 합성 · 「음악 없이」 · 위쪽 스피커 버튼) · 파일 이름 그대로 · 캐시 깨기 ver v538 */
-var TOUR = { ver: "v783", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */   /* 261024 v783 = TV 영상 연결(tour3.js VTV · 앱 v8.72) 캐시 깨기 */   /* 261021 v782 = 라운지 데스크 치움(tour3.js refit1F) 캐시 깨기 */   /* 261018 v781 = 미팅룸 탁자 흰색(라이트맵 자리) · 엘리베이터 권유 말풍선 대신 「다른 층 이동하기」 강조 */   /* 261016 v742 = 라운지 스태프 자리(흰 탁자 오른쪽 · 내 캐릭터 앞) · 다른 층 이동하기 자동 걷기 = 뒤에서 따라가기 · 쓰지 않는 STAIR 상수 걷음 캐시 깨기 */   /* 261016 v738 = 부스 최종 시안 반영(룰렛 판 둘째 줄 · 바닥 매트 · 판 틀 색 · TV 받침) 캐시 깨기 */   /* 261016 v737 = 룰렛 순서(행운을 빌어요 › 사라짐 › 당첨! › 카드) 캐시 깨기 */   /* 261016 v735 = 받침대 TV 5대 아랫단 0.62m → 1.07m(AX PLAY 책상 윗면 1.02m 보다 5cm 위 · 5대 같은 높이 · 사용자 결정) 캐시 깨기 */   /* 261015 v727 = 받침대 TV 5대 55인치 · 아랫단 0.62m 로 낮춤(뒤 판 글씨 가림 해소) · AX VISION TV 잘린 왼쪽 되살림 · 층별 안내 엑스배너(판 42) 흉상 서쪽으로(lowerTvs · REFIT.XB) 캐시 깨기 */   /* 261015 v726 = 로비 화분 실물 영상처럼(buildPlant · 흰 접시 · 시멘트 화분 · 호접란 · 팜파스) 캐시 깨기 */   /* 261012 v699 = 기둥 포스터 부착안(시안 A ~ E · tour-data colFaces · d/p46s.webp) 캐시 깨기 */
+var TOUR = { ver: "v784", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */   /* 261024 v783 = TV 영상 연결(tour3.js VTV · 앱 v8.72) 캐시 깨기 */   /* 261021 v782 = 라운지 데스크 치움(tour3.js refit1F) 캐시 깨기 */   /* 261018 v781 = 미팅룸 탁자 흰색(라이트맵 자리) · 엘리베이터 권유 말풍선 대신 「다른 층 이동하기」 강조 */   /* 261016 v742 = 라운지 스태프 자리(흰 탁자 오른쪽 · 내 캐릭터 앞) · 다른 층 이동하기 자동 걷기 = 뒤에서 따라가기 · 쓰지 않는 STAIR 상수 걷음 캐시 깨기 */   /* 261016 v738 = 부스 최종 시안 반영(룰렛 판 둘째 줄 · 바닥 매트 · 판 틀 색 · TV 받침) 캐시 깨기 */   /* 261016 v737 = 룰렛 순서(행운을 빌어요 › 사라짐 › 당첨! › 카드) 캐시 깨기 */   /* 261016 v735 = 받침대 TV 5대 아랫단 0.62m → 1.07m(AX PLAY 책상 윗면 1.02m 보다 5cm 위 · 5대 같은 높이 · 사용자 결정) 캐시 깨기 */   /* 261015 v727 = 받침대 TV 5대 55인치 · 아랫단 0.62m 로 낮춤(뒤 판 글씨 가림 해소) · AX VISION TV 잘린 왼쪽 되살림 · 층별 안내 엑스배너(판 42) 흉상 서쪽으로(lowerTvs · REFIT.XB) 캐시 깨기 */   /* 261015 v726 = 로비 화분 실물 영상처럼(buildPlant · 흰 접시 · 시멘트 화분 · 호접란 · 팜파스) 캐시 깨기 */   /* 261012 v699 = 기둥 포스터 부착안(시안 A ~ E · tour-data colFaces · d/p46s.webp) 캐시 깨기 */
 try { localStorage.removeItem('axfT3Diag'); } catch (e) {} window.AXT3_DIAG = /[?&]t3diag=1(?:&|$)/.test(location.search);   /* v5.47 진단은 주소에 ?t3diag=1 이 있는 그 페이지에서만 · 기억하지 않는다 · 옛 기기 기억은 지운다(사용자 261004) */   /* v5.44 둘러보기 실기기 진단(주소 ?t3diag=1 · 이 기기에 기억 · ?t3diag=0 이면 끔) · 화면 왼쪽 위에 GPU · 깊이 비트 · highp · DPR · fps */
 /* 켜기 스위치 · v5.28 true = 전체 공개(사용자 261003 「1층 3D 전체 공개」) · false 로 두면 입구 3곳 · 판 퀴즈 힌트 링크 · 열기가 모두 숨는다 */
 var TOUR_ON = true;
@@ -129,6 +129,7 @@ var TOUR_HOST = {
   vids: function () {
     var o = {};
     VIDS.concat(VIDS_TOUR).forEach(function (x) { if (vidOk(x)) o[x.id] = { p: x.v.poster || "", tall: !!x.v.tall }; });
+    VID_LOOP.forEach(function (id) { var x = vidById(id); if (o[id] && x) o[id].l = vidLoopSrc(x); });   /* v8.80 l = TV 미리보기 루프(소리 없음 · 짧은 클립 · 열린 영상만 · 현장 인터뷰 없음) */
     return o;
   },
   vidGo: function (id) {
@@ -406,6 +407,9 @@ var VIDS_TOUR = [
   { id: "av", t: "AX VISION", s: "AX 로드맵", len: "0:18", al: 1, v: { src: "assets/vid/axvision_v1.mp4", poster: "assets/vid/axvision_v1.webp", loop: false, page: "" } },
   { id: "lg", t: "AX 라운지", s: "AX 라운지", len: "2:47", al: 1, v: { src: "assets/vid/axlounge_v1.mp4", poster: "assets/vid/axlounge_v1.webp", loop: false, page: "", tall: true } }
 ];
+/* v8.80 (사용자 261024) 둘러보기 TV 미리보기 루프 = 원본 이름 + _loop.mp4(같은 assets/vid · 원본에서 8~9초 · 소리 없음 · 가로 640(세로 영상 480) · 0.15~0.7MB · faststart · 끝과 처음을 흰 · 검정 페이드로 이음) · 원본 · 표지는 그대로 · 현장 인터뷰(iv) = 루프 없음 */
+var VID_LOOP = ["hq", "hh", "av", "lg"];
+function vidLoopSrc(x) { return x && x.v && /\.mp4$/.test(x.v.src || "") ? x.v.src.replace(/\.mp4$/, "_loop.mp4") : ""; }
 function vidById(id) { return VIDS.concat(VIDS_TOUR).filter(function (x) { return x.id === id; })[0] || null; }
 var VFOLD = { open: false };   /* v8.69 (사용자 261024) 홈 영상 칸 접기 기억 · 접힌 채 시작 · 다른 화면에서 홈으로 오면 다시 접힘(프로그램 탭 PFOLD 와 같은 방식 · 앱 메모리만) */
 function vidSw() { var o = S.get("vid_sw", null); return o && typeof o === "object" ? o : {}; }
