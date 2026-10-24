@@ -122,7 +122,7 @@ function rewItems() {
   /* v5.90 (261006 경품 기획 변경 · 계약.md 5.1) 선착순 참여상 · 서버 my.fcfs 가 있을 때만(없으면 카드 없음) · 상태 got · done · full · void · closed */
   var f = fcfsMy(), fx = fxGet(), cap = fx ? fx.cap : 200;
   if (fcfsReady(f)) items.push({ k: "fin", used: false, chip: f.st === "got" && f.rk > 0 ? f.rk + "번" : fcfsLeftN() ? "남은 " + fcfsLeftN() : "선착순", nm: "선착순 참여상", big: "1개", why: fcfsAt("1F 주차장 체크인존"), go: "fcfsGotOpen(true)", btn: "받는 곳 보기" });   /* 261016 (사용자) 달성순 · chip = 선착순 번호(서버 my.fcfs.rk) · 옛 수령순 문구 삭제 */   /* v5.98 (사용자 261006 밤 「받기 선착순」) 예약 없음 · 「자격」 말 없음 */   /* v5.97 (사용자 261006 밤) 장소 「1F 주차장 체크인존」 · 버튼 = 수령 안내 시트 */
-  if (f && f.st === "done") items.push({ k: "fin", used: true, chip: "수령 완료", off: true, nm: "선착순 참여상", big: "", why: "무선 무드등 가습기" });
+  if (f && f.st === "done") items.push({ k: "fin", used: true, chip: "수령 완료", off: true, nm: "선착순 참여상", big: "", why: (f.rk > 0 ? "선착순 " + f.rk + "번 · " : "") + "무선 무드등 가습기" });   /* 261024 (사용자) 받은 뒤에도 번호(서버 my.fcfs.rk · done) */
   if (f && (f.st === "full" || f.st === "out")) items.push({ k: "fin", used: true, chip: "마감", off: true, nm: "선착순 참여상", big: "", why: cap + "개 모두 나갔어요 · 6개 달성은 행운권 3장" });
   if (f && f.st === "void") items.push({ k: "fin", used: true, chip: "취소", off: true, nm: "선착순 참여상", big: "", why: "받을 수 없어요 · 운영진 문의" });
   if (f && f.st === "closed") items.push({ k: "fin", used: true, chip: "마감", off: true, nm: "선착순 참여상", big: "", why: ((fxGet() || {}).cut || "17:00") + " 지급 마감" });
@@ -227,7 +227,7 @@ var PZ_ICO = {
 var PZ_SEC = [
   { k: "draw", en: "LUCKY DRAW", t: "행운권 추첨", need: function () { return [["stamp", "스탬프 4개부터 행운권", "6개면 3장"], lkCond() ? ["qr", "Closing Speech 참석 · 17F 입구 QR 체크인", "16:40부터 · 17:00 현장 추첨"] : ["cup", "17F Closing Speech 현장 추첨", "17:00 · 경품은 따로 전달"]]; } },
   { k: "lk7", en: "7TH PRIZE", t: "행운권 7등 · 랜덤 굿즈", on: function () { return !!S.get("lk7", null); }, need: function () { return [["stamp", "스탬프 4개 이상(행운권 보유)", "1~6등 당첨자는 제외"], ["box", "행사 뒤 추첨", "행사 종료 후 행운권 중 랜덤 선정 후 행랑 발송"]]; } },   /* v5.92 정말 랜덤(사용자 261006) */
-  { k: "fin", en: "FIRST COME", t: "선착순 참여상", on: function () { return !!fxGet(); }, need: function () { var x = fxGet() || {}; var st = fcfsStartHm(); return [["stamp", "스탬프 6개를 모은 순서 " + (x.cap || 200) + "명", ""], ["box", "1F 주차장 체크인존 · 내 QR 제시", (st ? st + "~" : "") + (x.cut || "17:00") + " · 못 받으면 행사 뒤 발송"]]; }   /* 261016 (사용자) 달성순 1~200 · 교환 = 당일 체크인존(17:00 지급 마감) · 못 받은 사람 발송 */   /* v6.83 「E 창구」 뺌(사용자 261009) */   /* v5.98 받기 선착순 */, qt: function () { return fcfsQtyTxt(); } },   /* v5.97 (사용자 261006 밤) 남은 수량은 상품 제목 오른쪽 한 곳(fcfsQtyTxt) · 상자 줄 삭제 · 「당일 못 받으면 발송」 줄 삭제(「선착순인데 당일 못 받는 건 말이 안 되잖아」) */
+  { k: "fin", en: "FIRST COME", t: "선착순 참여상", on: function () { return !!fxGet(); }, need: function () { var x = fxGet() || {}; var st = fcfsStartHm(), f = fcfsMy(); if (typeof fcfsOwn === "function" && !fcfsOwn(f) && !fcfsOpen()) return [["stamp", "선착순 " + (x.cap || 200) + "명 마감", "6개 달성은 행운권 3장"]]; return [["stamp", "스탬프 6개를 모은 순서 " + (x.cap || 200) + "명", ""], ["box", "1F 주차장 체크인존 · 내 QR 제시", (st ? st + "~" : "") + (x.cut || "17:00") + (f && f.st === "done" ? "" : " · 못 받으면 행사 뒤 발송")]]; }   /* 261024 (사용자 「마감 뒤 오해 없게」) 번호 없는 사람 · 마감(서버 fx.left 0 · 지급 마감 시각) = 마감 한 줄 · 발송 줄 없음 · 받은 사람 = 발송 줄 없음 */   /* 261016 (사용자) 달성순 1~200 · 교환 = 당일 체크인존(17:00 지급 마감) · 못 받은 사람 발송 */   /* v6.83 「E 창구」 뺌(사용자 261009) */   /* v5.98 받기 선착순 */, qt: function () { return fcfsQtyTxt(); } },   /* v5.97 (사용자 261006 밤) 남은 수량은 상품 제목 오른쪽 한 곳(fcfsQtyTxt) · 상자 줄 삭제 · 「당일 못 받으면 발송」 줄 삭제(「선착순인데 당일 못 받는 건 말이 안 되잖아」) */
   { k: "roulette", en: "ROULETTE", t: "룰렛", need: function () { return [["stamp", "스탬프 3개면 룰렛 1회", "1인 1회"], ["qr", "1F EVENT 룰렛 부스에서 내 QR 제시", S.get("rcut", "") ? "룰렛 " + S.get("rcut", "") + " 마감" : ""]]; } },
   { k: "idea", en: "IDEA KING", t: "아이디어왕", r3: 1, on: function () { return !!S.get("idea_pub", null); }, need: function () { var ip = S.get("idea_pub", null) || {}; return [["stamp", (ip.cut || "16:00") + "까지 아이디어 한 줄", "AX 라운지 · 커피챗 · 앱 어느 경로든"], ["cup", "Closing Speech에서 시상", ideaKingN() + "명 · AI 구독권"]]; } },
   { k: "type", en: "TYPING KING", t: "1F 타자왕 1~10위", sep: 1, need: [["key", "1F 타자왕 노트북에서 도전", ""], ["cup", "1F 현장 기록 1~10위", "17:00 마감 · Closing Speech에서 순위 발표"]], go: ["실시간 순위 보기", "typeSiteRankGo()"] }   /* v5.18 맨 아래 · 선으로 나눔 · 순위판 입구 = 블록 맨 아래(v5.73) · v5.97 Outro 시상 보조 줄 삭제(사용자 261006 밤 「투머치」) */   /* v7.61 (사용자 261017) 1~10위 · 덧붙임 = 순위 발표 · 옛 둘째 줄(시상 자리)과 별개 표시 걷음 */
@@ -286,7 +286,7 @@ function pzChipHtml(k) {
     var t = raffleTickets(n); c = ["지금 " + t + "장", t ? 0 : 1];
   } else if (k === "fin") {
     var f = fcfsMy();
-    c = fcfsReady(f) ? [fcfsPre() ? fcfsStartHm() + "부터 받을 수 있어요" : "받을 수 있어요", 0] : f && f.st === "done" ? ["수령 완료", 1] : f && f.st === "void" ? ["취소", 1] : fcfsGone(f) ? ["마감", 1] : n < STAMP_DENOM ? ["스탬프 " + n + " / " + STAMP_DENOM, 1] : null;
+    c = fcfsReady(f) ? [fcfsPre() ? fcfsStartHm() + "부터 받을 수 있어요" : "받을 수 있어요", 0] : f && f.st === "done" ? ["수령 완료", 1] : f && f.st === "void" ? ["취소", 1] : fcfsGone(f) ? ["마감", 1] : n < STAMP_DENOM ? [typeof fcfsOpen !== "function" || fcfsOpen() ? "스탬프 " + n + " / " + STAMP_DENOM : "마감", 1] : null;   /* 261024 마감 뒤 6개 전 = 「마감」(옛 「스탬프 n / 6」 = 모으면 받는 것처럼 읽힘) */
   }
   return c ? '<div class="axs-chiprow axs-pz-chip"><span class="axs-chip' + (c[1] ? " off" : "") + '">' + esc(c[0]) + "</span></div>" : "";
 }
@@ -329,11 +329,12 @@ function prizeCoverHtml(noHead) {
   var n = Math.min(STAMP_DENOM, stampCount()), nx = PZ_STEP.filter(function (x) { return x.m > n; })[0], nm = nx ? nx.m : 0, dots = "";
   for (var i = 1; i <= STAMP_DENOM; i++) dots += '<span class="c"><i class="' + (i <= n ? "on" : i === n + 1 ? "nx" : "") + '">' + i + "</i></span>";   /* v5.33 6칸마다 점 하나 · 같은 크기 */
   var fill = n >= 2 ? "calc(" + (n - 1) + " * ((100% - 20px) / 6 + 4px))" : "0px";   /* 1번 칸 가운데부터 받은 마지막 칸 가운데까지(칸 폭 + 칸 사이 4px) */
+  var tg6 = typeof fcfsTag6 === "function" ? fcfsTag6() : !!fxGet();   /* 261024 「+선착순」(검사 샌드박스는 옛 판정) */
   var cards = '<p class="pre' + (n >= 3 ? " done" : "") + '"><span class="t">보상은</span><b>3개부터</b></p>' + PZ_STEP.map(function (s) {
-    var st = s.m <= n ? "on" : s.m === nm ? "nx" : "", lbl = "스탬프 " + s.m + "개 · " + s.t + " " + s.a + (s.fin && fxGet() ? " · 선착순 참여상" : "") + (st === "on" ? " · 달성" : st === "nx" ? " · 다음" : "");
+    var st = s.m <= n ? "on" : s.m === nm ? "nx" : "", lbl = "스탬프 " + s.m + "개 · " + s.t + " " + s.a + (s.fin && tg6 ? " · 선착순 참여상" : "") + (st === "on" ? " · 달성" : st === "nx" ? " · 다음" : "");
     return '<button type="button" class="' + st + '" onclick="prizeJump(\'' + s.k + '\')" aria-label="' + lbl + '"><span class="i" aria-hidden="true">' + RAIL_ICO[s.ico] + "</span>" +
       '<span class="t" aria-hidden="true">' + s.t + '</span><b aria-hidden="true">' + s.a + "</b>" +
-      (s.fin && fxGet() ? '<span class="fn" aria-hidden="true">+<span class="g">' + PZ_GIFT + "</span>선착순</span>" : "") +
+      (s.fin && tg6 ? '<span class="fn" aria-hidden="true">+<span class="g">' + PZ_GIFT + "</span>선착순</span>" : "") +   /* 261024 마감 뒤 번호 없는 사람 = 6번 칸 「+선착순」 없음(fcfsTag6) */
       '<span class="bt" aria-hidden="true">' + (st === "nx" ? '<span class="tag">다음</span>' : st === "on" ? '<span class="tag on">' + CHECK_SVG + "달성</span>" : "") + '<span class="dn">' + PZ_DOWN + "</span></span></button>";
   }).join("");
   return '<section class="axs-pz-cv">' + (noHead ? "" : '<p class="ey">AX Festival 2026</p><h1 class="ttl">경품 보기</h1>') +   /* v5.69 시트 = 제목은 시트 머리 */
@@ -359,6 +360,10 @@ function fcfsGone(f) { return !!f && (f.st === "out" || f.st === "full" || f.st 
 function fcfsLeftN() { var x = fxGet(); return x && x.left > 0 ? x.left : 0; }
 function fxGet() { var x = S.get("fx", null); return x && typeof x === "object" && x.on ? x : null; }
 function fcfsOpen() { var x = fxGet(); return !!x && x.left !== 0 && !fcfsLate(); }   /* 남아 있고 마감 전 */
+/* 261024 (사용자 「200개 마감 뒤 일반 사람이 오해하지 않게」) 내 번호 · 받을 자리가 있음(got · ready · done) · 마감 판정은 서버 신호(fx.left 0 · fx.cut) 그대로(fcfsOpen) · 새 판정 없음 */
+function fcfsOwn(f) { return fcfsReady(f) || (!!f && f.st === "done"); }
+/* 경품 시트 6번 칸 「+선착순」 · 마감 전 = 그대로 · 마감 뒤 = 내 번호가 있는 사람만 */
+function fcfsTag6() { return !!fxGet() && (fcfsOpen() || fcfsOwn(fcfsMy())); }
 function fcfsLate() {
   if (typeof betaFree === "function" && betaFree()) return false;   /* 261014 클로즈 베타 = 마감 시각 없음 */
   var x = fxGet(), cut = String((x && x.cut) || "").split(":");
@@ -368,9 +373,9 @@ function fcfsLate() {
   return ymd > 20261026 || (ymd === 20261026 && d.getHours() * 60 + d.getMinutes() >= (+cut[0]) * 60 + (+cut[1]));
 }
 /* v5.97 (사용자 261006 밤) 경품 시트 선착순 상품 제목 오른쪽 = 남은 수량 · 숫자공개 규칙(ALL · LOW · OFF → left -1 = 숨김)을 따른다 · 0 · 마감 시각 뒤 = 「마감」 · 숨김 = 총수량 */
-function fcfsQtyTxt() { var x = fxGet(); if (!x) return ""; if (x.left === 0 || fcfsLate()) return "마감"; return x.left > 0 ? "남은 " + x.left + " / " + x.cap : ""; }
+function fcfsQtyTxt() { var x = fxGet(); if (!x) return ""; if (x.left === 0 || fcfsLate()) return "마감"; return x.left > 0 ? "남은 번호 " + x.left + " / " + x.cap : ""; }   /* 261024 (사용자) 「남은 번호」(남은 가습기 수로 읽히지 않게 · 수 = 아직 안 매긴 번호) */
 /* 6개 레일 캡션 뒤 · 수령 자격 · 수령 완료 · 마감 · 짧은 칸 캡션이라 「참여상」(v5.97 D3 · 그 밖은 「선착순 참여상」) */
-function fcfsCapTxt() { var f = fcfsMy(); return !f ? "" : fcfsReady(f) ? (f.st === "got" && f.rk > 0 ? " · 선착순 " + f.rk + "번" : " · 참여상 받을 수 있어요") : f.st === "done" ? " · 참여상 수령 완료" : fcfsGone(f) ? " · 선착순 마감" : ""; }   /* 261016 달성순 번호 · 201번째부터 「선착순 마감」 */
+function fcfsCapTxt() { var f = fcfsMy(); return !f ? "" : fcfsReady(f) ? (f.st === "got" && f.rk > 0 ? " · 선착순 " + f.rk + "번" : " · 참여상 받을 수 있어요") : f.st === "done" ? (f.rk > 0 ? " · 선착순 " + f.rk + "번 · 받음" : " · 참여상 수령 완료") : fcfsGone(f) ? " · 선착순 마감" : ""; }   /* 261016 달성순 번호 · 201번째부터 「선착순 마감」 */
 /* 남은 수량 한 줄 · 6개 전 · 서버가 숫자를 숨기면(-1) 안 그린다 · 0 = 마감 */
 function fcfsLeftHtml(n) {
   var x = fxGet(); if (!x || n >= STAMP_DENOM || x.left < 0) return "";
@@ -383,7 +388,7 @@ function fcfsRailTxt() {
   if (typeof evPreDay === "function" && evPreDay()) return null;   /* v7.47 (261016 레드팀 B2) 행사 전 = 선착순 줄 없음(서버 fx.on 은 설정 ON/OFF 라 행사 전에도 온다) */
   var f = fcfsMy(), st = f ? f.st : "";
   if (st === "void") return null;
-  if (st === "done") return "받음";
+  if (st === "done") return f.rk > 0 ? f.rk + "번 · 받음" : "받음";   /* 261024 (사용자) 받은 뒤에도 번호 · 「선착순 37번 · 받음」 */
   if (f && f.st === "got" && f.rk > 0) return f.rk + "번";   /* v7.57 (사용자 261017 S4) 17:00 지급 마감 뒤 미수령 = 칩 「N번」 + 다음 보상 한 줄 「행사 뒤 발송 · 17:00 지급 마감」(옛 v7.47 「N번 · 발송」) */   /* 261016 (사용자) 달성순 · 행운권 자리 옆 「선착순 N번」 · 남은 수 · 마감 시각보다 먼저(번호가 있으면 받을 사람) */
   if (st === "full" || st === "out" || st === "closed" || x.left === 0 || fcfsLate()) return "마감";   /* 261016 201번째부터(full) = 「선착순 마감」만 */   /* v5.98 ready = 「남은 N」 주황(fcfsRailHtml) · 「수령 자격」 없음 */
   return x.left > 0 ? "남은 " + x.left : "";   /* v5.97 (사용자 261006 밤 「210 / 210 헷갈림」) 남은 수만 */
@@ -441,7 +446,7 @@ function stampGoalText(n) {
   if (n < STAMP_DENOM) return "1개 더 모으면 행운권 " + raffleTickets(n + 1) + "장" + (n === STAMP_DENOM - 1 && fcfsOpen() ? " · 선착순 참여상" : "");   /* v5.90 6번째 = 선착순 참여상 · 남아 있고 마감 전일 때만 */
   var f = fcfsMy();   /* v5.90 계약 5.1 */
   if (f && (f.st === "ready" || f.st === "got")) return STAMP_DENOM + "개 모두 모았어요 · " + (f.st === "got" && f.rk > 0 ? "선착순 " + f.rk + "번" : "선착순 참여상 받을 수 있어요");   /* 261016 달성순 번호 */   /* v5.97 감사 하2 · D3 = 짧은 칸 캡션만 「참여상」 · v5.98 받기 선착순 · 「자격」 말 없음 */
-  if (f && f.st === "done") return STAMP_DENOM + "개 모두 모았어요 · 선착순 참여상 수령 완료";
+  if (f && f.st === "done") return STAMP_DENOM + "개 모두 모았어요 · " + (f.rk > 0 ? "선착순 " + f.rk + "번 · 받음" : "선착순 참여상 수령 완료");   /* 261024 받은 뒤에도 번호 */
   if (f && (f.st === "out" || f.st === "full" || f.st === "closed")) return STAMP_DENOM + "개 모두 모았어요 · 선착순 참여상은 마감";
   return STAMP_DENOM + "개 모두 모았어요 · 행운권 " + RAFFLE_MAX + "장";
 }
