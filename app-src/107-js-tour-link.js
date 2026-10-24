@@ -20,6 +20,7 @@ function tourOpen(o) {
   if (!tourOn()) return;
   o = o || {};
   if (!S.get("tour_seen", false)) S.put("tour_seen", true);   /* v5.83 처음 열면 홈 카드가 원래 자리로(tourHeroOn) · 기기 기준 */
+  tlogFrom(o);   /* v8.78 들어온 곳(방문 기록 경로 · 홈 카드 · 퀴즈 힌트 · 돌아가기) */
   var keep = o.hint && tourRetLive() ? TOUR_RET : null;   /* v5.57 둘러보기에서 출발한 AX 퀴즈의 힌트 「모형에서 보기」는 출처를 지우지 않는다(퀴즈를 마치면 그대로 1층으로) */
   if (!o.restore) TOUR_RET = null;   /* v5.53 그냥 열면 돌아가기 기억 지움 */
   if (keep) TOUR_RET = keep;
@@ -133,6 +134,7 @@ var TOUR_HOST = {
   vidGo: function (id) {
     var x = vidById(id); if (!x || !vidOk(x) || IVP.on) return false;
     IVP.t3 = true; ivAsk(null, x);
+    tlogVidPlay();   /* v8.78 방문 기록 · TV 영상 누른 수 */
     var m = el("modal");
     if (!m && !IVP.on) { IVP.t3 = false; return false; }   /* 새 창 등 = 둘러보기 그대로 */
     if (m) {
@@ -322,7 +324,15 @@ function trdHide() {   /* 인사 기다림 접기(화면을 옮길 때 · 띠 �
    3D · 2D 대체 모두 AXTour.isOpen() 하나로 본다(1초마다 · 가려진 동안은 보지 않음 · tour3.js 는 고치지 않음) · 닫을 때 머문 초 · 들른 구역 수(__tour3.api.visit · 없으면 0)
    같은 방문 = 닫고 TLOG.GAP(10분) 안에 다시 열면 보내지 않는다(서버도 같은 규칙 · 층 안내 · 스탬프로 갔다 돌아오기 포함) · 로그인 전 · 데모 · 오프라인 = 버림(다시 보내지 않음)
    열기를 못 보낸 방문은 닫기도 보내지 않는다(지난 방문 칸을 덮지 않게) · 화면이 가려지면(앱 전환 · 탭 닫기) 닫기를 sendBeacon 으로 · 실패해도 둘러보기는 모른다 */
-var TLOG = { on: 0, ok: 0, t0: 0, end: 0, z: 0, GAP: 600000 };
+/* v8.78 (사용자 261024 「행사 둘러보기를 사람들이 얼마나 눌러 봤고 얼마나 체류했는지 · 누가 봤는지」) 방문 기록 · 같은 tour_log 두 번(들어감 · 나옴)에 몇 칸을 더 싣는다(새 요청 · 하트비트 없음)
+   vid = 방문마다 새 무작위 글자(같은 방문의 들어감 · 나옴 짝) · src = 들어온 곳(tourOpen 이 tlogFrom 으로 남김 · home 홈 카드 | hint 퀴즈 힌트 | back 돌아가기 | etc)
+   ds = 둘러보기가 실제로 열려 보이던 초의 합(가려진 동안 · 10분 안에 다시 열기 전 빈 시간은 빼고 · sec 는 옛 칸 그대로 방문 처음부터) · d3 = 3D 로 그렸으면 1(평면 안내면 0) · vp = TV 영상 누른 수(TOUR_HOST.vidGo)
+   새 칸은 sendBeacon 에서 ses 뒤에 붙인다(옛 서버는 모르는 칸을 버린다) */
+var TLOG = { on: 0, ok: 0, t0: 0, end: 0, z: 0, GAP: 600000, vid: "", src: "", nx: "", t1: 0, acc: 0, vp: 0 };
+function tlogFrom(o) { o = o || {}; TLOG.nx = o.restore ? "back" : o.hint ? "hint" : typeof App !== "undefined" && App.current === "home" ? "home" : "etc"; }
+function tlogVid() { var r = ""; while (r.length < 10) r += Math.random().toString(36).slice(2); return r.slice(0, 10); }
+function tlogVidPlay() { if (TLOG.on) TLOG.vp++; }
+function tlog3d() { try { var g = window.__tour3; return g ? (g.mapMode ? "0" : "1") : ""; } catch (e) { return ""; } }
 function tlogEmp() { var u = S.get("user", {}) || {}; return u.empId ? String(u.empId) : ""; }
 function tlogCan() { return !!(GAS_URL && BE.on && tlogEmp() && navigator.onLine !== false && !visitSkip()); }
 function tlogZ() { try { var g = window.__tour3, v = g && g.api && g.api.visit ? g.api.visit() : null; return v && v.seen ? v.seen.length : 0; } catch (e) { return 0; } }
@@ -330,26 +340,29 @@ function tlogSend(ev, beacon) {
   try {
     var p = { action: "tour_log", emp: tlogEmp(), ev: ev };
     if (ev === "close") { p.sec = Math.max(0, Math.round((Date.now() - TLOG.t0) / 1000)); p.z = TLOG.z; }
+    var x = ev === "close" ? { vid: TLOG.vid, ds: Math.max(0, Math.round(TLOG.acc / 1000)), d3: tlog3d(), vp: TLOG.vp } : { vid: TLOG.vid, src: TLOG.src };
     if (beacon && navigator.sendBeacon) {
       var ses = sesParam(p), b = new URLSearchParams();
       if (ses) p.ses = ses;
       for (var k in p) if (Object.prototype.hasOwnProperty.call(p, k)) b.append(k, p[k]);
+      for (var k2 in x) if (Object.prototype.hasOwnProperty.call(x, k2)) b.append(k2, x[k2]);
       if (typeof APP_VER === "string") b.append("av", APP_VER);   /* v7.22 서버 tail 한 줄(AXREQ)에 앱 버전 */
       if (navigator.sendBeacon(GAS_URL, b)) return;
       delete p.ses;
     }
+    for (var k3 in x) if (Object.prototype.hasOwnProperty.call(x, k3)) p[k3] = x[k3];
     beCall(p, function () {}, function () {});
   } catch (e) {}
 }
 function tlogOpen() {
-  TLOG.on = 1;
-  if (TLOG.end && Date.now() - TLOG.end < TLOG.GAP) return;   /* 같은 방문 · 보내지 않음 */
-  TLOG.t0 = Date.now(); TLOG.z = 0; TLOG.ok = tlogCan() ? 1 : 0;
+  TLOG.on = 1; TLOG.t1 = Date.now();
+  if (TLOG.end && Date.now() - TLOG.end < TLOG.GAP) { TLOG.nx = ""; return; }   /* 같은 방문 · 보내지 않음 */
+  TLOG.t0 = Date.now(); TLOG.z = 0; TLOG.acc = 0; TLOG.vp = 0; TLOG.vid = tlogVid(); TLOG.src = TLOG.nx || "etc"; TLOG.nx = ""; TLOG.ok = tlogCan() ? 1 : 0;
   if (TLOG.ok) tlogSend("open");
 }
 function tlogClose(beacon) {
   if (!TLOG.on) return;
-  TLOG.on = 0; TLOG.end = Date.now(); TLOG.z = Math.max(TLOG.z, tlogZ());
+  TLOG.on = 0; TLOG.end = Date.now(); TLOG.z = Math.max(TLOG.z, tlogZ()); TLOG.acc += Math.max(0, TLOG.end - (TLOG.t1 || TLOG.end));
   if (TLOG.ok && tlogCan()) tlogSend("close", beacon);
 }
 function tlogTick() {
