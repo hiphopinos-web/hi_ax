@@ -123,7 +123,7 @@ function rewItems() {
   var f = fcfsMy(), fx = fxGet(), cap = fx ? fx.cap : 200;
   if (fcfsReady(f)) items.push({ k: "fin", used: false, chip: f.st === "got" && f.rk > 0 ? f.rk + "번" : fcfsLeftN() ? "남은 " + fcfsLeftN() : "선착순", nm: "선착순 참여상", big: "1개", why: fcfsAt("1F 주차장 체크인존"), go: "fcfsGotOpen(true)", btn: "받는 곳 보기" });   /* 261016 (사용자) 달성순 · chip = 선착순 번호(서버 my.fcfs.rk) · 옛 수령순 문구 삭제 */   /* v5.98 (사용자 261006 밤 「받기 선착순」) 예약 없음 · 「자격」 말 없음 */   /* v5.97 (사용자 261006 밤) 장소 「1F 주차장 체크인존」 · 버튼 = 수령 안내 시트 */
   if (f && f.st === "done") items.push({ k: "fin", used: true, chip: "수령 완료", off: true, nm: "선착순 참여상", big: "", why: (f.rk > 0 ? "선착순 " + f.rk + "번 · " : "") + "무선 무드등 가습기" });   /* 261024 (사용자) 받은 뒤에도 번호(서버 my.fcfs.rk · done) */
-  if (f && (f.st === "full" || f.st === "out")) items.push({ k: "fin", used: true, chip: "마감", off: true, nm: "선착순 참여상", big: "", why: cap + "개 모두 나갔어요 · 6개 달성은 행운권 3장" });
+  if (f && (f.st === "full" || f.st === "out")) items.push({ k: "fin", used: true, chip: "마감", off: true, nm: "선착순 참여상", big: "", why: "선착순 " + cap + "명 마감 · 6개 달성은 행운권 3장" });
   if (f && f.st === "void") items.push({ k: "fin", used: true, chip: "취소", off: true, nm: "선착순 참여상", big: "", why: "받을 수 없어요 · 운영진 문의" });
   if (f && f.st === "closed") items.push({ k: "fin", used: true, chip: "마감", off: true, nm: "선착순 참여상", big: "", why: ((fxGet() || {}).cut || "17:00") + " 지급 마감" });
   /* v5.90 행운권 7등 랜덤 굿즈 · 서버 my.lk7 이 있고 행운권 보유(in)일 때 · 추첨 전 「추첨 대기」
@@ -527,6 +527,7 @@ function reelDay() { var d = new Date(appNow().getTime() + 9 * 3600000); return 
 function reelPopMaybe(pbn) {
   if (App.current !== "exp" || pbn || REEL.pop) return false;
   if (S.get("reel_skip", "") === reelDay()) return false;
+  if (fxGet() && !fcfsOpen() && !fcfsOwn(fcfsMy())) return false;   /* 261024 (사용자) 선착순 마감(서버 fx.left 0 · 지급 마감 시각 = fcfsOpen) 뒤 번호 없는 사람 = 자동 광고 팝업 없음 · 번호 받은 사람 · 마감 전 = 그대로 */
   if (pbfNoteBusy() || el("lgx") || el("rgPlay") || document.documentElement.classList.contains("ivp-lock")) return false;
   reelPopOpen();
   return true;
