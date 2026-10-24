@@ -7,6 +7,12 @@
 .svd-k .dx-mt .dx-bi{background:var(--navy)}
 .svd-qn{margin-left:auto;white-space:nowrap;font-variant-numeric:tabular-nums}
 .svd-vb{margin-top:26px}
+.svd-ssw{overflow-x:auto;max-width:100%}
+.svd-ss td.n{white-space:nowrap}
+.svd-ss .svy-r{min-width:0;white-space:nowrap}.svd-ss .svy-r .bar{display:none}
+.svd-ss th.n{white-space:normal;line-height:1.3;width:56px;padding-top:4px;padding-bottom:4px;height:auto}
+.svd-na{font-size:13px;color:var(--tx2);font-variant-numeric:tabular-nums}
+.svd-na b{color:var(--tx);font-weight:600}
 .svd-ss td:first-child{word-break:keep-all;line-height:1.35;padding-top:4px;padding-bottom:4px;height:auto;min-height:30px}
 .svd-two>.card{min-width:0}
 @media (max-width:600px){
@@ -14,4 +20,5 @@
   .svd-top{flex-direction:column;align-items:stretch}
   .svd-bar .sp{display:none}
   .svd-bar .svd-upd{width:100%}
+  .svd-ss th:nth-child(3),.svd-ss td:nth-child(3){display:none}
 }
