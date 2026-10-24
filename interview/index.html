@@ -8,16 +8,14 @@
 <meta name="theme-color" content="#FFFFFF">
 <script src="../assets/server.js"></script>
 <script>
-/* 영상 주소(VIDEO_URL) · 열림 = 콘솔 스위치(사용자 결정 261024 · 날짜 고정 폐기 · 서버 vid_pub 의 iv). 열 때 서버에 한 번 묻고 열림이면 영상으로 넘긴다.
-   닫힘 · 실패 · 3초 안에 답이 없으면 준비 중 화면 · 열어 둔 화면은 30초마다 다시 묻는다. 다른 줄은 고치지 않는다. */
-var VIDEO_URL = "https://www.youtube.com/watch?v=OtsmHcrPpwA";
+/* 영상 열림 = 콘솔 스위치(사용자 결정 261024 · 서버 vid_pub 의 iv). 영상 주소는 이 파일에 두지 않는다(261024 미리 노출 막기 · 서버가 열린 영상만 주소 u.iv 를 준다).
+   열 때 서버에 한 번 묻고 열림 + 주소가 오면 그 주소로 넘긴다 · 닫힘 · 주소 없음 · 실패 · 3초 안에 답이 없으면 준비 중 화면 · 열어 둔 화면은 30초마다 다시 묻는다. */
 var SRV = typeof AXF_SERVER === "string" && /^https?:\/\/[^\s?#]+\/exec$/.test(AXF_SERVER) ? AXF_SERVER : "https://hi.axf2026.workers.dev/exec";
 var CHK_MS = 3000, POLL_MS = 30000;
-var TRY_FLAG = /(^|[?&])t=1(&|$)/.test(location.search.slice(1)) || location.hash === "#test";   /* 시험 장치(261023 · 사용자 확인 뒤 이 줄과 아래 TRY_FLAG 를 지운다) · 주소 뒤 ?t=1 이면 스위치와 상관없이 영상으로 */
 document.documentElement.className = "chk";   /* 묻는 동안(최대 3초) 준비 중 글자를 미리 보이지 않는다 */
-function goVideo() {
-  var u = (typeof VIDEO_URL === "string" ? VIDEO_URL : "").replace(/^\s+|\s+$/g, "");
-  if (!/^https?:\/\//i.test(u)) return false;
+function goVideo(u) {
+  u = (typeof u === "string" ? u : "").replace(/^\s+|\s+$/g, "");
+  if (!/^https:\/\/[^\s"<>]+$/i.test(u)) return false;
   document.documentElement.style.visibility = "hidden";
   try { var m = document.createElement("meta"); m.httpEquiv = "refresh"; m.content = "0;url=" + u; document.head.appendChild(m); } catch (e) {}
   location.replace(u);
@@ -25,22 +23,21 @@ function goVideo() {
 }
 function showWait() { document.documentElement.className = ""; }
 function check() {
-  if (TRY_FLAG) { if (!goVideo()) showWait(); return; }
-  var done = false, x = null, fin = function (open) {
+  var done = false, x = null, fin = function (u) {
     if (done) return;
     done = true;
-    try { if (x && !open) x.abort(); } catch (e) {}
-    if (open && goVideo()) return;
+    try { if (x && !u) x.abort(); } catch (e) {}
+    if (u && goVideo(u)) return;
     showWait();
   };
-  setTimeout(function () { fin(false); }, CHK_MS);
+  setTimeout(function () { fin(""); }, CHK_MS);
   try {
     x = new XMLHttpRequest();
     x.open("GET", SRV + "?action=vid_pub&_=" + Date.now(), true);
-    x.onload = function () { var o = null; try { o = JSON.parse(x.responseText); } catch (e) {} fin(!!(o && o.ok && o.v && o.v.iv === 1)); };
-    x.onerror = function () { fin(false); };
+    x.onload = function () { var o = null; try { o = JSON.parse(x.responseText); } catch (e) {} fin(o && o.ok && o.v && o.v.iv === 1 && o.u && typeof o.u.iv === "string" ? o.u.iv : ""); };
+    x.onerror = function () { fin(""); };
     x.send();
-  } catch (e) { fin(false); }
+  } catch (e) { fin(""); }
 }
 check();
 setInterval(function () { if (document.documentElement.className !== "chk") check(); }, POLL_MS);   /* 준비 중에 열어 둔 화면도 스위치가 열리면 넘어간다 */
