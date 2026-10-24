@@ -6,7 +6,8 @@
  * 마지막 받은 시각 · 대조 코드 = 이 PC(localStorage) */
 var LKY={ busy:"", ld:0, ldAt:0, ldErr:"", tkey:"", rows:null, rt:"", rfp:"", rm:0, rn:0, view:"no", info:null, infoAt:0, dir:null, dirN:"", auto:null, autoAt:"", autoErr:"", setOpen:true };   /* 261022 추첨 설정 칩 = 설정 칸 펼친 채로(원격 진행이 맨 아래 접힘) */
 /* 261024 럭키드로우 첫 화면 「1. 추첨 대상」 명단 표(lkui.js) · 같은 표 부품 · 따로 받은 것만(LKY_U) · 「명단 불러오기」 · 「표 새로 받기」를 누를 때만 받음 · 자동 받기(lkyLoad) 없음 · 칸 id 접두 lku */
-var LKY_U={ rows:null, rt:"", rfp:"", rm:0, rn:0, view:"no", tkey:"", busy:0, err:"", h:360 };
+var LKY_U={ rows:null, rt:"", rfp:"", rm:0, rn:0, view:"no", tkey:"", busy:0, err:"", h:360,
+  cw:{ no:84, emp:64, name:62, dept:130, c:74, win:52, at:92, nos:118 }, cwE:{ dept:100 } };   /* 첫 화면 좁은 칸 = 7열이 1280 폭 왼쪽 열에 다 보이게(넓으면 비율대로 늘어남 · 좁으면 표 안 가로 스크롤) · 장수 구분 짧게(전체 글자는 title) */
 var LKY_I={ tb:"lkyTb", vw:"lkyVw", rt:"lkyRt", no:"lkyno", emp:"lkyemp" }, LKY_UI={ tb:"lkuTb", vw:"lkuVw", rt:"lkuRt", no:"lkuno", emp:"lkuemp" };
 var LKY_K={ xlsx:"엑셀", csv:"CSV", txt:"번호만", kit:"종이 추첨 키트" };
 /* 추첨 설정 칩은 진행 칩 안 접이식으로(drawset.js 가 넣은 칩을 뺀다 · 옛 주소 #stage/set = 진행 · 설정 펼침) */
@@ -178,6 +179,7 @@ function lkyTable(P, I){
   var chips=[["all","전체",null],["c1","1장",function(r){ return r.c===1; }],["c2","2장",function(r){ return r.c===2; }],["c3","3장",function(r){ return r.c>=3; }],["win","당첨 표시",function(r){ return !!r.win; }]];
   var onRow=function(k){ var e=String(k).split(":")[0]; if(typeof pcOpen==="function") pcOpen(e); };
   var tier={ k:"c", t:"장수 구분", w:150, v:function(r){ return lkyTier(r.c); } };
+  if(P.cw) tier.f=function(r){ return esc(lkyTier(r.c).replace("스탬프 ","")); };
   var rows, spec;
   if(P.view==="no"){
     rows=P.rows.map(function(o){ return { no:String(o.no), emp:o.emp, name:o.name, dept:o.dept, pos:o.pos||"", c:cnt[o.emp], win:o.win||"", at:o.at||"" }; });
@@ -190,6 +192,7 @@ function lkyTable(P, I){
     spec={ file:"행운권 보유자", ph:"번호 · 사번 · 이름 찾기", key:function(r){ return r.emp; }, sort:{ k:"c", d:-1 }, onRow:onRow, chips:chips, all:1,
       cols:[{ k:"emp", t:"사번", w:90 },{ k:"name", t:"이름", w:100 },{ k:"dept", t:"소속", w:200 },tier,{ k:"nos", t:"행운권 번호", w:170 },{ k:"win", t:"당첨", w:110 },{ k:"at", t:"발급 시각", w:100 }],
       empty:"번호가 없습니다", h:P.h||640 }; }
+  if(P.cw){ var cw=Object.assign({}, P.cw, P.view==="no"?{}:P.cwE); spec.cols=spec.cols.map(function(c){ return Object.assign({}, c, { w:cw[c.k]||c.w }); }); }
   g=gridOf(id, spec); g.o=Object.assign({ id:id }, spec);
   if(root&&box.contains(root)){ XG.set(g, rows); }   /* 틀 · 스크롤 · 검색 칸 유지 · 본문 줄만 */
   else { box.innerHTML='<div id="mg_'+id+'"></div>'; XG.set(g, rows, el("mg_"+id)); }

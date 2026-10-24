@@ -32,5 +32,8 @@
 .lku-rh .r{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
 .lku-ld{background:var(--navy05);border-radius:var(--r-s);padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:6px 12px;flex-wrap:wrap}
 .lku-ld .btn{flex:none}
+.lku-ro .xg-t{font-size:12px}
+.lku-ro .xg-t td{padding:0 6px}
+.lku-ro .xg-t th button{padding:0 6px}
 @media (max-width:900px){ .lku{grid-template-columns:minmax(0,1fr)} }
 @media (max-width:600px){ .lku-big .v{font-size:22px} .lku-dp{max-width:140px} }
