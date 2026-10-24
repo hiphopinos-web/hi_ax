@@ -180,7 +180,7 @@
   #start h1 { font-size: 40px; line-height: 1.25; font-weight: 700; margin-top: 8px; }
   #stWarn { margin-top: 14px; font-size: 17px; line-height: 1.5; color: var(--o25); }
   #stWarn:empty { display: none; }
-  .mcards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; margin-top: 30px; }   /* 261024 명부 데모 · 가짜 데모 · 라이브 */
+  .mcards { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 30px; }   /* 261024 명부 데모 · 라이브 두 칸 */
   .mcard { position: relative; text-align: left; border-radius: 20px; padding: 30px 30px 28px; color: #fff; font-family: inherit; cursor: pointer; min-height: 230px; display: flex; flex-direction: column; gap: 10px; }
   .mcard .tag { align-self: flex-start; font-size: 15px; font-weight: 800; letter-spacing: .12em; padding: 6px 12px; border-radius: 8px; }
   .mcard b { font-size: 40px; line-height: 1.2; font-weight: 800; }
@@ -274,7 +274,6 @@
   <p id="stWarn"></p>
   <div class="mcards" id="stCards">
     <button class="mcard demo" id="btnDemoR" type="button"><span class="tag">DEMO</span><b>명부 데모</b><p>지금 행운권 명부 · 실명</p><p class="use">리허설 · 관리코드 · 서버 기록 없음</p></button>
-    <button class="mcard demo" id="btnDemo" type="button"><span class="tag">DEMO</span><b>가짜 데모</b><p>가짜 이름 · 인터넷 없이</p><p class="use">예비 노트북 점검 · 코드 없을 때</p></button>
     <button class="mcard live" id="btnLive" type="button"><span class="tag">LIVE</span><b>라이브</b><p>진짜 행운권 · 서버에 당첨 기록</p><p class="use">17F 본 추첨 · 관리코드 · 숫자 확인 뒤 시작</p></button>
   </div>
   <div id="stLive">
