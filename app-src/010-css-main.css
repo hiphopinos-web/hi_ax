@@ -2223,6 +2223,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #view[data-v="exp"] .axs-sgb { justify-content: flex-start; gap: var(--ax-space-8); padding: 0; text-align: left; }
   #view[data-v="exp"] .axs-sgb b { font: var(--ax-type-t4); color: var(--ax-color-ink); }
   #view[data-v="exp"] .axs-sgb span { margin-left: auto; font: var(--ax-type-t7); color: var(--ax-color-muted); white-space: nowrap; }
+  #view[data-v="exp"] .axs-sgb b { margin-left: 2px; padding: 1px 0 1px 10px; border-left: 3px solid var(--ax-color-ink); }   /* v8.65 (사용자 261024) 스탬프 탭 「스탬프 획득하기」 머리 = 홈 · 프로그램 탭 제목과 같은 왼쪽 막대 */
   #view[data-v="exp"] .sect { margin: 0; align-items: center; }
   #view[data-v="exp"] .sect b { font: var(--ax-type-t4); color: var(--ax-color-ink); }   /* v5.66 (디자인 감사 261005 D4) 옛 15.5px 800 · 12.5px 700 → 토큰(홈 .sect 와 같은 제목 크기) */
   #view[data-v="exp"] .sect span { font: var(--ax-type-t7); color: var(--ax-color-muted); cursor: default; }
