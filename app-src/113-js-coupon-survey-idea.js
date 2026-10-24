@@ -228,66 +228,12 @@ function svSlKey(e) {
   else return;
   e.preventDefault();
 }
-/* ── v8.83 (사용자 결정 261024 · 시험) 사전 신청자 설문(SURVEY_PQ) 5점 문항 = 별점 · 일반 설문(SURVEY_Q)은 위 슬라이더 그대로
-   별 5개 왼쪽부터 채움 · 별의 왼쪽 반 = .5 · 오른쪽 반 = 정수(첫 별은 왼쪽 반도 1점) · 끌어도 따라온다 · 값 = 슬라이더와 같은 0.5 단위(1 ~ 5 · 서버 · 집계 그대로)
-   빈 상태로 시작(고르면 「다음」 켜짐 · 자동 넘김 없음) · 채운 별 = 주황 · 높을수록 진하게(O50 #FFB284 → O100 #FF7E31) · 빈 별 = 옅은 회색 테두리
-   아래 줄 = 1점 보기 글(왼쪽) · 고른 점수(가운데 「4.5점」) · 5점 보기 글(오른쪽) · 가운데 보기 이름은 두지 않는다 · 다시 그리지 않고 칸만 칠한다(끄는 중 포인터를 놓치지 않게) ── */
-var SV_STAR = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2.6l2.93 5.94 6.55.95-4.74 4.62 1.12 6.53L12 17.56l-5.86 3.08 1.12-6.53-4.74-4.62 6.55-.95z"/></svg>';
-function svStCol(v) { var t = (Math.min(5, Math.max(1, v)) - 1) / 4, a = [255, 178, 132], b = [255, 126, 49]; return "rgb(" + a.map(function (x, i) { return Math.round(x + (b[i] - x) * t); }).join(", ") + ")"; }
-function svStW(v, i) { return svHalf(v) ? Math.max(0, Math.min(1, v - i + 1)) * 100 : 0; }
-function svStTx(v) { return String(v) + "점"; }
-function svStHtml(q, v) {
-  var sc = svSc(q.s), has = svHalf(v), st = "";
-  for (var i = 1; i <= 5; i++) st += '<span class="st"><span class="ic">' + SV_STAR + '<span class="fg" style="width:' + svStW(v, i) + '%">' + SV_STAR + "</span></span></span>";
-  return '<div class="axs-st' + (has ? " has" : "") + '" id="svSt" data-id="' + q.id + '" data-s="' + q.s + '" style="--sv-st:' + (has ? svStCol(v) : "transparent") + '">' +
-    '<div class="row" tabindex="0" role="slider" aria-label="' + esc(q.q) + '" aria-valuemin="1" aria-valuemax="5"' + (has ? ' aria-valuenow="' + v + '" aria-valuetext="' + esc(svStTx(v) + " " + svScaleLabel(q.s, v)) + '"' : ' aria-valuetext="선택 안 함"') +
-    ' onpointerdown="svStDown(event)" onpointermove="svStMove(event)" onpointerup="svSlUp()" onpointercancel="svSlUp()" onlostpointercapture="svSlUp()" onkeydown="svStKey(event)">' + st + "</div>" +
-    '<div class="ends" aria-hidden="true"><span class="l">' + esc(sc[0] || "") + '</span><span class="v" id="svStOut">' + (has ? esc(svStTx(v)) : "") + '</span><span class="r">' + esc(sc[4] || "") + "</span></div></div>";
-}
-function svStSet(v) {
-  var box = el("svSt"); if (!box || SV.busy) return;
-  v = Math.min(5, Math.max(1, Math.round(v * 2) / 2));
-  var id = box.getAttribute("data-id"), s = box.getAttribute("data-s"), d = svDraft();
-  if (d.a[id] === v) return;
-  d.a[id] = v; svPutD(d);   /* 조용한 저장 · 다시 그리지 않는다 */
-  box.classList.add("has");
-  box.style.setProperty("--sv-st", svStCol(v));
-  [].forEach.call(box.querySelectorAll(".fg"), function (f, i) { f.style.width = svStW(v, i + 1) + "%"; });
-  var row = box.querySelector(".row");
-  row.setAttribute("aria-valuenow", String(v)); row.setAttribute("aria-valuetext", svStTx(v) + " " + svScaleLabel(s, v));
-  el("svStOut").textContent = svStTx(v);
-  svReady(true);
-}
-/* 누른 자리 → 값 · 별 칸(가로로 붙은 다섯 칸) 중 몇 번째 · 그 칸 가운데보다 왼쪽이면 .5 */
-function svStX(e) {
-  var cs = el("svSt").querySelectorAll(".st"), x = e.clientX;
-  for (var i = 0; i < cs.length; i++) { var r = cs[i].getBoundingClientRect(); if (x < r.right || i === cs.length - 1) return Math.max(1, i + (x < r.left + r.width / 2 ? 0.5 : 1)); }
-  return 1;
-}
-function svStDown(e) {
-  if (SV.busy) return;
-  e.preventDefault(); SV.drag = 1;
-  try { e.currentTarget.setPointerCapture(e.pointerId); } catch (x) {}
-  try { e.currentTarget.focus({ preventScroll: true }); } catch (x) {}
-  svStSet(svStX(e));
-}
-function svStMove(e) { if (SV.drag) svStSet(svStX(e)); }
-function svStKey(e) {
-  var box = el("svSt"); if (!box) return;
-  var v = svDraft().a[box.getAttribute("data-id")], has = svHalf(v), k = e.key;
-  if (k === "ArrowRight" || k === "ArrowUp") svStSet(has ? v + 0.5 : 1);
-  else if (k === "ArrowLeft" || k === "ArrowDown") svStSet(has ? v - 0.5 : 1);
-  else if (k === "Home") svStSet(1);
-  else if (k === "End") svStSet(5);
-  else return;
-  e.preventDefault();
-}
 /* 「다음」 단추 · 답이 있으면 진하게 · 없으면 흐리게(눌리기는 한다 · 정본 wait) */
 function svReady(ok) { var b = el("svGo"); if (b) { b.classList.toggle("wait", !ok); b.setAttribute("aria-disabled", ok ? "false" : "true"); } }
 /* 형식별 입력 · 값은 draft.a[문항id] */
 function svInputHtml(q, v) {
   var id = q.id;
-  if (q.type === "slider") return svIsPre() ? svStHtml(q, v) : svSlHtml(q, v);   /* v8.83 사전 설문 = 별점 · 일반 설문 = 슬라이더 그대로 */
+  if (q.type === "slider") return svSlHtml(q, v);
   if (q.type === "sess") return '<div class="axs-svol" role="group" aria-label="' + esc(q.q) + '">' + SVP_SESS.map(function (s) {   /* 261024 세션 = 글자 배지 + 공식 이름(두 줄까지) */
     return '<button type="button" class="axs-svop wrap" aria-pressed="' + (v === s.id) + '" onclick="svChoose(\'' + id + '\', \'' + s.id + '\')"><span class="lb"><span class="fl">' + s.id + "</span>" + esc(s.nm) + '</span><span class="rd" aria-hidden="true"></span></button>';
   }).join("") + "</div>";
