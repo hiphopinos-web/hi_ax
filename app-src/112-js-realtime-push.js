@@ -304,6 +304,8 @@ function beSync(after) {
       if (bf9 !== S.get("bf", false)) S.set("bf", bf9);
       var vd9 = {}; ["iv", "hq", "hh"].forEach(function (k) { vd9[k] = res.my.vid && res.my.vid[k] === 1 ? 1 : 0; });   /* v8.67 (사용자 261024) 영상 열기 · 닫기(콘솔 스위치 · 서버 my.vid) · 옛 서버(필드 없음) = 셋 다 닫힘 · 홈은 아래 App.render 가 다시 그린다 */
       if (JSON.stringify(vd9) !== JSON.stringify(S.get("vid_sw", null))) S.set("vid_sw", vd9);
+      var vu9 = {}; ["iv"].forEach(function (k) { var u = res.my.vidu && res.my.vidu[k]; if (typeof u === "string" && /^https:\/\/[^\s"<>]+$/.test(u)) vu9[k] = u; });   /* v8.70 현장 인터뷰 주소 = 서버가 열린 영상만(my.vidu) · 옛 서버 · 닫힘 = 없음 = 준비 중 */
+      if (JSON.stringify(vu9) !== JSON.stringify(S.get("vid_u", null))) S.set("vid_u", vu9);
       if (Array.isArray(res.my.svPre)) S.put("sv_pre", res.my.svPre);
       if (res.my.queue) {
         var was = S.get("queue", {}), nowQ = res.my.queue, kq;
