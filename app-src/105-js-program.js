@@ -350,6 +350,11 @@ var FLOOR18 = [
    FLOOR1(판 퀴즈 지도 · 둘러보기 6구역 id)에는 넣지 않고 표 · 지도 · 시트만 쓴다 · ZONE_PBF = 선착순 이벤트 시트(첫 진입 · TIME EVENT 카드 · 홈 한 줄이 같이 연다) */
 var ZONE_WELCOME = { id: "welcome", grp: "", sign: "WELCOME", hdr: "WELCOME", kor: "사전 신청자 체크인 · 선착순 참여상 수령처", tb: "체크인 · 선착순 참여상 수령처", fact: "", st: "",
   todo: ["사전 신청자는 내 QR로 체크인해요", "스탬프 6개를 먼저 채운 1~200번이 선착순 참여상을 받아요"] };   /* 시안 셋째 줄 「당일 못 받으면 행사 뒤 발송」은 화면 글 0 규칙(§248 추가5 · 261006)과 부딪혀 뺌 · 결정 필요로 보고 */
+/* 261024 (사용자 「200개 마감 뒤 오해 없게」) 하는 일 둘째 줄 · 마감(서버 fx.left 0 · 지급 마감 시각) 뒤 번호 없는 사람 = 마감 사실 · 마감 전 · 번호 있는 사람 = 그대로 · 둘러보기도 같은 z.todo 를 읽는다 */
+Object.defineProperty(ZONE_WELCOME, "todo", { enumerable: true, get: function () {
+  var on = typeof fxGet !== "function" || !fxGet() || fcfsOpen() || fcfsOwn(fcfsMy());
+  return ["사전 신청자는 내 QR로 체크인해요", on ? "스탬프 6개를 먼저 채운 1~200번이 선착순 참여상을 받아요" : "선착순 참여상 1~200번 마감 · 6개 달성은 행운권 3장"];
+} });
 var ZONE_PBF = { id: "pbf", grp: "", sign: "TIME EVENT", hdr: "선착순 이벤트", kor: "선착순 이벤트", fact: "", st: "", todo: [] };
 /* 1F 칸 지도 구역 순서 = 리플릿 순서(D7) · 첫 구역 = 처음 골라진 칸 · stair = 계단 동행(stairOpen) · AX in Action 은 AX LAB 에 합침(D4 · 시트에 사례 3개) · v7.69 welcome 은 지도 밖 한 줄 카드(f1WelHtml) */
 var F1_TB = ["vision", "lab", "play", "event", "lounge", "stair"];
@@ -632,7 +637,7 @@ function f1RoulOn() { return stampCount() >= 3 && !S.get("roulette_used", false)
 function f1LnOn() { return !!loungeMine(); }   /* D3 라운지 스탬프 칸 = 사전 신청자(내 상담)에게만 */
 /* 구역마다 [아이콘, 글, 켜짐] · 없으면 null(빈칸) */
 function f1Cell(id) {
-  if (id === "welcome") { var fc = fcfsCapTxt().replace(/^ · /, ""); return [f1Medal(!!fc && !/마감/.test(fc)), fc || "6개면 선착순 참여상", !!fc && !/마감/.test(fc)]; }
+  if (id === "welcome") { var fc = fcfsCapTxt().replace(/^ · /, ""); return [f1Medal(!!fc && !/마감/.test(fc)), fc || (typeof fcfsOpen !== "function" || !fxGet() || fcfsOpen() ? "6개면 선착순 참여상" : "선착순 참여상 마감"), !!fc && !/마감/.test(fc)]; }
   if (id === "event") { var ro = f1RoulOn(); return [f1Roul(ro), ro ? "룰렛 1회 사용 가능" : "3개면 룰렛 1회", ro]; }
   if (id === "lounge") { if (!f1LnOn()) return null; var lg = f1Got("ln"); return [f1Seal(lg), lg ? "받음" : "상담 종료 때 2개", lg, 2]; }
   var st = { lab: "p5", play: "p2", stair: "st" }[id]; if (!st) return null;
