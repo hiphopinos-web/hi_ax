@@ -3,6 +3,7 @@
  * 읽기 = tour_stats(관리코드 · day = 그날 들어간 방문만 · 없으면 전체) · 서버 시트 둘러보기기록(앱 v8.78 부터 · 그 전 방문은 없다)
  * 위 = 숫자 카드 4(들어간 사람 · 들어간 횟수 · 총 체류 · 1회 평균 체류) · 시간대별 들어간 횟수 · 체류 분포 · 들어온 곳 · 3D · TV 영상
  *   요약 숫자는 시험 사번을 뺀다 · 표는 구분 칩(시험 제외 · 전체 · 시험)
+ * 261024 (사용자 「권장대로」) 사람별 「v8.78 전 횟수」 칸 = 서버 pre(계정 칸 옛 둘러보기 집계 · 새 기록과 더하지 않음) · 전체 기간이면 옛 집계만 있는 사람도 줄(누적 횟수 0 · 순위 없음)
  * 표 = table.js · 사람별(순위 = 누적 횟수 → 총 체류 · 빠른 정렬 단추 누적 횟수 · 총 체류 · 최근) | 방문별(최근 2,000회) · 엑셀 = 화면 그대로 · 줄을 누르면 한 사람 카드 */
 var TVL_SUB=["tour","행사 둘러보기"];
 var TVL_SORT=[["n","누적 횟수"],["sec","총 체류"],["last","최근"]];
@@ -38,8 +39,9 @@ function tvlGrids(){
     onRow:function(k){ pcOpen(k, MG.tvp); }, empty:"아직 들어간 사람이 없습니다",
     cols:[{ k:"rank", t:"순위", type:"num", w:60 },{ k:"emp", t:"사번", w:84 },{ k:"dept", t:"소속", w:150 },{ k:"name", t:"이름", w:90, tags:tvlTestTag },
       { k:"n", t:"누적 횟수", type:"num", w:84 },
-      { k:"sec", t:"총 체류", type:"num", w:96, f:function(r){ return esc(tvlDur(r.sec))||'<span class="cap">모름</span>'; }, x:function(r){ return tvlDur(r.sec); } },
-      { k:"avg", t:"1회 평균", type:"num", w:90, v:function(r){ return r.avg==null?"":r.avg; }, f:function(r){ return r.avg==null?'<span class="cap">모름</span>':esc(tvlDur(r.avg)); }, x:function(r){ return tvlDur(r.avg); } },
+      { k:"pre", t:"v8.78 전 횟수", type:"num", w:104 },
+      { k:"sec", t:"총 체류", type:"num", w:96, f:function(r){ return !num(r.n)?'<span class="cap">-</span>':esc(tvlDur(r.sec))||'<span class="cap">모름</span>'; }, x:function(r){ return num(r.n)?tvlDur(r.sec):""; } },
+      { k:"avg", t:"1회 평균", type:"num", w:90, v:function(r){ return r.avg==null?"":r.avg; }, f:function(r){ return !num(r.n)?'<span class="cap">-</span>':r.avg==null?'<span class="cap">모름</span>':esc(tvlDur(r.avg)); }, x:function(r){ return tvlDur(r.avg); } },
       { k:"first", t:"처음 들어간 시각", type:"date", w:120 },{ k:"last", t:"최근 들어간 시각", type:"date", w:120 },
       { k:"d3", t:"3D", w:56, v:function(r){ return r.d3?"3D":""; } },{ k:"vp", t:"TV 영상", type:"num", w:72 }] });
   gridOf("tvv",{ file:"행사 둘러보기 방문별", key:function(r){ return r.emp+"|"+r.in; }, sort:{ k:"in", d:-1 }, chips:tvlChips(), h:560, ph:"사번 · 소속 · 이름 찾기",
@@ -85,14 +87,15 @@ function tvlSumH(d){
   var ds=d.dist||[], dm=Math.max.apply(null,[1].concat(ds.map(function(x){ return num(x.n); })));
   var dist=ds.map(function(x){ var n=num(x.n); return '<div class="tvl-db"><b>'+esc(x.nm)+'</b><span class="bar"><i style="width:'+Math.round(n/dm*100)+'%"></i></span><em>'+n0(n)+'회</em></div>'; }).join("");
   var d3=s.d3||{}, src=(d.src||[]).filter(function(x){ return num(x.n); }).map(function(x){ return esc(x.nm)+" "+n0(x.n); }).join(" · ");
-  var ln='<p class="tvl-ln">들어온 곳 '+(src||"-")+'<br>3D '+n0(d3.y)+' · 평면 안내 '+n0(d3.n)+(num(d3.u)?' · 모름 '+n0(d3.u):'')+' · TV 영상 누름 '+n0(s.vp)+'회</p>';
+  var ln='<p class="tvl-ln">들어온 곳 '+(src||"-")+'<br>3D '+n0(d3.y)+' · 평면 안내 '+n0(d3.n)+(num(d3.u)?' · 모름 '+n0(d3.u):'')+' · TV 영상 누름 '+n0(s.vp)+'회'+
+    (s.pre!=null?'<br>v8.78 전 횟수(계정 칸 옛 집계 · 10분 묶음 · 표의 따로 칸) '+n0(s.preP)+'명 · '+n0(s.pre)+'회':'')+'</p>';
   return k+'<div class="grid g2 tvl-g2"><div class="tvl-box"><h3>시간대별 들어간 횟수 <span class="cap">'+(tvlDay()?"오늘":"전체 기간 합")+' · '+lo+'시 ~ '+hi+'시</span></h3>'+bars+'</div>'+
     '<div class="tvl-box"><h3>체류 분포 <span class="cap">방문 한 번</span></h3>'+dist+'</div></div>'+ln;
 }
 function tvlRank(rows){
-  var real=rows.filter(function(r){ return !r.test; }).sort(function(a,b){ return num(b.n)-num(a.n)||num(b.sec)-num(a.sec)||String(a.first).localeCompare(String(b.first)); });
+  var real=rows.filter(function(r){ return !r.test&&num(r.n)>0; }).sort(function(a,b){ return num(b.n)-num(a.n)||num(b.sec)-num(a.sec)||String(a.first).localeCompare(String(b.first)); });
   var rk={}; real.forEach(function(r,i){ rk[r.emp]=i+1; });
-  return rows.map(function(r){ return Object.assign({}, r, { rank:r.test?"":rk[r.emp] }); });
+  return rows.map(function(r){ return Object.assign({}, r, { rank:r.test||!rk[r.emp]?"":rk[r.emp] }); });
 }
 function tvlPaint(){
   var d=S.data.tvst, box=el("tvlSum"), gt=dataGate("tvst","행사 둘러보기");

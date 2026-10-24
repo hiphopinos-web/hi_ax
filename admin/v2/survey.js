@@ -97,13 +97,19 @@ function svyTl(d){
   if(D.dl.length>1) h+='<p class="cap mt">날짜별 · '+D.dl.map(function(x){ return esc(svyMd(x))+' '+n0(D.days[x]); }).join(" · ")+'</p>';
   return h;
 }
-/* 사전 신청자 · 세션별 응답 수(서버 sess · 세션 칸 빈 응답은 따로 한 줄) */
+/* 사전 신청자 · 세션별 응답 수(서버 sess · 세션 칸 빈 응답은 따로 한 줄)
+ * 261024 (사용자 「권장대로」) 세션별 만족 평균(서버 sessAvg { A: { n, overall, ops, skill } } · 5점) · 전반 만족 = overall · 교육 4문항 = 난이도 · 강사 설명 · 진행 속도 · 실습 환경 · 역량 향상 = e_skill */
+var SVY_SA=[["overall","전반 만족"],["ops","교육 4문항"],["skill","역량 향상"]];
 function svySess(d){
-  var ss=d.sess||{}, nm=d.sessNm||{}, L=Object.keys(nm).length?Object.keys(nm).sort():["A","B","C","D","E"], kd=d.kinds||{}, tot=svKind()==="gen"?0:num(kd.pre), sum=0;
+  var ss=d.sess||{}, nm=d.sessNm||{}, sa=d.sessAvg||{}, L=Object.keys(nm).length?Object.keys(nm).sort():["A","B","C","D","E"], kd=d.kinds||{}, tot=svKind()==="gen"?0:num(kd.pre), sum=0;
   L.forEach(function(x){ sum+=num(ss[x]); });
-  var row=function(a, c){ return '<tr><td>'+a+'</td><td class="n"><b>'+n0(c)+'</b>'+svUnit()+'</td><td class="svy-r"><div class="bar"><i style="width:'+svyPc(c,tot)+'%"></i></div><span class="n">'+svyPc(c,tot)+'%</span></td></tr>'; };
-  var h='<h2>세션별 응답 <span class="cap">사전 신청자 '+n0(tot)+svUnit()+' · 10F 실습 세션</span></h2><table class="tb svd-ss"><thead><tr><th>세션</th><th class="n">응답</th><th>비율</th></tr></thead><tbody>'+
-    L.map(function(x){ return row('<b>'+esc(x)+'</b> · '+esc(nm[x]||""), num(ss[x])); }).join("")+(tot>sum?row('<span class="cap">세션 칸 비어 있음</span>', tot-sum):"")+'</tbody></table>';
+  var row=function(a, c, av){ return '<tr><td>'+a+'</td><td class="n"><b>'+n0(c)+'</b>'+svUnit()+'</td><td class="svy-r"><div class="bar"><i style="width:'+svyPc(c,tot)+'%"></i></div><span class="n">'+svyPc(c,tot)+'%</span></td>'+
+    SVY_SA.map(function(k){ var v=av?av[k[0]]:null; return v==null?'<td class="cap n">-</td>':'<td class="n"><b>'+svyAvg(v)+'</b></td>'; }).join("")+'</tr>'; };
+  var h='<h2>세션별 응답 <span class="cap">사전 신청자 '+n0(tot)+svUnit()+' · 10F 실습 세션</span></h2><div class="svd-ssw"><table class="tb svd-ss"><thead><tr><th>세션</th><th class="n">응답</th><th>비율</th>'+
+    SVY_SA.map(function(k){ return '<th class="n">'+k[1]+'</th>'; }).join("")+'</tr></thead><tbody>'+
+    L.map(function(x){ return row('<b>'+esc(x)+'</b> · '+esc(nm[x]||""), num(ss[x]), sa[x]); }).join("")+(tot>sum?row('<span class="cap">세션 칸 비어 있음</span>', tot-sum, null):"")+'</tbody></table></div>'+
+    (d.preNoAtt!=null&&tot?'<p class="mt4 svd-na"><b>10F 출석 기록 없음 '+n0(d.preNoAtt)+svUnit()+'</b>'+(function(){ var na=d.sessNoAtt||{}, l=L.filter(function(x){ return num(na[x]); }).map(function(x){ return esc(x)+' '+n0(na[x]); }); return l.length?' <span class="cap">· '+l.join(" · ")+'</span>':''; })()+' <span class="cap">· 원본 엑셀 「10F 출석」 칸으로 거름</span></p>':'')+
+    '<p class="cap mt4">평균 = 5점 만점 · 교육 4문항 = 난이도 · 강사 설명 · 진행 속도 · 실습 환경<br>· 역량 향상 = AI 활용 역량 향상</p>';
   if(svKind()!=="pre") h+='<div class="mt"><button class="btn sm" type="button" onclick="goSub(\'pre\')">실습 세션 문항 보기 ›</button></div>';
   return h;
 }
@@ -203,8 +209,9 @@ function svyAggSheets(d, st){
       p1.filter(function(q){ return q.t!=="text"; }).map(function(q){ return [SVY_P1T[q.id]||q.q, q.n, q.avg==null?"":q.avg, Object.keys(q.counts||{}).map(function(c){ return c+" "+q.counts[c]; }).join(" · ")]; })));
     var tx=[]; p1.forEach(function(q){ (q.lines||[]).forEach(function(x){ var id=x.id||q.id; tx.push([rdlHm(x.t, day), (SVY_P1T[q.id]||q.id)+(id!==q.id?" · 기타":""), x.line]); }); });
     shs.push(bkSh("실습 세션 서술", "PART 1 서술 응답 · "+head+" · 기준 시각 "+st.s+" · "+n0(tx.length)+"줄", ["시각","문항","답"], [12,24,80], ["c","t","w"], tx));
-    var nm=d.sessNm||{}, ss=d.sess||{};
-    shs.push(bkSh("세션별", "세션별 응답 · "+head+" · 기준 시각 "+st.s, ["세션","이름","응답"], [7,48,9], ["c","t","n"], Object.keys(nm).sort().map(function(x){ return [x, nm[x], num(ss[x])]; })));
+    var nm=d.sessNm||{}, ss=d.sess||{}, sa=d.sessAvg||{}, na=d.sessNoAtt;
+    shs.push(bkSh("세션별", "세션별 응답 · 만족 평균(5점) · "+head+" · 기준 시각 "+st.s, ["세션","이름","응답"].concat(SVY_SA.map(function(k){ return k[1]; })).concat(na?["10F 출석 기록 없음"]:[]), [7,48,9,11,11,11,14].slice(0,na?7:6), ["c","t","n","n","n","n","n"].slice(0,na?7:6),
+      Object.keys(nm).sort().map(function(x){ var a=sa[x]||{}; return [x, nm[x], num(ss[x])].concat(SVY_SA.map(function(k){ return a[k[0]]==null?"":a[k[0]]; })).concat(na?[num(na[x])]:[]); })));
   }
   return shs;
 }
