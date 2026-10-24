@@ -199,12 +199,34 @@ function bkLngGrid(V, st){
   (lg.none||[]).forEach(function(s){ n++; out.push(["", "시간 미정", s.name+" ("+(s.dept||"")+") · "+s.st]); });
   return bkSh("라운지 시간표", bkT("AX 라운지 날짜별 시간표", st, n, "명"), head, [10,12].concat(head.slice(2).map(function(){ return 26; })), ["c","c"].concat(head.slice(2).map(function(){ return "w"; })), out, 30);
 }
-function bkSurveySh(S, st){
-  S=S||{ qs:[], progs:[] }; var qs=S.qs||[], tq=qs.filter(function(q){ return q.t==="text"; })[0], day=st.s.slice(0,10);
-  return [bkSh("문항 집계", "설문 문항 집계 · 기준 시각 "+st.s+" · 응답 "+n0(S.n)+"명(시험 사번 제외)", ["문항","응답","평균","분포"], [44,7,7,60], ["w","n","n","w"],
-      qs.filter(function(q){ return q.t!=="text"; }).map(function(q){ return [q.q, q.n, q.avg==null?"":q.avg, Object.keys(q.counts||{}).map(function(c){ return c+" "+q.counts[c]; }).join(" · ")]; })),
+/* 설문 · 261024 (사용자 확정 · 시안 svdash_mock) 「문항 집계」 한 장 → 5점 문항 · 선택지 문항 · 문항 원문 세 장 + 프로그램별 · 서술 응답
+ * 5점 문항 = 한 줄에 한 문항 · 번호 · 문항 짧은 이름 · 응답 · 평균 · 「5점 인원」~「1점 인원」 9칸 · 「5점 비율」~「1점 비율」 9칸(% 서식 값 · 데이터 막대) · 머리 한 줄
+ * 선택지 문항 = 문항 · 선택지 · 인원 · 비율(평균 없음 · 데이터 막대) · 문항 원문 = 번호 · 원문(줄바꿈)
+ * o = { pre 시트 이름 앞 글자 · head 제목 앞 글자 · nm(q) 짧은 이름 · no(q, i) 번호 · keep(q) 넣을 문항 } · 실습 세션(PART 1 · survey.js)도 같은 함수 */
+var BK_SV_STEPS=[5,4.5,4,3.5,3,2.5,2,1.5,1];
+function bkSvNm(S){ var T=typeof SVY_T==="object"?SVY_T:{}, P={}; (S.progs||[]).forEach(function(p){ P[p.id]=p.fl+" "+p.nm; }); return function(q){ return T[q.id]||P[q.id]||q.q||q.id; }; }
+function bkSvNo(q){ return String(q.id||"").toUpperCase().replace("_","-"); }
+function bkSvQSh(qs, st, o){
+  o=o||{}; var pre=o.pre||"", head=(o.head?o.head+" · ":"")+"기준 시각 "+st.s, nm=o.nm||function(q){ return q.q||q.id; }, no=o.no||bkSvNo, keep=o.keep||function(){ return true; };
+  var L=qs.filter(keep), I={}; L.forEach(function(q,i){ I[q.id]=no(q,i); });
+  var ch=function(q){ return !(Number(q.top)>=5); };
+  var sc=L.filter(function(q){ return q.t!=="text"&&q.t!=="multi"&&!ch(q); }), cq=L.filter(function(q){ return q.t!=="text"&&q.t!=="multi"&&ch(q)&&(q.opts||[]).length; });
+  var r3=function(a,b){ return b>0?Math.round(a/b*1000)/1000:0; }, S9=BK_SV_STEPS;
+  var s1=bkSh(pre+"5점 문항", (o.head?o.head+" · ":"")+"5점 문항 · 평균 = 빈 값 뺌 · "+"기준 시각 "+st.s, ["번호","문항","응답","평균"].concat(S9.map(function(x){ return x+"점 인원"; })).concat(S9.map(function(x){ return x+"점 비율"; })),
+    [8,26,7,7].concat(S9.map(function(){ return 10; })).concat(S9.map(function(){ return 10; })), ["c","t","n","d2"].concat(S9.map(function(){ return "n"; })).concat(S9.map(function(){ return "p"; })),
+    sc.map(function(q){ var n=num(q.n), D=q.dist||{}; return [I[q.id], nm(q), n, q.avg==null?"":q.avg].concat(S9.map(function(x){ return num(D[x]); })).concat(S9.map(function(x){ return r3(num(D[x]), n); })); }));
+  s1.fx=2; if(sc.length) s1.cf=[{ ref:rdlCol(13)+"3:"+rdlCol(21)+(sc.length+2) }];
+  var r2=[]; cq.forEach(function(q){ var n=num(q.n), D=q.dist||{}; (q.opts||[]).forEach(function(op){ var c=num(D[op[0]]); r2.push([I[q.id], nm(q), op[1], c, r3(c, n)]); }); });
+  var s2=bkSh(pre+"선택지 문항", (o.head?o.head+" · ":"")+"선택지 문항 · 비율 = 고른 사람 ÷ 답한 사람 · 기준 시각 "+st.s, ["번호","문항","선택지","인원","비율"], [8,26,40,7,10], ["c","t","t","n","p"], r2);
+  if(r2.length) s2.cf=[{ ref:"E3:E"+(r2.length+2) }];
+  var s3=bkSh(pre+"문항 원문", (o.head?o.head+" · ":"")+"문항 원문 · 기준 시각 "+st.s, ["번호","원문"], [8,90], ["c","w"], L.map(function(q){ return [I[q.id], q.q||""]; }));
+  return [s1, s2, s3];
+}
+function bkSurveySh(S, st, o){
+  S=S||{ qs:[], progs:[] }; o=o||{}; var qs=S.qs||[], tq=qs.filter(function(q){ return q.t==="text"; })[0], day=st.s.slice(0,10);
+  return bkSvQSh(qs, st, { head:o.head||"설문 · 응답 "+n0(S.n)+"명(시험 사번 제외)", nm:bkSvNm(S), keep:o.keep }).concat([
     bkSh("프로그램별", "설문 프로그램별 · 기준 시각 "+st.s, ["층","프로그램","고른 사람","비율(%)","평균"], [6,40,9,9,7], ["c","t","n","n","n"], (S.progs||[]).map(function(p){ return [p.fl, p.nm, p.n, p.rate, p.avg==null?"":p.avg]; })),
-    bkSh("서술 응답", "설문 서술 응답 · 기준 시각 "+st.s+" · "+n0(tq?(tq.lines||[]).length:0)+"줄", ["시각","답"], [12,90], ["c","w"], tq?(tq.lines||[]).map(function(x){ return [rdlHm(x.t, day), x.line]; }):[])];
+    bkSh("서술 응답", "설문 서술 응답 · 기준 시각 "+st.s+" · "+n0(tq?(tq.lines||[]).length:0)+"줄", ["시각","답"], [12,90], ["c","w"], tq?(tq.lines||[]).map(function(x){ return [rdlHm(x.t, day), x.line]; }):[])]);
 }
 function bkTypeSh(T, st){
   var day=st.s.slice(0,10);
@@ -213,18 +235,28 @@ function bkTypeSh(T, st){
 }
 /* ── 여러 장 xlsx · rosterdl.js 의 rdlX · rdlCol · 서식 RDL_STY + 줄바꿈 칸(8번째 서식 w) ── */
 var BK_STY=null;
-function bkSty(){ if(!BK_STY) BK_STY=RDL_STY.replace('<cellXfs count="7">','<cellXfs count="8">').replace('</cellXfs>','<xf numFmtId="49" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf></cellXfs>'); return BK_STY; }
-function bkCell(ref, v, k){ if(k!=="w") return rdlCell(ref, v, k); return '<c r="'+ref+'" s="7" t="inlineStr"><is><t xml:space="preserve">'+rdlX(v)+'</t></is></c>'; }
+/* 261024 서식 8 = 비율(0.0% · 숫자 값 0.433) · 9 = 소수 두 자리(평균) · 칸 종류 p · d2 · 앞 0~7 번은 그대로 */
+function bkSty(){ if(!BK_STY) BK_STY=RDL_STY.replace('<fonts ','<numFmts count="1"><numFmt numFmtId="164" formatCode="0.0%"/></numFmts><fonts ').replace('<cellXfs count="7">','<cellXfs count="10">').replace('</cellXfs>','<xf numFmtId="49" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>'+
+  '<xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="right" vertical="center"/></xf>'+
+  '<xf numFmtId="2" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf></cellXfs>'); return BK_STY; }
+function bkCell(ref, v, k){
+  if((k==="p"||k==="d2")&&v!==""&&v!=null&&isFinite(Number(v))) return '<c r="'+ref+'" s="'+(k==="p"?8:9)+'"><v>'+Number(v)+'</v></c>';
+  if(k==="p"||k==="d2") k="n";
+  if(k!=="w") return rdlCell(ref, v, k); return '<c r="'+ref+'" s="7" t="inlineStr"><is><t xml:space="preserve">'+rdlX(v)+'</t></is></c>'; }
+/* 데이터 막대 · sh.cf = [{ ref, min, max }](없으면 0 ~ 1) · 엑셀 규격 순서 = mergeCells 뒤 · printOptions 앞 */
+function bkCf(sh){ if(!sh.cf||!sh.cf.length) return "";
+  return sh.cf.map(function(c,i){ return '<conditionalFormatting sqref="'+c.ref+'"><cfRule type="dataBar" priority="'+(i+1)+'"><dataBar><cfvo type="num" val="'+(c.min==null?0:c.min)+'"/><cfvo type="num" val="'+(c.max==null?1:c.max)+'"/><color rgb="FF8EA0C8"/></dataBar></cfRule></conditionalFormatting>'; }).join(""); }
 function bkSheetXml(sh){
   var nc=Math.max(1,sh.head.length), last=rdlCol(nc-1), nr=sh.rows.length+2, x=[];
   x.push('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">');
   x.push('<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><dimension ref="A1:'+last+nr+'"/>');
-  x.push('<sheetViews><sheetView workbookViewId="0"><pane ySplit="2" topLeftCell="A3" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A3" sqref="A3"/></sheetView></sheetViews>');
+  if(sh.fx){ var tl=rdlCol(sh.fx)+"3"; x.push('<sheetViews><sheetView workbookViewId="0"><pane xSplit="'+sh.fx+'" ySplit="2" topLeftCell="'+tl+'" activePane="bottomRight" state="frozen"/><selection pane="topRight"/><selection pane="bottomLeft"/><selection pane="bottomRight" activeCell="'+tl+'" sqref="'+tl+'"/></sheetView></sheetViews>'); }   /* 261024 sh.fx = 앞 칸 고정(없으면 예전 그대로) */
+  else x.push('<sheetViews><sheetView workbookViewId="0"><pane ySplit="2" topLeftCell="A3" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A3" sqref="A3"/></sheetView></sheetViews>');
   x.push('<sheetFormatPr defaultRowHeight="18"/><cols>'+sh.w.map(function(w,i){ return '<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+w+'" customWidth="1"/>'; }).join("")+'</cols><sheetData>');
   x.push('<row r="1" ht="24" customHeight="1"><c r="A1" s="1" t="inlineStr"><is><t xml:space="preserve">'+rdlX(sh.title)+'</t></is></c></row>');
   x.push('<row r="2" ht="20" customHeight="1">'+sh.head.map(function(h,i){ return '<c r="'+rdlCol(i)+'2" s="2" t="inlineStr"><is><t>'+rdlX(h)+'</t></is></c>'; }).join("")+'</row>');
   sh.rows.forEach(function(r,ri){ var n=ri+3; x.push('<row r="'+n+'"'+(sh.ht?' ht="'+sh.ht+'" customHeight="1"':'')+'>'+r.map(function(v,i){ return bkCell(rdlCol(i)+n, v, sh.kind[i]); }).join("")+'</row>'); });
-  x.push('</sheetData><mergeCells count="1"><mergeCell ref="A1:'+last+'1"/></mergeCells>');
+  x.push('</sheetData><mergeCells count="1"><mergeCell ref="A1:'+last+'1"/></mergeCells>'+bkCf(sh));
   x.push('<printOptions horizontalCentered="1"/><pageMargins left="0.4" right="0.4" top="0.6" bottom="0.6" header="0.25" footer="0.25"/>');
   x.push('<pageSetup paperSize="9" orientation="'+(nc>8?"landscape":"portrait")+'" fitToWidth="1" fitToHeight="0"/>');
   x.push('<headerFooter><oddHeader>&amp;L'+rdlX(sh.name)+'</oddHeader><oddFooter>&amp;C&amp;P / &amp;N</oddFooter></headerFooter></worksheet>');
