@@ -365,10 +365,10 @@ function vidAt(t) {
 }
 var VIDS = [
   { t: "AI 활용 현장 인터뷰", s: "현장 인터뷰", len: "", at: IV_AT, v: { src: "", poster: "", loop: false, page: IV_YT } },   /* v8.63 공개 시각(at) 뒤 유튜브 · v8.20 (사용자 261021) 다른 두 줄과 같은 「준비 중」(회색 빈 칸 · 누를 수 없음) · 파일 assets/interview/ 는 그대로 */
-  { t: "HiDI Q", s: "AX PLAY", len: "", v: { src: "", poster: "", loop: false, page: "" } },
-  { t: "Hi-Helper", s: "AX PLAY", len: "", v: { src: "", poster: "", loop: false, page: "" } }
+  { t: "HiDI Q", s: "AX PLAY", len: "1:35", v: { src: "assets/vid/hidiq_v1.mp4", poster: "assets/vid/hidiq_v1.webp", loop: false, page: "" } },   /* v8.66 (사용자 261024) 원본 그대로(1080p · faststart) github.io 정적 파일 · 앱 안 플레이어(ivPlay · 누른 뒤에만 받음) · 바꿀 때는 _v2 새 이름 */
+  { t: "Hi-Helper", s: "AX PLAY", len: "1:54", v: { src: "assets/vid/hihelper_v1.mp4", poster: "assets/vid/hihelper_v1.webp", loop: false, page: "" } }
 ];
-var VIDS_PEND = { 0: "10/26 13:30 공개" };   /* v8.59 (사용자 261023) 현장 인터뷰 최종 영상 = 10/26 13:30 공개 · v8.63 그때 저절로 열림(IV_AT · vidAt) · 다른 줄은 「준비 중」 */
+var VIDS_PEND = { 0: "10/26 13:30 공개" };   /* v8.59 (사용자 261023) 현장 인터뷰 최종 영상 = 10/26 13:30 공개 · v8.63 그때 저절로 열림(IV_AT · vidAt) · HiDI Q · Hi-Helper = v8.66 영상 연결(칸이 보이면 바로 누를 수 있음) */
 var VFOLD = { open: false };
 function vidOk(x) { return !!(x && x.v && (x.v.src || x.v.page) && (!x.at || vidAt(x.at))); }
 function vidTick() {   /* v8.63 공개 시각이 지나면 켜진 화면의 줄만 바꾼다(접힘 · 스크롤 그대로) */
