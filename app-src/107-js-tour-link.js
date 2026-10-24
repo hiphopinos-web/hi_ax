@@ -399,10 +399,15 @@ function vidSw() { var o = S.get("vid_sw", null); return o && typeof o === "obje
 function vidTry() { return typeof testEmp === "function" && testEmp() && !ttGet(); }   /* 시험 장치(사용자 확인 뒤 이 줄만 지운다) · 테스트 사번 = 시험 시각을 고르지 않았으면 닫힌 영상도 미리 열림 · 일반 참가자는 해당 없음 */
 function vidUrl(x) { var o = S.get("vid_u", null), u = o && typeof o === "object" && x ? o[x.id] : ""; return typeof u === "string" && /^https:\/\/[^\s"<>]+$/.test(u) ? u : ""; }   /* v8.70 서버가 준 주소(열린 영상만) */
 function vidOk(x) { return !!(x && x.v && (x.v.src || x.v.page || vidUrl(x)) && (x.al === 1 || vidSw()[x.id] === 1 || vidTry())); }
-function vidRowHtml(x, i) {
-  var ok = vidOk(x), th = '<span class="tb">' + (ok && x.v.poster ? '<img src="' + esc(x.v.poster) + '" alt="" width="1280" height="720" loading="lazy" decoding="async">' : "") + '<span class="pl">' + IV_PLAY_SVG + "</span>" + (x.len ? "<em>" + esc(x.len) + "</em>" : "") + "</span>";
-  return '<button type="button" class="vr" data-vi="' + i + '"' + (ok ? ' onclick="ivAsk(this, ' + i + ')" aria-label="' + esc(x.t) + ' 영상 보기"' : " disabled") + ">" + th +
+function vidRowHtml(x, i) {   /* v8.74 i = 숫자(VIDS 줄 번호) | 문자열(영상 id · 구역 상세 AX VISION 줄 = vidById) */
+  var ok = vidOk(x), oc = typeof i === "string" ? "vidById('" + i + "')" : i, th = '<span class="tb">' + (ok && x.v.poster ? '<img src="' + esc(x.v.poster) + '" alt="" width="1280" height="720" loading="lazy" decoding="async">' : "") + '<span class="pl">' + IV_PLAY_SVG + "</span>" + (x.len ? "<em>" + esc(x.len) + "</em>" : "") + "</span>";
+  return '<button type="button" class="vr" data-vi="' + i + '"' + (ok ? ' onclick="ivAsk(this, ' + oc + ')" aria-label="' + esc(x.t) + ' 영상 보기"' : " disabled") + ">" + th +
     '<span class="x"><b>' + hdqHtml(esc(x.t)) + "</b><span>" + (ok ? esc(x.s) : segHtml(esc(x.s + " · 준비 중"))) + "</span></span>" + (ok ? '<span class="cv">' + CHEV_SVG + "</span>" : "") + "</button>";
+}
+/* v8.74 (사용자 261024) 구역 상세(zone_d vision) 안 영상 줄 = 홈 영상 칸 줄 · 둘러보기 TV 와 같은 vidRowHtml · ivAsk(소리 창 → 넓은 화면) · 표지 webp 만(lazy · mp4 는 누른 뒤에만 받음) · 열린 영상만(vidOk) */
+function vidZoneHtml(id) {
+  var x = vidById(id);
+  return x && vidOk(x) ? '<section class="axs-zvid" aria-label="영상 보기"><h3>영상</h3><div class="axs-vids">' + vidRowHtml(x, id) + "</div></section>" : "";
 }
 function vidHomeHtml() {   /* 줄 모양 = 판 문법 절(.axs-pan .axs-vids) 그대로 · 칸 그릇에 판 경계(axs-pan · 참여하기 칸과 같은 방식) */
   if (!VIDS.some(vidOk)) return "";   /* 셋 다 닫힘 = 칸째 없음 */

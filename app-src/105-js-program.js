@@ -776,13 +776,15 @@ function zonePairHtml(z, L) {
   return '<div class="ax-stack axs-pan"><div class="axs-zdt axs-sthost">' + zoneStampHtml(z) + zoneSign(z.sign, "lg") + zoneGdBody(z, L) + "</div>" +
     '<div class="axs-xbtns">' + progBtn(esc(b[0]), b[1], "", b[2] || "", !!b[3]) + "</div>" + tourFloorBackHtml() + "</div>";
 }
+/* v8.74 (사용자 261024) AX VISION 구역 상세 = 하는 일 아래 구분선 + 영상 줄(vidZoneHtml · 107) · 다른 구역은 빈 글 */
+function zoneVidHtml(z) { return z.id === "vision" && vidOk(vidById("av")) ? '<hr class="axs-rule">' + vidZoneHtml("av") : ""; }
 function zoneDetailHtml() {
   var z = zoneCur(), L = zoneLive(z), pill = zoneStampHtml(z), ev = z.id === "event", seal = pill && !ev;
   if (z.gd) return zonePairHtml(z, L);
   var cr = ev ? pill : seal ? (L.tm ? '<span class="axs-pt">' + esc(L.tm) + "</span>" : "") : '<span class="axs-pt">자유 관람 · 스탬프 없음</span>';
   return '<div class="ax-stack axs-pan"><div class="axs-zdt' + (seal ? " axs-sthost" : "") + '">' + (seal ? pill : "") + zoneSign(z.sign, "lg") +
     '<p class="axs-bar stm">' + esc(z.stm) + "</p>" + (cr ? '<div class="cr">' + cr + "</div>" : "") +
-    '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + z.todo.map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" + zoneCaseHtml(z) + zoneExHtml(z) +
+    '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + z.todo.map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" + zoneCaseHtml(z) + zoneExHtml(z) + zoneVidHtml(z) +
     (L.kv ? '<hr class="axs-rule"><dl class="axs-kv' + (ev ? " ev" : "") + '">' + L.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + segHtml(esc(r[1])) + "</dd>"; }).join("") + "</dl>" : "") + (L.needHtml || (L.need ? needBoxHtml("선착순 받으려면", "선착순 받으려면", L.need) : "")) +
     "</div>" + (ev && EV_TYP_PROMO ? typPromoHtml("go") : "") + zonePicHtml(z) + (L.btn ? '<button type="button" class="ax-button" onclick="' + L.btn[1] + '">' + esc(L.btn[0]) + "</button>" : "") + "</div>";   /* v5.60 E (사용자 261004 「모형에서 보기 굳이 없어도 될 버튼 · 여기서 길 잃는 수석님 많을 듯」) 구역 상세의 「모형에서 보기」 삭제 · 둘러보기 입구 = 상시 운영 맨 위 카드 · 홈 줄 */
 }
@@ -800,7 +802,7 @@ function zoneSheet() {
   var body = z.gd ? zoneGdBody(z, L) :   /* v6.83 (묶음 16) 라운지 · 커피챗 = 공용 본문(사실 표 → 사진 → 하는 일 → 참여 전 확인 상자 · 접힘 없음) */
     ev ? (meta ? '<div class="cr">' + meta + "</div>" : "") + (kv ? '<hr class="axs-rule">' + kv : "") + evBoothHtml() :   /* v7.67 (사용자 261017) EVENT = 부스별 안내(포토부스 · 룰렛 · 타자왕) · 옛 하는 일 3줄 · 선착순 상자 · 쿠키 사진 한 줄 */
     (meta ? '<div class="cr">' + meta + "</div>" : "") +
-    '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + (z.lead ? [z.lead] : []).concat(z.todo).map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" + zoneCaseHtml(z.id === "lab" ? zoneById("action") : z) + zoneExHtml(z) +   /* v7.67 (D4) AX LAB 시트 = AX in Action 사례 3개 */
+    '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + (z.lead ? [z.lead] : []).concat(z.todo).map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" + zoneCaseHtml(z.id === "lab" ? zoneById("action") : z) + zoneExHtml(z) + zoneVidHtml(z) +   /* v7.67 (D4) AX LAB 시트 = AX in Action 사례 3개 */
     (kv ? '<hr class="axs-rule">' + kv : "") + (L.needHtml || (L.need ? needBoxHtml("선착순 받으려면", "선착순 받으려면", L.need) : "")) +
     (ev && EV_TYP_PROMO ? typPromoHtml("go") : "") + zonePicHtml(z);   /* v5.96 (사용자 261006 밤 「여기에 타자왕 광고는 없애줘」) EVENT 구역 상세 = 홍보 칸 없음 · 스위치 EV_TYP_PROMO */
   return { cls: "axs-pan", name: zoneSign(z.sign, "lg"), chips: zoneChip(L.chip), title: esc(z.id === "cchat" ? CCHAT_TTL : z.kor), seal: seal ? pill : "", body: body,   /* v5.79 머리 이름 = 구역 간판 하나(현장 부스 사인과 같은 글자 · 한국어 이름을 따로 두지 않는다) · 상태 칩 · 한국어 한 줄 · 도장 = 본문 첫 줄 */
