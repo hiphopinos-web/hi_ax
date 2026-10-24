@@ -310,3 +310,8 @@
 .axs-pan .axs-tlnk { min-height: var(--ax-touch-size); margin: calc(var(--ax-space-8) * -1) 0; color: var(--ax-color-body); }
 .axs-pan .axs-evb .k { margin: 0; font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; }
 .axs-pan .axs-evb .axs-evps { margin-top: 0; }
+/* v8.74 (사용자 261024) 구역 상세 AX VISION 안 영상 줄 · 머리 = 하는 일 머리와 같은 글자 · 줄 모양은 홈 영상 칸 .axs-vids .vr 그대로(좌우 여백만 0 · 시트 본문 선에 맞춤) */
+.axs-pan .axs-zvid { display: flex; flex-direction: column; gap: 4px; }
+.axs-pan .axs-zvid h3 { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); word-break: keep-all; }
+.axs-pan .axs-zvid .axs-vids { padding: 0; }
+.axs-pan .axs-zvid .axs-vids .vr { padding: 8px 0; border-bottom: 0; }
