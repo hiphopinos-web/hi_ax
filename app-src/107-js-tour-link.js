@@ -381,18 +381,27 @@ function vFoldTog(b) {
   var w = b.closest(".axs-sfd"); if (w) w.classList.toggle("open", VFOLD.open);
   b.setAttribute("aria-expanded", String(VFOLD.open));
 }
-var IVP = { on: false, el: null, v: null, y: 0, from: null, fs: false, t: 0, vd: null, vt: "" };
+var IVP = { on: false, el: null, v: null, f: null, y: 0, from: null, fs: false, t: 0, vd: null, vt: "", yt: "" };
 function ivAsk(b, i) {   /* v7.67 i = 영상 표(VIDS) 줄 · 없으면 첫 줄(IV_VIDEO) */
   var x = VIDS[i || 0] || VIDS[0], V = x.v || IV_VIDEO;
   if (!vidOk(x)) { if (App.current === "home") App.render(); return; }   /* v8.67 닫힌 뒤 그려진 줄 = 홈을 다시 그린다 */
-  var pg = V.page || (V.src ? "" : vidUrl(x));   /* v8.70 현장 인터뷰 = 서버 주소 */
+  var pg = V.page || "", yt = V.src || pg ? "" : ivYtId(vidUrl(x));   /* v8.71 현장 인터뷰 = 서버 주소(유튜브) · 앱 안 재생(ivPlay · 유튜브 임베드) */
+  if (!pg && !V.src && !yt) pg = vidUrl(x);   /* 유튜브가 아닌 서버 주소 = 새 창 */
   if (pg) { try { window.open(pg, "_blank", "noopener"); } catch (e) { location.href = pg; } return; }
-  IVP.vd = V; IVP.vt = x.t;
+  IVP.vd = V; IVP.vt = x.t; IVP.yt = yt;
   IVP.from = b || null;
   modalOpen('<div class="ax-stack-tight axs-gap12">' +
     '<button type="button" class="ax-button" onclick="ivPlay(true)">소리 켜고 보기</button>' +
     '<button type="button" class="ax-button ax-button-weak" onclick="ivPlay(false)">소리 끄고 보기</button></div>', "소리를 켤까요?");
 }
+/* v8.71 (사용자 261024) 현장 인터뷰 = 앱 안 유튜브 임베드 · 영상 id 는 서버가 준 주소(vidUrl)에서만 뽑는다(앱에 id 없음)
+   youtube-nocookie · playsinline · 고른 소리(mute 0 | 1) · 소리 켜기 단추 = 플레이어에 unMute 명령(enablejsapi) · 전체 화면 단추 없음(fs=0 · 무대가 화면 전체) */
+function ivYtId(u) { var m = /^https:\/\/(?:www\.|m\.)?(?:youtube\.com\/watch\?(?:[^#]*&)?v=|youtu\.be\/)([\w-]{6,20})(?:[&#?]|$)/.exec(String(u || "")); return m ? m[1] : ""; }
+function ivYtSrc(id, snd) {
+  var o = /^https?:/.test(location.protocol) ? "&origin=" + encodeURIComponent(location.origin) : "";
+  return "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(id) + "?autoplay=1&playsinline=1&rel=0&fs=0&modestbranding=1&iv_load_policy=3&enablejsapi=1&mute=" + (snd ? 0 : 1) + o;
+}
+function ivYtCmd(f, fn) { try { if (f && f.contentWindow) f.contentWindow.postMessage(JSON.stringify({ event: "command", func: fn, args: [] }), "https://www.youtube-nocookie.com"); } catch (e) {} }
 /* 아이폰 = 요소 전체 화면 없음 + video 기본 전체 화면 있음 */
 function ivIOS() {
   var d = document.documentElement;
@@ -404,22 +413,23 @@ function ivSndHtml() { return '<button type="button" class="ivp-snd">' + sndIcon
 function ivPlay(snd) {
   if (IVP.on) return;
   modalClose(true);
-  var ios = ivIOS(), w = document.createElement("div");
-  IVP.on = true; IVP.fs = false; IVP.y = window.scrollY || 0; IVP.t = Date.now();
+  var yt = IVP.yt || "", ios = !yt && ivIOS(), w = document.createElement("div");   /* v8.71 유튜브 = 아이폰도 기본 플레이어 대신 무대(세로면 90도 돌림) */
+  IVP.on = true; IVP.fs = false; IVP.y = window.scrollY || 0; IVP.t = Date.now(); IVP.f = null;
   w.id = "ivPlayer"; w.className = AXM.rm() ? "rm" : "";
   w.setAttribute("role", "dialog"); w.setAttribute("aria-modal", "true"); w.setAttribute("aria-label", (IVP.vt || "AI 활용 현장 인터뷰") + " 영상"); w.tabIndex = -1;
-  w.innerHTML = '<div class="ivp-st"><video class="ivp-v" preload="auto" controls controlslist="nodownload nofullscreen noremoteplayback" disablepictureinpicture' + (ios ? "" : " playsinline") + "></video>" +
+  w.innerHTML = '<div class="ivp-st">' + (yt ? '<iframe class="ivp-v ivp-yt" src="' + esc(ivYtSrc(yt, snd)) + '" title="' + esc(IVP.vt || "AI 활용 현장 인터뷰") + '" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin"></iframe>' :
+    '<video class="ivp-v" preload="auto" controls controlslist="nodownload nofullscreen noremoteplayback" disablepictureinpicture' + (ios ? "" : " playsinline") + "></video>") +
     '<button type="button" class="ivp-x" aria-label="닫기">' + X_SVG + "</button>" + (snd ? "" : ivSndHtml()) + "</div>";
   var v = w.querySelector("video");
-  var V = IVP.vd || IV_VIDEO; v.poster = V.poster || ""; v.loop = !!V.loop; v.muted = !snd; v.defaultMuted = !snd; v.src = V.src;
-  IVP.el = w; IVP.v = v;
+  var V = IVP.vd || IV_VIDEO; if (v) { v.poster = V.poster || ""; v.loop = !!V.loop; v.muted = !snd; v.defaultMuted = !snd; v.src = V.src; }
+  IVP.el = w; IVP.v = v; IVP.f = w.querySelector("iframe");
   document.body.appendChild(w);
   document.documentElement.classList.add("ivp-lock");
   w.querySelector(".ivp-x").addEventListener("click", function () { ivClose(); });
   ivSndWire(w);
-  v.addEventListener("webkitendfullscreen", function () { if (IVP.v === v) ivClose(); });   /* 아이폰 기본 플레이어를 닫으면 세로 원래 화면으로 */
+  if (v) v.addEventListener("webkitendfullscreen", function () { if (IVP.v === v) ivClose(); });   /* 아이폰 기본 플레이어를 닫으면 세로 원래 화면으로 */
   var p = null;
-  try { p = v.play(); } catch (e) {}
+  if (v) { try { p = v.play(); } catch (e) {} }
   if (p && p.catch) p.catch(function () {   /* 소리 켠 재생을 브라우저가 막으면 소리 끄고 재생 + 소리 켜기 단추 */
     if (IVP.v !== v || v.muted) return;
     v.muted = true; try { var p2 = v.play(); if (p2 && p2.catch) p2.catch(function () {}); } catch (e) {}
@@ -438,6 +448,7 @@ function ivPlay(snd) {
 function ivSndWire(w) {
   var b = w.querySelector(".ivp-snd"); if (!b || b._w) return; b._w = 1;
   b.addEventListener("click", function () {
+    if (IVP.f) { ivYtCmd(IVP.f, "unMute"); ivYtCmd(IVP.f, "playVideo"); if (b.parentNode) b.parentNode.removeChild(b); try { w.querySelector(".ivp-x").focus({ preventScroll: true }); } catch (e) {} return; }   /* v8.71 유튜브 */
     var v = IVP.v; if (!v) return;
     v.muted = false; v.volume = 1; if (v.paused) { try { var p = v.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {} }
     if (b.parentNode) b.parentNode.removeChild(b);
@@ -446,8 +457,9 @@ function ivSndWire(w) {
 }
 function ivClose() {
   if (!IVP.on) return;
-  var w = IVP.el, v = IVP.v, y = IVP.y;
-  IVP.on = false; IVP.el = null; IVP.v = null; IVP.fs = false;
+  var w = IVP.el, v = IVP.v, y = IVP.y, fr = IVP.f;
+  IVP.on = false; IVP.el = null; IVP.v = null; IVP.f = null; IVP.fs = false;
+  if (fr && fr.parentNode) fr.parentNode.removeChild(fr);   /* v8.71 유튜브 = 바로 소리 끊기 · src 를 바꾸지 않고 떼어 낸다(바꾸면 방문 기록이 하나 늘어 뒤로 단추가 먹힌다) */
   try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {}
   if (ivFsEl()) { var ex = document.exitFullscreen || document.webkitExitFullscreen; if (ex) { try { var xp = ex.call(document); if (xp && xp.catch) xp.catch(function () {}); } catch (e) {} } }
   if (v) { try { v.pause(); v.removeAttribute("src"); v.load(); } catch (e) {} }
@@ -465,4 +477,4 @@ function ivClose() {
   document.addEventListener(t, function () { if (IVP.on && IVP.fs && !ivFsEl()) ivClose(); else if (IVP.on && ivFsEl()) IVP.fs = true; });
 });
 document.addEventListener("keydown", function (e) { if (IVP.on && e.key === "Escape") { e.preventDefault(); e.stopPropagation(); ivClose(); } }, true);
-document.addEventListener("visibilitychange", function () { if (document.hidden && IVP.on && IVP.v) { try { IVP.v.pause(); } catch (e) {} } });
+document.addEventListener("visibilitychange", function () { if (document.hidden && IVP.on && IVP.v) { try { IVP.v.pause(); } catch (e) {} } if (document.hidden && IVP.on && IVP.f) ivYtCmd(IVP.f, "pauseVideo"); });
