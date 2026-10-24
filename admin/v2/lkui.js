@@ -2,8 +2,9 @@
  * 4칸 = 1 추첨 대상 · 2 체크인 · 3 체크인한 사람 · 4 당첨 결과 · 맨 아래 「고급 · 평소에는 열지 않음」 = 옛 칩(현황 · 명단 · 종이 대비 · 추첨 설정 · 당첨 기록)
  * 읽기 = draw_stats(숫자 · 마감 · 고정 · 당첨 기록 · 슈퍼관리자면 who 1 · 10초) · draw_board(사람 줄 · 10초 · 대상 명단 펼침 = v all)
  * 쓰기 = 체크인 마감 · 다시 열기(draw_cfg closed · 확인 창 · 되돌리기 · 무대 공 넣기 뒤 다시 열기 막음) 하나뿐
+ * 261024 1칸 = 왼쪽 열 두 줄 높이(오른쪽 위 = 2 체크인 · 마감 단추와 1칸 숫자가 한 화면) · 큰 숫자 → 명단 표(lucky.js lkyTable 같은 부품 · 칸 lkuTb · 슈퍼관리자만 · 「명단 불러오기」 · 「표 새로 받기」를 누를 때만 받음 · 10초 갱신 · 탭 열기에는 받지 않음 · 화면을 다시 열면 처음 상태) → 접힌 「대상 명단 보기」(슈퍼관리자 아님 = 펼침)
  * 추첨 진행은 무대 노트북(draw/) · 무대는 콘솔 원격 명령을 받지 않는다(261016 E1) · 원격 진행 칸은 추첨 설정 칩 맨 아래 접힘(stage.js) */
-var LKU={ q:"", inOnly:false, open:false, qr:false, lim:200, limIn:100, sig:{} };
+var LKU={ q:"", inOnly:false, open:false, op0:0, qr:false, lim:200, limIn:100, sig:{} };
 var LKU_RK=[[6,3],[5,2],[4,2],[3,1],[2,1],[1,1]];
 var LKU_ADV=[["now","현황","발급 숫자 · 장수별 · 발급 흐름"],["list","명단","엑셀 · CSV · 번호만 · 종이 키트"],["paper","종이 대비","서버가 멈출 때 종이 추첨"],
   ["draw","추첨 설정","체크인 코드 · 시간 · 원격 진행"],["rec","당첨 기록","당첨 · 부재 · 취소 전체 표"]];
@@ -16,11 +17,14 @@ var LKU_ADV=[["now","현황","발급 숫자 · 장수별 · 발급 흐름"],["li
 function lkuNeed(){ return [{ k:"draw", a:"draw_stats", p:isTop()?{ who:"1" }:null, ttl:10000 },{ k:"dbd", a:"draw_board", p:{ v:LKU.open?"all":"in" }, ttl:10000 }]; }
 function lkuMount(vb){
   el("phCap").textContent="17F Closing Speech 행운권 1~6등 · 추첨 진행은 무대 노트북";
-  LKU.sig={};
+  LKU.sig={}; var top=isTop();
+  if(!top&&!LKU.op0){ LKU.op0=1; LKU.open=true; }   /* 슈퍼관리자 아님 = 명단 표 칸 없음 · 대상 명단 보기 펼친 채로(한 번만 · 접으면 접힌 채) */
+  if(typeof LKY_U==="object"){ LKY_U.rows=null; LKY_U.tkey=""; LKY_U.err=""; }   /* 화면을 다시 열면 불러오기 전 상태 */
   vb.innerHTML='<div class="chips" role="tablist"><button type="button" role="tab" aria-selected="true" class="chip on">럭키드로우</button><button type="button" class="chip" onclick="lkuAdvGo()">고급</button></div>'+
     '<div id="lkuMon"></div><div id="lkuBand"></div>'+
     '<div class="lku">'+
-    '<section class="card"><h2>1. 추첨 대상</h2><div id="lkuT">'+skel()+'</div>'+
+    '<section class="card lku-c1"><h2>1. 추첨 대상</h2><div id="lkuT">'+skel()+'</div>'+
+      (top?'<div class="lku-ro"><h3 class="lku-rh">명단 <span class="cap n" id="lkuRt"></span><span class="r" id="lkuRb"></span></h3><div id="lkuTb"></div></div>':'')+
       '<details class="lku-det" id="lkuLs"'+(LKU.open?" open":"")+' ontoggle="lkuOpen(this.open)"><summary>대상 명단 보기</summary>'+
       '<div class="lku-bar"><input class="xg-q" id="lkuQ" type="search" placeholder="이름 · 부서 찾기" aria-label="대상 명단 찾기" value="'+esc(LKU.q)+'" oninput="lkuFind(this.value)">'+
       '<button type="button" class="chip'+(LKU.inOnly?" on":"")+'" id="lkuIo" aria-pressed="'+LKU.inOnly+'" onclick="lkuInOnly()">체크인한 사람만</button></div><div id="lkuLst"></div></details></section>'+
@@ -63,8 +67,21 @@ function lkuPaint(){
   lkuSet("lkuBand","band",errTop("draw")+errTop("dbd")+(d&&d.ok&&(String(d.att||"").toUpperCase()==="ON"||(b&&b.cond))?band("warn","행운권 참석조건 ON · 6 · 5 · 4등도 체크인한 사람만"):""));
   if(gt){ ["lkuT","lkuCk","lkuW"].forEach(function(id){ lkuSet(id,id,gt); }); }
   else { lkuTop(d,b); lkuCkPaint(d,b); lkuWin(d); }
+  lkuRo();
   if(gb&&!b){ var lh=unknownSrv(S.data.dbd)?laterH("체크인한 사람 실명 목록 · 대상 명단"):gb; lkuSet("lkuIn","in",lh); lkuSet("lkuLst","ls",lh); lkuSet("lkuInC","inc",""); }
   else if(b){ lkuIn(b); lkuList(b); }
+}
+/* 명단 표 · 받은 것이 없으면 「명단 불러오기」 단추 · 받은 뒤는 lucky.js lkyTable(같은 데이터면 표를 다시 만들지 않음) · 여기서 서버를 부르지 않음 */
+function lkuRo(){
+  if(!el("lkuTb")||typeof LKY_U!=="object") return;
+  var U=LKY_U;
+  if(!U.rows){ lkuSet("lkuRt","rt",""); lkuSet("lkuRb","rb","");
+    lkuSet("lkuTb","rtb",'<div class="lku-ld"><p class="cap">'+(U.err?"불러오지 못했습니다 · "+esc(U.err):"누르면 서버에서 명단을 한 번 불러옴 · 10초 갱신에서는 부르지 않음")+'</p><button class="btn pri sm" type="button" onclick="lkyUGet()"'+(U.busy?" disabled":"")+'>'+(U.busy?"불러오는 중":"명단 불러오기")+'</button></div>');
+    return; }
+  if(LKU.sig.rtb){ LKU.sig.rtb=""; var tb=el("lkuTb"); if(tb) tb.innerHTML=""; }
+  lkuSet("lkuRb","rb",'<button class="btn sm" type="button" id="lkuVw" onclick="lkyView(1)">사람 단위</button><button class="btn sm" type="button" onclick="lkyUGet()">표 새로 받기</button>');
+  var rb=el("lkuRb"); if(rb){ var bs=rb.querySelectorAll("button"); if(bs[1]){ bs[1].disabled=!!U.busy; bs[1].textContent=U.busy?"받는 중":"표 새로 받기"; } }
+  lkyTable(U, LKY_UI);
 }
 function lkuTop(d, b){
   var p=b?{ n:b.n, balls:b.balls, inN:b.inN, inBalls:b.inBalls }:dtPool(d), k=d.lock;

@@ -23,5 +23,14 @@
 .lku-0{color:var(--tx3);font-size:12px;white-space:nowrap}
 .lku-yet td{color:var(--tx3)}
 .lku-ab td b,.lku-ab td .lku-dp,.lku-ab td.n{text-decoration:line-through;color:var(--tx3)}
+/* 261024 1칸 = 왼쪽 열 두 줄 높이 · 오른쪽 위 2 체크인(마감 단추 · 1칸 숫자를 스크롤 없이 같이) · 명단 표(lucky.js 표 부품 · 높이 상한 · 표 안 스크롤 · 자기 상자 안 가로 스크롤) · 불러오기 전 = 안내 한 줄 + 단추 */
+@media (min-width:901px){ .lku>.lku-c1{grid-column:1;grid-row:1 / span 2} }
+.lku>.lku-c1{min-width:0}
+.lku-ro{margin-top:12px;min-width:0}
+.lku-rh{font-size:14px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap;min-width:0}
+.lku-rh .cap{font-weight:400}
+.lku-rh .r{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.lku-ld{background:var(--navy05);border-radius:var(--r-s);padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:6px 12px;flex-wrap:wrap}
+.lku-ld .btn{flex:none}
 @media (max-width:900px){ .lku{grid-template-columns:minmax(0,1fr)} }
 @media (max-width:600px){ .lku-big .v{font-size:22px} .lku-dp{max-width:140px} }
