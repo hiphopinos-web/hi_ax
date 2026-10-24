@@ -2140,9 +2140,9 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-svhd { display: block; }
   .axs-svno { display: inline-flex; align-items: center; height: 24px; padding: 0 var(--ax-space-8); border-radius: 6px; background: var(--ax-color-ink); color: var(--ax-color-surface); font: var(--ax-type-t7); font-weight: 700; vertical-align: middle; }
   .axs-svtag { display: inline-flex; align-items: center; height: 24px; margin-left: 6px; padding: 0 var(--ax-space-8); border-radius: 6px; background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t7); font-weight: 700; vertical-align: middle; }
-  .axs-svq { margin: var(--ax-space-8) 0 0; word-break: keep-all; }
+  .axs-svq { margin: var(--ax-space-8) 0 0; word-break: keep-all; text-wrap: balance; }
   .axs-svq.miss { color: var(--ax-color-error); }
-  .axs-svhint { margin: var(--ax-space-4) 0 0; word-break: keep-all; }
+  .axs-svhint { margin: var(--ax-space-4) 0 0; word-break: keep-all; text-wrap: pretty; }
   .axs-svol { display: flex; flex-direction: column; gap: var(--ax-space-8); }
   .axs-svop { position: relative; display: flex; align-items: center; width: 100%; min-height: var(--ax-button-height); padding: 0 52px 0 var(--ax-space-16); border: 1px solid var(--ax-color-divider); border-radius: var(--ax-radius-16); background: var(--ax-color-surface); color: var(--ax-color-ink); text-align: left; font-family: inherit; cursor: pointer; }
   .axs-svol.compact { gap: 6px; }
@@ -2159,7 +2159,8 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-svop.excl { border-style: dashed; color: var(--ax-color-body); }
   .axs-svop.excl[aria-checked="true"] { border-style: solid; color: var(--ax-color-ink); }
   .axs-svop.wrap { padding-top: 10px; padding-bottom: 10px; }
-  .axs-svop.wrap .lb { white-space: normal; overflow: visible; text-overflow: clip; word-break: keep-all; line-height: 1.4; }   /* 261024 사전 설문 세션 이름 = 줄임 없이 두 줄까지 */
+  .axs-svop.wrap .lb { display: flex; align-items: center; white-space: normal; overflow: visible; text-overflow: clip; word-break: keep-all; text-wrap: balance; line-height: 1.4; }   /* 261024 사전 설문 세션 이름 = 줄임 없이 두 줄까지 · v8.86 배지(.fl) 와 이름 글을 나란히 둔 묶음 = 둘째 줄이 첫 줄 글자 시작선에 맞고(내어쓰기) 배지는 묶음 세로 가운데(라디오 원과 같은 기준) · 줄바꿈 = 어절 · 균형 */
+  .axs-svop.wrap .fl { flex: none; }
   .axs-svetc { width: 100%; box-sizing: border-box; margin-top: var(--ax-space-8); }   /* 261024 사전 설문 「기타」 글 칸 */
   .axs-svkt { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 10px 12px; border: 1px dashed var(--axs-divider-strong); border-radius: var(--ax-radius-12); font: var(--ax-type-t7); color: var(--ax-color-muted); }   /* 261024 테스트 사번 설문 종류 */
   .axs-svkt span { flex: 1 0 100%; }
@@ -2182,7 +2183,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-sl .trk:focus-visible .rail { outline: 2px solid var(--ax-color-brand); outline-offset: 10px; }
   .axs-sl .nums { position: relative; height: 20px; margin: 0 16px; }
   .axs-sl .nums span { position: absolute; top: 0; transform: translateX(-50%); font: var(--ax-type-t7); font-weight: 700; color: var(--ax-color-muted); }
-  .axs-sl .ends { display: grid; grid-template-columns: 1fr 1fr 1fr; column-gap: var(--ax-space-8); margin-top: var(--ax-space-4); font: var(--ax-type-t7); color: var(--ax-color-muted); word-break: keep-all; }
+  .axs-sl .ends { display: grid; grid-template-columns: 1.3fr 1fr 1.3fr; column-gap: var(--ax-space-8); margin-top: var(--ax-space-4); font: var(--ax-type-t7); color: var(--ax-color-muted); word-break: keep-all; text-wrap: balance; }
   .axs-sl .ends .l { text-align: left; } .axs-sl .ends .m { text-align: center; } .axs-sl .ends .r { text-align: right; }
   .axs-sl .out { min-height: 76px; margin-top: var(--ax-space-24); text-align: center; }
   .axs-sl .out p { margin: 0; }
