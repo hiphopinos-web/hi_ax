@@ -1833,6 +1833,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-gauge { height: 8px; border-radius: var(--ax-radius-999); background: var(--ax-color-brandSoft); overflow: hidden; }
   .axs-gauge i { display: block; height: 100%; border-radius: var(--ax-radius-999); background: var(--ax-color-brand); }
   #svQ > .axs-svtop { position: sticky; top: var(--sv-top, 0px); z-index: 4; margin: calc(-1 * var(--ax-space-12)) calc(-1 * var(--ax-page-inset)) calc(-1 * var(--ax-space-8)); padding: var(--ax-space-12) var(--ax-page-inset) var(--ax-space-8); background: var(--ax-color-canvas); }   /* v8.80 (사용자 261024) 설문 진행 바 줄 = 머리 아래에 붙음 · 여백을 안으로 옮겨 처음 자리는 그대로 */
+  html.sv-kb #topbar .axs-crumb { display: none; } html.sv-kb #topbar.ax-header { border-bottom-color: var(--axs-divider-strong); }   /* v8.82 설문 글 칸 · 키보드가 열린 동안 경로 줄 접음(고정 묶음 줄임 · 질문 글 + 입력 칸 첫 줄이 보이게) */
   #svQ > .axs-svtop > .axs-stag { top: calc(var(--ax-space-12) - 6px); right: var(--ax-page-inset); }
   .axs-fl6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   .axs-fl6 .axs-none { grid-column: 1 / -1; font: var(--ax-type-t6-strong); }

@@ -305,17 +305,30 @@ function svMount() { if (App.current !== "survey") return; svTopSync(); svHeadFi
 /* v8.80 (사용자 261024 「글 입력 문항에 들어가면 화면이 살짝 내려가 진행 바가 안 보인다」) 진행 바 줄(.axs-svtop · 스탬프 표 · 진행 바 · 영역 이름) = 머리 아래에 붙음(sticky · 자리 = 머리 아래 끝 --sv-top)
    글 칸 누름 = 옛 kbFocus(가운데로 스크롤 · 진행 바가 머리 밑으로 들어감) 대신 svKbFocus · 칸 첫 두 줄이 키보드 · 아래 단추 · 진행 바 줄에 가릴 때만 그만큼만 스크롤 */
 function svTopSync() { var h = el("topbar"); if (h) document.documentElement.style.setProperty("--sv-top", Math.round((parseFloat(getComputedStyle(h).top) || 0) + h.offsetHeight) + "px"); }
-function svKbFocus(n) {
-  setTimeout(function () {
-    if (typeof kbSync === "function") kbSync();
-    if (!n || !n.isConnected || document.activeElement !== n) return;
-    var vv = window.visualViewport, vb = vv ? vv.offsetTop + vv.height : window.innerHeight, bt = el("svBot"), tp = document.querySelector("#svQ > .axs-svtop");
-    if (bt && bt.offsetHeight) { var br = bt.getBoundingClientRect(); if (br.top < vb) vb = br.top; }
-    var r = n.getBoundingClientRect(), lim = tp ? tp.getBoundingClientRect().bottom : 0, need = Math.min(r.height, 64);
-    var dn = r.top + need + 12 - vb, up = lim + 8 - r.top;
-    if (dn > 0) window.scrollBy(0, dn); else if (up > 0) window.scrollBy(0, -up);
-  }, 320);
+/* v8.82 (사용자 261024 실폰 · 삼성 안드로이드 「키보드가 올라오면 화면이 너무 올라가 질문 글이 진행 바 줄 뒤로 숨고 입력 칸 첫 줄이 잘린다 · 버튼 아래 빈 공간」)
+   키보드가 열린 동안(설문 글 칸 포커스 + KBT.up) = 머리의 경로 줄(스탬프 › 참가자 설문)을 접어 고정 묶음을 줄이고(html.sv-kb)
+   브라우저가 스스로 칸을 끌어올린 뒤(보이는 창 크기 바뀜 · 0.32 · 0.7초) 한 번 더 맞춘다 = 질문 위끝을 진행 바 줄 바로 아래에 · 입력 칸 첫 줄(44px)이 키보드에 가리면 그때만 입력 칸 기준(큰글씨 360 처럼 둘 다 못 들어가면 질문 위가 조금 가림) */
+var SVKB = { t: 0 };
+function svKbOn() { var a = document.activeElement; return App.current === "survey" && !!a && /^(svText_|svEtc$)/.test(a.id || "") && typeof KBT === "object" && !!KBT.up; }
+function svKbAlign() {
+  if (typeof kbSync === "function") kbSync();
+  var on = svKbOn(), h = document.documentElement;
+  if (h.classList.contains("sv-kb") !== on) { h.classList.toggle("sv-kb", on); svTopSync(); }
+  svVv();
+  if (!on) return;
+  var n = document.activeElement, vv = window.visualViewport, vt = vv ? Math.max(0, vv.offsetTop) : 0, vb = vv ? vt + vv.height : window.innerHeight;
+  var tp = document.querySelector("#svQ > .axs-svtop"), th = tp ? tp.offsetHeight : 0, hd = el("svHead"), bt = el("svBot");
+  var lim = Math.max((parseFloat(getComputedStyle(h).getPropertyValue("--sv-top")) || 0) + th, vt + th) + 8;   /* 붙은 진행 바 줄 아래 끝(아이폰 = 보이는 창 맨 위로 내린 줄) */
+  if (bt && bt.offsetHeight && getComputedStyle(bt).position === "fixed") { var br = bt.getBoundingClientRect(); if (br.top < vb) vb = br.top; }
+  var nr = n.getBoundingClientRect(), need = Math.min(nr.height, 44), d = (hd ? hd.getBoundingClientRect().top : nr.top) - lim;
+  var over = nr.top - d + need + 12 - vb; if (over > 0) d += over;   /* 입력 칸이 키보드에 가리면 그만큼만 더 */
+  if (nr.top - d < lim) d = nr.top - lim;   /* 입력 칸 위끝은 진행 바 줄 아래 */
+  if (Math.abs(d) >= 2) window.scrollBy(0, d);
 }
+function svKbSoon() { clearTimeout(SVKB.t); SVKB.t = setTimeout(svKbAlign, 120); }
+function svKbFocus(n) {
+  if (!SVKB.fo) { SVKB.fo = 1; document.addEventListener("focusout", function () { if (document.documentElement.classList.contains("sv-kb")) setTimeout(svKbAlign, 60); }, true); }   /* 칸에서 나가면 경로 줄 다시 */
+  if (typeof kbSync === "function") kbSync(); setTimeout(svKbAlign, 320); setTimeout(svKbAlign, 700); }   /* 누른 순간 한 번 = 키보드 전 창 높이(KBT.base)를 먼저 잰다(안 재면 처음 열린 키보드를 못 알아봄) */
 /* v8.80 (사용자 261024 「키보드가 올라와도 진행 바는 늘 화면 맨 위」) 아이폰 사파리 = 키보드가 열리면 보이는 창(visualViewport)만 아래로 밀려 머리 · 붙인 진행 바 줄이 창 위로 나간다
    보이는 창 위 끝(offsetTop)이 진행 바 줄보다 아래면 그만큼 줄을 내려 보이는 창 맨 위에 둔다(transform 만) · 키보드가 닫히면 0 · 안드로이드 크롬(창이 줄어듦) = offsetTop 0 이라 그대로 */
 function svVv() {
@@ -325,8 +338,8 @@ function svVv() {
   var d = Math.round(off - b.getBoundingClientRect().top);
   if (d > 0) b.style.transform = "translateY(" + d + "px)";
 }
-if (window.visualViewport) { window.visualViewport.addEventListener("resize", svVv); window.visualViewport.addEventListener("scroll", svVv); }
-if (window.addEventListener) window.addEventListener("resize", function () { if (App.current === "survey") { SV.hw = 0; svMount(); } });
+if (window.visualViewport) { window.visualViewport.addEventListener("resize", svVv); window.visualViewport.addEventListener("scroll", svVv); window.visualViewport.addEventListener("resize", function () { if (App.current === "survey") svKbSoon(); }); }
+if (window.addEventListener) window.addEventListener("resize", function () { if (App.current === "survey") { SV.hw = 0; svMount(); svKbSoon(); } });
 function svSubmit() {
   var d = svDraft(), fl = svFlow(d);
   if (SV.busy) return;
