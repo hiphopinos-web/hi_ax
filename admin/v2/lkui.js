@@ -1,11 +1,16 @@
 /* AXF CONTROL v2 · 행운권 탭 첫 화면 「럭키드로우」 (261022 사용자 「누가 대상자 · 체크인을 언제 어떻게 정지 · 누가 체크인 · 누가 등수」)
- * 4칸 = 1 추첨 대상 · 2 체크인 · 3 체크인한 사람 · 4 당첨 결과 · 맨 아래 「고급 · 평소에는 열지 않음」 = 옛 칩(현황 · 명단 · 종이 대비 · 추첨 설정 · 당첨 기록)
- * 읽기 = draw_stats(숫자 · 마감 · 고정 · 당첨 기록 · 슈퍼관리자면 who 1 · 10초) · draw_board(사람 줄 · 10초 · 대상 명단 펼침 = v all)
+ * 261024 다시 짬(사용자 「네 칸으로 쪼개 명부가 어설프다 · 한 번 쓸 마감 단추가 너무 크다」) · 위에서 아래로
+ *   상태 줄 한 줄 = 무대 감시(dmon.js) · 체크인 상태 · 오른쪽 끝 작은 「체크인 마감」(테두리 단추 · 확인 창) · 「체크인 QR」 글 단추 · 경고 띠는 있을 때만 그 아래
+ *   숫자 줄 = 전체 통 명 · 장 / 체크인 통 명 · 장 / 17F 체크인 명 / 당첨 n · 10 · 공 넣기 뒤 무대 고정 숫자를 같은 칸에서 대조
+ *   탭 하나(대상 명단 · 체크인한 사람 · 당첨 결과) · 한 번에 표 하나 · 표는 높이 상한 안에서만 스크롤(1280 × 720 첫 화면에 상태 줄 · 숫자 줄 · 탭)
+ *   맨 아래 「고급 · 평소에는 열지 않음」 = 옛 칩(현황 · 명단 · 종이 대비 · 추첨 설정 · 당첨 기록)
+ * 읽기 = draw_stats(숫자 · 마감 · 고정 · 당첨 기록 · 슈퍼관리자면 who 1 · 10초) · draw_board(사람 줄 · 10초 · 슈퍼관리자 아님 + 대상 명단 탭 = v all)
+ * 대상 명단 탭(슈퍼관리자) = lucky.js lkyTable 같은 부품(칸 lkuTb · 「명단 불러오기」 · 「표 새로 받기」를 누를 때만 받음 · 10초 갱신 · 탭 열기 · 탭 오가기에는 받지 않음 · 화면을 다시 열면 처음 상태)
  * 쓰기 = 체크인 마감 · 다시 열기(draw_cfg closed · 확인 창 · 되돌리기 · 무대 공 넣기 뒤 다시 열기 막음) 하나뿐
- * 261024 1칸 = 왼쪽 열 두 줄 높이(오른쪽 위 = 2 체크인 · 마감 단추와 1칸 숫자가 한 화면) · 큰 숫자 → 명단 표(lucky.js lkyTable 같은 부품 · 칸 lkuTb · 슈퍼관리자만 · 「명단 불러오기」 · 「표 새로 받기」를 누를 때만 받음 · 10초 갱신 · 탭 열기에는 받지 않음 · 화면을 다시 열면 처음 상태) → 접힌 「대상 명단 보기」(슈퍼관리자 아님 = 펼침)
  * 추첨 진행은 무대 노트북(draw/) · 무대는 콘솔 원격 명령을 받지 않는다(261016 E1) · 원격 진행 칸은 추첨 설정 칩 맨 아래 접힘(stage.js) */
-var LKU={ q:"", inOnly:false, open:false, op0:0, qr:false, lim:200, limIn:100, sig:{} };
-var LKU_RK=[[6,3],[5,2],[4,2],[3,1],[2,1],[1,1]];
+var LKU={ q:"", inOnly:false, open:false, tab:"all", qr:false, lim:200, limIn:100, sig:{}, w:{ wins:0, abs:0 } };
+var LKU_RK=[[6,3],[5,2],[4,2],[3,1],[2,1],[1,1]], LKU_SLOTS=10;
+var LKU_TABS=[["all","대상 명단"],["in","체크인한 사람"],["win","당첨 결과"]];
 var LKU_ADV=[["now","현황","발급 숫자 · 장수별 · 발급 흐름"],["list","명단","엑셀 · CSV · 번호만 · 종이 키트"],["paper","종이 대비","서버가 멈출 때 종이 추첨"],
   ["draw","추첨 설정","체크인 코드 · 시간 · 원격 진행"],["rec","당첨 기록","당첨 · 부재 · 취소 전체 표"]];
 (function(){ if(SG_SUBS.some(function(x){ return x[0]==="lk"; })) return; SG_SUBS.unshift(["lk","럭키드로우"]); SG_SUBS.forEach(function(x){ if(x[0]==="draw") x[1]="추첨 설정"; }); })();
@@ -18,25 +23,42 @@ function lkuNeed(){ return [{ k:"draw", a:"draw_stats", p:isTop()?{ who:"1" }:nu
 function lkuMount(vb){
   el("phCap").textContent="17F Closing Speech 행운권 1~6등 · 추첨 진행은 무대 노트북";
   LKU.sig={}; var top=isTop();
-  if(!top&&!LKU.op0){ LKU.op0=1; LKU.open=true; }   /* 슈퍼관리자 아님 = 명단 표 칸 없음 · 대상 명단 보기 펼친 채로(한 번만 · 접으면 접힌 채) */
-  if(typeof LKY_U==="object"){ LKY_U.rows=null; LKY_U.tkey=""; LKY_U.err=""; }   /* 화면을 다시 열면 불러오기 전 상태 */
+  LKU.open=!top&&LKU.tab==="all";   /* 슈퍼관리자 아님 = 대상 명단 탭이 draw_board v all 목록 */
+  if(typeof LKY_U==="object"){ LKY_U.rows=null; LKY_U.tkey=""; LKY_U.err=""; LKY_U.h=Math.max(200,Math.min(560,innerHeight-480)); }   /* 화면을 다시 열면 불러오기 전 상태 · 표 높이 = 창 높이에 맞춤(첫 화면 안) */
+  var tabs='<div class="seg" role="tablist" aria-label="럭키드로우 표">'+LKU_TABS.map(function(x){ return '<button type="button" role="tab" id="lkuTab_'+x[0]+'" aria-controls="lkuP_'+x[0]+'" onclick="lkuTab(\''+x[0]+'\')">'+esc(x[1])+(x[0]==="in"?' <span class="c n" id="lkuInC"></span>':x[0]==="win"?' <span class="c n" id="lkuWC"></span>':'')+'</button>'; }).join("")+'</div>';
   vb.innerHTML='<div class="chips" role="tablist"><button type="button" role="tab" aria-selected="true" class="chip on">럭키드로우</button><button type="button" class="chip" onclick="lkuAdvGo()">고급</button></div>'+
-    '<div id="lkuMon"></div><div id="lkuBand"></div>'+
-    '<div class="lku">'+
-    '<section class="card lku-c1"><h2>1. 추첨 대상</h2><div id="lkuT">'+skel()+'</div>'+
-      (top?'<div class="lku-ro"><h3 class="lku-rh">명단 <span class="cap n" id="lkuRt"></span><span class="r" id="lkuRb"></span></h3><div id="lkuTb"></div></div>':'')+
-      '<details class="lku-det" id="lkuLs"'+(LKU.open?" open":"")+' ontoggle="lkuOpen(this.open)"><summary>대상 명단 보기</summary>'+
-      '<div class="lku-bar"><input class="xg-q" id="lkuQ" type="search" placeholder="이름 · 부서 찾기" aria-label="대상 명단 찾기" value="'+esc(LKU.q)+'" oninput="lkuFind(this.value)">'+
-      '<button type="button" class="chip'+(LKU.inOnly?" on":"")+'" id="lkuIo" aria-pressed="'+LKU.inOnly+'" onclick="lkuInOnly()">체크인한 사람만</button></div><div id="lkuLst"></div></details></section>'+
-    '<section class="card"><h2>2. 체크인</h2><div id="lkuCk">'+skel()+'</div>'+
-      '<details class="lku-det" id="lkuQr"'+(LKU.qr?" open":"")+' ontoggle="LKU.qr=this.open;LKU.sig.qr=\'\';lkuPaint()"><summary>체크인 QR 보기</summary><div id="lkuQrB"></div></details></section>'+
-    '<section class="card"><h2>3. 체크인한 사람 <span class="cap" id="lkuInC"></span></h2><div id="lkuIn">'+skel()+'</div></section>'+
-    '<section class="card"><h2>4. 당첨 결과 <span class="cap" id="lkuWC"></span></h2><div id="lkuW">'+skel()+'</div></section>'+
-    '</div>'+
+    '<section class="card lku-hd" aria-label="무대 · 체크인 상태"><div class="lku-row"><div id="lkuMon" class="lku-mon"></div><div id="lkuCk" class="lku-ck">'+skel()+'</div></div><div id="lkuQrB" class="lku-qr" hidden></div></section>'+
+    '<div id="lkuBand"></div>'+
+    '<div id="lkuT" class="lku-kp">'+skel()+'</div>'+
+    '<div class="lku-tabs">'+tabs+
+      '<div class="r" data-p="all">'+(top?'<span class="cap n" id="lkuRt"></span><span class="lku-rb" id="lkuRb"></span>':'<span class="cap" id="lkuLsC"></span>')+'</div>'+
+      '<div class="r" data-p="in"><span class="cap" id="lkuInN">최근 체크인이 위 · 10초마다</span></div>'+
+      '<div class="r" data-p="win"><span class="cap">무대 기록대로 · 10초마다</span></div></div>'+
+    '<section class="card lku-pane">'+
+      '<div id="lkuP_all" role="tabpanel" aria-labelledby="lkuTab_all">'+(top?'<div id="lkuTb"></div>':
+        '<div class="lku-bar"><input class="xg-q" id="lkuQ" type="search" placeholder="이름 · 부서 찾기" aria-label="대상 명단 찾기" value="'+esc(LKU.q)+'" oninput="lkuFind(this.value)">'+
+        '<button type="button" class="chip'+(LKU.inOnly?" on":"")+'" id="lkuIo" aria-pressed="'+LKU.inOnly+'" onclick="lkuInOnly()">체크인한 사람만</button></div><div id="lkuLst">'+skel()+'</div>')+'</div>'+
+      '<div id="lkuP_in" role="tabpanel" aria-labelledby="lkuTab_in"><div id="lkuIn">'+skel()+'</div></div>'+
+      '<div id="lkuP_win" role="tabpanel" aria-labelledby="lkuTab_win"><div id="lkuW">'+skel()+'</div></div>'+
+    '</section>'+
     '<details class="memo card mt" id="lkuAdv"><summary>고급 · 평소에는 열지 않음</summary><div class="mt4">'+LKU_ADV.map(function(x){ return '<div class="row"><div class="t"><b>'+esc(x[1])+'</b><span>'+esc(x[2])+'</span></div><button class="btn sm" type="button" style="flex:none" onclick="go(\'stage\',\''+x[0]+'\')">열기</button></div>'; }).join("")+'</div></details>';
+  lkuTabSync();
 }
 function lkuAdvGo(){ var a=el("lkuAdv"); if(!a) return; a.open=true; try{ a.scrollIntoView({ behavior:"smooth", block:"start" }); }catch(e){ a.scrollIntoView(); } }
-function lkuOpen(v){ LKU.open=!!v; LKU.sig.ls=""; if(v) reload(["dbd"]); else lkuPaint(); }
+/* 탭 · 한 번에 표 하나 · 슈퍼관리자 아님 + 대상 명단 = draw_board v all 로 한 번(그 뒤 10초) · 명단 표(roster)는 여기서 받지 않음 */
+function lkuTab(k){
+  if(!LKU_TABS.some(function(x){ return x[0]===k; })) return;
+  LKU.tab=k; lkuTabSync();
+  var need=!isTop()&&k==="all";
+  if(need!==LKU.open){ LKU.open=need; LKU.sig.ls=""; if(need){ lkuSet("lkuLst","ls",skel()); reload(["dbd"]); return; } }
+  lkuPaint();
+}
+function lkuTabSync(){
+  LKU_TABS.forEach(function(x){ var on=x[0]===LKU.tab, b=el("lkuTab_"+x[0]), p=el("lkuP_"+x[0]);
+    if(b){ b.className=on?"on":""; b.setAttribute("aria-selected",String(on)); b.tabIndex=on?0:-1; } if(p) p.hidden=!on; });
+  document.querySelectorAll(".lku-tabs .r").forEach(function(r){ r.hidden=r.getAttribute("data-p")!==LKU.tab; });
+}
+function lkuQrT(){ LKU.qr=!LKU.qr; LKU.sig.qr=""; LKU.sig.ck=""; var q=el("lkuQrB"); if(q) q.hidden=!LKU.qr; lkuPaint(); }
 function lkuFind(v){ LKU.q=String(v||""); LKU.lim=200; LKU.sig.ls=""; lkuPaint(); }
 function lkuInOnly(){ LKU.inOnly=!LKU.inOnly; LKU.lim=200; LKU.sig.ls=""; var b=el("lkuIo"); if(b){ b.className="chip"+(LKU.inOnly?" on":""); b.setAttribute("aria-pressed",String(LKU.inOnly)); } lkuPaint(); }
 function lkuMore(k){ if(k==="in") LKU.limIn+=200; else LKU.lim+=400; LKU.sig[k]=""; lkuPaint(); }
@@ -66,8 +88,8 @@ function lkuPaint(){
   lkuSet("lkuMon","mon",d&&d.ok&&d.mon&&typeof dmonLine==="function"?dmonLine(d.mon):"");   /* 261023 무대 감시 한 줄(서버 판정 mon · 10초 · 서버가 모르면 비움) */
   lkuSet("lkuBand","band",errTop("draw")+errTop("dbd")+(d&&d.ok&&(String(d.att||"").toUpperCase()==="ON"||(b&&b.cond))?band("warn","행운권 참석조건 ON · 6 · 5 · 4등도 체크인한 사람만"):""));
   if(gt){ ["lkuT","lkuCk","lkuW"].forEach(function(id){ lkuSet(id,id,gt); }); }
-  else { lkuTop(d,b); lkuCkPaint(d,b); lkuWin(d); }
-  lkuRo();
+  else { lkuWin(d); lkuTop(d,b); lkuCkPaint(d,b); }
+  if(LKU.tab==="all") lkuRo();
   if(gb&&!b){ var lh=unknownSrv(S.data.dbd)?laterH("체크인한 사람 실명 목록 · 대상 명단"):gb; lkuSet("lkuIn","in",lh); lkuSet("lkuLst","ls",lh); lkuSet("lkuInC","inc",""); }
   else if(b){ lkuIn(b); lkuList(b); }
 }
@@ -76,24 +98,35 @@ function lkuRo(){
   if(!el("lkuTb")||typeof LKY_U!=="object") return;
   var U=LKY_U;
   if(!U.rows){ lkuSet("lkuRt","rt",""); lkuSet("lkuRb","rb","");
-    lkuSet("lkuTb","rtb",'<div class="lku-ld"><p class="cap">'+(U.err?"불러오지 못했습니다 · "+esc(U.err):"누르면 서버에서 명단을 한 번 불러옴 · 10초 갱신에서는 부르지 않음")+'</p><button class="btn pri sm" type="button" onclick="lkyUGet()"'+(U.busy?" disabled":"")+'>'+(U.busy?"불러오는 중":"명단 불러오기")+'</button></div>');
+    lkuSet("lkuTb","rtb",'<div class="lku-ld"><p class="cap">'+(U.err?"불러오지 못했습니다 · "+esc(U.err):"행운권 번호 · 이름 · 소속 · 장수 · 당첨 · 발급 시각 · 누르면 서버에서 한 번 받음 · 10초 갱신에서는 받지 않음")+'</p><button class="btn pri sm" type="button" onclick="lkyUGet()"'+(U.busy?" disabled":"")+'>'+(U.busy?"불러오는 중":"명단 불러오기")+'</button></div>');
     return; }
   if(LKU.sig.rtb){ LKU.sig.rtb=""; var tb=el("lkuTb"); if(tb) tb.innerHTML=""; }
   lkuSet("lkuRb","rb",'<button class="btn sm" type="button" id="lkuVw" onclick="lkyView(1)">사람 단위</button><button class="btn sm" type="button" onclick="lkyUGet()">표 새로 받기</button>');
   var rb=el("lkuRb"); if(rb){ var bs=rb.querySelectorAll("button"); if(bs[1]){ bs[1].disabled=!!U.busy; bs[1].textContent=U.busy?"받는 중":"표 새로 받기"; } }
   lkyTable(U, LKY_UI);
 }
+/* 숫자 줄 · 1 · 2 = 무대 숫자 대조(공 넣기 뒤 = 무대 고정 숫자를 같은 칸 아래 줄 · 다르면 주의 칸) · 3 = 17F 체크인 · 4 = 당첨 n · 10 */
 function lkuTop(d, b){
-  var p=b?{ n:b.n, balls:b.balls, inN:b.inN, inBalls:b.inBalls }:dtPool(d), k=d.lock;
-  var big=function(l,v){ return '<div class="lku-big"><span class="l">'+esc(l)+'</span><span class="v n">'+(v?n0(v[0])+'<em>명</em> '+n0(v[1])+'<em>장</em>':'-')+'</span></div>'; };
-  var h='<div class="grid g2 s1">'+big("6 · 5 · 4등 대상 · 행운권 전체",p?[p.n,p.balls]:null)+big("3 · 2 · 1등 대상 · 17F 체크인",p&&p.inN!=null?[p.inN,p.inBalls]:null)+'</div>'+
-    '<p class="cap mt4">한 사람 한 번 · 행운권 장수만큼 뽑힐 확률'+(k?' · 무대 고정 '+esc(dtLockTxt(k)):'')+(b&&!b.real?' · 이름 일부 가림 · 사번 입장에서 실명':'')+'</p>';
+  var p=b?{ n:b.n, balls:b.balls, inN:b.inN, inBalls:b.inBalls }:dtPool(d), k=d.lock, zero=b?num(b.zero):num(d.zero), inA=b?num(b.inAll):num(d["in"]), W=LKU.w;
+  var ma=function(v){ return n0(v[0])+'<em>명</em> '+n0(v[1])+'<em>장</em>'; };
+  var cell=function(l,v,s,c){ return '<div class="lku-k'+(c?" "+c:"")+'"><span class="l">'+esc(l)+'</span><span class="v n">'+v+'</span><span class="s">'+s+'</span></div>'; };
+  var fix=function(a,bb){ if(!k||!p) return null; var df=num(k[a])!==num(p[a])||num(k[bb])!==num(p[bb]); return { s:'무대 고정 '+n0(k[a])+'명 '+n0(k[bb])+'장'+(df?' · 지금과 다름':' · 같음'), c:df?"warn":"" }; };
+  var f1=fix("n","balls"), f2=fix("inN","inBalls");
+  var h=cell("6 · 5 · 4등 대상 · 행운권 전체",p?ma([p.n,p.balls]):"-",f1?esc(f1.s):"한 사람 한 번 · 장수만큼 뽑힐 확률",f1&&f1.c)+
+    cell("3 · 2 · 1등 대상 · 17F 체크인",p&&p.inN!=null?ma([p.inN,p.inBalls]):"-",f2?esc(f2.s):"체크인한 행운권 보유자",f2&&f2.c)+
+    cell("17F 체크인",n0(inA)+'<em>명</em>',zero?"행운권 없는 사람 "+n0(zero)+"명 포함":"&nbsp;")+
+    cell("당첨",n0(W.wins)+'<em>/ '+LKU_SLOTS+'</em>',W.abs?"부재 "+n0(W.abs)+"명 · 다시 추첨":"무대 기록대로");
   lkuSet("lkuT","top",h);
 }
+/* 상태 줄 · 체크인 상태 + 오른쪽 끝 작은 단추(받는 중 = 체크인 마감 · 마감 = 다시 열기 · 공 넣기 뒤 = 다시 열기 흐림) */
 function lkuCkPaint(d, b){
-  var c=lkuCk(d,b), k=d.lock, h='<div class="lku-st '+c.k+'"><b>'+esc(c.t)+'</b><span class="cap">'+esc(c.s)+'</span></div>';
-  if(c.k==="closed") h+='<div class="btns mt"><button class="btn sm" type="button" style="flex:none" onclick="lkuClose(0)"'+(k?" disabled":"")+'>다시 열기</button></div><p class="cap mt4">'+(k?"무대 공 넣기 뒤라 다시 열 수 없음":"무대 공 넣기 전까지 다시 열 수 있음")+'</p>';
-  else h+='<button class="btn dng big mt lku-go" type="button" onclick="lkuClose(1)"'+(c.k==="open"?"":" disabled")+'>체크인 마감</button><p class="cap mt4">'+(c.k==="open"?"누르면 확인 창 · 마감 뒤 찍는 사람은 3 · 2 · 1등 통 밖":"체크인을 받는 동안 켜짐")+'</p>';
+  var c=lkuCk(d,b), k=d.lock, t=c.t, s=c.s, act;
+  if(c.k==="closed"&&k){ t="무대 고정"+(k.at?" · "+hm(String(k.at).slice(11,16)):""); s=c.t+" · "+c.s+" · 다시 열 수 없음"; }
+  else if(c.k==="closed") s=c.s+" · 무대 공 넣기 전까지 다시 열 수 있음";
+  if(c.k==="closed") act='<button class="btn sm" type="button" onclick="lkuClose(0)"'+(k?' disabled title="무대 공 넣기 뒤라 다시 열 수 없음"':' title="다시 열면 그 뒤 찍는 사람도 3 · 2 · 1등 통"')+'>다시 열기</button>';
+  else act='<button class="btn sm lku-cl" type="button" onclick="lkuClose(1)"'+(c.k==="open"?' title="누르면 확인 창 · 마감 뒤 찍는 사람은 3 · 2 · 1등 통 밖"':' disabled title="체크인을 받는 동안 켜짐"')+'>체크인 마감</button>';
+  var h='<div class="lku-st '+c.k+(k?" lock":"")+'"><b>'+esc(t)+'</b><span class="cap">'+esc(s)+'</span></div>'+
+    '<div class="lku-act"><button type="button" class="lku-lnk" aria-expanded="'+LKU.qr+'" aria-controls="lkuQrB" onclick="lkuQrT()">'+(LKU.qr?"체크인 QR 닫기":"체크인 QR")+'</button>'+act+'</div>';
   lkuSet("lkuCk","ck",h);
   if(LKU.qr) lkuSet("lkuQrB","qr",typeof dtQrH==="function"?dtQrH(d):"");
 }
@@ -111,27 +144,29 @@ function lkuClose(v){
 /* 마감 · 다시 열기 뒤 사람 줄 · 마감 시각은 서버 캐시(5초)를 건너뛰고 한 번 */
 function lkuFresh(){ call("draw_board",{ v:LKU.open?"all":"in", fresh:"1" }).then(function(r){ if(r&&r.ok){ S.data.dbd=r; S.at.dbd=Date.now(); S.err.dbd=null; } paint(); }); }
 function lkuTk(c){ return c?n0(c)+"장":'<span class="lku-0">행운권 없음</span>'; }
-function lkuNmH(r){ return '<b>'+esc(r.nm||"-")+'</b><span class="lku-dp">'+esc(r.dp||"-")+'</span>'; }
+function lkuNmH(r){ return '<td class="lku-nm">'+esc(r.nm||"-")+'</td><td class="lku-dp" title="'+esc(r.dp||"")+'">'+esc(r.dp||"-")+'</td>'; }
 function lkuIn(b){
   var all=lkuRows(b).filter(function(r){ return r.at; }).sort(function(a,c){ return a.at<c.at?-1:a.at>c.at?1:0; });
   all.forEach(function(r,i){ r.k=i+1; });
-  var tk=all.filter(function(r){ return r.c; }), rows=all.slice().reverse(), sh=rows.slice(0,LKU.limIn);
-  lkuSet("lkuInC","inc",n0(all.length)+"명 · 행운권 있음 "+n0(tk.length)+"명");
-  var h=all.length?'<div class="lku-tw"><table class="tb lku-tb"><thead><tr><th class="n">순서</th><th>이름 · 부서</th><th class="n">시각</th><th class="n">행운권</th></tr></thead><tbody>'+
-    sh.map(function(r){ return '<tr><td class="n">'+r.k+'</td><td class="lku-who">'+lkuNmH(r)+'</td><td class="n">'+esc(r.at)+'</td><td class="n">'+lkuTk(r.c)+'</td></tr>'; }).join("")+'</tbody></table></div>'+
-    (rows.length>sh.length?'<div class="btns mt"><button class="btn sm" type="button" onclick="lkuMore(\'in\')">'+n0(rows.length-sh.length)+'명 더 보기</button></div>':'')+'<p class="cap mt4">최근 체크인이 위 · 10초마다</p>':emptyH("아직 체크인한 사람이 없습니다");
+  var rows=all.slice().reverse(), sh=rows.slice(0,LKU.limIn);
+  lkuSet("lkuInC","inc",n0(all.length)); lkuSet("lkuInN","inn","최근 체크인이 위 · 10초마다"+(b.real?"":" · 이름 일부 가림 · 사번 입장에서 실명"));
+  var h=all.length?'<div class="lku-tw"><table class="tb lku-tb"><thead><tr><th class="n">순서</th><th>이름</th><th>부서</th><th class="n">시각</th><th class="n">행운권</th></tr></thead><tbody>'+
+    sh.map(function(r){ return '<tr><td class="n">'+r.k+'</td>'+lkuNmH(r)+'<td class="n">'+esc(r.at)+'</td><td class="n">'+lkuTk(r.c)+'</td></tr>'; }).join("")+'</tbody></table></div>'+
+    (rows.length>sh.length?'<div class="btns mt"><button class="btn sm" type="button" onclick="lkuMore(\'in\')">'+n0(rows.length-sh.length)+'명 더 보기</button></div>':''):emptyH("아직 체크인한 사람이 없습니다");
   lkuSet("lkuIn","in",h);
 }
+/* 슈퍼관리자 아님 · 대상 명단 탭 = draw_board v all(이름 · 부서 · 장수 · 체크인 시각) */
 function lkuList(b){
-  if(!LKU.open) return;
+  if(!LKU.open||!el("lkuLst")) return;
   if(b.v!=="all"){ lkuSet("lkuLst","ls",skel()); return; }
   var q=LKU.q.replace(/\s/g,"").toLowerCase(), all=lkuRows(b).filter(function(r){ return r.c>0||r.at; });
   var f=all.filter(function(r){ return (!LKU.inOnly||r.at)&&(!q||(r.nm+r.dp).replace(/\s/g,"").toLowerCase().indexOf(q)>=0); });
   f.sort(function(a,c){ return a.nm<c.nm?-1:a.nm>c.nm?1:0; });
   var sh=f.slice(0,LKU.lim);
-  var h='<p class="cap mt">'+n0(f.length)+'명'+(f.length!==all.length?' · 전체 '+n0(all.length)+'명':'')+'</p>'+(f.length?'<div class="lku-tw"><table class="tb lku-tb"><thead><tr><th>이름 · 부서</th><th class="n">행운권</th><th class="n">체크인</th></tr></thead><tbody>'+
-    sh.map(function(r){ return '<tr><td class="lku-who">'+lkuNmH(r)+'</td><td class="n">'+lkuTk(r.c)+'</td><td class="n">'+(r.at?esc(r.at.slice(0,5)):'<span class="lku-0">-</span>')+'</td></tr>'; }).join("")+'</tbody></table></div>'+
-    (f.length>sh.length?'<div class="btns mt"><button class="btn sm" type="button" onclick="lkuMore(\'ls\')">'+n0(f.length-sh.length)+'명 더 보기</button></div>':''):emptyH(q?"찾는 사람이 없습니다":"아직 대상이 없습니다"));
+  lkuSet("lkuLsC","lsc",n0(f.length)+"명"+(f.length!==all.length?" · 전체 "+n0(all.length)+"명":"")+(b.real?"":" · 이름 일부 가림 · 사번 입장에서 실명"));
+  var h=f.length?'<div class="lku-tw"><table class="tb lku-tb"><thead><tr><th>이름</th><th>부서</th><th class="n">행운권</th><th class="n">체크인</th></tr></thead><tbody>'+
+    sh.map(function(r){ return '<tr>'+lkuNmH(r)+'<td class="n">'+lkuTk(r.c)+'</td><td class="n">'+(r.at?esc(r.at.slice(0,5)):'<span class="lku-0">-</span>')+'</td></tr>'; }).join("")+'</tbody></table></div>'+
+    (f.length>sh.length?'<div class="btns mt"><button class="btn sm" type="button" onclick="lkuMore(\'ls\')">'+n0(f.length-sh.length)+'명 더 보기</button></div>':''):emptyH(q?"찾는 사람이 없습니다":"아직 대상이 없습니다");
   lkuSet("lkuLst","ls",h);
 }
 function lkuWin(d){
@@ -141,14 +176,15 @@ function lkuWin(d){
   LKU_RK.forEach(function(x){ var k=x[0], L=(by[k]||[]).slice().sort(function(a,c){ return String(a.t)<String(c.t)?-1:1; }), w=L.filter(function(r){ return r.st==="win"; }), a=L.filter(function(r){ return r.st==="absent"; });
     wins+=w.length; abs+=a.length;
     L.forEach(function(r){ rows.push(lkuWRow(k,r,r.st==="absent"?1:0)); });
-    for(var i=w.length;i<x[1];i++) rows.push('<tr class="lku-yet"><td><b>'+k+'등</b></td><td colspan="3">아직 추첨 전</td></tr>'); });
-  lkuSet("lkuWC","wc",wins||abs?"당첨 "+n0(wins)+"명"+(abs?" · 부재 "+n0(abs)+"명":"")+" · 무대 기록대로":"무대 기록대로");
-  lkuSet("lkuW","win",'<div class="lku-tw all"><table class="tb lku-tb"><thead><tr><th>등수</th><th>이름 · 부서</th><th class="n">번호</th><th>확인</th></tr></thead><tbody>'+rows.join("")+'</tbody></table></div>');
+    for(var i=w.length;i<x[1];i++) rows.push('<tr class="lku-yet"><td><b>'+k+'등</b></td><td colspan="4">아직 추첨 전</td></tr>'); });
+  LKU.w={ wins:wins, abs:abs };
+  lkuSet("lkuWC","wc",n0(wins)+"/"+LKU_SLOTS);
+  lkuSet("lkuW","win",'<div class="lku-tw"><table class="tb lku-tb"><thead><tr><th>등수</th><th>이름</th><th>부서</th><th class="n">번호</th><th>확인</th></tr></thead><tbody>'+rows.join("")+'</tbody></table></div>');
 }
 function lkuWRow(k, r, ab){
   var tg="";
   if(ab) tg=tag("부재 · 다시 추첨","off");
   else if(r.fb) tg=tag("전체 통 이어 뽑기","off");
   else if(k<=3) tg=r.warn==="in"?tag("체크인 없음","warn"):tag("체크인","ok");
-  return '<tr'+(ab?' class="lku-ab"':'')+'><td><b>'+k+'등</b></td><td class="lku-who"><b>'+esc(r.name||r.nm||"-")+'</b><span class="lku-dp">'+esc(r.dept||"-")+'</span></td><td class="n">'+esc(r.no||"-")+'</td><td>'+tg+'</td></tr>';
+  return '<tr'+(ab?' class="lku-ab"':'')+'><td><b>'+k+'등</b></td>'+lkuNmH({ nm:r.name||r.nm, dp:r.dept })+'<td class="n">'+esc(r.no||"-")+'</td><td>'+tg+'</td></tr>';
 }
