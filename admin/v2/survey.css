@@ -1,0 +1,17 @@
+/* AXF CONTROL v2 · 설문 탭(261024 · survey.js) · 하단 탭 9칸(설정 앞 설문) · 홈 대시보드 부품(dashfx.css · usage.css)을 그대로 쓰고 자리만 */
+.tabs{grid-template-columns:repeat(9,1fr)}
+.svd-top{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;margin-bottom:10px}
+.svd-top .chips{margin:0}
+.svd-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;min-height:40px}
+.svd-bar .chip.svd-chip{height:32px;font-size:12px;padding:0 12px}
+.svd-k .dx-mt .dx-bi{background:var(--navy)}
+.svd-qn{margin-left:auto;white-space:nowrap;font-variant-numeric:tabular-nums}
+.svd-vb{margin-top:26px}
+.svd-ss td:first-child{word-break:keep-all;line-height:1.35;padding-top:4px;padding-bottom:4px;height:auto;min-height:30px}
+.svd-two>.card{min-width:0}
+@media (max-width:600px){
+  .tabs button .s{font-size:11px;letter-spacing:-.02em}
+  .svd-top{flex-direction:column;align-items:stretch}
+  .svd-bar .sp{display:none}
+  .svd-bar .svd-upd{width:100%}
+}
