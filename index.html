@@ -11976,7 +11976,7 @@ WS.h.scan = function (m) { scanTellIn(m); };
 WS.h.fcfsout = function () {
   var was = fcfsReady(fcfsMy());
   if (BE.on && typeof wsSyncSoon === "function") wsSyncSoon(3000);
-  if (was && App.current !== "sscan") toast("선착순 참여상이 모두 나갔어요");
+  if (was && App.current !== "sscan") toast("선착순 참여상 " + ((fxGet() || {}).cap || 200) + "명 마감");   /* 261024 (사용자) 나의 보상 카드와 같은 톤 · 수 = 설정값 */
 };
 /* v5.98 (사용자 261006 밤 「QR 스캔이 되면 완료 푸시가 나가나? 룰렛은 행운을 빌어요」) 스태프가 내 QR 을 찍은 순간
  * 소켓 개인 사건(scan) 또는 앱이 보일 때 온 푸시(태그 scan:<사건 키>) · 같은 사건은 한 번(SCANTELL) · 곧바로 sync(스탬프 연출 · 화면 · 내 QR 「확인됨」)
