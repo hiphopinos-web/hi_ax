@@ -322,7 +322,7 @@ var SV_SCALE = {   /* 첫 칸 = 1점 · 마지막 칸 = 5점(정본 SAT · OPS �
 };
 var SV_OPT = {   /* 첫 칸 = 가장 높은 점수(보기 수) */
   idea: ["적극적으로 해 볼 생각이다", "한번 시도해 보려 한다", "아직 잘 모르겠다"],
-  know: ["주요 내용을 알고 있다", "대략적인 내용을 알고 있다", "이름과 핵심 키워드 정도는 알고 있다", "들어는 봤으나, 정확한 내용은 모른다", "처음 들어봤다"],
+  know: ["주요 내용을 알게 되었다", "대략적인 내용을 알게 되었다", "이름과 핵심 키워드 정도를 알게 되었다", "들어는 봤으나, 정확한 내용은 아직 모른다", "이번에 처음 들어봤다"],
   plan: ["적극적으로 사용할 계획이다", "사용할 계획이다", "사용할지 고민 중이다", "들어는 봤으나, 사용할 계획은 없다", "처음 들어봤다"]
 };
 var SV_GROUPS = [{ no: "Ⅰ", sec: "전체 만족도" }, { no: "Ⅱ", sec: "프로그램별 만족도" }, { no: "Ⅲ", sec: "이해도" }, { no: "Ⅳ", sec: "자유 의견" }];
@@ -348,9 +348,9 @@ var SURVEY_Q = [
   { id: "q2_0", g: 1, type: "multi", q: "귀하가 금일 참여하거나 관람한 프로그램을 선택해 주세요.", hint: "복수 응답 가능", none: "참여한 프로그램이 없다" }
 ].concat(SV_PROGS.map(function (p) { return { id: p.id, g: 1, type: "slider", s: "use", q: p.q, tag: p.fl + " · " + p.nm, prog: p.id }; })).concat([
   { id: "i_und", g: 2, type: "info", t: "이해도", q: "다음은 1층에서 소개한 기술지원부문 과제들에 대한 이해도를 묻는 조사입니다." },
-  { id: "q3_1", g: 2, type: "single", o: "know", q: "귀하는 현대해상의 AX 3개년 로드맵에 대해 알고 계신가요?" },
-  { id: "q3_2", g: 2, type: "single", o: "plan", q: "귀하는 현대해상의 Hi-헬퍼와 HiDi-Q에 대해 어느 정도 알고 계신가요?" },
-  { id: "q3_3", g: 2, type: "single", o: "know", q: "데이터분석프로젝트(DAP)에 대해 알고 계신가요?" },
+  { id: "q3_1", g: 2, type: "single", o: "know", q: "이번 행사를 통해 현대해상의 AX 3개년 로드맵을 알게 되었나요?" },
+  { id: "q3_2", g: 2, type: "single", o: "plan", q: "이번 행사를 통해 Hi-헬퍼와 HiDi-Q를 업무에 사용할 계획이 생겼나요?" },
+  { id: "q3_3", g: 2, type: "single", o: "know", q: "이번 행사를 통해 데이터분석프로젝트(DAP)를 알게 되었나요?" },
   { id: "q4", g: 3, type: "text", optional: true, max: 300, ph: "자유롭게 적어주세요", hint: "선택 입력입니다. 비워두셔도 제출할 수 있어요.", q: "오늘 행사에서 가장 인상 깊었던 점이나 개선했으면 하는 점을 자유롭게 남겨주세요." }
 ]);
 var SURVEY_DONE = { t: "참여해 주셔서 감사합니다", q: "소중한 의견은 다음 AX 행사를 준비하는 데 반영하겠습니다.", meta: "스탬프 1개 적립" };   /* v8.28 meta = 완료 화면 아래 줄 · 설문 테스트 주소(?svreview)는 「테스트 · 저장하지 않음」 */
@@ -390,11 +390,11 @@ var SURVEY_PQ = [
   { id: "session", g: 1, type: "sess", q: "오늘 참여한 세션은 무엇인가요?" },
   { id: "job", g: 1, type: "single", o: "job", q: "소속 직군은 무엇인가요?" },
   { id: "level", g: 1, type: "single", o: "level", q: "세션을 듣기 전, 본인의 AI 활용 수준은 어느 정도였나요?" },
+  { id: "overall", g: 2, type: "slider", s: "satS", q: "오늘 참여한 실습형 세션의 전반적인 만족도는 어떠했나요?" },
   { id: "s_difficulty", g: 2, type: "slider", s: "agree", q: "교육 내용의 난이도는 적절하였나요?" },
   { id: "s_instructor", g: 2, type: "slider", s: "agree", q: "강사(동료 강사 포함)의 설명이 이해하기 쉬웠나요?" },
   { id: "s_pacing", g: 2, type: "slider", s: "agree", q: "실습 시간과 진행 속도는 적절하였나요?" },
   { id: "s_env", g: 2, type: "slider", s: "agree", q: "실습 환경은 원활하였나요?", hint: "노트북, AI 도구, 계정 등" },
-  { id: "overall", g: 2, type: "slider", s: "satS", q: "오늘 참여한 실습형 세션의 전반적인 만족도는 어떠했나요?" },
   { id: "e_skill", g: 3, type: "slider", s: "agree", q: "세션을 듣고 난 후, AI 활용 역량이 향상되었다고 느꼈나요?" },
   { id: "e_share", g: 3, type: "slider", s: "agree", q: "오늘 배운 내용을 동료에게 공유할 의향이 있나요?" },
   { id: "e_retake", g: 3, type: "slider", s: "agree", q: "유사한 심화 교육이 열리면 다시 참여할 의향이 있나요?" },
@@ -411,9 +411,9 @@ var SURVEY_PQ = [
   { id: "q1_3", g: 7, type: "slider", s: "again", q: "다음 AX 행사가 열린다면 다시 참여하거나 동료에게 추천할 의향이 있나요?" },
   { id: "q2_0", g: 8, type: "multi", pids: SVP_PIDS, q: "오늘 참여하거나 관람한 프로그램을 모두 선택해 주세요.", hint: "복수 응답 가능", none: "참여한 프로그램이 없다" }
 ].concat(SV_PROGS.filter(function (p) { return SVP_PIDS.indexOf(p.id) >= 0; }).map(function (p) { return { id: p.id, g: 8, type: "slider", s: "use", q: SVP_PQ[p.id], tag: p.fl + " · " + p.nm, prog: p.id }; })).concat([
-  { id: "q3_1", g: 9, type: "single", o: "know", q: "현대해상의 AX 3개년 로드맵에 대해 알고 있나요?" },
-  { id: "q3_2", g: 9, type: "single", o: "plan", q: "Hi-헬퍼와 HiDi-Q를 업무에 사용할 계획이 있나요?" },
-  { id: "q3_3", g: 9, type: "single", o: "know", q: "데이터분석프로젝트(DAP)에 대해 알고 있나요?" },
+  { id: "q3_1", g: 9, type: "single", o: "know", q: "이번 행사를 통해 현대해상의 AX 3개년 로드맵을 알게 되었나요?" },
+  { id: "q3_2", g: 9, type: "single", o: "plan", q: "이번 행사를 통해 Hi-헬퍼와 HiDi-Q를 업무에 사용할 계획이 생겼나요?" },
+  { id: "q3_3", g: 9, type: "single", o: "know", q: "이번 행사를 통해 데이터분석프로젝트(DAP)를 알게 되었나요?" },
   { id: "q4", g: 10, type: "text", optional: true, max: 300, q: "오늘 행사 전반에서 가장 인상 깊었던 점이나 개선했으면 하는 점을 자유롭게 적어 주세요.", hint: "선택 문항", ph: "자유롭게 적어 주세요" },
   { id: "interview", g: 11, type: "single", o: "interview", q: "업무와 AI에 대한 짧은 인터뷰에 참여할 의향이 있나요?", hint: "30분 내외로 진행됩니다." }
 ]);
