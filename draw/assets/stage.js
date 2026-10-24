@@ -1073,7 +1073,7 @@
     if (!nx.c) { if (nx.n === "잠시만") kbNo(); else { KB.noN++; hlRej(nx.n); kbNote(nx.n); } return; }   /* 261016 버려진 누름도 스태프 표시줄에 보인다(소리 없이 버리지 않는다) */
     if (nx.c === "skip") { if (SC === "intro") { vidCut("intro"); lock(0.5); kbOk(nm); } else if (canSkipMix()) { skipMix(); kbOk(nm); } else kbNo(); return; }
     if (nx.c === "confirm" && topRank() && cmdWhy("confirm", nx.arg)) return keyFail(cmdWhy("confirm", nx.arg));   /* 공개 1.4초 안 = 첫 누름으로 세지 않는다 */
-    if (nx.c === "confirm" && topRank()) return twice("confirm", curRound().name + " 확정 · Space 한 번 더", function () { keyRun("confirm", nx.arg, nm); });   /* 261016 3 · 2 · 1등 = 두 번 눌러 확정(부재면 그 사이 「다시 추첨」) */
+    if (nx.c === "confirm" && topRank()) return twice("confirm", curRound().name + "을 확정하려면 Space를 한 번 더 눌러 주세요", function () { keyRun("confirm", nx.arg, nm); });   /* 261016 3 · 2 · 1등 = 두 번 눌러 확정(부재면 그 사이 「다시 추첨」) */
     keyRun(nx.c, nx.arg, nm);
   }
   /* 261016 등수 숫자(1 ~ 6) · 3 · 2 · 1등만 부재 · 다시 추첨(사용자 확정 · 6 · 5 · 4등은 이름만 호명하고 끝) */
@@ -1788,7 +1788,7 @@
   function kbOk(nm) { KB.okN++; kbFlash("ok", "다음 · " + nm, 1.4); }
   function kbNo() { KB.noN++; hlRej(kbWait() < 0 ? "안 받음 · 뽑는 중" : "안 받음 · 연출 중"); kbFlash("no", "", Math.max(1.6, kbWait() + 0.2)); }
   function kbNote(msg) { kbFlash("info", msg, 2.6); }
-  function kbFast() { KB.noN++; hlRej("안 받음 · 두 번째가 너무 빠름"); kbFlash("fast", "안 받음 · 두 번째가 너무 빠름 · 0.4초쯤 뒤 한 번 더", 1.2); }
+  function kbFast() { KB.noN++; hlRej("안 받음 · 두 번째가 너무 빠름"); kbFlash("fast", "두 번째 누름이 너무 빨라 안 받았어요 · 잠깐 뒤 한 번 더 눌러 주세요", 1.2); }
   function kbFlash(k, msg, sec) { KB.k = k; KB.msg = msg; KB.until = T + sec; kbPaint(true); }
   function kbView() {
     if (KB.k === "fast" && T < KB.until) return { cls: "no", txt: KB.msg };
@@ -2053,9 +2053,9 @@
     else if (fbShow()) warn.push("체크인 통 소진");
     info.push(SFX.on ? "소리 켬" : "소리 끔");
     set("opInfo", (warn.length ? '<span class="warn">' + esc(warn.join(" · ")) + "</span> · " : "") + esc(info.join(" · ")));
-    var fb = $("opFb"); if (fb) { var on = fbShow(); fb.hidden = !on; fb.textContent = ARM.k === "fb" ? "한 번 더 · 전체 통에서 이어 뽑기" : "전체 통에서 이어 뽑기"; fb.classList.toggle("arm", ARM.k === "fb"); }
-    $("opRestart").textContent = ARM.k === "restart" ? "한 번 더 · 다시 시작" : "다시 시작";
-    $("opReset").textContent = ARM.k === "reset" ? "한 번 더 · 리셋" : "리셋";
+    var fb = $("opFb"); if (fb) { var on = fbShow(); fb.hidden = !on; fb.textContent = ARM.k === "fb" ? "전체 통에서 이어 뽑으려면 한 번 더 눌러 주세요" : "전체 통에서 이어 뽑기"; fb.classList.toggle("arm", ARM.k === "fb"); }
+    $("opRestart").textContent = ARM.k === "restart" ? "다시 시작하려면 한 번 더 눌러 주세요" : "다시 시작";
+    $("opReset").textContent = ARM.k === "reset" ? "리셋하려면 한 번 더 눌러 주세요" : "리셋";
   }
   /* 261021 체크인 통 소진(R9 · 사용자 「단순하게」) · 3 · 2 · 1등 부저 화면에서 체크인 통 0 · 전체 통은 남음 → 운영 줄 단추 하나(두 번 누름)
    *   누르면 ST.fb(한 번 켜지면 남은 등수도 전체 통 · sticky) · 기록 fb 1 · 그 밖의 자동 규칙 없음 */
@@ -2089,7 +2089,7 @@
     var on = redoShow(); el.classList.toggle("on", on);
     if (!on) return;
     var n = ST.redo && ST.redo[ST.round] || 0;
-    set("redoBtn", ARM.k === "redo" ? "<b>한 번 더 누르면 다시 추첨</b>" : "<b>다시 추첨</b><em>" + esc(curRound().name) + " 현장에 없을 때" + (n ? " · " + n + "회째" : "") + "</em>");
+    set("redoBtn", ARM.k === "redo" ? "<b>다시 추첨하려면 한 번 더 눌러 주세요</b>" : "<b>다시 추첨</b><em>" + esc(curRound().name) + " 현장에 없을 때" + (n ? " · " + n + "회째" : "") + "</em>");
     el.classList.toggle("arm", ARM.k === "redo");
   }
   function redoClick() { mouseSeen(); if (!redoShow()) return; if (armed("redo")) act("redraw"); }
@@ -2129,7 +2129,7 @@
     var b = backTarget(), on = !!b;
     el.classList.toggle("on", on);
     if (!on) { if (ARM.k === "back") ARM.k = ""; el.classList.remove("arm"); return; }
-    set("backBtn", ARM.k === "back" ? "<b>한 번 더 누르면 " + esc(b.n) + " 화면으로</b>" : "<b>되돌리기</b><em>" + esc(b.n) + " 화면으로</em>");
+    set("backBtn", ARM.k === "back" ? "<b>" + esc(b.n) + " 화면으로 되돌리려면 한 번 더 눌러 주세요</b>" : "<b>되돌리기</b><em>" + esc(b.n) + " 화면으로</em>");
     el.classList.toggle("arm", ARM.k === "back");
   }
   function backClick() {
