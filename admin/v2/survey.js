@@ -11,7 +11,7 @@ var SVY_T={ q1_1:"전반 만족", q1_2:"행사 운영", q1_3:"재참여 · 추�
 var SVY_P1T={ session:"참여 세션", job:"소속 직군", level:"듣기 전 AI 활용 수준", s_difficulty:"교육 난이도", s_instructor:"강사 설명", s_pacing:"실습 시간 · 진행 속도", s_env:"실습 환경", overall:"세션 전반 만족",
   e_skill:"AI 활용 역량 향상", e_share:"동료에게 공유할 의향", e_retake:"심화 교육 재참여 의향", apply:"적용해 볼 업무", parts:"AI가 맡을 부분", task_name:"그 업무", customer_data:"고객 정보 자료 필요",
   barriers:"업무 연결이 어려운 이유", good:"좋았던 점 · 아쉬웠던 점", wish:"듣고 싶은 AI 교육 주제", interview:"인터뷰 참여 의향" };
-var SVY={ test:false, src:"", busy:"" };
+var SVY={ test:false, src:"", busy:"", Q:{}, open:"", ret:null, ct:0 };
 var SV_KINDS=[["all","전체"],["gen","일반"],["pre","사전 신청자"]];
 var SV_PRE_P=["q2_1","q2_2","q2_3","q2_4","q2_5"];   /* 사전 신청자 설문 PART 2 프로그램 = 1F 5개(서버 SVP_PIDS) */
 LG_SUBS.splice(1,0,["sv","설문"]);   /* 옛 자리 · 누르면 설문 탭(routeFix) */
@@ -27,19 +27,78 @@ function svUnit(){ return SVY.src?"건":"명"; }
 function svyPc(a,b){ return b>0?Math.round(a/b*1000)/10:0; }
 function svyAvg(v){ return v==null||v===""?"-":Number(v).toFixed(2); }
 function svyNo(id){ return String(id||"").toUpperCase().replace("_","-"); }
-/* 점수 문항 분포 · no = 문항 번호 글자(빈 글자 = 번호 없음 · PART 1) */
+/* 261024 (사용자 확정 · 시안 svdash_mock) 문항 카드 = 제목 + 「전체 보기 ›」 + 질문 한 줄 + 도넛(평균 ÷ 만점) 또는 선택지 막대 + 답 수 · 카드 전체가 단추
+ * 5점 문항 = q.top 5 · 선택지형 = q.top 5 미만(Q1-4 3점) 또는 점수 없는 보기 문항(PART 1 직군 · 수준 · 여러 개 고름) · 평균 · 점수 표기 없음 · 최다 선택지만 네이비(동률 = 둘 다)
+ * 전체 보기 = svyOpen(열쇠) · 넓은 화면 = 가운데 창 · 600px 아래 = 전체 화면 · 창은 #vb 밖(body 끝)이라 30초 갱신(svyPaint)이 다시 그려도 닫히지 않고 내용만 바뀜
+ * 움직임 = 전역 스킬 mobile-popup-motion(들어옴 300ms 6px 떠오름 · 나감 180ms 흐려짐 · 동작 줄이기 = 바로) */
+function svyCh(q){ return !(Number(q.top)>=5); }
+function svyKey(q, no){ return (no===""?"p1:":"q:")+q.id; }
+/* 도넛 · 링 = 평균 ÷ 만점 · 선 끝 둥글게 · 0건 = 빈 링과 「-」 */
+function svyDonut(avg, top, big){
+  top=Number(top)||5; var v=avg==null||avg===""||!isFinite(Number(avg))?null:Number(avg), f=v==null?0:Math.max(0,Math.min(1,v/top)), r=42, C=2*Math.PI*r;
+  return '<span class="svd-dn'+(big?" svd-lg":"")+'" role="img" aria-label="평균 '+(v==null?"없음":v.toFixed(2))+' · '+top+'점 만점"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="svd-tr" cx="50" cy="50" r="'+r+'"/>'+
+    (f>0?'<circle class="svd-fl" cx="50" cy="50" r="'+r+'" stroke-dasharray="'+(C*f).toFixed(2)+' '+C.toFixed(2)+'"/>':'')+
+    '</svg><span class="svd-ct"><span class="svd-v n">'+(v==null?"-":v.toFixed(2))+'</span><span class="svd-u">/ '+top+'</span></span></span>';
+}
+/* 선택지 막대 · 글 + 막대 + 「18명 · 60%」 · 최다만 네이비 · 굵게 */
+function svyChoice(q){
+  var n=q.n||0, D=q.dist||{}, mx=0, u=svUnit();
+  (q.opts||[]).forEach(function(o){ mx=Math.max(mx, num(D[o[0]])); });
+  return '<span class="svd-ch">'+(q.opts||[]).map(function(o){ var c=num(D[o[0]]), p=svyPc(c,n);
+    return '<span class="svd-o'+(c>0&&c===mx?" hi":"")+'"><span class="svd-ot"><span>'+esc(o[1])+'</span><span class="n">'+n0(c)+u+' · '+p+'%</span></span><span class="svd-ob"><i style="width:'+p+'%"></i></span></span>'; }).join("")+'</span>';
+}
+/* 점수별 분포 · 전체 보기 오른쪽(좁은 화면 = 도넛 아래) · q.opts 그대로(0.5 단위 9칸 · 정수 5칸) */
+function svyDist(q){
+  var n=q.n||0;
+  return '<table class="tb svy-d svd-dt"><tbody>'+(q.opts||[]).map(function(o){ var c=num((q.dist||{})[o[0]]); return '<tr><td><b class="n">'+esc(o[0])+'</b><span class="svd-lb">'+esc(o[1])+'</span></td><td class="svy-b"><div class="bar"><i style="width:'+svyPc(c,n)+'%"></i></div></td><td class="n">'+n0(c)+' · '+svyPc(c,n)+'%</td></tr>'; }).join("")+'</tbody></table>';
+}
+/* 문항 카드 · no = 문항 번호 글자(빈 글자 = 번호 없음 · PART 1) */
 function svyBlock(q, title, no){
-  var n=q.n||0, nb=no===""?"":esc(no||svyNo(q.id))+' · ';
-  return '<div class="svy-q"><div class="svy-h"><b>'+nb+esc(title)+'</b><span class="n svy-av" title="평균 · '+(q.top||5)+'점 만점">'+svyAvg(q.avg)+'</span></div><p class="cap">'+esc(q.q||"")+'</p>'+
-    '<table class="tb svy-d"><tbody>'+(q.opts||[]).map(function(o){ var c=(q.dist||{})[o[0]]||0; return '<tr><td><b class="n">'+esc(o[0])+'</b> · '+esc(o[1])+'</td><td class="svy-b"><div class="bar"><i style="width:'+svyPc(c,n)+'%"></i></div></td><td class="n">'+n0(c)+' · '+svyPc(c,n)+'%</td></tr>'; }).join("")+'</tbody></table><p class="cap mt4">답 '+n0(n)+svUnit()+' · 평균은 빈 값 뺌</p></div>';
+  var n=q.n||0, nb=no===""?"":esc(no||svyNo(q.id))+' · ', k=svyKey(q, no), ch=svyCh(q);
+  SVY.Q[k]={ q:q, title:title, nb:nb };
+  return '<button type="button" class="svy-q svd-c" data-svk="'+esc(k)+'" aria-haspopup="dialog" onclick="svyOpen(\''+esc(k)+'\')"><span class="svy-h"><b>'+nb+esc(title)+'</b><span class="svd-more">전체 보기 ›</span></span>'+
+    '<span class="svd-qt" title="'+esc(q.q||"")+'">'+esc(q.q||"")+'</span>'+(ch?svyChoice(q):'<span class="svd-dnw" title="평균 · '+(q.top||5)+'점 만점">'+svyDonut(q.avg, q.top)+'</span>')+
+    '<span class="svd-cn">답 '+n0(n)+svUnit()+(q.when?' · 보인 사람만':'')+(q.t==="pick"?' · 여러 개 고름':'')+'</span></button>';
 }
-/* 보기 문항(점수 없음 · PART 1 직군 · 수준 · 적용 · 고객 정보 · 인터뷰 · 여러 개 고름) · 비율 = 고른 수 ÷ 답한 수 */
-function svyCat(q, title){
-  var n=q.n||0, pick=q.t==="pick";
-  return '<div class="svy-q"><div class="svy-h"><b>'+esc(title)+'</b><span class="cap svd-qn">답 '+n0(n)+svUnit()+'</span></div><p class="cap">'+esc(q.q||"")+(q.when?' <span class="dx-nw">· 보인 사람만</span>':'')+'</p>'+
-    '<table class="tb svy-d"><tbody>'+(q.opts||[]).map(function(o){ var c=(q.dist||{})[o[0]]||0; return '<tr><td>'+esc(o[1])+'</td><td class="svy-b"><div class="bar"><i style="width:'+svyPc(c,n)+'%"></i></div></td><td class="n">'+n0(c)+' · '+svyPc(c,n)+'%</td></tr>'; }).join("")+'</tbody></table>'+
-    (pick?'<p class="cap mt4">여러 개 고름 · 비율 = 고른 사람 ÷ 답한 사람</p>':'')+'</div>';
+/* 보기 문항(점수 없음 · PART 1) = 같은 카드 · 선택지형 */
+function svyCat(q, title){ return svyBlock(q, title, ""); }
+/* ── 전체 보기 창 ── */
+function svyOv(){
+  var o=el("svdOv"); if(o) return o;
+  document.body.insertAdjacentHTML("beforeend",'<div class="svd-ov" id="svdOv" hidden><div class="svd-dim" onclick="svyClose()"></div><div class="svd-sh" id="svdSh" role="dialog" aria-modal="true" aria-labelledby="svdT" tabindex="-1"></div></div>');
+  return el("svdOv");
 }
+function svyDetail(k){
+  var e=SVY.Q[k]; if(!e) return ""; var q=e.q, n=q.n||0, ch=svyCh(q), half=(q.opts||[]).length>5;
+  return '<div class="svd-hd"><b id="svdT">'+e.nb+esc(e.title)+'</b><button type="button" class="svd-x" onclick="svyClose()">닫기</button></div><div class="svd-bd" id="svdBd"><p class="svd-q">'+esc(q.q||"")+'</p>'+
+    (ch?svyChoice(q):'<div class="svd-row">'+svyDonut(q.avg, q.top, 1)+'<div class="svd-dw"><p class="cap">점수별 분포'+(half?" · 0.5 단위":"")+'</p>'+svyDist(q)+'</div></div>')+
+    '<p class="cap">답 '+n0(n)+svUnit()+(ch?(q.when?' · 보인 사람만':'')+(q.t==="pick"?' · 여러 개 고름 · 비율 = 고른 사람 ÷ 답한 사람':''):' · 평균은 빈 값 뺌')+'</p></div>';
+}
+function svyRM(){ return !!(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches); }
+function svyOpen(k){
+  if(!SVY.Q[k]) return; var o=svyOv(), sh=el("svdSh");
+  clearTimeout(SVY.ct); SVY.open=k; if(!SVY.ret) SVY.ret=document.activeElement;
+  sh.innerHTML=svyDetail(k);
+  o.classList.remove("is-closing","is-opening"); o.hidden=false; void o.offsetWidth; o.classList.add("is-opening");
+  document.documentElement.classList.add("svd-lock"); var ap=el("app"); if(ap) ap.inert=true;
+  var x=sh.querySelector(".svd-x"); if(x) x.focus();
+}
+function svyClose(){
+  var o=el("svdOv"), k=SVY.open; if(!k||!o) return; SVY.open="";
+  o.classList.remove("is-opening"); o.classList.add("is-closing");
+  document.documentElement.classList.remove("svd-lock"); var ap=el("app"); if(ap) ap.inert=false;
+  clearTimeout(SVY.ct); SVY.ct=setTimeout(function(){ if(!SVY.open){ o.hidden=true; o.classList.remove("is-closing"); el("svdSh").innerHTML=""; } }, svyRM()?0:180);
+  var r=SVY.ret; SVY.ret=null; if(!(r&&r!==document.body&&document.body.contains(r))) r=document.querySelector('.svd-c[data-svk="'+k+'"]');   /* 갱신으로 카드가 다시 그려졌으면 같은 문항 카드로 */
+  if(r&&r.focus) r.focus();
+}
+/* 30초 갱신 · 열린 창은 내용만 바꾼다(스크롤 그대로) · 그 문항이 사라지면(구분 바꿈) 닫는다 */
+function svyRefresh(){
+  if(!SVY.open) return; if(!SVY.Q[SVY.open]){ svyClose(); return; }
+  var b=el("svdBd"), st=b?b.scrollTop:0, sh=el("svdSh"), f=document.activeElement&&document.activeElement.classList.contains("svd-x");
+  sh.innerHTML=svyDetail(SVY.open); b=el("svdBd"); if(b) b.scrollTop=st; if(f){ var x=sh.querySelector(".svd-x"); if(x) x.focus(); }
+}
+document.addEventListener("keydown",function(e){ if(SVY.open&&(e.key==="Escape"||e.key==="Esc")){ e.preventDefault(); svyClose(); } });
+window.addEventListener("hashchange",function(){ if(SVY.open&&S.tab!=="sv") svyClose(); });
 function svyProgs(d){
   var n=d.n||0, pre=svKind()==="pre", ps=(d.progs||[]).filter(function(p){ return !pre||SV_PRE_P.indexOf(p.id)>=0; });
   return '<table class="tb"><thead><tr><th>층</th><th>프로그램</th><th class="n">고른 사람</th><th>참여율</th><th class="n">평균</th></tr></thead><tbody>'+
@@ -128,6 +187,7 @@ function svyBar(d){
 }
 function svyPaint(){
   var kb=el("svyK"), bx=el("svyB"), k=svKey(), d=S.data[k]; if(!kb||!bx) return;
+  SVY.Q={};
   var g=MG.svq4, gp=MG.svp1t, gt=dataGate(k,"설문 집계"), kind=svKind(), test=!!SVY.src;
   if(!gt&&(!/^post[23]$/.test(d.sv||"")||!d.progs)) gt=band("warn","서버가 옛 설문 형식으로 답합니다 · 사후 설문 서버 배포 뒤 채워집니다");
   if(!gt&&(!d.kinds||(test&&d.src!=="test"))) gt=band("info","이 서버는 아직 일반 · 사전 구분과 테스트 응답을 모릅니다 · 서버 갱신 뒤");
@@ -135,7 +195,7 @@ function svyPaint(){
   var br=el("svBar"); if(br) br.innerHTML=svyBar(gt?null:d);
   g.o.file=test?"설문 테스트 자유 의견":"설문 자유 의견"; if(gp) gp.o.file=test?"실습 세션 테스트 서술 응답":"실습 세션 서술 응답";
   var hasP=gp&&el("mg_svp1t");
-  if(gt){ kb.innerHTML=""; bx.innerHTML=gt; g.gate=""; XG.set(g, null, el("mg_svq4")); if(hasP){ gp.gate=""; XG.set(gp, null, el("mg_svp1t")); } return; }
+  if(gt){ kb.innerHTML=""; bx.innerHTML=gt; g.gate=""; XG.set(g, null, el("mg_svq4")); if(hasP){ gp.gate=""; XG.set(gp, null, el("mg_svp1t")); } svyRefresh(); return; }
   var by={}; (d.qs||[]).forEach(function(q){ by[q.id]=q; });
   if(kind==="pre") delete by.q1_4;   /* 사전 신청자 설문에 Q1-4 없음 */
   var P={}; (d.p1||[]).forEach(function(q){ P[q.id]=q; });
@@ -149,8 +209,8 @@ function svyPaint(){
     { k:"sv:q11", ic:I.peak, l:"행사 전반 만족", v:q11.avg, d:2, t:svyAvg(q11.avg), u:"/ 5", meter:mt("sv:q11m",q11.avg,5), sub:"Q1-1 · 답 "+n0(q11.n)+u },
     t4
   ].map(function(o){ if(!o.key) delete o.key; return dxTile(o); }).join("");
-  var grp=function(ids){ return '<div class="svy-g">'+ids.filter(function(id){ return by[id]; }).map(function(id){ return svyBlock(by[id], SVY_T[id]||id); }).join("")+'</div>'; };
-  var pg=function(ids){ return '<div class="svy-g">'+ids.filter(function(id){ return P[id]; }).map(function(id){ var q=P[id]; return q.t==="slider"?svyBlock(q, SVY_P1T[id]||id, ""):svyCat(q, SVY_P1T[id]||id); }).join("")+'</div>'; };
+  var grp=function(ids){ return '<div class="svy-g svd-g">'+ids.filter(function(id){ return by[id]; }).map(function(id){ return svyBlock(by[id], SVY_T[id]||id); }).join("")+'</div>'; };
+  var pg=function(ids){ return '<div class="svy-g svd-g">'+ids.filter(function(id){ return P[id]; }).map(function(id){ var q=P[id]; return q.t==="slider"?svyBlock(q, SVY_P1T[id]||id, ""):svyCat(q, SVY_P1T[id]||id); }).join("")+'</div>'; };
   var pq=(d.progs||[]).filter(function(p){ return by[p.id]&&(kind!=="pre"||SV_PRE_P.indexOf(p.id)>=0); }).map(function(p){ return svyBlock(by[p.id], p.fl+" "+p.nm); }).join("");
   var hasPre=kind!=="gen"&&num(kd.pre)>0;
   if(!n){
@@ -158,12 +218,12 @@ function svyPaint(){
   } else {
     bx.innerHTML=(hasPre?'<div class="grid g32 mb svd-two"><div class="card dx-a" data-dxc="sv:tl">'+svyTl(d)+'</div><div class="card dx-a" data-dxc="sv:ss">'+svySess(d)+'</div></div>':'<div class="card mb dx-a" data-dxc="sv:tl">'+svyTl(d)+'</div>')+
       (kind==="pre"?
-        '<div class="card mb"><h2>PART 1 · 실습 세션 만족 <span class="cap">점수 5 = 가장 좋음 · 0.5 단위 · 오른쪽 위 = 평균</span></h2>'+pg(["overall","s_difficulty","s_instructor","s_pacing","s_env"])+'</div>'+
+        '<div class="card mb"><h2>PART 1 · 실습 세션 만족 <span class="cap">점수 5 = 가장 좋음 · 0.5 단위 · 도넛 = 평균 ÷ 5점 · 카드를 누르면 전체 보기</span></h2>'+pg(["overall","s_difficulty","s_instructor","s_pacing","s_env"])+'</div>'+
         '<div class="card mb"><h2>PART 1 · 실습 뒤</h2>'+pg(["e_skill","e_share","e_retake"])+'</div>'+
         '<div class="card mb"><h2>PART 1 · 업무 적용 <span class="cap">「적용해 볼 업무」 답에 따라 보인 문항이 다름</span></h2>'+pg(["apply","parts","customer_data","barriers"])+'</div>'+
         '<div class="card mb"><h2>PART 1 · 참여자</h2>'+pg(["job","level","interview"])+'</div>':'')+
-      '<div class="card"><h2>'+(kind==="pre"?"PART 2 · ":"")+'Q1 · 행사 전반 <span class="cap">점수 5 = 가장 좋음(Q1-1~3 = 0.5 단위'+(kind==="pre"?"":" · Q1-4 는 3점 만점")+') · 오른쪽 위 = 평균</span></h2>'+grp(["q1_1","q1_2","q1_3","q1_4"])+'</div>'+
-      '<div class="card mt"><h2>Q2 · 프로그램 참여율 · 만족도 <span class="cap">참여율 = 고른 사람 ÷ 응답 '+n0(n)+u+(kind==="pre"?" · 사전 신청자 설문 = 1F 5개":kind===""&&num(kd.pre)?" · 17F · 18F 는 일반 설문 문항":"")+'</span></h2>'+svyProgs(d)+'<details class="memo mt"><summary>프로그램별 점수 분포</summary><div class="svy-g mt">'+pq+'</div></details></div>'+
+      '<div class="card"><h2>'+(kind==="pre"?"PART 2 · ":"")+'Q1 · 행사 전반 <span class="cap">점수 5 = 가장 좋음(Q1-1~3 = 0.5 단위'+(kind==="pre"?"":" · Q1-4 = 선택지")+') · 도넛 = 평균 ÷ 만점 · 카드를 누르면 전체 보기</span></h2>'+grp(["q1_1","q1_2","q1_3","q1_4"])+'</div>'+
+      '<div class="card mt"><h2>Q2 · 프로그램 참여율 · 만족도 <span class="cap">참여율 = 고른 사람 ÷ 응답 '+n0(n)+u+(kind==="pre"?" · 사전 신청자 설문 = 1F 5개":kind===""&&num(kd.pre)?" · 17F · 18F 는 일반 설문 문항":"")+'</span></h2>'+svyProgs(d)+'<details class="memo mt"><summary>프로그램별 점수</summary><div class="svy-g svd-g mt">'+pq+'</div></details></div>'+
       '<div class="card mt"><h2>Q3 · AX 이해도</h2>'+grp(["q3_1","q3_2","q3_3"])+'</div>';
   }
   var lines=(q4.lines||[]).map(function(x,i){ return { i:i, t:x.t, k:x.k||"일반", line:x.line }; });
@@ -173,13 +233,14 @@ function svyPaint(){
     gp.gate=""; XG.set(gp, pr, el("mg_svp1t"));
   }
   dxAfter(el("vb"));
+  svyRefresh();
 }
 SCREENS.sv={
   title:"설문", desc:"참가자 설문 응답 집계 · 일반 · 사전 신청자 · 30초마다",
   need:function(){ return [{ k:svKey(), a:"survey_list", p:svParams(), ttl:30000 }]; },
   mount:function(vb){
     var t=!!SVY.src, s=svSub();
-    dxMount(); svyGrid(); if(s!=="gen") svpGrid();
+    svyClose(); dxMount(); svyGrid(); if(s!=="gen") svpGrid();
     el("phCap").textContent=t?"설문 테스트 페이지(hiax.app/survey-review/)에서 낸 응답 · 실제 집계와 따로":"참가자 설문 응답 · 시험 사번 "+(SVY.test?"포함":"뺌")+" · 30초마다";
     vb.innerHTML='<div class="svd-top"><div class="dx-seg" role="tablist" aria-label="응답 종류">'+[["","실제 응답"],["test","테스트 응답"]].map(function(x){ var on=SVY.src===x[0]; return '<button type="button" role="tab" aria-selected="'+on+'" class="'+(on?"on":"")+'" onclick="svySrc('+(x[0]?1:0)+')">'+x[1]+'</button>'; }).join("")+'</div>'+
       '<div id="svChips">'+svyKindChips(null)+'</div></div>'+
@@ -198,15 +259,16 @@ function svySave(bytes, name){ rdlSave(new Blob([bytes],{ type:"application/vnd.
 /* 집계 · 사번 없음 · 문항 · 프로그램 · 서술(bkup.js 와 같은 시트) + PART 1 · 세션 */
 function svyAggSheets(d, st){
   var test=!!SVY.src, pre=svKind()==="pre", head=(test?"테스트 응답 · ":"")+svyKindNm(), day=st.s.slice(0,10);
-  var shs=bkSurveySh(d, st);
-  shs[0].title="설문 문항 집계 · "+head+" · 기준 시각 "+st.s+" · 응답 "+n0(d.n)+svUnit()+(test?"":SVY.test?"(시험 사번 포함)":"(시험 사번 제외)");
-  if(pre) shs[1].rows=shs[1].rows.filter(function(r,i){ var p=(d.progs||[])[i]; return p&&SV_PRE_P.indexOf(p.id)>=0; });
-  shs[2].rows=(((d.qs||[]).filter(function(q){ return q.t==="text"; })[0]||{}).lines||[]).map(function(x){ return [rdlHm(x.t, day), x.k||"일반", x.line]; });
-  shs[2].head=["시각","구분","답"]; shs[2].w=[12,9,90]; shs[2].kind=["c","c","w"];
+  var keep=pre?function(q){ return q.id!=="q1_4"&&(!/^q2_[1-9]$/.test(q.id)||SV_PRE_P.indexOf(q.id)>=0); }:null;
+  var shs=bkSurveySh(d, st, { head:"설문 · "+head+" · 응답 "+n0(d.n)+svUnit()+(test?"":SVY.test?"(시험 사번 포함)":"(시험 사번 제외)"), keep:keep });   /* 5점 문항 · 선택지 문항 · 문항 원문 · 프로그램별 · 서술 응답 */
+  if(pre) shs[3].rows=shs[3].rows.filter(function(r,i){ var p=(d.progs||[])[i]; return p&&SV_PRE_P.indexOf(p.id)>=0; });
+  shs[4].rows=(((d.qs||[]).filter(function(q){ return q.t==="text"; })[0]||{}).lines||[]).map(function(x){ return [rdlHm(x.t, day), x.k||"일반", x.line]; });
+  shs[4].head=["시각","구분","답"]; shs[4].w=[12,9,90]; shs[4].kind=["c","c","w"];
   var p1=(d.p1||[]).filter(function(q){ return q.n; });
   if(p1.length){
-    shs.push(bkSh("실습 세션 문항", "PART 1 실습 세션 문항 집계 · "+head+" · 기준 시각 "+st.s, ["문항","응답","평균","분포"], [44,7,7,60], ["w","n","n","w"],
-      p1.filter(function(q){ return q.t!=="text"; }).map(function(q){ return [SVY_P1T[q.id]||q.q, q.n, q.avg==null?"":q.avg, Object.keys(q.counts||{}).map(function(c){ return c+" "+q.counts[c]; }).join(" · ")]; })));
+    /* 실습 세션 문항 = 같은 구조 세 장 · 번호 = P1-순번(서버 문항 순서) */
+    var P1=d.p1||[], pno={}; P1.forEach(function(q,i){ pno[q.id]="P1-"+(i+1); });
+    shs=shs.concat(bkSvQSh(P1.filter(function(q){ return q.t!=="text"&&q.n; }), st, { pre:"실습 세션 ", head:"PART 1 실습 세션 · "+head, nm:function(q){ return SVY_P1T[q.id]||q.q; }, no:function(q){ return pno[q.id]; } }));
     var tx=[]; p1.forEach(function(q){ (q.lines||[]).forEach(function(x){ var id=x.id||q.id; tx.push([rdlHm(x.t, day), (SVY_P1T[q.id]||q.id)+(id!==q.id?" · 기타":""), x.line]); }); });
     shs.push(bkSh("실습 세션 서술", "PART 1 서술 응답 · "+head+" · 기준 시각 "+st.s+" · "+n0(tx.length)+"줄", ["시각","문항","답"], [12,24,80], ["c","t","w"], tx));
     var nm=d.sessNm||{}, ss=d.sess||{}, sa=d.sessAvg||{}, na=d.sessNoAtt;
