@@ -2400,7 +2400,7 @@
       var st = STOPS[0], f = nearestFree(st.x, st.z); flood(f[0], f[1]);
       STOPS.forEach(function (s) { var q = nearestFree(s.x, s.z); if (q) { s.x = q[0]; s.z = q[1]; } });
       buildGuides(); buildRooms(); hideCheckin(); buildTypingTv(); buildLaptops(); buildTvs(); buildPlant();   /* v5.51 오락기 3대 없앰(사용자 261004) */
-      if (G.wallScr) { var wv = MOT.on ? motAdd(G.wallScr, 'wall') : tvAdd(G.wallScr, 64, Math.round(64 * WW.h / WW.w), 'wall'); wv.sphere.radius = Math.hypot(WW.w, WW.h) / 2 + 0.1; G.tvN = TVS.length; }   /* v5.45 가벽 전체 화면 · 같은 픽셀 광고 루프(행사명 → ME to WE → 물결) · 화면 비율대로 64 × 96 */
+      if (G.wallScr) { var wv = MOT.on ? motAdd(G.wallScr, 'wall') : tvAdd(G.wallScr, 64, Math.round(64 * WW.h / WW.w), 'wall'); vtvTag(wv, 'lg'); wv.sphere.radius = Math.hypot(WW.w, WW.h) / 2 + 0.1; G.tvN = TVS.length; }   /* v5.45 가벽 전체 화면 · 같은 픽셀 광고 루프(행사명 → ME to WE → 물결) · 화면 비율대로 64 × 96 */
       STOPS.forEach(function (s) { if (!free(s.x, s.z)) { var q = nearestFree(s.x, s.z); if (q) { s.x = q[0]; s.z = q[1]; } } });   /* v5.38 멈춤 자리가 스태프 · TV 원 안이면 밖으로 */
       G.ceil = S.lobby.getObjectByName('ceiling');
       G.loaded = true; $('load').hidden = true;
@@ -3723,10 +3723,13 @@
       var pc = planOf(c); if (land && pc[0] > 19.6 && pc[0] < 24.9 && pc[1] < 3) { ivAdd(m); return; }   /* v5.58 AX in Action TV = 인터뷰 화면(나 닮은 챗봇) */
       if (MOT.on) motAdd(m, land ? 'tv' : 'kiosk'); else tvAdd(m, cw, ch, land ? 'tv' : 'kiosk');   /* v5.53 홍보부 모션 · 끄면 옛 픽셀 루프 */
     });
+    TVS.forEach(function (v) { if (!v.vid && v.mesh.name === 'tvScreen' && (v.kind === 'tv' || v.iv)) vtvTag(v, vtvOf(planOf(v.c), v.mesh.userData, v.w / Math.max(0.01, v.h) > 1.2)); });   /* v8.72 TV ↔ 영상(vtvOf · 모형 자리) */
     G.tvN = TVS.length;
   }
   function tvStep(now) {
     if (!TVS.length || G.tvOff) return false;   /* tvOff = 시험용(성능 비교) */
+    var vch = vtvSync(now);   /* v8.72 TV 영상 열림 · 닫힘(1초마다 앱에 묻는다) */
+    if (RM && vch) return true;
     if (RM) { if (!G.tvRM) { G.tvRM = true; TVS.forEach(function (v) { if (v.mot) motStill(v); else if (v.iv) ivStep(v, performance.now(), true); else tvDraw(v, 30); }); return true; } return false; }
     if (G.tvRM) { G.tvRM = false; }
     if (now - tvLast < 1000 / (MOT.n ? MOT_FPS : TV_FPS)) return false;   /* v5.53 모션 화면이 있으면 초당 15번(픽셀 화면은 아래에서 그대로 TV_FPS) */
@@ -3736,12 +3739,93 @@
     TVS.forEach(function (v) {
       _tv.copy(camera.position).sub(v.c);
       v.on = _tv.length() < 16 && _tv.dot(v.n) > 0 && _fr.intersectsSphere(v.sphere) && isShown(v.mesh);
+      if (v.vo && !v.iv) { if (v.mot && !v.mot.el.paused) v.mot.el.pause(); return; }   /* v8.72 영상이 열린 TV = 표지 그림 한 장(모션 영상 받지 않음 · 그리지 않음) */
       if (v.mot) { if (motStep(v, v.on, now)) any = true; return; }
       if (v.iv) { if (v.on && ivStep(v, now)) any = true; return; }   /* v5.58 인터뷰 화면 */
       if (v.on && now - (v.pxT || 0) >= 1000 / TV_FPS - 2) { v.pxT = now; tvDraw(v, t); any = true; }
     });
     G.tvOn = TVS.filter(function (v) { return v.on; }).length; var tm = performance.now() - tw; G.tvMs = G.tvMs == null ? tm : G.tvMs * 0.9 + tm * 0.1; G.tvMax = Math.max(G.tvMax || 0, tm);   /* 진단 · 한 번 그리는 데 든 시간 */
-    return any;
+    return any || vch;
+  }
+  /* ═══════════ v8.72 TV 영상 연결(사용자 261024 「행사 둘러보기에서도 영상을 켜면 영상을 눌러서 볼 수 있고, 티비를 클릭하면 크게 볼 수 있게 · 콘솔 영상 열기 = 앱 + 둘러보기 둘 다」) ═══════════
+   * 어느 TV = 모형 자리(도면 좌표 · 구역): AX PLAY HiDI Q 줄 TV(x 14.24) = hq · Hi-Helper 줄 TV(x 7.01) = hh · AX in Action TV(인터뷰 화면) = iv · AX VISION TV = av · 미팅룸 날개 입구 가벽 전체 화면(AX 라운지 가는 곳) = lg
+   *   그 밖(AX LAB TV · 포토부스 키오스크 · 타자왕 TV · 엘리베이터 화면) = 그대로
+   * 열림 판정 = 앱 한 곳(TOUR_HOST.vids · 홈 영상 칸과 같은 vidOk · 콘솔 스위치 my.vid · 테스트 사번 미리 보기 · av · lg 는 늘 열림) · 1초마다 묻고 바뀐 것만 고친다 · 앱 밖(시험판) = 늘 닫힘
+   * 열림 = 화면 앞에 표지 그림 한 장(webp · 받는 것은 그림뿐 · mp4 · 유튜브는 누른 뒤 앱 플레이어가 받는다) + 가운데 흰 원 재생 표시(홈 영상 줄 썸네일과 같은 모양) · 모션 영상은 멈추고 받지 않는다
+   *   현장 인터뷰 = 표지 그림이 없다(유튜브 그림을 받지 않는다) · 인터뷰 화면(나 닮은 챗봇)은 그대로 두고 재생 표시만 얹는다
+   * 닫힘 = 지금 모습 그대로(누름 = 원래 일 · 판 보기) · 누름(열림) = 앱 소리 확인 창 → 넓은 화면(TOUR_HOST.vidGo) · 그동안 둘러보기 멈춤(vidHold) */
+  var VTV = { t: -1e9, key: '', on: {}, img: {}, badge: null };
+  function vtvOf(pc, u, land) {
+    if (!land) return '';
+    if (pc[0] > 19.6 && pc[0] < 24.9 && pc[1] < 3) return 'iv';
+    if (pc[1] < 3 && Math.abs(pc[0] - 14.24) < 0.9) return 'hq';
+    if (pc[1] < 3 && Math.abs(pc[0] - 7.01) < 0.9) return 'hh';
+    if ((u && u.zone === 'vision') || (Math.abs(pc[0] - 31.15) < 1 && Math.abs(pc[1] - 5.1) < 1.6)) return 'av';
+    return '';
+  }
+  function vtvTag(v, vid) { if (v && vid) { v.vid = vid; v.mesh.userData.vid = vid; } return v; }
+  function vtvHost() { var h = window.TOUR_HOST; return h && typeof h.vids === 'function' ? h : null; }
+  function vtvSync(now) {
+    if (now - VTV.t < 1000) return false;
+    VTV.t = now;
+    var h = vtvHost(), o = {}; try { o = h ? h.vids() || {} : {}; } catch (e) { o = {}; }
+    var key = TVS.map(function (v) { return v.vid && o[v.vid] ? v.vid : ''; }).join(',');
+    if (key === VTV.key) return false;
+    VTV.key = key; VTV.on = o;
+    TVS.forEach(function (v) { if (v.vid) vtvShow(v, !!o[v.vid], o[v.vid]); });
+    G.need = true; return true;
+  }
+  function vtvBadge(g, W, H) {   /* 흰 원(92%) + 먹색 세모 · 홈 썸네일 .pl 과 같은 모양 · 화면 짧은 변의 30% · 흰 표지 위에서도 보이게 옅은 그림자 */
+    var r = Math.min(W, H) * 0.15, cx = W / 2, cy = H / 2;
+    g.save(); g.shadowColor = 'rgba(0,0,0,.35)'; g.shadowBlur = r * 0.45; g.shadowOffsetY = r * 0.06;
+    g.fillStyle = 'rgba(255,255,255,.92)'; g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.fill(); g.restore();
+    g.fillStyle = '#191F28'; g.beginPath(); g.moveTo(cx - r * 0.3, cy - r * 0.42); g.lineTo(cx + r * 0.46, cy); g.lineTo(cx - r * 0.3, cy + r * 0.42); g.closePath(); g.fill();
+  }
+  function vtvTex(v, info) {   /* 화면 비율 캔버스 · 바탕 검정 · 표지 = 안에 맞춤(잘리지 않음) · 받기 전 = 검정 + 재생 표시 */
+    var W = 512, H = Math.max(64, Math.round(512 * v.h / Math.max(0.1, v.w))), cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    var g = cv.getContext('2d'), tex = new T.CanvasTexture(cv); tex.colorSpace = T.SRGBColorSpace; tex.minFilter = T.LinearFilter; tex.generateMipmaps = false;
+    var paint = function (im) {
+      g.clearRect(0, 0, W, H);
+      if (!v.iv) { g.fillStyle = '#010100'; g.fillRect(0, 0, W, H); }
+      if (im) { var k = Math.min(W / im.naturalWidth, H / im.naturalHeight), iw = im.naturalWidth * k, ih = im.naturalHeight * k; g.drawImage(im, (W - iw) / 2, (H - ih) / 2, iw, ih); }
+      vtvBadge(g, W, H); tex.needsUpdate = true; G.need = true;
+    };
+    paint(null);
+    var p = info && info.p; if (p && !v.iv) {
+      var im = VTV.img[p]; if (!im) { im = VTV.img[p] = new Image(); im.decoding = 'async'; im.src = (/^(https?:|\/)/.test(p) ? '' : ROOT) + p; }
+      if (im.complete && im.naturalWidth) paint(im); else im.addEventListener('load', function () { paint(im); });
+    }
+    return tex;
+  }
+  function vtvShow(v, open, info) {
+    v.vo = open;
+    var pm = v.mesh.children.filter(function (o) { return o.name === 'motScreen'; })[0];
+    if (open) {
+      if (!v.vp) {
+        var m = new T.Mesh(new T.PlaneGeometry(v.w || 1, v.h || 1), new T.MeshBasicMaterial({ map: vtvTex(v, info), transparent: !!v.iv, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -8 }));
+        m.position.z = 0.005; m.name = 'vidScreen'; m.raycast = function () {}; m.renderOrder = v.iv ? 10 : 0; v.mesh.add(m); v.vp = m;   /* 누름은 아래 화면(tvScreen · 가벽 화면)이 받는다 */
+        if (v.kind === 'wall') patchFade([m.material], WFADE, 'w');
+      }
+      v.vp.visible = true; if (pm) pm.visible = false;
+      if (v.mot && !v.mot.el.paused) v.mot.el.pause();
+    } else {
+      if (v.vp) v.vp.visible = false; if (pm) pm.visible = true;
+      if (v.mot) v.mot.want = '';
+      if (RM) G.tvRM = false;   /* 움직임 줄이기 = 정지 한 장을 다시 그린다 */
+    }
+  }
+  function vtvTap(vid) {   /* 열린 TV 누름 = 앱 소리 확인 창 · 닫혔으면 false(원래 일) */
+    var h = vtvHost(); if (!h || !VTV.on[vid] || typeof h.vidGo !== 'function') return false;
+    G.path = null; G.goal = null; G.tapAct = null; $('dest').hidden = true; G.stick = null; setRun(false);
+    G.vtvLog = (G.vtvLog || []).concat([vid]).slice(-20);
+    try { return h.vidGo(vid) !== false; } catch (e) { return false; }
+  }
+  function vidHold(on) {   /* 앱 영상 창 · 넓은 화면 동안 = 그리기 · 음악 · 누름 · 키 멈춤 · 닫히면 그 자리 그대로 다시 */
+    if (!ROOTEL || !G.open) { G.hold = false; G.vHold = false; return; }
+    if (on) { if (G.vHold) return; G.vHold = true; G.hold = true; G.sheetOpen = true; motIdle(); if (MUS.ctx) musStop(false, 0.2); return; }
+    if (!G.vHold) return;
+    G.vHold = false; G.hold = false; G.sheetOpen = false; G.need = true; G.last = 0; loopWake();
+    if (MUS.want && musOn() && !document.hidden) musStart(1);
   }
   /* ═══════════ v5.53 TV · 가벽 화면 = 홍보부 모션(사용자 261004 「가상화면에 나오는 광고들을 홍보부에서 만들어준 영상으로 대체해줘 · 점에서 사람으로 바뀌고 꽃으로 바뀌고 하는 동영상」) ═══════════
    * 원본 = AXF Design Data/03. app/01. motion 8종(1080 · 30fps · 흰 바탕 · 260916 홍보부 앱용 수령) → m/이름.mp4(H.264 Main · 소리 없음 · 바탕 검정 · 점 = O100 #FF7E31 한 색)
@@ -4743,6 +4827,7 @@
     ray.setFromCamera(new T.Vector2(x / W * 2 - 1, -(y / H) * 2 + 1), camera);
     if (G.scn === 'cafe') return;
     var hits = ray.intersectObject(S.lobby, true);
+    G.tapHit = hits.slice(0, 5).map(function (q) { return (q.object.name || '?') + (q.object.userData && q.object.userData.vid ? ':' + q.object.userData.vid : '') + '@' + q.distance.toFixed(2); });   /* v8.72 진단 · 마지막 누름에 걸린 것 */
     for (var i = 0; i < hits.length; i++) {
       var h = hits[i], o = h.object; if (!isShown(o) || o === shadow) continue;
       var mat = o.material; if (mat && mat.transparent && mat.opacity < 0.3) continue;   /* 유리 · 바닥 강조 */
@@ -4759,6 +4844,7 @@
       /* 비워진 기둥은 지나친다 */
       var pi = PIL.findIndex(function (q) { return Math.abs(q[0] - pn[0]) < 0.8 && Math.abs(q[1] - pn[1]) < 0.8; });
       if (pi >= 0 && G.fade[pi] < 0.5) continue;
+      if (u.vid && VTV.on[u.vid] && h.point.y > 0.1 && (u.vid !== 'lg' || WFADE.value > 0.5) && vtvTap(u.vid)) return;   /* v8.72 영상이 열린 TV = 앱 소리 확인 창 → 넓은 화면(걷지 않고 바로) · 닫힘 = 아래 원래 일 · 가벽이 비워진 동안은 지나침 */
       if (u.promo) { tapGo({ k: 'promo' }); return; }
       var gd = guideOf(o); if (gd) { tapGo({ k: 'guide', gd: gd }); return; }   /* v5.91 스태프 = 앞까지 걸어가 말풍선 */
       var ev = h.point.y > 0.1 ? tapEvent(o, pn, u) : null; if (ev) { tapGo({ k: ev }); return; }   /* v5.91 포토부스 · 룰렛 · 타자왕 */
@@ -5481,6 +5567,7 @@
   G.api.sp = function () { var ov = $('spov'); return { card: !$('spc').hidden, rows: $('spcl').children.length, next: $('spcn').textContent, cardMs: SP.cardMs, on: SP.on, ph: SP.ph, near: SP.near, n: SP.n, ang: +SP.ang.toFixed(1), dur: SP.dur, A: Math.round(SP.A), stopMs: SP.stopMs, ticks: SP.ticks, snd: SP.snd, rise: ov.classList.contains('rise'), whT: $('spwh').style.transform, wheel: !$('spst').hidden, raf: !!SP.raf, tm: SP.tm.length, out: !!SP.out, ov: !ov.hidden, cls: ov.className, msg: $('spm').innerText, rank: spRankAt(SP.ang), u: SP.u, spg: !$('spg').hidden, sheet: !!G.sheetOpen, rm: !!RM, log: SP.log.slice() }; };   /* v6.91 확인용 */
   G.api.spNear = function () { return spNear(); };
   G.api.taps = function () { return { act: G.tapAct ? G.tapAct.k : null, pend: G.tapPend || null, done: G.tapDone || [], log: G.tapLog || [], frames: G.tapFrames || 0, rings: TAPS.rings.length, op: TAPS.mat ? +TAPS.mat.opacity.toFixed(3) : null, vis: TAPS.fr ? TAPS.fr.visible : null, hint: !$('hint').hidden, hint2: !$('hint2').hidden, hfg: !$('hfg').hidden, hintAt: G.hintAt || null, hintN: G.hintN || 0, hintV: VIS.hintN || 0, idle: Math.round(performance.now() - (G.idleAt || 0)), learned: store.get('axfTour3TapUsed') === '1', sq: !!G.squeeze, scn: G.scn, sheet: !!G.sheetOpen, scard: !!SCARD, ph: !!PH.on, talk: G.talk ? G.talk.id : null, bub: !$('gbub').hidden }; };   /* v5.91 확인용 */
+  G.api.vtv = function () { return { key: VTV.key, on: Object.keys(VTV.on), log: G.vtvLog || [], hold: !!G.vHold, tvs: TVS.map(function (v) { var pc = planOf(v.c); return { i: v.i, kind: v.kind, vid: v.vid || '', vo: !!v.vo, x: +pc[0].toFixed(2), z: +pc[1].toFixed(2), c: [+v.c.x.toFixed(3), +v.c.y.toFixed(3), +v.c.z.toFixed(3)], n: [+v.n.x.toFixed(3), +v.n.z.toFixed(3)], w: v.w, h: v.h, zone: (v.mesh.userData || {}).zone || '', mot: v.mot ? v.mot.cur || '' : null }; }), motGot: MOT.got }; };   /* v8.72 진단 · TV 영상 연결 */
   G.api.tapGo = function (k, id) { if (k === 'coin') { var b = BLOCKS.filter(function (q) { return q.id === id; })[0]; if (b) tapGo({ k: 'coin', b: b }); return; } if (k === 'guide') { var g = guides.filter(function (q) { return q.zone === id || q.id === id; })[0]; if (g) tapGo({ k: 'guide', gd: g }); return; } if (k === 'board') { tapGo({ k: 'board', z: D.Z(id[0]), pg: id[1] || null }); return; } tapGo({ k: k }); };
   /* ═══════════ 앱 안 열기 · 닫기 · 뒤로(v5.37 정식 앱 이식 · 사용자 261003 「이것들이 수정되면 정식 앱에 올리자」) ═══════════
    * window.AXTour = { open(o), close(), back(), isOpen() } · 옛 tour.js 와 같은 약속(앱 tourOpen · 뒤로 가기 popstate 가 그대로 부른다)
@@ -5623,7 +5710,7 @@
     if (renderer) resize();
   }
   function open(o) {
-    OPTS = o || {}; loopWake();   /* v6.83 닫혀 쉬던 그리기를 깨운다 */
+    OPTS = o || {}; loopWake(); VTV.t = -1e9;   /* v8.72 열 때 TV 영상 열림을 바로 다시 묻는다 */   /* v6.83 닫혀 쉬던 그리기를 깨운다 */
     if (!OPTS.restore) visitReset();   /* v5.84 새 방문 · 말풍선 · 방향점 · 「더 힘내세요!」 횟수 · 들른 구역 */
     clearInterval(ETIP.iv); ETIP.iv = setInterval(etipTick, 1000);   /* v5.84 엘리베이터 권유 살핌(열려 있는 동안 1초마다 · 가벼움) */
     clearInterval(G.hintIv); G.idleAt = performance.now(); G.hintIv = setInterval(hintTick, 500);   /* v5.99 6초 서 있으면 손가락 안내 */
@@ -5665,6 +5752,7 @@
     if (G.scn === 'elev' && !G.keepElev) leaveElev(true);   /* v5.49 다음에 열 때 로비에서 · v5.65 층 안내로 갈 때는 엘리베이터 안 그대로(돌아오면 그 자리) */
     if (G.squeeze) { G.pos.copy(toThree(GATE.at[0], GATE.at[1] - 0.3)); G.sqS = [1, 1, 1]; G.jy = 0; }   /* v5.56 연출 중 닫으면 게이트 앞으로(걷는 곳 밖에 남지 않게) */
     G.squeeze = null; G.push = 0; G.pushK = 0; $('cheer').hidden = true; setRun(false); G.runKey = false; G.cover = false;
+    if (G.vHold) { G.vHold = false; G.hold = false; G.sheetOpen = false; }   /* v8.72 영상 창 동안 닫힘 */
     if (SH) { closeSheet(true); G.lastFace = null; }
     occClear(); $('look').hidden = true;
     closeCfg(); closeBigMap();
@@ -5690,5 +5778,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v7.82', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, vidHold: vidHold, ver: 'v7.83', v3: true };   /* v8.72 vidHold = 앱 영상 창 동안 멈춤 */   /* v5.65 엘리베이터 안 = { elev } */
 })();

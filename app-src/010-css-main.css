@@ -1376,6 +1376,9 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #ivPlayer.rm { transition: none; }
   #ivPlayer .ivp-st { position: absolute; left: 50%; top: 50%; width: 100vw; height: 100vh; height: 100dvh; transform: translate(-50%, -50%); }
   @media (max-aspect-ratio: 1/1) { #ivPlayer .ivp-st { width: 100vh; width: 100dvh; height: 100vw; transform: translate(-50%, -50%) rotate(90deg); } }   /* 세로 화면(높이 ≥ 폭) = 무대를 90도 돌려 가로로 꽉 차게 · 가로 고정 · 기기 돌림이면 돌리지 않는다 */
+  #ivPlayer.tall .ivp-st { width: 100vw; height: 100vh; height: 100dvh; transform: translate(-50%, -50%); }   /* v8.72 세로 영상(AX 라운지 가벽) = 돌리지 않고 세로 그대로 꽉 차게 */
+  #ivPlayer.t3v { z-index: 9300; }   /* v8.72 둘러보기(#axTour3 · z 9000) TV 에서 연 영상 · 소리 확인 창 = 둘러보기 위 */
+  #modal.t3v { z-index: 9200; }
   #ivPlayer .ivp-v { display: block; width: 100%; height: 100%; object-fit: contain; background: rgb(0, 0, 0); }
   #ivPlayer .ivp-yt { border: 0; }   /* v8.71 현장 인터뷰 유튜브 임베드 */
   #ivPlayer .ivp-x { position: absolute; top: var(--ax-space-12); right: var(--ax-space-12); display: flex; align-items: center; justify-content: center; width: 56px; height: 56px; padding: 0; border: 0; border-radius: 50%; background: rgba(0, 0, 0, 0.55); color: rgb(255, 255, 255); cursor: pointer; }
