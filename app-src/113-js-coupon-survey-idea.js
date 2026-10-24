@@ -271,26 +271,13 @@ function svInputHtml(q, v) {
 }
 /* 선택 글 문항이 마지막이 아니면 「다음」 · 「건너뛰기」 바꿈(정본) */
 function svTextBtn(t) { var b = el("svGo"); if (b && b.getAttribute("data-skip") === "1") b.textContent = String(t || "").trim() ? "다음" : "건너뛰기"; }
-/* 문항 머리(번호 · 층 줄 · 질문 · 안내) · 모든 문항 머리 높이를 지금 폭에서 가장 긴 것에 맞춘다(정본 measureHeads · 보기 · 슬라이더 시작 자리가 같게) */
+/* 문항 머리(번호 · 층 줄 · 질문 · 안내) · v8.86 높이 맞춤(정본 measureHeads)은 뺐다 */
 function svHeadHtml(q, num, tid) {
   return '<span class="axs-svno">Q' + num + "</span>" + (q.tag ? '<span class="axs-svtag">' + esc(q.tag) + "</span>" : "") +
     '<h1 class="ax-type-t3 axs-svq"' + (tid ? ' id="' + tid + '"' : "") + ">" + esc(q.q) + "</h1>" + (q.hint ? '<p class="ax-meta axs-svhint">' + esc(q.hint) + "</p>" : "");
 }
-function svHeadFit() {
-  var hd = el("svHead"); if (!hd) return;
-  if (hd.getAttribute("data-fit") === "0") { hd.style.minHeight = ""; return; }   /* Q2-0 = 보기 8줄이 한 화면에 들도록 맞춤 없음 */
-  var w = hd.clientWidth; if (!w) return;
-  var fs = getComputedStyle(document.documentElement).fontSize;
-  if (SV.hw === w && SV.hfs === fs && SV.hk === svKind()) { hd.style.minHeight = SV.hh + "px"; return; }
-  var m = document.createElement("div");
-  m.style.cssText = "position:absolute;left:-10000px;top:0;visibility:hidden;width:" + w + "px";
-  var QS = svQs();
-  m.innerHTML = QS.filter(svAsk).map(function (q) { return '<div class="axs-svhd">' + svHeadHtml(q, QS.length, "") + "</div>"; }).join("");
-  hd.parentNode.appendChild(m);
-  var mx = 0; for (var i = 0; i < m.children.length; i++) mx = Math.max(mx, m.children[i].offsetHeight);
-  m.parentNode.removeChild(m);
-  SV.hw = w; SV.hfs = fs; SV.hk = svKind(); SV.hh = Math.ceil(mx);
-  hd.style.minHeight = SV.hh + "px";
+function svHeadFit() {   /* v8.86 (사용자 261024 「질문 아래에 큰 빈 칸 · 보기가 아래로 밀려 스크롤」) 머리 높이를 가장 긴 문항에 맞추지 않는다 = 보기 · 슬라이더가 질문 바로 아래(24px) · 남는 자리는 보기 아래(하단 단추 위) */
+  var hd = el("svHead"); if (hd) hd.style.minHeight = "";
 }
 /* 보기 글 한 줄 · 넘치면 0.5px 씩 줄인다(정본 fitList · 범위 = 지금 글자 크기 ~ 그 74%) · 큰글씨는 그 크기에서 시작 */
 function svFitOpts() {

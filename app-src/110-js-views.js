@@ -299,7 +299,7 @@ var Views = {
     var skip = !last && q.optional && q.type === "text", goTx = skip && !String(d.a[q.id] || "").trim() ? "건너뛰기" : "다음";
     return '<div class="ax-stack axs-form" id="svQ">' +
       '<div class="ax-stack-tight axs-gap12 axs-sthost axs-svtop">' + top + "</div>" +
-      '<div class="axs-svhd" id="svHead"' + (q.type === "multi" ? ' data-fit="0"' : "") + ">" + svHeadHtml(q, num, "svTitle") + "</div>" +   /* Q2-0(보기 8줄)은 머리 높이 맞춤 없이 바로 아래(한 화면에) */
+      '<div class="axs-svhd" id="svHead">' + svHeadHtml(q, num, "svTitle") + "</div>" +   /* v8.86 머리 높이 맞춤 없음 = 보기가 질문 바로 아래 */
       '<div class="axs-svin">' + svInputHtml(q, d.a[q.id]) + "</div></div>" +
       bot(last ? '<button type="button" class="ax-button axs-svgo' + (ready ? "" : " wait") + '" id="svGo" aria-disabled="' + !ready + '" ' + (SV.busy ? 'disabled aria-busy="true"' : "") + ' onclick="svSubmit()">' + (SV.busy ? "제출하는 중" : "제출하기") + "</button>"
         : '<button type="button" class="ax-button axs-svgo' + (ready ? "" : " wait") + '" id="svGo" aria-disabled="' + !ready + '"' + (skip ? ' data-skip="1"' : "") + ' onclick="svNext()">' + goTx + "</button>");
