@@ -381,7 +381,7 @@ var IV_PLAY_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6.8v1
    열린 영상 = 누르면 재생(ivAsk · 인터뷰는 유튜브 새 창) · 닫힌 영상 = 회색 「준비 중」 줄(누를 수 없음) · 셋 다 닫힘 = 칸째 없음 · 옛 서버(필드 없음) · 첫 열기 = 셋 다 닫힘
    영상 표 VIDS 한 곳(id = 서버 스위치 이름 · 제목 · 한 줄 · 길이 · 영상 v = IV_VIDEO 와 같은 모양 src · poster · loop · page) · 재생은 그대로(ivAsk 소리 확인 창 → ivPlay 전체 화면 · page 면 새 창) */
 /* v8.70 (사용자 261024 「영상이 미리 노출되면 안 된다」) 현장 인터뷰 유튜브 주소는 앱에 두지 않는다 · 서버가 열린 영상만 sync my.vidu { iv: 주소 } → S "vid_u"(사람 키)
-   주소가 없으면(닫힘 · 옛 서버 · 로그아웃) 줄은 「준비 중」 · 테스트 사번 미리 보기도 서버가 맞는 세션 토큰에만 주소를 줄 때만 열린다 */
+   주소가 없으면(닫힘 · 옛 서버 · 로그아웃) 줄은 「준비 중」 · v8.76 (사용자 261024 「시험 끝났으니 현장 인터뷰 시험 장치 지워줘」) 현장 인터뷰는 예외 없음 · 테스트 사번도 콘솔에서 연 때만 */
 var VIDS = [
   { id: "iv", t: "AI 활용 현장 인터뷰", s: "현장 인터뷰", len: "", v: { src: "", poster: "", loop: false, page: "" } },   /* 유튜브 새 창(주소 = 서버 vidUrl) · 인쇄 QR 페이지 interview/ 도 같은 스위치(vid_pub) */
   { id: "hq", t: "HiDI Q", s: "AX PLAY", len: "1:35", v: { src: "assets/vid/hidiq_v1.mp4", poster: "assets/vid/hidiq_v1.webp", loop: false, page: "" } },   /* v8.66 (사용자 261024) 원본 그대로(1080p · faststart) github.io 정적 파일 · 앱 안 플레이어(ivPlay · 누른 뒤에만 받음) · 바꿀 때는 _v2 새 이름 */
@@ -396,9 +396,9 @@ var VIDS_TOUR = [
 function vidById(id) { return VIDS.concat(VIDS_TOUR).filter(function (x) { return x.id === id; })[0] || null; }
 var VFOLD = { open: false };   /* v8.69 (사용자 261024) 홈 영상 칸 접기 기억 · 접힌 채 시작 · 다른 화면에서 홈으로 오면 다시 접힘(프로그램 탭 PFOLD 와 같은 방식 · 앱 메모리만) */
 function vidSw() { var o = S.get("vid_sw", null); return o && typeof o === "object" ? o : {}; }
-function vidTry() { return typeof testEmp === "function" && testEmp() && !ttGet(); }   /* 시험 장치(사용자 확인 뒤 이 줄만 지운다) · 테스트 사번 = 시험 시각을 고르지 않았으면 닫힌 영상도 미리 열림 · 일반 참가자는 해당 없음 */
+function vidTry(x) { return !!x && x.id !== "iv" && typeof testEmp === "function" && testEmp() && !ttGet(); }   /* 시험 장치(HiDI Q · Hi-Helper 만) · 테스트 사번 = 시험 시각을 고르지 않았으면 닫힌 영상도 미리 열림 · 현장 인터뷰(iv) = 예외 없음(v8.76) · 일반 참가자는 해당 없음 */
 function vidUrl(x) { var o = S.get("vid_u", null), u = o && typeof o === "object" && x ? o[x.id] : ""; return typeof u === "string" && /^https:\/\/[^\s"<>]+$/.test(u) ? u : ""; }   /* v8.70 서버가 준 주소(열린 영상만) */
-function vidOk(x) { return !!(x && x.v && (x.v.src || x.v.page || vidUrl(x)) && (x.al === 1 || vidSw()[x.id] === 1 || vidTry())); }
+function vidOk(x) { return !!(x && x.v && (x.v.src || x.v.page || vidUrl(x)) && (x.al === 1 || vidSw()[x.id] === 1 || vidTry(x))); }
 function vidRowHtml(x, i) {   /* v8.74 i = 숫자(VIDS 줄 번호) | 문자열(영상 id · 구역 상세 AX VISION 줄 = vidById) */
   var ok = vidOk(x), oc = typeof i === "string" ? "vidById('" + i + "')" : i, th = '<span class="tb">' + (ok && x.v.poster ? '<img src="' + esc(x.v.poster) + '" alt="" width="1280" height="720" loading="lazy" decoding="async">' : "") + '<span class="pl">' + IV_PLAY_SVG + "</span>" + (x.len ? "<em>" + esc(x.len) + "</em>" : "") + "</span>";
   return '<button type="button" class="vr" data-vi="' + i + '"' + (ok ? ' onclick="ivAsk(this, ' + oc + ')" aria-label="' + esc(x.t) + ' 영상 보기"' : " disabled") + ">" + th +
