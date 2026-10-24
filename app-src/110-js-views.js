@@ -32,6 +32,7 @@ var Views = {
       betaBannerHtml() +
       '<section class="axs-sec axs-railgo" onclick="if (!event.target.closest(\'.mk, .sect span\')) App.tab(\'exp\')">' + myCouponHtml() + "</section>" +   /* v7.97 레일 아래 접기 칸 삭제(사용자 261018 · v7.65 칸) · 레일 칸 = 누르면 스탬프 탭 */
       cnHomeHtml() +
+      vidHomeHtml() +   /* v8.67 (사용자 261024) 영상 보기 = 지금 현장 바로 아래 · 콘솔 스위치로 열린 영상이 있을 때만 */
       "</div>";
   },
 
@@ -327,7 +328,7 @@ var Views = {
   /* v4.93 (261001 사용자 확정 · IA 검토 8장 A1) 탭 맨 위 [시간표 | 상시 운영] · 상시 운영 = 1F 로비 6구역(현장 간판) + 18F AX 커피챗 · 판 문법 경계 axs-pan(design.md A-5 5-19) */
   guide: function () {
     var al = PROG.seg === "always", ap = PROG.seg === "apply";
-    return '<div class="ax-stack' + (al ? " axs-pan" : "") + '">' + progSegHtml() + (al ? progAlwaysHtml() + progIvHtml() : ap ? progApplyTabHtml() : progTimeHtml()) + "</div>";   /* 261013 오후 (사용자) AI 활용 현장 인터뷰 카드 = 상시 운영 하단에만 */   /* v5.85 세 칸(사용자 261006) · 신청하기 = 커피챗 · AX 라운지 카드(v5.82 시간표 맨 위 신청 줄을 옮겼다) */
+    return '<div class="ax-stack' + (al ? " axs-pan" : "") + '">' + progSegHtml() + (al ? progAlwaysHtml() : ap ? progApplyTabHtml() : progTimeHtml()) + "</div>";   /* 261013 오후 (사용자) AI 활용 현장 인터뷰 카드 = 상시 운영 하단에만 */   /* v5.85 세 칸(사용자 261006) · 신청하기 = 커피챗 · AX 라운지 카드(v5.82 시간표 맨 위 신청 줄을 옮겼다) */
   },
 
   /* ═══ 전체 시간표 P05 / 내 일정 M02 · 라우트 guide_time 하나(SCHED.tab) · 옛 해시·딥링크·noticeGo(my_sched) 그대로 ═══
