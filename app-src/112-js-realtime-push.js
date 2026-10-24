@@ -302,6 +302,8 @@ function beSync(after) {
       if (typeof res.my.svOpen === "boolean" && res.my.svOpen !== S.get("sv_open", null)) S.set("sv_open", res.my.svOpen);
       var bf9 = res.my.bf === true;   /* 261014 클로즈 베타 시간 무관(서버 betaFree_) · 옛 서버(필드 없음) = false = 지금 규칙 */
       if (bf9 !== S.get("bf", false)) S.set("bf", bf9);
+      var vd9 = {}; ["iv", "hq", "hh"].forEach(function (k) { vd9[k] = res.my.vid && res.my.vid[k] === 1 ? 1 : 0; });   /* v8.67 (사용자 261024) 영상 열기 · 닫기(콘솔 스위치 · 서버 my.vid) · 옛 서버(필드 없음) = 셋 다 닫힘 · 홈은 아래 App.render 가 다시 그린다 */
+      if (JSON.stringify(vd9) !== JSON.stringify(S.get("vid_sw", null))) S.set("vid_sw", vd9);
       if (Array.isArray(res.my.svPre)) S.put("sv_pre", res.my.svPre);
       if (res.my.queue) {
         var was = S.get("queue", {}), nowQ = res.my.queue, kq;

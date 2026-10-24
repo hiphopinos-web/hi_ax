@@ -349,59 +349,34 @@ window.addEventListener("pagehide", function () { tlogClose(true); });
      → [영상 보기]가 확인 창 없이 그 고정 주소를 새 창으로 연다(외부 영상 주소는 웹배포용/interview/index.html 의 VIDEO_URL 한 줄 · 여기서는 poster 만 썸네일로 쓴다) */
 var IV_VIDEO = { src: "assets/interview/sample.mp4", poster: "assets/interview/sample.webp", loop: true, page: "" };
 var IV_PLAY_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6.8v10.4a.8.8 0 0 0 1.2.7l8.3-5.2a.8.8 0 0 0 0-1.4l-8.3-5.2A.8.8 0 0 0 9 6.8z" fill="currentColor"/></svg>';
-/* v7.67 (사용자 확정 261017 D9 · D14) 1F 칸 맨 아래 「영상 보기」 묶음 · 닫힘 기본 접기(홈 「스탬프 모으는 방법」과 같은 부품 axs-sfd · 열림 0.3초 · 닫힘 0.18초 · 동작 줄이기 즉시)
-   영상 표 VIDS 한 곳(제목 · 한 줄 · 길이 · 영상 v = IV_VIDEO 와 같은 모양 src · poster · loop · page) · 파일이 들어오면 v 한 줄만 채운다
-   VIDS_HIDE = 파일(src · page) 없는 줄 숨김 스위치(사용자 결정 261017 D15 = false · 「준비 중」 꺼진 줄) · 단추 숫자 = 보이는 줄 수(「영상 보기 3」) · 보일 줄이 없으면 묶음째 없음
-   옛 v7.05 큰 썸네일 + [영상 보기] 카드(axs-ivc · axs-ivth)는 이 묶음 줄로 바뀌었다 · 재생은 그대로(ivAsk 소리 확인 창 → ivPlay 전체 화면 · page 면 새 창) */
-var VIDS_HIDE = false;   /* 사용자 결정 261017 D15 = 숨기지 않고 「준비 중」(누를 수 없음 · 회색) · true = 파일 없는 줄 숨김 */
-/* v8.63 (사용자 261023) 현장 인터뷰 = 유튜브 영상 · 공개 시각 IV_AT = 2026-10-26 13:30 KST(UTC 04:30 · 폰 시간대와 무관한 절대 시각)
-   판정 vidAt = appNow()(서버 시계 보정 toff · 테스트 계정의 시험 시각 tt) · 공개 전 = 회색 「10/26 13:30 공개」(누를 수 없음) · 공개 뒤 = 누르면 유튜브 새 창
-   켜진 화면은 vidTick 이 15초마다 줄만 다시 그린다(앱 재배포 · 새로 고침 없이 13:30 에 바뀜) · 인쇄 QR 페이지 interview/index.html 도 같은 시각에 유튜브로 넘긴다 */
+/* v8.67 (사용자 결정 261024) 영상 칸 = 홈 「지금 현장」 바로 아래(vidHomeHtml · 홈 섹션 제목 .sect 왼쪽 막대 · 접기 없이 줄이 바로 보임) · 프로그램 탭 1F 칸 「영상 보기」 접기(v7.67 progIvHtml)는 걷었다
+   날짜 고정 폐기(v8.20 vidPre 10/26 전 칸 숨김 · v8.63 IV_AT 13:30 자동 공개) · 영상마다 콘솔 스위치(서버 설정 영상_공개 · sync my.vid { iv, hq, hh } = 1 | 0 → S "vid_sw")
+   열린 영상 = 누르면 재생(ivAsk · 인터뷰는 유튜브 새 창) · 닫힌 영상 = 회색 「준비 중」 줄(누를 수 없음) · 셋 다 닫힘 = 칸째 없음 · 옛 서버(필드 없음) · 첫 열기 = 셋 다 닫힘
+   영상 표 VIDS 한 곳(id = 서버 스위치 이름 · 제목 · 한 줄 · 길이 · 영상 v = IV_VIDEO 와 같은 모양 src · poster · loop · page) · 재생은 그대로(ivAsk 소리 확인 창 → ivPlay 전체 화면 · page 면 새 창) */
 var IV_YT = "https://www.youtube.com/watch?v=OtsmHcrPpwA";
-var IV_AT = Date.UTC(2026, 9, 26, 4, 30);   /* 10/26 13:30 KST */
-function vidAt(t) {
-  if (typeof testEmp === "function" && testEmp() && !ttGet()) return true;   /* 시험 장치(261023 · 사용자 확인 뒤 이 줄만 지운다) · 테스트 사번 = 시험 시각을 고르지 않았으면 미리 열림 · 일반 참가자는 해당 없음 */
-  return appNow().getTime() >= t;
-}
 var VIDS = [
-  { t: "AI 활용 현장 인터뷰", s: "현장 인터뷰", len: "", at: IV_AT, v: { src: "", poster: "", loop: false, page: IV_YT } },   /* v8.63 공개 시각(at) 뒤 유튜브 · v8.20 (사용자 261021) 다른 두 줄과 같은 「준비 중」(회색 빈 칸 · 누를 수 없음) · 파일 assets/interview/ 는 그대로 */
-  { t: "HiDI Q", s: "AX PLAY", len: "", v: { src: "", poster: "", loop: false, page: "" } },
-  { t: "Hi-Helper", s: "AX PLAY", len: "", v: { src: "", poster: "", loop: false, page: "" } }
+  { id: "iv", t: "AI 활용 현장 인터뷰", s: "현장 인터뷰", len: "", v: { src: "", poster: "", loop: false, page: IV_YT } },   /* 유튜브 새 창 · 인쇄 QR 페이지 interview/ 도 같은 스위치(vid_pub) */
+  { id: "hq", t: "HiDI Q", s: "AX PLAY", len: "1:35", v: { src: "assets/vid/hidiq_v1.mp4", poster: "assets/vid/hidiq_v1.webp", loop: false, page: "" } },   /* v8.66 (사용자 261024) 원본 그대로(1080p · faststart) github.io 정적 파일 · 앱 안 플레이어(ivPlay · 누른 뒤에만 받음) · 바꿀 때는 _v2 새 이름 */
+  { id: "hh", t: "Hi-Helper", s: "AX PLAY", len: "1:54", v: { src: "assets/vid/hihelper_v1.mp4", poster: "assets/vid/hihelper_v1.webp", loop: false, page: "" } }
 ];
-var VIDS_PEND = { 0: "10/26 13:30 공개" };   /* v8.59 (사용자 261023) 현장 인터뷰 최종 영상 = 10/26 13:30 공개 · v8.63 그때 저절로 열림(IV_AT · vidAt) · 다른 줄은 「준비 중」 */
-var VFOLD = { open: false };
-function vidOk(x) { return !!(x && x.v && (x.v.src || x.v.page) && (!x.at || vidAt(x.at))); }
-function vidTick() {   /* v8.63 공개 시각이 지나면 켜진 화면의 줄만 바꾼다(접힘 · 스크롤 그대로) */
-  var z = document.getElementById("zoneVid"); if (!z) return;
-  [].forEach.call(z.querySelectorAll(".vr[data-vi]"), function (b) {
-    var i = +b.getAttribute("data-vi"), x = VIDS[i];
-    if (x && b.disabled === vidOk(x)) b.outerHTML = vidRowHtml(x, i);
-  });
-}
-setInterval(vidTick, 15000);
+var VFOLD = { open: false };   /* 옛 접기 기억(v7.67) · 칸이 홈으로 옮겨 쓰지 않는다 · 라우터 · progSeg 의 되돌리기 줄이 남아 있어 이름만 둔다 */
+function vidSw() { var o = S.get("vid_sw", null); return o && typeof o === "object" ? o : {}; }
+function vidTry() { return typeof testEmp === "function" && testEmp() && !ttGet(); }   /* 시험 장치(사용자 확인 뒤 이 줄만 지운다) · 테스트 사번 = 시험 시각을 고르지 않았으면 닫힌 영상도 미리 열림 · 일반 참가자는 해당 없음 */
+function vidOk(x) { return !!(x && x.v && (x.v.src || x.v.page) && (vidSw()[x.id] === 1 || vidTry())); }
 function vidRowHtml(x, i) {
   var ok = vidOk(x), th = '<span class="tb">' + (ok && x.v.poster ? '<img src="' + esc(x.v.poster) + '" alt="" width="1280" height="720" loading="lazy" decoding="async">' : "") + '<span class="pl">' + IV_PLAY_SVG + "</span>" + (x.len ? "<em>" + esc(x.len) + "</em>" : "") + "</span>";
   return '<button type="button" class="vr" data-vi="' + i + '"' + (ok ? ' onclick="ivAsk(this, ' + i + ')" aria-label="' + esc(x.t) + ' 영상 보기"' : " disabled") + ">" + th +
-    '<span class="x"><b>' + hdqHtml(esc(x.t)) + "</b><span>" + (ok ? esc(x.s) : segHtml(esc(x.s + " · " + (VIDS_PEND[i] || "준비 중")))) + "</span></span>" + (ok ? '<span class="cv">' + CHEV_SVG + "</span>" : "") + "</button>";
+    '<span class="x"><b>' + hdqHtml(esc(x.t)) + "</b><span>" + (ok ? esc(x.s) : segHtml(esc(x.s + " · 준비 중"))) + "</span></span>" + (ok ? '<span class="cv">' + CHEV_SVG + "</span>" : "") + "</button>";
 }
-function vidPre() { return typeof evPreDay === "function" && evPreDay() && !(typeof testEmp === "function" && testEmp()); }   /* v8.20 (사용자 261021 「당일에 오픈 · 일단 메뉴 자체를 숨겨」) 10/26 전 = 「영상 보기」 칸째 없음 · 테스트 사번은 미리 보임 */
-function progIvHtml() {
-  if (vidPre()) return "";
-  var rs =VIDS.map(function (x, i) { return [x, i]; }).filter(function (r) { return vidOk(r[0]) || !VIDS_HIDE; }), n = rs.length, o = VFOLD.open;
-  if (!rs.length) return "";
-  return '<section class="axs-zsec" id="zoneVid"><div class="axs-sfd axs-vfd' + (o ? " open" : "") + '">' +   /* v7.71 (사용자 261017) 머리 줄 「영상 보기」 · 접힘 단추는 이름 대신 개수(머리와 이름이 겹치지 않게) */
-    '<button type="button" class="axs-sfdb axs-pfb" id="vFoldBtn" aria-expanded="' + o + '" aria-controls="vFoldBody" onclick="vFoldTog(this)"><b>영상 보기</b>' + lnkChev("자세히 보기") + "</button>" +   /* v8.03 (사용자 261018) 가운데 「n개 보기」 단추 없앰 · 머리 줄 오른쪽 「자세히 보기 ⌄」(선착순 이벤트와 같은 부품 axs-pfb) */
-    '<div class="axs-sfdp" id="vFoldBody"><div class="axs-sfdi"><div class="axs-sfdc"><section class="ax-card axs-vids" aria-label="영상 보기">' + rs.map(function (r) { return vidRowHtml(r[0], r[1]); }).join("") + "</section></div></div></div></div></section>";
-}
-function vFoldTog(b) {
-  VFOLD.open = !VFOLD.open;
-  var w = b.closest(".axs-sfd"); if (w) w.classList.toggle("open", VFOLD.open);
-  b.setAttribute("aria-expanded", String(VFOLD.open));
+function vidHomeHtml() {   /* 줄 모양 = 판 문법 절(.axs-pan .axs-vids) 그대로 · 칸 그릇에 판 경계(axs-pan · 참여하기 칸과 같은 방식) */
+  if (!VIDS.some(vidOk)) return "";   /* 셋 다 닫힘 = 칸째 없음 */
+  return '<section class="axs-sec axs-pan axs-vsec" id="zoneVid"><div class="sect"><b>영상 보기</b></div>' +
+    '<section class="ax-card axs-vids" aria-label="영상 보기">' + VIDS.map(vidRowHtml).join("") + "</section></section>";
 }
 var IVP = { on: false, el: null, v: null, y: 0, from: null, fs: false, t: 0, vd: null, vt: "" };
 function ivAsk(b, i) {   /* v7.67 i = 영상 표(VIDS) 줄 · 없으면 첫 줄(IV_VIDEO) */
   var x = VIDS[i || 0] || VIDS[0], V = x.v || IV_VIDEO;
-  if (!vidOk(x)) { vidTick(); return; }   /* v8.63 공개 전에 그려진 줄 · 판정이 바뀐 줄은 다시 그린다 */
+  if (!vidOk(x)) { if (App.current === "home") App.render(); return; }   /* v8.67 닫힌 뒤 그려진 줄 = 홈을 다시 그린다 */
   if (V.page) { try { window.open(V.page, "_blank", "noopener"); } catch (e) { location.href = V.page; } return; }
   IVP.vd = V; IVP.vt = x.t;
   IVP.from = b || null;
