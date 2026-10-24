@@ -2190,6 +2190,18 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-sl .out .v small { margin-left: 2px; font: var(--ax-type-t5-strong); }
   .axs-sl .out .lb { margin-top: var(--ax-space-4); font: var(--ax-type-t6-strong); color: var(--ax-color-body); }
   .axs-sl .out .empty { padding-top: var(--ax-space-16); font: var(--ax-type-t6); color: var(--ax-color-muted); }
+  /* v8.83 (사용자 결정 261024 · 시험) 사전 신청자 설문 별점 · 별 칸 = 가로로 붙은 다섯 칸(칸마다 44px 이상 · 큰글씨 · 360 폭 한 줄) · 채운 별 색 = --sv-st(높을수록 진한 주황 · svStCol) · 빈 별 = 옅은 회색 테두리 */
+  .axs-st { --sv-sz: calc(40px * var(--fs)); width: 100%; box-sizing: border-box; max-width: calc(5 * (var(--sv-sz) + 20px)); margin: var(--ax-space-8) auto 0; user-select: none; -webkit-user-select: none; }
+  .axs-st .row { display: flex; gap: 0; align-items: stretch; touch-action: none; cursor: pointer; outline: none; border-radius: var(--ax-radius-12); }
+  .axs-st .row:focus-visible { outline: 2px solid var(--ax-color-brand); outline-offset: 4px; }
+  .axs-st .st { flex: 1 1 0; min-width: 44px; height: calc(var(--sv-sz) + 16px); display: flex; align-items: center; justify-content: center; }
+  .axs-st .ic { position: relative; width: var(--sv-sz); height: var(--sv-sz); }
+  .axs-st .ic svg { display: block; width: var(--sv-sz); height: var(--sv-sz); fill: none; stroke: var(--axs-divider-strong); stroke-width: 1.5; stroke-linejoin: round; }
+  .axs-st .ic .fg { position: absolute; left: 0; top: 0; bottom: 0; width: 0; overflow: hidden; pointer-events: none; }
+  .axs-st .ic .fg svg { fill: var(--sv-st); stroke: var(--sv-st); }
+  .axs-st .ends { display: grid; grid-template-columns: 1fr auto 1fr; column-gap: var(--ax-space-8); align-items: start; margin-top: var(--ax-space-4); padding: 0 var(--ax-space-8); font: var(--ax-type-t7); color: var(--ax-color-muted); word-break: keep-all; }
+  .axs-st .ends .l { text-align: left; } .axs-st .ends .r { text-align: right; }
+  .axs-st .ends .v { min-width: 3em; text-align: center; font: var(--ax-type-t6-strong); color: var(--ax-color-brandText); }
   .axs-fix#svBot { flex-direction: row; }
   #svBot > .ax-button-weak { flex: 1 1 0; min-width: 0; }
   #svBot > .ax-button:not(.ax-button-weak) { flex: 1.6 1 0; min-width: 0; }
