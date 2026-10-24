@@ -147,6 +147,17 @@
     var n = Number(m.seat); if (!seatOk(n, m.test) || !G8.test(m.g || "") || DONE[m.g]) return;
     var S = SEATS[n]; if (S && S.g === m.g) return;
     SEATS[n] = seatNew(n, m);
+    try { var D = DUEL[n]; if (D && !D.used && now() - D.at < 15000) { D.used = 1; SEATS[n].duel = D; } else if (D) delete DUEL[n]; } catch (e) {}   /* v8.87 대결 시작 신호 뒤 15초 안에 시작한 판 = 그 대결 판 */
+  }
+  /* v8.87 (261024 · 같은 단어 대결) Hub tv 사건 duel · dk go = 두 자리 · dk res = 승자 자리(w · 0 = 무승부) · 결과 작은 줄에만 쓴다(판 그리기 · 순위 그대로) */
+  var DUEL = {};
+  function onDuel(m) {
+    var a = Number(m.a), b = Number(m.b), z = String(m.z || "");
+    if (m.dk === "go" && /^[0-9a-f]{8}$/.test(z) && a !== b) { var t0 = now(); [a, b].forEach(function (n) { if (n === 1 || n === 2 || n === 3) DUEL[n] = { z: z, at: t0, w: null }; }); return; }
+    if (m.dk !== "res") return;
+    var w = Number(m.w); if (!(w === 0 || w === 1 || w === 2 || w === 3)) return;
+    NS.forEach(function (n) { var S = SEATS[n]; if (S && S.duel && S.duel.z === z) S.duel.w = w; });
+    for (var k in DUEL) if (DUEL[k] && DUEL[k].z === z) DUEL[k].w = w;
   }
   function onLive(m) {
     (m.f || []).forEach(function (it) {
@@ -241,6 +252,7 @@
         else if (m.k === "type_end") onEnd(m);
         else if (m.k === "type_stop") onStop(m);
         else if (m.k === "live_seats") onSeats(m);
+        else if (m.k === "duel") onDuel(m);   /* v8.87 같은 단어 대결 */
       } catch (e) { if (window.console) console.error(e); }
     };
     s.onclose = function () { if (WS.s !== s) return; WS.s = null; if (WS.up) WS.down = now(); WS.up = false; wsRetry(); };
@@ -424,9 +436,10 @@
     set(u, "inp", typing, function (v) { u.inp.textContent = v; });
     set(u, "inOn", F && !F.bn && !F.x ? 1 : 0, function (v) { u.bd.classList.toggle("noin", !v); });
     set(u, "pz", F && F.pz ? 1 : 0, function (v) { u.pz.classList.toggle("on", !!v); });
-    set(u, "res", S.end ? S.end.id || S.end.g : "", function (v) {
+    set(u, "res", S.end ? (S.end.id || S.end.g) + (S.duel && S.duel.w != null ? "|d" + S.duel.w : "") : "", function (v) {
       u.res.classList.toggle("on", !!v); if (!v) return;
       var m = S.end, t = resText(m);
+      if (S.duel && S.duel.w != null) { var dt = "대결 " + (S.duel.w ? S.duel.w + "P 승" : "무승부"); t[2] = t[2] ? t[2] + " · " + dt : dt; }   /* v8.87 같은 단어 대결 · 작은 줄 끝에 승패 */
       u.res.querySelector("b").textContent = t[0]; u.res.querySelector("em").textContent = t[1]; u.res.querySelector("small").textContent = t[2];
       u.res.classList.toggle("hi", !!t[3]);
     });

@@ -18,6 +18,7 @@ function rgTopHtml() {
     (side ? "" : '<span class="rg-sc"><small>점수</small><b id="rgHudSc">0</b></span>') +
     '<span class="rg-tm" id="rgHudTm">0.0초</span>' +
     (RG.mode === "site" && TSF.info ? '<span class="rg-try">' + tsfTry().t + "</span>" : "") +   /* 261017 1F 셀프 · 몇 번째 도전 · 261021 기회 상한 없음(최대 칸 없음) */
+    (RG.mode === "site" && RG.duel && TDL.on ? '<span class="rg-duel" id="rgDuel">' + esc(tdlLine()) + "</span>" : "") +   /* v8.87 같은 단어 대결 · 상대 목숨 · 점수 · 승패 */
     (side ? "" : '<span class="rg-ht" id="rgHudHt">' + hearts + "</span>") +
     (RG.mode === "site" ? "" : sndBtnHtml(false) +
     '<button class="rg-ib rgp-x" type="button" data-on="계속" data-off="멈춤" aria-label="일시정지" onpointerdown="event.preventDefault()" onclick="gsPauseToggle()">멈춤</button>') + "</div>";
@@ -462,7 +463,7 @@ function tsfAdmin() {
   modalOpen('<div class="ax-stack-tight axs-gap12"><label class="ax-sr-only" for="tsfOffCode">관리코드</label>' +
     '<input id="tsfOffCode" class="ax-field" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="관리코드" onkeydown="onEnter(event, tsfOffGo)">' +
     '<p class="ax-meta" id="tsfOffMsg">효과음 ' + (on ? "켜짐" : "꺼짐") + " · 배경 음악 기본 " + (S.get("site_bgm_def", true) === true ? "켜짐" : "꺼짐") + (TSF_CAM ? " · 카메라 " + (C.stream ? "켜짐 " + esc(C.res) : "꺼짐") + " · 한 번 읽기 " + Math.round(TSF.sc.ms) + "ms" : "") + " · 접속 QR " + (TSF.lk.tok ? "켜짐" : "꺼짐" + (tsfLinkWhy() ? "(" + esc(tsfLinkWhy()) + ")" : "")) + (TSF.lk.hold ? " · 폰 로그인 중" : "") +
-    " · 송출 " + (tvlSeat() ? "자리 " + tvlSeat() + (TVL.st === "ok" ? " 연결됨" : "") : "끔") + " · 화면 " + (tsfOrient() === "port" ? "세로" : "가로") + " · 키 잠금 " + (!tsfKlockOk() ? "끔" : TSFK.on ? "켜짐" : "대기" + (TSFK.err ? "(" + esc(TSFK.err) + ")" : TSFK.held ? "(다음 판에)" : "")) + "</p>" +   /* 261017 실시간 송출 자리 */
+    " · 송출 " + (tvlSeat() ? "자리 " + tvlSeat() + (TVL.st === "ok" ? " 연결됨" : "") : "끔") + (tvlSeat() ? " · 대결(F9) " + (TDL.st === "ok" ? "연결됨" : TDL.no ? "서버 없음" : "연결 중") : "") +   /* v8.87 */ " · 화면 " + (tsfOrient() === "port" ? "세로" : "가로") + " · 키 잠금 " + (!tsfKlockOk() ? "끔" : TSFK.on ? "켜짐" : "대기" + (TSFK.err ? "(" + esc(TSFK.err) + ")" : TSFK.held ? "(다음 판에)" : "")) + "</p>" +   /* 261017 실시간 송출 자리 */
     '<p class="ax-meta" id="tsfQLn">' + esc(tsfQLine()) + "</p>" +   /* v7.66 이 노트북 대기열 · 마지막 실패 */
     '<button type="button" class="ax-button" onclick="tsfOffGo()">셀프 모드 끄기</button>' +
     '<button type="button" class="ax-button ax-button-weak" onclick="tsfSndGo()">효과음 ' + (on ? "끄기" : "켜기") + "</button>" +
@@ -1166,6 +1167,7 @@ function tsfMount() {
   if (!TSF.raf) TSF.raf = requestAnimationFrame(tsfFrame);
   TSF.sc.on = false;
   tsfCamStart(); tsfRankPull(); tsfCfgPull(); tsfLinkPaint(); tvlUrlSeat(); tsfOriHint();
+  try { tdlOpen(); } catch (e) {}   /* v8.87 같은 단어 대결 · 자리 노트북만(상태 신호 · F9 를 기다린다) */
   if (TSF.ph === "nick") tsfNickFocus();
   if (typeof BOT_DOT !== "undefined" && !BOT_DOT.ok && typeof botDotLoad === "function") botDotLoad(tsfPrevDraw);
 }
@@ -1176,12 +1178,13 @@ function tsfFrame() {
   if (!RG.on) { tsfPrevDraw(); tsfScanDraw(); }
   TSF.raf = requestAnimationFrame(tsfFrame);
 }
-function tsfStop() { if (typeof bgmBtn === "function") { bgmBtn(false); bgmStop(); } tvlOff(); if (TSF.t) { clearInterval(TSF.t); TSF.t = null; } if (TSF.raf) { cancelAnimationFrame(TSF.raf); TSF.raf = 0; } tsfCamStop(); }
+function tsfStop() { if (typeof bgmBtn === "function") { bgmBtn(false); bgmStop(); } tvlOff(); tdlOff(); if (TSF.t) { clearInterval(TSF.t); TSF.t = null; } if (TSF.raf) { cancelAnimationFrame(TSF.raf); TSF.raf = 0; } tsfCamStop(); }
 function tsfTick() {
   if (App.current !== "type_site" || !tsfOn()) { tsfStop(); return; }
   if (RG.on && (RG.mode !== "site" || TSF.ph !== "play")) { rgStop(); tsfDbg("rgfix", TSF.ph); }   /* 261019 (접속 QR 「준비하는 중」 멈춤 조사) 판이 아닌 화면에 엔진이 켜져 있으면(이 탭에서 앞서 돈 다른 판 · 놓친 끝) 끈다 · 켜져 있으면 QR · 키 · 시계가 모두 멈춘다 */
   tsfLinkTick();
   try { tsfQTick(); } catch (e) {}   /* v7.66 못 보낸 기록 다시 보내기(판 중에도) */
+  try { tdlTick(); } catch (e) {}   /* v8.87 같은 단어 대결 · 소켓 · 신호 · 승패(판 중에도) */
   if (RG.on) return;
   var now = Date.now(), el2 = (performance.now() - TSF.phAt) / 1000, ph = TSF.ph, cl = tsfClosed();
   if ((cl ? "c" + cl.next : "") !== TSF.closedK) tsfPaint();
@@ -1196,8 +1199,9 @@ function tsfTick() {
   else if ((ph === "ready" && now - TSF.idle > TSF_READY_MS) || (ph === "nick" && now - TSF.idle > TSF_NICK_MS)) tsfReset();   /* 자리를 뜬 사람이 다음 사람에게 남지 않게 */
   else if (ph === "result") {
     var left = Math.max(0, Math.ceil((TSF_RES_MS - (performance.now() - TSF.resAt)) / 1000)), c = el("tsfCount"), fin = TSF.send === "ok" || TSF.send === "fail";
-    if (c) c.textContent = fin ? left + "초 뒤 처음 화면" : "";
-    if (left <= 0 && fin) tsfReset();   /* 261006 결과 화면 왼쪽 QR 없음 · 10초 뒤 대기 화면 가운데 QR · v7.66 저장됐거나 서버가 받지 않는 판(limit · range 등)일 때만 · 못 보냈으면 결과를 남기고 SPACE = 다음 사람(대기열은 계속 다시 보낸다) */
+    var hold = tdlHold();   /* v8.87 대결 · 상대 판이 끝날 때까지 결과를 남긴다(SPACE = 그대로 새 QR) */
+    if (c) c.textContent = fin ? (hold ? tdlLbl(TDL.op) + " 끝나면 처음 화면" : left + "초 뒤 처음 화면") : "";
+    if (left <= 0 && fin && !hold) tsfReset();   /* 261006 결과 화면 왼쪽 QR 없음 · 10초 뒤 대기 화면 가운데 QR · v7.66 저장됐거나 서버가 받지 않는 판(limit · range 등)일 때만 · 못 보냈으면 결과를 남기고 SPACE = 다음 사람(대기열은 계속 다시 보낸다) */
   }
   if (TSF.cam.stream && !TSF.cam.timer) tsfCamAttach();
   if (TSF.ph === "attract" || TSF.ph === "ad") { tsfRankPull(); tsfCfgPull(); }
@@ -1224,8 +1228,8 @@ function tsfNickSave() {
   }, function () { TSF.busy = false; if (TSF.ph === "nick") { tsfNm(TSF_WHY.net, true); tsfNickFocus(); } });
 }
 /* SPACE(READY) · 서버에 시작을 알리고(이때 1회를 쓴다) 바로 카운트다운 · 서버가 거절하면 판을 접는다 · v5.61 노트북 이름(dev) = 같은 사번 두 노트북 동시 진행 막기 */
-function tsfGo() {
-  if (TSF.ph !== "ready" || !TSF.info || TSF.busy) return;
+function tsfGo(dz) {
+  if (TSF.ph !== "ready" || !TSF.info || TSF.busy) return;   /* v8.87 dz = 같은 단어 대결 시드(tdlGoIn · F9) · SPACE 는 없음 = 혼자 하기 그대로 */
   TSFK.held = false; tsfFsGrab();   /* 261023 새 판 = 스태프가 풀었던 키 잠금을 다시 잡는다(SPACE = 사용자 동작) */
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
   TSF.ph = "play"; TSF.res = null; TSF.sub = null; TSF.send = ""; TSF.ticket = ""; tsfDbg("ph", "play"); tsfLinkDrop(); tsfScanShow(false);
@@ -1239,7 +1243,8 @@ function tsfGo() {
     }
   }, function () {});   /* 응답이 없으면 그대로 한다 · 제출 때 서버가 남은 횟수로 다시 본다 */
   var T = tsfTry(); TVL.tn = T.n; TVL.tm = 0;   /* 261017 송출 tn(시작 응답 전 값 · 응답이 오면 서버 값) · 261021 tm 0 = 최대 기회 없음 */
-  rgStart("site", { wait: false, bonus: true, race: TSF.race, cdSub: T.t, cloudN: tsfBnsTest() });   /* 261017 첫 카운트다운에 한 번 크게(엔진 RG.cdSub) */
+  var du = dz > 0 && TDL.on ? dz : 0;   /* v8.87 대결 = 엔진 같은 시드 · 카운트다운 아래 「n번째 도전 · 2P 대결」 */
+  rgStart("site", { wait: false, bonus: true, race: TSF.race, cdSub: du ? (T.t + " · " + tdlLbl(TDL.op) + " 대결").slice(0, 20) : T.t, cloudN: tsfBnsTest(), duel: du });   /* 261017 첫 카운트다운에 한 번 크게(엔진 RG.cdSub) */
 }
 /* 261017 시험 손잡이(「타자왕 개편 제안」 5절) · 주소에 bns=2 · 테스트 사번만 · 첫 구름 2단어(보너스 스테이지까지 빨리) */
 function tsfBnsTest() { try { return /[?&#]bns=2(&|$)/.test(String(location.search) + "#" + String(location.hash).replace(/^#/, "")) && TEST_EMP.indexOf(TSF.emp) >= 0 ? 2 : 0; } catch (e) { return 0; } }
@@ -1247,6 +1252,7 @@ function tsfBnsTest() { try { return /[?&#]bns=2(&|$)/.test(String(location.sear
 function tsfDone(res) {
   res.prev = (TSF.info && TSF.info.best) || 0;
   tvlEnd("over");   /* 261017 실시간 송출 · 판 끝 한 건(제출 전) */
+  try { tdlEnd(res); } catch (e) {}   /* v8.87 같은 단어 대결 · 끝 신호(기록 · 제출은 아래 그대로) */
   TSF.res = res; TSF.ph = "result"; TSF.resAt = performance.now(); TSF.phAt = TSF.resAt; tsfPoke(); tsfDbg("ph", "result");
   try { TSF.qid = tsfQAdd(res); } catch (e) { TSF.qid = ""; }   /* v7.66 기록을 먼저 이 기기 대기열에 · 그다음 보내기 · 그리기 예외가 제출을 막지 않게(그리기는 맨 뒤 try) */
   tsfSend();
@@ -1535,12 +1541,236 @@ function tvlDrop() {
 }
 /* 와이파이가 돌아오면 기다리던 다시 붙기를 곧바로 */
 window.addEventListener("online", function () { try { if (TVL.rt && TVL.cap && !TVL.no) { clearTimeout(TVL.rt); TVL.rt = null; TVL.fails = 0; tvlOpen(); } } catch (e) {} });
+/* ── v8.87 (261024 사용자 결정 · 「타자왕 게임」 세션) 같은 단어 대결 · 1F 셀프 노트북 두 대(자리 1 · 2 · 예비 3) ──
+   쓰는 법 = 두 사람이 각자 자기 노트북 QR 로 평소처럼 입장(READY) → 스태프가 한쪽 노트북에서 F9 → 두 노트북이 같이 3 · 2 · 1
+   두 판은 같은 시드(엔진 rgStart opt.duel)로 따로 돈다 · 단어 · 차례 · 낙하 빠르기 · 요소가 같다 · 공격 · 주고받기 없음 · 규칙 · 난이도 · 목숨 · 점수 · 기록 저장(type_self_start · type_self_submit · 대기열)은 혼자 하기 그대로
+   승패 = 먼저 목숨이 다 떨어진 쪽이 진다 · 「먼저」 = 게임 시계(보너스 스테이지 시간을 뺀 버틴 시간 · 엔진 RG.surv · 두 판의 단계 · 빠르기가 이 시계로 정해진다) · 같으면 점수 · 둘 다 5분 상한이면 점수
+   남은 쪽 = 혼자 하기처럼 끝까지 계속(점수 조건이 혼자 하기 · 순위와 같다) · 상대가 끝난 순간 「1P 승」 배너 · 판 위 줄 · 결과 화면에 승패 + 각자 점수 · 먼저 끝난 쪽 결과 화면은 상대 판이 끝날 때까지 남는다(SPACE 는 그대로 새 QR)
+   연결 = Hub tv 방 쓰기 소켓 하나 더(hello w 1 · dl 1 · 관리 인증 tvsrc 그대로) · 짧은 신호 dl(st 상태 · go 시작 · pl 진행 · end 끝 · no 못 함 · res 결과)만 · 판정은 노트북 두 대가 같은 숫자로 같은 식(tdlJudge)
+   F9 를 누르지 않으면 소켓 · 상태 신호만 오가고 판 · 화면 · 기록은 혼자 하기와 같다 · 옛 Hub(ok 에 dl 없음) · 옛 엔진(RG_DUEL_V 없음) = F9 가 이유 한 줄만 · 끊겨도 각자 판은 끝까지 · 점수는 남는다
+   싣는 것 = 자리 · 판 상태 · 목숨 · 점수 · 버틴 시간뿐(사번 · 실명 · 닉네임 · 표 없음) */
+var TDL = { ws: null, st: "off", no: false, rt: null, fails: 0, pt: null, pong: 0, pingAt: 0, peers: {}, stT: 0, stPh: "", plT: 0,
+  z: "", sd: 0, op: 0, on: false, opD: null, mine: null, res: null, ann: false, cancel: false, want: null, end: null, endT: 0, endN: 0, seen: {} };
+var TDL_FRESH = 7000, TDL_ST_MS = 3000, TDL_PL_MS = 1000, TDL_LOST_MS = 10000, TDL_GO_WAIT = 2500, TDL_END_MS = 2000, TDL_END_N = 30;
+function tdlSeat() { return tvlSeat(); }   /* 스태프 노트북 자리 1 · 2 · 3 · 0 = 대결 없음 */
+function tdlLbl(s) { return (Number(s) || 0) + "P"; }
+function tdlDev() { return "tvd" + tsfDev() + tdlSeat(); }
+function tdlEng() { return typeof RG_DUEL_V !== "undefined" && RG_DUEL_V >= 1; }
+function tdlPh() { return RG.on && TSF.ph === "play" ? "play" : TSF.ph === "ready" && TSF.info && !TSF.busy && !el("modal") ? "ready" : TSF.ph === "result" ? "res" : "wait"; }
+function tdlSend(o) {
+  try {
+    var ws = TDL.ws;
+    if (!ws || TDL.st !== "ok" || ws.readyState !== 1 || ws.bufferedAmount > 8192) return false;
+    o.t = "dl"; o.s = tdlSeat(); ws.send(JSON.stringify(o));
+    return true;
+  } catch (e) { return false; }
+}
+function tdlOpen() {
+  try {
+    if (TDL.ws || TDL.rt || TDL.no || !tdlSeat() || App.current !== "type_site" || typeof WebSocket === "undefined") return;
+    var u = typeof wsUrl === "function" ? wsUrl() : "";
+    if (!u) return;
+    var ws = new WebSocket(u + "?r=tv");
+    TDL.ws = ws; TDL.st = "open";
+    ws.onopen = function () {
+      if (TDL.ws !== ws) return;
+      var h = { t: "hello", v: "tvduel-1", w: 1, dl: 1, d: tdlDev() }, tk = tsfTok();
+      if (tk) h.tok = tk; else h.key = tsfKey();
+      try { ws.send(JSON.stringify(h)); } catch (e) {}
+    };
+    ws.onmessage = function (e) {
+      if (TDL.ws !== ws) return;
+      if (e.data === "o") { TDL.pong = Date.now(); return; }
+      var m = null; try { m = JSON.parse(e.data); } catch (x) { return; }
+      if (!m || typeof m.t !== "string") return;
+      if (m.t === "ok") {
+        if (m.dl !== 1) { TDL.no = true; tdlOff(); return; }   /* 옛 Hub(대결 신호 없음) · 이 화면에서는 다시 열지 않는다 */
+        TDL.st = "ok"; TDL.fails = 0; TDL.pong = Date.now(); TDL.stT = 0; tdlPing(true); tsfDbg("tdl", "ok");
+      } else if (m.t === "no") { if (m.reason === "auth" || m.reason === "off") TDL.no = true; tsfDbg("tdl", "no " + m.reason); }
+      else if (m.t === "dl") { try { tdlIn(m); } catch (x) {} }
+    };
+    ws.onclose = function (e) {
+      if (TDL.ws !== ws) return;
+      var was = TDL.st === "ok"; TDL.ws = null; TDL.st = "off"; tdlPing(false); tsfDbg("tdl", "close " + (e && e.code));
+      if (was) TDL.fails = 0;
+      if (TDL.no || (e && e.code === 4000)) return;
+      tdlRetry();
+    };
+    ws.onerror = function () {};
+  } catch (e) { TDL.ws = null; TDL.st = "off"; tdlRetry(); }
+}
+function tdlRetry() {
+  try {
+    if (TDL.rt || TDL.no || !tdlSeat()) return;
+    var ms = TVL_BACK[Math.min(TVL_BACK.length - 1, TDL.fails)] + Math.random() * 1000; TDL.fails++;
+    TDL.rt = setTimeout(function () { TDL.rt = null; if (App.current === "type_site" && tsfOn()) tdlOpen(); }, ms);
+  } catch (e) {}
+}
+function tdlPing(on) {
+  if (TDL.pt) { clearInterval(TDL.pt); TDL.pt = null; }
+  if (!on) return;
+  TDL.pingAt = 0;
+  TDL.pt = setInterval(function () {
+    try {
+      var ws = TDL.ws, now = Date.now(), live = TDL.on && RG.on; if (!ws || TDL.st !== "ok") return;
+      if (TDL.pingAt > TDL.pong && now - TDL.pingAt > (live ? 4000 : 45000)) { tdlDrop(); return; }
+      if (now - Math.max(TDL.pingAt, TDL.pong) >= (live ? 5000 : 25000)) { TDL.pingAt = now; ws.send("p"); }
+    } catch (e) {}
+  }, 1000);
+}
+function tdlDrop() {
+  try { var ws = TDL.ws; TDL.ws = null; TDL.st = "off"; tdlPing(false); if (ws) { try { ws.close(); } catch (e) {} } TDL.fails = 0; tdlRetry(); } catch (e) {}
+}
+/* 화면을 떠남 · 셀프 모드 끔 · 자리 바꿈 = 소켓 정리(판은 그대로 · 대결 표시만 멈춘다) */
+function tdlOff() {
+  try {
+    if (TDL.rt) { clearTimeout(TDL.rt); TDL.rt = null; }
+    tdlPing(false);
+    var ws = TDL.ws; TDL.ws = null; TDL.st = "off";
+    if (ws) ws.close(1000);
+  } catch (e) {}
+}
+window.addEventListener("online", function () { try { if (TDL.rt && !TDL.no) { clearTimeout(TDL.rt); TDL.rt = null; TDL.fails = 0; tdlOpen(); } } catch (e) {} });
+/* 승패 · a = 나 · b = 상대 · { end · why(lives · cap) · el(게임 시계 ms) · sc } · 1 = a 승 · -1 = a 패 · 0 = 무승부 · null = 아직 · 두 노트북이 같은 숫자로 같은 답 */
+function tdlJudge(a, b) {
+  if (!a || !b) return null;
+  var ca = a.why === "cap", cb = b.why === "cap";
+  if (a.end && b.end) {
+    if (ca !== cb) return ca ? 1 : -1;
+    if (!ca && a.el !== b.el) return a.el > b.el ? 1 : -1;
+    return a.sc === b.sc ? 0 : a.sc > b.sc ? 1 : -1;
+  }
+  if (a.end && !ca && !b.end && b.el > a.el) return -1;   /* 상대가 이미 더 오래 버텼다 */
+  if (b.end && !cb && !a.end && a.el > b.el) return 1;
+  return null;
+}
+function tdlMine() {   /* 내 판 · 끝났으면 끝난 값 · 판 중이면 지금 값 */
+  if (TDL.mine) return TDL.mine;
+  return { end: false, why: "", el: Math.round((RG.surv || 0) * 1000), sc: RG.score || 0, lv: RG.lives || 0 };
+}
+function tdlOpLost() { var o = TDL.opD; return !!o && !o.end && Date.now() - o.at > TDL_LOST_MS; }
+/* 받은 신호 · 다른 자리 상태표 · 내 대결(z)의 진행 · 끝 · 못 함 */
+function tdlIn(m) {
+  var me = tdlSeat(), s = Number(m.s) || 0, now = Date.now();
+  if (m.k === "go") { if ((m.a === me || m.b === me) && !TDL.seen[m.z]) { TDL.seen[m.z] = 1; tdlGoIn(m); } return; }
+  if (s === me || !s) return;
+  var P = TDL.peers[s] || (TDL.peers[s] = { ph: "", at: 0 });
+  P.at = now;
+  if (m.k === "st") P.ph = String(m.ph || "");
+  if (m.k === "pl") P.ph = "play";
+  if (!TDL.z || m.z !== TDL.z || s !== TDL.op) return;
+  var o = TDL.opD || (TDL.opD = {});
+  if (m.k === "no") { if (!o.started) { TDL.cancel = true; if (!(RG.on && TSF.ph === "play") && TSF.ph !== "result") toast(tdlLbl(s) + " 시작 안 됨 · 혼자 하기로 진행"); } return; }
+  if (m.k === "pl" || m.k === "end") {
+    o.at = now; o.started = true;
+    if (o.end) return;
+    o.lv = Number(m.lv) || 0; o.sc = Number(m.sc) || 0; o.el = Number(m.el) || 0;
+    if (m.k === "end") { o.end = true; o.why = m.why === "cap" ? "cap" : "lives"; }
+  }
+}
+/* F9 · 스태프 · 판 밖에서만 · 두 자리 모두 READY 일 때 시작 신호(go) · Hub 가 두 노트북에(나에게도) 같이 보내고 받는 순간 둘 다 3 · 2 · 1 */
+function tdlKey() {
+  var me = tdlSeat(), now = Date.now();
+  if (RG.on) return;
+  if (!me) { toast("대결은 자리 1 · 2 노트북에서 · F2 관리에서 자리 지정"); return; }
+  if (!tdlEng()) { toast("대결 기능을 쓰려면 새로 고침이 필요해요"); return; }
+  if (TDL.no) { toast("대결 연결이 아직 없어요 · 혼자 하기는 그대로"); return; }
+  if (TDL.st !== "ok") { tdlOpen(); toast("대결 연결 중 · 잠시 뒤 다시 F9"); return; }
+  if (tdlPh() !== "ready") { toast(tdlLbl(me) + " 도전자 입장 전 · 두 자리 모두 입장한 뒤 F9"); return; }
+  var op = 0, any = 0;
+  Object.keys(TDL.peers).map(Number).sort().forEach(function (s) { var P = TDL.peers[s]; if (!P || now - P.at > TDL_FRESH) return; any = any || s; if (!op && P.ph === "ready") op = s; });
+  if (!op) { toast(any ? tdlLbl(any) + " 도전자 입장 전 · 두 자리 모두 입장한 뒤 F9" : "상대 노트북과 연결되지 않았어요"); return; }
+  if (TDL.want && now - TDL.want.t < TDL_GO_WAIT) return;
+  var z = "", sd = 0;
+  for (var i = 0; i < 8; i++) z += "0123456789abcdef".charAt(Math.floor(Math.random() * 16));
+  try { var a = new Uint32Array(1); crypto.getRandomValues(a); sd = a[0]; } catch (e) {}
+  sd = (sd || Math.floor(Math.random() * 4294967295)) >>> 0 || 1;
+  TDL.want = { z: z, t: now, op: op };
+  if (!tdlSend({ k: "go", z: z, sd: sd, a: me, b: op })) { TDL.want = null; toast("대결 신호가 가지 않았어요 · 다시 F9"); return; }
+  tsfDbg("tdl", "go " + z);
+}
+/* 시작 신호를 받음(내가 보낸 것 포함) · 지금 READY 면 대결 판 · 아니면 못 함(no) */
+function tdlGoIn(m) {
+  var me = tdlSeat(), op = m.a === me ? m.b : m.a, mine = TDL.want && TDL.want.z === m.z;
+  TDL.want = null;
+  if (tdlPh() !== "ready" || !tdlEng()) { tdlSend({ k: "no", z: m.z, why: "ph" }); if (mine) toast("대결을 시작하지 못했어요 · 다시 F9"); return; }
+  TDL.z = m.z; TDL.sd = Number(m.sd) >>> 0 || 1; TDL.op = op; TDL.on = true; TDL.cancel = false; TDL.res = null; TDL.ann = false; TDL.mine = null; TDL.end = null; TDL.endN = 0; TDL.opEnd = false;
+  TDL.opD = { at: Date.now(), lv: RAIN_LIVES, sc: 0, el: 0, end: false, started: false };
+  tsfDbg("tdl", "start " + m.z + " vs " + op);
+  tsfGo(TDL.sd);
+  TDL.plT = 0;
+}
+/* 판 끝(tsfDone · 기록 대기열에 넣은 뒤) · 내 끝 값 · 끝 신호(2초마다 다시 · 상대가 놓치지 않게) */
+function tdlEnd(res) {
+  if (!TDL.on || !TDL.z) return;
+  var s = typeof rgStat === "function" ? rgStat() : {};
+  TDL.mine = { end: true, why: res && res.why === "cap" ? "cap" : "lives", el: Number(s.el) || Math.round((RG.surv || 0) * 1000), sc: Number(res && res.score) || 0, lv: Math.max(0, RG.lives || 0) };
+  TDL.end = { k: "end", z: TDL.z, why: TDL.mine.why, el: TDL.mine.el, sc: TDL.mine.sc, lv: TDL.mine.lv };
+  TDL.endN = 0; TDL.endT = 0;
+  tdlEndSend();
+}
+function tdlEndSend() { if (!TDL.end || TDL.endN >= TDL_END_N) return; if (tdlSend(Object.assign({}, TDL.end))) { TDL.endN++; TDL.endT = Date.now(); } }
+/* 셀프 시계(0.265초) · 소켓 · 상태 신호 · 진행 신호 · 승패 · 판 위 줄 · 결과 화면 */
+function tdlTick() {
+  if (!tdlSeat()) { if (TDL.ws) tdlOff(); return; }
+  if (!TDL.ws && !TDL.rt && !TDL.no) tdlOpen();
+  var now = Date.now(), ph = tdlPh();
+  if (TDL.st === "ok" && (ph !== TDL.stPh || now - TDL.stT >= TDL_ST_MS)) { if (tdlSend({ k: "st", ph: ph, z: TDL.on ? TDL.z : "" })) { TDL.stPh = ph; TDL.stT = now; } }
+  if (TDL.want && now - TDL.want.t > TDL_GO_WAIT) { TDL.want = null; toast("대결 신호가 가지 않았어요 · 다시 F9"); }
+  if (TDL.end && now - TDL.endT >= TDL_END_MS) tdlEndSend();
+  if (!TDL.on) return;
+  if (ph !== "play" && ph !== "res") { TDL.on = false; TDL.res = null; return; }   /* 다음 사람 · 대결 표시 끝(끝 신호는 위에서 마저 보낸다) */
+  if (ph === "play" && now - TDL.plT >= TDL_PL_MS) { var M = tdlMine(); if (tdlSend({ k: "pl", z: TDL.z, lv: M.lv, sc: M.sc, el: M.el })) TDL.plT = now; }
+  var j = TDL.cancel ? null : tdlJudge(tdlMine(), TDL.opD), was = TDL.res;
+  if (j != null && was == null) {
+    TDL.res = j;
+    if (ph === "play" && j === 1 && !TDL.ann) { TDL.ann = true; RG.banner = { text: tdlLbl(tdlSeat()) + " 승", t: 2.4 }; }
+    if (ph === "res") { TSF.resAt = performance.now(); TSF.phAt = TSF.resAt; }   /* 결과가 정해진 때부터 10초 */
+    tdlSend({ k: "res", z: TDL.z, w: j === 1 ? tdlSeat() : j === -1 ? TDL.op : 0 });
+  }
+  if (TDL.opD && TDL.opD.end && !TDL.opEnd) { TDL.opEnd = true; if (ph === "res") { TSF.resAt = performance.now(); TSF.phAt = TSF.resAt; } }   /* 상대 최종 점수가 나온 때부터 10초 */
+  if (ph === "play") tdlHud(); else tdlResPaint();
+}
+/* 결과 화면을 남겨 두나 · 상대 판이 아직 돌고 연결이 살아 있을 때 */
+function tdlHold() { return !!(TDL.on && TSF.ph === "result" && !TDL.cancel && TDL.opD && TDL.opD.started && !TDL.opD.end && !tdlOpLost()); }   /* 승패가 정해졌어도 상대 최종 점수가 나올 때까지 */
+function tdlLine() {   /* 판 위 줄 · 결과 화면 머리 */
+  var me = tdlSeat(), op = TDL.op, o = TDL.opD || {}, r = TDL.res;
+  if (r === 1) return "대결 · " + tdlLbl(me) + " 승";
+  if (r === -1) return "대결 · " + tdlLbl(op) + " 승";
+  if (r === 0) return "대결 · 무승부";
+  if (TDL.cancel) return "대결 · " + tdlLbl(op) + " 시작 안 됨";
+  if (tdlOpLost()) return "대결 · " + tdlLbl(op) + " 연결 끊김";
+  if (o.end) return "대결 · " + tdlLbl(op) + " 탈락";
+  if (!o.started) return "대결 · " + tdlLbl(op) + " 시작 전";
+  return "대결 · " + tdlLbl(op) + " 목숨 " + (o.lv || 0) + " · " + typePts(o.sc || 0);
+}
+function tdlHud() { var n = el("rgDuel"); if (!n) return; var t = tdlLine(); if (n.textContent !== t) n.textContent = t; n.classList.toggle("win", TDL.res === 1); }
+/* 결과 화면 칸 · 승패 한 줄 + 자리 순서대로 각자 점수(상대가 아직 하는 중이면 지금 점수 · 도전 중) */
+function tdlResHtml() {
+  if (!TDL.on || !TDL.z) return "";
+  return '<div class="tsf-duel" id="tsfDuel">' + tdlResInner() + "</div>";
+}
+function tdlResInner() {
+  var me = tdlSeat(), op = TDL.op, M = tdlMine(), o = TDL.opD || {}, r = TDL.res;
+  var head = r === 1 ? tdlLbl(me) + " 승" : r === -1 ? tdlLbl(op) + " 승" : r === 0 ? "무승부" : TDL.cancel ? tdlLbl(op) + " 시작 안 됨" : tdlOpLost() ? tdlLbl(op) + " 연결 끊김" : tdlLbl(op) + " 도전 중";
+  var rows = [[me, M.sc, ""], [op, o.sc || 0, TDL.cancel || !o.started ? "-" : o.end || tdlOpLost() ? "" : "도전 중 "]].sort(function (x, y) { return x[0] - y[0]; });
+  return '<p class="tsf-dh' + (r != null ? " on" : "") + '">대결 · ' + esc(head) + '</p><p class="tsf-ds">' + rows.map(function (x) { return tdlLbl(x[0]) + " " + (x[2] === "-" ? "기록 없음" : x[2] + typePts(x[1])); }).join(" · ") + "</p>";   /* 「1P 도전 중 6,386점 · 2P 4,102점」 */
+}
+function tdlResPaint() { var n = el("tsfDuel"); if (!n) return; var h = tdlResInner(); if (n._h !== h) { n._h = h; n.innerHTML = h; } }
+/* F9 · 셀프 화면에서만 · 판 도중 = 삼키기만 · 관리 창이 열려 있으면 그대로 둔다(F8 과 같은 자리) */
+document.addEventListener("keydown", function (e) {
+  if (e.key !== "F9" || App.current !== "type_site" || !tsfOn() || el("modal")) return;
+  e.preventDefault(); e.stopPropagation();
+  if (e.repeat || RG.on) return;
+  tsfPoke(); tdlKey();
+}, true);
 /* 스태프 「관리」 · 자리 끔 → 1 → 2 → 3(261017 예비 노트북) → 끔 */
 function tsfSeatGo(ok) {
   if (ok !== true && !tsfCodeOk(tsfSeatGo)) return;
   var v = (tvlSeat() + 1) % 4;   /* 261017 끔 → 1 → 2 → 3 → 끔 */
   S.put("self_seat", v);
   if (!v) tvlOff(); else if (TVL.ws) { tvlOff(); tvlOpen(); }   /* 자리를 바꾸면 기기 이름이 바뀐다 · 새 이름으로 다시 */
+  tdlOff(); TDL.peers = {}; TDL.no = false;   /* v8.87 대결 소켓도 새 자리 이름으로(다음 시계에 다시 연다) */
   modalClose();
 }
 /* 261022 (사용자 「타자왕 게임」 · 플랜 B 스탠바이미 세로) 화면 가로 · 세로 · 이 노트북 저장(site_orient · 기본 가로 · 새로 고침 · 재부팅해도 그대로)
@@ -1592,7 +1822,7 @@ function tsfResHtml() {
   var cap = r.why === "cap";
   return rtGoHtml({ title: cap ? "TIME UP" : "GAME OVER", sub: "AX 단어 소나기 · " + (TSF.nick || "익명 참가자"),
     line: cap ? "5분을 버텼어요 · 목숨 보너스" : "단어 " + (RG.lives0 || RAIN_LIVES) + "개를 놓쳤어요",
-    body: '<p class="gs-sc">' + typePts(r.score || 0) + "</p>" + '<p class="rt-go-rank">' + esc(rank) + "</p>" + (left ? '<p class="rt-go-rank">' + esc(left) + "</p>" : "") +
+    body: '<p class="gs-sc">' + typePts(r.score || 0) + "</p>" + tdlResHtml() + '<p class="rt-go-rank">' + esc(rank) + "</p>" +   /* v8.87 대결 = 승패 · 각자 점수(대결이 아니면 빈칸) */ (left ? '<p class="rt-go-rank">' + esc(left) + "</p>" : "") +
       (TSF.send === "retry" ? '<button type="button" class="ax-button rt-btn" onclick="tsfSend()">다시 보내기</button>' : "") +   /* v7.66 서버가 받지 않는 판(fail)은 단추 없음 */
       rtFoldHtml("기록 자세히 보기", rtFoldSec("점수 구성", rtRefTable([["단어 점수", typePts((r.score || 0) - (r.bns || 0) - (r.capBns || 0))], ["보너스 스테이지", typePts(r.bns || 0) + " · " + (r.bnsN || 0) + "번"], ["목숨 보너스", typePts(r.capBns || 0)]])) +
         rtFoldSec("참고 기록", rtRefTable([["터뜨린 단어", (r.hits || 0) + "개"], ["최고 콤보", r.combo || 0], ["정확도", (r.acc || 0) + "%"], ["버틴 시간", typeSec(r.surv || 0)]]))) });

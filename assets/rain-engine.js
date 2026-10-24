@@ -149,6 +149,7 @@ function rgSeed(seed) {
   RG.rs = RG.seed;
 }
 function rgRnd() {
+  if (RG.dz) return rgDzRnd(RG.dz);   /* v8.87 같은 단어 대결 · 흐름 안에서만(rgDuelWrap) */
   if (!RG.seed) return Math.random();
   RG.rs = (RG.rs + 0x6D2B79F5) >>> 0;
   var t = RG.rs;
@@ -160,6 +161,44 @@ function rgShuf(a) {
   for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(rgRnd() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; }
   return a;
 }
+/* ═══ v8.87 (261024 사용자 결정 · 「타자왕 게임」 세션) 같은 단어 대결 · 1F 셀프(site)만 ═══
+   화면 쪽이 rgStart opt.duel(시드 · 두 노트북이 같은 값)을 줄 때만 켜진다 · 주지 않으면 아래는 한 줄도 돌지 않는다(혼자 하기 그대로)
+   규칙 · 난이도 · 목숨 · 점수 · 낙하 빠르기 · 등장 간격 · 숨 돌리기 · 붐빔 · 도착 간격은 혼자 하기 그대로(사람마다 다르게 흘러가는 부분도 그대로)
+   같게 하는 것 = 단계마다 따로 도는 시드 난수 흐름(단어 · 요소 · 자리) · 구름 문장 · 구름 단어 · 그 단계의 n번째 단어 · 요소가 두 노트북에서 같다 · 낙하 빠르기는 단계로 정해져 같은 단어 = 같은 빠르기
+   단계가 바뀌면 그 단계 흐름의 처음부터라 한쪽이 단어를 하나 덜 받아도 다음 단계에서 다시 같아진다 · 섞기 칸(RAIN_SITE_MIX) · 요소 칸(RAIN_SITE_MOD)도 단계마다 따로
+   단어 고르기의 「판 위 · NEXT 와 겹치지 않기」는 실제 판 대신 그 단계에서 앞서 뽑은 9개로 본다(사람마다 판이 달라도 같은 단어) · 내보낼 때 판 위 단어와 겹치면 NEXT 다음 단어와 차례만 바꾼다(rgNextWord) */
+var RG_DUEL_V = 1;
+function rgDuelHash(seed, k) {
+  var h = ((seed >>> 0) ^ 0x9E3779B9) >>> 0; k = String(k);
+  for (var i = 0; i < k.length; i++) h = Math.imul(h ^ k.charCodeAt(i), 0x85EBCA6B) >>> 0;
+  h = Math.imul(h ^ (h >>> 13), 0xC2B2AE35) >>> 0;
+  return ((h ^ (h >>> 16)) >>> 0) || 1;
+}
+function rgDzRnd(D) {   /* mulberry32 · 흐름마다 따로 */
+  D.rs = (D.rs + 0x6D2B79F5) >>> 0;
+  var t = D.rs;
+  t = Math.imul(t ^ (t >>> 15), t | 1) >>> 0;
+  t = (t ^ (t + Math.imul(t ^ (t >>> 7), t | 61))) >>> 0;
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+/* k = 흐름 이름(w 단어 · m 요소 · p 자리 + 단계 · c 구름) · dk = 그 흐름이 따로 갖는 RG 칸(섞기 칸 · 요소 칸 · 문장 주머니) · 끝나면 되돌린다 */
+function rgDuelWrap(k, fn, dk) {
+  var D = RG.dst[k] || (RG.dst[k] = { rs: rgDuelHash(RG.duel, k), deck: null, bags: {}, recent: [], hist: [] }), z0 = RG.dz, in0 = RG.dzIn, d0 = dk ? RG[dk] : null;
+  if (dk) RG[dk] = D.deck;
+  RG.dz = D; RG.dzIn = k.charAt(0);
+  try { return fn(D); } finally { if (dk) { D.deck = RG[dk]; RG[dk] = d0; } RG.dz = z0; RG.dzIn = in0; }
+}
+function rgDuelPick(D) {   /* 셀프 섞기(RAIN_SITE_MIX · RG_SFB) 그대로 · 판 위 · NEXT 대신 이 단계에서 앞서 뽑은 9개 */
+  var C = rgSiteCls(), c0 = rgSiteSlot(), od = RG_SFB[c0] || RG_SFB[0], near = D.hist.slice(-9), w = "";
+  for (var o = 0; o < od.length && !w; o++) if (C[od[o]].length) w = rgPickIn(C[od[o]], D.bags, od[o], near, near, D.recent);
+  w = w || C[c0][0] || RAIN_WORDS[0];
+  D.hist.push(w); if (D.hist.length > 12) D.hist.shift();
+  (RG.dmw || (RG.dmw = {}))[w] = rgModSlot();   /* 이 단어의 요소(빠른 · 흔들림 · 가림) · 이 단계 요소 칸에서 */
+  return w;
+}
+/* 다음에 내보낼 차례 · 판 위 단어와 같거나 자모 앞부분이 겹치면 NEXT 다음 단어 */
+function rgDuelIdx(q) { var on = rgOnScreen(), k = 0; while (k < q.length - 1 && (on.indexOf(q[k]) >= 0 || rgClash(q[k], on))) k++; return k; }
+function rgDuelMod() { var q = RG.next || []; return q.length && RG.dmw ? RG.dmw[q[rgDuelIdx(q)]] || 0 : 0; }
 /* 서버가 준 판 설정 · 없는 값은 건드리지 않는다 */
 function rgApplyTune(o) {
   o = o || {};
@@ -242,6 +281,7 @@ var RAIN_SITE_MOD = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [1, 0, 0], [1, 
   [2, 1, 0], [2, 1, 0], [2, 1, 1]];
 var RAIN_SITE_FX = { k: 0.5, tele: 0.5, swayT: 1.6, hide: [0.25, 0.45], show: 0.5, rush: 1.2 };
 function rgModSlot() {
+  if (RG.duel && RG.dzIn !== "m") return RG.dzIn === "w" ? rgDuelWrap("m" + (RG.stage || 1), rgModSlot, "modDeck") : rgDuelMod();   /* v8.87 같은 단어 대결 · 요소는 단어를 뽑을 때 그 단계 칸에서 정해 단어에 붙는다(같은 단어 = 같은 요소) · 내보낼 때는 그 값 */
   var d = RG.modDeck;
   if (!d || !d.length) {
     var m = rgSiteAt(RAIN_SITE_MOD, RG.stage || 1); d = [];
@@ -675,6 +715,7 @@ function rgPickIn(pool, hold, key, onScreen, near, recent) {   /* hold[key] = �
 }
 var RG_SFB = [[0, 1, 3, 2], [1, 0, 2, 3], [2, 1, 3, 0], [3, 2, 1, 0]];   /* 261018 v7.89 그 칸 단어가 다 판 위 · 겹침이면 길이가 가까운 칸부터 */
 function rgPickWord() {
+  if (RG.duel && RG.dzIn !== "w" && rgSiteMixOn()) return rgDuelWrap("w" + (RG.stage || 1), rgDuelPick, "mixDeck");   /* v8.87 같은 단어 대결 · 단계마다 같은 차례 */
   var onScreen = rgOnScreen(), near = rgAutoOn() && !RG.seed ? onScreen.concat(RG.next || []) : null;   /* 261003 자동 클리어 · 판 위 · NEXT 단어와 자모 앞부분이 겹치면 건너뛴다 */
   var recent = RG.recent || (RG.recent = []);
   if (rgSiteMixOn()) {   /* 261018 v7.89 셀프 = 단계별 정해진 비율(RAIN_SITE_MIX) */
@@ -695,6 +736,10 @@ function rgNextFill() { var q = RG.next || (RG.next = []); while (q.length < 3) 
 function rgNextWord() {
   if (RG.cloud) return rgCloudPick();   /* v5.24 비구름 · 구름에 담긴 단어부터 */
   if (RG.seed) return rgPickWord();
+  if (RG.duel) {   /* v8.87 같은 단어 대결 · 판 위 단어와 같거나 자모 앞부분이 겹치면 NEXT 다음 단어와 차례만 바꾼다(뽑은 단어 · 차례는 두 노트북이 같다) */
+    var dq = rgNextFill(), dw = dq.splice(rgDuelIdx(dq), 1)[0]; rgNextFill();
+    return dw;
+  }
   var w = rgNextFill().shift(); rgNextFill();
   return w;
 }
@@ -709,6 +754,7 @@ function rgStart(mode, opt) {
   rgStop();
   RG.mode = mode || "app";
   rgSeed(RG.mode === "race" ? (opt.seed || 1) : 0);
+  RG.duel = RG.mode === "site" && opt.duel > 0 ? opt.duel >>> 0 : 0; RG.dst = {}; RG.dz = null; RG.dzIn = ""; RG.dmw = {};   /* v8.87 같은 단어 대결(1F 셀프 · 화면 쪽이 시드를 줄 때만) · 0 = 혼자 하기 그대로 */
   RG.lives0 = RAIN_LIVES; RG.cap = RG.mode === "site" && RAIN_SITE.cap > 0 ? RAIN_SITE.cap : RAIN_CAP_SEC;   /* 261017 셀프 = 300초 · 대전 · 앱 = 180 */
   rgApplyTune(opt);
   RG.words = []; RG.ghost = []; RG.seq = 0; RG.parts = []; RG.pops = []; RG.bag = null; RG.bags = null; RG.mixDeck = null; RG.recent = []; RG.surv = 0;
@@ -785,6 +831,7 @@ function rgDropDraw(ctx, L) {
 /* 새 단어 · 레인을 섞어 윗부분 단어 상자와 겹치지 않는 자리 · 좌우 8px 여백
    대전에서는 겹침 검사도 유령 목록으로 본다(누가 얼마나 쳤는지와 무관하게 같은 자리) */
 function rgSpawn(sec) {
+  if (RG.duel && RG.dzIn !== "p") return rgDuelWrap("p" + (RG.stage || 1), function () { return rgSpawn(sec); });   /* v8.87 같은 단어 대결 · 자리 · 레인도 단계마다 같은 흐름 */
   var L = RG.L, cv = rgEl("rgCv"); if (!L || !cv) return false;
   var ctx = cv.getContext("2d"), cl = !!RG.cloud, text = rgNextWord();   /* v5.24 cl = 비구름에서 내린 단어 */
   if (!text) return false;
@@ -1605,6 +1652,7 @@ function rgCloudStage() {
 /* 261018 v7.90 다음 구름까지 남은 게임 초(단계로 정한 구름) */
 function rgCloudNextSec(now) { return Math.max(0, (rgCloudStage() - 1 - (RG.stOff || 0)) * rgStageSec() - (RG.t0 ? rgElapsed(now) : 0)); }
 function rgCloudStart() {
+  if (RG.duel && RG.dzIn !== "c") return rgDuelWrap("c", rgCloudStart, "bnsBag");   /* v8.87 같은 단어 대결 · 구름 문장 · 구름 단어도 같은 흐름(구름이 열리는 순서대로) */
   if (!RG.bnsBag || !RG.bnsBag.length) RG.bnsBag = rgShuf(RAIN_BONUS_LINES.slice());
   var ln = RG.bnsBag.pop(), n = RAIN_CLOUD.n[Math.min(RG.cloudN, RAIN_CLOUD.n.length - 1)], seq = [];
   ln.w.forEach(function (w) { for (var k = 0; k < RAIN_CLOUD.key; k++) seq.push(w); });
@@ -2214,4 +2262,5 @@ if (typeof module !== "undefined" && module.exports) module.exports = { RG: RG, 
   RAIN_SITE: RAIN_SITE, RAIN_AUTO: RAIN_AUTO, RAIN_BNS_GUARD: RAIN_BNS_GUARD, rgSiteReset: rgSiteReset, rgAutoOn: rgAutoOn, rgFallSec: rgFallSec, rgSpawnSec: rgSpawnSec, rgStageSec: rgStageSec, rgRampSite: rgRampSite, rgGapWait: rgGapWait, rgCdNum: rgCdNum, rgSpawnFall: rgSpawnFall, rgJit: rgJit, rgEase: rgEase, RAIN_BNS_GUIDE: RAIN_BNS_GUIDE, RAIN_BNS_GO: RAIN_BNS_GO, rgClash: rgClash, rgPool: rgPool, rgBnsNorm: rgBnsNorm, rgBlk: rgBlk, rgCloudPick: rgCloudPick, rgCloudStage: rgCloudStage,
   rgBonusVal: rgBonusVal, rgBonusValOf: rgBonusValOf, RAIN_DROP: RAIN_DROP, rgBonusV0: rgBonusV0, rgBnsLines: rgBnsLines, rgBnsBr: rgBnsBr,   /* 261017 타자왕 개편 */
   RAIN_SITE_MORE: RAIN_SITE_MORE, RAIN_SITE_MIX: RAIN_SITE_MIX, rgShiftW: rgShiftW, rgSiteCls: rgSiteCls, rgSiteSlot: rgSiteSlot, rgSiteMixOn: rgSiteMixOn, rgPickIn: rgPickIn,
-  RAIN_SITE_MOD: RAIN_SITE_MOD, RAIN_SITE_FX: RAIN_SITE_FX, rgModSlot: rgModSlot, rgWordFx: rgWordFx, rgCloudBottom: rgCloudBottom, rgSwayX: rgSwayX, rgFlourish: rgFlourish, rgKeyN: rgKeyN, rgCloudNextSec: rgCloudNextSec, rgBnsJump: rgBnsJump };   /* 261018 v7.90 */   /* 261018 v7.89 셀프 단어 섞기 */
+  RAIN_SITE_MOD: RAIN_SITE_MOD, RAIN_SITE_FX: RAIN_SITE_FX, rgModSlot: rgModSlot, rgWordFx: rgWordFx, rgCloudBottom: rgCloudBottom, rgSwayX: rgSwayX, rgFlourish: rgFlourish, rgKeyN: rgKeyN, rgCloudNextSec: rgCloudNextSec, rgBnsJump: rgBnsJump,
+  RG_DUEL_V: RG_DUEL_V, rgDuelHash: rgDuelHash, rgDuelWrap: rgDuelWrap, rgDuelPick: rgDuelPick, rgDuelMod: rgDuelMod, rgStart: rgStart };   /* v8.87 같은 단어 대결 */   /* 261018 v7.90 */   /* 261018 v7.89 셀프 단어 섞기 */
