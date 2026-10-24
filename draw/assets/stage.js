@@ -60,6 +60,7 @@
   var LS_CFG = "axfDraw.cfg.v1", LS_ST = "axfDraw.state.v1";
   if (SANDBOX) { LS_CFG += ".test"; LS_ST += ".test"; }   /* 시험 페이지는 무대 노트북의 진짜 기록과 섞이지 않는다 */
   if (FAKE) LS_ST += ".fake"; else if (LAB) LS_ST += ".lab";   /* 261021 가짜 서버 시험 · 실험실은 데모 시험 기록과도 따로 */
+  var LS_DM = SANDBOX ? LS_ST : "axfDraw.demo.v1";   /* 261024 데모 기록은 라이브(LS_ST)와 다른 키 · 데모 결과가 라이브 이어받기 · 보낼 줄에 섞이지 않는다 · 시험 페이지는 이미 따로 키라 그대로 */
   /* 통 · drum.js 와 같은 값 */
   var DX = 600, DY = 560, RW = 352, PIT = 0.24, FOC = 2100;
   var NBL = 3, BT = 7, HUBR = 30, WMIX = 3.6, WSLOW = 1.4, G = 3000, JET = 10500, BLL = 0.62, NPEG = 48, GATE0 = 0;
@@ -189,14 +190,19 @@
    * batch = 지금 공개 중인 한 번의 뽑기(기록 id 목록) · pending = 그 마지막 id(옛 화면 · 콘솔 호환) */
   var ST = load(LS_ST, null);
   if (!ST || ST.v !== 1) ST = { v: 1, seed: Math.floor(Math.random() * 1e9), scene: "idle", pool: null, arrived: [], closed: false, round: 0, results: [], out: {}, src: CFG.mode };
+  if (LS_DM !== LS_ST && ST.mode !== "live") { var DM0 = load(LS_DM, null); if (DM0 && DM0.v === 1 && DM0.mode === "demo") ST = DM0; }   /* 261024 데모 기록 키 · 라이브 기록이 있으면 라이브가 먼저 */
   ST.batch = ST.batch || [];
   /* 261016 모드 · ST.mode = demo | live(시작 화면에서 고른 값) · 없으면 시작 화면 · 라이브 기록이 다른 서버 것이면 시작 화면(고르면 비운다) · 시험 페이지 = 데모 고정 */
   if (SANDBOX && ST.mode !== "demo" && !FAKE) ST = { v: 1, seed: Math.floor(Math.random() * 1e9), scene: "idle", pool: null, arrived: [], closed: false, round: 0, results: [], out: {}, mode: "demo", batch: [] };
   var MODE_BAD = ST.mode === "live" && ST.srv !== SERVER_URL;
-  var NEED_START = !ST.mode || MODE_BAD;
+  /* 261024 명부 데모(사용자 261024 「라이브는 진짜 라이브에만 · 연습은 데모로 하되 지금 명부로」) · ST.mode demo + ST.dk real · 행운권 명부는 서버(draw_dpool)에서 읽기만 · 당첨자 실명은 draw_who
+   *   뽑기 · 1인 1회 · 장수 가중 · 두 통 · 다시 추첨 · 소진 · 이어 뽑기 = 라이브와 같은 함수(PICK · pickBatch) · 서버 쓰기 0(jsonp 관문 netWhy) · 상태 보고 · 감시 없음 */
+  function rDemo() { return ST.mode === "demo" && ST.dk === "real"; }
+  var DM_BAD = rDemo() && ST.srv !== SERVER_URL;
+  var NEED_START = !ST.mode || MODE_BAD || DM_BAD || (rDemo() && (!sessionKey() || !ST.pool || ST.pool.kind !== "dreal"));   /* 261024 명부 데모 = 관리코드 · 명부가 있어야 이어서 */
   CFG.mode = ST.mode === "live" && !MODE_BAD ? "server" : "demo";
   function isLive() { return CFG.mode === "server" && ST.mode === "live"; }
-  function persist() { save(LS_ST, ST); pushCtl(); }
+  function persist() { save(ST.mode === "demo" ? LS_DM : LS_ST, ST); pushCtl(); }
 
   /* ─────────────── 데모 행운권 ─────────────── */
   var SUR = "김이박최정강조윤장임한오서신권황안송류홍전고문양손배백허유남심노하곽성차주우구민진나지엄원천방공현함변염여추도소석선설마길연위표명기반왕금옥육인맹제모탁국어은편용".split("");
@@ -234,7 +240,8 @@
   var QKEY = "axfDraw.q." + ((/^https:\/\/([a-z0-9-]+)\./.exec(SERVER_URL) || ["", "none"])[1]) + (SANDBOX ? ".test" : "");
   var SRV = { status: "", polling: null, since: "", queue: load(QKEY, []) };
   /* 261016 서버 문 한 곳 · 데모 · 시험 페이지 = 호출 0(읽기도 보내지 않는다) · 라이브 연결 상자에서는 읽기만 · 쓰기(draw_log · draw_cfg · draw_scr · draw_cmd)는 라이브로 시작한 뒤에만 */
-  var NET = { connect: false, calls: 0, blocked: 0, fake: 0 }, WRITES = { draw_log: 1, draw_cfg: 1, draw_scr: 1, draw_cmd: 1 };
+  var NET = { connect: false, calls: 0, blocked: 0, fake: 0, sent: {} }, WRITES = { draw_log: 1, draw_cfg: 1, draw_scr: 1, draw_cmd: 1 };
+  var DEMO_READS = { draw_dpool: 1, draw_who: 1 };   /* 261024 명부 데모가 부르는 읽기 두 가지 · 그 밖(쓰기 · draw_stats · draw_pool · draw_state)은 관문에서 거절 */
   /* 261023 무대 건강 · 상태 보고(draw_scr s.h)에 싣는다 · 콘솔 「무대 정상 · 멈춤 의심 · 오류 · 보고 끊김」 · 진행 · 당첨 셈 · 그림은 읽기만
    *   er = 최근 오류 3건(글 120자) · en = 오류 수 · 프레임 = 보고 사이 최대 간격 · 1초 넘는 끊김 수 · 보고 사이 fps · 키 · 단추 · 거부 = 마지막 것과 그 뒤 초 */
   var HL = { er: [], en: 0, flashT: 0, k: "", kt: 0, bn: "", bt: 0, rj: "", rt: 0, nf: 0, lastF: 0, mx: 0, sl: 0, slt: 0, fN: 0, fT0: 0, hid: false, t0: Date.now() };
@@ -258,11 +265,14 @@
   }
   function netWhy(action) {
     if (SANDBOX && !FAKE) return "sandbox";
-    if (WRITES[action]) return isLive() ? "" : "demo";
-    return isLive() || NET.connect ? "" : "demo";
+    if (WRITES[action]) return isLive() && !rDemo() && NET.connect !== "demo" ? "" : "demo";   /* 261024 명부 데모 · 데모 확인표에서는 쓰기 0 */
+    if (rDemo() || NET.connect === "demo") return DEMO_READS[action] ? "" : "demo";
+    if (action === "draw_dpool") return "demo";   /* 라이브 · 라이브 확인표는 데모 명부를 읽지 않는다 */
+    return isLive() || NET.connect === true ? "" : "demo";
   }
   function jsonp(action, params, done) {
     var nw = netWhy(action); if (nw) { NET.blocked++; done({ ok: false, reason: nw }); return; }
+    NET.sent[action] = (NET.sent[action] || 0) + 1;
     var url = SERVER_URL;
     if (!url) { done({ ok: false, reason: "noserver" }); return; }
     if (FAKE) { NET.fake++; var fp = Object.assign({}, params, { action: action }); var res = null; try { res = FAKE(fp); } catch (e) { res = { ok: false, reason: "fake" }; } res = res || { ok: false, reason: "network" }; var ms = +res.__ms || 30; delete res.__ms; setTimeout(function () { done(JSON.parse(JSON.stringify(res))); }, ms); return; }   /* 261021 가짜 서버 · 부모 창 메모리 · 네트워크 0 */
@@ -316,6 +326,11 @@
   function srvHM() { var n = srvNow(); return n ? n.slice(11) : "-"; }
   var RAF_DAY = "2026-10-26", RAF_CUT = "17:00";   /* 서버 설정 행운권_마감 기본값(CUT_1700)과 같은 값 */
   function before17() { var n = srvNow(); if (!n) return isLive(); return n.slice(0, 10) === RAF_DAY && n.slice(11) < RAF_CUT; }   /* 261017 D3 · 라이브인데 서버 시각을 아직 모르면(새로 고침 직후) 공 넣기를 받지 않는다 */
+  /* 261024 운영 라이브 잠금(사용자 261024 「라이브는 진짜 라이브에만」) · 운영 서버(hi)는 서버 날짜가 RAF_DAY 일 때만 라이브 · 시험 서버(hi-qa)는 그대로
+   *   확인표(liveSum block) · 진행 키(runNext · 서버 날짜를 알 때만 · 모르면 막지 않는다 · 공 넣기는 before17 이 막는다) */
+  var DAY_TXT = "운영 라이브는 10/26에만 · 연습은 데모";
+  function isProd() { return /^https:\/\/hi\./.test(SERVER_URL); }
+  function prodDayBad() { var n = srvNow(); return isProd() && !!n && n.slice(0, 10) !== RAF_DAY; }
   /* 261016 draw_state 줄 → 당첨 기록(취소 반영) · 예비 노트북 · 다시 시작 · 새 탭이 같은 길로 서버 기록을 이어받는다 */
   function stateApply(rows) {
     var byId = {}, list = [];
@@ -352,7 +367,7 @@
   function whoFetch() {
     if (CFG.nameMode !== "real") return;
     var want = whoWant(); if (!want.length) return;
-    if (CFG.mode !== "server") {
+    if (CFG.mode !== "server" && !rDemo()) {   /* 가짜 데모 = 기기 안 가짜 이름 · 명부 데모 = 라이브처럼 draw_who(읽기) */
       var ch = false;
       want.forEach(function (r) { var pp = ST.pool && ST.pool.people[r.pk]; if (pp && pp.fn) { r.fn = pp.fn; r.fd = pp.fd || pp.dp || ""; ch = true; } else WHO.miss[r.pk] = 1; });
       if (ch) { persist(); whoPaint(); }
@@ -1069,11 +1084,12 @@
     return { c: "", n: "끝" };
   }
   function runNext() {
+    if (isLive() && prodDayBad()) { KB.noN++; hlRej(DAY_TXT); kbNote(DAY_TXT); return; }   /* 261024 운영 라이브 잠금 */
     var nx = nextCmd(), nm = kbName(nx, true);
     if (!nx.c) { if (nx.n === "잠시만") kbNo(); else { KB.noN++; hlRej(nx.n); kbNote(nx.n); } return; }   /* 261016 버려진 누름도 스태프 표시줄에 보인다(소리 없이 버리지 않는다) */
     if (nx.c === "skip") { if (SC === "intro") { vidCut("intro"); lock(0.5); kbOk(nm); } else if (canSkipMix()) { skipMix(); kbOk(nm); } else kbNo(); return; }
     if (nx.c === "confirm" && topRank() && cmdWhy("confirm", nx.arg)) return keyFail(cmdWhy("confirm", nx.arg));   /* 공개 1.4초 안 = 첫 누름으로 세지 않는다 */
-    if (nx.c === "confirm" && topRank()) return twice("confirm", curRound().name + " 확정 · Space 한 번 더", function () { keyRun("confirm", nx.arg, nm); });   /* 261016 3 · 2 · 1등 = 두 번 눌러 확정(부재면 그 사이 「다시 추첨」) */
+    if (nx.c === "confirm" && topRank()) return twice("confirm", curRound().name + "을 확정하려면 Space를 한 번 더 눌러 주세요", function () { keyRun("confirm", nx.arg, nm); });   /* 261016 3 · 2 · 1등 = 두 번 눌러 확정(부재면 그 사이 「다시 추첨」) */
     keyRun(nx.c, nx.arg, nm);
   }
   /* 261016 등수 숫자(1 ~ 6) · 3 · 2 · 1등만 부재 · 다시 추첨(사용자 확정 · 6 · 5 · 4등은 이름만 호명하고 끝) */
@@ -1141,7 +1157,7 @@
   var CK = { ph: "", n: 0, mm: 0, tm: null, cfg: null, read: null, lockN: 0, lockTm: null, match: "" };
   function ckStop() { clearTimeout(CK.tm); CK.tm = null; }
   function startCheckin() {
-    if (CFG.mode === "demo" && (!ST.pool || ST.pool.kind !== "demo")) ST.pool = demoPool(CFG.demoN, ST.seed, CFG.demoT);
+    if (CFG.mode === "demo" && !rDemo() && (!ST.pool || ST.pool.kind !== "demo")) ST.pool = demoPool(CFG.demoN, ST.seed, CFG.demoT);
     scatterSymbol();
     if (!ST.ckAt) { ST.ckAt = Date.now(); persist(); }
     DRM.mode = "spin"; DRM.tgt = WSLOW; scene("checkin"); lock(0.6);
@@ -1788,7 +1804,7 @@
   function kbOk(nm) { KB.okN++; kbFlash("ok", "다음 · " + nm, 1.4); }
   function kbNo() { KB.noN++; hlRej(kbWait() < 0 ? "안 받음 · 뽑는 중" : "안 받음 · 연출 중"); kbFlash("no", "", Math.max(1.6, kbWait() + 0.2)); }
   function kbNote(msg) { kbFlash("info", msg, 2.6); }
-  function kbFast() { KB.noN++; hlRej("안 받음 · 두 번째가 너무 빠름"); kbFlash("fast", "안 받음 · 두 번째가 너무 빠름 · 0.4초쯤 뒤 한 번 더", 1.2); }
+  function kbFast() { KB.noN++; hlRej("안 받음 · 두 번째가 너무 빠름"); kbFlash("fast", "두 번째 누름이 너무 빨라 안 받았어요 · 잠깐 뒤 한 번 더 눌러 주세요", 1.2); }
   function kbFlash(k, msg, sec) { KB.k = k; KB.msg = msg; KB.until = T + sec; kbPaint(true); }
   function kbView() {
     if (KB.k === "fast" && T < KB.until) return { cls: "no", txt: KB.msg };
@@ -1847,17 +1863,24 @@
     try { bc && bc.postMessage(s); } catch (e) {}
   }
   /* 261016 화면 비우기 · 이 기기의 화면 기록만(서버 당첨 기록은 그대로) · 보낼 줄(draw_log 대기)은 지우지 않는다(남아 있으면 다시 시작 · 리셋을 막는다) */
-  function blankState(mode) {
+  function blankState(mode, dk) {
     var keepSeq = ST.cmdSeq || {};
     ST = { cmdSeq: keepSeq, v: 1, seed: Math.floor(Math.random() * 1e9), scene: "idle", pool: null, arrived: [], closed: false, round: 0, results: [], out: {}, src: mode === "live" ? "server" : "demo", batch: [], redo: {}, mode: mode || undefined };
     if (mode === "live") ST.srv = SERVER_URL;
+    if (mode === "demo" && dk === "real") { ST.dk = "real"; ST.srv = SERVER_URL; }   /* 261024 명부 데모 */
     for (var i = 0; i < NB; i++) live_[i] = 0;
     NIN = 0; LOAD.q = 0; pn = 0; WB = []; REEL.on = false; EXP.ph = ""; GATE.v = GATE.tgt = 0; NEXTCARD = 0; CONF.until = 0;
     SRV.since = ""; SRV.hasPool = false; SRV.stateChecked = true; SRV.loading = false; SRV.dup = 0; if (SRV.polling) { clearInterval(SRV.polling); SRV.polling = null; }
     WHO.miss = {}; WHO.fail = 0; WHO.off = false;
     ckStop(); clearTimeout(CK.lockTm); CK.lockTm = null; CK.ph = ""; CK.cfg = CK.read = null; CK.match = ""; SRV.warnIn = 0; SRV.closeStatus = ""; SRV.lockStatus = "";   /* 261021 */
     DRM.mode = "spin"; DRM.tgt = 0; MIXT = 0; MIXSKIP = false;
-    fade($("rv"), 0, 0); stageTo("black"); ME.from = null; save(LS_ST, ST);
+    fade($("rv"), 0, 0); stageTo("black"); ME.from = null;
+    /* 261024 데모 = 데모 키에만 · 라이브 키는 고른 모드 없는 빈 기록으로(전처럼 데모를 고르면 이 기기의 라이브 화면 기록은 비운다 · 서버 기록 · 보낼 줄은 그대로) · 라이브 · 시작 화면 = 데모 키를 지운다 */
+    if (LS_DM !== LS_ST) {
+      if (mode === "demo") { save(LS_ST, { cmdSeq: keepSeq, v: 1, seed: ST.seed, scene: "idle", pool: null, arrived: [], closed: false, round: 0, results: [], out: {}, batch: [], redo: {} }); save(LS_DM, ST); return; }
+      try { localStorage.removeItem(LS_DM); } catch (e) {}
+    }
+    save(LS_ST, ST);
   }
   /* 콘솔 원격 reset_screen(?ctl=console 일 때만) = 같은 모드 다시 시작 */
   function resetAll() { restartMode(true); }
@@ -1871,8 +1894,9 @@
   /* 다시 시작 = 같은 모드로 처음부터 · 데모 = 새 가짜 명단 · 라이브 = 서버 행운권 · 당첨 기록을 다시 받아 이어서(새 노트북과 같은 길) */
   function restartMode(force) {
     var w = force ? "" : holdWhy(); if (w) { toast(w, true); return; }
-    var m = ST.mode === "live" ? "live" : "demo";
-    blankState(m); CFG.mode = m === "live" ? "server" : "demo";
+    var m = ST.mode === "live" ? "live" : "demo", real = rDemo();
+    blankState(m, real ? "real" : ""); CFG.mode = m === "live" ? "server" : "demo";
+    if (real) { persist(); modeUi(); scene("start"); dOpen(true); return; }   /* 261024 명부 데모 다시 시작 = 명부를 새로 읽어 처음부터(서버 기록 없음) */
     if (m === "demo") { ST.pool = demoPool(CFG.demoN, ST.seed, CFG.demoT); persist(); MEsetIdle(); scene("idle"); ME.idleA = 1; toast("데모 · 처음부터", true); modeUi(); return; }
     persist(); modeUi(); scene("start"); liveOpen(true);
   }
@@ -1885,28 +1909,47 @@
   /* ─────────────── 261016 시작 화면 · 데모 | 라이브 · 운영 줄 · 다시 추첨 단추 ───────────────
    *   데모 = 바로 시작(가짜 명단 · 서버 호출 0) · 라이브 = 관리코드 → draw_stats · draw_pool · draw_state 읽기 → 숫자 대조표 → 「라이브 시작」(확인 1단계)
    *   라이브 시작 = 이 기기 화면 기록을 비우고 서버 기록을 그대로 이어받는다(처음이면 6등부터 · 기록이 있으면 그다음 등수 · 마지막 줄이 3 · 2 · 1등 당첨이면 그 공개 화면으로) */
-  var LV = { step: "", stat: null, pool: null, state: null, err: "", auto: false, why: [] };
+  var LV = { step: "", kind: "", stat: null, pool: null, state: null, dp: null, err: "", auto: false, why: [] };   /* 261024 kind = live | demo(명부 데모 확인표) */
   /* 261017 D2 · 상태 보고 sid = 이 탭 하나(새로 고침해도 같다 · 새 탭 · 다른 노트북은 다르다) · 확인표에서 다른 라이브 화면이 보고 중이면 잠금
    *   풀리는 길 = 그 화면이 LIVE_QUIET 초 동안 보고하지 않으면(그 노트북에서 리셋 · 탭 닫기 · 끄기 · 네트워크 끊김) · 「다시 불러오기」 */
   var SID = (function () { var s = ""; try { s = sessionStorage.getItem("axfDraw.sid") || ""; } catch (e) {} if (!/^[0-9a-z]{6,16}$/.test(s)) { s = "s" + Math.random().toString(36).slice(2, 12); try { sessionStorage.setItem("axfDraw.sid", s); } catch (e) {} } return s; })();
   var LIVE_QUIET = 30;
   function otherLive() { return (LV.stat && LV.stat.scrs || []).filter(function (x) { return x && x.sid !== SID && +x.age < LIVE_QUIET && x.scene && x.scene !== "start"; }); }
   function startPaint() {
-    var live = LV.step !== "";
+    var live = LV.step !== "", dm = live && LV.kind === "demo";
     document.body.classList.toggle("lv-on", live);
-    set("stWarn", Q.get("old") === "blocked" && !live ? "행사일에는 옛 화면(?classic=1)을 열지 않습니다 · 이 화면으로 진행" : MODE_BAD && !live ? "이 노트북에 다른 서버(" + esc(srvName(ST.srv)) + ")의 라이브 기록이 있습니다 · 고르면 이 화면 기록만 비웁니다(서버 기록은 그대로)" : FAKE ? "시험 페이지 · 가짜 서버(이 창 메모리 · 네트워크 없음)" : SANDBOX ? "시험 페이지 · 데모만" : "");
+    document.body.classList.toggle("lv-demo", dm);
+    set("stWarn", Q.get("old") === "blocked" && !live ? "행사일에는 옛 화면(?classic=1)을 열지 않습니다 · 이 화면으로 진행" : MODE_BAD && !live ? "이 노트북에 다른 서버(" + esc(srvName(ST.srv)) + ")의 라이브 기록이 있습니다 · 고르면 이 화면 기록만 비웁니다(서버 기록은 그대로)" : DM_BAD && !live ? "이 노트북에 다른 서버(" + esc(srvName(ST.srv)) + ")의 명부 데모 기록이 있습니다 · 고르면 비웁니다" : FAKE ? "시험 페이지 · 가짜 서버(이 창 메모리 · 네트워크 없음)" : SANDBOX ? "시험 페이지 · 데모만" : "");
     $("btnLive").disabled = (SANDBOX && !FAKE) || !SERVER_URL;
+    $("btnDemoR").disabled = (SANDBOX && !FAKE) || !SERVER_URL;
     if (!live) return;
-    var qa = !/^https:\/\/hi\./.test(SERVER_URL);
-    set("lvSrv", '<span class="' + (qa ? "qa" : "prod") + '">' + esc(srvName()) + "</span>");
+    var qa = !isProd();
+    set("lvSrv", '<span class="' + (qa ? "qa" : "prod") + '">' + esc(srvName()) + "</span>" + (dm ? '<span class="dmk">명부 데모 · 읽기만</span>' : ""));
     $("lvKey").style.display = LV.step === "key" ? "" : "none";
     set("lvErr", esc(LV.err || (LV.step === "load" ? "서버에서 읽는 중" : "")));
-    var h = "", c = null;
+    var h = "", c = null, go = $("lvGo");
     LV.why = [];
+    if (dm) {   /* 261024 명부 데모 확인표 · 읽은 숫자 · 체크인 통 기준 */
+      if (LV.step === "sum") {
+        c = dSum();
+        h += "<tr><th>서버 시각</th><td>" + esc(c.now || "-") + "</td></tr>";
+        h += "<tr><th>이 화면이 받은 행운권</th><td><b>" + nf(c.ppl) + "</b>명 · <b>" + nf(c.tks) + "</b>장 " + (c.same ? '<em class="ok">서버 집계 일치</em>' : '<em class="bad">서버 집계와 다름</em>') + "</td></tr>";
+        h += "<tr><th>체크인 통 기준 · 3 · 2 · 1등</th><td>" + (c.basis === "pre" ? "사전 신청자 <b>" + nf(c.inP) + "</b>명 · <b>" + nf(c.inT) + "</b>장<br>10F 사전 신청자 " + nf(c.pre) + "명 중 행운권 있는 분 · 10/26부터 실제 체크인" : "실제 체크인 <b>" + nf(c.inP) + "</b>명 · <b>" + nf(c.inT) + "</b>장") + "</td></tr>";
+        h += "<tr><th>당첨자 이름</th><td>실명 · 뽑힌 분만 서버에서 읽기</td></tr>";
+        h += "<tr><th>서버 기록</th><td>쓰지 않음 <em class=\"ok\">당첨 · 고정 · 상태 보고 없음</em></td></tr>";
+        LV.why = c.block;
+      }
+      set("lvSum", h);
+      go.disabled = LV.step !== "sum" || !!LV.why.length; go.textContent = "명부 데모 시작";
+      if (c && LV.why.length) set("lvErr", esc(LV.why.join(" · ")));
+      $("lvRe").style.display = LV.step === "sum" || LV.step === "err" ? "" : "none";
+      if (LV.step === "key") setTimeout(function () { try { $("lvKeyIn").focus(); } catch (e) {} }, 30);
+      return;
+    }
     if (LV.step === "sum") {
       c = liveSum();
       var ok = function (b) { return b ? '<em class="ok">일치</em>' : '<em class="bad">다름</em>'; };
-      h += "<tr><th>서버 시각</th><td>" + esc(c.now || "-") + (c.pre ? ' <em class="bad">행운권 발급 마감(17:00) 전 · 공 넣기는 17:00 뒤</em>' : c.now && c.now.slice(0, 10) === RAF_DAY ? ' <em class="ok">발급 마감 지남</em>' : "") + "</td></tr>";
+      h += "<tr><th>서버 시각</th><td>" + esc(c.now || "-") + (c.dayBad ? ' <em class="bad">' + esc(DAY_TXT) + "</em>" : c.pre ? ' <em class="bad">행운권 발급 마감(17:00) 전 · 공 넣기는 17:00 뒤</em>' : c.now && c.now.slice(0, 10) === RAF_DAY ? ' <em class="ok">발급 마감 지남</em>' : "") + "</td></tr>";
       h += "<tr><th>이 화면이 받은 행운권</th><td><b>" + nf(c.ppl) + "</b>명 · <b>" + nf(c.tks) + "</b>장</td></tr>";
       h += "<tr><th>서버 집계 · 콘솔 「추첨 대상」</th><td>" + nf(c.sp) + "명 · " + nf(c.st) + "장 " + ok(c.same) + "</td></tr>";
       h += "<tr><th>17F 체크인 행운권 · 3 · 2 · 1등</th><td>이 화면 <b>" + nf(c.inP) + "</b>명 · <b>" + nf(c.inT) + "</b>장" + (c.has2 ? "<br>서버 집계 ① " + nf(c.i2.p) + "명 · " + nf(c.i2.t) + "장 · ② " + nf(c.i3.p) + "명 · " + nf(c.i3.t) + "장 " + ok(c.inSame) : ' <em class="bad">서버 숫자 없음</em>') + "</td></tr>";
@@ -1919,7 +1962,7 @@
       LV.why = c.block;
     }
     set("lvSum", h);
-    var go = $("lvGo"); go.disabled = LV.step !== "sum" || !!LV.why.length;
+    go.disabled = LV.step !== "sum" || !!LV.why.length;
     go.textContent = c && c.wins ? "서버 기록 이어서 라이브 시작" : "라이브 시작";
     if (c && LV.why.length) set("lvErr", esc(LV.why.join(" · ")));
     $("lvRe").style.display = LV.step === "sum" || LV.step === "err" ? "" : "none";
@@ -1947,29 +1990,78 @@
     if (other.length) block.push("다른 라이브 화면이 " + other.length + "대 돌고 있습니다 · 그 노트북에서 리셋하거나 탭을 닫으면 " + LIVE_QUIET + "초 뒤 풀립니다 · 다시 불러오기");
     var now = srvNow();
     if (now.slice(0, 10) === RAF_DAY && !/^https:\/\/hi\./.test(SERVER_URL)) block.push("행사일에는 운영 서버만 · 주소에서 ?srv=qa 를 지우고 다시 열기");   /* 261017 D6 */
+    var dayBad = isProd() && now.slice(0, 10) !== RAF_DAY;   /* 261024 운영 라이브 잠금 · 서버 시각을 모르면(빈 값) 막는다 */
+    if (dayBad) block.unshift(DAY_TXT);
     /* 261021 D6 · R6 · 서버 고정 숫자(추첨_고정) = 이 화면이 센 두 통(당첨 · 부재 포함) · 다르면 경고만(잠그지 않는다 · 서버 통이 정본) */
     var lk = S0.lock || null, lkStr = lk ? [lk.n, lk.balls, lk.inN, lk.inBalls].join(".") : "", mine = [ppl, tks, inP, inT].join("."), warn = [];
     if (lk && lkStr !== mine) warn.push("서버 고정 숫자 " + lkStr + " · 이 화면 " + mine + " 다름");
     if (!lk && wins + abs > 0) warn.push("서버 고정 숫자 없음");
     if (wins + abs > 0 && +S0.closed !== 1) warn.push("서버 체크인 열림");
-    return { ppl: ppl, tks: tks, sp: sp, st: st, same: ppl === sp && tks === st, wins: wins, abs: abs, next: ri < rs.length ? rs[ri].name : "결과판", now: now, pre: before17(), block: block, other: other,
+    return { ppl: ppl, tks: tks, sp: sp, st: st, same: ppl === sp && tks === st, wins: wins, abs: abs, next: ri < rs.length ? rs[ri].name : "결과판", now: now, pre: before17(), block: block, other: other, dayBad: dayBad,
       inP: inP, inT: inT, i1: i1, i2: i2, i3: i3, has2: has2, inSame: inSame, closed: +S0.closed === 1, closedAt: S0.closedAt || S0.closeAt || "", lock: lk, lockStr: lkStr, mine: mine, warn: warn, att: S0.att || "" };
   }
   function liveSumOf(pool, stat) { var a = LV.pool, b = LV.stat; LV.pool = pool; LV.stat = stat; try { return liveSum(); } finally { LV.pool = a; LV.stat = b; } }
   function pickDemo() {
-    SFX.ensure(); LV.step = ""; NET.connect = false;
-    blankState("demo"); CFG.mode = "demo"; MODE_BAD = false;
+    SFX.ensure(); LV.step = ""; LV.kind = ""; NET.connect = false;
+    blankState("demo"); CFG.mode = "demo"; MODE_BAD = false; DM_BAD = false;
     ST.pool = demoPool(CFG.demoN, ST.seed, CFG.demoT); persist(); remoteBoot();
     MEsetIdle(); scene("idle"); ME.idleA = 1; modeUi(); uiPool(); startPaint();
   }
+  /* ── 261024 명부 데모 · 관리코드 → draw_dpool(읽기 · 행운권 명부 · 체크인 통 기준) → 확인표 → 「명부 데모 시작」 ──
+   *   관문 = NET.connect "demo"(확인표) · rDemo()(시작 뒤) · 둘 다 DEMO_READS 만 · 쓰기 0 · 고정 숫자 · 상태 보고 · 당첨 기록 없음
+   *   통 = 서버가 준 줄 그대로(가린 이름 · 번호 · in) · 서버 당첨 기록(x)은 보지 않는다(데모는 처음부터) · 당첨자 실명 = draw_who(라이브와 같은 길) */
+  function dOpen(auto) {
+    if ((SANDBOX && !FAKE) || !SERVER_URL) return;
+    SFX.ensure(); LV.kind = "demo"; LV.auto = !!auto; LV.err = ""; LV.why = []; LV.stat = LV.pool = LV.state = LV.dp = null;
+    LV.step = sessionKey() ? "load" : "key"; startPaint();
+    if (sessionKey()) dLoad();
+  }
+  function dLoad() {
+    LV.kind = "demo"; NET.connect = "demo"; LV.step = "load"; LV.err = ""; startPaint();
+    jsonp("draw_dpool", {}, function (r) {
+      if (LV.kind !== "demo" || LV.step !== "load") return;
+      if (!r || !r.ok) {
+        var why = r && (r.reason || r.err) || "응답 없음";
+        if (why === "auth") { try { sessionStorage.removeItem("axfDraw.key"); } catch (e) {} LV.step = "key"; LV.err = "관리코드가 맞지 않습니다"; }
+        else { LV.step = "err"; LV.err = why === "unknown action" ? "이 서버에는 명부 데모가 없습니다 · 가짜 데모로" : "명부 읽기 실패 · " + why; }
+        startPaint(); return;
+      }
+      LV.dp = r; setSrvT(r.t); LV.step = "sum"; startPaint();
+      if (LV.auto && !LV.why.length) dGo();
+    });
+  }
+  function dSum() {
+    var r = LV.dp || {}, ppl = 0, tks = 0, inP = 0, inT = 0, nm = r.num || null, block = [];
+    (r.rows || []).forEach(function (x) { var n = (x && x.no || []).length; if (n) { ppl++; tks += n; if (x.in === true) { inP++; inT += n; } } });
+    var same = ppl === +r.n && tks === +r.balls && inP === +r.inn && inT === +r.inb && (!nm || (ppl === +nm.n && tks === +nm.balls));
+    if (r.basis !== "pre" && r.basis !== "in") block.push("서버 판이 다릅니다 · 가짜 데모로");
+    if (!ppl) block.push("행운권이 0장입니다");
+    if (!same) block.push("받은 수와 서버 집계가 다릅니다 · 다시 불러오기");
+    return { ppl: ppl, tks: tks, inP: inP, inT: inT, same: same, basis: r.basis || "", pre: +r.pre || 0, now: srvNow(), block: block };
+  }
+  function dPool(r) {
+    var pool = { people: {}, order: [], kind: "dreal" };
+    (r.rows || []).forEach(function (x) { var nos = x && x.no || []; if (!x || !x.pk || !nos.length || pool.people[x.pk]) return; pool.people[x.pk] = { nm: x.nm || "", dp: x.dp || "", nos: nos.map(String), in: x.in === true, at: "" }; pool.order.push(x.pk); });
+    return pool;
+  }
+  function dGo() {
+    if (LV.kind !== "demo" || LV.step !== "sum" || LV.why.length || !LV.dp) return;
+    SFX.ensure();
+    var r = LV.dp, c = dSum();
+    LV.step = ""; LV.kind = ""; LV.dp = null; NET.connect = false; MODE_BAD = false; DM_BAD = false;
+    blankState("demo", "real"); CFG.mode = "demo";
+    ST.pool = dPool(r); ST.dBasis = c.basis; ST.dPre = c.pre; persist(); remoteBoot();
+    MEsetIdle(); scene("idle"); ME.idleA = 1; modeUi(); uiPool(); startPaint();
+    toast("명부 데모 · 행운권 " + nf(c.ppl) + "명 · " + nf(c.tks) + "장 · " + (c.basis === "pre" ? "체크인 통 = 사전 신청자 " : "체크인 통 = 실제 체크인 ") + nf(c.inP) + "명", true);
+  }
   function liveOpen(auto) {
     if ((SANDBOX && !FAKE) || !SERVER_URL) return;
-    SFX.ensure(); LV.auto = !!auto; LV.err = ""; LV.why = []; LV.stat = LV.pool = LV.state = null;
+    SFX.ensure(); LV.kind = "live"; LV.auto = !!auto; LV.err = ""; LV.why = []; LV.stat = LV.pool = LV.state = null;
     LV.step = sessionKey() ? "load" : "key"; startPaint();
     if (sessionKey()) liveLoad();
   }
   function liveLoad() {
-    NET.connect = true; LV.step = "load"; LV.err = ""; startPaint();
+    LV.kind = "live"; NET.connect = true; LV.step = "load"; LV.err = ""; startPaint();
     var fail = function (res, what) {
       var r = res && (res.reason || res.err) || "응답 없음";
       if (r === "auth") { try { sessionStorage.removeItem("axfDraw.key"); } catch (e) {} LV.step = "key"; LV.err = "관리코드가 맞지 않습니다"; }
@@ -2010,9 +2102,11 @@
   }
   function liveGo() {
     if (LV.step !== "sum" || LV.why.length) return;
+    if (LV.kind === "demo") return;
+    if (isProd() && srvNow().slice(0, 10) !== RAF_DAY) return;   /* 261024 운영 라이브 잠금(확인표가 이미 막는다 · 한 번 더) */
     SFX.ensure();
     var pool = LV.pool, state = LV.state, stat = LV.stat;
-    LV.step = ""; NET.connect = false; MODE_BAD = false;
+    LV.step = ""; LV.kind = ""; NET.connect = false; MODE_BAD = false; DM_BAD = false;
     blankState("live"); CFG.mode = "server";
     poolApply(pool); SRV.hasPool = true; SRV.stat = stat.pool || null; SRV.att = stat.att; SRV.stateChecked = true; SRV.status = "draw_pool 연결";
     var list = stateApply(state.rows);
@@ -2035,13 +2129,13 @@
   function modeUi() {
     var b = document.body, d = SC !== "start" && (ST.mode === "demo" || !!FAKE), l = SC !== "start" && isLive() && !FAKE;   /* 261021 가짜 서버 시험도 띠를 단다 */
     b.classList.toggle("m-demo", d); b.classList.toggle("m-live", l); b.classList.toggle("demo", d);
-    set("modeBand", FAKE ? "시험 페이지 · 가짜 서버 · 가짜 이름 · 네트워크 없음" : SANDBOX ? "DEMO · 시험 페이지 · 가짜 이름 · 서버 기록 없음" : "DEMO · 가짜 이름 · 서버 기록 없음");
+    set("modeBand", FAKE ? "시험 페이지 · 가짜 서버 · 가짜 이름 · 네트워크 없음" : SANDBOX ? "DEMO · 시험 페이지 · 가짜 이름 · 서버 기록 없음" : rDemo() ? "DEMO · 실제 명부 · 서버 기록 없음" : "DEMO · 가짜 이름 · 서버 기록 없음");
     opPaint();
   }
   function opPaint() {
     if (!$("opMode")) return;
     var l = isLive(), lk = ST.lock;
-    set("opMode", l ? '<b class="lv">LIVE</b> ' + esc(srvName()) : '<b class="dm">DEMO</b> 가짜 이름 · 서버 기록 없음');
+    set("opMode", l ? '<b class="lv">LIVE</b> ' + esc(srvName()) : rDemo() ? '<b class="dm">DEMO</b> 실제 명부 · ' + esc(srvName()) + " · 서버 기록 없음" + (ST.dBasis === "pre" ? " · 체크인 통 = 사전 신청자" : ST.dBasis === "in" ? " · 체크인 통 = 실제 체크인" : "") : '<b class="dm">DEMO</b> 가짜 이름 · 서버 기록 없음');
     var info = [], warn = [];
     if (lk) info.push("고정 " + nf(lk.ppl) + "명 · " + nf(lk.tks) + "장" + (lk.inPpl != null ? " · 체크인 " + nf(lk.inPpl) + "명 · " + nf(lk.inTks) + "장" : "") + (lk.at ? " · " + lk.at : ""));
     if (l && SC === "checkin" && SRV.closeStatus) info.push(SRV.closeStatus);
@@ -2053,9 +2147,9 @@
     else if (fbShow()) warn.push("체크인 통 소진");
     info.push(SFX.on ? "소리 켬" : "소리 끔");
     set("opInfo", (warn.length ? '<span class="warn">' + esc(warn.join(" · ")) + "</span> · " : "") + esc(info.join(" · ")));
-    var fb = $("opFb"); if (fb) { var on = fbShow(); fb.hidden = !on; fb.textContent = ARM.k === "fb" ? "한 번 더 · 전체 통에서 이어 뽑기" : "전체 통에서 이어 뽑기"; fb.classList.toggle("arm", ARM.k === "fb"); }
-    $("opRestart").textContent = ARM.k === "restart" ? "한 번 더 · 다시 시작" : "다시 시작";
-    $("opReset").textContent = ARM.k === "reset" ? "한 번 더 · 리셋" : "리셋";
+    var fb = $("opFb"); if (fb) { var on = fbShow(); fb.hidden = !on; fb.textContent = ARM.k === "fb" ? "전체 통에서 이어 뽑으려면 한 번 더 눌러 주세요" : "전체 통에서 이어 뽑기"; fb.classList.toggle("arm", ARM.k === "fb"); }
+    $("opRestart").textContent = ARM.k === "restart" ? "다시 시작하려면 한 번 더 눌러 주세요" : "다시 시작";
+    $("opReset").textContent = ARM.k === "reset" ? "리셋하려면 한 번 더 눌러 주세요" : "리셋";
   }
   /* 261021 체크인 통 소진(R9 · 사용자 「단순하게」) · 3 · 2 · 1등 부저 화면에서 체크인 통 0 · 전체 통은 남음 → 운영 줄 단추 하나(두 번 누름)
    *   누르면 ST.fb(한 번 켜지면 남은 등수도 전체 통 · sticky) · 기록 fb 1 · 그 밖의 자동 규칙 없음 */
@@ -2089,7 +2183,7 @@
     var on = redoShow(); el.classList.toggle("on", on);
     if (!on) return;
     var n = ST.redo && ST.redo[ST.round] || 0;
-    set("redoBtn", ARM.k === "redo" ? "<b>한 번 더 누르면 다시 추첨</b>" : "<b>다시 추첨</b><em>" + esc(curRound().name) + " 현장에 없을 때" + (n ? " · " + n + "회째" : "") + "</em>");
+    set("redoBtn", ARM.k === "redo" ? "<b>다시 추첨하려면 한 번 더 눌러 주세요</b>" : "<b>다시 추첨</b><em>" + esc(curRound().name) + " 현장에 없을 때" + (n ? " · " + n + "회째" : "") + "</em>");
     el.classList.toggle("arm", ARM.k === "redo");
   }
   function redoClick() { mouseSeen(); if (!redoShow()) return; if (armed("redo")) act("redraw"); }
@@ -2129,7 +2223,7 @@
     var b = backTarget(), on = !!b;
     el.classList.toggle("on", on);
     if (!on) { if (ARM.k === "back") ARM.k = ""; el.classList.remove("arm"); return; }
-    set("backBtn", ARM.k === "back" ? "<b>한 번 더 누르면 " + esc(b.n) + " 화면으로</b>" : "<b>되돌리기</b><em>" + esc(b.n) + " 화면으로</em>");
+    set("backBtn", ARM.k === "back" ? "<b>" + esc(b.n) + " 화면으로 되돌리려면 한 번 더 눌러 주세요</b>" : "<b>되돌리기</b><em>" + esc(b.n) + " 화면으로</em>");
     el.classList.toggle("arm", ARM.k === "back");
   }
   function backClick() {
@@ -2142,14 +2236,15 @@
   function mouseSeen() { document.body.classList.add("mouse"); clearTimeout(MOUSE.tm); MOUSE.tm = setTimeout(function () { document.body.classList.remove("mouse"); }, 4000); }
   function startBind() {
     $("btnDemo").addEventListener("click", pickDemo);
+    $("btnDemoR").addEventListener("click", function () { dOpen(false); });   /* 261024 명부 데모 */
     $("btnLive").addEventListener("click", function () { liveOpen(false); });
-    $("lvBack").addEventListener("click", function () { LV.step = ""; NET.connect = false; LV.err = ""; startPaint(); });
-    $("lvRe").addEventListener("click", function () { liveLoad(); });
-    $("lvGo").addEventListener("click", liveGo);
+    $("lvBack").addEventListener("click", function () { LV.step = ""; LV.kind = ""; LV.dp = null; NET.connect = false; LV.err = ""; startPaint(); });
+    $("lvRe").addEventListener("click", function () { if (LV.kind === "demo") dLoad(); else liveLoad(); });
+    $("lvGo").addEventListener("click", function () { if (LV.kind === "demo") dGo(); else liveGo(); });
     $("lvKey").addEventListener("submit", function (e) {
       e.preventDefault(); var v = ($("lvKeyIn").value || "").trim(); if (!v) return;
       try { sessionStorage.setItem("axfDraw.key", v); } catch (x) {}
-      $("lvKeyIn").value = ""; liveLoad();
+      $("lvKeyIn").value = ""; if (LV.kind === "demo") dLoad(); else liveLoad();
     });
     $("opRestart").addEventListener("click", function () { opClick("restart"); });
     $("opReset").addEventListener("click", function () { opClick("reset"); });
@@ -2409,6 +2504,7 @@
     if (SC === "start") {
       scene("start");
       if (ST.mode === "live" && !MODE_BAD && !sessionKey()) liveOpen(false);   /* 라이브 중 새 탭 · 관리코드를 다시 넣으면 서버 기록으로 이어서 */
+      else if (rDemo() && !DM_BAD) dOpen(!!sessionKey() && !ST.pool);   /* 261024 명부 데모 중 새 탭(관리코드 다시) · 다시 시작 도중 새로 고침(명부 다시 읽기) */
       startPaint();
     } else if (SC === "restore") {
       rebuildBalls();
@@ -2429,7 +2525,7 @@
       var wasDrawing = s === "tension" || s === "spin" || ST.drawing; ST.drawing = 0;
       toast("이어서 진행합니다 · 당첨 " + ST.results.filter(function (r) { return r.st === "win"; }).length + "건" + (wasDrawing && SC === "mix" ? " · 감속 중이던 추첨은 결과 없이 다시 뽑습니다" : ""), true);
     } else { scene("idle"); ME.idleA = 1; }
-    if (SC !== "start" && ST.mode === "demo" && (!ST.pool || ST.pool.kind !== "demo")) { ST.pool = demoPool(CFG.demoN, ST.seed, CFG.demoT); uiPool(); }
+    if (SC !== "start" && ST.mode === "demo" && !rDemo() && (!ST.pool || ST.pool.kind !== "demo")) { ST.pool = demoPool(CFG.demoN, ST.seed, CFG.demoT); uiPool(); }
     if (SC !== "start" && isLive() && ST.pool == null) serverLoad(function () { pushCtl(); });
     else if (SC !== "start" && isLive() && !ST.closed) { SRV.hasPool = true; serverLoad(function () { uiPool(); pushCtl(); }); }   /* 261017 D3 · 새로 고침 복원 = 서버에서 다시 읽기(그사이 는 행운권 · 서버 시각) · 30초 폴링도 다시 돈다 */
     if (SC !== "start" && isLive() && ST.pool && !SRV.stateChecked) { SRV.stateChecked = true; serverState(); }
@@ -2445,9 +2541,9 @@
       sid: function () { return SID; },
       pick: PICK,   /* 261021 R3 · 추첨 계산 함수 객체 그대로(시험 페이지 · 계산 보기 · 확률 실험실이 흉내 내지 않고 부른다) */
       ck: function () { var rp = ST.pool ? roundPool() : { tk: [], why: "", useIn: false }; return { ph: CK.ph, n: CK.n, mm: CK.mm, match: CK.match, close: SRV.closeStatus || "", lockSt: SRV.lockStatus || "", lock: ST.lock || null, lockSaved: ST.lockSaved || "", fb: ST.fb || null, fbShow: fbShow(), why: rp.why, useIn: rp.useIn, tickets: rp.tk.length, warnIn: SRV.warnIn || 0, redo: PCHK.redo, card: $("kSub") ? $("kSub").textContent : "" }; },
-      net: function () { return { calls: NET.calls, blocked: NET.blocked, live: isLive(), mode: ST.mode || "", srv: SERVER_URL, queue: SRV.queue.length, sandbox: SANDBOX, ctl: CONSOLE_CTL, fake: NET.fake, isFake: !!FAKE }; },   /* 261016 시험 · 서버 호출 수 */
-      ui: { demo: pickDemo, live: liveOpen, go: liveGo, redo: redoClick, op: opClick, back: backClick, backTo: function () { var b = backTarget(); return b ? b.n : ""; }, reload: liveLoad,
-        kb: function () { return { cls: KB.cls, txt: KB.txt, ok: KB.okN, no: KB.noN, arm: KB.armN }; }, lv: function () { return { step: LV.step, err: LV.err, why: LV.why.slice(), sum: LV.step === "sum" ? liveSum() : null }; } },
+      net: function () { return { calls: NET.calls, blocked: NET.blocked, live: isLive(), mode: ST.mode || "", dk: ST.dk || "", srv: SERVER_URL, queue: SRV.queue.length, sandbox: SANDBOX, ctl: CONSOLE_CTL, fake: NET.fake, isFake: !!FAKE, sent: JSON.parse(JSON.stringify(NET.sent)), lsDemo: LS_DM, lsLive: LS_ST }; },   /* 261016 시험 · 서버 호출 수 · 261024 관문을 지난 액션별 수 */
+      ui: { demo: pickDemo, dreal: dOpen, dgo: dGo, dload: dLoad, live: liveOpen, go: liveGo, redo: redoClick, op: opClick, back: backClick, backTo: function () { var b = backTarget(); return b ? b.n : ""; }, reload: liveLoad,
+        kb: function () { return { cls: KB.cls, txt: KB.txt, ok: KB.okN, no: KB.noN, arm: KB.armN }; }, lv: function () { return { step: LV.step, kind: LV.kind || "", err: LV.err, why: LV.why.slice(), sum: LV.step === "sum" ? (LV.kind === "demo" ? dSum() : liveSum()) : null }; } },
       perf: function (reset) { var o = { tier: QL.tier, qlog: QL.log.slice(), fps: Math.round(FPS.v), long: PERF.long, worstMs: Math.round(PERF.worst * 1000), px: vw + "x" + vh, sc: {} };
         for (var k in PERF.sc) { var p = PERF.sc[k]; o.sc[k] = { avg: +(p.n / Math.max(1e-6, p.t)).toFixed(1), min1s: p.min1 === 999 ? null : +p.min1.toFixed(1), worstMs: Math.round(p.worst * 1000), sec: +p.t.toFixed(1) }; }
         if (reset) { PERF.sc = {}; PERF.long = 0; PERF.worst = 0; } return o; },
