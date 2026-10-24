@@ -194,6 +194,7 @@ var App = {
       if (this.PARENT[v] === prev) delete this.from[v]; else this.from[v] = prev;
     }
     if (v === "guide" && this.current !== "guide" && !detIs(this.current) && typeof VFOLD !== "undefined") { VFOLD.open = false; if (typeof PFOLD !== "undefined") PFOLD.open = false; }   /* v7.67 1F 칸 영상 묶음 = 다른 화면에서 오면 닫힘(시트를 닫고 돌아오면 그대로) */
+    if (v === "home" && this.current !== "home" && !detIs(this.current) && typeof VFOLD !== "undefined") VFOLD.open = false;   /* v8.69 홈 영상 칸 = 다른 화면에서 오면 접힘 */
     this.current = v;
     if (typeof fgTick === "function") fgTick(false);   /* v7.61 A1 화면 그룹이 바뀌면 지난 구간을 닫는다 */
     detHist(v, isBack, dPrev);   /* v5.69 시트에서 시트로 = 앞 내용을 기억(뒤로 = 앞 내용) */
