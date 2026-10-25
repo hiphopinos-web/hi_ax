@@ -122,21 +122,21 @@
     return r;
   }
   function seatNew(n, m) {
-    return { n: n, g: m.g, nick: clip(m.nick || "도전자", 16), test: m.test ? 1 : 0, tn: tryNo(m), best0: Number(m.best0) || 0, rank0: m.rank0 == null ? null : Number(m.rank0), total: Number(m.total) || 0,
+    return { n: n, g: m.g, nick: clip(m.nick || "도전자", 16), test: m.test || m.prac ? 1 : 0, prac: m.prac ? 1 : 0, tn: tryNo(m), best0: Number(m.best0) || 0, rank0: m.rank0 == null ? null : Number(m.rank0), total: Number(m.total) || 0,
       fr: [], q: -1, recv: now(), start: now(), cur: null, wm: {}, rg: mkRG(), scD: 0, cloudNo: 0, bns: null, over: 0, end: null, endAt: 0, lives0: 0, rkPrev: 0, lat: [], hub: [] };
   }
   function tryNo(m) {   /* 261017 n번째 도전(tn · tm 최대 기회 · 261021 tn 1~99 · tm 0 = 상한 없음) · 옛 앱은 칸이 없다 = 0(「1P」만) */
     var t = Number(m && m.tn), x = Number(m && m.tm);
     return t >= 1 && t <= 99 && t === Math.floor(t) && (!(x >= 1) || t <= x) ? t : 0;
   }
-  function seatOk(n, test) { return (n === 1 || n === 2 || n === 3) && (!ONLY || ONLY === n) && (!test || TEST) && (!LED || LEDS.indexOf(n) >= 0); }
+  function seatOk(n, test, prac) { return (n === 1 || n === 2 || n === 3) && (!ONLY || ONLY === n) && (LED ? LEDS.indexOf(n) >= 0 : (!test || TEST) && !prac); }   /* 261025 (사용자 결정) LED(seats=) = 테스트 사번 · 연습판 명단 판도 &test=1 없이 중계 · 세로 · 기본 TV = 지금처럼(테스트는 &test=1 · 연습판은 안 보임) */
   function done(g) { if (DONE[g]) return; DONE[g] = 1; DONE_Q.push(g); if (DONE_Q.length > 64) delete DONE[DONE_Q.shift()]; }
   var G8 = /^[0-9a-f]{8}$/;
 
   function onSeats(m) {
     var seen = {};
     (m.seats || []).forEach(function (s) {
-      var n = Number(s.seat); if (!seatOk(n, s.test) || !G8.test(s.g || "") || DONE[s.g]) return;
+      var n = Number(s.seat); if (!seatOk(n, s.test, s.prac) || !G8.test(s.g || "") || DONE[s.g]) return;
       seen[n] = 1;
       var S = SEATS[n]; if (S && S.g === s.g) { S.recv = now(); return; }
       SEATS[n] = seatNew(n, s);
@@ -144,7 +144,7 @@
     NS.forEach(function (n) { var S = SEATS[n]; if (S && !S.end && !seen[n]) SEATS[n] = null; });   /* 끊긴 동안 끝난 판 · 결과 보이는 중이면 둔다 */
   }
   function onStart(m) {
-    var n = Number(m.seat); if (!seatOk(n, m.test) || !G8.test(m.g || "") || DONE[m.g]) return;
+    var n = Number(m.seat); if (!seatOk(n, m.test, m.prac) || !G8.test(m.g || "") || DONE[m.g]) return;
     var S = SEATS[n]; if (S && S.g === m.g) return;
     SEATS[n] = seatNew(n, m);
     try { var D = DUEL[n]; if (D && !D.used && now() - D.at < 15000) { D.used = 1; SEATS[n].duel = D; } else if (D) delete DUEL[n]; } catch (e) {}   /* v8.87 대결 시작 신호 뒤 15초 안에 시작한 판 = 그 대결 판 */
@@ -161,13 +161,14 @@
   }
   function onLive(m) {
     (m.f || []).forEach(function (it) {
-      var n = Number(it.seat); if (!seatOk(n, it.test) || !G8.test(it.g || "") || DONE[it.g]) return;
+      var n = Number(it.seat); if (!seatOk(n, it.test, it.prac) || !G8.test(it.g || "") || DONE[it.g]) return;
       var S = SEATS[n];
       if (!S || S.g !== it.g) { S = SEATS[n] = seatNew(n, it); }   /* 모르는 판 · 시작을 놓쳤어도 진행으로 연다 */
       var q = Number(it.q); if (!(q > S.q)) return;
       S.q = q; S.recv = now();
       if (it.nick) S.nick = clip(it.nick, 16);
       if (tryNo(it)) S.tn = tryNo(it);
+      if (it.prac && !S.prac) { S.prac = 1; S.test = 1; }   /* 261025 시작을 놓친 연습판 = 진행(Hub prac)으로 「연습」 */
       it._rx = performance.now(); it._ev = !!it.ev || evLike(it, S.fr.length ? S.fr[S.fr.length - 1] : null);
       S.fr.push(it); if (S.fr.length > 16) S.fr.shift();
       if (it.x === "over" && !S.over) S.over = now();
@@ -185,7 +186,7 @@
     if (G8.test(m.g || "")) done(m.g);
     var n = Number(m.seat), S = SEATS[n]; if (!S || S.g !== m.g || S.end) return;
     S.end = m; S.endAt = now(); ANY_END = true;
-    if (!m.test) topMerge(S.nick, Number(m.best) || Number(m.score) || 0);
+    if (!m.test && !m.prac && !S.test) topMerge(S.nick, Number(m.best) || Number(m.score) || 0);   /* 261025 테스트 · 연습판은 화면 TOP 10 에도 넣지 않는다 */
   }
   function onStop(m) {
     if (G8.test(m.g || "")) done(m.g);
@@ -410,14 +411,14 @@
       if (u.p1) { var f = u.P.nick[4]; u.nick.style.fontSize = f + "px"; while (f > 40 && u.nick.scrollWidth > u.nick.clientWidth + 1) { f -= 6; u.nick.style.fontSize = f + "px"; } }   /* 세로 1자리 · 긴 닉네임은 글자를 줄여 한 줄에 */
     });
     if (u.try) set(u, "tn", S.tn || 0, function (v) { u.try.textContent = v ? v + "번째 도전" : ""; });
-    if (!u.p1) set(u, "test", S.test, function (v) { u.tag.textContent = u.n + "번 자리" + (v ? " · 리허설" : ""); nickFit(u); });
+    if (!u.p1) set(u, "test", S.test, function (v) { u.tag.textContent = u.n + "번 자리" + (v ? (S.prac ? " · 연습" : " · 리허설") : ""); nickFit(u); });
     var sc = F ? Number(F.sc) || 0 : 0;
     S.scD = sc < S.scD ? sc : S.scD + (sc - S.scD) * Math.min(1, dt * 7); if (sc - S.scD < 1) S.scD = sc;
     set(u, "sc", Math.round(S.scD), function (v) { u.sc.textContent = fmt(v); if (u.P.led) ledFit(u, "scW", u.sc, u.P.sc[2], fmt(v).length); });
     var lr = liveRank(S, sc), rt = "", rk = 0;
     if (S.end) rt = "";
     else if (F && F.x === "over") rt = "<span>결과 집계 중</span>";
-    else if (lr && sc > 0) {   /* 261017 0점이면 순위를 띄우지 않는다 */
+    else if (lr && sc > 0 && !S.prac && !(LED && S.test)) {   /* 261017 0점이면 순위를 띄우지 않는다 · 261025 연습판 · LED 의 테스트 판 = 지금 N위 없음 */
       rk = lr.r;
       if (rk <= 10) rt = "지금 <b>" + rk + "위</b>";
       else rt = "<span>TOP 10까지 " + fmt(lr.l[9].score - sc + 1) + "점</span>";
@@ -430,15 +431,15 @@
     }
     var lv = F ? Number(F.lv) : 5, hit = r.heartHit > 0 ? 1 : 0;
     set(u, "lv", lv + "|" + hit, function () { Array.prototype.forEach.call(u.life.children, function (h, i) { h.className = i < lv ? "on" : i === lv && hit ? "hit" : ""; h.style.display = i < Math.max(5, S.lives0) ? "" : "none"; }); });
-    set(u, "stg", F ? (u.p1 && S.test ? "리허설 · " : "") + "단계 " + (Number(F.st) || 1) : "", function (v) { u.stg.textContent = v; });
-    if (u.race) set(u, "race", raceHtml(S, lr, sc), function (v) { u.race.innerHTML = v; });
+    set(u, "stg", F ? (u.p1 && S.test ? (S.prac ? "연습 · " : "리허설 · ") : "") + "단계 " + (Number(F.st) || 1) : "", function (v) { u.stg.textContent = v; });
+    if (u.race) set(u, "race", S.prac || (LED && S.test) ? "" : raceHtml(S, lr, sc), function (v) { u.race.innerHTML = v; });
     var typing = F && !F.bn && !F.x && !(F.cd > 0) ? clip(F.inp, 24) : "";
     set(u, "inp", typing, function (v) { u.inp.textContent = v; });
     set(u, "inOn", F && !F.bn && !F.x ? 1 : 0, function (v) { u.bd.classList.toggle("noin", !v); });
     set(u, "pz", F && F.pz ? 1 : 0, function (v) { u.pz.classList.toggle("on", !!v); });
     set(u, "res", S.end ? (S.end.id || S.end.g) + (S.duel && S.duel.w != null ? "|d" + S.duel.w : "") : "", function (v) {
       u.res.classList.toggle("on", !!v); if (!v) return;
-      var m = S.end, t = resText(m);
+      var m = S.end, t = resText(m, S);
       if (S.duel && S.duel.w != null) { var dt = "대결 " + (S.duel.w ? S.duel.w + "P 승" : "무승부"); t[2] = t[2] ? t[2] + " · " + dt : dt; }   /* v8.87 같은 단어 대결 · 작은 줄 끝에 승패 */
       u.res.querySelector("b").textContent = t[0]; u.res.querySelector("em").textContent = t[1]; u.res.querySelector("small").textContent = t[2];
       u.res.classList.toggle("hi", !!t[3]);
@@ -453,9 +454,10 @@
     else rows = [{ no: r - 1, name: l[r - 2].name, score: l[r - 2].score }, me, l[r - 1] && { no: r + 1, name: l[r - 1].name, score: l[r - 1].score }];
     return rows.filter(Boolean).map(function (x) { return '<p class="' + (x.me ? "me" : "") + '"><i>' + (x.no ? x.no + "위" : "") + "</i><b>" + esc(x.name) + "</b><em>" + fmt(x.score) + "</em></p>"; }).join("");
   }
-  function resText(m) {   /* [큰 줄, 둘째 줄, 작은 줄, 강조] */
+  function resText(m, S) {   /* [큰 줄, 둘째 줄, 작은 줄, 강조] */
     var sc = fmt(m.score) + "점", rank = m.rank == null ? 0 : Number(m.rank), prev = m.prevRank == null ? 0 : Number(m.prevRank);
-    if (m.test) return ["리허설 판", sc, "순위에 넣지 않음", 0];
+    if (m.prac || (S && S.prac)) return ["연습 판", sc, "순위에 넣지 않음", 0];   /* 261025 연습판 명단 */
+    if (m.test || (S && S.test)) return ["리허설 판", sc, "순위에 넣지 않음", 0];
     if (m.pb && rank && rank <= 10 && (!prev || rank < prev)) return [rank + "위 진입!", sc, "최고 기록", 1];
     if (m.pb && rank && rank <= 10) return [rank + "위", sc, "최고 기록", 1];
     var best = Number(m.best) || 0;   /* 261017 10위 밖 = 점수를 크게 · 순위 숫자는 10위 안만 */

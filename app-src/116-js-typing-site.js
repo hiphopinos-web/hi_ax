@@ -1235,7 +1235,7 @@ function tsfGo(dz) {
   TSF.ph = "play"; TSF.res = null; TSF.sub = null; TSF.send = ""; TSF.ticket = ""; tsfDbg("ph", "play"); tsfLinkDrop(); tsfScanShow(false);
   var lv = tvlNew();   /* 261017 실시간 송출 · 이 판 번호표(응답이 늦게 와도 다른 판에 붙지 않게) · seat 없으면 null(보내지 않는다) */
   admCall({ action: "type_self_start", key: tsfKey(), tok: tsfTok(), emp: TSF.emp, dev: tsfDev(), seat: lv.seat || null }, function (r) {
-    if (r && r.ok) { TSF.ticket = r.ticket || ""; if (r.tn > 0) TVL.tn = r.tn; tvlBegin(lv, r.prac ? "" : r.live); return; }   /* 261023 연습판 = TV 송출 없음(서버도 live 를 주지 않는다) */   /* 261017 새 서버 = 이번 판 몇 번째 도전(tn) · 261021 최대 기회 tm 없음(0) */
+    if (r && r.ok) { TSF.ticket = r.ticket || ""; if (r.tn > 0) TVL.tn = r.tn; tvlBegin(lv, r.live); return; }   /* 261025 (사용자 결정) 연습판도 서버가 live 를 주면 송출(LED 화면 「연습」 · 순위 · TOP 10 에는 넣지 않음) · 옛 서버는 연습판에 live 를 주지 않는다 */   /* 261017 새 서버 = 이번 판 몇 번째 도전(tn) · 261021 최대 기회 tm 없음(0) */
     if (r && ["limit", "unknown", "window", "auth", "param", "locked", "dup"].indexOf(r.reason) >= 0) {
       if (RG.on && RG.mode === "site") rgStop();
       if (r.reason === "limit") tsfErr(tsfLimitMsg()); else tsfErr(TSF_WHY[r.reason] || "시작하지 못했어요");   /* 261021 limit = 옛 서버뿐 */
