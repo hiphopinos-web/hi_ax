@@ -8662,7 +8662,7 @@ function a2cLater() {
 }
 /* ═══ v7.57 (사용자 확정 261016 · 261017 H3 · 기획 문서/홈 재설계_레드팀_261016.md 2절 · 4절 O5) 홈 할 일 카드 = 홈 맨 위 · 있을 때만 · 최대 2장 ═══
    순서 = 포토부스 호출 › 참가자 설문 · 선착순 참여상(15:00부터 설문이 위 · 그 전엔 참여상이 위) › 옷 사이즈 카드 › 추첨 체크인(행운권 참석 조건 ON 일 때만)
-   2장이 넘으면 선착순 참여상부터 뺀다(H3) · 그다음은 뒤쪽부터 · 설문 카드 = 행사 당일 설문 열림(14:30) 뒤 · 안 낸 사람
+   2장이 넘으면 뒤쪽부터 뺀다 · v8.88 (261025) 선착순 참여상 카드 = 스탬프 카드가 그린다 · 설문 카드 = 행사 당일 설문 열림(14:30) 뒤 · 안 낸 사람
    옛 「나의 일정」 섹션(myScheduleHtml · 지금 · 다음 · 내 일정 카드 · 커피챗 신청 줄)은 홈에서 부르지 않는다(나의 참여 › 나의 일정) */
 var HOME_ACT_MAX = 2;
 function homeActRow(r) { return '<div class="axs-rows">' + rcHtml({ cls: " my", onclick: r[1], link: true, left: tokBadge(esc(r[2]), r[5]), title: esc(r[3]), sub: esc(r[4]), place: r[6] }) + "</div>"; }
@@ -8670,11 +8670,9 @@ function homeActList() {
   var L = [], hm = hmNow(), live = evPhase() === "live";
   myItems(false).forEach(function (x) { if (x.call) L.push(["call", homeActRow([x.min, x.go, x.badge, x.title, x.sub, !x.photo && isBlack("call") ? "act" : "mine", x.place])]); });   /* 포토부스 호출(서버 my.queue call) */
   var sv = live && !surveyDone() && !surveyLock() && hm >= t2m(SURVEY.open) ? ["sv", homeActRow([-1, "App.go('survey')", "설문", "참가자 설문", "약 2분 · 스탬프 1개", "mine"])] : null;
-  var fg = fcfsGotRow(), fc = fg ? ["fcfs", homeActRow(fg)] : null;
-  (hm >= t2m("15:00") ? [sv, fc] : [fc, sv]).forEach(function (x) { if (x) L.push(x); });   /* H3 15:00 경계 */
+  if (sv) L.push(sv);   /* v8.88 (사용자 261025 「메인 화면도 이런 구성으로」) 선착순 참여상 할 일 카드(fcfsGotRow · 번호 · 장소)는 홈에서 걷었다 · 같은 번호 · 장소 · 시각을 스탬프 카드 안(선착순 N번 알약 + 다음 보상 한 줄)이 그린다 · fcfsGotRow 는 나의 일정이 쓴다 */
   var kt = kitCardHtml(); if (kt) L.push(["kit", kt]);
   var dc = drawCardHtml(); if (dc) L.push(["draw", dc]);
-  if (L.length > HOME_ACT_MAX) L = L.filter(function (x) { return x[0] !== "fcfs"; });   /* H3 2장이 넘으면 참여상부터 */
   return L.slice(0, HOME_ACT_MAX);
 }
 function homeActHtml() { return homeActList().map(function (x) { return x[1]; }).join(""); }
