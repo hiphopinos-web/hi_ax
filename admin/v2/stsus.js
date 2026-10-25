@@ -3,7 +3,7 @@
  * 읽기 = stair_stats(관리코드 · 이미 이 화면이 부른다 · qss) 의 sus[] · 오늘 · 테스트 사번 제외 · 새것 먼저 100건
  *   fast = 너무 빠른 종료(서버가 적립하지 않음) / slow1 = 정상 종료 · 한 층 10초 미만(설정 바꾸기 전 기록 포함) / many = 1분 안 종료 여러 번 / same = 같은 지점 ±2초 여러 사람 종료
  * 취소 · 수정 단추 없음(사람이 보고 판단 · 스탬프 취소는 사람 › 스탬프에서) · 옛 서버(sus 없음)면 한 줄 안내 */
-var STS_WHY={ fast:["너무 빠름 · 미적립","warn"], slow1:["한 층 10초 미만","off"], many:["1분 안 여러 번","off"], same:["같은 지점 동시(±2초)","off"] };
+var STS_WHY={ fast:["너무 빠름 · 미적립","warn"], slow1:["한 층 10초 미만","off"], many:["1분 안 여러 번","off"], same:["같은 지점 동시(±2초)","off"], self:["자기 신고","off"] };   /* 261026 self = 보정에서 고른 종료 층(읽기만) */
 (function(){
   if(typeof qrPaint!=="function"||qrPaint.__sts) return;
   var p0=qrPaint;
@@ -21,7 +21,7 @@ function stsCard(){
   return h+'<div style="overflow-x:auto;max-height:520px;overflow-y:auto"><table class="tb"><thead><tr><th>시각</th><th>이름</th><th>소속</th><th>출발 → 도착</th><th class="n">걸린 초</th><th>사유</th></tr></thead><tbody>'+
     l.map(function(x){
       var why=(x.why||[]).map(function(w){ var d=STS_WHY[w]||[w,"off"]; return tag(d[0],d[1]); }).join(" ");
-      return '<tr><td>'+esc(stsHm(x.ts))+'</td><td>'+esc(x.name||x.emp||"")+'</td><td>'+esc(x.dept||"")+'</td><td>'+esc(x.from)+'F → '+esc(x.to)+'F · '+n0(x.floors)+'개 층</td><td class="n">'+(x.sec==null?"-":n0(x.sec))+'</td><td>'+why+'</td></tr>';
+      return '<tr><td>'+esc(stsHm(x.ts))+'</td><td>'+esc(x.name||x.emp||"")+'</td><td>'+esc(x.dept||"")+'</td><td>'+esc(x.from)+'F → '+(x.kind==="self"&&!x.to?"계단 안 씀":esc(x.to)+'F · '+n0(x.floors)+'개 층')+'</td><td class="n">'+(x.sec==null?"-":n0(x.sec))+'</td><td>'+why+'</td></tr>';
     }).join("")+'</tbody></table></div></div>';
 }
 function stsPaint(){
