@@ -246,7 +246,7 @@ function ckiNowPaint(){
     kpi({ l:"선착순 받음 / 수량", v:n0(fxGot), u:"/ "+n0(f.cap), s:"받기 전 자격 "+n0(fxDue)+"명 · "+(f.mode||"달성순") })+
     kpi({ l:"선착순 지급", v:ph[1], st:ph[0]==="ok"?"ok":ph[0]==="bad"?"bad":ph[0]==="warn"?"warn":"", s:ph[2] }):
     kpi({ l:"체크인 대상", v:n0(pre.length), u:"명", s:"10F 사전 신청자" })+
-    kpi({ l:"체크인", v:n0(nIn), u:"/ "+n0(pre.length), s:"안 온 사람 "+n0(pre.length-nIn)+"명" }));
+    kpi({ l:"체크인", v:n0(nIn), u:"/ "+n0(pre.length), s:"안 온 사람 "+n0(pre.length-nIn)+"명 · 스태프 체크인 "+n0(rows.filter(function(r){ return r.kind==="staff"&&!!r.ck; }).length)+"명(따로 셈)" }));   /* 261025 스태프 체크인은 대상 숫자에 넣지 않고 따로 */
 }
 
 /* ── 5. 명단 표(체크인 화면 = 사전신청자 명단 · 선착순 화면 = 선착순 명단 · 261022 칩 걷음 · 맨 위 큰 전환으로) ── */
