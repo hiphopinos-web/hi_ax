@@ -1466,14 +1466,13 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .rail .axs-rnx .l1 { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
   .rail .axs-rnx .num { color: var(--ax-color-brandText); font-weight: 700; }
   .rail .axs-rnx .l2 { margin: 2px 0 0; font: var(--ax-type-t7); color: var(--ax-color-muted); }
-  /* v8.89 (사용자 261025 시안 68.png) 선착순 참여상 카드 = 스탬프 카드 안 · 진행 줄 다음 · 행운권 번호 위 · 예전 홈 할 일 카드와 같은 모양(흰 면 · 옅은 그림자 · 둥근 모서리 20 · 주황 채움 칩 · 글 왼쪽 정렬) · 카드 안쪽 8px 까지 넓힘(레일 안쪽 여백 24 에서 -16) · 보조 줄 한 줄 · 모자라면 「 · 」 자리에서만 넘기고 둘째 줄은 「· 」로 시작 */
-  #view .rail .axs-fcr { margin: var(--ax-space-16) -16px 0; text-align: left; }
-  #view .rail .axs-fcr .rc.my { margin: 0; border: 0; border-radius: var(--ax-radius-20); background: var(--ax-color-surface); box-shadow: 0 1px 6px rgba(25, 31, 40, 0.10); --rc-px: var(--ax-space-12); --rc-h: 64px; --rc-ls: 60px; --rc-gap: 10px; }
-  #view .rail .axs-fcr .rc .bd { min-width: 0; text-align: left; }
+  /* v8.89 (사용자 261025) 선착순 참여상 카드 = 스탬프 카드 안 · 진행 줄 다음 · 행운권 번호 위 · 예전 홈 할 일 카드와 같은 글 · 칩(주황 채움) · › · 옅은 회색 면 · 폭 = 카드 안쪽 내용 폭(행운권 번호 줄과 같은 좌우 선) · 보조 줄은 폭이 모자라면 「 · 」 자리에서 넘긴다 */
+  #view .rail .axs-fcr { margin-top: var(--ax-space-16); }
+  #view .rail .axs-fcr .rc.my { margin: 0; border: 0; border-radius: var(--ax-radius-16); background: var(--ax-color-inset); box-shadow: none; --rc-px: var(--ax-space-12); --rc-h: 64px; --rc-ls: 56px; --rc-gap: 10px; }
+  #view .rail .axs-fcr .rc .bd { min-width: 0; }
   #view .rail .axs-fcr .rc .tt { font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
   #view .rail .axs-fcr .rc .sb { font: var(--ax-type-t7); color: var(--ax-color-muted); }
   #view .rail .axs-fcr .rc .rh .sb { white-space: normal; overflow: visible; text-overflow: clip; }
-  #view .rail .axs-fcr .axs-fcp { display: inline-block; max-width: 100%; }
   #view .rail .axs-fcr .rc .chev { color: var(--ax-color-muted); }
   #view .rail .axs-fcr .rc .chev.arw { width: 20px; margin-left: -4px; }
   #view .rail .axs-fcr .tok { border-radius: var(--ax-radius-12); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t6-strong); }
@@ -10248,10 +10247,8 @@ function fcfsGotRow() { var f = fcfsMy(), rk = f && f.st === "got" && f.rk > 0 ?
    글 · 칩 · › = 예전 홈 할 일 카드(fcfsGotRow)와 같다 · 누르면 fcfsGotOpen(true) 수령 안내 시트 · 수령 전(ready · got)만 · 받음 · 마감 · 자격 없음 = 줄 없음(받음 · 마감은 6번 칸 아래 알약이 말한다) · 홈은 스탬프 카드 칸 전체가 스탬프 탭으로 가는 단추라 stopPropagation(경품 보기 단추와 같게) */
 function fcfsPrizeCardHtml() {
   var g = fcfsGotRow(); if (!g) return "";
-  return '<div class="axs-fcr">' + rcHtml({ cls: " my", onclick: "event.stopPropagation(); " + g[1], link: true, left: tokBadge(esc(g[2]), g[5]), title: esc(g[3]), sub: fcfsSubHtml(g[4]) }) + "</div>";
+  return '<div class="axs-fcr">' + rcHtml({ cls: " my", onclick: "event.stopPropagation(); " + g[1], link: true, left: tokBadge(esc(g[2]), g[5]), title: esc(g[3]), sub: segHtml(esc(g[4])) }) + "</div>";
 }
-/* 보조 줄 = 한 줄 「37번 · 10:30부터 1F 주차장 체크인존」 · 폭이 모자랄 때만 「 · 」 자리에서 넘기고 둘째 줄은 「· 」로 시작(조각 안은 끊지 않는다 · 점 목록으로 쪼개지 않으려고 segHtml 대신 · 「1F 주차장 체크인존」은 한 덩어리) */
-function fcfsSubHtml(t) { return String(t).split(" · ").map(function (p, i) { return '<span class="axs-fcp">' + (i ? "·&nbsp;" : "") + esc(p).replace(/1F 주차장 체크인존/g, "1F&nbsp;주차장&nbsp;체크인존") + "</span>"; }).join(" "); }
 /* 261017 (사용자 확정 「럭키드로우에 대한 푸시 · 당첨자 안내 모두 걷어 내」) 럭키드로우 당첨 시트 · 본인 확인(draw_ack) · 홈 당첨 줄 · 현장 부재로 다시 추첨 표시 · 7등 당첨 안내 걷음 · 되살리기 = 루트 「정리 기록.md」 */
 /* 261014 선착순 참여상 요약 팝업도 경품 시트의 선착순 구역으로 바로(옛 받으려면 상자 + 경품 한 줄 + 닫기 · 자격이 없어졌을 때 수령 안내 시트(fcfsGotOpen)의 되돌림 길) */
 function fcfsInfoOpen() { prizeGo("fin"); }
