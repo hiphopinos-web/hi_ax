@@ -1296,6 +1296,17 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .rail .axs-rnx .l1 { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
   .rail .axs-rnx .num { color: var(--ax-color-brandText); font-weight: 700; }
   .rail .axs-rnx .l2 { margin: 2px 0 0; font: var(--ax-type-t7); color: var(--ax-color-muted); }
+  /* v8.89 (사용자 261025) 선착순 참여상 카드 = 스탬프 카드 안 · 진행 줄 다음 · 행운권 번호 위 · 예전 홈 할 일 카드와 같은 글 · 칩(주황 채움) · › · 옅은 회색 면 · 폭 = 카드 안쪽 내용 폭(행운권 번호 줄과 같은 좌우 선) · 보조 줄은 폭이 모자라면 「 · 」 자리에서 넘긴다 */
+  #view .rail .axs-fcr { margin-top: var(--ax-space-16); }
+  #view .rail .axs-fcr .rc.my { margin: 0; border: 0; border-radius: var(--ax-radius-16); background: var(--ax-color-inset); box-shadow: none; --rc-px: var(--ax-space-12); --rc-h: 64px; --rc-ls: 56px; --rc-gap: 10px; }
+  #view .rail .axs-fcr .rc .bd { min-width: 0; }
+  #view .rail .axs-fcr .rc .tt { font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
+  #view .rail .axs-fcr .rc .sb { font: var(--ax-type-t7); color: var(--ax-color-muted); }
+  #view .rail .axs-fcr .rc .rh .sb { white-space: normal; overflow: visible; text-overflow: clip; }
+  #view .rail .axs-fcr .rc .chev { color: var(--ax-color-muted); }
+  #view .rail .axs-fcr .rc .chev.arw { width: 20px; margin-left: -4px; }
+  #view .rail .axs-fcr .tok { border-radius: var(--ax-radius-12); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t6-strong); }
+  #view .rail .axs-fcr .tok.act { background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
   #view .rail .rnum .cap.rafx { margin-top: 6px; color: var(--ax-color-muted); }
   /* v5.97 (사용자 261006 밤) 선착순 = 「3장」과 다른 요소 · 작은 알약 한 줄 · 흰 바탕 + 연한 주황 테(brand 35%) · 「선착순」 회색 · 상태 굵은 검정 · got 만 주황 · 가운데 = 6번 노드 축 · 넘치면 오른쪽 끝 = 노드 오른쪽 끝(15px = 노드 반지름) · 줄바꿈 없음 */
   #view .rail .lbls span.fx6 { top: calc(15px * var(--fs) + 10px); left: 100%; transform: translateX(min(-50%, calc(15px - 100%))); display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border: 1px solid rgba(255, 127, 50, 0.35); border-radius: 999px; background: var(--ax-color-surface); font: 600 min(calc(11px * var(--fs)), 13px)/1.3 var(--ax-font); letter-spacing: -0.01em; color: var(--ax-color-muted); white-space: nowrap; }
