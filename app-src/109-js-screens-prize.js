@@ -423,8 +423,10 @@ function fcfsGotRow() { var f = fcfsMy(), rk = f && f.st === "got" && f.rk > 0 ?
    글 · 칩 · › = 예전 홈 할 일 카드(fcfsGotRow)와 같다 · 누르면 fcfsGotOpen(true) 수령 안내 시트 · 수령 전(ready · got)만 · 받음 · 마감 · 자격 없음 = 줄 없음(받음 · 마감은 6번 칸 아래 알약이 말한다) · 홈은 스탬프 카드 칸 전체가 스탬프 탭으로 가는 단추라 stopPropagation(경품 보기 단추와 같게) */
 function fcfsPrizeCardHtml() {
   var g = fcfsGotRow(); if (!g) return "";
-  return '<div class="axs-fcr">' + rcHtml({ cls: " my", onclick: "event.stopPropagation(); " + g[1], link: true, left: tokBadge(esc(g[2]), g[5]), title: esc(g[3]), sub: segHtml(esc(g[4])) }) + "</div>";
+  return '<div class="axs-fcr">' + rcHtml({ cls: " my", onclick: "event.stopPropagation(); " + g[1], link: true, left: tokBadge(esc(g[2]), g[5]), title: esc(g[3]), sub: fcfsSubHtml(g[4]) }) + "</div>";
 }
+/* 보조 줄 = 한 줄 「37번 · 10:30부터 1F 주차장 체크인존」 · 폭이 모자랄 때만 「 · 」 자리에서 넘기고 둘째 줄은 「· 」로 시작(조각 안은 끊지 않는다 · 점 목록으로 쪼개지 않으려고 segHtml 대신 · 「1F 주차장 체크인존」은 한 덩어리) */
+function fcfsSubHtml(t) { return String(t).split(" · ").map(function (p, i) { return '<span class="axs-fcp">' + (i ? "·&nbsp;" : "") + esc(p).replace(/1F 주차장 체크인존/g, "1F&nbsp;주차장&nbsp;체크인존") + "</span>"; }).join(" "); }
 /* 261017 (사용자 확정 「럭키드로우에 대한 푸시 · 당첨자 안내 모두 걷어 내」) 럭키드로우 당첨 시트 · 본인 확인(draw_ack) · 홈 당첨 줄 · 현장 부재로 다시 추첨 표시 · 7등 당첨 안내 걷음 · 되살리기 = 루트 「정리 기록.md」 */
 /* 261014 선착순 참여상 요약 팝업도 경품 시트의 선착순 구역으로 바로(옛 받으려면 상자 + 경품 한 줄 + 닫기 · 자격이 없어졌을 때 수령 안내 시트(fcfsGotOpen)의 되돌림 길) */
 function fcfsInfoOpen() { prizeGo("fin"); }
