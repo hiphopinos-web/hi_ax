@@ -7,8 +7,11 @@
  * 읽기 = draw_stats(숫자 · 마감 · 고정 · 당첨 기록 · 슈퍼관리자면 who 1 · 10초) · draw_board(사람 줄 · 10초 · 슈퍼관리자 아님 + 대상 명단 탭 = v all)
  * 대상 명단 탭(슈퍼관리자) = lucky.js lkyTable 같은 부품(칸 lkuTb · 「명단 불러오기」 · 「표 새로 받기」를 누를 때만 받음 · 10초 갱신 · 탭 열기 · 탭 오가기에는 받지 않음 · 화면을 다시 열면 처음 상태)
  * 쓰기 = 체크인 마감 · 다시 열기(draw_cfg closed · 확인 창 · 되돌리기 · 무대 공 넣기 뒤 다시 열기 막음) 하나뿐
- * 추첨 진행은 무대 노트북(draw/) · 무대는 콘솔 원격 명령을 받지 않는다(261016 E1) · 원격 진행 칸은 추첨 설정 칩 맨 아래 접힘(stage.js) */
-var LKU={ q:"", inOnly:false, open:false, tab:"all", qr:false, lim:200, limIn:100, sig:{}, w:{ wins:0, abs:0 } };
+ * 추첨 진행은 무대 노트북(draw/) · 무대는 콘솔 원격 명령을 받지 않는다(261016 E1) · 원격 진행 칸은 추첨 설정 칩 맨 아래 접힘(stage.js)
+ * 261025 「연습 체크인 보기」(사용자 261025 · 기본 끔 · 10/26 16:40 부터 숨김) · 켜면 사람 줄 · 숫자 = draw_bprac(연습 기록 · draw_board 와 같은 모양 · 같은 거름) · 맨 위 띠 · 체크인 마감 못 누름 · 무대 고정 대조 안 함
+ *   당첨 결과 · 무대 감시 = draw_stats 그대로(실제) · 슈퍼관리자 = 고급 맨 아래 「연습 체크인 받기」 켜기 · 끄기(cfg_set 추첨_연습체크인 · 확인 창 · 되돌리기) */
+var LKU={ q:"", inOnly:false, open:false, tab:"all", qr:false, lim:200, limIn:100, sig:{}, w:{ wins:0, abs:0 }, prac:false };
+var LKU_PRAC_CUT="2026-10-26 16:40", LKU_PRAC_KEY="추첨_연습체크인";
 var LKU_RK=[[6,3],[5,2],[4,2],[3,1],[2,1],[1,1]], LKU_SLOTS=10;
 var LKU_TABS=[["all","대상 명단"],["in","체크인한 사람"],["win","당첨 결과"]];
 var LKU_ADV=[["now","현황","발급 숫자 · 장수별 · 발급 흐름"],["list","명단","엑셀 · CSV · 번호만 · 종이 키트"],["paper","종이 대비","서버가 멈출 때 종이 추첨"],
@@ -19,14 +22,22 @@ var LKU_ADV=[["now","현황","발급 숫자 · 장수별 · 발급 흐름"],["li
   sc.mount=function(vb){ if(sgSub()!=="lk") return m0.apply(this,arguments); lkuMount(vb); };
   sc.paint=function(vb){ if(sgSub()!=="lk") return p0.apply(this,arguments); lkuPaint(); };
 })();
-function lkuNeed(){ return [{ k:"draw", a:"draw_stats", p:isTop()?{ who:"1" }:null, ttl:10000 },{ k:"dbd", a:"draw_board", p:{ v:LKU.open?"all":"in" }, ttl:10000 }]; }
+function lkuNeed(){ var a=[{ k:"draw", a:"draw_stats", p:isTop()?{ who:"1" }:null, ttl:10000 },{ k:"dbd", a:lkuPr()?"draw_bprac":"draw_board", p:{ v:LKU.open?"all":"in" }, ttl:10000 }];
+  if(isTop()&&lkuPracOk()) a.push({ k:"cfgl", a:"cfg_list", ttl:60000 });   /* 261025 연습 체크인 받기 스위치 값 */
+  return a; }
+/* 261025 연습 체크인 보기 · 서버 시각 10/26 16:40 전 · 서버가 연습 보기를 끝냈다고(prac 0) 하면 숨김 */
+function lkuNowS(){ var t=srvNow(); return lkuToday()+" "+("0"+t.getHours()).slice(-2)+":"+("0"+t.getMinutes()).slice(-2); }
+function lkuPracOk(){ var b=S.data.dbd; return lkuNowS()<LKU_PRAC_CUT&&!(b&&b.ok&&b.prac===0); }
+function lkuPr(){ return LKU.prac&&lkuPracOk(); }
+function lkuPrT(){ LKU.prac=!LKU.prac&&lkuPracOk(); S.data.dbd=null; LKU.sig={}; lkuPrSync(); lkuSet("lkuIn","in",skel()); lkuSet("lkuT","top",skel()); reload(["dbd"]); paint(); }
+function lkuPrSync(){ var b=el("lkuPrB"), ok=lkuPracOk(); if(LKU.prac&&!ok) LKU.prac=false; if(!b) return; b.hidden=!ok; b.className="chip lku-prt"+(LKU.prac?" on":""); b.setAttribute("aria-pressed",String(LKU.prac)); }
 function lkuMount(vb){
   el("phCap").textContent="17F Closing Speech 행운권 1~6등 · 추첨 진행은 무대 노트북";
   LKU.sig={}; var top=isTop();
   LKU.open=!top&&LKU.tab==="all";   /* 슈퍼관리자 아님 = 대상 명단 탭이 draw_board v all 목록 */
   if(typeof LKY_U==="object"){ LKY_U.rows=null; LKY_U.tkey=""; LKY_U.err=""; LKY_U.h=Math.max(200,Math.min(560,innerHeight-480)); }   /* 화면을 다시 열면 불러오기 전 상태 · 표 높이 = 창 높이에 맞춤(첫 화면 안) */
   var tabs='<div class="seg" role="tablist" aria-label="럭키드로우 표">'+LKU_TABS.map(function(x){ return '<button type="button" role="tab" id="lkuTab_'+x[0]+'" aria-controls="lkuP_'+x[0]+'" onclick="lkuTab(\''+x[0]+'\')">'+esc(x[1])+(x[0]==="in"?' <span class="c n" id="lkuInC"></span>':x[0]==="win"?' <span class="c n" id="lkuWC"></span>':'')+'</button>'; }).join("")+'</div>';
-  vb.innerHTML='<div class="chips" role="tablist"><button type="button" role="tab" aria-selected="true" class="chip on">럭키드로우</button><button type="button" class="chip" onclick="lkuAdvGo()">고급</button></div>'+
+  vb.innerHTML='<div class="chips" role="tablist"><button type="button" role="tab" aria-selected="true" class="chip on">럭키드로우</button><button type="button" class="chip" onclick="lkuAdvGo()">고급</button><button type="button" class="chip lku-prt" id="lkuPrB" aria-pressed="false" onclick="lkuPrT()" hidden>연습 체크인 보기</button></div>'+
     '<section class="card lku-hd" aria-label="무대 · 체크인 상태"><div class="lku-row"><div id="lkuMon" class="lku-mon"></div><div id="lkuCk" class="lku-ck">'+skel()+'</div></div><div id="lkuQrB" class="lku-qr" hidden></div></section>'+
     '<div id="lkuBand"></div>'+
     '<div id="lkuT" class="lku-kp">'+skel()+'</div>'+
@@ -41,8 +52,8 @@ function lkuMount(vb){
       '<div id="lkuP_in" role="tabpanel" aria-labelledby="lkuTab_in"><div id="lkuIn">'+skel()+'</div></div>'+
       '<div id="lkuP_win" role="tabpanel" aria-labelledby="lkuTab_win"><div id="lkuW">'+skel()+'</div></div>'+
     '</section>'+
-    '<details class="memo card mt" id="lkuAdv"><summary>고급 · 평소에는 열지 않음</summary><div class="mt4">'+LKU_ADV.map(function(x){ return '<div class="row"><div class="t"><b>'+esc(x[1])+'</b><span>'+esc(x[2])+'</span></div><button class="btn sm" type="button" style="flex:none" onclick="go(\'stage\',\''+x[0]+'\')">열기</button></div>'; }).join("")+'</div></details>';
-  lkuTabSync();
+    '<details class="memo card mt" id="lkuAdv"><summary>고급 · 평소에는 열지 않음</summary><div class="mt4">'+LKU_ADV.map(function(x){ return '<div class="row"><div class="t"><b>'+esc(x[1])+'</b><span>'+esc(x[2])+'</span></div><button class="btn sm" type="button" style="flex:none" onclick="go(\'stage\',\''+x[0]+'\')">열기</button></div>'; }).join("")+(top&&lkuPracOk()?'<div class="row" id="lkuPrS"></div>':'')+'</div></details>';
+  lkuTabSync(); lkuPrSync();
 }
 function lkuAdvGo(){ var a=el("lkuAdv"); if(!a) return; a.open=true; try{ a.scrollIntoView({ behavior:"smooth", block:"start" }); }catch(e){ a.scrollIntoView(); } }
 /* 탭 · 한 번에 표 하나 · 슈퍼관리자 아님 + 대상 명단 = draw_board v all 로 한 번(그 뒤 10초) · 명단 표(roster)는 여기서 받지 않음 */
@@ -63,7 +74,7 @@ function lkuFind(v){ LKU.q=String(v||""); LKU.lim=200; LKU.sig.ls=""; lkuPaint()
 function lkuInOnly(){ LKU.inOnly=!LKU.inOnly; LKU.lim=200; LKU.sig.ls=""; var b=el("lkuIo"); if(b){ b.className="chip"+(LKU.inOnly?" on":""); b.setAttribute("aria-pressed",String(LKU.inOnly)); } lkuPaint(); }
 function lkuMore(k){ if(k==="in") LKU.limIn+=200; else LKU.lim+=400; LKU.sig[k]=""; lkuPaint(); }
 function lkuSet(id, k, h){ if(LKU.sig[k]===h) return; LKU.sig[k]=h; var x=el(id); if(x) x.innerHTML=h; }
-function lkuB(){ var b=S.data.dbd; return b&&b.ok&&Array.isArray(b.rows)?b:null; }
+function lkuB(){ var b=S.data.dbd; if(!(b&&b.ok&&Array.isArray(b.rows))) return null; return (b.prac===1?1:0)===(lkuPr()?1:0)?b:null; }   /* 261025 연습 보기 · 켠 쪽 응답만 그린다(바꾼 직후 옛 응답 안 그림) */
 function lkuRows(b){ var dp=b.dps||[]; return (b.rows||[]).map(function(r){ return { nm:String(r[0]||""), dp:String(dp[r[1]]||""), c:num(r[2]), at:String(r[3]||"") }; }); }
 function lkuMd(day){ var m=String(day||"").match(/^\d{4}-(\d{2})-(\d{2})$/); return m?(+m[1])+"/"+(+m[2]):""; }
 function lkuToday(){ var t=srvNow(); return t.getFullYear()+"-"+("0"+(t.getMonth()+1)).slice(-2)+"-"+("0"+t.getDate()).slice(-2); }
@@ -86,7 +97,8 @@ function lkuPaint(){
   if(!el("lkuT")) return;
   var gt=dataGate("draw","행운권 추첨"), d=S.data.draw, b=lkuB(), gb=dataGate("dbd","체크인한 사람 실명 목록");
   lkuSet("lkuMon","mon",d&&d.ok&&d.mon&&typeof dmonLine==="function"?dmonLine(d.mon):"");   /* 261023 무대 감시 한 줄(서버 판정 mon · 10초 · 서버가 모르면 비움) */
-  lkuSet("lkuBand","band",errTop("draw")+errTop("dbd")+(d&&d.ok&&(String(d.att||"").toUpperCase()==="ON"||(b&&b.cond))?band("warn","행운권 참석조건 ON · 6 · 5 · 4등도 체크인한 사람만"):""));
+  lkuPrSync(); lkuPrSw();
+  lkuSet("lkuBand","band",(lkuPr()?band("info",'<span><b>연습 체크인 보기</b> · 실제 체크인 아님</span>','<button class="btn sm" type="button" onclick="lkuPrT()">연습 보기 끄기</button>'):"")+errTop("draw")+errTop("dbd")+(d&&d.ok&&(String(d.att||"").toUpperCase()==="ON"||(b&&b.cond))?band("warn","행운권 참석조건 ON · 6 · 5 · 4등도 체크인한 사람만"):""));
   if(gt){ ["lkuT","lkuCk","lkuW"].forEach(function(id){ lkuSet(id,id,gt); }); }
   else { lkuWin(d); lkuTop(d,b); lkuCkPaint(d,b); }
   if(LKU.tab==="all") lkuRo();
@@ -107,20 +119,24 @@ function lkuRo(){
 }
 /* 숫자 줄 · 1 · 2 = 무대 숫자 대조(공 넣기 뒤 = 무대 고정 숫자를 같은 칸 아래 줄 · 다르면 주의 칸) · 3 = 17F 체크인 · 4 = 당첨 n · 10 */
 function lkuTop(d, b){
-  var p=b?{ n:b.n, balls:b.balls, inN:b.inN, inBalls:b.inBalls }:dtPool(d), k=d.lock, zero=b?num(b.zero):num(d.zero), inA=b?num(b.inAll):num(d["in"]), W=LKU.w;
+  var pr=lkuPr(), p=b?{ n:b.n, balls:b.balls, inN:b.inN, inBalls:b.inBalls }:pr?null:dtPool(d), k=pr?null:d.lock, zero=b?num(b.zero):pr?0:num(d.zero), inA=b?num(b.inAll):pr?0:num(d["in"]), W=LKU.w;   /* 261025 연습 보기 = 무대 고정 대조 안 함 */
   var ma=function(v){ return n0(v[0])+'<em>명</em> '+n0(v[1])+'<em>장</em>'; };
   var cell=function(l,v,s,c){ return '<div class="lku-k'+(c?" "+c:"")+'"><span class="l">'+esc(l)+'</span><span class="v n">'+v+'</span><span class="s">'+s+'</span></div>'; };
   var fix=function(a,bb){ if(!k||!p) return null; var df=num(k[a])!==num(p[a])||num(k[bb])!==num(p[bb]); return { s:'무대 고정 '+n0(k[a])+'명 '+n0(k[bb])+'장'+(df?' · 지금과 다름':' · 같음'), c:df?"warn":"" }; };
   var f1=fix("n","balls"), f2=fix("inN","inBalls");
   var h=cell("6 · 5 · 4등 대상 · 행운권 전체",p?ma([p.n,p.balls]):"-",f1?esc(f1.s):"한 사람 한 번 · 장수만큼 뽑힐 확률",f1&&f1.c)+
-    cell("3 · 2 · 1등 대상 · 17F 체크인",p&&p.inN!=null?ma([p.inN,p.inBalls]):"-",f2?esc(f2.s):"체크인한 행운권 보유자",f2&&f2.c)+
-    cell("17F 체크인",n0(inA)+'<em>명</em>',zero?"행운권 없는 사람 "+n0(zero)+"명 포함":"&nbsp;")+
+    cell(pr?"3 · 2 · 1등 대상 · 연습 체크인":"3 · 2 · 1등 대상 · 17F 체크인",p&&p.inN!=null?ma([p.inN,p.inBalls]):"-",f2?esc(f2.s):pr?"연습 체크인한 행운권 보유자":"체크인한 행운권 보유자",f2&&f2.c)+
+    cell(pr?"연습 체크인":"17F 체크인",n0(inA)+'<em>명</em>',zero?"행운권 없는 사람 "+n0(zero)+"명 포함":"&nbsp;")+
     cell("당첨",n0(W.wins)+'<em>/ '+LKU_SLOTS+'</em>',W.abs?"부재 "+n0(W.abs)+"명 · 다시 추첨":"무대 기록대로");
   lkuSet("lkuT","top",h);
 }
 /* 상태 줄 · 체크인 상태 + 오른쪽 끝 작은 단추(받는 중 = 체크인 마감 · 마감 = 다시 열기 · 공 넣기 뒤 = 다시 열기 흐림) */
 function lkuCkPaint(d, b){
   var c=lkuCk(d,b), k=d.lock, t=c.t, s=c.s, act;
+  if(lkuPr()){ var pn=b?num(b.inAll):0, on=!!(b&&b.on); c={ k:on?"open":"pre" };   /* 261025 연습 보기 · 마감 단추는 흐림 */
+    lkuSet("lkuCk","ck",'<div class="lku-st '+c.k+'"><b>'+esc((on?"연습 받는 중 · ":"연습 체크인 꺼짐 · ")+n0(pn)+"명")+'</b><span class="cap">'+esc(on?"10/26 0시 전까지 · 실제 체크인과 따로 기록":"설정 「럭키드로우 연습 체크인」 꺼짐 · 받은 연습 기록은 그대로")+'</span></div>'+
+      '<div class="lku-act"><button class="btn sm lku-cl" type="button" disabled title="연습 체크인 보기에서는 누를 수 없음">체크인 마감</button></div>');
+    return; }
   if(c.k==="closed"&&k){ t="무대 고정"+(k.at?" · "+hm(String(k.at).slice(11,16)):""); s=c.t+" · "+c.s+" · 다시 열 수 없음"; }
   else if(c.k==="closed") s=c.s+" · 무대 공 넣기 전까지 다시 열 수 있음";
   if(c.k==="closed") act='<button class="btn sm" type="button" onclick="lkuClose(0)"'+(k?' disabled title="무대 공 넣기 뒤라 다시 열 수 없음"':' title="다시 열면 그 뒤 찍는 사람도 3 · 2 · 1등 통"')+'>다시 열기</button>';
@@ -131,6 +147,7 @@ function lkuCkPaint(d, b){
   if(LKU.qr) lkuSet("lkuQrB","qr",typeof dtQrH==="function"?dtQrH(d):"");
 }
 function lkuClose(v){
+  if(lkuPr()) return;   /* 261025 연습 보기에서는 마감 · 다시 열기 없음 */
   var d=S.data.draw||{};
   if(!v&&d.lock){ toast("무대 공 넣기 뒤에는 다시 열 수 없습니다",{ bad:1 }); return; }
   var n=lkuCk(d,lkuB()).n;
@@ -149,10 +166,10 @@ function lkuIn(b){
   var all=lkuRows(b).filter(function(r){ return r.at; }).sort(function(a,c){ return a.at<c.at?-1:a.at>c.at?1:0; });
   all.forEach(function(r,i){ r.k=i+1; });
   var rows=all.slice().reverse(), sh=rows.slice(0,LKU.limIn);
-  lkuSet("lkuInC","inc",n0(all.length)); lkuSet("lkuInN","inn","최근 체크인이 위 · 10초마다"+(b.real?"":" · 이름 일부 가림 · 사번 입장에서 실명"));
+  lkuSet("lkuInC","inc",n0(all.length)); lkuSet("lkuInN","inn",(b.prac===1?"연습 체크인 · ":"")+"최근 체크인이 위 · 10초마다"+(b.real?"":" · 이름 일부 가림 · 사번 입장에서 실명"));
   var h=all.length?'<div class="lku-tw"><table class="tb lku-tb"><thead><tr><th class="n">순서</th><th>이름</th><th>부서</th><th class="n">시각</th><th class="n">행운권</th></tr></thead><tbody>'+
     sh.map(function(r){ return '<tr><td class="n">'+r.k+'</td>'+lkuNmH(r)+'<td class="n">'+esc(r.at)+'</td><td class="n">'+lkuTk(r.c)+'</td></tr>'; }).join("")+'</tbody></table></div>'+
-    (rows.length>sh.length?'<div class="btns mt"><button class="btn sm" type="button" onclick="lkuMore(\'in\')">'+n0(rows.length-sh.length)+'명 더 보기</button></div>':''):emptyH("아직 체크인한 사람이 없습니다");
+    (rows.length>sh.length?'<div class="btns mt"><button class="btn sm" type="button" onclick="lkuMore(\'in\')">'+n0(rows.length-sh.length)+'명 더 보기</button></div>':''):emptyH(b.prac===1?"아직 연습 체크인한 사람이 없습니다":"아직 체크인한 사람이 없습니다");
   lkuSet("lkuIn","in",h);
 }
 /* 슈퍼관리자 아님 · 대상 명단 탭 = draw_board v all(이름 · 부서 · 장수 · 체크인 시각) */
@@ -187,4 +204,20 @@ function lkuWRow(k, r, ab){
   else if(r.fb) tg=tag("전체 통 이어 뽑기","off");
   else if(k<=3) tg=r.warn==="in"?tag("체크인 없음","warn"):tag("체크인","ok");
   return '<tr'+(ab?' class="lku-ab"':'')+'><td><b>'+k+'등</b></td>'+lkuNmH({ nm:r.name||r.nm, dp:r.dept })+'<td class="n">'+esc(r.no||"-")+'</td><td>'+tg+'</td></tr>';
+}
+/* 261025 고급 맨 아래 「연습 체크인 받기」(슈퍼관리자 · 10/26 16:40 전) · 값 = cfg_list · 바꾸기 = cfg_set(서버 L3 · 운영로그) · 확인 창 · 되돌리기 */
+function lkuPrV(){ var c=S.data.cfgl, r=c&&c.ok&&(c.rows||[]).filter(function(x){ return x.k===LKU_PRAC_KEY; })[0]; return r?String(r.v||"").toUpperCase():null; }
+function lkuPrSw(){
+  var row=el("lkuPrS"); if(!row) return;
+  row.style.display=lkuPracOk()?"":"none"; if(!lkuPracOk()) return;   /* 화면을 연 뒤 16:40 이 지나면 숨김 */
+  var v=lkuPrV(), on=v==="ON";
+  lkuSet("lkuPrS","prs",v==null?'<div class="t"><b>연습 체크인 받기</b><span>'+(S.data.cfgl&&S.data.cfgl.ok?"서버 갱신 뒤":"불러오는 중")+'</span></div>':
+    '<div class="t"><b>연습 체크인 받기 · '+(on?"켬":"꺼짐")+'</b><span>켜면 10/26 0시 전까지 체크인 QR 을 연습 기록에만 남김 · 행운권 번호 · 추첨 통 · 실제 체크인 그대로</span></div><button class="btn sm" type="button" style="flex:none" onclick="lkuPrSet('+(on?0:1)+')">'+(on?"끄기":"켜기")+'</button>');
+}
+function lkuPrSet(on){
+  var put=function(x){ return call("cfg_set",{ k:LKU_PRAC_KEY, v:x?"ON":"OFF" }); };
+  confirmBox({ t:on?"연습 체크인을 켤까요?":"연습 체크인을 끌까요?", who:"17F 럭키드로우 체크인 QR · 10/26 0시 전까지",
+    sub:on?"켜면 체크인 QR 을 찍은 기록이 연습 기록에만 남습니다 · 실제 체크인 · 추첨 통은 그대로":"끄면 체크인 QR 이 지금처럼 시간 전 안내로 돌아갑니다 · 받은 연습 기록은 그대로", ok:on?"켜기":"끄기", danger:false,
+    run:function(){ return put(on); },
+    done:function(){ reload(["cfgl","dbd"]); toast(on?"연습 체크인을 켰습니다":"연습 체크인을 껐습니다",{ undo:function(){ put(!on).then(function(x){ reload(["cfgl","dbd"]); toast(x&&x.ok?"되돌렸습니다":"되돌리지 못했습니다 · "+why(x),{ bad:!(x&&x.ok) }); }); } }); } });
 }

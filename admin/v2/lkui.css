@@ -60,3 +60,6 @@
 #main:has(.lku-hd){scrollbar-gutter:stable}
 @media (max-width:900px){ .lku-kp{grid-template-columns:repeat(2,minmax(0,1fr))} }
 @media (max-width:600px){ .lku-mon:not(:empty)+.lku-ck{border-left:0;padding-left:0} .lku-act{margin-left:0} .lku-k .v{font-size:20px} .lku-dp{max-width:120px} .lku-tabs .r{margin-left:0} }
+/* 261025 연습 체크인 보기 칩 · 칩 줄 오른쪽 끝 */
+.chips .lku-prt{margin-left:auto}
+.chips .lku-prt[hidden]{display:none}
