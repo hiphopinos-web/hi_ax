@@ -419,12 +419,6 @@ function fcfsGotOpen(again) {
 }
 /* 홈 나의 일정 맨 위 한 줄 · 수령 전(got)만 · 받음 · 취소 · 마감이면 없음 · [정렬 분, onclick, 뱃지, 제목, 보조 줄, 뱃지 상태] */
 function fcfsGotRow() { var f = fcfsMy(), rk = f && f.st === "got" && f.rk > 0 ? f.rk : 0, ln = fcfsLeftN(); return fcfsReady(f) ? [-3, "fcfsGotOpen(true)", "참여상", "선착순 참여상", rk ? rk + "번 · " + (fcfsLate() ? "행사 뒤 발송" : fcfsAt("1F 주차장 체크인존")) : fcfsAt("1F 주차장 체크인존") + (ln ? " · 남은 " + ln : ""), "act"] : null; }   /* v7.57 17:00 지급 마감 뒤 = 「N번 · 행사 뒤 발송」(홈 할 일 카드) */   /* 261016 「선착순 참여상 · N번 · 1F 주차장 체크인존」 */   /* v5.98 ready 만 · 소진(out)이면 사라진다 */
-/* v8.89 (사용자 261025 「홈과 스탬프 탭은 동일하게 · 선착순 참여상 팝업은 이렇게」) 선착순 참여상 카드 = 스탬프 카드(railHtml) 안 · 스탬프 진행 줄 다음 · 행운권 번호 위 · 홈 스탬프 카드 · 스탬프 탭 나의 보상 같은 함수 한 곳
-   글 · 칩 · › = 예전 홈 할 일 카드(fcfsGotRow)와 같다 · 누르면 fcfsGotOpen(true) 수령 안내 시트 · 수령 전(ready · got)만 · 받음 · 마감 · 자격 없음 = 줄 없음(받음 · 마감은 6번 칸 아래 알약이 말한다) · 홈은 스탬프 카드 칸 전체가 스탬프 탭으로 가는 단추라 stopPropagation(경품 보기 단추와 같게) */
-function fcfsPrizeCardHtml() {
-  var g = fcfsGotRow(); if (!g) return "";
-  return '<div class="axs-fcr">' + rcHtml({ cls: " my", onclick: "event.stopPropagation(); " + g[1], link: true, left: tokBadge(esc(g[2]), g[5]), title: esc(g[3]), sub: segHtml(esc(g[4])) }) + "</div>";
-}
 /* 261017 (사용자 확정 「럭키드로우에 대한 푸시 · 당첨자 안내 모두 걷어 내」) 럭키드로우 당첨 시트 · 본인 확인(draw_ack) · 홈 당첨 줄 · 현장 부재로 다시 추첨 표시 · 7등 당첨 안내 걷음 · 되살리기 = 루트 「정리 기록.md」 */
 /* 261014 선착순 참여상 요약 팝업도 경품 시트의 선착순 구역으로 바로(옛 받으려면 상자 + 경품 한 줄 + 닫기 · 자격이 없어졌을 때 수령 안내 시트(fcfsGotOpen)의 되돌림 길) */
 function fcfsInfoOpen() { prizeGo("fin"); }
@@ -471,13 +465,16 @@ function stampNextInfo(n) {
     if (n < 3 && !S.get("roulette_out", false)) return { ico: "wheel", num: (3 - n) + "개", main: " 더 모으면 룰렛 1회", sub: "" };
     return { ico: "ticket", num: (n < 3 ? 4 - n : 1) + "개", main: " 더 모으면 행운권 " + raffleTickets(Math.max(4, n + 1)) + "장", sub: n === STAMP_DENOM - 1 && fcfsOpen() ? "선착순 참여상도 함께" : "" };   /* 룰렛 소진 · 마감이면 다음 = 행운권 1장 */
   }
-  var f = fcfsMy();
-  if (f && (f.st === "got" || f.st === "ready")) return { ico: "card", num: "", main: "선착순 참여상", sub: "" };   /* v8.89 (사용자 261025) 선착순 참여상 카드(fcfsPrizeCardHtml) = 홈 할 일 카드에서 옮겨 와 이 자리(스탬프 진행 줄 다음 · 행운권 번호 위)에 선다 · 옛 체크인존 줄(qr) · 17:00 뒤 발송 줄(box)을 대신한다 · 글은 카드 한 곳(fcfsGotRow) */
+  var f = fcfsMy(), x = fxGet(), cut = String((x && x.cut) || "17:00");
+  if (f && (f.st === "got" || f.st === "ready")) {
+    if (fcfsLate()) return { ico: "box", num: "", main: "행사 뒤 발송", sub: cut + " 지급 마감" };
+    var st = fcfsStartHm();
+    return { ico: "qr", num: "", main: "1F 주차장 체크인존", sub: (st ? st + "~" + cut : cut + "까지") + " · 내 QR 제시" };
+  }
   return { ico: "ticket", num: "", main: "17F Closing Speech 때|행운권 추첨", sub: lkCond() ? "16:40부터 17F 입구 QR 체크인" : "" };
 }
 function stampNextHtml(n) {   /* 굵은 줄 「|」 = 줄을 넘길 때 나누는 구 경계(한 줄에 들어가면 한 줄) · v8.88 (사용자 261025) 홈 · 스탬프 탭 · 나의 보상 모두 같은 줄(옛 홈 변형 = 굵은 줄만 · 6개 선착순 받기 전 한 줄 없음 · 걷음) */
   var g = stampNextInfo(n);
-  if (g.ico === "card") return fcfsPrizeCardHtml();
   var ic = g.ico === "wheel" || g.ico === "ticket" ? RAIL_ICO[g.ico] : g.ico === "time" ? App.ICONS.guide_time : PZ_ICO[g.ico];
   return '<div class="axs-rnx"><span class="ic" aria-hidden="true">' + ic + '</span><div class="tx"><p class="l1">' +
     (g.num ? '<b class="num">' + g.num + "</b>" : "") + g.main.split("|").map(function (t) { return '<span class="axs-nwr">' + esc(t) + "</span>"; }).join(" ") + "</p>" + (g.sub ? '<p class="l2">' + segHtml(esc(g.sub)) + "</p>" : "") + "</div></div>";
