@@ -802,7 +802,8 @@
   #view[data-v="home"] .axs-railgo .sect span { min-height: 32px; }
   #view[data-v="home"] .axs-railgo .sect span[role="button"] { position: relative; }
   #view[data-v="home"] .axs-railgo .sect span[role="button"]::after { content: ""; position: absolute; inset: -6px -8px; }   /* v6.83 (접근성 B-3) 「바로가기」 눌림 32 → 44 · 투명 */
-  /* v8.88 (사용자 261025 「메인 화면도 이런 구성으로」) 홈 카드 안 여백 · 모은 스탬프 시작선 · 경품 보기 줄 높이 = 스탬프 탭 · 나의 보상과 같은 값(옛 홈 컴팩트 값 padding 12 20 · 시작선 4 · 경품 보기 44 · 위 8 걷음) */
+  #view[data-v="home"] .axs-railgo .rail { padding: var(--ax-space-12) var(--ax-space-20); }
+  #view[data-v="home"] .axs-railgo .axs-pzgo { min-height: 44px; margin-top: var(--ax-space-8); padding-top: var(--ax-space-4); padding-bottom: var(--ax-space-4); }
   /* v7.65 (사용자 261017) 접기 부품 axs-sfd(처음 = 홈 「스탬프 모으는 방법」 · v7.97 홈 칸 삭제 · 지금 = 영상 보기 · 스탬프 획득하기)
      높이 = grid-template-rows 0fr → 1fr · 안쪽 = 흐려짐 + 떠오름 6px · 열림 0.3초 이동 곡선 · 닫힘 0.18초 닫힘 곡선(--ax-motion-* · mobile-popup-motion) · 셰브론 회전 같은 시간 · 동작 줄이기 = 즉시 */
   .axs-sfd { display: flex; flex-direction: column; }   /* v7.97 홈 칸 삭제 · 홈 전용 위 여백(-20) 걷음 · 부품은 영상 보기(axs-vfd) · 스탬프 획득하기(axs-sgfd)가 쓴다 */
@@ -1275,6 +1276,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-sth b { margin-left: 2px; padding: 1px 0 1px 10px; border-left: 3px solid var(--ax-color-ink); font: var(--ax-type-t4); color: var(--ax-color-ink); }
   #view[data-v="my"] .axs-myrw { display: flex; flex-direction: column; gap: var(--ax-space-12); }
   #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .hd.axs-rhd { justify-content: flex-start; gap: var(--ax-space-8); }
+  #view[data-v="home"] .axs-railgo .rail .hd.axs-rhd { padding-left: var(--ax-space-4); }   /* 홈 카드만 안쪽 여백이 20 → 「모은 스탬프」 시작선을 스탬프 탭 · 나의 참여(24)와 맞춘다 */
   #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .hd.axs-rhd .nm { font: var(--ax-type-t6); color: var(--ax-color-muted); white-space: nowrap; }
   #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .hd.axs-rhd .cnt { font: var(--ax-type-t5-strong); white-space: nowrap; }
   #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .hd.axs-rhd .cnt small { font: var(--ax-type-t6); color: var(--ax-color-muted); }
@@ -1288,8 +1290,9 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .cap { font: var(--ax-type-t7); color: var(--ax-color-brandText); }
   /* v5.96 (사용자 261006 밤) 선착순 두 줄 = 6번 칸(3장) 라벨 아래 가운데 · 넘치면 레일 오른쪽 끝(라벨 줄 여백 15px 안)에 맞춤 · 줄 높이만큼 아래를 띄운다 */
   .rail .lbls.fx6 { margin-bottom: calc(15px * var(--fs) + 34px); }
-  /* v7.57 (사용자 261017 S1 · 시안 A) 다음 보상 한 줄 · 옅은 회색 면 · 왼쪽 원 = 다음 칸과 같은 그림(무채색) · 굵은 줄(숫자만 주황) + 옅은 줄 · v8.88 홈도 같은 줄 */
+  /* v7.57 (사용자 261017 S1 · 시안 A) 다음 보상 한 줄 · 옅은 회색 면 · 왼쪽 원 = 다음 칸과 같은 그림(무채색) · 굵은 줄(숫자만 주황) + 옅은 줄 · 홈 = 굵은 줄만 */
   .rail .axs-rnx { display: flex; align-items: center; gap: var(--ax-space-12); margin-top: var(--ax-space-16); padding: var(--ax-space-12) 14px var(--ax-space-12) var(--ax-space-12); border-radius: var(--ax-radius-16); background: var(--ax-color-inset); }
+  .rail .axs-rnx.home { margin-top: var(--ax-space-12); padding-top: 10px; padding-bottom: 10px; }
   .rail .axs-rnx .ic { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 999px; border: 1.5px solid var(--ax-color-divider); background: var(--ax-color-surface); color: var(--ax-color-body); }
   .rail .axs-rnx .ic svg { display: block; width: 18px; height: 18px; }
   .rail .axs-rnx .tx { min-width: 0; }
