@@ -182,7 +182,7 @@ var CN_HLV = ["", "여유", "보통", "붐빔", "거의 만석", "만석"];
 var CN_HCLS = ["", " ok", " ok ok2", " busy", " jam", " full"];   /* 261008 신호등 색 · 여유 = 초록 빈 점 · 보통 = 초록 반쯤 · 붐빔 = 호박 반쯤 · 거의 만석 · 만석 = 빨강 꽉 찬 점(만석은 글자 굵게) · v6.48 색은 점에만 */
 function cnGet() { var c = crowdGet(); return c && c.n && typeof c.n === "object" ? c.n : null; }
 function cnShow() { var n = cnGet(); return !(n && n.on === 0); }   /* v7.57 (사용자 261017 H4) 참가자 · 스태프 모두 늘(날짜 · 값 조건 없음 · 레드팀 「당일 + 값 있을 때만」 안 채택) · 서버 혼잡_표시 OFF 는 비상 스위치로 그대로 */   /* 261008 (사용자 「시간 조건 해제 · 혼잡도 전부」) 날짜 조건 없음 · 언제나 보인다 · 서버 혼잡_표시 OFF(n.on 0)만 숨김 */
-function cnTest() { return typeof testEmp === "function" && testEmp() === true; }   /* 261008 테스트 사번 = 네 칸을 무작위 시험값으로(아래 cnRand) */
+function cnTest() { return typeof testEmp === "function" && testEmp() === true && typeof evPreDay === "function" && evPreDay(); }   /* v8.92 (사용자 261026 「실제 운용 · 테스트 계정은 가상값이 나오잖아」) 행사 당일부터 = 테스트 사번도 「지금 현장」 실제 값 · 261008 테스트 사번 = 네 칸을 무작위 시험값으로(아래 cnRand) */
 function cnStaff() { return typeof staffBtn === "function" && staffBtn() === true; }
 function cnSub(k, x) {
   if (k === "h") return crowdHm(x.at) + " 기준";
