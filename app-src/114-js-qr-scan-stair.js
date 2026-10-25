@@ -708,14 +708,14 @@ function stairDone(res, sc, late, act) {
   }
   if (res.leg === "start" && !res.reclass) stampBuzz(25);
   if (late) {
-    var body = res.leg === "end" ? res.from.fl + "F → " + res.to.fl + "F · " + res.floors + "개 층" + (s.goal > 1 ? " · 누적 " + res.total + " / " + s.goal : "")
+    var body = res.fast ? "적립되지 않았어요 · 도착한 층의 QR을 다시 찍어 주세요" : res.leg === "end" ? res.from.fl + "F → " + res.to.fl + "F · " + res.floors + "개 층" + (s.goal > 1 ? " · 누적 " + res.total + " / " + s.goal : "")
       : res.leg === "start" ? res.fl + "F 시작" : res.leg === "fix" ? "지난번 종료를 찍지 않았어요" : res.fl + "F";
-    STR.res = res; STR.sc = sc; STR.mode = res.leg === "dup" ? "start" : res.leg;
-    notice({ key: "stair:late:" + res.leg + ":" + (sc.t || ""), title: "저장한 계단 스캔 처리", body: body, go: "stair", goLbl: "계단 화면" });
+    STR.res = res; STR.sc = sc; STR.mode = res.fast ? "fast" : res.leg === "dup" ? "start" : res.leg;
+    notice({ key: "stair:late:" + (res.fast ? "fast" : res.leg) + ":" + (sc.t || ""), title: "저장한 계단 스캔 처리", body: body, go: "stair", goLbl: "계단 화면" });
     return;
   }
   STR.res = res; STR.pick = null;
-  STR.mode = act === "stair_fix" ? "ask" : res.leg === "dup" ? "start" : res.leg;
+  STR.mode = act === "stair_fix" ? "ask" : res.fast ? "fast" : res.leg === "dup" ? "start" : res.leg;   /* v8.93 (261026) 너무 빠른 종료 = 서버 leg dup + fast(옛 앱은 진행 화면) · 시작은 그대로 */
   if (App.current === "stair") App.render(); else App.go("stair");
   if (STR.mode === "end" && act === "stair_scan" && typeof stbArrive === "function") stbArrive(res);   /* 261009 계단 동행 5차 · 도착 장면(128) · 누를 단추 없이 스탬프 탭으로 */
 }
@@ -797,6 +797,17 @@ function stairHtml() {
       (got && o.stamp.dry ? '<p class="ax-meta">테스트 계정 · 서버 적립 없음</p>' : "") + ((o.stamp && o.stamp.no === "preday") || o.no === "preday" ? '<p class="ax-meta">계단 스탬프 · 행사 당일(10/26) 적립</p>' : "") + "</section>" +   /* 261016 행사 전 가드 */
       '<button type="button" class="ax-link axs-plain axs-self" onclick="stairReclassOpen()">종료가 아니라 새로 시작이에요</button>',
       btn: ax2Btn(got ? "스탬프 확인하기" : "확인", got ? "expStamp('st')" : "App.tab('exp')") };
+  }
+  if (m === "fast") {   /* v8.93 (사용자 261026 「너무 빠르면 적립 안 함」) 출발 QR 뒤 걸린 초 < 층수 × 8초 · 서버가 종료로 세지 않고 시작을 남긴다 · 도착 층 QR 을 다시 찍으면 정상 종료 */
+    var lg2 = s.leg || o.from || {};
+    return { body:
+      '<div class="axs-chiprow"><span class="axs-chip off">적립 안 됨</span></div>' +
+      '<h1 class="ax-title">' + (o.from ? o.from.fl : "") + "F → " + (o.to ? o.to.fl : "") + "F</h1>" +
+      '<p class="ax-description">출발 QR 뒤 너무 빨리 찍혀 적립되지 않았어요</p>' +
+      '<p class="ax-meta">' + stairSec(o.sec) + " · " + (o.floors || 1) + "개 층은 " + (o.need || 8) + "초 이상</p>" +
+      '<section class="ax-card axs-gap12"><p class="ax-type-t6-strong">도착한 층의 QR을 다시 찍어 주세요</p>' +
+      '<p class="ax-description">진행 중 · ' + esc(lg2.fl) + "F 시작" + (lg2.at ? " · " + esc(lg2.at) : "") + "</p></section>",
+      btn: stbFoot(Date.now()) };
   }
   if (m === "fix") {
     return { body:
