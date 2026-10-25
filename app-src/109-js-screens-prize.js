@@ -451,7 +451,7 @@ function stampGoalText(n) {
   return STAMP_DENOM + "개 모두 모았어요 · 행운권 " + RAFFLE_MAX + "장";
 }
 /* ═══ v7.57 (사용자 261017 S1 · S3 · S4 · R1 · H5 · 시안 `디자인 시안/스탬프탭_다음보상_261016/A.html`) 「다음 보상 한 줄」 = 레일 라벨 바로 아래 · 그림(다음 칸과 같은 그림 · 무채색) + 굵은 줄(숫자만 주황) + 옅은 줄
-   스탬프 탭 = 굵은 줄 + 옅은 줄 · 홈 = 굵은 줄만(같은 문장 · 선착순 번호는 홈 할 일 카드 한 곳) · 6개 캡션(「6개 모두 모았어요」 · fcfsCapWhere)을 대신한다
+   홈 · 스탬프 탭 · 나의 보상 = 같은 줄(굵은 줄 + 옅은 줄 · v8.88 사용자 261025 「메인 화면도 이런 구성으로」 · 옛 홈 = 굵은 줄만) · 6개 캡션(「6개 모두 모았어요」 · fcfsCapWhere)을 대신한다
    행운권 발급 마감(서버 sync my.rafclosed · 17:00 · 클로즈 베타 없음) 뒤 6개 전 = 「행운권 17:00 발급 마감」 */
 function rafClosed() { return S.get("rafc", 0) === 1 && !(typeof betaFree === "function" && betaFree()); }
 function stampNextInfo(n) {
@@ -473,12 +473,11 @@ function stampNextInfo(n) {
   }
   return { ico: "ticket", num: "", main: "17F Closing Speech 때|행운권 추첨", sub: lkCond() ? "16:40부터 17F 입구 QR 체크인" : "" };
 }
-function stampNextHtml(n, home) {   /* 굵은 줄 「|」 = 줄을 넘길 때 나누는 구 경계(한 줄에 들어가면 한 줄) */
+function stampNextHtml(n) {   /* 굵은 줄 「|」 = 줄을 넘길 때 나누는 구 경계(한 줄에 들어가면 한 줄) · v8.88 (사용자 261025) 홈 · 스탬프 탭 · 나의 보상 모두 같은 줄(옛 홈 변형 = 굵은 줄만 · 6개 선착순 받기 전 한 줄 없음 · 걷음) */
   var g = stampNextInfo(n);
-  if (home && (g.ico === "qr" || g.ico === "box")) return "";   /* v7.57 (사용자 확정 261017 H5 「나」) 6개 · 선착순 받기 전 = 홈 한 줄 없음 · 번호와 장소는 홈 맨 위 할 일 카드 한 곳 */
   var ic = g.ico === "wheel" || g.ico === "ticket" ? RAIL_ICO[g.ico] : g.ico === "time" ? App.ICONS.guide_time : PZ_ICO[g.ico];
-  return '<div class="axs-rnx' + (home ? " home" : "") + '"><span class="ic" aria-hidden="true">' + ic + '</span><div class="tx"><p class="l1">' +
-    (g.num ? '<b class="num">' + g.num + "</b>" : "") + g.main.split("|").map(function (t) { return '<span class="axs-nwr">' + esc(t) + "</span>"; }).join(" ") + "</p>" + (!home && g.sub ? '<p class="l2">' + segHtml(esc(g.sub)) + "</p>" : "") + "</div></div>";
+  return '<div class="axs-rnx"><span class="ic" aria-hidden="true">' + ic + '</span><div class="tx"><p class="l1">' +
+    (g.num ? '<b class="num">' + g.num + "</b>" : "") + g.main.split("|").map(function (t) { return '<span class="axs-nwr">' + esc(t) + "</span>"; }).join(" ") + "</p>" + (g.sub ? '<p class="l2">' + segHtml(esc(g.sub)) + "</p>" : "") + "</div></div>";
 }
 
 /* ── v4.84 스탬프 탭(exp) 행 · 번호 · 이름 · 수단 칩 + 한 줄 · 오른쪽 행동 하나 · AX 퀴즈 · 미니 게임은 종목 타일 ── */

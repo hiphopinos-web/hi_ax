@@ -417,14 +417,14 @@ function stampVerSet(v) {
 stampVerSet(S.get("stv", 2) === 1 ? 1 : 2);
 /* 보상 레일 (v3.1) · 사다리 카드+룰렛 쿠폰 카드를 한 줄로. 마커 3=룰렛(탭=쿠폰 모달) · 4~6=응모(탭=추첨 안내 모달).
    v3.2: 레일은 6단이다(v4.58 다시 6단 · 6개가 한도 · 칸 끝 = 6). 1·2 지점에도 보상 없는 회색 틱을 둬서 1~2개인 사용자도 진행이 레일 위에 찍혀 보이게 한다.
-   홈·스탬프 탭 공용 컴포넌트 (design.md 컴포넌트 일관성) · home=true 는 컴팩트 변형(캡션 축약 + 하단 CTA)일 뿐 시각 문법은 동일. */
+   홈·스탬프 탭·나의 보상 공용 컴포넌트 (design.md 컴포넌트 일관성) · v8.88 (사용자 261025 「메인 화면도 이런 구성으로」) 홈도 같은 구성 · 같은 글 · 같은 모양 · noHead = 카드 밖 머리(「| STAMP TOUR」)를 부른 쪽(홈 .sect 머리 + 바로가기)이 그릴 때만 true. */
 /* v3.44c 레일 아이콘 · SICO 선 아이콘 문법 · 룰렛 판(바늘 + 살 3개) · 응모권(양옆 홈 + 절취선) */
 var RAIL_ICO = {
   wheel: SICO + '<circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V6M12 13.5l6.5 3.75M12 13.5l-6.5 3.75"/><path d="M10 2.5h4L12 5z" fill="currentColor" stroke-width="1.2"/></svg>',
   ticket: SICO + '<path d="M3.5 7h17v3.2a1.8 1.8 0 0 0 0 3.6V17h-17v-3.2a1.8 1.8 0 0 0 0-3.6z"/><path d="M14.5 7.5v1.6M14.5 11.2v1.6M14.5 14.9v1.6"/></svg>'
 };
 /* v3.44c (사용자 요청 260917 · 규칙 문장이 많다) · 설명 줄 삭제 · 라벨은 짧게(룰렛 · 1장~3장) · 규칙 설명은 마커를 누르면 뜨는 모달에만 */
-function railHtml(n, glow, dispN, home) {
+function railHtml(n, glow, dispN, noHead) {
   if (dispN == null) dispN = n;
   var shown = Math.min(STAMP_DENOM, dispN);
   n = Math.min(REWARD_CAP, n); dispN = Math.min(REWARD_CAP, dispN);
@@ -446,15 +446,15 @@ function railHtml(n, glow, dispN, home) {
       RAIL_ICO[m[3]] + '<span class="no">' + m[0] + "</span></button>";
     lb += '<span class="' + (n >= m[0] ? "on" : m[0] === nextAt ? "next" : "") + '" style="left:' + pos + '">' + m[1] + "</span>";
   });
-  var fx6 = home ? "" : fcfsRailHtml();   /* v5.96 (사용자 261006 밤) 스탬프 탭 · 나의 보상 = 선착순 두 줄을 6번 칸(3장) 아래로 · 홈은 옛 한 줄 그대로 */
+  var fx6 = fcfsRailHtml();   /* v5.96 (사용자 261006 밤) 스탬프 탭 · 나의 보상 = 선착순 두 줄을 6번 칸(3장) 아래로 · v8.88 홈도 같게 */
   /* v8.68 (사용자 261024 안 B) 카드 안 「스탬프 보상」 제목 줄 + 오른쪽 큰 「1 / 6」을 걷는다 · 카드 밖 위에 「| STAMP TOUR」 머리(스탬프 탭 · 나의 참여 = 여기서, 홈 = 기존 .sect 머리가 맡는다) · 카드 안 맨 위 작은 줄 「모은 스탬프 1 / 6」 */
-  return (home ? "" : '<div class="axs-sth"><b>STAMP TOUR</b></div>') + '<div class="rail">' +
+  return (noHead ? "" : '<div class="axs-sth"><b>STAMP TOUR</b></div>') + '<div class="rail">' +
     '<div class="hd axs-rhd"><span class="nm">모은 스탬프</span><span class="cnt"><span id="ppCnt">' + shown + "</span><small> / " + STAMP_DENOM + "</small></span></div>" +
     '<div class="rb"><i style="width:' + railPos(n).toFixed(1) + '%"></i>' + mk + "</div>" +
     '<div class="lbls' + (fx6 ? " fx6" : "") + '">' + lb + fx6 + "</div>" +
-    stampNextHtml(dispN, home) +   /* v7.57 (사용자 261017 S1 · H5) 다음 보상 한 줄 · 옛 6개 캡션(다 모았다는 말 + 선착순 캡션)을 대신한다 · 홈 = 굵은 줄만 */
-    (home ? "" : (out0 ? '<p class="cap">' + (roulCut() ? "룰렛 " + roulCutHm() + " 마감" : "룰렛 소진") + "</p>" : "") +   /* 룰렛 소진 · 마감 작은 줄은 스탬프 탭 그대로 */
-      raffleNumsHtml(n) + prizeGoHtml()) +   /* v7.57 (사용자 261016 홈 = 막대 + 다음 보상 한 줄) 홈은 행운권 번호 칩 · 경품 보기 · 선착순 남은 수량 줄 없음 · 스탬프 탭 · 나의 보상 그대로 */
+    stampNextHtml(dispN) +   /* v7.57 (사용자 261017 S1 · H5) 다음 보상 한 줄 · 옛 6개 캡션(다 모았다는 말 + 선착순 캡션)을 대신한다 · v8.88 홈도 같은 줄(옅은 줄 · 선착순 번호 · 장소 포함) */
+    (out0 ? '<p class="cap">' + (roulCut() ? "룰렛 " + roulCutHm() + " 마감" : "룰렛 소진") + "</p>" : "") +   /* 룰렛 소진 · 마감 작은 줄 */
+    raffleNumsHtml(n) + prizeGoHtml() +   /* v8.88 (사용자 261025) 행운권 번호 · 경품 보기 = 홈도 같게(옛 v7.57 홈 = 막대 + 다음 보상 한 줄만) */
     "</div>";
 }
 /* v3.31c 내 응모 번호 · 응모권 1장 이상일 때만 · 서버 번호가 아직 없으면 「발급 중」 회색 (v3.12 모달과 같은 규칙) */
