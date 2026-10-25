@@ -1,0 +1,35 @@
+/* 261026 럭키드로우 체크인 감시 띠(lkmon.js) · 상태 줄 아래 · 숫자 4칸 위 · 무채색 · 주의 = --warn · 끊김 = --bad · 숫자 tabular-nums
+ * 첫 줄 = 판정 · 17F 체크인 흐름 · 분당 막대 / 둘째 줄 = 콘솔 → 서버 · 서버 처리 · 체크인 요청 결과 */
+.lkm{margin-top:10px;padding:8px 14px;font-variant-numeric:tabular-nums}
+.lkm.warn{background:var(--warn-bg);border-color:var(--warn-ln)}
+.lkm.bad{background:var(--bad-bg);border-color:var(--bad-ln)}
+.lkm-r{display:flex;flex-wrap:wrap;align-items:center;gap:6px 0;min-width:0}
+.lkm-r2{margin-top:6px;padding-top:6px;border-top:1px solid var(--line2)}
+.lkm.warn .lkm-r2{border-top-color:var(--warn-ln)}
+.lkm.bad .lkm-r2{border-top-color:var(--bad-ln)}
+.lkm-j{display:flex;align-items:center;gap:6px;flex:0 0 auto;min-width:0;padding-right:16px;margin-right:16px;border-right:1px solid var(--line2)}
+.lkm-j i{width:10px;height:10px;border-radius:50%;background:var(--line3);flex:none}
+.lkm-j b{font-size:16px;font-weight:700;color:var(--tx);white-space:nowrap}
+.lkm-j .cap{font-size:12px;color:var(--tx2);white-space:nowrap}
+.lkm-j .tag{height:20px;font-size:12px}
+.lkm-j.ok i{background:var(--tx3)}
+.lkm-j.warn i{background:var(--warn)}.lkm-j.warn b,.lkm-j.warn .cap{color:var(--warn)}
+.lkm-j.bad i{background:var(--bad)}.lkm-j.bad b,.lkm-j.bad .cap{color:var(--bad)}
+.lkm-fl{display:flex;align-items:flex-end;gap:16px;flex:1 1 auto;min-width:0}
+.lkm-g{display:flex;flex-direction:column;gap:1px;min-width:0}
+.lkm-r2>.lkm-g{flex:0 1 auto;padding-right:16px;margin-right:16px;border-right:1px solid var(--line2)}
+.lkm-r2>.lkm-g:last-child{border-right:0;margin-right:0;padding-right:0}
+.lkm-g .l{font-size:12px;font-weight:600;color:var(--tx3);white-space:nowrap}
+.lkm-g .v{font-size:13px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lkm-g .v b{font-size:14px;font-weight:700;color:var(--tx)}
+.lkm-g.warn .v,.lkm-g.warn .v b{color:var(--warn)}
+.lkm-g.bad .v,.lkm-g.bad .v b{color:var(--bad)}
+.lkm.bad .lkm-fl .v,.lkm.bad .lkm-fl .v b,.lkm.bad .lkm-r2>.lkm-g:not(.bad) .v,.lkm.bad .lkm-r2>.lkm-g:not(.bad) .v b{color:var(--tx3)}
+.lkm-fp{font-family:ui-monospace,Consolas,monospace;font-size:12px;color:var(--tx2)}
+.lkm-bars{display:flex;align-items:flex-end;gap:1px;height:26px;flex:0 1 auto;min-width:0;overflow:hidden;padding-bottom:1px;border-bottom:1px solid var(--line3)}
+.lkm-bars.e{display:none}
+.lkm-bars i{width:6px;flex:none;background:var(--navy);border-radius:1px 1px 0 0}
+.lkm-bars i.z{background:var(--line3)}
+.lkm-bars i:last-child{opacity:.55}
+.lkm.bad .lkm-bars i{background:var(--line3)}
+@media (max-width:900px){ .lkm-j{border-right:0;margin-right:0;flex-basis:100%} .lkm-r2>.lkm-g{border-right:0;margin-right:0;padding-right:0;flex-basis:100%} .lkm-fl{flex-basis:100%;flex-wrap:wrap} }
