@@ -1610,18 +1610,51 @@ var QRS = { stream: null, timer: null, det: null, busy: false, hint: null, next:
 /* jsQR 경로 · 카메라 프레임을 긴 변 QR_DEC_PX 로 줄여 디코딩한다(원본 해상도로 돌리면 폰에서 프레임당 수백 ms)
    261020 480 → 800(계단 QR 버전 5 를 더 멀리서 · 디코딩에 쓴 만큼 쉬는 규칙(qrScanTick)은 그대로) */
 var QR_DEC_PX = 800;
+/* 261026 (아이폰 스태프 스캔 · 사용자 「QR 인식이 잘 안 된다」) jsQR 경로만 · 프레임마다 읽는 방법을 돌린다(한 프레임에 하나 · 프레임당 시간은 그대로)
+   full = 옛 그대로(긴 변 800) · find = 가운데 80% × 60% 원본에서 세 모서리 무늬 → 그 자리만 늘려 읽기(타자왕 TSF_DETECT 함수 · 멀리 · 작은 QR)
+   half = 긴 변 400(폰 화면 모아레) · sharp = 긴 변 400 + 언샤프(반사 · 낮은 대비) · BarcodeDetector(안드로이드) 경로는 그대로 */
+var QR_PASS = ["full", "find", "half", "sharp"];
 function qrDecodeFrame(v) {
   var vw = v.videoWidth, vh = v.videoHeight;
   if (!vw || !vh) return null;
+  QRS.k = ((QRS.k || 0) + 1) % QR_PASS.length;
+  var pass = QR_PASS[QRS.k];
+  if (pass === "find") { if (typeof tsfFinders === "function") return qrDecodeFind(v, vw, vh); pass = "full"; }
   var sc = Math.min(1, QR_DEC_PX / Math.max(vw, vh));
+  if (pass !== "full") sc = Math.min(1, 400 / Math.max(vw, vh));
   var w = Math.round(vw * sc), h = Math.round(vh * sc);
   if (!QRS.cv) { QRS.cv = document.createElement("canvas"); QRS.g = QRS.cv.getContext("2d", { willReadFrequently: true }); }
   if (QRS.cv.width !== w || QRS.cv.height !== h) { QRS.cv.width = w; QRS.cv.height = h; }
   QRS.g.drawImage(v, 0, 0, w, h);
-  var r = jsQR(QRS.g.getImageData(0, 0, w, h).data, w, h, { inversionAttempts: "dontInvert" });
+  var dd = QRS.g.getImageData(0, 0, w, h).data;
+  if (pass === "sharp") qrSharpen(dd, w, h);
+  var r = jsQR(dd, w, h, { inversionAttempts: "dontInvert" });
   /* v4.13 코드 자리(영상 원래 크기 좌표) · 인식 순간 테두리를 그 자리에 그린다 */
   QRS.pts = r && r.location ? ["topLeftCorner", "topRightCorner", "bottomRightCorner", "bottomLeftCorner"].map(function (k) { return { x: r.location[k].x / sc, y: r.location[k].y / sc }; }) : null;
   return r && r.data ? r.data : null;
+}
+/* find · 원본 해상도 캔버스(cv2) · 무늬가 없으면 이 프레임은 넘긴다 */
+function qrDecodeFind(v, vw, vh) {
+  if (!QRS.cv2) { QRS.cv2 = document.createElement("canvas"); QRS.g2 = QRS.cv2.getContext("2d", { willReadFrequently: true }); }
+  if (QRS.cv2.width !== vw || QRS.cv2.height !== vh) { QRS.cv2.width = vw; QRS.cv2.height = vh; }
+  QRS.g2.drawImage(v, 0, 0, vw, vh);
+  var ox = Math.round(vw * 0.1), oy = Math.round(vh * 0.2), cw = Math.round(vw * 0.8), ch = Math.round(vh * 0.6);
+  var b = tsfQrBox(tsfFinders(tsfGray(QRS.g2.getImageData(ox, oy, cw, ch).data, cw, ch), cw, ch, 2));
+  QRS.pts = null;
+  if (!b) return null;
+  var P = tsfPlan(b, vw, vh, ox, oy), id = QRS.g2.getImageData(P.sx, P.sy, P.S, P.S);
+  var u = Math.abs(P.k - 1) < 0.05 ? { d: id.data, w: P.S, h: P.S } : tsfUp(id.data, P.S, P.S, 0, 0, P.S, P.k);
+  var r = jsQR(u.d, u.w, u.h, { inversionAttempts: "dontInvert" }), f = u.w / P.S;
+  QRS.pts = r && r.location ? ["topLeftCorner", "topRightCorner", "bottomRightCorner", "bottomLeftCorner"].map(function (k) { return { x: P.sx + r.location[k].x / f, y: P.sy + r.location[k].y / f }; }) : null;
+  return r && r.data ? r.data : null;
+}
+/* sharp · 회색 한 채널 · 5×5 박스 흐림을 뺀 만큼 1.5배 더한다(제자리) */
+function qrSharpen(d, w, h) {
+  var n = w * h, g = new Float32Array(n), t = new Float32Array(n), c = new Float32Array(n), x, y, a, R = 2, D = 2 * R + 1;
+  for (x = 0; x < n; x++) g[x] = d[x * 4] * 0.3 + d[x * 4 + 1] * 0.59 + d[x * 4 + 2] * 0.11;
+  for (y = 0; y < h; y++) { a = 0; for (x = -R; x <= R; x++) a += g[y * w + Math.min(w - 1, Math.max(0, x))]; for (x = 0; x < w; x++) { c[y * w + x] = a / D; a += g[y * w + Math.min(w - 1, x + R + 1)] - g[y * w + Math.max(0, x - R)]; } }
+  for (x = 0; x < w; x++) { a = 0; for (y = -R; y <= R; y++) a += c[Math.min(h - 1, Math.max(0, y)) * w + x]; for (y = 0; y < h; y++) { t[y * w + x] = a / D; a += c[Math.min(h - 1, y + R + 1) * w + x] - c[Math.max(0, y - R) * w + x]; } }
+  for (x = 0; x < n; x++) { a = g[x] + 1.5 * (g[x] - t[x]); d[x * 4] = d[x * 4 + 1] = d[x * 4 + 2] = a; }
 }
 /* 카메라만 열리면 된다. 디코더는 BarcodeDetector(안드로이드 크롬) 또는 내장 jsQR(그 외 · 아이폰 포함) */
 function qrScanSupported() {
@@ -1632,6 +1665,8 @@ function qrScanSupported() {
 function qrScanTick() {
   var v = el("qrVideo");
   if (!v) { qrScanClose(); return; }          /* 모달이 다른 경로로 닫힌 경우 카메라 정리 */
+  /* 261026 jsQR 경로(아이폰) · 화면이 잠겼다 풀리거나 앱을 오가면 영상이 멈춘 채(paused) 남아 같은 그림만 읽던 것 · 1초에 한 번 다시 재생 */
+  if (!QRS.det && v.paused && !QRS.hold && QRS.stream && v.srcObject && Date.now() - (QRS.replay || 0) > 1000) { QRS.replay = Date.now(); var pp = v.play(); if (pp && pp.catch) pp.catch(function () {}); }
   if (QRS.busy || v.readyState < 2) return;
   if (QRS.det) {                              /* 안드로이드 크롬 · 네이티브 디코더(비동기) */
     QRS.busy = true;                          /* detect가 느린 기기에서 호출이 겹쳐 쌓이지 않게 */
