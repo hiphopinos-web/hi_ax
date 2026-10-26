@@ -952,8 +952,8 @@ function progDetail(s) {
       if (laD.length > 1) D.kv = laD.map(function (x, i) { return ["상담 " + (i + 1), resvWhen(x) + (x.seat ? " · 미팅룸 " + x.seat : "")]; }).concat([["장소", "1F AX 라운지"], ["진행", "시작 5분 전 도착"]]); else
       D.kv = [["일시", rg ? (resvDl(r) ? rg : "10월 26일 " + rg) : resvTbd(r) ? RESV_TBD : (r.dl ? r.dl : "10월 26일") + " · " + RESV_TBD],   /* 261022 잠그기 전 = 날짜 · 시간 없이 「시간 확정 전」 */ ["장소", resvPlace(r)],   /* 261021 서버 dl 이 있으면 「10/22(목) 14:00~15:00」 */ ["진행", r.status === "checked" ? "상담 진행 중" : r.status === "done" ? "상담 완료" : "시작 5분 전 도착"]];
       D.secT = r.status === "done" ? "상담을 마쳤어요" : "사전 신청한 상담이에요";
-      D.secB = r.status === "checked" ? "업무 설명 → 병목 → 개선방안 순서로 진행돼요." : r.status === "done" ? "아래 코드를 AX 라운지 데스크에 보여 주고 사은품을 받으세요." : "";
-      if (r.status === "done") D.after = '<div class="ax-inset ax-stack-tight axs-gift"><p class="ax-card-title">사은품 교환권 · 1회</p>' + qrHtml() + '<p class="ax-type-t5-strong axs-center-tx">GIFT-' + esc((S.get("user", {}) || {}).empId || "") + '</p></div>';   /* v5.60 W4 「중복 수령 방지 코드예요」 줄 삭제 */
+      D.secB = r.status === "checked" ? "업무 설명 → 병목 → 개선방안 순서로 진행돼요." : r.status === "done" ? "1F AX 라운지 데스크에서 사은품을 받으세요." : "";
+      /* v8.95 (사용자 261026 현장 「이런게 발급된 것 같은데 보고 수정」) 옛 「사은품 교환권 · 1회」 상자(장식 QR · GIFT-사번)는 스캔되지 않는 장식이라 걷음 · 위 한 줄로 수령 안내 */
       if (r.status !== "checked" && r.status !== "done") D.need = needBoxHtml("스탬프 받으려면", "스탬프 받으려면", [["qr", "상담 시작 · 끝에 스태프에게 내 QR 보여 주기", "상담 시간에 1F AX 라운지에서"], ["stamp", "종료 때 프로그램 참여 2개", progSrcTxt() + " 합쳐 최대 2개"]]);   /* 261013 참석 확인 스탬프 ln · 261016 (사용자 스태프 QR 정리) 라운지 체크인 = 출석만 · 종료 스캔 = 2개 */
       if (RESV_LIVE.indexOf(r.status) >= 0 && r.status !== "checked") { D.help = DAP_CX_TXT; D.btn = progBtn("내 QR", "qrPanelOpen('mine')"); }   /* v7.75 (사용자 확정 261017 「AX 라운지는 신청 취소가 안 되는 게 맞음」) 신청 취소 단추 · 시트 없음 · 안내 한 줄(작은 회색 help) */
       else { D.help = ""; D.btn = progBtn("나의 일정 보기", "mySched()", "ax-button-weak"); }
