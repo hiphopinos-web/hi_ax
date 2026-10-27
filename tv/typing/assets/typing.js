@@ -98,6 +98,18 @@
     sc.src = RK.srv + (RK.srv.indexOf("?") >= 0 ? "&" : "?") + qs + "&callback=" + name + "&_=" + Date.now();
     document.head.appendChild(sc);
   }
+  /* 261027 행사 종료 · 서버 type_rank 가 오픈_범위 종료일 때 { ok: true, ended: 1 }(순위 줄 없음)을 주면 앱 종료 화면과 같은 챗봇 장면을 판 위에 크게(#tyEnd · 세로 · 가로 모두 vmin)
+     ended 가 없는 ok 응답이 오면 걷고 지금 순위판 그대로 · 받기 실패에는 그대로 둔다 · 챗봇 = ../../assets/bot.js 원본(BOT_SVG) + 안테나 전파 호 · 눈웃음 호(앱 v8.96 과 같은 path) */
+  var END_ADD = '<g class="ant"><path d="M85.28 22.81 A17 17 0 0 1 114.72 22.81"/><path d="M80.08 19.81 A23 23 0 0 1 119.92 19.81"/><path d="M74.89 16.81 A29 29 0 0 1 125.11 16.81"/></g><g class="sm"><path d="M75.4 102.6 A6.2 6.2 0 0 1 87.1 102.6"/><path d="M112.9 102.6 A6.2 6.2 0 0 1 124.6 102.6"/></g>';
+  function endOn(on) {
+    var g = $("tyEnd");
+    if (!on) { if (g) g.parentNode.removeChild(g); return; }
+    if (g) return;
+    g = document.createElement("div"); g.id = "tyEnd"; g.setAttribute("role", "status");
+    g.innerHTML = '<div class="te-in"><span class="te-bot" aria-hidden="true"><span class="te-sh"></span>' + (typeof BOT_SVG === "string" ? BOT_SVG.replace("</svg>", END_ADD + "</svg>") : "") + "</span>" +
+      '<h1><span>AX Festival 2026이</span> <span>종료되었습니다</span></h1><p>내년에 다시 만나요</p></div>';
+    body.appendChild(g);
+  }
   function took(res) {
     if (typeof res.now === "number" && res.now > 1.6e12) SRV_OFF = res.now - Date.now();
     if (srvOk(res.moved) && res.moved !== RK.srv) RK.srv = res.moved;
@@ -115,7 +127,8 @@
     RK.busy = true;
     jsonp({ action: "type_rank", mode: "site", n: 10 }, function (res) {
       RK.busy = false;
-      if (res && res.ok) { RK.fails = 0; RK.polls++; body.classList.remove("off"); took(res); next(POLL_MS + (PRANK ? Math.floor(Math.random() * 5000) : 0)); }
+      if (res && res.ok && res.ended === 1) { RK.fails = 0; RK.polls++; body.classList.remove("off"); endOn(true); next(POLL_MS + (PRANK ? Math.floor(Math.random() * 5000) : 0)); return; }
+      if (res && res.ok) { endOn(false); RK.fails = 0; RK.polls++; body.classList.remove("off"); took(res); next(POLL_MS + (PRANK ? Math.floor(Math.random() * 5000) : 0)); }
       else { RK.fails++; if (RK.fails >= 2) body.classList.add("off"); next(Math.min(POLL_MAX, POLL_MS * Math.pow(2, Math.min(RK.fails, 2))) + Math.floor(Math.random() * 5000)); }
     });
   }

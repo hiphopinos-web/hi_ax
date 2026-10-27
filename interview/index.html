@@ -6,10 +6,13 @@
 <title>AI 활용 현장 인터뷰 · AX Festival 2026</title>
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#FFFFFF">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <script src="../assets/server.js"></script>
 <script>
 /* 영상 열림 = 콘솔 스위치(사용자 결정 261024 · 서버 vid_pub 의 iv). 영상 주소는 이 파일에 두지 않는다(261024 미리 노출 막기 · 서버가 열린 영상만 주소 u.iv 를 준다).
-   열 때 서버에 한 번 묻고 열림 + 주소가 오면 그 주소로 넘긴다 · 닫힘 · 주소 없음 · 실패 · 3초 안에 답이 없으면 준비 중 화면 · 열어 둔 화면은 30초마다 다시 묻는다. */
+   열 때 서버에 한 번 묻고 열림 + 주소가 오면 그 주소로 넘긴다 · 닫힘 · 주소 없음 · 실패 · 3초 안에 답이 없으면 준비 중 화면 · 열어 둔 화면은 30초마다 다시 묻는다.
+   261027 (사용자 「영상은 열되 내가 원하는 시점에 닫을 수 있게」) 닫힘이 2026-10-26 18:00 KST(END_MS) 뒤면 준비 중 대신 앱과 같은 행사 종료 화면(챗봇 · 「AX Festival 2026이 종료되었습니다」 · 「내년에 다시 만나요」) · 열림 동작은 그대로. */
+var END_MS = 1793005200000;   /* 2026-10-26 18:00 KST */
 var SRV = typeof AXF_SERVER === "string" && /^https?:\/\/[^\s?#]+\/exec$/.test(AXF_SERVER) ? AXF_SERVER : "https://hi.axf2026.workers.dev/exec";
 var CHK_MS = 3000, POLL_MS = 30000;
 document.documentElement.className = "chk";   /* 묻는 동안(최대 3초) 준비 중 글자를 미리 보이지 않는다 */
@@ -21,7 +24,7 @@ function goVideo(u) {
   location.replace(u);
   return true;
 }
-function showWait() { document.documentElement.className = ""; }
+function showWait() { document.documentElement.className = Date.now() >= END_MS ? "end" : ""; }
 function check() {
   var done = false, x = null, fin = function (u) {
     if (done) return;
@@ -56,6 +59,31 @@ h1{font-size:30px;line-height:1.3;font-weight:800;margin-top:10px;letter-spacing
 p{font-size:18px;color:var(--tx);margin-top:14px}
 .ft{margin-top:56px;padding-top:18px;border-top:1px solid var(--line);font-size:14px;color:var(--sub)}
 .ft b{font-weight:700;color:var(--tx)}
+/* 261027 행사 종료 화면 · 앱 종료 화면(app-src 010-css-main.css #endGate · v8.96)과 같은 그림 · 같은 움직임 · 값은 앱 토큰 그대로 옮김 */
+.endv{display:none}
+html.end body{background:#F2F4F6}
+html.end .wrap{display:none}
+html.end .endv{min-height:100%;display:flex;align-items:center;justify-content:center;padding:24px 24px calc(64px + env(safe-area-inset-bottom,0px));text-align:center}
+.endv .in{display:flex;flex-direction:column;align-items:center;gap:16px;max-width:360px}
+.endv .end-bot{position:relative;display:block;width:104px;height:104px;margin-bottom:4px;animation:endIn .6s cubic-bezier(.2,.8,.2,1) both}
+.endv .end-sh{position:absolute;left:26px;top:78px;width:52px;height:8px;border-radius:50%;background:#FF7F32;opacity:.16;animation:endSh 1.8s linear 1.3s infinite}
+.endv svg{position:relative;width:104px;height:104px;display:block;overflow:visible;transform-origin:50% 78%;animation:endHop 1.8s linear 1.3s infinite}
+.endv .eye{transform-box:fill-box;transform-origin:center;animation:endEyeOff .2s ease-in 1s both}
+.endv .sm{transform-box:fill-box;transform-origin:50% 100%;opacity:0;animation:endSmOn .28s cubic-bezier(.2,.8,.2,1) 1.12s both}
+.endv .sm path{fill:none;stroke:#191F28;stroke-width:5;stroke-linecap:round}
+.endv .ant path{fill:none;stroke:#FF7F32;stroke-width:4.8;stroke-linecap:round;opacity:0;transform-box:view-box;transform-origin:100px 31.31px;animation:endPop 1.8s linear 1.62s infinite}
+.endv .ant path:nth-child(2){animation-delay:1.7s}
+.endv .ant path:nth-child(3){animation-delay:1.78s}
+.endv h1{margin:0;font-size:26px;line-height:35px;font-weight:700;letter-spacing:normal;color:#191F28;animation:endIn .6s cubic-bezier(.2,.8,.2,1) .15s both}
+.endv h1 span{display:block}
+.endv p{margin:0;font-size:15px;line-height:22.5px;letter-spacing:normal;color:#4E5968;animation:endIn .6s cubic-bezier(.2,.8,.2,1) .3s both}
+@keyframes endIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes endEyeOff{0%{transform:scaleY(1);opacity:1}60%{transform:scaleY(.15);opacity:1}100%{transform:scaleY(.1);opacity:0}}
+@keyframes endSmOn{from{opacity:0;transform:scaleY(.2)}to{opacity:1;transform:none}}
+@keyframes endHop{0%{transform:translateY(0) scale(1,1);animation-timing-function:cubic-bezier(.3,0,.6,1)}8%{transform:translateY(0) scale(1.07,.92);animation-timing-function:cubic-bezier(.2,.6,.4,1)}14%{transform:translateY(-6px) scale(.96,1.05);animation-timing-function:cubic-bezier(.2,.6,.5,1)}32%{transform:translateY(-26px) scale(1,1);animation-timing-function:cubic-bezier(.5,0,.8,.5)}50%{transform:translateY(0) scale(.97,1.04);animation-timing-function:cubic-bezier(.2,.6,.4,1)}57%{transform:translateY(0) scale(1.09,.9);animation-timing-function:cubic-bezier(.3,.6,.4,1)}68%{transform:translateY(0) scale(.98,1.02)}76%,100%{transform:translateY(0) scale(1,1)}}
+@keyframes endSh{0%,76%,100%{transform:scale(1);opacity:.16}8%{transform:scale(1.08);opacity:.18}32%{transform:scale(.55);opacity:.06}50%{transform:scale(.95);opacity:.15}57%{transform:scale(1.12);opacity:.2}}
+@keyframes endPop{0%{opacity:0;transform:scale(.5);animation-timing-function:cubic-bezier(.2,.7,.3,1)}6%{opacity:1;transform:scale(.9);animation-timing-function:cubic-bezier(.2,.6,.4,1)}30%{opacity:0;transform:scale(1.5)}34%{opacity:0;transform:scale(.5);animation-timing-function:cubic-bezier(.2,.7,.3,1)}40%{opacity:.9;transform:scale(.9);animation-timing-function:cubic-bezier(.2,.6,.4,1)}64%,100%{opacity:0;transform:scale(1.5)}}
+@media (prefers-reduced-motion:reduce){.endv .end-bot,.endv svg,.endv .end-sh,.endv .eye,.endv .sm,.endv .ant path,.endv h1,.endv p{animation:none}.endv .eye{opacity:0}.endv .sm{opacity:1}.endv .ant path{opacity:.3}}
 </style>
 </head>
 <body>
@@ -67,5 +95,6 @@ p{font-size:18px;color:var(--tx);margin-top:14px}
   <p>영상은 10월 26일(월) 13:30에 공개됩니다.</p>
   <div class="ft"><b>ME to WE</b> : 나의 경험을 우리의 가능성으로</div>
 </main>
+<main class="endv" role="status"><div class="in"><span class="end-bot" aria-hidden="true"><span class="end-sh"></span><svg viewBox="0 0 200 200" fill="none" aria-hidden="true"><path d="M104.68 56.4898V43.0698C103.23 43.6498 101.66 43.9698 100 43.9698C98.3401 43.9698 96.7601 43.6398 95.3101 43.0598V56.4798C64.7401 58.8698 40.6701 84.4198 40.6701 115.6H40.6201V128.09H159.32V115.6C159.32 84.4098 135.25 58.8698 104.68 56.4798V56.4898Z" fill="#FFC56E"/><path d="M149.96 156.2H50.0399C44.8699 156.2 40.6699 152 40.6699 146.83V131.22H159.32V146.83C159.32 152 155.12 156.2 149.95 156.2" fill="#FF7F32"/><path d="M112.67 31.3099C112.67 38.2999 107 43.9699 100.01 43.9699C93.0203 43.9699 87.3403 38.2999 87.3403 31.3099C87.3403 24.3199 93.0103 18.6499 100.01 18.6499C107.01 18.6499 112.67 24.3199 112.67 31.3099Z" fill="#FF7F32"/><path class="eye" d="M86.5902 99.9999C86.5902 102.94 84.2002 105.33 81.2602 105.33C78.3202 105.33 75.9302 102.94 75.9302 99.9999C75.9302 97.0599 78.3202 94.6699 81.2602 94.6699C84.2002 94.6699 86.5902 97.0599 86.5902 99.9999Z" fill="#282320"/><path class="eye" d="M124.06 99.9999C124.06 102.94 121.67 105.33 118.73 105.33C115.79 105.33 113.4 102.94 113.4 99.9999C113.4 97.0599 115.79 94.6699 118.73 94.6699C121.67 94.6699 124.06 97.0599 124.06 99.9999Z" fill="#282320"/><g class="ant"><path d="M85.28 22.81 A17 17 0 0 1 114.72 22.81"/><path d="M80.08 19.81 A23 23 0 0 1 119.92 19.81"/><path d="M74.89 16.81 A29 29 0 0 1 125.11 16.81"/></g><g class="sm"><path d="M75.4 102.6 A6.2 6.2 0 0 1 87.1 102.6"/><path d="M112.9 102.6 A6.2 6.2 0 0 1 124.6 102.6"/></g></svg></span><h1><span>AX Festival 2026이</span> <span>종료되었습니다</span></h1><p>내년에 다시 만나요</p></div></main>
 </body>
 </html>
