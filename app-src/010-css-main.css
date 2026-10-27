@@ -1457,17 +1457,36 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   /* 261009 행사 종료 · 종료 안내 한 화면(endShow) · 「열려요」 화면 문법 그대로 · 모든 화면 위(장면 390 · 도장 팝 400 위) · 챗봇 원본(BOT_SVG) + 안테나 전파(합성 · 원본 path 그대로) · 단추 없음 */
   #endGate { position: fixed; inset: 0; z-index: 420; display: flex; align-items: center; justify-content: center; padding: var(--ax-page-inset); padding-bottom: calc(var(--ax-space-64) + env(safe-area-inset-bottom, 0px)); background: var(--ax-color-canvas); text-align: center; }
   #endGate .og-in { display: flex; flex-direction: column; align-items: center; gap: var(--ax-space-16); max-width: 360px; }
-  #endGate .end-bot { display: block; width: 104px; height: 104px; margin-bottom: var(--ax-space-4); animation: endIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-  #endGate svg { width: 104px; height: 104px; display: block; animation: axsFloat 3.2s ease-in-out 0.6s infinite; }
-  #endGate .eye { transform-box: fill-box; transform-origin: center; animation: axsBlink 4.6s linear infinite; }
-  #endGate .ant path { fill: none; stroke: var(--ax-color-brand); stroke-width: 4; stroke-linecap: round; opacity: 0; animation: axsWave 1.6s ease-out infinite; }
-  #endGate .ant path:nth-child(2) { animation-delay: 0.18s; }
-  #endGate .ant path:nth-child(3) { animation-delay: 0.36s; }
+  /* v8.96 261027 종료 장면 움직임(사용자 「기본 얼굴에서 웃으면서 방방 뛰면서 전파가 머리 위에 팡팡」) · 원본 path 그대로 · 눈 감춤 + 반달 호(.sm) 덧씌움 · transform · opacity 만
+     0~0.6초 기본 얼굴로 나타남 → 1.0초 눈 감김 · 1.12초 눈웃음 → 1.3초부터 1.8초마다 한 번 통통(웅크림 · 뛰기 1초 · 착지 납작 · 쉼 0.8초) · 뛰어오를 때 · 착지할 때 한 번씩 안테나 위 전파 호 셋이 차례로 터지며 퍼짐(팡팡) · 바닥 그림자는 뛰면 작아짐 */
+  #endGate .end-bot { position: relative; display: block; width: 104px; height: 104px; margin-bottom: var(--ax-space-4); animation: endIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  #endGate .end-sh { position: absolute; left: 26px; top: 78px; width: 52px; height: 8px; border-radius: 50%; background: var(--ax-color-brand); opacity: 0.16; animation: endSh 1.8s linear 1.3s infinite; }
+  #endGate svg { position: relative; width: 104px; height: 104px; display: block; overflow: visible; transform-origin: 50% 78%; animation: endHop 1.8s linear 1.3s infinite; }
+  #endGate .eye { transform-box: fill-box; transform-origin: center; animation: endEyeOff 0.2s ease-in 1s both; }
+  #endGate .sm { transform-box: fill-box; transform-origin: 50% 100%; opacity: 0; animation: endSmOn 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) 1.12s both; }
+  #endGate .sm path { fill: none; stroke: var(--ax-color-ink); stroke-width: 5; stroke-linecap: round; }
+  #endGate .ant path { fill: none; stroke: var(--ax-color-brand); stroke-width: 4.8; stroke-linecap: round; opacity: 0; transform-box: view-box; transform-origin: 100px 31.31px; animation: endPop 1.8s linear 1.62s infinite; }
+  #endGate .ant path:nth-child(2) { animation-delay: 1.7s; }
+  #endGate .ant path:nth-child(3) { animation-delay: 1.78s; }
   #endGate h1 { margin: 0; color: var(--ax-color-ink); word-break: keep-all; animation: endIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s both; }
   #endGate h1 span { display: block; }   /* 「AX Festival 2026이」 · 「종료되었습니다」 늘 두 줄 */
   #endGate .ax-description { margin: 0; color: var(--ax-color-body); word-break: keep-all; animation: endIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s both; }
   @keyframes endIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
-  @media (prefers-reduced-motion: reduce) { #endGate .end-bot, #endGate svg, #endGate .eye, #endGate .ant path, #endGate h1, #endGate .ax-description { animation: none; } #endGate .ant path { opacity: 0.3; } }
+  @keyframes endEyeOff { 0% { transform: scaleY(1); opacity: 1; } 60% { transform: scaleY(0.15); opacity: 1; } 100% { transform: scaleY(0.1); opacity: 0; } }
+  @keyframes endSmOn { from { opacity: 0; transform: scaleY(0.2); } to { opacity: 1; transform: none; } }
+  @keyframes endHop {
+    0% { transform: translateY(0) scale(1, 1); animation-timing-function: cubic-bezier(0.3, 0, 0.6, 1); }
+    8% { transform: translateY(0) scale(1.07, 0.92); animation-timing-function: cubic-bezier(0.2, 0.6, 0.4, 1); }
+    14% { transform: translateY(-6px) scale(0.96, 1.05); animation-timing-function: cubic-bezier(0.2, 0.6, 0.5, 1); }
+    32% { transform: translateY(-26px) scale(1, 1); animation-timing-function: cubic-bezier(0.5, 0, 0.8, 0.5); }
+    50% { transform: translateY(0) scale(0.97, 1.04); animation-timing-function: cubic-bezier(0.2, 0.6, 0.4, 1); }
+    57% { transform: translateY(0) scale(1.09, 0.9); animation-timing-function: cubic-bezier(0.3, 0.6, 0.4, 1); }
+    68% { transform: translateY(0) scale(0.98, 1.02); }
+    76%, 100% { transform: translateY(0) scale(1, 1); }
+  }
+  @keyframes endSh { 0%, 76%, 100% { transform: scale(1); opacity: 0.16; } 8% { transform: scale(1.08); opacity: 0.18; } 32% { transform: scale(0.55); opacity: 0.06; } 50% { transform: scale(0.95); opacity: 0.15; } 57% { transform: scale(1.12); opacity: 0.2; } }
+  @keyframes endPop { 0% { opacity: 0; transform: scale(0.5); animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1); } 6% { opacity: 1; transform: scale(0.9); animation-timing-function: cubic-bezier(0.2, 0.6, 0.4, 1); } 30% { opacity: 0; transform: scale(1.5); } 34% { opacity: 0; transform: scale(0.5); animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1); } 40% { opacity: 0.9; transform: scale(0.9); animation-timing-function: cubic-bezier(0.2, 0.6, 0.4, 1); } 64%, 100% { opacity: 0; transform: scale(1.5); } }
+  @media (prefers-reduced-motion: reduce) { #endGate .end-bot, #endGate svg, #endGate .end-sh, #endGate .eye, #endGate .sm, #endGate .ant path, #endGate h1, #endGate .ax-description { animation: none; } #endGate .eye { opacity: 0; } #endGate .sm { opacity: 1; } #endGate .ant path { opacity: 0.3; } }
   #axsWait { position: fixed; inset: 0; z-index: 130; display: flex; align-items: center; justify-content: center; padding: var(--ax-page-inset); background: var(--ax-color-canvas); }
   /* 비밀번호 찾기 화면 · 입력 56 / 주 버튼 56 모양만 A01 에 맞춘다(재방문 #quick 은 v4.94 수면형 .axs-lf) */
   #pwlost input { min-height: var(--ax-button-height); border: 1px solid var(--axs-field-line); border-radius: var(--ax-radius-12); background: var(--ax-color-inset); color: var(--ax-color-ink); }
